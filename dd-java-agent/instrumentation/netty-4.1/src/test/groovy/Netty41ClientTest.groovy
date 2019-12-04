@@ -1,5 +1,6 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.base.HttpClientTest
+import datadog.trace.api.DDTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler
@@ -85,11 +86,10 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
+        basicSpan(it, 0, "parent", null, null, thrownException)
 
         span(1) {
           operationName "netty.connect"
-          resourceName "netty.connect"
           childOf span(0)
           errored true
           tags {
@@ -195,9 +195,9 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
         span(1) {
           childOf((DDSpan) span(0))
           operationName "trace.annotation"
-          resourceName "AnnotatedClass.makeRequestUnderTrace"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "AnnotatedClass.makeRequestUnderTrace"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }

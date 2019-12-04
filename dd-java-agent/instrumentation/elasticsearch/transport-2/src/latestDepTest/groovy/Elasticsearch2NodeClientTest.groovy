@@ -74,11 +74,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          resourceName "ClusterHealthAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "ClusterHealthAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -102,12 +102,12 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          resourceName "GetAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           errored true
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -167,7 +167,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     and:
     // IndexAction and PutMappingAction run in separate threads and order in which
     // these spans are closed is not defined. So we force the order if it is wrong.
-    if (TEST_WRITER[3][0].resourceName == "IndexAction") {
+    if (TEST_WRITER[3][0].tags[DDTags.RESOURCE_NAME] == "IndexAction") {
       def tmp = TEST_WRITER[3]
       TEST_WRITER[3] = TEST_WRITER[4]
       TEST_WRITER[4] = tmp
@@ -175,11 +175,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     assertTraces(6) {
       trace(0, 1) {
         span(0) {
-          resourceName "CreateIndexAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "CreateIndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -192,11 +192,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          resourceName "ClusterHealthAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "ClusterHealthAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -208,11 +208,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          resourceName "GetAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -228,11 +228,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(3, 1) {
         span(0) {
-          resourceName "PutMappingAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "PutMappingAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -245,11 +245,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(4, 1) {
         span(0) {
-          resourceName "IndexAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -263,11 +263,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(5, 1) {
         span(0) {
-          resourceName "GetAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"

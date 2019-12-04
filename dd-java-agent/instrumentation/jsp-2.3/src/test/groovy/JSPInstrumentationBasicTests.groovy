@@ -3,6 +3,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -89,7 +90,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -110,9 +110,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/$jspFileName"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -123,9 +123,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(2) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/$jspFileName"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
@@ -162,7 +162,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/getQuery.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -183,9 +182,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/getQuery.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/getQuery.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -196,9 +195,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(2) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/getQuery.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/getQuery.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
@@ -232,7 +231,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "POST /$jspWebappContext/post.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -253,9 +251,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/post.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/post.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -266,9 +264,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(2) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/post.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/post.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
@@ -299,7 +297,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
@@ -328,9 +325,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/$jspFileName"
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -349,9 +346,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(2) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/$jspFileName"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
@@ -387,7 +384,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/includes/includeHtml.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -408,9 +404,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/includes/includeHtml.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -421,9 +417,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(2) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/includes/includeHtml.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
@@ -453,7 +449,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/includes/includeMulti.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -474,9 +469,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/includes/includeMulti.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -487,9 +482,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(2) {
           childOf span(1)
           operationName "jsp.render"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -500,9 +495,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(3) {
           childOf span(1)
           operationName "jsp.compile"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -513,9 +508,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(4) {
           childOf span(1)
           operationName "jsp.render"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -526,9 +521,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(5) {
           childOf span(1)
           operationName "jsp.compile"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -539,9 +534,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(6) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/includes/includeMulti.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
@@ -571,7 +566,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
@@ -593,9 +587,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/$jspFileName"
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"

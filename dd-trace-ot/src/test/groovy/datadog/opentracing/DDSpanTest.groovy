@@ -20,7 +20,6 @@ class DDSpanTest extends DDSpecification {
         1G,
         0G,
         "fakeOperation",
-        "fakeResource",
         false,
         "fakeType",
         null,
@@ -35,34 +34,9 @@ class DDSpanTest extends DDSpecification {
     span.getOperationName() == "operation"
 
     when:
-    span.setResourceName("resource")
-    then:
-    span.getResourceName() == "resource"
-
-    when:
     span.setSpanType("type")
     then:
     span.getSpanType() == "type"
-  }
-
-  def "resource name equals operation name if null"() {
-    setup:
-    final String opName = "operationName"
-    DDSpan span
-
-    when:
-    span = tracer.buildSpan(opName).start()
-    then:
-    span.getResourceName() == opName
-
-    when:
-    final String resourceName = "fake"
-    span = new DDTracer()
-      .buildSpan(opName)
-      .withResourceName(resourceName)
-      .start()
-    then:
-    span.getResourceName() == resourceName
   }
 
   def "duration measured in nanoseconds"() {

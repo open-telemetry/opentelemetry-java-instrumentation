@@ -3,6 +3,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -88,7 +89,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/$forwardFromFileName"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -109,9 +109,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/$forwardFromFileName"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/$forwardFromFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspForwardFromClassName
             "servlet.context" "/$jspWebappContext"
@@ -122,9 +122,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(2) {
           childOf span(1)
           operationName "jsp.render"
-          resourceName "/$forwardDestFileName"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/$forwardDestFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspForwardDestClassName
             "servlet.context" "/$jspWebappContext"
@@ -136,9 +136,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(3) {
           childOf span(1)
           operationName "jsp.compile"
-          resourceName "/$forwardDestFileName"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/$forwardDestFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardDestClassPrefix$jspForwardDestClassName"
@@ -149,9 +149,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(4) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/$forwardFromFileName"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/$forwardFromFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
@@ -186,7 +186,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/forwards/forwardToHtml.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -207,9 +206,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/forwards/forwardToHtml.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToHtml_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -220,9 +219,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(2) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/forwards/forwardToHtml.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToHtml_jsp"
@@ -252,7 +251,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -273,9 +271,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/forwards/forwardToIncludeMulti.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToIncludeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -286,9 +284,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(2) {
           childOf span(1)
           operationName "jsp.render"
-          resourceName "/includes/includeMulti.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -300,9 +298,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(3) {
           childOf span(2)
           operationName "jsp.render"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -314,9 +312,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(4) {
           childOf span(2)
           operationName "jsp.compile"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -327,9 +325,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(5) {
           childOf span(2)
           operationName "jsp.render"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -341,9 +339,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(6) {
           childOf span(2)
           operationName "jsp.compile"
-          resourceName "/common/javaLoopH2.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -354,9 +352,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(7) {
           childOf span(1)
           operationName "jsp.compile"
-          resourceName "/includes/includeMulti.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
@@ -367,9 +365,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(8) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/forwards/forwardToIncludeMulti.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
@@ -399,7 +397,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/forwards/forwardToJspForward.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -420,9 +417,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/forwards/forwardToJspForward.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToJspForward_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -433,9 +430,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(2) {
           childOf span(1)
           operationName "jsp.render"
-          resourceName "/forwards/forwardToSimpleJava.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToSimpleJava_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -447,9 +444,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(3) {
           childOf span(2)
           operationName "jsp.render"
-          resourceName "/common/loop.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/loop.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "loop_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -461,9 +458,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(4) {
           childOf span(2)
           operationName "jsp.compile"
-          resourceName "/common/loop.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/common/loop.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.loop_jsp"
@@ -474,9 +471,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(5) {
           childOf span(1)
           operationName "jsp.compile"
-          resourceName "/forwards/forwardToSimpleJava.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
@@ -487,9 +484,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(6) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/forwards/forwardToJspForward.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
@@ -519,7 +516,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "GET /$jspWebappContext/forwards/forwardToCompileError.jsp"
           spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
@@ -541,9 +537,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/forwards/forwardToCompileError.jsp"
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToCompileError_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -555,9 +551,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(2) {
           childOf span(1)
           operationName "jsp.compile"
-          resourceName "/compileError.jsp"
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "/compileError.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.compileError_jsp"
@@ -569,9 +565,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(3) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/forwards/forwardToCompileError.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
@@ -601,7 +597,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
-          resourceName "404"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -622,9 +617,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName "jsp.render"
-          resourceName "/forwards/forwardToNonExistent.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToNonExistent_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -635,9 +630,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(2) {
           childOf span(0)
           operationName "jsp.compile"
-          resourceName "/forwards/forwardToNonExistent.jsp"
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToNonExistent_jsp"

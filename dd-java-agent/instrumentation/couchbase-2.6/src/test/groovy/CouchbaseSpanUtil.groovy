@@ -9,7 +9,6 @@ class CouchbaseSpanUtil {
   // Of the class hierarchy of these tests
   static void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      resourceName name
       operationName "couchbase.call"
       spanType DDSpanTypes.COUCHBASE
       errored false
@@ -20,6 +19,7 @@ class CouchbaseSpanUtil {
       }
       tags {
         "$DDTags.SERVICE_NAME" "couchbase"
+        "$DDTags.RESOURCE_NAME" name
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
 

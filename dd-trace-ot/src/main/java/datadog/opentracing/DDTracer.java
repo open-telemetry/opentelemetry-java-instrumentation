@@ -257,7 +257,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private final Map<String, Object> tags = new HashMap<>();
     private long timestampMicro;
     private SpanContext parent;
-    private String resourceName;
     private boolean errorFlag;
     private String spanType;
     private boolean ignoreScope = false;
@@ -321,11 +320,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     @Override
     public DDSpanBuilder withStartTimestamp(final long timestampMicroseconds) {
       timestampMicro = timestampMicroseconds;
-      return this;
-    }
-
-    public DDSpanBuilder withResourceName(final String resourceName) {
-      this.resourceName = resourceName;
       return this;
     }
 
@@ -437,8 +431,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         parentTrace = new PendingTrace(DDTracer.this, traceId);
       }
 
-      final String operationName = this.operationName != null ? this.operationName : resourceName;
-
       // some attributes are inherited from the parent
       context =
           new DDSpanContext(
@@ -446,7 +438,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               spanId,
               parentSpanId,
               operationName,
-              resourceName,
               errorFlag,
               spanType,
               tags,

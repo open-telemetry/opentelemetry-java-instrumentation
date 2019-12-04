@@ -58,13 +58,11 @@ class DDSpanBuilderTest extends DDSpecification {
 
     when:
     // with all custom fields provided
-    final String expectedResource = "fakeResource"
     final String expectedType = "fakeType"
 
     span =
       tracer
         .buildSpan(expectedName)
-        .withResourceName(expectedResource)
         .withErrorFlag()
         .withSpanType(expectedType)
         .start()
@@ -72,7 +70,6 @@ class DDSpanBuilderTest extends DDSpecification {
     final DDSpanContext context = span.context()
 
     then:
-    context.getResourceName() == expectedResource
     context.getErrorFlag()
     context.getSpanType() == expectedType
 
@@ -191,15 +188,12 @@ class DDSpanBuilderTest extends DDSpecification {
   def "should inherit the DD parent attributes"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentResourceName = "fakeResourceName"
     def expectedParentType = "fakeType"
-    def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withResourceName(expectedParentResourceName)
         .withSpanType(expectedParentType)
         .start()
 
@@ -212,7 +206,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     expect:
     span.getOperationName() == expectedName
-    span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
 
     when:
@@ -220,14 +213,12 @@ class DDSpanBuilderTest extends DDSpecification {
     span =
       tracer
         .buildSpan(expectedName)
-        .withResourceName(expectedChildResourceName)
         .withSpanType(expectedChildType)
         .asChildOf(parent)
         .start()
 
     then:
     span.getOperationName() == expectedName
-    span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
 
@@ -235,15 +226,12 @@ class DDSpanBuilderTest extends DDSpecification {
   def "should inherit the DD parent attributes addReference CHILD_OF"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentResourceName = "fakeResourceName"
     def expectedParentType = "fakeType"
-    def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withResourceName(expectedParentResourceName)
         .withSpanType(expectedParentType)
         .start()
 
@@ -259,7 +247,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     expect:
     span.getOperationName() == expectedName
-    span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
 
     when:
@@ -267,14 +254,12 @@ class DDSpanBuilderTest extends DDSpecification {
     span =
       tracer
         .buildSpan(expectedName)
-        .withResourceName(expectedChildResourceName)
         .withSpanType(expectedChildType)
         .addReference("child_of", parent.context())
         .start()
 
     then:
     span.getOperationName() == expectedName
-    span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
 
@@ -282,15 +267,12 @@ class DDSpanBuilderTest extends DDSpecification {
   def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentResourceName = "fakeResourceName"
     def expectedParentType = "fakeType"
-    def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withResourceName(expectedParentResourceName)
         .withSpanType(expectedParentType)
         .start()
 
@@ -306,7 +288,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     expect:
     span.getOperationName() == expectedName
-    span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
 
     when:
@@ -314,14 +295,12 @@ class DDSpanBuilderTest extends DDSpecification {
     span =
       tracer
         .buildSpan(expectedName)
-        .withResourceName(expectedChildResourceName)
         .withSpanType(expectedChildType)
         .addReference("follows_from", parent.context())
         .start()
 
     then:
     span.getOperationName() == expectedName
-    span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
 

@@ -1,5 +1,6 @@
 import com.netflix.hystrix.HystrixObservableCommand
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import rx.Observable
@@ -73,7 +74,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "parent"
-          resourceName "parent"
           spanType null
           parent()
           errored false
@@ -83,11 +83,11 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hystrix.cmd"
-          resourceName "OtherGroup.HystrixObservableChainTest\$2.execute"
           spanType null
           childOf span(3)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "OtherGroup.HystrixObservableChainTest\$2.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
@@ -97,22 +97,22 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(2) {
           operationName "trace.annotation"
-          resourceName "HystrixObservableChainTest\$2.tracedMethod"
           spanType null
           childOf span(1)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         span(3) {
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixObservableChainTest\$1.execute"
           spanType null
           childOf span(0)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableChainTest\$1.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -122,11 +122,11 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(4) {
           operationName "trace.annotation"
-          resourceName "HystrixObservableChainTest\$1.tracedMethod"
           spanType null
           childOf span(3)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }

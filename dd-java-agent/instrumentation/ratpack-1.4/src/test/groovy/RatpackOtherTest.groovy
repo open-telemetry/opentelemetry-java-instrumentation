@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -63,12 +64,12 @@ class RatpackOtherTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          resourceName "GET /$route"
           operationName "netty.request"
           spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "GET /$route"
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"
@@ -81,12 +82,12 @@ class RatpackOtherTest extends AgentTestRunner {
           }
         }
         span(1) {
-          resourceName "GET /$route"
           operationName "ratpack.handler"
           spanType DDSpanTypes.HTTP_SERVER
           childOf(span(0))
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "GET /$route"
             "$Tags.COMPONENT" "ratpack"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"

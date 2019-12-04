@@ -52,7 +52,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
       trace.span(index + 1) {
         childOf(trace.span(index))
         operationName "netty.client.request"
-        resourceName "$method $uri.path"
         spanType DDSpanTypes.HTTP_CLIENT
         errored exception != null
         tags {

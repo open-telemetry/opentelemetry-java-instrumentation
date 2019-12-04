@@ -1,5 +1,6 @@
 import com.netflix.hystrix.HystrixCommand
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import spock.lang.Timeout
@@ -45,7 +46,6 @@ class HystrixTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "parent"
-          resourceName "parent"
           spanType null
           parent()
           errored false
@@ -55,11 +55,11 @@ class HystrixTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixTest\$1.execute"
           spanType null
           childOf span(0)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$1.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -69,11 +69,11 @@ class HystrixTest extends AgentTestRunner {
         }
         span(2) {
           operationName "trace.annotation"
-          resourceName "HystrixTest\$1.tracedMethod"
           spanType null
           childOf span(1)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "HystrixTest\$1.tracedMethod"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -120,7 +120,6 @@ class HystrixTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "parent"
-          resourceName "parent"
           spanType null
           parent()
           errored false
@@ -130,11 +129,11 @@ class HystrixTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixTest\$2.execute"
           spanType null
           childOf span(0)
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$2.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -145,11 +144,11 @@ class HystrixTest extends AgentTestRunner {
         }
         span(2) {
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixTest\$2.fallback"
           spanType null
           childOf span(1)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$2.fallback"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"

@@ -6,6 +6,7 @@ import datadog.trace.agent.test.asserts.SpanAssert
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
 import datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator
@@ -73,7 +74,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       if (renderSpan) {
         SpanAssert.assertSpan(renderSpan) {
           operationName "response.render"
-          resourceName "response.render"
           spanType "web"
           errored false
           tags {
@@ -91,14 +91,14 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   }
 
   @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "spring.handler"
-      resourceName "TestController.${endpoint.name().toLowerCase()}"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
+        "$DDTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
         "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         if (endpoint == EXCEPTION) {
@@ -113,7 +113,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -123,6 +122,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
         parent()
       }
       tags {
+        "$DDTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

@@ -66,7 +66,6 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          resourceName "hibernate.session"
           operationName "hibernate.session"
           spanType DDSpanTypes.HIBERNATE
           parent()
@@ -78,7 +77,6 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(1) {
-          resourceName "hibernate.transaction.commit"
           operationName "hibernate.transaction.commit"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
@@ -90,12 +88,12 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(2) {
-          resourceName "TEST_PROC"
           operationName "hibernate.procedure.getOutputs"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.RESOURCE_NAME" "TEST_PROC"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
@@ -106,11 +104,13 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(2)
           tags {
             "$DDTags.SERVICE_NAME" "hsqldb"
+            "$DDTags.RESOURCE_NAME" "{call TEST_PROC()}"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
+            "$Tags.DB_STATEMENT" "{call TEST_PROC()}"
             "span.origin.type" "org.hsqldb.jdbc.JDBCCallableStatement"
             defaultTags()
           }
@@ -141,7 +141,6 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          resourceName "hibernate.session"
           operationName "hibernate.session"
           spanType DDSpanTypes.HIBERNATE
           parent()
@@ -153,7 +152,6 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(1) {
-          resourceName "hibernate.transaction.commit"
           operationName "hibernate.transaction.commit"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
@@ -165,13 +163,13 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(2) {
-          resourceName "TEST_PROC"
           operationName "hibernate.procedure.getOutputs"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           errored(true)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.RESOURCE_NAME" "TEST_PROC"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(SQLGrammarException, "could not prepare statement")

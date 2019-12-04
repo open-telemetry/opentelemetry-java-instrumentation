@@ -113,7 +113,6 @@ class CassandraClientTest extends AgentTestRunner {
   def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, boolean renameService, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName "cassandra.query"
-      resourceName statement
       spanType DDSpanTypes.CASSANDRA
       if (parentSpan == null) {
         parent()
@@ -129,6 +128,7 @@ class CassandraClientTest extends AgentTestRunner {
         "$Tags.PEER_PORT" port
         "$Tags.DB_TYPE" "cassandra"
         "$Tags.DB_INSTANCE" keyspace
+        "$Tags.DB_STATEMENT" statement
         defaultTags()
       }
     }

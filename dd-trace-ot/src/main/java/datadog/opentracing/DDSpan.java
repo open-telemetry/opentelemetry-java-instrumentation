@@ -251,11 +251,6 @@ public class DDSpan implements Span {
     return this;
   }
 
-  public final DDSpan setResourceName(final String resourceName) {
-    context().setResourceName(resourceName);
-    return this;
-  }
-
   public final DDSpan setSpanType(final String type) {
     context().setSpanType(type);
     return this;
@@ -290,10 +285,6 @@ public class DDSpan implements Span {
 
   public BigInteger getParentId() {
     return context.getParentId();
-  }
-
-  public String getResourceName() {
-    return context.getResourceName();
   }
 
   public String getOperationName() {

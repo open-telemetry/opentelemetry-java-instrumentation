@@ -171,12 +171,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
+            "$DDTags.RESOURCE_NAME" query
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -184,6 +184,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -231,12 +232,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" driver
+            "$DDTags.RESOURCE_NAME" query
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -244,6 +245,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -283,12 +285,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" driver
+            "$DDTags.RESOURCE_NAME" query
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -296,6 +298,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -335,12 +338,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" driver
+            "$DDTags.RESOURCE_NAME" query
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -348,6 +351,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -387,12 +391,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" driver
+            "$DDTags.RESOURCE_NAME" query
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -400,6 +404,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -442,12 +447,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" driver
+            "$DDTags.RESOURCE_NAME" query
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -455,6 +460,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -510,12 +516,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" driver
+            "$DDTags.RESOURCE_NAME" query
             if (prepareStatement) {
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             } else {
@@ -527,6 +533,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -586,16 +593,17 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "${dbType}.query"
-          resourceName query
           spanType DDSpanTypes.SQL
           errored false
           tags {
             "$DDTags.SERVICE_NAME" dbType
+            "$DDTags.RESOURCE_NAME" query
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" dbType
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             "$Tags.DB_USER" "SA"
+            "$Tags.DB_STATEMENT" query
             "span.origin.type" String
             defaultTags()
           }
@@ -605,16 +613,17 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         trace(i, 1) {
           span(0) {
             operationName "${dbType}.query"
-            resourceName query
             spanType DDSpanTypes.SQL
             errored false
             tags {
               "$DDTags.SERVICE_NAME" dbType
+              "$DDTags.RESOURCE_NAME" query
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" dbType
               "$Tags.DB_INSTANCE" dbName.toLowerCase()
               "$Tags.DB_USER" "SA"
+              "$Tags.DB_STATEMENT" query
               "span.origin.type" String
               defaultTags()
             }

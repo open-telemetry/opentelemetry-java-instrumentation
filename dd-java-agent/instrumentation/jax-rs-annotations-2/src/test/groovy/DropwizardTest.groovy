@@ -2,6 +2,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
@@ -76,14 +77,14 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   }
 
   @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "jax-rs.request"
-      resourceName "${testResource().simpleName}.${endpoint.name().toLowerCase()}"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
+        "$DDTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
         "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.component()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -97,7 +98,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -107,6 +107,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
         parent()
       }
       tags {
+        "$DDTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

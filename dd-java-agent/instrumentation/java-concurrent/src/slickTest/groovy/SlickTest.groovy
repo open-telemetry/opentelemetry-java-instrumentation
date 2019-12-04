@@ -20,27 +20,28 @@ class SlickTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "trace.annotation"
-          resourceName "SlickUtils.startQuery"
           parent()
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "SlickUtils.startQuery"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         span(1) {
           operationName "${SlickUtils.Driver()}.query"
-          resourceName SlickUtils.TestQuery()
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" SlickUtils.Driver()
+            "$DDTags.RESOURCE_NAME" SlickUtils.TestQuery()
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" SlickUtils.Driver()
             "$Tags.DB_INSTANCE" SlickUtils.Db()
             "$Tags.DB_USER" SlickUtils.Username()
+            "$Tags.DB_STATEMENT" SlickUtils.TestQuery()
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             defaultTags()
           }

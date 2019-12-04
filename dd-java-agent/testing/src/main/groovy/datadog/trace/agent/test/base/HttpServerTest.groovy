@@ -244,7 +244,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       if (hasHandlerSpan()) {
         trace(0, 3) {
           serverSpan(it, 0, null, null, method, REDIRECT)
-          handlerSpan(it, 1, span(0), REDIRECT)
+          handlerSpan(it, 1, span(0), method, REDIRECT)
           controllerSpan(it, 2, span(1))
         }
       } else {
@@ -274,7 +274,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       if (hasHandlerSpan()) {
         trace(0, 3) {
           serverSpan(it, 0, null, null, method, ERROR)
-          handlerSpan(it, 1, span(0), ERROR)
+          handlerSpan(it, 1, span(0), method, ERROR)
           controllerSpan(it, 2, span(1))
         }
       } else {
@@ -306,7 +306,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       if (hasHandlerSpan()) {
         trace(0, 3) {
           serverSpan(it, 0, null, null, method, EXCEPTION)
-          handlerSpan(it, 1, span(0), EXCEPTION)
+          handlerSpan(it, 1, span(0), method, EXCEPTION)
           controllerSpan(it, 2, span(1), EXCEPTION.body)
         }
       } else {
@@ -336,7 +336,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       if (hasHandlerSpan()) {
         trace(0, 2) {
           serverSpan(it, 0, null, null, method, NOT_FOUND)
-          handlerSpan(it, 1, span(0), NOT_FOUND)
+          handlerSpan(it, 1, span(0), method, NOT_FOUND)
         }
       } else {
         trace(0, 1) {
@@ -403,7 +403,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null) {
     trace.span(index) {
       operationName "controller"
-      resourceName "controller"
       errored errorMessage != null
       childOf(parent as DDSpan)
       tags {
@@ -415,7 +414,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     }
   }
 
-  void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     throw new UnsupportedOperationException("handlerSpan not implemented in " + getClass().name)
   }
 
@@ -423,7 +422,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {

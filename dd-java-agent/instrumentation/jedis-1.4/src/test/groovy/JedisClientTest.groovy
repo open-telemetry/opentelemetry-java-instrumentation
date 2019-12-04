@@ -50,13 +50,13 @@ class JedisClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          resourceName "SET"
           spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_STATEMENT" "SET"
             defaultTags()
           }
         }
@@ -76,13 +76,13 @@ class JedisClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          resourceName "SET"
           spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_STATEMENT" "SET"
             defaultTags()
           }
         }
@@ -90,13 +90,13 @@ class JedisClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "redis.query"
-          resourceName "GET"
           spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_STATEMENT" "GET"
             defaultTags()
           }
         }
@@ -116,13 +116,13 @@ class JedisClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          resourceName "SET"
           spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_STATEMENT" "SET"
             defaultTags()
           }
         }
@@ -130,13 +130,13 @@ class JedisClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "redis.query"
-          resourceName "RANDOMKEY"
           spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_STATEMENT" "RANDOMKEY"
             defaultTags()
           }
         }

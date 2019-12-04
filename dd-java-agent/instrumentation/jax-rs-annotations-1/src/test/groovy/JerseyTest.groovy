@@ -1,4 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
+import datadog.trace.instrumentation.api.Tags
 import io.dropwizard.testing.junit.ResourceTestRule
 import org.junit.ClassRule
 import spock.lang.Shared
@@ -25,7 +27,7 @@ class JerseyTest extends AgentTestRunner {
 
     def trace = TEST_WRITER.firstTrace()
     def span = trace[0]
-    span.resourceName == "POST /test/hello/{name}"
-    span.tags["component"] == "jax-rs"
+    span.tags[DDTags.RESOURCE_NAME] == "POST /test/hello/{name}"
+    span.tags[Tags.COMPONENT] == "jax-rs"
   }
 }

@@ -15,15 +15,13 @@ class DDSpanContextTest extends DDSpecification {
 
     expect:
     context.getTags() == tags
-    context.resourceName == "fakeResource"
     context.spanType == "fakeType"
-    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation/fakeResource metrics={} *errored* tags={${extra}${tags.containsKey(DDTags.SPAN_TYPE) ? "span.type=${context.getSpanType()}, " : ""}thread.id=${Thread.currentThread().id}, thread.name=${Thread.currentThread().name}}"
+    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation metrics={} *errored* tags={${extra}${tags.containsKey(DDTags.SPAN_TYPE) ? "span.type=${context.getSpanType()}, " : ""}thread.id=${Thread.currentThread().id}, thread.name=${Thread.currentThread().name}}"
 
     where:
-    name                 | extra             | tags
-    DDTags.RESOURCE_NAME | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
-    DDTags.SPAN_TYPE     | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
-    "some.tag"           | ""                | [(DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
+    name             | extra             | tags
+    DDTags.SPAN_TYPE | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
+    "some.tag"       | ""                | [(DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
   }
 
   def "special tags set certain values"() {
@@ -41,9 +39,8 @@ class DDSpanContextTest extends DDSpecification {
     context.toString() == expectedTrace
 
     where:
-    name                 | value                | method         | details
-    DDTags.RESOURCE_NAME | "different resource" | "resourceName" | "fakeOperation/different resource"
-    DDTags.SPAN_TYPE     | "different type"     | "spanType"     | "fakeOperation/fakeResource"
+    name             | value            | method     | details
+    DDTags.SPAN_TYPE | "different type" | "spanType" | "fakeOperation"
   }
 
   def "tags can be added to the context"() {
@@ -58,7 +55,7 @@ class DDSpanContextTest extends DDSpecification {
       (DDTags.THREAD_NAME): thread.name,
       (DDTags.THREAD_ID)  : thread.id
     ]
-    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation/fakeResource metrics={} tags={$name=$value, thread.id=$thread.id, thread.name=$thread.name}"
+    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation metrics={} tags={$name=$value, thread.id=$thread.id, thread.name=$thread.name}"
 
     where:
     name             | value

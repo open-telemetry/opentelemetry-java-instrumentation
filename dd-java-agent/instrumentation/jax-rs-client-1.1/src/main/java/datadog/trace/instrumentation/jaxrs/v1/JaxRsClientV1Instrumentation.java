@@ -17,7 +17,6 @@ import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
@@ -70,9 +69,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       final boolean isRootClientHandler = null == request.getProperties().get(DD_SPAN_ATTRIBUTE);
       if (isRootClientHandler) {
-        final AgentSpan span =
-            startSpan("jax-rs.client.call")
-                .setTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call");
+        final AgentSpan span = startSpan("jax-rs.client.call");
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
         request.getProperties().put(DD_SPAN_ATTRIBUTE, span);

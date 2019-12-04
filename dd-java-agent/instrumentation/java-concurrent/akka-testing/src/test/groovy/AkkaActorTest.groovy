@@ -1,5 +1,6 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 
 class AkkaActorTest extends AgentTestRunner {
 
@@ -14,7 +15,7 @@ class AkkaActorTest extends AgentTestRunner {
     expect:
     TEST_WRITER.size() == 1
     trace.size() == 2
-    trace[0].resourceName == "AkkaActors.$testMethod"
+    trace[0].tags[DDTags.RESOURCE_NAME] == "AkkaActors.$testMethod"
     findSpan(trace, "$expectedGreeting, Akka").context().getParentId() == trace[0].getSpanId()
 
     where:

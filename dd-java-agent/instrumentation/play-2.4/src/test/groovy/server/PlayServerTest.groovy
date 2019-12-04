@@ -79,7 +79,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
   }
 
   @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "play.request"
       spanType DDSpanTypes.HTTP_SERVER

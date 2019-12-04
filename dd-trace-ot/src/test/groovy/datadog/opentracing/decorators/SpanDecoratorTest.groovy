@@ -47,17 +47,6 @@ class SpanDecoratorTest extends DDSpecification {
     operationName << OperationDecorator.MAPPINGS.values()
   }
 
-  def "set resource name"() {
-    when:
-    span.setTag(DDTags.RESOURCE_NAME, name)
-
-    then:
-    span.getResourceName() == name
-
-    where:
-    name = "my resource name"
-  }
-
   def "set span type"() {
     when:
     span.setTag(DDTags.SPAN_TYPE, type)
@@ -87,36 +76,6 @@ class SpanDecoratorTest extends DDSpecification {
 
     where:
     type = "foo"
-  }
-
-  def "DBStatementAsResource should not interact on Mongo queries"() {
-    when:
-    span.setResourceName("not-change-me")
-    Tags.COMPONENT.set(span, "java-mongo")
-    Tags.DB_STATEMENT.set(span, something)
-
-    then:
-    span.getResourceName() == "not-change-me"
-
-
-    when:
-    span.setResourceName("change-me")
-    Tags.COMPONENT.set(span, "other-contrib")
-    Tags.DB_STATEMENT.set(span, something)
-
-    then:
-    span.getResourceName() == something
-
-    where:
-    something = "fake-query"
-  }
-
-  def "set 404 as a resource on a 404 issue"() {
-    when:
-    Tags.HTTP_STATUS.set(span, 404)
-
-    then:
-    span.getResourceName() == "404"
   }
 
   def "set 5XX status code as an error"() {
@@ -158,18 +117,11 @@ class SpanDecoratorTest extends DDSpecification {
     span.context()."$attribute" == value
 
     where:
-    attribute      | name                 | value
-    "resourceName" | DDTags.RESOURCE_NAME | "my-resource"
-    "spanType"     | DDTags.SPAN_TYPE     | "my-span-type"
+    attribute  | name             | value
+    "spanType" | DDTags.SPAN_TYPE | "my-span-type"
   }
 
   def "decorators apply to builder too"() {
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 404).start()
-
-    then:
-    span.resourceName == "404"
-
     when:
     span = tracer.buildSpan("decorator.test").withTag("error", "true").start()
 
@@ -181,17 +133,5 @@ class SpanDecoratorTest extends DDSpecification {
 
     then:
     span.error
-
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_URL.key, "http://example.com/path/number123/?param=true").start()
-
-    then:
-    span.resourceName == "/path/?/"
-
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.DB_STATEMENT.key, "some-statement").start()
-
-    then:
-    span.resourceName == "some-statement"
   }
 }
