@@ -24,9 +24,6 @@ import redis.clients.jedis.commands.ProtocolCommand;
 @AutoService(Instrumenter.class)
 public final class JedisInstrumentation extends Instrumenter.Default {
 
-  private static final String SERVICE_NAME = "redis";
-  private static final String COMPONENT_NAME = SERVICE_NAME + "-command";
-
   public JedisInstrumentation() {
     super("jedis", "redis");
   }
@@ -66,6 +63,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       if (command instanceof Protocol.Command) {
         DECORATE.onStatement(span, ((Protocol.Command) command).name());
       } else {
+        // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
+        // us if that changes
         DECORATE.onStatement(span, new String(command.getRaw()));
       }
       return activateSpan(span, true);

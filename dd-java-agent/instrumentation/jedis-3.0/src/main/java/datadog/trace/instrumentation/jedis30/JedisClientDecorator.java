@@ -7,6 +7,9 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public class JedisClientDecorator extends DatabaseClientDecorator<ProtocolCommand> {
   public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
 
+  private static final String SERVICE_NAME = "redis";
+  private static final String COMPONENT_NAME = SERVICE_NAME + "-command";
+
   @Override
   protected String[] instrumentationNames() {
     return new String[] {"jedis", "redis"};
@@ -14,12 +17,12 @@ public class JedisClientDecorator extends DatabaseClientDecorator<ProtocolComman
 
   @Override
   protected String service() {
-    return "redis";
+    return SERVICE_NAME;
   }
 
   @Override
   protected String component() {
-    return "redis-command";
+    return COMPONENT_NAME;
   }
 
   @Override
