@@ -1,0 +1,12 @@
+muzzle {
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+task "rmic", dependsOn: testClasses {
+  def clazz = 'rmi.app.ServerLegacy'
+  String command = """rmic -g -keep -classpath ${sourceSets.test.output.classesDirs.asPath} -d ${buildDir}/classes/java/test ${clazz}"""
+  command.execute().text
+}
+
+test.dependsOn "rmic"

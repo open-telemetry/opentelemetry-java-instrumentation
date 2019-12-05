@@ -92,6 +92,7 @@ public class AgentInstaller {
                         not(
                             named("java.net.URL")
                                 .or(named("java.net.HttpURLConnection"))
+                                .or(nameStartsWith("java.rmi."))
                                 .or(nameStartsWith("java.util.concurrent."))
                                 .or(
                                     nameStartsWith("java.util.logging.")
@@ -111,6 +112,7 @@ public class AgentInstaller {
                     .and(
                         not(
                             nameStartsWith("sun.net.www.protocol.")
+                                .or(nameStartsWith("sun.rmi.server."))
                                 .or(named("sun.net.www.http.HttpClient")))))
             .or(nameStartsWith("jdk."))
             .or(nameStartsWith("org.aspectj."))
