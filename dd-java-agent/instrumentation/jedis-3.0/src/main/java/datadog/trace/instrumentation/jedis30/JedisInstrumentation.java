@@ -30,7 +30,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.Protocol");
+    return named("redis.clients.jedis.Protocol")
+        .and(named("redis.clients.jedis.commands.ProtocolCommand"));
   }
 
   @Override
