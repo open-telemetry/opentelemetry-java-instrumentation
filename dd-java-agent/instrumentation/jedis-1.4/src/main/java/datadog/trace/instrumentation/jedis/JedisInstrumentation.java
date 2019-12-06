@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jedis;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jedis.JedisClientDecorator.DECORATE;
@@ -7,6 +8,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -31,8 +33,13 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return not(classLoaderHasClasses("redis.clients.jedis.commands.ProtocolCommand"));
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.Protocol").and(named("redis.clients.jedis.JedisCommands"));
+    return named("redis.clients.jedis.Protocol");
   }
 
   @Override
