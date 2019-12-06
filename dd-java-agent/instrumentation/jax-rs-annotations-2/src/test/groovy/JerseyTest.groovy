@@ -5,6 +5,8 @@ import io.dropwizard.testing.junit.ResourceTestRule
 import org.junit.ClassRule
 import spock.lang.Shared
 
+import javax.ws.rs.client.Entity
+
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class JerseyTest extends AgentTestRunner {
@@ -21,7 +23,7 @@ class JerseyTest extends AgentTestRunner {
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
     def response = runUnderTrace("test.span") {
-      resources.client().resource(resource).post(String)
+      resources.client().target(resource).request().post(Entity.text(""), String)
     }
 
     then:
