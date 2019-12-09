@@ -35,18 +35,6 @@ class SpanDecoratorTest extends DDSpecification {
     span.getTags().get("newFoo") == "newBar"
   }
 
-  def "set operation name"() {
-    when:
-    Tags.COMPONENT.set(span, component)
-
-    then:
-    span.getOperationName() == operationName
-
-    where:
-    component << OperationDecorator.MAPPINGS.keySet()
-    operationName << OperationDecorator.MAPPINGS.values()
-  }
-
   def "set span type"() {
     when:
     span.setTag(DDTags.SPAN_TYPE, type)
@@ -58,12 +46,12 @@ class SpanDecoratorTest extends DDSpecification {
     type = DDSpanTypes.HTTP_CLIENT
   }
 
-  def "override operation with DBTypeDecorator"() {
+
+  def "set span type with DBTypeDecorator"() {
     when:
     Tags.DB_TYPE.set(span, type)
 
     then:
-    span.getOperationName() == type + ".query"
     span.context().getSpanType() == "sql"
 
 
@@ -71,7 +59,6 @@ class SpanDecoratorTest extends DDSpecification {
     Tags.DB_TYPE.set(span, "mongo")
 
     then:
-    span.getOperationName() == "mongo.query"
     span.context().getSpanType() == "mongodb"
 
     where:

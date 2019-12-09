@@ -35,7 +35,7 @@ class DDTracerTest extends DDSpecification {
     def tracer = new DDTracer()
 
     then:
-    tracer.spanContextDecorators.size() == 5
+    tracer.spanContextDecorators.size() == 4
 
     tracer.injector instanceof DatadogHttpCodec.Injector
     tracer.extractor instanceof DatadogHttpCodec.Extractor

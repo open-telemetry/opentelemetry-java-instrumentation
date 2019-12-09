@@ -34,8 +34,6 @@ public class DBTypeDecorator extends AbstractDecorator {
     } else {
       context.setSpanType(DDSpanTypes.SQL);
     }
-    // Works for: mongo, cassandra, jdbc
-    context.setOperationName(String.valueOf(value) + ".query");
     return true;
   }
 }
