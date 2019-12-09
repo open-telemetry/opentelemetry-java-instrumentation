@@ -1,3 +1,7 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 muzzle {
   pass {
     group = "com.github.Ma27"
