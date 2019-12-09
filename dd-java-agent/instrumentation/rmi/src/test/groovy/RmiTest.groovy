@@ -52,7 +52,7 @@ class RmiTest extends AgentTestRunner {
           operationName "rmi.request"
           tags {
             "span.origin.type" server.class.canonicalName
-            defaultTags()
+            defaultTags(true)
           }
         }
       }
@@ -119,7 +119,7 @@ class RmiTest extends AgentTestRunner {
           tags {
             "span.origin.type" server.class.canonicalName
             errorTags(RuntimeException, String)
-            defaultTags()
+            defaultTags(true)
           }
         }
       }
@@ -134,7 +134,6 @@ class RmiTest extends AgentTestRunner {
     def server = new ServerLegacy()
     serverRegistry.rebind(ServerLegacy.RMI_ID, server)
 
-
     when:
     def response = runUnderTrace("parent") {
       def client = (Greeter) clientRegistry.lookup(ServerLegacy.RMI_ID)
@@ -144,6 +143,7 @@ class RmiTest extends AgentTestRunner {
     then:
     response.contains("Hello you")
     assertTraces(TEST_WRITER, 2) {
+      def parentSpan = TEST_WRITER[1][1]
       trace(1, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
@@ -156,13 +156,15 @@ class RmiTest extends AgentTestRunner {
           }
         }
       }
+
       trace(0, 1) {
         span(0) {
+          childOf parentSpan
           resourceName "ServerLegacy#hello"
           operationName "rmi.request"
           tags {
             "span.origin.type" server.class.canonicalName
-            defaultTags()
+            defaultTags(true)
           }
         }
       }

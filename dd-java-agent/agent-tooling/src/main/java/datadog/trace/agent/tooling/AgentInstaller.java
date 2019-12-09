@@ -112,7 +112,8 @@ public class AgentInstaller {
                     .and(
                         not(
                             nameStartsWith("sun.net.www.protocol.")
-                                .or(nameStartsWith("sun.rmi.server."))
+                                .or(nameStartsWith("sun.rmi.server"))
+                                .or(nameStartsWith("sun.rmi.transport"))
                                 .or(named("sun.net.www.http.HttpClient")))))
             .or(nameStartsWith("jdk."))
             .or(nameStartsWith("org.aspectj."))
