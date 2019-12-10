@@ -433,7 +433,7 @@ class DDAgentWriterTest extends DDSpecification {
     //   loop until outstanding requests > finished requests
     while (numFlushes.get() - (numRequests.get() + numFailedRequests.get()) < senderQueueSize) {
       // chunk the loop & wait to allow for flushing to send queue
-      (1..1_000).forEach {
+      (1..1_000).each {
         writer.write(minimalTrace)
         numWritten += 1
       }
@@ -450,7 +450,7 @@ class DDAgentWriterTest extends DDSpecification {
     // test reliable
     while (numFlushes.get() - (numRequests.get() + numFailedRequests.get()) < senderQueueSize) {
       // chunk the loop & wait to allow for flushing to send queue
-      (1..1_000).forEach {
+      (1..1_000).each {
         writer.write(minimalTrace)
         numWritten += 1
       }
