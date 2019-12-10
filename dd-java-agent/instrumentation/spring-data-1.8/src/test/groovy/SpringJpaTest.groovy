@@ -30,7 +30,6 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName "toString test"
           tags {
-            defaultTags()
           }
         }
       }
@@ -61,7 +60,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "JpaRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) { // select
@@ -77,7 +75,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -99,7 +96,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.save"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) { // insert
@@ -115,7 +111,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -137,7 +132,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.save"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) { // update
@@ -153,7 +147,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^update /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
         span(2) { // select
@@ -169,7 +162,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -189,7 +181,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "JpaCustomerRepository.findByLastName"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) { // select
@@ -205,7 +196,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -225,7 +215,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.delete"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) { // delete
@@ -241,7 +230,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^delete /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
         span(2) { // select
@@ -257,7 +245,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }

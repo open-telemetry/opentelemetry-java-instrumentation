@@ -89,7 +89,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
-        defaultTags()
       }
     }
   }
@@ -122,7 +121,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        defaultTags(true)
       }
     }
   }

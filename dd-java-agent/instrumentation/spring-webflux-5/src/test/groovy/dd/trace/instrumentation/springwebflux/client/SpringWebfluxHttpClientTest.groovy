@@ -73,7 +73,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
           if (exception) {
             errorTags(exception.class, exception.message)
           }
-          defaultTags()
         }
       }
     }

@@ -80,7 +80,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
             "$Tags.COMPONENT" "spring-webmvc"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "view.type" RedirectView.name
-            defaultTags()
           }
         }
         it.remove(renderSpan)
@@ -104,7 +103,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
-        defaultTags()
       }
     }
   }
@@ -138,7 +136,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        defaultTags(true)
       }
     }
   }

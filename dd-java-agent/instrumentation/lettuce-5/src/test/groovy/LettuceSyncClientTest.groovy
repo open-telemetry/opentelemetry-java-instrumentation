@@ -109,7 +109,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.PEER_PORT" port
             "$Tags.DB_TYPE" "redis"
             "db.redis.dbIndex" 0
-            defaultTags()
           }
         }
       }
@@ -146,7 +145,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.DB_TYPE" "redis"
             "db.redis.dbIndex" 0
             errorTags CompletionException, String
-            defaultTags()
           }
         }
       }
@@ -172,7 +170,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -198,7 +195,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -224,7 +220,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -250,7 +245,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -276,7 +270,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -302,7 +295,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -328,7 +320,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -353,7 +344,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }
@@ -378,7 +368,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
-            defaultTags()
           }
         }
       }

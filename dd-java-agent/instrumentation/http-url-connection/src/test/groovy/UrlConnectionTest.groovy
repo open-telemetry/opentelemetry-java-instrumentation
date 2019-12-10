@@ -38,7 +38,6 @@ class UrlConnectionTest extends AgentTestRunner {
           errored true
           tags {
             errorTags ConnectException, String
-            defaultTags()
           }
         }
         span(1) {
@@ -55,7 +54,6 @@ class UrlConnectionTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "$url/"
             "$Tags.HTTP_METHOD" "GET"
             errorTags ConnectException, String
-            defaultTags()
           }
         }
       }
@@ -92,7 +90,6 @@ class UrlConnectionTest extends AgentTestRunner {
           errored true
           tags {
             errorTags IllegalArgumentException, String
-            defaultTags()
           }
         }
         span(1) {
@@ -107,7 +104,6 @@ class UrlConnectionTest extends AgentTestRunner {
             // FIXME: These tags really make no sense for non-http connections, why do we set them?
             "$Tags.HTTP_URL" "$url"
             errorTags IllegalArgumentException, String
-            defaultTags()
           }
         }
       }
@@ -139,7 +135,6 @@ class UrlConnectionTest extends AgentTestRunner {
           errored true
           tags {
             errorTags ClassNotFoundException, String
-            defaultTags()
           }
         }
       }

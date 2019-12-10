@@ -86,7 +86,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           parent()
           errored false
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -104,7 +103,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            defaultTags()
           }
         }
         span(2) {
@@ -122,7 +120,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            defaultTags()
           }
         }
       }
@@ -171,7 +168,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           parent()
           errored false
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -189,7 +185,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            defaultTags()
           }
         }
         span(2) {
@@ -207,7 +202,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            defaultTags()
           }
         }
       }
@@ -241,7 +235,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           parent()
           errored false
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -259,7 +252,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            defaultTags()
           }
         }
       }
@@ -309,7 +301,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           parent()
           errored false
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -327,7 +318,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" STATUS
-            defaultTags()
           }
         }
       }

@@ -50,7 +50,6 @@ class SessionTest extends AbstractHibernateTest {
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-              defaultTags()
             }
           }
           span(1) {
@@ -61,7 +60,6 @@ class SessionTest extends AbstractHibernateTest {
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-              defaultTags()
             }
           }
           span(2) {
@@ -73,7 +71,6 @@ class SessionTest extends AbstractHibernateTest {
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-              defaultTags()
             }
           }
           span(3) {
@@ -89,7 +86,6 @@ class SessionTest extends AbstractHibernateTest {
               "$Tags.DB_USER" "sa"
               "$Tags.DB_STATEMENT" String
               "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-              defaultTags()
             }
           }
         }
@@ -150,7 +146,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -161,7 +156,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -177,7 +171,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
         span(3) {
@@ -189,7 +182,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(4) {
@@ -205,7 +197,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -253,7 +244,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -264,7 +254,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -277,7 +266,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(MappingException, "Unknown entity: java.lang.Long")
-            defaultTags()
           }
         }
       }
@@ -312,7 +300,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -323,7 +310,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -339,7 +325,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
         span(3) {
@@ -351,7 +336,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
 
@@ -410,7 +394,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -421,7 +404,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -434,7 +416,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_STATEMENT" String
-            defaultTags()
           }
         }
         span(3) {
@@ -450,7 +431,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -494,7 +474,6 @@ class SessionTest extends AbstractHibernateTest {
         span(0) {
           operationName "overlapping Sessions"
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -505,7 +484,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -516,7 +494,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(3) {
@@ -527,7 +504,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(4) {
@@ -543,7 +519,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^delete /
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
         span(5) {
@@ -559,7 +534,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
         span(6) {
@@ -570,7 +544,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(7) {
@@ -582,7 +555,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(8) {
@@ -594,7 +566,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(9) {
@@ -606,7 +577,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(10) {
@@ -622,7 +592,6 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
         span(11) {
@@ -634,7 +603,6 @@ class SessionTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
       }

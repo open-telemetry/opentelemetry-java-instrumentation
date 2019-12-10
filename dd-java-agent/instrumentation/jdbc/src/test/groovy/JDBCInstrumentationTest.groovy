@@ -186,7 +186,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -247,7 +246,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -300,7 +298,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -353,7 +350,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -406,7 +402,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -462,7 +457,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -535,7 +529,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -605,7 +598,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$Tags.DB_USER" "SA"
             "$Tags.DB_STATEMENT" query
             "span.origin.type" String
-            defaultTags()
           }
         }
       }
@@ -625,7 +617,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "$Tags.DB_USER" "SA"
               "$Tags.DB_STATEMENT" query
               "span.origin.type" String
-              defaultTags()
             }
           }
         }

@@ -27,17 +27,6 @@ class TagsAssert {
     asserter.assertTagsAllVerified()
   }
 
-  /**
-   * @param distributedRootSpan set to true if current span has a parent span but still considered 'root' for current service
-   */
-  def defaultTags(boolean distributedRootSpan = false) {
-    assertedTags.add("thread.name")
-    assertedTags.add("thread.id")
-
-    assert tags["thread.name"] != null
-    assert tags["thread.id"] != null
-  }
-
   def errorTags(Class<Throwable> errorType) {
     errorTags(errorType, null)
   }
@@ -84,6 +73,6 @@ class TagsAssert {
     // The primary goal is to ensure the set is empty.
     // tags and assertedTags are included via an "always true" comparison
     // so they provide better context in the error message.
-    assert tags.entrySet() != assertedTags && set.isEmpty()
+    assert (tags.entrySet() != assertedTags || assertedTags.isEmpty()) && set.isEmpty()
   }
 }

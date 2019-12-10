@@ -410,7 +410,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         if (errorMessage) {
           errorTags(Exception, errorMessage)
         }
-        defaultTags()
       }
     }
   }
@@ -444,7 +443,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 //          "$DDTags.HTTP_QUERY" uri.query
 //          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
 //        }
-        defaultTags(true)
       }
     }
   }

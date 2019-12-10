@@ -30,7 +30,6 @@ class CriteriaTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -41,7 +40,6 @@ class CriteriaTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -52,7 +50,6 @@ class CriteriaTest extends AbstractHibernateTest {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(3) {
@@ -68,7 +65,6 @@ class CriteriaTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
       }

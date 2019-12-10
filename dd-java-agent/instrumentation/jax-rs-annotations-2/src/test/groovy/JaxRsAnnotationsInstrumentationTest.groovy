@@ -35,7 +35,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "POST /a"
             "$DDTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
-            defaultTags()
           }
         }
       }
@@ -58,7 +57,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" name
             "$Tags.COMPONENT" "jax-rs"
-            defaultTags()
           }
         }
         span(1) {
@@ -68,7 +66,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "${className}.call"
             "$DDTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
-            defaultTags()
           }
         }
       }
@@ -156,7 +153,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         span(0) {
           operationName "test"
           tags {
-            defaultTags()
           }
         }
       }

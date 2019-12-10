@@ -39,7 +39,6 @@ class ReactorCoreTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         for (int i = 0; i < workSpans; i++) {
@@ -49,7 +48,6 @@ class ReactorCoreTest extends AgentTestRunner {
             tags {
               "$DDTags.RESOURCE_NAME" "addOne"
               "$Tags.COMPONENT" "trace"
-              defaultTags()
             }
           }
         }
@@ -57,7 +55,6 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "publisher-parent"
           childOf(span(0))
           tags {
-            defaultTags()
           }
         }
       }
@@ -95,7 +92,6 @@ class ReactorCoreTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
-            defaultTags()
           }
         }
         span(1) {
@@ -104,7 +100,6 @@ class ReactorCoreTest extends AgentTestRunner {
           errored true
           tags {
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
-            defaultTags()
           }
         }
       }
@@ -135,7 +130,6 @@ class ReactorCoreTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
-            defaultTags()
           }
         }
         for (int i = 0; i < workSpans; i++) {
@@ -145,7 +139,6 @@ class ReactorCoreTest extends AgentTestRunner {
             tags {
               "$DDTags.RESOURCE_NAME" "addOne"
               "$Tags.COMPONENT" "trace"
-              defaultTags()
             }
           }
         }
@@ -155,7 +148,6 @@ class ReactorCoreTest extends AgentTestRunner {
           errored true
           tags {
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
-            defaultTags()
           }
         }
       }
@@ -180,14 +172,12 @@ class ReactorCoreTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(1) {
           operationName "publisher-parent"
           childOf(span(0))
           tags {
-            defaultTags()
           }
         }
       }

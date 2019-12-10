@@ -31,7 +31,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -55,7 +54,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
             "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -78,7 +76,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "WORLD"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -102,7 +99,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "EARTH"
             "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -125,7 +121,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test2"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHELLOsayHA"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(1) {
@@ -137,7 +132,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
             "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(2) {
@@ -148,7 +142,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -171,7 +164,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test2"
             "$DDTags.RESOURCE_NAME" "WORLD"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(1) {
@@ -183,7 +175,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
             "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(2) {
@@ -194,7 +185,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -217,7 +207,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test2"
             "$DDTags.RESOURCE_NAME" "WORLD"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(1) {
@@ -229,7 +218,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "EARTH"
             "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(2) {
@@ -240,7 +228,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -267,7 +254,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayERROR"
             "$Tags.COMPONENT" "trace"
             errorTags(error.class)
-            defaultTags()
           }
         }
       }
@@ -294,7 +280,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "WORLD"
             "$Tags.COMPONENT" "trace"
             errorTags(error.class)
-            defaultTags()
           }
         }
       }
@@ -314,7 +299,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "SayTracedHello\$1.call"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -339,7 +323,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "SayTracedHello\$1.call"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         trace(1, 1) {
@@ -348,7 +331,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             tags {
               "$DDTags.RESOURCE_NAME" "TraceAnnotationsTest\$1.call"
               "$Tags.COMPONENT" "trace"
-              defaultTags()
             }
           }
         }

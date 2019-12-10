@@ -129,7 +129,6 @@ class CassandraClientTest extends AgentTestRunner {
         "$Tags.DB_TYPE" "cassandra"
         "$Tags.DB_INSTANCE" keyspace
         "$Tags.DB_STATEMENT" statement
-        defaultTags()
       }
     }
   }

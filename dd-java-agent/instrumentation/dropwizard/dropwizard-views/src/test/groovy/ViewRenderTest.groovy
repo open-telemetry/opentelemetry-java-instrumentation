@@ -34,7 +34,6 @@ class ViewRenderTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "View $template"
             "$Tags.COMPONENT" "dropwizard-view"
             "span.origin.type" renderer.class.simpleName
-            defaultTags()
           }
         }
       }

@@ -50,7 +50,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
-            defaultTags(true)
           }
         }
         span(1) {
@@ -62,7 +61,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
-            defaultTags()
           }
         }
       }
@@ -77,7 +75,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
-            defaultTags()
           }
         }
         span(1) {
@@ -89,7 +86,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "message.type" "example.Helloworld\$Response"
-            defaultTags()
           }
         }
       }
@@ -140,7 +136,6 @@ class GrpcTest extends AgentTestRunner {
             if (status.cause != null) {
               errorTags status.cause.class, status.cause.message
             }
-            defaultTags(true)
           }
         }
         span(1) {
@@ -152,7 +147,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
-            defaultTags()
           }
         }
       }
@@ -168,7 +162,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "${status.code.name()}"
             "status.description" description
-            defaultTags()
           }
         }
       }
@@ -221,7 +214,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             errorTags error.class, error.message
-            defaultTags(true)
           }
         }
         span(1) {
@@ -233,7 +225,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
-            defaultTags()
           }
         }
       }
@@ -248,7 +239,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "UNKNOWN"
-            defaultTags()
           }
         }
       }

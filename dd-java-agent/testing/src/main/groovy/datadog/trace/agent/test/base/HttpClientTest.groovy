@@ -340,7 +340,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
         if (exception) {
           errorTags(exception.class, exception.message)
         }
-        defaultTags()
       }
     }
   }

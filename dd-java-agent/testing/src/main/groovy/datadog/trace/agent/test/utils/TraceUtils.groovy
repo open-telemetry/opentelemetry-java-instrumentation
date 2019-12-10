@@ -62,7 +62,6 @@ class TraceUtils {
         if (exception) {
           errorTags(exception.class, exception.message)
         }
-        defaultTags()
       }
     }
   }

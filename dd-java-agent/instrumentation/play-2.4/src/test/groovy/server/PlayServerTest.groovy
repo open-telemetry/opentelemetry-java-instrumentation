@@ -96,7 +96,6 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
-        defaultTags()
       }
     }
   }

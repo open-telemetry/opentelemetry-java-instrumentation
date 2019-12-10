@@ -74,7 +74,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
 
@@ -94,7 +93,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.search.types" "doc"
-            defaultTags()
           }
         }
       }
@@ -132,7 +130,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
-            defaultTags()
           }
         }
       }
@@ -143,7 +140,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
 
@@ -163,7 +159,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
           }
         }
 
@@ -186,7 +181,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.replication.failed" 0
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.total" 2
-            defaultTags()
           }
         }
       }
@@ -206,7 +200,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
 
@@ -226,7 +219,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
             "elasticsearch.version" Number
-            defaultTags()
           }
         }
       }
@@ -250,7 +242,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -269,7 +260,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
           }
         }
         span(2) {
@@ -291,7 +281,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.replication.failed" 0
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.total" 2
-            defaultTags()
           }
         }
       }
@@ -302,7 +291,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
 
@@ -322,7 +310,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
             "elasticsearch.version" Number
-            defaultTags()
           }
         }
       }
@@ -345,7 +332,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.deleteById"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
 
@@ -365,7 +351,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
           }
         }
         span(2) {
@@ -386,7 +371,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.replication.failed" 0
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.total" 2
-            defaultTags()
           }
         }
       }
@@ -398,7 +382,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
 
@@ -416,7 +399,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.search.types" "doc"
-            defaultTags()
           }
         }
       }

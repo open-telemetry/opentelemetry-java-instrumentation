@@ -78,7 +78,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.SPAN_TYPE" null
-            defaultTags()
           }
         }
         span(1) {
@@ -92,7 +91,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
             "hystrix.circuit-open" false
-            defaultTags()
           }
         }
         span(2) {
@@ -103,7 +101,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
             "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(3) {
@@ -117,7 +114,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            defaultTags()
           }
         }
         span(4) {
@@ -128,7 +124,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
             "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }

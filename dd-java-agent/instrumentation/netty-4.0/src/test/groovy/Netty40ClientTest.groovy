@@ -91,7 +91,6 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
               // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
             }
             errorTags errorClass, "Connection refused: localhost/127.0.0.1:$UNUSABLE_PORT"
-            defaultTags()
           }
         }
       }

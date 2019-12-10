@@ -92,7 +92,6 @@ class KafkaClientTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
-            defaultTags()
           }
         }
       }
@@ -110,7 +109,6 @@ class KafkaClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
-            defaultTags(true)
           }
         }
       }
@@ -175,7 +173,6 @@ class KafkaClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "kafka.partition" { it >= 0 }
-            defaultTags(true)
           }
         }
       }
@@ -193,7 +190,6 @@ class KafkaClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
-            defaultTags(true)
           }
         }
       }

@@ -104,7 +104,6 @@ class AwsClientTest extends AgentTestRunner {
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
-            defaultTags()
           }
         }
         span(1) {
@@ -120,7 +119,6 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "${server.address}${path}"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
       }
@@ -220,7 +218,6 @@ class AwsClientTest extends AgentTestRunner {
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
-            defaultTags()
           }
         }
       }
@@ -240,7 +237,6 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "${server.address}${path}"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
       }
@@ -329,7 +325,6 @@ class AwsClientTest extends AgentTestRunner {
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
             errorTags SdkClientException, "Unable to execute HTTP request: Read timed out"
-            defaultTags()
           }
         }
         (1..4).each {
@@ -346,7 +341,6 @@ class AwsClientTest extends AgentTestRunner {
               "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
               "$Tags.HTTP_METHOD" "GET"
               errorTags SocketTimeoutException, "Read timed out"
-              defaultTags()
             }
           }
         }
