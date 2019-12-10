@@ -1,1 +1,23 @@
 apply from: "${rootDir}/gradle/java.gradle"
+
+//apply plugin: 'org.unbroken-dome.test-sets'
+//
+//testSets {
+//  latestDepTest {
+//    dirName = 'test'
+//  }
+//}
+
+dependencies {
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:jax-rs-annotations-2')
+  testCompile project(':dd-java-agent:instrumentation:servlet:request-3')
+
+  // First version with DropwizardTestSupport:
+  testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
+  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+  testCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
+
+  // Anything 1.0+ fails with a java.lang.NoClassDefFoundError: org/eclipse/jetty/server/RequestLog
+//  latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
+}
