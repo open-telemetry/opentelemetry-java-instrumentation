@@ -23,8 +23,8 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public abstract class AbstractRequestFilterInstrumentation extends Instrumenter.Default {
-  public AbstractRequestFilterInstrumentation() {
+public abstract class AbstractRequestContextInstrumentation extends Instrumenter.Default {
+  public AbstractRequestContextInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-filter");
   }
 
@@ -41,7 +41,7 @@ public abstract class AbstractRequestFilterInstrumentation extends Instrumenter.
       "datadog.trace.agent.tooling.ClassHierarchyIterable",
       "datadog.trace.agent.tooling.ClassHierarchyIterable$ClassIterator",
       packageName + ".JaxRsAnnotationsDecorator",
-      AbstractRequestFilterInstrumentation.class.getName() + "$RequestFilterHelper",
+      AbstractRequestContextInstrumentation.class.getName() + "$RequestFilterHelper",
     };
   }
 

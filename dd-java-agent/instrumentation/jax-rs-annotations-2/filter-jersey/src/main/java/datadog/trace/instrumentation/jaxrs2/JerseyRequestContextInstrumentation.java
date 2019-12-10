@@ -11,7 +11,7 @@ import net.bytebuddy.asm.Advice;
 
 /** Jersey specific filter instrumentation. */
 @AutoService(Instrumenter.class)
-public class JerseyRequestFilterInstrumentation extends AbstractRequestFilterInstrumentation {
+public class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope decorateAbortSpan(@Advice.This final ContainerRequestContext context) {

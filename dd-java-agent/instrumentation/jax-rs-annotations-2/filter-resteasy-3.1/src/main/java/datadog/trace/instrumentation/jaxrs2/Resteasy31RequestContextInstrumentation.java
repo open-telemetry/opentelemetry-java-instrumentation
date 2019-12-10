@@ -10,7 +10,7 @@ import org.jboss.resteasy.core.ResourceMethodInvoker;
 import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestContext;
 
 @AutoService(Instrumenter.class)
-public class Resteasy31RequestFilterInstrumentation extends AbstractRequestFilterInstrumentation {
+public class Resteasy31RequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope decorateAbortSpan(@Advice.This final ContainerRequestContext context) {
