@@ -445,6 +445,18 @@ class DDAgentWriterTest extends DDSpecification {
     numPublished.get() + numFailedPublish.get() == numWritten
 
     when:
+    // As best as possible, make sure a slot hasn't just freed up in the sender queue
+    // DQH - TODO: Add a flush to sender queue but don't wait for send to make the
+    // test reliable
+    while (numFlushes.get() - (numRequests.get() + numFailedRequests.get()) < senderQueueSize) {
+      // chunk the loop & wait to allow for flushing to send queue
+      (1..1_000).forEach {
+        writer.write(minimalTrace)
+        numWritten += 1
+      }
+      Thread.sleep(100)
+    }
+
     def priorNumFailed = numFailedPublish.get()
 
     // with both disruptor & queue full, should reject everything
@@ -455,8 +467,8 @@ class DDAgentWriterTest extends DDSpecification {
     }
 
     then:
-    // timing means that not 100% will be rejected, but the vast majority should be rejected
-    numFailedPublish.get() - priorNumFailed > expectedRejects * 0.8
+    // if a slot frees up in the sending queue
+    numFailedPublish.get() - priorNumFailed > expectedRejects * 0.60
     numPublished.get() + numFailedPublish.get() == numWritten
 
     cleanup:
