@@ -23,16 +23,16 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope createGenericSpan(@Advice.This final ContainerRequestContext context) {
 
-      if (context.getProperty(ContainerRequestFilterInstrumentation.ABORT_HANDLED) == null) {
+      if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null) {
         final AgentSpan parent = activeSpan();
         final AgentSpan span = startSpan("jax-rs.request.abort");
 
         // Save spans so a more specific instrumentation can run later
-        context.setProperty(ContainerRequestFilterInstrumentation.ABORT_PARENT, parent);
-        context.setProperty(ContainerRequestFilterInstrumentation.ABORT_SPAN, span);
+        context.setProperty(JaxRsAnnotationsDecorator.ABORT_PARENT, parent);
+        context.setProperty(JaxRsAnnotationsDecorator.ABORT_SPAN, span);
 
         final Class filterClass =
-            (Class) context.getProperty(ContainerRequestFilterInstrumentation.ABORT_FILTER_CLASS);
+            (Class) context.getProperty(JaxRsAnnotationsDecorator.ABORT_FILTER_CLASS);
         Method method = null;
         try {
           method = filterClass.getMethod("filter", ContainerRequestContext.class);

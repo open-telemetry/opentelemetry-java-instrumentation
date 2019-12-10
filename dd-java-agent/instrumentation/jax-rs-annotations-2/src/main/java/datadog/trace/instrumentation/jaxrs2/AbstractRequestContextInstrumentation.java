@@ -60,14 +60,12 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
         final ContainerRequestContext context, final Class resourceClass, final Method method) {
 
       if (method != null && resourceClass != null) {
-        context.setProperty(ContainerRequestFilterInstrumentation.ABORT_HANDLED, true);
+        context.setProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED, true);
         // The ordering of the specific and general abort instrumentation is unspecified
         // The general instrumentation (ContainerRequestFilterInstrumentation) saves spans
         // properties if it ran first
-        AgentSpan parent =
-            (AgentSpan) context.getProperty(ContainerRequestFilterInstrumentation.ABORT_PARENT);
-        AgentSpan span =
-            (AgentSpan) context.getProperty(ContainerRequestFilterInstrumentation.ABORT_SPAN);
+        AgentSpan parent = (AgentSpan) context.getProperty(JaxRsAnnotationsDecorator.ABORT_PARENT);
+        AgentSpan span = (AgentSpan) context.getProperty(JaxRsAnnotationsDecorator.ABORT_SPAN);
 
         if (span == null) {
           parent = activeSpan();

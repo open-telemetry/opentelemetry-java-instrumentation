@@ -17,7 +17,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
     public static AgentScope decorateAbortSpan(@Advice.This final ContainerRequestContext context) {
       final UriInfo uriInfo = context.getUriInfo();
 
-      if (context.getProperty(ContainerRequestFilterInstrumentation.ABORT_HANDLED) == null
+      if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null
           && uriInfo instanceof ResourceInfo) {
 
         final ResourceInfo resourceInfo = (ResourceInfo) uriInfo;

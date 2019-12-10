@@ -22,13 +22,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 /** This adds the filter class name to the request properties */
 @AutoService(Instrumenter.class)
 public class ContainerRequestFilterInstrumentation extends Instrumenter.Default {
-  public static final String ABORT_FILTER_CLASS =
-      "datadog.trace.instrumentation.jaxrs2.filter.abort.class";
-  public static final String ABORT_HANDLED =
-      "datadog.trace.instrumentation.jaxrs2.filter.abort.handled";
-  public static final String ABORT_PARENT =
-      "datadog.trace.instrumentation.jaxrs2.filter.abort.parent";
-  public static final String ABORT_SPAN = "datadog.trace.instrumentation.jaxrs2.filter.abort.span";
 
   public ContainerRequestFilterInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-filter");
@@ -55,7 +48,7 @@ public class ContainerRequestFilterInstrumentation extends Instrumenter.Default 
     public static void setFilterClass(
         @Advice.This final ContainerRequestFilter filter,
         @Advice.Argument(0) final ContainerRequestContext context) {
-      context.setProperty(ABORT_FILTER_CLASS, filter.getClass());
+      context.setProperty(JaxRsAnnotationsDecorator.ABORT_FILTER_CLASS, filter.getClass());
     }
   }
 }
