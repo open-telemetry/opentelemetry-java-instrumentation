@@ -281,6 +281,42 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     endpoint << [SUCCESS, QUERY_PARAM]
   }
 
+  def "test success with multiple header attached parent"() {
+    setup:
+    def traceId = 123G
+    def parentId = 456G
+    def request = request(SUCCESS, method, body)
+      .header("x-datadog-trace-id", traceId.toString() + ", " + traceId.toString())
+      .header("x-datadog-parent-id", parentId.toString() + ", " + parentId.toString())
+      .header("x-datadog-sampling-priority", "1, 1")
+      .build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == SUCCESS.status
+    response.body().string() == SUCCESS.body
+
+    and:
+    cleanAndAssertTraces(1) {
+      if (hasHandlerSpan()) {
+        trace(0, 3) {
+          serverSpan(it, 0, traceId, parentId)
+          handlerSpan(it, 1, span(0))
+          controllerSpan(it, 2, span(1))
+        }
+      } else {
+        trace(0, 2) {
+          serverSpan(it, 0, traceId, parentId)
+          controllerSpan(it, 1, span(0))
+        }
+      }
+    }
+
+    where:
+    method = "GET"
+    body = null
+  }
+
   def "test redirect"() {
     setup:
     def request = request(REDIRECT, method, body).build()
