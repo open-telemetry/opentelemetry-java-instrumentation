@@ -29,8 +29,6 @@ public class HttpServletRequestExtractAdapter
     if (attribute instanceof String) {
       return (String) attribute;
     }
-    String s = carrier.getHeader(key);
-    if (s == null) return null;
-    return s.split(",")[0].trim();
+    return carrier.getHeader(key);
   }
 }
