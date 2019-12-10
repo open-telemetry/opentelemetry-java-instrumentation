@@ -19,7 +19,10 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/** This adds the filter class name to the request properties */
+/**
+ * This adds the filter class name to the request properties. The class name is used by <code>
+ * DefaultRequestContextInstrumentation</code>
+ */
 @AutoService(Instrumenter.class)
 public class ContainerRequestFilterInstrumentation extends Instrumenter.Default {
 

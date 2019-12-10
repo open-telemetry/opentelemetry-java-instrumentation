@@ -14,8 +14,13 @@ import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
 
 /**
- * Create a generic jax-rs.request.abort span based on the class name of the filter Implementation
- * specifc instrumentations can override tag values
+ * Default context instrumentation.
+ *
+ * <p>JAX-RS does not define a way to get the matched resource method from the <code>
+ * ContainerRequestContext</code>
+ *
+ * <p>This default instrumentation uses the class name of the filter to create the span. More
+ * specific instrumentations may override this value.
  */
 @AutoService(Instrumenter.class)
 public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {

@@ -9,6 +9,16 @@ import net.bytebuddy.asm.Advice;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestContext;
 
+/**
+ * RESTEasy specific context instrumentation.
+ *
+ * <p>JAX-RS does not define a way to get the matched resource method from the <code>
+ * ContainerRequestContext</code>
+ *
+ * <p>In the RESTEasy implementation, <code>ContainerRequestContext</code> is implemented by <code>
+ * PostMatchContainerRequestContext</code>. This class provides a way to get the matched resource
+ * method through <code>getResourceMethod()</code>.
+ */
 @AutoService(Instrumenter.class)
 public class Resteasy31RequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {

@@ -9,7 +9,15 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.UriInfo;
 import net.bytebuddy.asm.Advice;
 
-/** Jersey specific filter instrumentation. */
+/**
+ * Jersey specific context instrumentation.
+ *
+ * <p>JAX-RS does not define a way to get the matched resource method from the <code>
+ * ContainerRequestContext</code>
+ *
+ * <p>In the Jersey implementation, <code>UriInfo</code> implements <code>ResourceInfo</code>. The
+ * matched resource method can be retrieved from that object
+ */
 @AutoService(Instrumenter.class)
 public class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
