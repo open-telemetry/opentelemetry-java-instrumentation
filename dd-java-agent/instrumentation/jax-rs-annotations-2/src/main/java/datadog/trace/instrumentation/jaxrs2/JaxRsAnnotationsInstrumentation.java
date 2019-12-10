@@ -82,7 +82,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       final AgentSpan parent = activeSpan();
 
       final AgentSpan span = startSpan(JAX_ENDPOINT_OPERATION_NAME);
-      DECORATE.onControllerStart(span, parent, target.getClass(), method);
+      DECORATE.onJaxRsSpan(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
       final AgentScope scope = activateSpan(span, false);

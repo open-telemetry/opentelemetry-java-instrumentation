@@ -75,11 +75,11 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
           scope.setAsyncPropagation(true);
 
           DECORATE.afterStart(span);
-          DECORATE.onAbort(span, parent, resourceClass, method);
+          DECORATE.onJaxRsSpan(span, parent, resourceClass, method);
 
           return scope;
         } else {
-          DECORATE.onAbort(span, parent, resourceClass, method);
+          DECORATE.onJaxRsSpan(span, parent, resourceClass, method);
           return null;
         }
       } else {

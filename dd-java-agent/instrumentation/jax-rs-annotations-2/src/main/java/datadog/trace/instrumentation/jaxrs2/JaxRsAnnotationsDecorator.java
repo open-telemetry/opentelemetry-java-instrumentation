@@ -44,36 +44,10 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return "jax-rs-controller";
   }
 
-  public void onControllerStart(
+  public void onJaxRsSpan(
       final AgentSpan span, final AgentSpan parent, final Class target, final Method method) {
+
     final String resourceName = getPathResourceName(target, method);
-
-    decorateJaxRsSpan(span, parent, target, method, resourceName);
-  }
-
-  public void onAbort(
-      final AgentSpan span, final AgentSpan parent, final Class target, final Method method) {
-    final String resourceName = getPathResourceName(target, method);
-
-    decorateJaxRsSpan(span, parent, target, method, resourceName);
-  }
-
-  public void onAbort(
-      final AgentSpan span,
-      final AgentSpan parent,
-      final Class target,
-      final Method method,
-      final String resourceName) {
-
-    decorateJaxRsSpan(span, parent, target, method, resourceName);
-  }
-
-  private void decorateJaxRsSpan(
-      final AgentSpan span,
-      final AgentSpan parent,
-      final Class target,
-      final Method method,
-      final String resourceName) {
     updateParent(parent, resourceName);
 
     span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
