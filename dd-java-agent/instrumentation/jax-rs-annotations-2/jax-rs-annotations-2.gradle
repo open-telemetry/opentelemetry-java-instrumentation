@@ -13,13 +13,13 @@ muzzle {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-//apply plugin: 'org.unbroken-dome.test-sets'
-//
-//testSets {
-//  latestDepTest {
-//    dirName = 'test'
-//  }
-//}
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
 
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
@@ -32,6 +32,5 @@ dependencies {
   testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
 
-  // Anything 1.0+ fails with a java.lang.NoClassDefFoundError: org/eclipse/jetty/server/RequestLog
-//  latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
+  latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
 }
