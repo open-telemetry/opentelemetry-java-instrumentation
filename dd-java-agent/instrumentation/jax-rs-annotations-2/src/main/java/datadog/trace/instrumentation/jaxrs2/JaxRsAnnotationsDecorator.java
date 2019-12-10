@@ -39,6 +39,33 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   public void onControllerStart(
       final AgentSpan span, final AgentSpan parent, final Class target, final Method method) {
     final String resourceName = getPathResourceName(target, method);
+
+    decorateJaxRsSpan(span, parent, target, method, resourceName);
+  }
+
+  public void onAbort(
+      final AgentSpan span, final AgentSpan parent, final Class target, final Method method) {
+    final String resourceName = getPathResourceName(target, method);
+
+    decorateJaxRsSpan(span, parent, target, method, resourceName);
+  }
+
+  public void onAbort(
+      final AgentSpan span,
+      final AgentSpan parent,
+      final Class target,
+      final Method method,
+      final String resourceName) {
+
+    decorateJaxRsSpan(span, parent, target, method, resourceName);
+  }
+
+  private void decorateJaxRsSpan(
+      final AgentSpan span,
+      final AgentSpan parent,
+      final Class target,
+      final Method method,
+      final String resourceName) {
     updateParent(parent, resourceName);
 
     span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
@@ -48,7 +75,9 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (isRootScope && !resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
     } else {
-      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForClass(target) + "." + method.getName());
+      span.setTag(
+          DDTags.RESOURCE_NAME,
+          DECORATE.spanNameForClass(target) + (method == null ? "" : "." + method.getName()));
     }
   }
 
