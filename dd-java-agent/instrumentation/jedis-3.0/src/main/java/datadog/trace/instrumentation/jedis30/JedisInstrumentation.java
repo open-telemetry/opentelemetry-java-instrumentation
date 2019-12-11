@@ -1,14 +1,12 @@
-package datadog.trace.instrumentation.jedis;
+package datadog.trace.instrumentation.jedis30;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.jedis.JedisClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.jedis30.JedisClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -20,21 +18,14 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import redis.clients.jedis.Protocol.Command;
+import redis.clients.jedis.Protocol;
+import redis.clients.jedis.commands.ProtocolCommand;
 
 @AutoService(Instrumenter.class)
 public final class JedisInstrumentation extends Instrumenter.Default {
 
-  private static final String SERVICE_NAME = "redis";
-  private static final String COMPONENT_NAME = SERVICE_NAME + "-command";
-
   public JedisInstrumentation() {
     super("jedis", "redis");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(classLoaderHasClasses("redis.clients.jedis.commands.ProtocolCommand"));
   }
 
   @Override
@@ -58,7 +49,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(isPublic())
             .and(named("sendCommand"))
-            .and(takesArgument(1, named("redis.clients.jedis.Protocol$Command"))),
+            .and(takesArgument(1, named("redis.clients.jedis.commands.ProtocolCommand"))),
         JedisInstrumentation.class.getName() + "$JedisAdvice");
     // FIXME: This instrumentation only incorporates sending the command, not processing the result.
   }
@@ -66,10 +57,16 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   public static class JedisAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(@Advice.Argument(1) final Command command) {
+    public static AgentScope onEnter(@Advice.Argument(1) final ProtocolCommand command) {
       final AgentSpan span = startSpan("redis.command");
       DECORATE.afterStart(span);
-      DECORATE.onStatement(span, command.name());
+      if (command instanceof Protocol.Command) {
+        DECORATE.onStatement(span, ((Protocol.Command) command).name());
+      } else {
+        // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
+        // us if that changes
+        DECORATE.onStatement(span, new String(command.getRaw()));
+      }
       return activateSpan(span, true);
     }
 

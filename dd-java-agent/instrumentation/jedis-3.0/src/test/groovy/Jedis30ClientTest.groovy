@@ -7,7 +7,7 @@ import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
-class JedisClientTest extends AgentTestRunner {
+class Jedis30ClientTest extends AgentTestRunner {
 
   @Shared
   int port = PortUtils.randomOpenPort()
@@ -32,7 +32,7 @@ class JedisClientTest extends AgentTestRunner {
 
   def cleanupSpec() {
     redisServer.stop()
-//    jedis.close()  // not available in the early version we're using.
+    jedis.close()
 
     System.clearProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE)
   }
