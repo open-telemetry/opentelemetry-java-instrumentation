@@ -19,6 +19,10 @@ testSets {
   latestDepTest {
     dirName = 'test'
   }
+
+  resteasy31Test {
+    dirName = 'test'
+  }
 }
 
 dependencies {
@@ -26,11 +30,26 @@ dependencies {
 
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:servlet:request-3')
+  testCompile project(':dd-java-agent:instrumentation:jax-rs-annotations-2:filter-jersey')
+  testCompile project(':dd-java-agent:instrumentation:jax-rs-annotations-2:filter-resteasy-3.0')
+  testCompile project(':dd-java-agent:instrumentation:jax-rs-annotations-2:filter-resteasy-3.1')
 
+  // Jersey
   // First version with DropwizardTestSupport:
   testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
   testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
 
   latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
+  
+  // Resteasy
+  testCompile group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
+  
+  resteasy31TestCompile(group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.1.0.Final') {
+    force = true
+  }
+  
+  latestDepTestCompile group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '+'
 }
+
+test.dependsOn resteasy31Test

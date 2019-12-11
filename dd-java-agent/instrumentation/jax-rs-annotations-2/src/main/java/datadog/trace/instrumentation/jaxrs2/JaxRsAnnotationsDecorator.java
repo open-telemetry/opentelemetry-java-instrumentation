@@ -17,7 +17,15 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
 public class JaxRsAnnotationsDecorator extends BaseDecorator {
-  public static JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
+  public static final String ABORT_FILTER_CLASS =
+      "datadog.trace.instrumentation.jaxrs2.filter.abort.class";
+  public static final String ABORT_HANDLED =
+      "datadog.trace.instrumentation.jaxrs2.filter.abort.handled";
+  public static final String ABORT_PARENT =
+      "datadog.trace.instrumentation.jaxrs2.filter.abort.parent";
+  public static final String ABORT_SPAN = "datadog.trace.instrumentation.jaxrs2.filter.abort.span";
+
+  public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
 
@@ -36,8 +44,9 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return "jax-rs-controller";
   }
 
-  public void onControllerStart(
+  public void onJaxRsSpan(
       final AgentSpan span, final AgentSpan parent, final Class target, final Method method) {
+
     final String resourceName = getPathResourceName(target, method);
     updateParent(parent, resourceName);
 
@@ -48,7 +57,9 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (isRootScope && !resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
     } else {
-      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForClass(target) + "." + method.getName());
+      span.setTag(
+          DDTags.RESOURCE_NAME,
+          DECORATE.spanNameForClass(target) + (method == null ? "" : "." + method.getName()));
     }
   }
 
