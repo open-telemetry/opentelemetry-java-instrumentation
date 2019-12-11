@@ -346,6 +346,9 @@ public class DDAgentWriter implements Writer {
         try {
           senderSemaphore.acquire();
         } catch (final InterruptedException e) {
+          monitor.onFailedSend(
+              DDAgentWriter.this, representativeCount, sizeInBytes, DDApi.Response.failed(e));
+
           // Finally, we'll schedule another flush
           // Any threads awaiting the flush will continue to wait
           return;
