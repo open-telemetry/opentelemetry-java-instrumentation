@@ -72,8 +72,8 @@ public class ContainerInfo {
   public static ContainerInfo fromDefaultProcFile() throws IOException, ParseException {
     final String content = new String(Files.readAllBytes(CGROUP_DEFAULT_PROCFILE));
     if (content.isEmpty()) {
-      log.error("proc file is empty");
-      throw new IOException();
+      log.debug("Proc file is empty");
+      return new ContainerInfo();
     }
     return parse(content);
   }
