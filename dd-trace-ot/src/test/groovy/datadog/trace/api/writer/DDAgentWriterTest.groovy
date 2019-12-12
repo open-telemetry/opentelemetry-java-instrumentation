@@ -11,6 +11,7 @@ import datadog.trace.common.writer.DDApi
 import datadog.trace.util.test.DDSpecification
 import spock.lang.Timeout
 
+import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -350,26 +351,31 @@ class DDAgentWriterTest extends DDSpecification {
   }
 
   def "slow response test"() {
-    def numPublished = 0
-    def numFailedPublish = 0
+    def numWritten = 0
+    def numFlushes = new AtomicInteger(0)
+    def numPublished = new AtomicInteger(0)
+    def numFailedPublish = new AtomicInteger(0)
+    def numRequests = new AtomicInteger(0)
+    def numFailedRequests = new AtomicInteger(0)
+
+    def responseSemaphore = new Semaphore(1)
 
     setup:
     def minimalTrace = createMinimalTrace()
 
     // Need to set-up a dummy agent for the final send callback to work
-    def first = true
     def agent = httpServer {
       handlers {
         put("v0.4/traces") {
           // DDApi sniffs for end point existence, so respond quickly the first time
           // then slowly thereafter
 
-          if (!first) {
-            // Long enough to stall the pipeline, but not long enough to fail
-            Thread.sleep(2_500)
+          responseSemaphore.acquire()
+          try {
+            response.status(200).send()
+          } finally {
+            responseSemaphore.release()
           }
-          response.status(200).send()
-          first = false
         }
       }
     }
@@ -378,49 +384,86 @@ class DDAgentWriterTest extends DDSpecification {
     // This test focuses just on failed publish, so not verifying every callback
     def monitor = Stub(DDAgentWriter.Monitor)
     monitor.onPublish(_, _) >> {
-      numPublished += 1
+      numPublished.incrementAndGet()
     }
     monitor.onFailedPublish(_, _) >> {
-      numFailedPublish += 1
+      numFailedPublish.incrementAndGet()
+    }
+    monitor.onFlush(_, _) >> {
+      numFlushes.incrementAndGet()
+    }
+    monitor.onSend(_, _, _, _) >> {
+      numRequests.incrementAndGet()
+    }
+    monitor.onFailedPublish(_, _, _, _) >> {
+      numFailedRequests.incrementAndGet()
     }
 
+    // sender queue is sized in requests -- not traces
     def bufferSize = 32
-    def writer = new DDAgentWriter(api, monitor, bufferSize, DDAgentWriter.FLUSH_PAYLOAD_DELAY)
+    def senderQueueSize = 2
+    def writer = new DDAgentWriter(api, monitor, bufferSize, senderQueueSize, DDAgentWriter.FLUSH_PAYLOAD_DELAY)
     writer.start()
 
+    // gate responses
+    responseSemaphore.acquire()
+
     when:
-    // write & flush a single trace -- the slow agent response will cause
-    // additional writes to back-up the sending queue
+    // write a single trace and flush
+    // with responseSemaphore held, the response is blocked but may still time out
     writer.write(minimalTrace)
+    numWritten += 1
+
+    // sanity check coordination mechanism of test
+    // release to allow response to be generated
+    responseSemaphore.release()
     writer.flush()
 
+    // reacquire semaphore to stall further responses
+    responseSemaphore.acquire()
+
     then:
-    numPublished == 1
-    numFailedPublish == 0
+    numFailedPublish.get() == 0
+    numPublished.get() == numWritten
+    numPublished.get() + numFailedPublish.get() == numWritten
+    numFlushes.get() == 1
 
     when:
-    // send many traces to flood the sender queue...
-    (1..20).each {
-      writer.write(minimalTrace)
+    // send many traces to fill the sender queue...
+    //   loop until outstanding requests > finished requests
+    while (numFlushes.get() - (numRequests.get() + numFailedRequests.get()) < senderQueueSize) {
+      // chunk the loop & wait to allow for flushing to send queue
+      (1..1_000).each {
+        writer.write(minimalTrace)
+        numWritten += 1
+      }
+      Thread.sleep(100)
     }
 
     then:
-    // might spill back into the Disruptor slightly, but sender queue is currently unbounded
-    numPublished == 1 + 20
-    numFailedPublish == 0
+    numFailedPublish.get() > 0
+    numPublished.get() + numFailedPublish.get() == numWritten
 
     when:
-    // now, fill-up the disruptor buffer as well
-    (1..bufferSize * 2).each {
+    def priorNumFailed = numFailedPublish.get()
+
+    // with both disruptor & queue full, should reject everything
+    def expectedRejects = 100_000
+    (1..expectedRejects).each {
       writer.write(minimalTrace)
+      numWritten += 1
     }
 
     then:
-    // Disruptor still doesn't reject because the sender queue is unbounded
-    (numPublished + numFailedPublish) == (1 + 20 + bufferSize * 2)
-    numFailedPublish >= 0
+    // If the in-flight requests timeouts and frees up a slot in the sending queue, then
+    // many of traces will be accepted and batched into a new failing request.
+    // In that case, the reject number will be low.
+    numFailedPublish.get() - priorNumFailed > expectedRejects * 0.40
+    numPublished.get() + numFailedPublish.get() == numWritten
 
     cleanup:
+    responseSemaphore.release()
+
     writer.close()
     agent.close()
   }

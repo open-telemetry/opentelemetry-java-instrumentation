@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,7 +40,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DDAgentWriter implements Writer {
-  private static final int DISRUPTOR_BUFFER_SIZE = 8192;
+  private static final int DISRUPTOR_BUFFER_SIZE = 1024;
+  private static final int SENDER_QUEUE_SIZE = 16;
   private static final int FLUSH_PAYLOAD_BYTES = 5_000_000; // 5 MB
   private static final int FLUSH_PAYLOAD_DELAY = 1; // 1/second
 
@@ -68,6 +70,8 @@ public class DDAgentWriter implements Writer {
   private final DDApi api;
   private final int flushFrequencySeconds;
   private final Disruptor<Event<List<DDSpan>>> disruptor;
+
+  private final Semaphore senderSemaphore;
   private final ScheduledExecutorService scheduledWriterExecutor;
   private final AtomicInteger traceCount = new AtomicInteger(0);
   private final AtomicReference<ScheduledFuture<?>> flushSchedule = new AtomicReference<>();
@@ -83,7 +87,7 @@ public class DDAgentWriter implements Writer {
   }
 
   public DDAgentWriter(final DDApi api, final Monitor monitor) {
-    this(api, monitor, DISRUPTOR_BUFFER_SIZE, FLUSH_PAYLOAD_DELAY);
+    this(api, monitor, DISRUPTOR_BUFFER_SIZE, SENDER_QUEUE_SIZE, FLUSH_PAYLOAD_DELAY);
   }
 
   /** Old signature (pre-Monitor) used in tests */
@@ -98,14 +102,33 @@ public class DDAgentWriter implements Writer {
    * @param disruptorSize Rounded up to next power of 2
    * @param flushFrequencySeconds value < 1 disables scheduled flushes
    */
+  private DDAgentWriter(
+      final DDApi api,
+      final int disruptorSize,
+      final int senderQueueSize,
+      final int flushFrequencySeconds) {
+    this(api, new NoopMonitor(), disruptorSize, senderQueueSize, flushFrequencySeconds);
+  }
+
+  // DQH - TODO - Update the tests & remove this
+  private DDAgentWriter(
+      final DDApi api,
+      final Monitor monitor,
+      final int disruptorSize,
+      final int flushFrequencySeconds) {
+    this(api, monitor, disruptorSize, SENDER_QUEUE_SIZE, flushFrequencySeconds);
+  }
+
+  // DQH - TODO - Update the tests & remove this
   private DDAgentWriter(final DDApi api, final int disruptorSize, final int flushFrequencySeconds) {
-    this(api, new NoopMonitor(), disruptorSize, flushFrequencySeconds);
+    this(api, new NoopMonitor(), disruptorSize, SENDER_QUEUE_SIZE, flushFrequencySeconds);
   }
 
   private DDAgentWriter(
       final DDApi api,
       final Monitor monitor,
       final int disruptorSize,
+      final int senderQueueSize,
       final int flushFrequencySeconds) {
     this.api = api;
     this.monitor = monitor;
@@ -120,6 +143,7 @@ public class DDAgentWriter implements Writer {
     disruptor.handleEventsWith(new TraceConsumer());
 
     this.flushFrequencySeconds = flushFrequencySeconds;
+    senderSemaphore = new Semaphore(senderQueueSize);
     scheduledWriterExecutor = Executors.newScheduledThreadPool(1, SCHEDULED_FLUSH_THREAD_FACTORY);
 
     apiPhaser = new Phaser(); // Ensure API calls are completed when flushing
@@ -291,15 +315,20 @@ public class DDAgentWriter implements Writer {
           monitor.onFailedSerialize(DDAgentWriter.this, trace, e);
         }
       }
+
       if (event.shouldFlush || payloadSize >= FLUSH_PAYLOAD_BYTES) {
-        reportTraces();
+        boolean early = (payloadSize >= FLUSH_PAYLOAD_BYTES);
+
+        reportTraces(early);
         event.shouldFlush = false;
       }
     }
 
-    private void reportTraces() {
+    private void reportTraces(final boolean early) {
       try {
         if (serializedTraces.isEmpty()) {
+          monitor.onFlush(DDAgentWriter.this, early);
+
           apiPhaser.arrive(); // Allow flush to return
           return;
           // scheduleFlush called in finally block.
@@ -311,11 +340,25 @@ public class DDAgentWriter implements Writer {
         final int representativeCount = traceCount.getAndSet(0);
         final int sizeInBytes = payloadSize;
 
+        monitor.onFlush(DDAgentWriter.this, early);
+
         // Run the actual IO task on a different thread to avoid blocking the consumer.
+        try {
+          senderSemaphore.acquire();
+        } catch (final InterruptedException e) {
+          monitor.onFailedSend(
+              DDAgentWriter.this, representativeCount, sizeInBytes, DDApi.Response.failed(e));
+
+          // Finally, we'll schedule another flush
+          // Any threads awaiting the flush will continue to wait
+          return;
+        }
         scheduledWriterExecutor.execute(
             new Runnable() {
               @Override
               public void run() {
+                senderSemaphore.release();
+
                 try {
                   final DDApi.Response response =
                       api.sendSerializedTraces(representativeCount, sizeInBytes, toSend);
@@ -391,6 +434,8 @@ public class DDAgentWriter implements Writer {
 
     void onFailedPublish(final DDAgentWriter agentWriter, final List<DDSpan> trace);
 
+    void onFlush(final DDAgentWriter agentWriter, final boolean early);
+
     void onScheduleFlush(final DDAgentWriter agentWriter, final boolean previousIncomplete);
 
     void onSerialize(
@@ -424,6 +469,9 @@ public class DDAgentWriter implements Writer {
 
     @Override
     public void onFailedPublish(final DDAgentWriter agentWriter, final List<DDSpan> trace) {}
+
+    @Override
+    public void onFlush(final DDAgentWriter agentWriter, final boolean early) {}
 
     @Override
     public void onScheduleFlush(
@@ -520,6 +568,9 @@ public class DDAgentWriter implements Writer {
     public void onScheduleFlush(final DDAgentWriter agentWriter, final boolean previousIncomplete) {
       // not recorded
     }
+
+    @Override
+    public void onFlush(final DDAgentWriter agentWriter, final boolean early) {}
 
     @Override
     public void onSerialize(
