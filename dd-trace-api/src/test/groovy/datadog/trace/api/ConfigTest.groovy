@@ -35,7 +35,7 @@ class ConfigTest extends DDSpecification {
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == true
     config.httpServerErrorStatuses == (500..599).toSet()
-    config.httpClientErrorStatuses == (400..499).toSet()
+    config.httpClientErrorStatuses == (400..599).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
     config.partialFlushMinSpans == 1000
@@ -149,7 +149,7 @@ class ConfigTest extends DDSpecification {
     config.writerType == " "
     config.traceResolverEnabled == true
     config.httpServerErrorStatuses == (500..599).toSet()
-    config.httpClientErrorStatuses == (400..499).toSet()
+    config.httpClientErrorStatuses == (400..599).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
   }

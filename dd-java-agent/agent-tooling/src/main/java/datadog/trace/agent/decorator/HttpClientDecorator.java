@@ -92,8 +92,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       if (status != null) {
         span.setTag(Tags.HTTP_STATUS.getKey(), status);
 
-        if (Config.get().getHttpClientErrorStatuses().contains(status)
-            || Config.get().getHttpServerErrorStatuses().contains(status)) {
+        if (Config.get().getHttpClientErrorStatuses().contains(status)) {
           span.setError(true);
         }
       }

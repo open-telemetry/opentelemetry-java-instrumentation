@@ -108,7 +108,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     400    | true  | null       | [status: 400]
     499    | true  | null       | [status: 499]
     500    | true  | null       | [status: 500]
-    500    | true  | "400-499"  | [status: 500]
+    500    | false | "400-499"  | [status: 500]
     500    | true  | "400-500"  | [status: 500]
     600    | false | null       | [status: 600]
     null   | false | null       | [status: null]
