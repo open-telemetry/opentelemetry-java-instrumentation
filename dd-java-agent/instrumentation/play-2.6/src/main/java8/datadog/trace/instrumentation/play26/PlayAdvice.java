@@ -56,6 +56,7 @@ public class PlayAdvice {
     } else {
       DECORATE.onError(playControllerSpan, throwable);
       playControllerSpan.setTag(Tags.HTTP_STATUS, 500);
+      playControllerSpan.setError(true);
       DECORATE.beforeFinish(playControllerSpan);
       playControllerSpan.finish();
     }

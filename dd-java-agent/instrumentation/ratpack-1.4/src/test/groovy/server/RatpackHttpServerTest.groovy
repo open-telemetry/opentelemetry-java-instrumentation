@@ -115,9 +115,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Integer
-        if (endpoint == ERROR) {
-          "$Tags.ERROR" true
-        } else if (endpoint == EXCEPTION) {
+        if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
         defaultTags()
@@ -146,9 +144,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
-        if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
-        }
         defaultTags(true)
       }
     }

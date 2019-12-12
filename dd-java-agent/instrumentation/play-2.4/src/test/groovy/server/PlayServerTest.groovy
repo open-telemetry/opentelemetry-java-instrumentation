@@ -92,9 +92,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Integer
-        if (endpoint == ERROR) {
-          "$Tags.ERROR" true
-        } else if (endpoint == EXCEPTION) {
+        if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
         defaultTags()

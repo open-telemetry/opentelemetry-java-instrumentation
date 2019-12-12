@@ -85,6 +85,7 @@ public class Servlet2Advice {
               == HttpServletResponse.SC_OK) {
         // exception was thrown but status code wasn't set
         span.setTag(Tags.HTTP_STATUS, 500);
+        span.setError(true);
       }
       DECORATE.onError(span, throwable);
     }

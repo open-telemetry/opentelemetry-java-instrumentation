@@ -134,7 +134,6 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
         "$Tags.HTTP_STATUS" endpoint.status
         "span.origin.type" handlerName
         if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }

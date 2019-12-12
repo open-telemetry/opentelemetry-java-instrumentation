@@ -165,7 +165,11 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public AgentSpan setError(final boolean error) {
-      Tags.ERROR.set(span, error);
+      if (span instanceof DDSpan) {
+        ((DDSpan) span).setError(error);
+      } else {
+        Tags.ERROR.set(span, error);
+      }
       return this;
     }
 
