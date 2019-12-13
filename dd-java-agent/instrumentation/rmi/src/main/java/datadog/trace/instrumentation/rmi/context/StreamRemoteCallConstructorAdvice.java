@@ -4,11 +4,14 @@ import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.rmi.context.ContextPayload.SETTER;
 
+import datadog.trace.bootstrap.ContextStore;
+import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
 import java.rmi.server.ObjID;
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import sun.rmi.transport.Connection;
 import sun.rmi.transport.StreamRemoteCall;
@@ -35,18 +38,14 @@ import sun.rmi.transport.TransportConstants;
  * that instruction will essentially be garbage data and will cause the parsing loop to throw
  * exception and shutdown the connection which we do not want
  */
+@Slf4j
 public class StreamRemoteCallConstructorAdvice {
   public static final ObjID ACTIVATOR_ID = new ObjID(ObjID.ACTIVATOR_ID);
   public static final ObjID DGC_ID = new ObjID(ObjID.DGC_ID);
   public static final ObjID REGISTRY_ID = new ObjID(ObjID.REGISTRY_ID);
-  public static final ObjID DD_CONTEXT_CALL_ID = new ObjID("Datadog.context_call".hashCode());
+  public static final ObjID DD_CONTEXT_CALL_ID = new ObjID("Datadog.context_call.v2".hashCode());
   public static final int CONTEXT_CHECK_CALL_OP_ID = -1;
   public static final int CONTEXT_PASS_OPERATION_ID = -2;
-  public static ThreadLocal<Boolean> internalCall = new ThreadLocal<>();
-
-  static {
-    internalCall.set(false);
-  }
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
@@ -58,33 +57,45 @@ public class StreamRemoteCallConstructorAdvice {
       return;
     }
 
-    attemptToPropagateContext(c);
+    final ContextStore<Connection, Boolean> contextStore =
+        InstrumentationContext.get(Connection.class, Boolean.class);
+    attemptToPropagateContext(contextStore, c);
   }
 
   public static boolean isRMIInternalObject(final ObjID id) {
     return ACTIVATOR_ID.equals(id) || DGC_ID.equals(id) || REGISTRY_ID.equals(id);
   }
 
-  public static void attemptToPropagateContext(final Connection c) {
+  public static void attemptToPropagateContext(
+      final ContextStore<Connection, Boolean> contextStore, final Connection c) {
     final AgentSpan span = activeSpan();
     if (span == null) {
       return;
     }
 
-    if (checkIfContextCanBePassed(c)) {
+    if (checkIfContextCanBePassed(contextStore, c)) {
       final ContextPayload payload = new ContextPayload();
       propagate().inject(span, payload, SETTER);
-      syntheticCall(c, payload, CONTEXT_PASS_OPERATION_ID);
+      if (!syntheticCall(c, payload, CONTEXT_PASS_OPERATION_ID)) {
+        log.debug("Couldn't propagate context");
+      }
     }
   }
 
-  private static boolean checkIfContextCanBePassed(final Connection c) {
-    // TODO memorize this per connection to avoid unnecessary overhead
-    return syntheticCall(c, null, CONTEXT_CHECK_CALL_OP_ID);
+  private static boolean checkIfContextCanBePassed(
+      final ContextStore<Connection, Boolean> contextStore, final Connection c) {
+    final Boolean storedResult = contextStore.get(c);
+    if (storedResult != null) {
+      return storedResult;
+    }
+
+    final boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OP_ID);
+    contextStore.put(c, result);
+    return result;
   }
 
   private static boolean syntheticCall(
-      final Connection c, final Object payload, final int operationId) {
+      final Connection c, final ContextPayload payload, final int operationId) {
     final StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);
@@ -94,11 +105,15 @@ public class StreamRemoteCallConstructorAdvice {
       DD_CONTEXT_CALL_ID.write(out);
 
       // call header, part 2 (read by Dispatcher)
-      out.writeInt(operationId); // method number (operation index)
-      out.writeLong(operationId); // stub/skeleton hash
+      out.writeInt(operationId); // in normal call this is method number (operation index)
+      out.writeLong(operationId); // in normal RMI call this holds stub/skeleton hash
 
+      // if method is not found by uninstrumented code then writing payload will cause an exception
+      // in
+      // RMI server - as the payload will be interpreted as another call
+      // but it will not be parsed correctly - closing connection
       if (payload != null) {
-        out.writeObject(payload);
+        payload.write(out);
       }
 
       try {
@@ -109,10 +124,10 @@ public class StreamRemoteCallConstructorAdvice {
           if (ex instanceof NoSuchObjectException) {
             return false;
           } else {
-            // TODO: log ex.printStackTrace();
+            log.debug("Server error when executing synthetic call", ex);
           }
         } else {
-          // TODO: log ex.printStackTrace();
+          log.debug("Error executing synthetic call", e);
         }
         return false;
       } finally {
@@ -120,7 +135,7 @@ public class StreamRemoteCallConstructorAdvice {
       }
 
     } catch (final IOException e) {
-      // TODO: log ex.printStackTrace();
+      log.debug("Communication error executing synthetic call", e);
       return false;
     }
     return true;

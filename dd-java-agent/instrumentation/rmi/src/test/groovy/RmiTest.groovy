@@ -1,5 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import rmi.app.Greeter
 import rmi.app.Server
 import rmi.app.ServerLegacy
@@ -40,19 +42,35 @@ class RmiTest extends AgentTestRunner {
           resourceName "Greeter#hello"
           operationName "rmi.invoke"
           childOf span(0)
+          spanType DDSpanTypes.RPC
+
           tags {
+            "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
             defaultTags()
           }
         }
       }
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           resourceName "Server#hello"
           operationName "rmi.request"
+          spanType DDSpanTypes.RPC
+
           tags {
             "span.origin.type" server.class.canonicalName
+            "$Tags.COMPONENT" "rmi-server"
             defaultTags(true)
+          }
+        }
+        span(1) {
+          resourceName "Server#someMethod"
+          operationName "rmi.request"
+          spanType DDSpanTypes.RPC
+          tags {
+            "$Tags.COMPONENT" "rmi-server"
+            "span.origin.type" server.class.canonicalName
+            defaultTags()
           }
         }
       }
@@ -102,8 +120,10 @@ class RmiTest extends AgentTestRunner {
           operationName "rmi.invoke"
           childOf span(0)
           errored true
+          spanType DDSpanTypes.RPC
 
           tags {
+            "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
             errorTags(RuntimeException, String)
             defaultTags()
@@ -115,9 +135,11 @@ class RmiTest extends AgentTestRunner {
           resourceName "Server#exceptional"
           operationName "rmi.request"
           errored true
+          spanType DDSpanTypes.RPC
 
           tags {
             "span.origin.type" server.class.canonicalName
+            "$Tags.COMPONENT" "rmi-server"
             errorTags(RuntimeException, String)
             defaultTags(true)
           }
@@ -149,8 +171,10 @@ class RmiTest extends AgentTestRunner {
         span(1) {
           resourceName "Greeter#hello"
           operationName "rmi.invoke"
+          spanType DDSpanTypes.RPC
           childOf span(0)
           tags {
+            "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
             defaultTags()
           }
@@ -162,7 +186,9 @@ class RmiTest extends AgentTestRunner {
           childOf parentSpan
           resourceName "ServerLegacy#hello"
           operationName "rmi.request"
+          spanType DDSpanTypes.RPC
           tags {
+            "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
             defaultTags(true)
           }

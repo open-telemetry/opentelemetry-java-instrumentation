@@ -1,8 +1,9 @@
-package datadog.trace.instrumentation.rmi;
+package datadog.trace.instrumentation.rmi.server;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.rmi.server.ServerDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -18,6 +19,7 @@ import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentTracer;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -40,9 +42,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.rmi.context.ContextPayload$InjectAdapter",
-      "datadog.trace.instrumentation.rmi.context.ContextPayload$ExtractAdapter",
-      "datadog.trace.instrumentation.rmi.context.ContextPayload",
+      packageName + ".ServerDecorator", "datadog.trace.agent.decorator.BaseDecorator"
     };
   }
 
@@ -55,7 +55,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(not(isStatic())),
-        "datadog.trace.instrumentation.rmi.RmiServerInstrumentation$ServerAdvice");
+        "datadog.trace.instrumentation.rmi.server.RmiServerInstrumentation$ServerAdvice");
   }
 
   public static class ServerAdvice {
@@ -64,17 +64,28 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
         @Advice.This final Object thiz, @Advice.Origin(value = "#m") final String method) {
       final ContextStore<Thread, AgentSpan.Context> callableContextStore =
           InstrumentationContext.get(Thread.class, AgentSpan.Context.class);
+
+      final AgentSpan span =
+          startSpan(callableContextStore)
+              .setTag(DDTags.RESOURCE_NAME, thiz.getClass().getSimpleName() + "#" + method)
+              .setTag("span.origin.type", thiz.getClass().getCanonicalName());
+      DECORATE.afterStart(span);
+      return activateSpan(span, true);
+    }
+
+    public static AgentSpan startSpan(
+        final ContextStore<Thread, AgentSpan.Context> callableContextStore) {
+      if (activeSpan() != null) {
+        return AgentTracer.startSpan("rmi.request");
+      }
+
       final AgentSpan.Context context = callableContextStore.get(Thread.currentThread());
 
-      final AgentSpan span;
       if (context == null) {
-        span = startSpan("rmi.request");
+        return AgentTracer.startSpan("rmi.request");
       } else {
-        span = startSpan("rmi.request", context);
+        return AgentTracer.startSpan("rmi.request", context);
       }
-      span.setTag(DDTags.RESOURCE_NAME, thiz.getClass().getSimpleName() + "#" + method);
-      span.setTag("span.origin.type", thiz.getClass().getCanonicalName());
-      return activateSpan(span, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -83,11 +94,9 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       if (scope == null) {
         return;
       }
-      final AgentSpan span = scope.span();
-      if (throwable != null) {
-        span.setError(true);
-        span.addThrowable(throwable);
-      }
+
+      DECORATE.onError(scope, throwable);
+
       scope.close();
     }
   }

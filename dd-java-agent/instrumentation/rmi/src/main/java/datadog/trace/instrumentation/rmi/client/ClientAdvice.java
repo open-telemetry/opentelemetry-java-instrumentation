@@ -1,8 +1,9 @@
-package datadog.trace.instrumentation.rmi;
+package datadog.trace.instrumentation.rmi.client;
 
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.rmi.client.ClientDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
@@ -22,6 +23,8 @@ public class ClientAdvice {
                 DDTags.RESOURCE_NAME,
                 method.getDeclaringClass().getSimpleName() + "#" + method.getName())
             .setTag("span.origin.type", method.getDeclaringClass().getCanonicalName());
+
+    DECORATE.afterStart(span);
     return activateSpan(span, true);
   }
 
@@ -31,11 +34,7 @@ public class ClientAdvice {
     if (scope == null) {
       return;
     }
-    final AgentSpan span = scope.span();
-    if (throwable != null) {
-      span.setError(true);
-      span.addThrowable(throwable);
-    }
+    DECORATE.onError(scope, throwable);
     scope.close();
   }
 }

@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.rmi;
+package datadog.trace.instrumentation.rmi.client;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -28,12 +28,19 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      packageName + ".ClientDecorator", "datadog.trace.agent.decorator.BaseDecorator"
+    };
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod()
             .and(named("invoke"))
             .and(takesArgument(0, named("java.rmi.Remote")))
             .and(takesArgument(1, named("java.lang.reflect.Method"))),
-        "datadog.trace.instrumentation.rmi.ClientAdvice");
+        packageName + ".ClientAdvice");
   }
 }

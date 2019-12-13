@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Server extends UnicastRemoteObject implements Greeter {
-  static String RMI_ID = Server.class.getSimpleName();
+  public static String RMI_ID = Server.class.getSimpleName();
 
   private static final long serialVersionUID = 1L;
 
@@ -14,6 +14,10 @@ public class Server extends UnicastRemoteObject implements Greeter {
 
   @Override
   public String hello(final String name) {
+    return someMethod(name);
+  }
+
+  public String someMethod(final String name) {
     return "Hello " + name;
   }
 
