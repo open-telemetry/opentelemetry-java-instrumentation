@@ -42,11 +42,11 @@ class GrpcTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "grpc.server"
-          spanType DDSpanTypes.RPC
           childOf trace(1).get(0)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
@@ -55,10 +55,10 @@ class GrpcTest extends AgentTestRunner {
         }
         span(1) {
           operationName "grpc.message"
-          spanType DDSpanTypes.RPC
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
@@ -69,11 +69,11 @@ class GrpcTest extends AgentTestRunner {
       trace(1, 2) {
         span(0) {
           operationName "grpc.client"
-          spanType DDSpanTypes.RPC
           parent()
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
@@ -82,10 +82,10 @@ class GrpcTest extends AgentTestRunner {
         }
         span(1) {
           operationName "grpc.message"
-          spanType DDSpanTypes.RPC
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "message.type" "example.Helloworld\$Response"
@@ -128,11 +128,11 @@ class GrpcTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "grpc.server"
-          spanType DDSpanTypes.RPC
           childOf trace(1).get(0)
           errored true
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "${status.code.name()}"
@@ -145,10 +145,10 @@ class GrpcTest extends AgentTestRunner {
         }
         span(1) {
           operationName "grpc.message"
-          spanType DDSpanTypes.RPC
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
@@ -159,11 +159,11 @@ class GrpcTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "grpc.client"
-          spanType DDSpanTypes.RPC
           parent()
           errored true
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "${status.code.name()}"
@@ -213,11 +213,11 @@ class GrpcTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "grpc.server"
-          spanType DDSpanTypes.RPC
           childOf trace(1).get(0)
           errored true
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             errorTags error.class, error.message
@@ -226,10 +226,10 @@ class GrpcTest extends AgentTestRunner {
         }
         span(1) {
           operationName "grpc.message"
-          spanType DDSpanTypes.RPC
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
@@ -240,11 +240,11 @@ class GrpcTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "grpc.client"
-          spanType DDSpanTypes.RPC
           parent()
           errored true
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "UNKNOWN"

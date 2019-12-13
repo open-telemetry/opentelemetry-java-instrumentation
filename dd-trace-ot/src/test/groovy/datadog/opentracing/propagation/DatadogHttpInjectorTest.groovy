@@ -26,7 +26,6 @@ class DatadogHttpInjectorTest extends DDSpecification {
         0G,
         "fakeOperation",
         false,
-        "fakeType",
         null,
         new PendingTrace(tracer, 1G),
         tracer)

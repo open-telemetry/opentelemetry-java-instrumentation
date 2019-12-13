@@ -43,11 +43,11 @@ class UrlConnectionTest extends AgentTestRunner {
         }
         span(1) {
           operationName OPERATION_NAME
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored true
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -97,10 +97,10 @@ class UrlConnectionTest extends AgentTestRunner {
         }
         span(1) {
           operationName "file.request"
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored true
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" UrlInstrumentation.COMPONENT
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_PORT" 80

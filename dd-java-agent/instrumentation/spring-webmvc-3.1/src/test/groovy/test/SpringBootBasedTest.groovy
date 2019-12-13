@@ -74,9 +74,9 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       if (renderSpan) {
         SpanAssert.assertSpan(renderSpan) {
           operationName "response.render"
-          spanType "web"
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "spring-webmvc"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "view.type" RedirectView.name
@@ -94,11 +94,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "spring.handler"
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
         "$DDTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         if (endpoint == EXCEPTION) {
@@ -113,7 +113,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -123,6 +122,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       }
       tags {
         "$DDTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

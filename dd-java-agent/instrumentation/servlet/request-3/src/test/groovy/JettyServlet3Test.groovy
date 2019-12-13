@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -238,10 +239,10 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
         def endpoint = lastRequest
         span(0) {
           operationName expectedOperationName()
-          spanType DDSpanTypes.HTTP_SERVER
           errored endpoint.errored
           // we can't reliably assert parent or child relationship here since both are tested.
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" serverDecorator.component()
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

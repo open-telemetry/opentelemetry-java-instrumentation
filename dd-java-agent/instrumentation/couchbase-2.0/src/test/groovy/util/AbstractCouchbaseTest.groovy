@@ -138,7 +138,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
       operationName "couchbase.call"
-      spanType DDSpanTypes.COUCHBASE
       errored false
       if (parentSpan == null) {
         parent()
@@ -148,6 +147,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       tags {
         "$DDTags.SERVICE_NAME" "couchbase"
         "$DDTags.RESOURCE_NAME" name
+        "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" "couchbase"

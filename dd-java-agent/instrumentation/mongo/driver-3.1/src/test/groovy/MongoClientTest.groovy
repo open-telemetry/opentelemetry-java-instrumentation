@@ -237,7 +237,6 @@ class MongoClientTest extends MongoBaseTest {
   def mongoSpan(TraceAssert trace, int index, String statement, boolean renameService = false, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName "mongo.query"
-      spanType DDSpanTypes.MONGO
       if (parentSpan == null) {
         parent()
       } else {
@@ -246,6 +245,7 @@ class MongoClientTest extends MongoBaseTest {
       tags {
         "$DDTags.SERVICE_NAME" renameService ? instance : "mongo"
         "$DDTags.RESOURCE_NAME" { it.replace(" ", "") == statement }
+        "$DDTags.SPAN_TYPE" DDSpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

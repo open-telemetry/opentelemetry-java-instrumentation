@@ -30,12 +30,12 @@ class SlickTest extends AgentTestRunner {
         }
         span(1) {
           operationName "database.query"
-          spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" SlickUtils.Driver()
             "$DDTags.RESOURCE_NAME" SlickUtils.TestQuery()
+            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" SlickUtils.Driver()
@@ -65,12 +65,12 @@ class SlickTest extends AgentTestRunner {
     // Expect two traces because two queries have been run
     assertTraces(2) {
       trace(0, 2, {
-        span(0) {}
-        span(1) { spanType DDSpanTypes.SQL }
+        span(0) { operationName "trace.annotation" }
+        span(1) { operationName "database.query" }
       })
       trace(1, 2, {
-        span(0) {}
-        span(1) { spanType DDSpanTypes.SQL }
+        span(0) { operationName "trace.annotation" }
+        span(1) { operationName "database.query" }
       })
     }
   }

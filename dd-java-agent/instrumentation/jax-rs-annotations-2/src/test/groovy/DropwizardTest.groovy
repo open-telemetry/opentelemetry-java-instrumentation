@@ -80,11 +80,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "jax-rs.request"
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
         "$DDTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.component()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -98,7 +98,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -108,6 +107,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       }
       tags {
         "$DDTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

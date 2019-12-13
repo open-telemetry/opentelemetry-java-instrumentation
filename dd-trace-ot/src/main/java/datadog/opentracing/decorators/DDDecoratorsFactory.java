@@ -7,6 +7,6 @@ import java.util.List;
 public class DDDecoratorsFactory {
   public static List<AbstractDecorator> createBuiltinDecorators() {
 
-    return Arrays.asList(new DBTypeDecorator(), new SpanTypeDecorator());
+    return Arrays.asList();
   }
 }

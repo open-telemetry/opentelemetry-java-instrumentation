@@ -84,12 +84,12 @@ class KafkaClientTest extends AgentTestRunner {
         // PRODUCER span 0
         span(0) {
           operationName "kafka.produce"
-          spanType "queue"
           errored false
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
+            "$DDTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             defaultTags()
@@ -100,12 +100,12 @@ class KafkaClientTest extends AgentTestRunner {
         // CONSUMER span 0
         span(0) {
           operationName "kafka.consume"
-          spanType "queue"
           errored false
           childOf TEST_WRITER[0][0]
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
+            "$DDTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
@@ -166,12 +166,12 @@ class KafkaClientTest extends AgentTestRunner {
         // PRODUCER span 0
         span(0) {
           operationName "kafka.produce"
-          spanType "queue"
           errored false
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
+            "$DDTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "kafka.partition" { it >= 0 }
@@ -183,12 +183,12 @@ class KafkaClientTest extends AgentTestRunner {
         // CONSUMER span 0
         span(0) {
           operationName "kafka.consume"
-          spanType "queue"
           errored false
           childOf TEST_WRITER[0][0]
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
+            "$DDTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }

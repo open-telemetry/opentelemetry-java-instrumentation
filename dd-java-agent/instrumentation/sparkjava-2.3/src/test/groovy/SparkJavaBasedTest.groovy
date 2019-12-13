@@ -46,11 +46,11 @@ class SparkJavaBasedTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "jetty.request"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           parent()
           tags {
             "$DDTags.RESOURCE_NAME" "GET /param/:param"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jetty-handler"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"

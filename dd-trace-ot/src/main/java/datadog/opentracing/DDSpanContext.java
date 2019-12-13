@@ -40,8 +40,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   /** Each span have an operation name describing the current span */
   private volatile String operationName;
-  /** The type of the span. If null, the Datadog Agent will report as a custom */
-  private volatile String spanType;
   /** True indicates that the span reports an error */
   private volatile boolean errorFlag;
   /** Metrics on the span */
@@ -57,7 +55,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final BigInteger parentId,
       final String operationName,
       final boolean errorFlag,
-      final String spanType,
       final Map<String, Object> tags,
       final PendingTrace trace,
       final DDTracer tracer) {
@@ -80,7 +77,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
     this.operationName = operationName;
     this.errorFlag = errorFlag;
-    this.spanType = spanType;
 
     this.tags.put(DDTags.THREAD_NAME, threadName);
     this.tags.put(DDTags.THREAD_ID, threadId);
@@ -122,14 +118,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setErrorFlag(final boolean errorFlag) {
     this.errorFlag = errorFlag;
-  }
-
-  public String getSpanType() {
-    return spanType;
-  }
-
-  public void setSpanType(final String spanType) {
-    this.spanType = spanType;
   }
 
   /* (non-Javadoc)

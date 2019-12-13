@@ -6,6 +6,7 @@ import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator
 import datadog.trace.instrumentation.api.Tags
 import spock.lang.Shared
@@ -68,9 +69,9 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
         span(0) {
           parent()
           operationName "akka-http.request"
-          spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "akka-http-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(NullPointerException)

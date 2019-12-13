@@ -121,12 +121,12 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "jms"
             "$DDTags.RESOURCE_NAME" "JMS receiveNoWait"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -159,12 +159,12 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "jms"
             "$DDTags.RESOURCE_NAME" "JMS receive"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -210,12 +210,12 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "jms"
             "$DDTags.RESOURCE_NAME" "Consumed from $jmsResourceName"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -241,13 +241,13 @@ class JMS1Test extends AgentTestRunner {
     writer.trace(index, 1) {
       span(0) {
         operationName "jms.produce"
-        spanType DDSpanTypes.MESSAGE_PRODUCER
         errored false
         parent()
 
         tags {
           "$DDTags.SERVICE_NAME" "jms"
           "$DDTags.RESOURCE_NAME" "Produced for $jmsResourceName"
+          "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           "span.origin.type" ActiveMQMessageProducer.name
@@ -265,13 +265,13 @@ class JMS1Test extends AgentTestRunner {
         } else {
           operationName "jms.consume"
         }
-        spanType DDSpanTypes.MESSAGE_CONSUMER
         errored false
         childOf parentSpan
 
         tags {
           "$DDTags.SERVICE_NAME" "jms"
           "$DDTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
+          "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
           "span.origin.type" origin.name

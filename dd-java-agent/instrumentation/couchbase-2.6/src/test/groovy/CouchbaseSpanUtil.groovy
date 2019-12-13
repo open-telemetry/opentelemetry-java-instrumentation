@@ -10,7 +10,6 @@ class CouchbaseSpanUtil {
   static void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
       operationName "couchbase.call"
-      spanType DDSpanTypes.COUCHBASE
       errored false
       if (parentSpan == null) {
         parent()
@@ -20,6 +19,7 @@ class CouchbaseSpanUtil {
       tags {
         "$DDTags.SERVICE_NAME" "couchbase"
         "$DDTags.RESOURCE_NAME" name
+        "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
 

@@ -90,12 +90,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "SET"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -119,12 +119,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "GET"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -156,12 +156,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "GET"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -191,12 +191,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "RANDOMKEY"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -216,12 +216,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" AGENT_CRASHING_COMMAND_PREFIX + "COMMAND"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -242,12 +242,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" AGENT_CRASHING_COMMAND_PREFIX + "COMMAND"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -281,12 +281,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -306,12 +306,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "SHUTDOWN"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
