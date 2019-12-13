@@ -1,0 +1,19 @@
+muzzle {
+  // Cant assert fails because muzzle assumes all instrumentations will fail
+  // Instrumentations in jax-rs-annotations-2 will pass
+
+  // Resteasy changes a class's package in 3.1.0 then moves it back in 3.5.0 
+  pass {
+    group = "org.jboss.resteasy"
+    module = "resteasy-jaxrs"
+    versions = "[3.1.0.Final,3.5.0.Final)"
+  }
+}
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
+  compileOnly group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.1.0.Final'
+
+  compile project(':dd-java-agent:instrumentation:jax-rs-annotations-2')
+}

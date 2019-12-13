@@ -41,7 +41,10 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".JaxRsAnnotationsDecorator",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.tooling.ClassHierarchyIterable",
+      "datadog.trace.agent.tooling.ClassHierarchyIterable$ClassIterator",
+      packageName + ".JaxRsAnnotationsDecorator",
     };
   }
 

@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
@@ -9,7 +10,8 @@ import spock.lang.Shared
 
 class JedisClientTest extends AgentTestRunner {
 
-  public static final int PORT = 6399
+  @Shared
+  int port = PortUtils.randomOpenPort()
 
   @Shared
   RedisServer redisServer = RedisServer.builder()
@@ -17,9 +19,9 @@ class JedisClientTest extends AgentTestRunner {
     .setting("bind 127.0.0.1")
   // set max memory to avoid problems in CI
     .setting("maxmemory 128M")
-    .port(PORT).build()
+    .port(port).build()
   @Shared
-  Jedis jedis = new Jedis("localhost", PORT)
+  Jedis jedis = new Jedis("localhost", port)
 
   def setupSpec() {
     println "Using redis: $redisServer.args"

@@ -87,53 +87,53 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     resourceNames.get(obj.class).size() == 1
 
     where:
-    name               | obj
-    "/a"               | new Jax() {
+    name                 | obj
+    "/a"                 | new Jax() {
       @Path("/a")
       void call() {
       }
     }
-    "GET /b"           | new Jax() {
+    "GET /b"             | new Jax() {
       @GET
       @Path("/b")
       void call() {
       }
     }
-    "POST /c"          | new InterfaceWithPath() {
+    "POST /interface/c"  | new InterfaceWithPath() {
       @POST
       @Path("/c")
       void call() {
       }
     }
-    "HEAD"             | new InterfaceWithPath() {
+    "HEAD /interface"    | new InterfaceWithPath() {
       @HEAD
       void call() {
       }
     }
-    "POST /abstract/d" | new AbstractClassWithPath() {
+    "POST /abstract/d"   | new AbstractClassWithPath() {
       @POST
       @Path("/d")
       void call() {
       }
     }
-    "PUT /abstract"    | new AbstractClassWithPath() {
+    "PUT /abstract"      | new AbstractClassWithPath() {
       @PUT
       void call() {
       }
     }
-    "OPTIONS /child/e" | new ChildClassWithPath() {
+    "OPTIONS /child/e"   | new ChildClassWithPath() {
       @OPTIONS
       @Path("/e")
       void call() {
       }
     }
-    "DELETE /child"    | new ChildClassWithPath() {
+    "DELETE /child/call" | new ChildClassWithPath() {
       @DELETE
       void call() {
       }
     }
-    "POST /child/call" | new ChildClassWithPath()
-    "GET /child/call"  | new JavaInterfaces.ChildClassOnInterface()
+    "POST /child/call"   | new ChildClassWithPath()
+    "GET /child/call"    | new JavaInterfaces.ChildClassOnInterface()
     // TODO: uncomment when we drop support for Java 7
 //    "GET /child/invoke"         | new JavaInterfaces.DefaultChildClassOnInterface()
 
@@ -165,18 +165,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     where:
     obj | _
     new Jax() {
-      void call() {
-      }
-    }   | _
-    new InterfaceWithPath() {
-      void call() {
-      }
-    }   | _
-    new AbstractClassWithPath() {
-      void call() {
-      }
-    }   | _
-    new ChildClassWithPath() {
       void call() {
       }
     }   | _

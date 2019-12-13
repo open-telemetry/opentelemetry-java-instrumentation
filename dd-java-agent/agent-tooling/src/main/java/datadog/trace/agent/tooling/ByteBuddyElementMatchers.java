@@ -1,5 +1,7 @@
 package datadog.trace.agent.tooling;
 
+import static net.bytebuddy.matcher.ElementMatchers.hasSignature;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -7,8 +9,10 @@ import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.build.HashCodeAndEqualsPlugin;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
@@ -294,6 +298,87 @@ public class ByteBuddyElementMatchers {
       } else {
         return "?";
       }
+    }
+  }
+
+  // TODO: add javadoc
+  public static <T extends MethodDescription> ElementMatcher.Junction<T> hasSuperMethod(
+      final ElementMatcher<? super MethodDescription> matcher) {
+    return new HasSuperMethodMatcher<>(matcher);
+  }
+
+  // TODO: add javadoc
+  @HashCodeAndEqualsPlugin.Enhance
+  public static class HasSuperMethodMatcher<T extends MethodDescription>
+      extends ElementMatcher.Junction.AbstractBase<T> {
+
+    private final ElementMatcher<? super MethodDescription> matcher;
+
+    public HasSuperMethodMatcher(final ElementMatcher<? super MethodDescription> matcher) {
+      this.matcher = matcher;
+    }
+
+    @Override
+    public boolean matches(final MethodDescription target) {
+      if (target.isConstructor()) {
+        return false;
+      }
+      final Junction<MethodDescription> signatureMatcher = hasSignature(target.asSignatureToken());
+      TypeDefinition declaringType = target.getDeclaringType();
+      final Set<TypeDefinition> checkedInterfaces = new HashSet<>();
+
+      while (declaringType != null) {
+        for (final MethodDescription methodDescription :
+            declaringType.getDeclaredMethods().filter(signatureMatcher)) {
+          if (matcher.matches(methodDescription)) {
+            return true;
+          }
+        }
+        if (matchesInterface(declaringType.getInterfaces(), signatureMatcher, checkedInterfaces)) {
+          return true;
+        }
+        declaringType = safeGetSuperClass(declaringType);
+      }
+      return false;
+    }
+
+    private boolean matchesInterface(
+        final TypeList.Generic interfaces,
+        final Junction<MethodDescription> signatureMatcher,
+        final Set<TypeDefinition> checkedInterfaces) {
+      for (final TypeDefinition type : interfaces) {
+        if (!checkedInterfaces.contains(type)) {
+          checkedInterfaces.add(type);
+          for (final MethodDescription methodDescription :
+              type.getDeclaredMethods().filter(signatureMatcher)) {
+            if (matcher.matches(methodDescription)) {
+              return true;
+            }
+          }
+          if (matchesInterface(type.getInterfaces(), signatureMatcher, checkedInterfaces)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    private TypeDefinition safeGetSuperClass(final TypeDefinition typeDefinition) {
+      try {
+        return typeDefinition.getSuperClass();
+      } catch (final Exception e) {
+        log.debug(
+            "{} trying to get super class for target {}: {}",
+            e.getClass().getSimpleName(),
+            safeTypeDefinitionName(typeDefinition),
+            e.getMessage());
+        return null;
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "hasSuperMethodMatcher(" + matcher + ")";
     }
   }
 }
