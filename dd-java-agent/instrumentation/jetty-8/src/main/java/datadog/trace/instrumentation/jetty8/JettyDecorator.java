@@ -28,7 +28,14 @@ public class JettyDecorator
 
   @Override
   protected URI url(final HttpServletRequest httpServletRequest) throws URISyntaxException {
-    return new URI(httpServletRequest.getRequestURL().toString());
+    return new URI(
+        httpServletRequest.getScheme(),
+        null,
+        httpServletRequest.getServerName(),
+        httpServletRequest.getServerPort(),
+        httpServletRequest.getRequestURI(),
+        httpServletRequest.getQueryString(),
+        null);
   }
 
   @Override

@@ -1,17 +1,18 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet2.Servlet2Decorator
+import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
 
-import javax.servlet.http.HttpServletRequest
-
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -36,9 +37,10 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
 //    servletContext.setSecurityHandler(security)
 
     servletContext.addServlet(TestServlet2.Sync, SUCCESS.path)
+    servletContext.addServlet(TestServlet2.Sync, QUERY_PARAM.path)
+    servletContext.addServlet(TestServlet2.Sync, REDIRECT.path)
     servletContext.addServlet(TestServlet2.Sync, ERROR.path)
     servletContext.addServlet(TestServlet2.Sync, EXCEPTION.path)
-    servletContext.addServlet(TestServlet2.Sync, REDIRECT.path)
     servletContext.addServlet(TestServlet2.Sync, AUTH_REQUIRED.path)
 
     jettyServer.setHandler(servletContext)
@@ -109,6 +111,9 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
+        }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
         }
         defaultTags(true)
       }

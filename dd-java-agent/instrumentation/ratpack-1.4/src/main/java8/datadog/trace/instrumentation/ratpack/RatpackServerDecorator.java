@@ -7,6 +7,7 @@ import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.handling.Context;
+import ratpack.http.HttpUrlBuilder;
 import ratpack.http.Request;
 import ratpack.http.Response;
 import ratpack.http.Status;
@@ -42,7 +43,9 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
     // This call implicitly uses request via a threadlocal provided by ratpack.
     final PublicAddress publicAddress =
         PublicAddress.inferred(address.getPort() == 443 ? "https" : "http");
-    return publicAddress.get(request.getPath());
+    final HttpUrlBuilder url =
+        publicAddress.builder().path(request.getPath()).params(request.getQueryParams());
+    return url.build();
   }
 
   @Override

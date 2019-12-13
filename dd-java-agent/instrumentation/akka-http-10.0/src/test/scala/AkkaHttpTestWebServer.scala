@@ -23,6 +23,8 @@ object AkkaHttpTestWebServer {
   val route = { //handleExceptions(exceptionHandler) {
     path(SUCCESS.rawPath) {
       complete(HttpResponse(status = SUCCESS.getStatus).withEntity(SUCCESS.getBody))
+    } ~ path(QUERY_PARAM.rawPath) {
+      complete(HttpResponse(status = QUERY_PARAM.getStatus).withEntity(SUCCESS.getBody))
     } ~ path(REDIRECT.rawPath) {
       redirect(Uri(REDIRECT.getBody), StatusCodes.Found)
     } ~ path(ERROR.rawPath) {

@@ -8,6 +8,7 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -24,8 +25,10 @@ import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.instrumentation.api.AgentTracer.activeScope
@@ -111,16 +114,25 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     NOT_FOUND("notFound", 404, "not found"),
 
     // TODO: add tests for the following cases:
+    QUERY_PARAM("query?some=query", 200, "some=query"),
+    // OkHttp never sends the fragment in the request, so these cases don't work.
+//    FRAGMENT_PARAM("fragment#some-fragment", 200, "some-fragment"),
+//    QUERY_FRAGMENT_PARAM("query/fragment?some=query#some-fragment", 200, "some=query#some-fragment"),
     PATH_PARAM("path/123/param", 200, "123"),
     AUTH_REQUIRED("authRequired", 200, null),
 
     private final String path
+    final String query
+    final String fragment
     final int status
     final String body
     final Boolean errored
 
-    ServerEndpoint(String path, int status, String body) {
-      this.path = path
+    ServerEndpoint(String uri, int status, String body) {
+      def uriObj = URI.create(uri)
+      this.path = uriObj.path
+      this.query = uriObj.query
+      this.fragment = uriObj.fragment
       this.status = status
       this.body = body
       this.errored = status >= 500
@@ -146,8 +158,12 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   Request.Builder request(ServerEndpoint uri, String method, String body) {
+    def url = HttpUrl.get(uri.resolve(address)).newBuilder()
+      .query(uri.query)
+      .fragment(uri.fragment)
+      .build()
     return new Request.Builder()
-      .url(HttpUrl.get(uri.resolve(address)))
+      .url(url)
       .method(method, body)
   }
 
@@ -230,6 +246,39 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     where:
     method = "GET"
     body = null
+  }
+
+  def "test tag query string for #endpoint"() {
+    setup:
+    def request = request(endpoint, method, body).build()
+    Response response = withConfigOverride("http.server.tag.query-string", "true") {
+      client.newCall(request).execute()
+    }
+
+    expect:
+    response.code() == endpoint.status
+    response.body().string() == endpoint.body
+
+    and:
+    cleanAndAssertTraces(1) {
+      if (hasHandlerSpan()) {
+        trace(0, 3) {
+          serverSpan(it, 0, null, null, "GET", endpoint)
+          handlerSpan(it, 1, span(0), endpoint)
+          controllerSpan(it, 2, span(1))
+        }
+      } else {
+        trace(0, 2) {
+          serverSpan(it, 0, null, null, "GET", endpoint)
+          controllerSpan(it, 1, span(0))
+        }
+      }
+    }
+
+    where:
+    method = "GET"
+    body = null
+    endpoint << [SUCCESS, QUERY_PARAM]
   }
 
   def "test redirect"() {
@@ -447,13 +496,16 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
-//        if (tagQueryString) {
-//          "$DDTags.HTTP_QUERY" uri.query
-//          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
-//        }
         if (endpoint.errored) {
           "$Tags.ERROR" endpoint.errored
         }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
+        }
+        // OkHttp never sends the fragment in the request.
+//        if (endpoint.fragment) {
+//          "$DDTags.HTTP_FRAGMENT" endpoint.fragment
+//        }
         defaultTags(true)
       }
     }

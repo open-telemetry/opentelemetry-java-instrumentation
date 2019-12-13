@@ -1,13 +1,14 @@
 import datadog.trace.agent.test.base.HttpServerTest
 import groovy.servlet.AbstractHttpServlet
-
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+
 import java.util.concurrent.Phaser
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -24,6 +25,10 @@ class TestServlet3 {
           case SUCCESS:
             resp.status = endpoint.status
             resp.writer.print(endpoint.body)
+            break
+          case QUERY_PARAM:
+            resp.status = endpoint.status
+            resp.writer.print(req.queryString)
             break
           case REDIRECT:
             resp.sendRedirect(endpoint.body)
@@ -52,13 +57,23 @@ class TestServlet3 {
             resp.contentType = "text/plain"
             switch (endpoint) {
               case SUCCESS:
-              case ERROR:
                 resp.status = endpoint.status
                 resp.writer.print(endpoint.body)
                 context.complete()
                 break
+              case QUERY_PARAM:
+                resp.status = endpoint.status
+                resp.writer.print(req.queryString)
+                context.complete()
+                break
               case REDIRECT:
                 resp.sendRedirect(endpoint.body)
+                context.complete()
+                break
+              case ERROR:
+                resp.status = endpoint.status
+                resp.writer.print(endpoint.body)
+//                resp.sendError(endpoint.status, endpoint.body)
                 context.complete()
                 break
               case EXCEPTION:
@@ -88,12 +103,18 @@ class TestServlet3 {
           resp.contentType = "text/plain"
           switch (endpoint) {
             case SUCCESS:
-            case ERROR:
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               break
+            case QUERY_PARAM:
+              resp.status = endpoint.status
+              resp.writer.print(req.queryString)
+              break
             case REDIRECT:
               resp.sendRedirect(endpoint.body)
+              break
+            case ERROR:
+              resp.sendError(endpoint.status, endpoint.body)
               break
             case EXCEPTION:
               throw new Exception(endpoint.body)
