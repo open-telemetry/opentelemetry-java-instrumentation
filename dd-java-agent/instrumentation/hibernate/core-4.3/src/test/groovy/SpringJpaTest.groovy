@@ -40,7 +40,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -70,7 +69,6 @@ class SpringJpaTest extends AgentTestRunner {
               "$Tags.DB_USER" "sa"
               "$Tags.DB_STATEMENT" "call next value for hibernate_sequence"
               "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-              defaultTags()
             }
           }
         }
@@ -88,7 +86,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -115,7 +112,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -132,7 +128,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "update Customer set firstName=?, lastName=? where id=?"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -159,7 +154,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -184,7 +178,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }
@@ -201,7 +194,6 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "delete from Customer where id=?"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-            defaultTags()
           }
         }
       }

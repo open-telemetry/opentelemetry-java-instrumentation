@@ -2,7 +2,6 @@ package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.trace.api.Config
-import datadog.trace.api.DDTags
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
@@ -46,16 +45,6 @@ class DDSpanBuilderTest extends DDSpecification {
     span.getOperationName() == expectedName
     span.tags.subMap(tags.keySet()) == tags
 
-
-    when:
-    span = tracer.buildSpan(expectedName).start()
-
-    then:
-    span.getTags() == [
-      (DDTags.THREAD_NAME): Thread.currentThread().getName(),
-      (DDTags.THREAD_ID)  : Thread.currentThread().getId()
-    ]
-
     when:
     // with all custom fields provided
 
@@ -69,9 +58,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     context.getErrorFlag()
-
-    context.tags[DDTags.THREAD_NAME] == Thread.currentThread().getName()
-    context.tags[DDTags.THREAD_ID] == Thread.currentThread().getId()
   }
 
   def "setting #name should remove"() {

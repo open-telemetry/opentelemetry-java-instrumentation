@@ -98,7 +98,6 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
-        defaultTags()
       }
     }
   }
@@ -125,7 +124,6 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        defaultTags(true)
       }
     }
   }

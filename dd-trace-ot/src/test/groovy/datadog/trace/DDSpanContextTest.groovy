@@ -15,27 +15,24 @@ class DDSpanContextTest extends DDSpecification {
 
     expect:
     context.getTags() == tags
-    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation metrics={} *errored* tags={${extra}${tags.containsKey(DDTags.SPAN_TYPE) ? "span.type=${tags.get(DDTags.SPAN_TYPE)}, " : ""}thread.id=${Thread.currentThread().id}, thread.name=${Thread.currentThread().name}}"
+    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation metrics={} *errored* tags={${extra}${tags.containsKey(DDTags.SPAN_TYPE) ? ", span.type=${tags.get(DDTags.SPAN_TYPE)}" : ""}}"
 
     where:
-    name             | extra             | tags
-    DDTags.SPAN_TYPE | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
-    "some.tag"       | ""                | [(DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
+    name             | extra           | tags
+    DDTags.SPAN_TYPE | "some.tag=asdf" | ["some.tag": "asdf"]
+    "some.tag"       | ""              | [:]
   }
 
   def "tags can be added to the context"() {
     setup:
     def context = SpanFactory.newSpanOf(0).context
     context.setTag(name, value)
-    def thread = Thread.currentThread()
 
     expect:
     context.getTags() == [
-      (name)              : value,
-      (DDTags.THREAD_NAME): thread.name,
-      (DDTags.THREAD_ID)  : thread.id
+      (name): value
     ]
-    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation metrics={} tags={$name=$value, thread.id=$thread.id, thread.name=$thread.name}"
+    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeOperation metrics={} tags={$name=$value}"
 
     where:
     name             | value

@@ -104,7 +104,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
-            defaultTags()
           }
         }
         span(1) {
@@ -117,7 +116,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            defaultTags()
           }
         }
         span(2) {
@@ -130,7 +128,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
       }
@@ -176,7 +173,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/getQuery.jsp"
-            defaultTags()
           }
         }
         span(1) {
@@ -189,7 +185,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            defaultTags()
           }
         }
         span(2) {
@@ -202,7 +197,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
       }
@@ -245,7 +239,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/post.jsp"
-            defaultTags()
           }
         }
         span(1) {
@@ -258,7 +251,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            defaultTags()
           }
         }
         span(2) {
@@ -271,7 +263,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
       }
@@ -318,7 +309,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
               return errorMessageOptional || tagErrorMsg instanceof String
             }
             "error.stack" String
-            defaultTags()
           }
         }
         span(1) {
@@ -338,7 +328,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
               return errorMessageOptional || tagErrorMsg instanceof String
             }
             "error.stack" String
-            defaultTags()
           }
         }
         span(2) {
@@ -351,7 +340,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
       }
@@ -396,7 +384,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeHtml.jsp"
-            defaultTags()
           }
         }
         span(1) {
@@ -409,7 +396,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            defaultTags()
           }
         }
         span(2) {
@@ -422,7 +408,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
       }
@@ -461,7 +446,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeMulti.jsp"
-            defaultTags()
           }
         }
         span(1) {
@@ -474,7 +458,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            defaultTags()
           }
         }
         span(2) {
@@ -487,7 +470,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            defaultTags()
           }
         }
         span(3) {
@@ -500,7 +482,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
         span(4) {
@@ -513,7 +494,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            defaultTags()
           }
         }
         span(5) {
@@ -526,7 +506,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
         span(6) {
@@ -539,7 +518,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            defaultTags()
           }
         }
       }
@@ -579,7 +557,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
             errorTags(JasperException, String)
-            defaultTags()
           }
         }
         span(1) {
@@ -593,7 +570,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             errorTags(JasperException, String)
-            defaultTags()
           }
         }
       }

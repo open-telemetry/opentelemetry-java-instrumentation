@@ -103,7 +103,6 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        defaultTags(true)
       }
     }
   }

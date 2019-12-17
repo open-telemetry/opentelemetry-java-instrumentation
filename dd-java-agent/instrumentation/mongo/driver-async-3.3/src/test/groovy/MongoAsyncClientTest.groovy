@@ -292,7 +292,6 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "$Tags.DB_STATEMENT" statementEval
         "$Tags.DB_TYPE" "mongo"
         "$Tags.DB_INSTANCE" instance
-        defaultTags()
       }
     }
   }

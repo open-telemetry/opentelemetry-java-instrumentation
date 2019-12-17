@@ -98,7 +98,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
-            defaultTags()
           }
         }
       }
@@ -129,7 +128,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
             errorTags RemoteTransportException, String
-            defaultTags()
           }
         }
       }
@@ -203,7 +201,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
-            defaultTags()
           }
         }
       }
@@ -222,7 +219,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
-            defaultTags()
           }
         }
       }
@@ -245,7 +241,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.type" indexType
             "elasticsearch.id" "1"
             "elasticsearch.version"(-1)
-            defaultTags()
           }
         }
       }
@@ -262,7 +257,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
             "elasticsearch.request.indices" indexName
-            defaultTags()
           }
         }
       }
@@ -283,7 +277,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" indexType
-            defaultTags()
           }
         }
       }
@@ -306,7 +299,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.type" indexType
             "elasticsearch.id" "1"
             "elasticsearch.version" 1
-            defaultTags()
           }
         }
       }

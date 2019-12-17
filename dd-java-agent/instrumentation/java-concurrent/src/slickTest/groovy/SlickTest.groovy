@@ -25,7 +25,6 @@ class SlickTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "SlickUtils.startQuery"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         span(1) {
@@ -43,7 +42,6 @@ class SlickTest extends AgentTestRunner {
             "$Tags.DB_USER" SlickUtils.Username()
             "$Tags.DB_STATEMENT" SlickUtils.TestQuery()
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
-            defaultTags()
           }
         }
       }

@@ -139,7 +139,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -155,7 +154,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
       }
@@ -194,7 +192,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -210,7 +207,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.sid" "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "completed"
-            defaultTags()
           }
         }
       }
@@ -271,7 +267,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -287,7 +282,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
         span(2) {
@@ -301,7 +295,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            defaultTags()
           }
         }
       }
@@ -378,7 +371,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -394,7 +386,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
         span(2) {
@@ -408,7 +399,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            defaultTags()
           }
         }
         span(3) {
@@ -422,7 +412,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            defaultTags()
           }
         }
       }
@@ -507,7 +496,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -523,7 +511,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
         span(2) {
@@ -539,7 +526,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
         // Spans are reported in reverse order of completion,
@@ -555,7 +541,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            defaultTags()
           }
         }
         span(4) {
@@ -569,7 +554,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            defaultTags()
           }
         }
       }
@@ -614,7 +598,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -627,7 +610,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "twilio-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(ApiException, "Testing Failure")
-            defaultTags()
           }
         }
       }
@@ -666,7 +648,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
       }
@@ -714,7 +695,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -730,7 +710,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
         span(2) {
@@ -746,7 +725,6 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
-            defaultTags()
           }
         }
       }
@@ -803,7 +781,6 @@ class TwilioClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            defaultTags()
           }
         }
         span(1) {
@@ -816,7 +793,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "twilio-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(ApiException, "Testing Failure")
-            defaultTags()
           }
         }
         span(2) {
@@ -829,7 +805,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "twilio-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(ApiException, "Testing Failure")
-            defaultTags()
           }
         }
       }

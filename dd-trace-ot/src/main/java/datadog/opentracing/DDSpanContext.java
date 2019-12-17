@@ -1,6 +1,5 @@
 package datadog.opentracing;
 
-import datadog.trace.api.DDTags;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Map;
@@ -43,10 +42,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   /** Metrics on the span */
   private final AtomicReference<Map<String, Number>> metrics = new AtomicReference<>();
 
-  // Additional Metadata
-  private final String threadName = Thread.currentThread().getName();
-  private final long threadId = Thread.currentThread().getId();
-
   public DDSpanContext(
       final BigInteger traceId,
       final BigInteger spanId,
@@ -75,9 +70,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
     this.operationName = operationName;
     this.errorFlag = errorFlag;
-
-    this.tags.put(DDTags.THREAD_NAME, threadName);
-    this.tags.put(DDTags.THREAD_ID, threadId);
   }
 
   public BigInteger getTraceId() {

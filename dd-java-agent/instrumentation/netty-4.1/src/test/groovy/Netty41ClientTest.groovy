@@ -95,7 +95,6 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           tags {
             "$Tags.COMPONENT" "netty"
             errorTags AbstractChannel.AnnotatedConnectException, "Connection refused: localhost/127.0.0.1:$UNUSABLE_PORT"
-            defaultTags()
           }
         }
       }
@@ -199,7 +198,6 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           tags {
             "$DDTags.RESOURCE_NAME" "AnnotatedClass.makeRequestUnderTrace"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
         clientSpan(it, 2, span(1), method)

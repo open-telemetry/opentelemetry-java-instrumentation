@@ -105,7 +105,6 @@ class TestHttpServer implements AutoCloseable {
         }
         tags {
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-          defaultTags(parentSpan != null)
         }
       }
     }

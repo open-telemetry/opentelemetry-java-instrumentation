@@ -109,7 +109,6 @@ class RabbitMQTest extends AgentTestRunner {
         span(0) {
           operationName "parent"
           tags {
-            defaultTags()
           }
         }
         // reverse order
@@ -398,7 +397,6 @@ class RabbitMQTest extends AgentTestRunner {
         if (exception) {
           errorTags(exception.class, errorMsg)
         }
-        defaultTags(distributedRootSpan)
       }
     }
   }

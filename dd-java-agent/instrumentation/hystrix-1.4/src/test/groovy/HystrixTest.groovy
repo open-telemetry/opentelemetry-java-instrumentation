@@ -50,7 +50,6 @@ class HystrixTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.SPAN_TYPE" null
-            defaultTags()
           }
         }
         span(1) {
@@ -64,7 +63,6 @@ class HystrixTest extends AgentTestRunner {
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            defaultTags()
           }
         }
         span(2) {
@@ -75,7 +73,6 @@ class HystrixTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "HystrixTest\$1.tracedMethod"
             "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -124,7 +121,6 @@ class HystrixTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.SPAN_TYPE" null
-            defaultTags()
           }
         }
         span(1) {
@@ -139,7 +135,6 @@ class HystrixTest extends AgentTestRunner {
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
             errorTags(IllegalArgumentException)
-            defaultTags()
           }
         }
         span(2) {
@@ -153,7 +148,6 @@ class HystrixTest extends AgentTestRunner {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            defaultTags()
           }
         }
       }

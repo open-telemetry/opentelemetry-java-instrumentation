@@ -44,7 +44,6 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "AnnotationTracedCallable.call"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }

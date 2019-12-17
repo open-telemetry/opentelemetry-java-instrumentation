@@ -39,7 +39,6 @@ class CouchbaseSpanUtil {
         // We assign a resourceName of 'Bucket.query' and this is shared with n1ql queries
         // that do have operation ids
         "couchbase.operation_id" { it == null || String }
-        defaultTags()
       }
     }
   }

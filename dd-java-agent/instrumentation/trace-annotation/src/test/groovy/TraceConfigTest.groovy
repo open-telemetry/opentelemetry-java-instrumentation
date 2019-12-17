@@ -42,7 +42,6 @@ class TraceConfigTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "ConfigTracedCallable.call"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }

@@ -154,7 +154,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         if (bucketName != null) {
           "bucket" bucketName
         }
-        defaultTags()
       }
     }
   }

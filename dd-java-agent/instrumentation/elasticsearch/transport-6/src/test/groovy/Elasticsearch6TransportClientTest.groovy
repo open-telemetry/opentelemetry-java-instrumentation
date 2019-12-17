@@ -102,7 +102,6 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
-            defaultTags()
           }
         }
       }
@@ -133,7 +132,6 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
             errorTags RemoteTransportException, String
-            defaultTags()
           }
         }
       }
@@ -207,7 +205,6 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
-            defaultTags()
           }
         }
       }
@@ -230,7 +227,6 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "elasticsearch.type" indexType
             "elasticsearch.id" "1"
             "elasticsearch.version"(-1)
-            defaultTags()
           }
         }
       }
@@ -246,7 +242,6 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
-            defaultTags()
           }
         }
       }
@@ -272,7 +267,6 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "elasticsearch.shard.replication.total" 2
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.failed" 0
-            defaultTags()
           }
         }
       }
@@ -295,7 +289,6 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "elasticsearch.type" indexType
             "elasticsearch.id" "1"
             "elasticsearch.version" 1
-            defaultTags()
           }
         }
       }

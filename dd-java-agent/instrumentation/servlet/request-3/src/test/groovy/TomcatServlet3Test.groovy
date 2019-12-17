@@ -313,7 +313,6 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
               "error.type" { it == null || it == Exception.name }
               "error.stack" { it == null || it instanceof String }
             }
-            defaultTags(true)
           }
         }
       }

@@ -72,7 +72,6 @@ class SpringWebfluxTest extends AgentTestRunner {
               // Annotation API
               "handler.type" TestController.getName()
             }
-            defaultTags()
           }
         }
         span(1) {
@@ -89,7 +88,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
       }
@@ -144,7 +142,6 @@ class SpringWebfluxTest extends AgentTestRunner {
               // Annotation API
               "handler.type" TestController.getName()
             }
-            defaultTags()
           }
         }
         span(1) {
@@ -161,7 +158,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
         span(2) {
@@ -177,7 +173,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" annotatedMethod == null ? "SpringWebFluxTestApplication.tracedMethod" : "TestController.tracedMethod"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -220,7 +215,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 404
-            defaultTags()
           }
         }
         span(1) {
@@ -233,7 +227,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
             errorTags(ResponseStatusException, String)
-            defaultTags()
           }
         }
       }
@@ -266,7 +259,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "handler.type" { String tagVal ->
               return tagVal.contains(EchoHandlerFunction.getName())
             }
-            defaultTags()
           }
         }
         span(1) {
@@ -283,7 +275,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" 202
-            defaultTags()
           }
         }
         span(2) {
@@ -292,7 +283,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" "echo"
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -326,7 +316,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
-            defaultTags()
           }
         }
         span(1) {
@@ -354,7 +343,6 @@ class SpringWebfluxTest extends AgentTestRunner {
               "handler.type" TestController.getName()
             }
             errorTags(RuntimeException, "bad things happen")
-            defaultTags()
           }
         }
       }
@@ -397,7 +385,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 307
-            defaultTags()
           }
         }
         span(1) {
@@ -412,7 +399,6 @@ class SpringWebfluxTest extends AgentTestRunner {
               return (tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                 || tagVal.contains("Lambda"))
             }
-            defaultTags()
           }
         }
       }
@@ -428,7 +414,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "handler.type" { String tagVal ->
               return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
             }
-            defaultTags()
           }
         }
         span(1) {
@@ -445,7 +430,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" finalUrl
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
       }
@@ -489,7 +473,6 @@ class SpringWebfluxTest extends AgentTestRunner {
                 // Annotation API
                 "handler.type" TestController.getName()
               }
-              defaultTags()
             }
           }
           span(1) {
@@ -506,7 +489,6 @@ class SpringWebfluxTest extends AgentTestRunner {
               "$Tags.HTTP_URL" url
               "$Tags.HTTP_METHOD" "GET"
               "$Tags.HTTP_STATUS" 200
-              defaultTags()
             }
           }
         }

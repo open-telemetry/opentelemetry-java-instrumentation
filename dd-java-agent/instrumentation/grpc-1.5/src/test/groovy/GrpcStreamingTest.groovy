@@ -94,7 +94,6 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
-            defaultTags(true)
           }
         }
         clientRange.each {
@@ -107,7 +106,6 @@ class GrpcStreamingTest extends AgentTestRunner {
               "$Tags.COMPONENT" "grpc-server"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
               "message.type" "example.Helloworld\$Response"
-              defaultTags()
             }
           }
         }
@@ -123,7 +121,6 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
-            defaultTags()
           }
         }
         (1..(clientMessageCount * serverMessageCount)).each {
@@ -136,7 +133,6 @@ class GrpcStreamingTest extends AgentTestRunner {
               "$Tags.COMPONENT" "grpc-client"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "message.type" "example.Helloworld\$Response"
-              defaultTags()
             }
           }
         }

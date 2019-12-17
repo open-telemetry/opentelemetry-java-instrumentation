@@ -114,7 +114,6 @@ class AWSClientTest extends AgentTestRunner {
             "aws.endpoint" "$server.address"
             "aws.operation" "${operation}Request"
             "aws.agent" "java-aws-sdk"
-            defaultTags()
           }
         }
         span(1) {
@@ -130,7 +129,6 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "$server.address/$url"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
       }
@@ -187,7 +185,6 @@ class AWSClientTest extends AgentTestRunner {
             "aws.operation" "${operation}Request"
             "aws.agent" "java-aws-sdk"
             errorTags AmazonClientException, ~/Unable to execute HTTP request/
-            defaultTags()
           }
         }
         span(1) {
@@ -203,7 +200,6 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
             "$Tags.HTTP_METHOD" "$method"
             errorTags HttpHostConnectException, ~/Connection refused/
-            defaultTags()
           }
         }
       }
@@ -249,7 +245,6 @@ class AWSClientTest extends AgentTestRunner {
             "aws.operation" "GetObjectRequest"
             "aws.agent" "java-aws-sdk"
             errorTags RuntimeException, "bad handler"
-            defaultTags()
           }
         }
       }
@@ -295,7 +290,6 @@ class AWSClientTest extends AgentTestRunner {
             "aws.operation" "GetObjectRequest"
             "aws.agent" "java-aws-sdk"
             errorTags AmazonClientException, ~/Unable to execute HTTP request/
-            defaultTags()
           }
         }
         (1..4).each {
@@ -316,7 +310,6 @@ class AWSClientTest extends AgentTestRunner {
               } catch (AssertionError e) {
                 errorTags RequestAbortedException, "Request aborted"
               }
-              defaultTags()
             }
           }
         }

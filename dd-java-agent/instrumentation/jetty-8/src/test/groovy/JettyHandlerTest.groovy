@@ -138,7 +138,6 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        defaultTags(true)
       }
     }
   }

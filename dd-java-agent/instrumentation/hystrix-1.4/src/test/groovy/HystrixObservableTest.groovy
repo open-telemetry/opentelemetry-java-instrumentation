@@ -70,7 +70,6 @@ class HystrixObservableTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.SPAN_TYPE" null
-            defaultTags()
           }
         }
         span(1) {
@@ -84,7 +83,6 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            defaultTags()
           }
         }
         span(2) {
@@ -95,7 +93,6 @@ class HystrixObservableTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" "HystrixObservableTest\$1.tracedMethod"
             "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
-            defaultTags()
           }
         }
       }
@@ -176,7 +173,6 @@ class HystrixObservableTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.SPAN_TYPE" null
-            defaultTags()
           }
         }
         span(1) {
@@ -191,7 +187,6 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
             errorTags(IllegalArgumentException)
-            defaultTags()
           }
         }
         span(2) {
@@ -205,7 +200,6 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            defaultTags()
           }
         }
       }
@@ -292,7 +286,6 @@ class HystrixObservableTest extends AgentTestRunner {
           tags {
             "$DDTags.SPAN_TYPE" null
             errorTags(HystrixRuntimeException, "HystrixObservableTest\$3 failed and no fallback available.")
-            defaultTags()
           }
         }
         span(1) {
@@ -307,7 +300,6 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
             errorTags(IllegalArgumentException)
-            defaultTags()
           }
         }
         span(2) {
@@ -322,7 +314,6 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
             errorTags(UnsupportedOperationException, "No fallback available.")
-            defaultTags()
           }
         }
       }

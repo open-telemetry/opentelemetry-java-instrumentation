@@ -73,7 +73,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -84,7 +83,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -96,7 +94,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(3) {
@@ -112,7 +109,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "{call TEST_PROC()}"
             "span.origin.type" "org.hsqldb.jdbc.JDBCCallableStatement"
-            defaultTags()
           }
         }
       }
@@ -148,7 +144,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(1) {
@@ -159,7 +154,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            defaultTags()
           }
         }
         span(2) {
@@ -173,7 +167,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(SQLGrammarException, "could not prepare statement")
-            defaultTags()
           }
         }
       }

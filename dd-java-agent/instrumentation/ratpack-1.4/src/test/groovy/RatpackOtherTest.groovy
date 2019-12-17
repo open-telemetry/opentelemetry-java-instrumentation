@@ -78,7 +78,6 @@ class RatpackOtherTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "${app.address.resolve(path)}"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
         span(1) {
@@ -95,7 +94,6 @@ class RatpackOtherTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "${app.address.resolve(path)}"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
       }

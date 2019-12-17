@@ -262,7 +262,6 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
               "error.type" { it == null || it == Exception.name }
               "error.stack" { it == null || it instanceof String }
             }
-            defaultTags(true)
           }
         }
       }

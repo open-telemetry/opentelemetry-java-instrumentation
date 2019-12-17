@@ -92,7 +92,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
             errorTags IndexNotFoundException, "no such index"
-            defaultTags()
           }
         }
       }
@@ -154,7 +153,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
-            defaultTags()
           }
         }
       }
@@ -170,7 +168,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
-            defaultTags()
           }
         }
       }
@@ -188,7 +185,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.search.types" indexType
-            defaultTags()
           }
         }
       }
@@ -205,7 +201,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
             "elasticsearch.request.indices" indexName
-            defaultTags()
           }
         }
       }
@@ -226,7 +221,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" indexType
-            defaultTags()
           }
         }
       }
@@ -246,7 +240,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
           }
         }
       }
@@ -264,7 +257,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.search.types" indexType
-            defaultTags()
           }
         }
       }
@@ -344,7 +336,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
-            defaultTags()
           }
         }
       }

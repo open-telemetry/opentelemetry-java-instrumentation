@@ -620,7 +620,6 @@ class SpymemcachedTest extends AgentTestRunner {
       parent()
       errored false
       tags {
-        defaultTags()
       }
     }
   }
@@ -665,8 +664,6 @@ class SpymemcachedTest extends AgentTestRunner {
             IllegalArgumentException,
             "Key is too long (maxlen = 250)")
         }
-
-        defaultTags()
       }
     }
   }

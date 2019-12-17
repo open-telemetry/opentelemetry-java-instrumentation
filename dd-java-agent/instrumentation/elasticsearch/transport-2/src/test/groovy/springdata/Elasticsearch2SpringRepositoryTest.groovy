@@ -52,7 +52,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.search.types" "doc"
-            defaultTags()
           }
         }
       }
@@ -88,7 +87,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" "doc"
-            defaultTags()
           }
         }
       }
@@ -108,7 +106,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
           }
         }
       }
@@ -139,7 +136,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
             "elasticsearch.version" Number
-            defaultTags()
           }
         }
       }
@@ -172,7 +168,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" "doc"
-            defaultTags()
           }
         }
       }
@@ -192,7 +187,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
           }
         }
       }
@@ -215,7 +209,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
             "elasticsearch.version" Number
-            defaultTags()
           }
         }
       }
@@ -247,7 +240,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" "doc"
-            defaultTags()
           }
         }
       }
@@ -267,7 +259,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
           }
         }
       }
@@ -285,7 +276,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.search.types" "doc"
-            defaultTags()
           }
         }
       }

@@ -130,7 +130,6 @@ class JMS1Test extends AgentTestRunner {
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
-            defaultTags()
           }
         }
       }
@@ -168,7 +167,6 @@ class JMS1Test extends AgentTestRunner {
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
-            defaultTags()
           }
         }
       }
@@ -219,7 +217,6 @@ class JMS1Test extends AgentTestRunner {
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
-            defaultTags()
           }
         }
       }
@@ -251,7 +248,6 @@ class JMS1Test extends AgentTestRunner {
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           "span.origin.type" ActiveMQMessageProducer.name
-          defaultTags()
         }
       }
     }
@@ -275,7 +271,6 @@ class JMS1Test extends AgentTestRunner {
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
           "span.origin.type" origin.name
-          defaultTags(true)
         }
       }
     }

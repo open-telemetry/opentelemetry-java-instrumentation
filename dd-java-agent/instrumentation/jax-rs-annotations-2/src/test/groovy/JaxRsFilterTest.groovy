@@ -3,13 +3,6 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.dropwizard.testing.junit.ResourceTestRule
-import javax.ws.rs.client.Entity
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.Provider
 import org.jboss.resteasy.core.Dispatcher
 import org.jboss.resteasy.mock.MockDispatcherFactory
 import org.jboss.resteasy.mock.MockHttpRequest
@@ -17,6 +10,14 @@ import org.jboss.resteasy.mock.MockHttpResponse
 import org.junit.ClassRule
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import javax.ws.rs.client.Entity
+import javax.ws.rs.container.ContainerRequestContext
+import javax.ws.rs.container.ContainerRequestFilter
+import javax.ws.rs.container.PreMatching
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.Provider
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
@@ -62,7 +63,6 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" parentResourceName
             "$Tags.COMPONENT" "jax-rs"
-            defaultTags()
           }
         }
         span(1) {
@@ -72,7 +72,6 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" controllerName
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
-            defaultTags()
           }
         }
       }

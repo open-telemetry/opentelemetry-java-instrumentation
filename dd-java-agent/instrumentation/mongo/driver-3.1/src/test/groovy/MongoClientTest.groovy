@@ -256,7 +256,6 @@ class MongoClientTest extends MongoBaseTest {
         }
         "$Tags.DB_TYPE" "mongo"
         "$Tags.DB_INSTANCE" instance
-        defaultTags()
       }
     }
   }

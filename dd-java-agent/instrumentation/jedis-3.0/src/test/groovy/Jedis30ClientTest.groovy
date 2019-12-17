@@ -59,7 +59,6 @@ class Jedis30ClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
-            defaultTags()
           }
         }
       }
@@ -85,7 +84,6 @@ class Jedis30ClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
-            defaultTags()
           }
         }
       }
@@ -99,7 +97,6 @@ class Jedis30ClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "GET"
-            defaultTags()
           }
         }
       }
@@ -125,7 +122,6 @@ class Jedis30ClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
-            defaultTags()
           }
         }
       }
@@ -139,7 +135,6 @@ class Jedis30ClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "RANDOMKEY"
-            defaultTags()
           }
         }
       }

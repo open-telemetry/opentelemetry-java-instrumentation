@@ -97,7 +97,6 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.DB_TYPE" "elasticsearch"
-            defaultTags()
           }
         }
         span(1) {
@@ -110,7 +109,6 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            defaultTags()
           }
         }
       }
