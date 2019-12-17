@@ -41,19 +41,23 @@ import java.util.regex.Pattern;
  */
 public class AgentBootstrap {
 
-  public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
+  public static void premain(final String agentArgs, final Instrumentation inst) {
     agentmain(agentArgs, inst);
   }
 
-  public static void agentmain(final String agentArgs, final Instrumentation inst)
-      throws Exception {
+  public static void agentmain(final String agentArgs, final Instrumentation inst) {
+    try {
 
-    final URL bootstrapURL = installBootstrapJar(inst);
+      final URL bootstrapURL = installBootstrapJar(inst);
 
-    final Class<?> agentClass =
-        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.Agent");
-    final Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
-    startMethod.invoke(null, inst, bootstrapURL);
+      final Class<?> agentClass =
+          ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.Agent");
+      final Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
+      startMethod.invoke(null, inst, bootstrapURL);
+    } catch (final Throwable ex) {
+      // Don't rethrow.  We don't have a log manager here, so just print.
+      ex.printStackTrace();
+    }
   }
 
   private static synchronized URL installBootstrapJar(final Instrumentation inst)
@@ -106,8 +110,12 @@ public class AgentBootstrap {
       throw new RuntimeException("Unable to parse javaagent parameter: " + agentArgument);
     }
 
-    bootstrapURL = new URL("file:" + matcher.group(1));
-    inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(bootstrapURL.toURI())));
+    final File javaagentFile = new File(matcher.group(1));
+    if (!(javaagentFile.exists() || javaagentFile.isFile())) {
+      throw new RuntimeException("Unable to find javaagent file: " + javaagentFile);
+    }
+    bootstrapURL = javaagentFile.toURI().toURL();
+    inst.appendToBootstrapClassLoaderSearch(new JarFile(javaagentFile));
 
     return bootstrapURL;
   }
