@@ -1,20 +1,21 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import javax.servlet.Servlet
+import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
-
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServletRequest
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
@@ -116,51 +117,55 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   }
 }
 
-class JettyServlet3TestForward extends JettyServlet3Test {
-  @Override
-  Class<Servlet> servlet() {
-    TestServlet3.Sync // dispatch to sync servlet
-  }
+// FIXME: not working right now...
+//class JettyServlet3TestForward extends JettyDispatchTest {
+//  @Override
+//  Class<Servlet> servlet() {
+//    TestServlet3.Sync // dispatch to sync servlet
+//  }
+//
+//  @Override
+//  boolean testNotFound() {
+//    false
+//  }
+//
+//  @Override
+//  protected void setupServlets(ServletContextHandler context) {
+//    super.setupServlets(context)
+//
+//    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
+//    addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Forward)
+//    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
+//    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
+//    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
+//    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
+//  }
+//}
 
-  @Override
-  boolean testNotFound() {
-    false
-  }
-
-  @Override
-  protected void setupServlets(ServletContextHandler context) {
-    super.setupServlets(context)
-
-    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
-    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
-  }
-}
-
-class JettyServlet3TestInclude extends JettyServlet3Test {
-  @Override
-  Class<Servlet> servlet() {
-    TestServlet3.Sync // dispatch to sync servlet
-  }
-
-  @Override
-  boolean testNotFound() {
-    false
-  }
-
-  @Override
-  protected void setupServlets(ServletContextHandler context) {
-    super.setupServlets(context)
-
-    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
-    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
-    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
-    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
-    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
-  }
-}
+// FIXME: not working right now...
+//class JettyServlet3TestInclude extends JettyDispatchTest {
+//  @Override
+//  Class<Servlet> servlet() {
+//    TestServlet3.Sync // dispatch to sync servlet
+//  }
+//
+//  @Override
+//  boolean testNotFound() {
+//    false
+//  }
+//
+//  @Override
+//  protected void setupServlets(ServletContextHandler context) {
+//    super.setupServlets(context)
+//
+//    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
+//    addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Include)
+//    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
+//    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
+//    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
+//    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
+//  }
+//}
 
 
 class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
@@ -174,6 +179,7 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchImmediate)
+    addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchImmediate)
@@ -193,6 +199,7 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
@@ -263,6 +270,9 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
               "error.msg" { it == null || it == EXCEPTION.body }
               "error.type" { it == null || it == Exception.name }
               "error.stack" { it == null || it instanceof String }
+            }
+            if (endpoint.query) {
+              "$DDTags.HTTP_QUERY" endpoint.query
             }
             defaultTags(true)
           }

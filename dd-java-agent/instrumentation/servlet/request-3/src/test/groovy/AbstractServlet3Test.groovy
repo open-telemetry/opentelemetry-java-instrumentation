@@ -1,16 +1,17 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
+import javax.servlet.Servlet
 import okhttp3.Request
 import org.apache.catalina.core.ApplicationFilterChain
-
-import javax.servlet.Servlet
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -53,6 +54,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     def servlet = servlet()
 
     addServlet(context, SUCCESS.path, servlet)
+    addServlet(context, QUERY_PARAM.path, servlet)
     addServlet(context, ERROR.path, servlet)
     addServlet(context, EXCEPTION.path, servlet)
     addServlet(context, REDIRECT.path, servlet)
@@ -98,6 +100,9 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
+        }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
         }
         defaultTags(true)
       }

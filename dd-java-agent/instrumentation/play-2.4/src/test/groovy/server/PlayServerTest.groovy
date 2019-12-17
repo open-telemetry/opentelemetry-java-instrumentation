@@ -4,6 +4,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.play24.PlayHttpServerDecorator
@@ -15,6 +16,7 @@ import java.util.function.Supplier
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -26,6 +28,11 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
         .GET(SUCCESS.getPath()).routeTo({
         controller(SUCCESS) {
           Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
+        }
+      } as Supplier)
+        .GET(QUERY_PARAM.getPath()).routeTo({
+        controller(QUERY_PARAM) {
+          Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
         }
       } as Supplier)
         .GET(REDIRECT.getPath()).routeTo({
@@ -97,6 +104,9 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
           "$Tags.ERROR" true
         } else if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
+        }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
         }
         defaultTags()
       }

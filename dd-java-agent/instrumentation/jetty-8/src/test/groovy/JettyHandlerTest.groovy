@@ -1,21 +1,22 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.jetty8.JettyDecorator
+import javax.servlet.DispatcherType
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.ErrorHandler
 
-import javax.servlet.DispatcherType
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -78,6 +79,10 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
           response.status = endpoint.status
           response.writer.print(endpoint.body)
           break
+        case QUERY_PARAM:
+          response.status = endpoint.status
+          response.writer.print(request.queryString)
+          break
         case REDIRECT:
           response.sendRedirect(endpoint.body)
           break
@@ -138,6 +143,9 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
+        }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
         }
         defaultTags(true)
       }

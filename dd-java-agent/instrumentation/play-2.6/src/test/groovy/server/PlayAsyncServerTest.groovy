@@ -14,6 +14,7 @@ import java.util.function.Supplier
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -34,6 +35,13 @@ class PlayAsyncServerTest extends PlayServerTest {
         CompletableFuture.supplyAsync({
           controller(SUCCESS) {
             Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
+          }
+        }, execContext)
+      } as Supplier)
+        .GET(QUERY_PARAM.getPath()).routeAsync({
+        CompletableFuture.supplyAsync({
+          controller(QUERY_PARAM) {
+            Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
           }
         }, execContext)
       } as Supplier)

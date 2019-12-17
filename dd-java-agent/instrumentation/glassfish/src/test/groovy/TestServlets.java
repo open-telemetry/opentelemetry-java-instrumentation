@@ -26,6 +26,25 @@ public class TestServlets {
     }
   }
 
+  @WebServlet("/query")
+  public static class Query extends HttpServlet {
+    @Override
+    protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
+      final HttpServerTest.ServerEndpoint endpoint =
+          HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
+      HttpServerTest.controller(
+          endpoint,
+          new Closure(null) {
+            public Object doCall() throws Exception {
+              resp.setContentType("text/plain");
+              resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(req.getQueryString());
+              return null;
+            }
+          });
+    }
+  }
+
   @WebServlet("/redirect")
   public static class Redirect extends HttpServlet {
     @Override

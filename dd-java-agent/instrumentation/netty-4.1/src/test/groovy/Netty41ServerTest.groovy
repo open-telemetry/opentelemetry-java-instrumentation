@@ -23,6 +23,7 @@ import io.netty.util.CharsetUtil
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH
@@ -47,7 +48,8 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDe
           pipeline.addLast([
             channelRead0       : { ctx, msg ->
               if (msg instanceof HttpRequest) {
-                ServerEndpoint endpoint = ServerEndpoint.forPath((msg as HttpRequest).uri)
+                def uri = URI.create((msg as HttpRequest).uri)
+                ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
                 ctx.write controller(endpoint) {
                   ByteBuf content = null
                   FullHttpResponse response = null
@@ -55,6 +57,10 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDe
                     case SUCCESS:
                     case ERROR:
                       content = Unpooled.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
+                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                      break
+                    case QUERY_PARAM:
+                      content = Unpooled.copiedBuffer(uri.query, CharsetUtil.UTF_8)
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
                       break
                     case REDIRECT:
