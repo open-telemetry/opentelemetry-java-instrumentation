@@ -35,7 +35,6 @@ class JerseyTest extends AgentTestRunner {
           tags {
             "$DDTags.RESOURCE_NAME" expectedResourceName
             "$Tags.COMPONENT" "jax-rs"
-            defaultTags()
           }
         }
 
@@ -46,7 +45,6 @@ class JerseyTest extends AgentTestRunner {
             "$DDTags.RESOURCE_NAME" controllerName
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
-            defaultTags()
           }
         }
       }
