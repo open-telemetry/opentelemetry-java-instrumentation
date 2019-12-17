@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jaxrs2;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.hasSuperMethod;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
@@ -8,6 +9,7 @@ import static datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DEC
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -47,21 +49,27 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".JaxRsAnnotationsDecorator",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.tooling.ClassHierarchyIterable",
+      "datadog.trace.agent.tooling.ClassHierarchyIterable$ClassIterator",
+      packageName + ".JaxRsAnnotationsDecorator",
     };
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isAnnotatedWith(
-            named("javax.ws.rs.Path")
-                .or(named("javax.ws.rs.DELETE"))
-                .or(named("javax.ws.rs.GET"))
-                .or(named("javax.ws.rs.HEAD"))
-                .or(named("javax.ws.rs.OPTIONS"))
-                .or(named("javax.ws.rs.POST"))
-                .or(named("javax.ws.rs.PUT"))),
+        isMethod()
+            .and(
+                hasSuperMethod(
+                    isAnnotatedWith(
+                        named("javax.ws.rs.Path")
+                            .or(named("javax.ws.rs.DELETE"))
+                            .or(named("javax.ws.rs.GET"))
+                            .or(named("javax.ws.rs.HEAD"))
+                            .or(named("javax.ws.rs.OPTIONS"))
+                            .or(named("javax.ws.rs.POST"))
+                            .or(named("javax.ws.rs.PUT"))))),
         JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 
@@ -74,7 +82,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       final AgentSpan parent = activeSpan();
 
       final AgentSpan span = startSpan(JAX_ENDPOINT_OPERATION_NAME);
-      DECORATE.onControllerStart(span, parent, target.getClass(), method);
+      DECORATE.onJaxRsSpan(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
       final AgentScope scope = activateSpan(span, false);

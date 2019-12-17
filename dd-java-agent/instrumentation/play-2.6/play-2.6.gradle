@@ -17,13 +17,13 @@ muzzle {
   pass {
     group = 'com.typesafe.play'
     module = 'play_2.12'
-    versions = '[2.6.0,)'
+    versions = '[2.6.0,2.8.0)'
     assertInverse = true
   }
   pass {
     group = 'com.typesafe.play'
     module = 'play_2.13'
-    versions = '[2.6.0,)'
+    versions = '[2.6.0,2.8.0)'
     assertInverse = true
   }
 }
@@ -52,6 +52,7 @@ dependencies {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 
+  // TODO: This should be changed to the latest in scala 2.13 instead of 2.11 since its ahead
   latestDepTestCompile group: 'com.typesafe.play', name: "play-java_$scalaVersion", version: '2.+'
   latestDepTestCompile(group: 'com.typesafe.play', name: "play-test_$scalaVersion", version: '2.+') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'

@@ -23,7 +23,7 @@ import java.lang.ref.WeakReference;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -254,7 +254,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private final String operationName;
 
     // Builder attributes
-    private final Map<String, Object> tags = new HashMap<>();
+    private final Map<String, Object> tags = new LinkedHashMap<>();
     private long timestampMicro;
     private SpanContext parent;
     private boolean errorFlag;
