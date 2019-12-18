@@ -174,12 +174,6 @@ public final class AgentTracerImpl implements TracerAPI {
     }
 
     @Override
-    public AgentSpan setErrorMessage(final String errorMessage) {
-      span.log(singletonMap(LogFields.MESSAGE, errorMessage));
-      return this;
-    }
-
-    @Override
     public AgentSpan addThrowable(final Throwable throwable) {
       span.log(singletonMap(LogFields.ERROR_OBJECT, throwable));
       return this;
