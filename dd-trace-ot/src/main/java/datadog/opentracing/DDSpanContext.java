@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * associated Span instance
  */
 @Slf4j
-public class DDSpanContext implements io.opentracing.SpanContext {
+public class DDSpanContext implements SpanContext {
 
   private static final Map<String, Number> EMPTY_METRICS = Collections.emptyMap();
 
@@ -76,22 +76,12 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     return traceId;
   }
 
-  @Override
-  public String toTraceId() {
-    return traceId.toString();
-  }
-
   public BigInteger getParentId() {
     return parentId;
   }
 
   public BigInteger getSpanId() {
     return spanId;
-  }
-
-  @Override
-  public String toSpanId() {
-    return spanId.toString();
   }
 
   public String getOperationName() {
@@ -110,20 +100,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.errorFlag = errorFlag;
   }
 
-  /* (non-Javadoc)
-   * @see io.opentracing.SpanContext#baggageItems()
-   */
-  @Override
-  public Iterable<Map.Entry<String, String>> baggageItems() {
-    return Collections.emptyList();
-  }
-
   public PendingTrace getTrace() {
     return trace;
-  }
-
-  public DDTracer getTracer() {
-    return tracer;
   }
 
   public Map<String, Number> getMetrics() {

@@ -5,7 +5,6 @@ import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.propagation.TextMapInjectAdapter
 
 class HttpInjectorTest extends DDSpecification {
 

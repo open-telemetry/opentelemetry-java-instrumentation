@@ -1,11 +1,7 @@
 package datadog.opentracing;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-
 import datadog.trace.api.DDTags;
 import datadog.trace.common.util.Clock;
-import io.opentracing.Span;
-import io.opentracing.tag.Tag;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -95,7 +91,6 @@ public class DDSpan implements Span {
     }
   }
 
-  @Override
   public final void finish(final long stoptimeMicros) {
     finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
   }
@@ -136,131 +131,36 @@ public class DDSpan implements Span {
     setTag(DDTags.ERROR_STACK, errorString.toString());
   }
 
-  private boolean extractError(final Map<String, ?> map) {
-    if (map.get(ERROR_OBJECT) instanceof Throwable) {
-      final Throwable error = (Throwable) map.get(ERROR_OBJECT);
-      setErrorMeta(error);
-      return true;
-    }
-    return false;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.String)
-   */
   @Override
   public final DDSpan setTag(final String tag, final String value) {
-    context().setTag(tag, (Object) value);
+    context().setTag(tag, value);
     return this;
   }
 
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#setTag(java.lang.String, boolean)
-   */
   @Override
   public final DDSpan setTag(final String tag, final boolean value) {
-    context().setTag(tag, (Object) value);
+    context().setTag(tag, value);
     return this;
   }
 
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.Number)
-   */
   @Override
   public final DDSpan setTag(final String tag, final Number value) {
-    context().setTag(tag, (Object) value);
+    context().setTag(tag, value);
     return this;
   }
 
-  @Override
-  public <T> Span setTag(final Tag<T> tag, final T value) {
-    context().setTag(tag.getKey(), value);
-    return this;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#context()
-   */
   @Override
   public final DDSpanContext context() {
     return context;
   }
 
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#getBaggageItem(java.lang.String)
-   */
-  @Override
-  public final String getBaggageItem(final String key) {
-    return null;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#setBaggageItem(java.lang.String, java.lang.String)
-   */
-  @Override
-  public final DDSpan setBaggageItem(final String key, final String value) {
-    return this;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#setOperationName(java.lang.String)
-   */
   @Override
   public final DDSpan setOperationName(final String operationName) {
     context().setOperationName(operationName);
     return this;
   }
 
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#log(java.util.Map)
-   */
-  @Override
-  public final DDSpan log(final Map<String, ?> map) {
-    if (!extractError(map)) {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
-    return this;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#log(long, java.util.Map)
-   */
-  @Override
-  public final DDSpan log(final long l, final Map<String, ?> map) {
-    if (!extractError(map)) {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
-    return this;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#log(java.lang.String)
-   */
-  @Override
-  public final DDSpan log(final String s) {
-    log.debug("`log` method is not implemented. Provided log: {}", s);
-    return this;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.BaseSpan#log(long, java.lang.String)
-   */
-  @Override
-  public final DDSpan log(final long l, final String s) {
-    log.debug("`log` method is not implemented. Provided log: {}", s);
-    return this;
-  }
-
   // Getters
-
-  /**
-   * Span metrics.
-   *
-   * @return metrics for this span
-   */
-  public Map<String, Number> getMetrics() {
-    return context.getMetrics();
-  }
 
   public long getStartTime() {
     return startTimeNano > 0 ? startTimeNano : TimeUnit.MICROSECONDS.toNanos(startTimeMicro);

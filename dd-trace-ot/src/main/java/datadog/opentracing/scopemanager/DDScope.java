@@ -1,10 +1,12 @@
 package datadog.opentracing.scopemanager;
 
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.opentracing.Span;
+import java.io.Closeable;
 
-// Intentionally package private.
-interface DDScope extends Scope {
-  @Override
+public interface DDScope extends Closeable {
+
   Span span();
+
+  @Override
+  void close();
 }

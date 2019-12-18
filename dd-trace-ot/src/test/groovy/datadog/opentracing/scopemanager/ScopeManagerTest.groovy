@@ -3,21 +3,17 @@ package datadog.opentracing.scopemanager
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
+import datadog.opentracing.NoopSpan
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.context.ScopeListener
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.Scope
-import io.opentracing.Span
-import io.opentracing.noop.NoopSpan
 import spock.lang.Subject
 import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
 
 import static java.util.concurrent.TimeUnit.SECONDS
 
@@ -397,105 +393,6 @@ class ScopeManagerTest extends DDSpecification {
     writer == [[childSpan, span]]
   }
 
-  def "context takes control (#active)"() {
-    setup:
-    contexts.each {
-      scopeManager.addScopeContext(it)
-    }
-    def builder = tracer.buildSpan("test")
-    def scope = (AtomicReferenceScope) builder.startActive(true)
-
-    expect:
-    scopeManager.tlsScope.get() == null
-    scopeManager.active() == scope
-    contexts[active].get() == scope.get()
-    writer.empty
-
-    where:
-    active | contexts
-    0      | [new AtomicReferenceScope(true)]
-    1      | [new AtomicReferenceScope(true), new AtomicReferenceScope(true)]
-    3      | [new AtomicReferenceScope(false), new AtomicReferenceScope(true), new AtomicReferenceScope(false), new AtomicReferenceScope(true)]
-  }
-
-  def "disabled context is ignored (#contexts.size)"() {
-    setup:
-    contexts.each {
-      scopeManager.addScopeContext(it)
-    }
-    def builder = tracer.buildSpan("test")
-    def scope = builder.startActive(true)
-
-    expect:
-    contexts.findAll {
-      it.get() != null
-    } == []
-
-    scopeManager.tlsScope.get() == scope
-    scopeManager.active() == scope
-    writer.empty
-
-    where:
-    contexts                                                                                            | _
-    []                                                                                                  | _
-    [new AtomicReferenceScope(false)]                                                                   | _
-    [new AtomicReferenceScope(false), new AtomicReferenceScope(false)]                                  | _
-    [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)] | _
-  }
-
-  def "ContinuableScope put in threadLocal after continuation activation"() {
-    setup:
-    ContinuableScope scope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
-    scope.setAsyncPropagation(true)
-
-    expect:
-    scopeManager.tlsScope.get() == scope
-
-    when:
-    def cont = scope.capture()
-    scope.close()
-
-    then:
-    scopeManager.tlsScope.get() == null
-
-    when:
-    scopeManager.addScopeContext(new AtomicReferenceScope(true))
-    def newScope = cont.activate()
-
-    then:
-    newScope != scope
-    scopeManager.tlsScope.get() == newScope
-  }
-
-  def "context to threadlocal (#contexts.size)"() {
-    setup:
-    contexts.each {
-      scopeManager.addScopeContext(it)
-    }
-    def scope = tracer.buildSpan("parent").startActive(false)
-    def span = scope.span()
-
-    expect:
-    scope instanceof AtomicReferenceScope
-    scopeManager.tlsScope.get() == null
-
-    when:
-    scope.close()
-    contexts.each {
-      ((AtomicBoolean) it.enabled).set(false)
-    }
-    scope = scopeManager.activate(span, true)
-
-    then:
-    scope instanceof ContinuableScope
-    scopeManager.tlsScope.get() == scope
-
-    where:
-    contexts                                                         | _
-    [new AtomicReferenceScope(true)]                                 | _
-    [new AtomicReferenceScope(true), new AtomicReferenceScope(true)] | _
-  }
-
   def "add scope listener"() {
     setup:
     AtomicInteger activatedCount = new AtomicInteger(0)
@@ -514,14 +411,14 @@ class ScopeManagerTest extends DDSpecification {
     })
 
     when:
-    Scope scope1 = scopeManager.activate(NoopSpan.INSTANCE, true)
+    DDScope scope1 = scopeManager.activate(NoopSpan.INSTANCE, true)
 
     then:
     activatedCount.get() == 1
     closedCount.get() == 0
 
     when:
-    Scope scope2 = scopeManager.activate(NoopSpan.INSTANCE, true)
+    DDScope scope2 = scopeManager.activate(NoopSpan.INSTANCE, true)
 
     then:
     activatedCount.get() == 2
@@ -542,14 +439,14 @@ class ScopeManagerTest extends DDSpecification {
     closedCount.get() == 2
 
     when:
-    Scope continuableScope = tracer.buildSpan("foo").startActive(true)
+    DDScope continuableScope = tracer.buildSpan("foo").startActive(true)
 
     then:
     continuableScope instanceof ContinuableScope
     activatedCount.get() == 4
 
     when:
-    Scope childContinuableScope = tracer.buildSpan("child").startActive(true)
+    DDScope childContinuableScope = tracer.buildSpan("child").startActive(true)
 
     then:
     childContinuableScope instanceof ContinuableScope
@@ -571,56 +468,7 @@ class ScopeManagerTest extends DDSpecification {
     closedCount.get() == 4
   }
 
-  boolean spanFinished(Span span) {
-    return ((DDSpan) span)?.isFinished()
-  }
-
-  class AtomicReferenceScope extends AtomicReference<Span> implements ScopeContext, Scope {
-    final AtomicBoolean enabled
-
-    AtomicReferenceScope(boolean enabled) {
-      this.enabled = new AtomicBoolean(enabled)
-    }
-
-    @Override
-    boolean inContext() {
-      return enabled.get()
-    }
-
-    @Override
-    void close() {
-      getAndSet(null).finish()
-    }
-
-    @Override
-    Span span() {
-      return get()
-    }
-
-    @Override
-    Scope activate(Span span, boolean finishSpanOnClose) {
-      set(span)
-      return this
-    }
-
-    @Override
-    Scope activate(Span span) {
-      set(span)
-      return this
-    }
-
-    @Override
-    Scope active() {
-      return get() == null ? null : this
-    }
-
-    @Override
-    Span activeSpan() {
-      return active()?.span()
-    }
-
-    String toString() {
-      return "Ref: " + super.toString()
-    }
+  boolean spanFinished(DDSpan span) {
+    return span?.isFinished()
   }
 }

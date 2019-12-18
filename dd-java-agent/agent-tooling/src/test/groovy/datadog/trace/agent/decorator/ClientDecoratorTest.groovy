@@ -2,7 +2,7 @@ package datadog.trace.agent.decorator
 
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.AgentSpan
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 
 class ClientDecoratorTest extends BaseDecoratorTest {
 
@@ -19,8 +19,8 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     if (serviceName != null) {
       1 * span.setTag(DDTags.SERVICE_NAME, serviceName)
     }
-    1 * span.setTag(Tags.COMPONENT.key, "test-component")
-    1 * span.setTag(Tags.SPAN_KIND.key, "client")
+    1 * span.setTag(Tags.COMPONENT, "test-component")
+    1 * span.setTag(Tags.SPAN_KIND, "client")
     1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
     _ * span.setTag(_, _) // Want to allow other calls from child implementations.
     0 * _

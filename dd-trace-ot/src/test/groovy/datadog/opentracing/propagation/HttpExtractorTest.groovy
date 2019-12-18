@@ -2,8 +2,6 @@ package datadog.opentracing.propagation
 
 
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.SpanContext
-import io.opentracing.propagation.TextMapExtractAdapter
 import spock.lang.Shared
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
@@ -26,7 +24,7 @@ class HttpExtractorTest extends DDSpecification {
     }
 
     when:
-    final SpanContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(actual))
 
     then:
     if (expectedTraceId == null) {

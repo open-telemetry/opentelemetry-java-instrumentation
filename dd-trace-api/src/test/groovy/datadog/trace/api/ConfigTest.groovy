@@ -14,7 +14,6 @@ import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static datadog.trace.api.Config.TRACE_ENABLED
-import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
 
 class ConfigTest extends DDSpecification {
@@ -33,7 +32,6 @@ class ConfigTest extends DDSpecification {
     then:
     config.traceEnabled == true
     config.writerType == "LoggingWriter"
-    config.traceResolverEnabled == true
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..599).toSet()
     config.httpClientSplitByDomain == false
@@ -55,7 +53,6 @@ class ConfigTest extends DDSpecification {
     def prop = new Properties()
     prop.setProperty(TRACE_ENABLED, "false")
     prop.setProperty(WRITER_TYPE, "LoggingWriter")
-    prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
     prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -69,7 +66,6 @@ class ConfigTest extends DDSpecification {
     then:
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.traceResolverEnabled == false
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -82,7 +78,6 @@ class ConfigTest extends DDSpecification {
     setup:
     System.setProperty(PREFIX + TRACE_ENABLED, "false")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
-    System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -96,7 +91,6 @@ class ConfigTest extends DDSpecification {
     then:
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.traceResolverEnabled == false
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -135,7 +129,6 @@ class ConfigTest extends DDSpecification {
     setup:
     System.setProperty(PREFIX + TRACE_ENABLED, " ")
     System.setProperty(PREFIX + WRITER_TYPE, " ")
-    System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
@@ -147,7 +140,6 @@ class ConfigTest extends DDSpecification {
     then:
     config.traceEnabled == true
     config.writerType == " "
-    config.traceResolverEnabled == true
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..599).toSet()
     config.httpClientSplitByDomain == false
@@ -159,7 +151,6 @@ class ConfigTest extends DDSpecification {
     Properties properties = new Properties()
     properties.setProperty(TRACE_ENABLED, "false")
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
-    properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
     properties.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -172,7 +163,6 @@ class ConfigTest extends DDSpecification {
     then:
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.traceResolverEnabled == false
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true

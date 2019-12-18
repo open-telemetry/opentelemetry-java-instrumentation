@@ -10,24 +10,18 @@ apply from: "${rootDir}/gradle/publish.gradle"
 minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.5
 excludedClassesCoverage += [
+  'datadog.opentracing.NoopSpan',
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.writer.LoggingWriter'
 ]
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
-testSets {
-  ot31CompatabilityTest
-  ot33CompatabilityTest
-}
-
 dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
   compile project(':dd-trace-api')
-  compile deps.opentracing
-  compile group: 'io.opentracing.contrib', name: 'opentracing-tracerresolver', version: '0.1.0'
 
   compile deps.slf4j
   compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0' // Last version to support Java7
@@ -41,33 +35,7 @@ dependencies {
   testCompile project(":dd-java-agent:testing")
   testCompile project(':utils:gc-utils')
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
-
-  ot31CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-api', version: '0.31.0'
-  ot31CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-util', version: '0.31.0'
-  ot31CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-noop', version: '0.31.0'
-
-  ot33CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-api', version: '0.33.0'
-  ot33CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-util', version: '0.33.0'
-  ot33CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-noop', version: '0.33.0'
 }
-
-[configurations.ot31CompatabilityTestCompile, configurations.ot31CompatabilityTestRuntime].each {
-  it.resolutionStrategy {
-    force group: 'io.opentracing', name: 'opentracing-api', version: '0.31.0'
-    force group: 'io.opentracing', name: 'opentracing-util', version: '0.31.0'
-    force group: 'io.opentracing', name: 'opentracing-noop', version: '0.31.0'
-  }
-}
-[configurations.ot33CompatabilityTestCompile, configurations.ot33CompatabilityTestRuntime].each {
-  it.resolutionStrategy {
-    force group: 'io.opentracing', name: 'opentracing-api', version: '0.33.0'
-    force group: 'io.opentracing', name: 'opentracing-util', version: '0.33.0'
-    force group: 'io.opentracing', name: 'opentracing-noop', version: '0.33.0'
-  }
-}
-
-test.finalizedBy ot31CompatabilityTest
-test.finalizedBy ot33CompatabilityTest
 
 jmh {
 //  include = [".*URLAsResourceNameBenchmark"]

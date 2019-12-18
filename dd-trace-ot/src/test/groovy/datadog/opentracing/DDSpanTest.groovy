@@ -3,7 +3,6 @@ package datadog.opentracing
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.SpanContext
 
 import java.util.concurrent.TimeUnit
 

@@ -1,8 +1,6 @@
 package datadog.opentracing.propagation
 
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.SpanContext
-import io.opentracing.propagation.TextMapExtractAdapter
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
@@ -46,7 +44,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
     ]
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
+    ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null
@@ -61,7 +59,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
     ]
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
+    ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null
@@ -75,7 +73,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
     ]
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
+    ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null

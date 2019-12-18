@@ -2,20 +2,13 @@ package datadog.opentracing;
 
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
+import datadog.opentracing.propagation.TextMapExtract;
+import datadog.opentracing.propagation.TextMapInject;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
-import datadog.opentracing.scopemanager.ScopeContext;
+import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.api.Config;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
-import io.opentracing.References;
-import io.opentracing.Scope;
-import io.opentracing.ScopeManager;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapExtract;
-import io.opentracing.propagation.TextMapInject;
-import io.opentracing.tag.Tag;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
@@ -23,14 +16,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
-public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace.api.Tracer {
+public class DDTracer implements Closeable, datadog.trace.api.Tracer {
   // UINT64 max value
   public static final BigInteger TRACE_ID_MAX =
       BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
@@ -56,10 +48,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
     this(Config.get());
-  }
-
-  public DDTracer(final Properties config) {
-    this(Config.get(config));
   }
 
   private DDTracer(final Config config) {
@@ -109,48 +97,24 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
   }
 
-  @Deprecated
-  public void addScopeContext(final ScopeContext context) {
-    scopeManager.addScopeContext(context);
-  }
-
-  @Override
   public ContextualScopeManager scopeManager() {
     return scopeManager;
   }
 
-  @Override
   public Span activeSpan() {
     return scopeManager.activeSpan();
   }
 
-  @Override
-  public Scope activateSpan(final Span span) {
-    return scopeManager.activate(span);
-  }
-
-  @Override
   public DDSpanBuilder buildSpan(final String operationName) {
     return new DDSpanBuilder(operationName, scopeManager);
   }
 
-  @Override
-  public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
-    if (carrier instanceof TextMapInject) {
-      injector.inject((DDSpanContext) spanContext, (TextMapInject) carrier);
-    } else {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
-    }
+  public void inject(final SpanContext spanContext, final TextMapInject carrier) {
+    injector.inject((DDSpanContext) spanContext, carrier);
   }
 
-  @Override
-  public <T> SpanContext extract(final Format<T> format, final T carrier) {
-    if (carrier instanceof TextMapExtract) {
-      return extractor.extract((TextMapExtract) carrier);
-    } else {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
-      return null;
-    }
+  public SpanContext extract(final TextMapExtract carrier) {
+    return extractor.extract(carrier);
   }
 
   /** @param trace a list of the spans related to the same trace */
@@ -207,8 +171,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /** Spans are built using this builder */
-  public class DDSpanBuilder implements SpanBuilder {
-    private final ScopeManager scopeManager;
+  public class DDSpanBuilder {
+    private final ContextualScopeManager scopeManager;
 
     /** Each span must have an operationName according to the opentracing specification */
     private final String operationName;
@@ -220,13 +184,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private boolean errorFlag;
     private boolean ignoreScope = false;
 
-    public DDSpanBuilder(final String operationName, final ScopeManager scopeManager) {
+    public DDSpanBuilder(final String operationName, final ContextualScopeManager scopeManager) {
       this.operationName = operationName;
       this.scopeManager = scopeManager;
     }
 
-    @Override
-    public SpanBuilder ignoreActiveSpan() {
+    public DDSpanBuilder ignoreActiveSpan() {
       ignoreScope = true;
       return this;
     }
@@ -235,48 +198,32 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return new DDSpan(timestampMicro, buildSpanContext());
     }
 
-    @Override
-    public Scope startActive(final boolean finishSpanOnClose) {
+    public DDScope startActive(final boolean finishSpanOnClose) {
       final DDSpan span = startSpan();
-      final Scope scope = scopeManager.activate(span, finishSpanOnClose);
+      final DDScope scope = scopeManager.activate(span, finishSpanOnClose);
       log.debug("Starting a new active span: {}", span);
       return scope;
     }
 
-    @Override
     @Deprecated
     public DDSpan startManual() {
       return start();
     }
 
-    @Override
     public DDSpan start() {
       final DDSpan span = startSpan();
       log.debug("Starting a new span: {}", span);
       return span;
     }
 
-    @Override
     public DDSpanBuilder withTag(final String tag, final Number number) {
       return withTag(tag, (Object) number);
     }
 
-    @Override
     public DDSpanBuilder withTag(final String tag, final String string) {
       return withTag(tag, (Object) string);
     }
 
-    @Override
-    public DDSpanBuilder withTag(final String tag, final boolean bool) {
-      return withTag(tag, (Object) bool);
-    }
-
-    @Override
-    public <T> SpanBuilder withTag(final Tag<T> tag, final T value) {
-      return withTag(tag.getKey(), value);
-    }
-
-    @Override
     public DDSpanBuilder withStartTimestamp(final long timestampMicroseconds) {
       timestampMicro = timestampMicroseconds;
       return this;
@@ -287,34 +234,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return this;
     }
 
-    @Override
     public DDSpanBuilder asChildOf(final Span span) {
       return asChildOf(span == null ? null : span.context());
     }
 
-    @Override
     public DDSpanBuilder asChildOf(final SpanContext spanContext) {
       parent = spanContext;
-      return this;
-    }
-
-    @Override
-    public DDSpanBuilder addReference(final String referenceType, final SpanContext spanContext) {
-      if (spanContext == null) {
-        return this;
-      }
-      if (!(spanContext instanceof ExtractedContext) && !(spanContext instanceof DDSpanContext)) {
-        log.debug(
-            "Expected to have a DDSpanContext or ExtractedContext but got "
-                + spanContext.getClass().getName());
-        return this;
-      }
-      if (References.CHILD_OF.equals(referenceType)
-          || References.FOLLOWS_FROM.equals(referenceType)) {
-        return asChildOf(spanContext);
-      } else {
-        log.debug("Only support reference type of CHILD_OF and FOLLOWS_FROM");
-      }
       return this;
     }
 

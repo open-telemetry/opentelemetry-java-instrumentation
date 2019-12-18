@@ -1,11 +1,10 @@
 package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
+import datadog.opentracing.scopemanager.DDScope
 import datadog.trace.api.Config
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.Scope
-import io.opentracing.noop.NoopSpan
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -143,12 +142,12 @@ class DDSpanBuilderTest extends DDSpecification {
 
   def "should link to parent span implicitly"() {
     setup:
-    final Scope parent = noopParent ?
+    final DDScope parent = noopParent ?
       tracer.scopeManager().activate(NoopSpan.INSTANCE, false) :
       tracer.buildSpan("parent")
         .startActive(false)
 
-    final BigInteger expectedParentId = noopParent ? 0G : new BigInteger(parent.span().context().toSpanId())
+    final BigInteger expectedParentId = noopParent ? 0G : ((DDSpanContext) parent.span().context()).getSpanId()
 
     final String expectedName = "fakeName"
 
@@ -181,46 +180,6 @@ class DDSpanBuilderTest extends DDSpecification {
       tracer
         .buildSpan(expectedName)
         .asChildOf(parent)
-        .start()
-
-    expect:
-    span.getOperationName() == expectedName
-  }
-
-
-  def "should inherit the DD parent attributes addReference CHILD_OF"() {
-    setup:
-    def expectedName = "fakeName"
-
-    final DDSpan parent =
-      tracer
-        .buildSpan(expectedName)
-        .start()
-
-    DDSpan span =
-      tracer
-        .buildSpan(expectedName)
-        .addReference("child_of", parent.context())
-        .start()
-
-    expect:
-    span.getOperationName() == expectedName
-  }
-
-
-  def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
-    setup:
-    def expectedName = "fakeName"
-
-    final DDSpan parent =
-      tracer
-        .buildSpan(expectedName)
-        .start()
-
-    DDSpan span =
-      tracer
-        .buildSpan(expectedName)
-        .addReference("follows_from", parent.context())
         .start()
 
     expect:

@@ -1,9 +1,9 @@
 package datadog.trace;
 
 import datadog.opentracing.DDTracer;
+import datadog.opentracing.Span;
+import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.common.writer.ListWriter;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.State;
 
@@ -13,9 +13,8 @@ public class DDTraceBenchmark {
   @State(org.openjdk.jmh.annotations.Scope.Thread)
   public static class TraceState {
     public ListWriter traceCollector = new ListWriter();
-    public Tracer tracer = new DDTracer(traceCollector);
-    // TODO: this will need to be fixed if we want backwards compatibility for older versions...
-    public io.opentracing.Scope scope = tracer.buildSpan(SPAN_NAME).startActive(true);
+    public DDTracer tracer = new DDTracer(traceCollector);
+    public DDScope scope = tracer.buildSpan(SPAN_NAME).startActive(true);
   }
 
   @Benchmark
@@ -42,7 +41,7 @@ public class DDTraceBenchmark {
 
   @Benchmark
   public Object testFullActiveSpan(final TraceState state) {
-    final io.opentracing.Scope scope = state.tracer.buildSpan(SPAN_NAME).startActive(true);
+    final DDScope scope = state.tracer.buildSpan(SPAN_NAME).startActive(true);
     scope.close();
     return scope;
   }

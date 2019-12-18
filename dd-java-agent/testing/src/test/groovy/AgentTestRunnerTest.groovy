@@ -3,11 +3,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.SpockRunner
 import datadog.trace.agent.test.utils.ClasspathUtils
 import datadog.trace.agent.test.utils.ConfigUtils
-import datadog.trace.agent.test.utils.GlobalTracerUtils
 import datadog.trace.agent.tooling.Constants
-import io.opentracing.Span
-import io.opentracing.Tracer
-import spock.lang.Shared
 
 import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
@@ -17,24 +13,14 @@ import static datadog.trace.api.Config.TRACE_CLASSES_EXCLUDE
 
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
-  private static final ClassLoader OT_LOADER
   private static final boolean AGENT_INSTALLED_IN_CLINIT
-
-  @Shared
-  private Class sharedSpanClass
 
   static {
     ConfigUtils.updateConfig {
       System.setProperty("dd." + TRACE_CLASSES_EXCLUDE, "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
     }
 
-    // when test class initializes, opentracing should be set up, but not the agent.
-    OT_LOADER = io.opentracing.Tracer.getClassLoader()
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
-  }
-
-  def setupSpec() {
-    sharedSpanClass = Span
   }
 
   def "spock runner bootstrap prefixes correct for test setup"() {
@@ -58,13 +44,9 @@ class AgentTestRunnerTest extends AgentTestRunner {
     }
 
     expect:
-    // shared OT classes should cause no trouble
-    sharedSpanClass.getClassLoader() == BOOTSTRAP_CLASSLOADER
-    Tracer.getClassLoader() == BOOTSTRAP_CLASSLOADER
     !AGENT_INSTALLED_IN_CLINIT
-    getTestTracer() == GlobalTracerUtils.getUnderlyingGlobalTracer()
+    getTestTracer() == datadog.trace.api.GlobalTracer.get()
     getAgentTransformer() != null
-    GlobalTracerUtils.getUnderlyingGlobalTracer() == datadog.trace.api.GlobalTracer.get()
     bootstrapClassesIncorrectlyLoaded == []
   }
 

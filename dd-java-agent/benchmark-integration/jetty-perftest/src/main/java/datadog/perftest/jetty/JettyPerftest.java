@@ -1,9 +1,10 @@
 package datadog.perftest.jetty;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+
 import datadog.perftest.Worker;
 import datadog.trace.api.Trace;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -58,7 +59,7 @@ public class JettyPerftest {
 
     @Trace
     private void scheduleWork(final long workTimeMS) {
-      final Span span = GlobalTracer.get().activeSpan();
+      final AgentSpan span = activeSpan();
       if (span != null) {
         span.setTag("work-time", workTimeMS);
         span.setTag("info", "interesting stuff");

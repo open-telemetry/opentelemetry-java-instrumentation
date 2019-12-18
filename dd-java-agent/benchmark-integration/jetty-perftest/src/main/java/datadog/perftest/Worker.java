@@ -1,8 +1,9 @@
 package datadog.perftest;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+
 import datadog.trace.api.Trace;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.TimeUnit;
 
 public class Worker {
@@ -10,7 +11,7 @@ public class Worker {
   @Trace
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(final long workTimeMS) {
-    final Span span = GlobalTracer.get().activeSpan();
+    final AgentSpan span = activeSpan();
     if (span != null) {
       span.setTag("work-time", workTimeMS);
       span.setTag("info", "interesting stuff");

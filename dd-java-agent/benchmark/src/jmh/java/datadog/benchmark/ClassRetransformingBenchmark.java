@@ -2,10 +2,10 @@ package datadog.benchmark;
 
 import datadog.benchmark.classes.TracedClass;
 import datadog.benchmark.classes.UntracedClass;
+import datadog.opentracing.DDTracer;
+import datadog.trace.api.GlobalTracer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -37,15 +37,7 @@ public class ClassRetransformingBenchmark {
 
     @TearDown
     public void stopAgent() {
-      try {
-        final Class<?> gt = Class.forName("io.opentracing.util.GlobalTracer");
-        final Field tracerField = gt.getDeclaredField("tracer");
-        tracerField.setAccessible(true);
-        final Object tracer = tracerField.get(null);
-        final Method close = tracer.getClass().getMethod("close");
-        close.invoke(tracer);
-      } catch (final Exception e) {
-      }
+      ((DDTracer) GlobalTracer.get()).close();
     }
   }
 

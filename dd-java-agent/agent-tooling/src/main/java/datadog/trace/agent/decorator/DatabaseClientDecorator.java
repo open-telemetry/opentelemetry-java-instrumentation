@@ -3,7 +3,7 @@ package datadog.trace.agent.decorator;
 import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 
 public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorator {
 
@@ -16,7 +16,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   @Override
   public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
-    span.setTag(Tags.DB_TYPE.getKey(), dbType());
+    span.setTag(Tags.DB_TYPE, dbType());
     return super.afterStart(span);
   }
 
@@ -30,9 +30,9 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setTag(Tags.DB_USER.getKey(), dbUser(connection));
+      span.setTag(Tags.DB_USER, dbUser(connection));
       final String instanceName = dbInstance(connection);
-      span.setTag(Tags.DB_INSTANCE.getKey(), instanceName);
+      span.setTag(Tags.DB_INSTANCE, instanceName);
 
       if (instanceName != null && Config.get().isDbClientSplitByInstance()) {
         span.setTag(DDTags.SERVICE_NAME, instanceName);
@@ -43,7 +43,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
 
   public AgentSpan onStatement(final AgentSpan span, final String statement) {
     assert span != null;
-    span.setTag(Tags.DB_STATEMENT.getKey(), statement);
+    span.setTag(Tags.DB_STATEMENT, statement);
     return span;
   }
 }

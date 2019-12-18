@@ -1,8 +1,8 @@
 package controllers
 
+import datadog.trace.instrumentation.api.AgentTracer.activeSpan
+
 import datadog.trace.api.Trace
-import io.opentracing.Span
-import io.opentracing.util.GlobalTracer
 import javax.inject.Inject
 
 import play.api.mvc._
@@ -30,7 +30,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   @Trace
   private def scheduleWork(workTimeMS: Long) {
-    val span = GlobalTracer.get().activeSpan
+    val span = activeSpan
     if (span != null) {
       span.setTag("work-time", workTimeMS)
       span.setTag("info", "interesting stuff")

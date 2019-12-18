@@ -5,7 +5,6 @@ import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import datadog.trace.bootstrap.DatadogClassLoader;
 import datadog.trace.bootstrap.PatchLogger;
 import datadog.trace.bootstrap.WeakMap;
-import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -101,10 +100,6 @@ public class ClassLoaderMatcher {
      */
     private boolean delegatesToBootstrap(final ClassLoader loader) {
       boolean delegates = true;
-      if (!loadsExpectedClass(loader, GlobalTracer.class)) {
-        log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
-        delegates = false;
-      }
       if (!loadsExpectedClass(loader, PatchLogger.class)) {
         log.debug("loader {} failed to delegate bootstrap datadog class", loader);
         delegates = false;

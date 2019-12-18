@@ -74,7 +74,6 @@ dependencies {
 
   compile project(':dd-trace-api')
   compile project(':dd-java-agent:agent-tooling')
-  compile deps.opentracing
   compile deps.autoservice
   annotationProcessor deps.autoservice
 

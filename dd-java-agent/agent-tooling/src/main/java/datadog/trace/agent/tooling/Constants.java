@@ -18,8 +18,7 @@ public final class Constants {
     "datadog.trace.api",
     "datadog.trace.bootstrap",
     "datadog.trace.context",
-    "datadog.trace.instrumentation.api",
-    "io.opentracing",
+    "datadog.trace.instrumentation.api"
   };
 
   // This is used in IntegrationTestUtils.java
@@ -35,8 +34,6 @@ public final class Constants {
     "com.blogspot.mydailyjava.weaklockfree",
     // bytebuddy
     "net.bytebuddy",
-    // OT contribs for dd trace resolver
-    "io.opentracing.contrib",
     "org.yaml.snakeyaml",
     // disruptor
     "com.lmax.disruptor",
