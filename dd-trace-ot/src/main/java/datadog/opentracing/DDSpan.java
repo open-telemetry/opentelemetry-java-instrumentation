@@ -1,6 +1,7 @@
 package datadog.opentracing;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static io.opentracing.log.Fields.MESSAGE;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -152,6 +153,9 @@ public class DDSpan implements Span, MutableSpan {
     if (map.get(ERROR_OBJECT) instanceof Throwable) {
       final Throwable error = (Throwable) map.get(ERROR_OBJECT);
       setErrorMeta(error);
+      return true;
+    } else if (map.get(MESSAGE) instanceof String) {
+      setTag(DDTags.ERROR_MSG, (String) map.get(MESSAGE));
       return true;
     }
     return false;

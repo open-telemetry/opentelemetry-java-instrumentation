@@ -4,6 +4,7 @@ import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator
 import spock.lang.Shared
@@ -69,6 +70,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
             "$Tags.ERROR" true
+            "$DDTags.ERROR_MSG" "Server Error"
             defaultTags()
           }
         }
