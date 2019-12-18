@@ -2,7 +2,6 @@ package datadog.trace.instrumentation.rmi.context;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -12,20 +11,15 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.instrumentation.api.AgentSpan;
-import java.rmi.server.ObjID;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import sun.rmi.transport.Connection;
-import sun.rmi.transport.ObjectTable;
-import sun.rmi.transport.StreamRemoteCall;
 
 @AutoService(Instrumenter.class)
 public class RmiContextInstrumentation extends Instrumenter.Default {
-  // TODO clean this up
 
   public RmiContextInstrumentation() {
     super("rmi", "rmi-context-propagator");
@@ -36,8 +30,8 @@ public class RmiContextInstrumentation extends Instrumenter.Default {
     return not(isInterface())
         .and(
             safeHasSuperType(
-                named(StreamRemoteCall.class.getName()) // TODO replace with string
-                    .or(named(ObjectTable.class.getName()))
+                named("sun.rmi.transport.StreamRemoteCall")
+                    .or(named("sun.rmi.transport.ObjectTable"))
                     .or(named("sun.rmi.transport.ObjectEndpoint"))));
   }
 
@@ -45,26 +39,22 @@ public class RmiContextInstrumentation extends Instrumenter.Default {
   public Map<String, String> contextStore() {
     final HashMap<String, String> contextStore = new HashMap<>();
     // thread context that stores distributed context
-    contextStore.put(Thread.class.getName(), AgentSpan.Context.class.getName());
+    contextStore.put("java.lang.Thread", "datadog.trace.instrumentation.api.AgentSpan$Context");
 
     // caching if a connection can support enhanced format
-    contextStore.put(Connection.class.getName(), Boolean.class.getName());
-
-    // used to avoid reflection when instrumenting protected class ObjectEndpoint
-    contextStore.put(Object.class.getName(), ObjID.class.getName());
+    contextStore.put("sun.rmi.transport.Connection", "java.lang.Boolean");
     return contextStore;
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".StreamRemoteCallConstructorAdvice",
       packageName + ".ContextPayload",
       packageName + ".ContextPayload$InjectAdapter",
       packageName + ".ContextPayload$ExtractAdapter",
-      packageName + ".ObjectTableAdvice",
       packageName + ".ContextDispatcher",
-      packageName + ".ObjectEndpointConstructorAdvice",
+      packageName + ".StreamRemoteCallConstructorAdvice",
+      packageName + ".ObjectTableAdvice",
       packageName + ".ObjectTableAdvice$DummyRemote"
     };
   }
@@ -85,9 +75,6 @@ public class RmiContextInstrumentation extends Instrumenter.Default {
             .and((takesArgument(0, named("sun.rmi.transport.ObjectEndpoint")))),
         packageName + ".ObjectTableAdvice");
 
-    transformers.put(
-        isConstructor().and(isDeclaredBy(named("sun.rmi.transport.ObjectEndpoint"))),
-        packageName + ".ObjectEndpointConstructorAdvice");
-    return transformers;
+    return Collections.unmodifiableMap(transformers);
   }
 }

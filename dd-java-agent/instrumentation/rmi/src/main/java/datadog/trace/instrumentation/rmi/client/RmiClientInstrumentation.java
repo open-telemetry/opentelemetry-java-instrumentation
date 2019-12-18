@@ -30,7 +30,9 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ClientDecorator", "datadog.trace.agent.decorator.BaseDecorator"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      packageName + ".ClientDecorator",
+      packageName + ".ClientAdvice"
     };
   }
 

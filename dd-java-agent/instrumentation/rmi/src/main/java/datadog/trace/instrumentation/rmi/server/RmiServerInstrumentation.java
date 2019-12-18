@@ -42,7 +42,9 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ServerDecorator", "datadog.trace.agent.decorator.BaseDecorator"
+      packageName + ".ServerDecorator",
+      packageName + ".RmiServerInstrumentation$ServerAdvice",
+      "datadog.trace.agent.decorator.BaseDecorator"
     };
   }
 
@@ -55,7 +57,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(not(isStatic())),
-        "datadog.trace.instrumentation.rmi.server.RmiServerInstrumentation$ServerAdvice");
+        packageName + ".RmiServerInstrumentation$ServerAdvice");
   }
 
   public static class ServerAdvice {
