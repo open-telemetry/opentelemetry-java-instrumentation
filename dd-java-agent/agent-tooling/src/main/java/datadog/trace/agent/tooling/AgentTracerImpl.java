@@ -1,7 +1,5 @@
 package datadog.trace.agent.tooling;
 
-import static java.util.Collections.singletonMap;
-
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.NoopSpan;
@@ -10,7 +8,6 @@ import datadog.opentracing.SpanContext;
 import datadog.opentracing.propagation.TextMapExtract;
 import datadog.opentracing.propagation.TextMapInject;
 import datadog.opentracing.scopemanager.DDScope;
-import datadog.trace.api.LogFields;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
@@ -175,7 +172,9 @@ public final class AgentTracerImpl implements TracerAPI {
 
     @Override
     public AgentSpan addThrowable(final Throwable throwable) {
-      span.log(singletonMap(LogFields.ERROR_OBJECT, throwable));
+      if (span instanceof DDSpan) {
+        ((DDSpan) span).setErrorMeta(throwable);
+      }
       return this;
     }
 

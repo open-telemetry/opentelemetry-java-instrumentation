@@ -1,7 +1,6 @@
 package datadog.opentracing;
 
 import datadog.trace.api.DDTags;
-import datadog.trace.api.LogFields;
 import datadog.trace.common.util.Clock;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -132,15 +131,6 @@ public class DDSpan implements Span {
     setTag(DDTags.ERROR_STACK, errorString.toString());
   }
 
-  private boolean extractError(final Map<String, ?> map) {
-    if (map.get(LogFields.ERROR_OBJECT) instanceof Throwable) {
-      final Throwable error = (Throwable) map.get(LogFields.ERROR_OBJECT);
-      setErrorMeta(error);
-      return true;
-    }
-    return false;
-  }
-
   @Override
   public final DDSpan setTag(final String tag, final String value) {
     context().setTag(tag, value);
@@ -167,14 +157,6 @@ public class DDSpan implements Span {
   @Override
   public final DDSpan setOperationName(final String operationName) {
     context().setOperationName(operationName);
-    return this;
-  }
-
-  @Override
-  public final DDSpan log(final Map<String, ?> map) {
-    if (!extractError(map)) {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
     return this;
   }
 

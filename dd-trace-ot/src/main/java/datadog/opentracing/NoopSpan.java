@@ -1,7 +1,5 @@
 package datadog.opentracing;
 
-import java.util.Map;
-
 public class NoopSpan implements Span {
   public static final NoopSpan INSTANCE = new NoopSpan();
 
@@ -25,11 +23,6 @@ public class NoopSpan implements Span {
 
   @Override
   public NoopSpan setTag(final String key, final Number value) {
-    return this;
-  }
-
-  @Override
-  public NoopSpan log(final Map<String, ?> fields) {
     return this;
   }
 
