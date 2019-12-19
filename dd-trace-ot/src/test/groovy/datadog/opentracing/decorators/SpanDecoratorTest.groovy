@@ -470,4 +470,72 @@ class SpanDecoratorTest extends DDSpecification {
     then:
     span.resourceName == "some-statement"
   }
+
+  def "disable decorator via config"() {
+    setup:
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.trace." + PeerServiceDecorator.getSimpleName().toLowerCase() + ".enabled", "false")
+    }
+
+    tracer = new DDTracer(
+      "some-service",
+      new LoggingWriter(),
+      new AllSampler(),
+      "some-runtime-id",
+      emptyMap(),
+      emptyMap(),
+      emptyMap(),
+      emptyMap()
+    )
+
+    when:
+    def span = tracer.buildSpan("some span").withTag(Tags.PEER_SERVICE.key, "peer-service").start()
+    span.finish()
+
+    then:
+    span.getServiceName() == "some-service"
+
+    cleanup:
+    ConfigUtils.updateConfig {
+      System.clearProperty("dd.trace." + PeerServiceDecorator.getSimpleName().toLowerCase() + ".enabled")
+    }
+  }
+
+  def "disabling service decorator does not disable split by tags"() {
+    setup:
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.trace." + ServiceNameDecorator.getSimpleName().toLowerCase() + ".enabled", "false")
+    }
+
+    tracer = new DDTracer(
+      "some-service",
+      new LoggingWriter(),
+      new AllSampler(),
+      "some-runtime-id",
+      emptyMap(),
+      emptyMap(),
+      emptyMap(),
+      emptyMap()
+    )
+
+    when:
+    def span = tracer.buildSpan("some span").withTag(tag, name).start()
+    span.finish()
+
+    then:
+    span.getServiceName() == expected
+
+    cleanup:
+    ConfigUtils.updateConfig {
+      System.clearProperty("dd.trace." + ServiceNameDecorator.getSimpleName().toLowerCase() + ".enabled")
+    }
+
+    where:
+    tag                 | name          | expected
+    DDTags.SERVICE_NAME | "new-service" | "some-service"
+    "service"           | "new-service" | "some-service"
+    "sn.tag1"           | "new-service" | "new-service"
+
+
+  }
 }

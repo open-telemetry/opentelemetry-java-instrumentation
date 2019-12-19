@@ -596,6 +596,10 @@ public class Config {
     return jmxFetchIntegrationEnabled(integrationNames, defaultEnabled);
   }
 
+  public boolean isDecoratorEnabled(final String name) {
+    return getBooleanSettingFromEnvironment("trace." + name.toLowerCase() + ".enabled", true);
+  }
+
   /**
    * @deprecated This method should only be used internally. Use the instance getter instead {@link
    *     #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
