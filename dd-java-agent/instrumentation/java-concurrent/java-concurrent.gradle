@@ -1,3 +1,10 @@
+// This won't work until the akka and scala integrations are split into separate projects.
+//muzzle {
+//  pass {
+//    coreJdk()
+//  }
+//}
+
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
 apply from: "${rootDir}/gradle/test-with-kotlin.gradle"
