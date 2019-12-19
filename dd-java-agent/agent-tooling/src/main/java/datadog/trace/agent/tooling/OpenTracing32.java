@@ -298,7 +298,11 @@ public final class OpenTracing32 implements TracerAPI {
     private Extractor(final C carrier, final Getter<C> getter) {
       extracted = new HashMap<>();
       for (final String key : getter.keys(carrier)) {
-        extracted.put(key, getter.get(carrier, key));
+        // extracted header value
+        String s = getter.get(carrier, key);
+        // in case of multiple values in the header, need to parse
+        if (s != null) s = s.split(",")[0].trim();
+        extracted.put(key, s);
       }
     }
 
