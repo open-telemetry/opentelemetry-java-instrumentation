@@ -21,7 +21,6 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import okio.BufferedSink;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
@@ -108,11 +107,11 @@ public class DDApi {
     return sendSerializedTraces(serializedTraces.size(), sizeInBytes, serializedTraces);
   }
 
-  byte[] serializeTrace(final List<DDSpan> trace) throws JsonProcessingException {
+  public byte[] serializeTrace(final List<DDSpan> trace) throws JsonProcessingException {
     return OBJECT_MAPPER.writeValueAsBytes(trace);
   }
 
-  Response sendSerializedTraces(
+  public Response sendSerializedTraces(
       final int representativeCount, final Integer sizeInBytes, final List<byte[]> traces) {
     try {
       final RequestBody body =
@@ -348,21 +347,21 @@ public class DDApi {
     }
 
     public final boolean success() {
-      return this.success;
+      return success;
     }
 
     // TODO: DQH - In Java 8, switch to OptionalInteger
     public final Integer status() {
-      return this.status;
+      return status;
     }
 
     public final JsonNode json() {
-      return this.json;
+      return json;
     }
 
     // TODO: DQH - In Java 8, switch to Optional<Throwable>?
     public final Throwable exception() {
-      return this.exception;
+      return exception;
     }
   }
 

@@ -9,6 +9,7 @@ import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ddagent.Monitor
+import datadog.trace.common.writer.ddagent.TraceConsumer
 import datadog.trace.util.test.DDSpecification
 import spock.lang.Timeout
 
@@ -180,7 +181,7 @@ class DDAgentWriterTest extends DDSpecification {
     minimalSpan = new DDSpan(0, minimalContext)
     minimalTrace = [minimalSpan]
     traceSize = DDApi.OBJECT_MAPPER.writeValueAsBytes(minimalTrace).length
-    maxedPayloadTraceCount = ((int) (DDAgentWriter.FLUSH_PAYLOAD_BYTES / traceSize)) + 1
+    maxedPayloadTraceCount = ((int) (TraceConsumer.FLUSH_PAYLOAD_BYTES / traceSize)) + 1
   }
 
   def "check that are no interactions after close"() {
