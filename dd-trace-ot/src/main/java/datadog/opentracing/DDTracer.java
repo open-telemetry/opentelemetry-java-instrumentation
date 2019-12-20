@@ -14,8 +14,8 @@ import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.sampling.PrioritySampler;
 import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
-import datadog.trace.common.writer.DDApi;
 import datadog.trace.common.writer.Writer;
+import datadog.trace.common.writer.ddagent.DDAgentApi;
 import datadog.trace.context.ScopeListener;
 import io.opentracing.References;
 import io.opentracing.Scope;
@@ -246,9 +246,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     extractor = HttpCodec.createExtractor(Config.get(), taggedHeaders);
 
     if (this.writer instanceof DDAgentWriter) {
-      final DDApi api = ((DDAgentWriter) this.writer).getApi();
-      if (sampler instanceof DDApi.ResponseListener) {
-        api.addResponseListener((DDApi.ResponseListener) this.sampler);
+      final DDAgentApi api = ((DDAgentWriter) this.writer).getApi();
+      if (sampler instanceof DDAgentApi.ResponseListener) {
+        api.addResponseListener((DDAgentApi.ResponseListener) this.sampler);
       }
     }
 

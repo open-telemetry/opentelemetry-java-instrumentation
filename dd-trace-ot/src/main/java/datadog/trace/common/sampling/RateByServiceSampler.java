@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.sampling.PrioritySampling;
-import datadog.trace.common.writer.DDApi.ResponseListener;
+import datadog.trace.common.writer.ddagent.DDAgentApi.ResponseListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

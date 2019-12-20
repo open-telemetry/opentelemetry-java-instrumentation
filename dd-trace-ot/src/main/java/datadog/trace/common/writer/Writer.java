@@ -2,6 +2,7 @@ package datadog.trace.common.writer;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.Config;
+import datadog.trace.common.writer.ddagent.DDAgentApi;
 import datadog.trace.common.writer.ddagent.Monitor;
 import java.io.Closeable;
 import java.util.List;
@@ -66,8 +67,8 @@ public interface Writer extends Closeable {
       return new DDAgentWriter(createApi(config), createMonitor(config));
     }
 
-    private static DDApi createApi(final Config config) {
-      return new DDApi(
+    private static DDAgentApi createApi(final Config config) {
+      return new DDAgentApi(
           config.getAgentHost(), config.getAgentPort(), config.getAgentUnixDomainSocket());
     }
 

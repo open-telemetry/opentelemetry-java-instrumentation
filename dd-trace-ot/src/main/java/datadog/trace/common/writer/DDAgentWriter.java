@@ -7,6 +7,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.util.DaemonThreadFactory;
+import datadog.trace.common.writer.ddagent.DDAgentApi;
 import datadog.trace.common.writer.ddagent.Monitor;
 import datadog.trace.common.writer.ddagent.TraceConsumer;
 import datadog.trace.common.writer.ddagent.TraceSerializingDisruptor;
@@ -34,7 +35,7 @@ public class DDAgentWriter implements Writer {
   private static final ThreadFactory SCHEDULED_FLUSH_THREAD_FACTORY =
       new DaemonThreadFactory("dd-trace-writer");
 
-  private final DDApi api;
+  private final DDAgentApi api;
   public final int flushFrequencySeconds;
   public final TraceSerializingDisruptor disruptor;
 
@@ -46,16 +47,17 @@ public class DDAgentWriter implements Writer {
 
   public DDAgentWriter() {
     this(
-        new DDApi(DEFAULT_AGENT_HOST, DEFAULT_TRACE_AGENT_PORT, DEFAULT_AGENT_UNIX_DOMAIN_SOCKET),
+        new DDAgentApi(
+            DEFAULT_AGENT_HOST, DEFAULT_TRACE_AGENT_PORT, DEFAULT_AGENT_UNIX_DOMAIN_SOCKET),
         new Monitor.Noop());
   }
 
-  public DDAgentWriter(final DDApi api, final Monitor monitor) {
+  public DDAgentWriter(final DDAgentApi api, final Monitor monitor) {
     this(api, monitor, DISRUPTOR_BUFFER_SIZE, SENDER_QUEUE_SIZE, FLUSH_PAYLOAD_DELAY);
   }
 
   /** Old signature (pre-Monitor) used in tests */
-  private DDAgentWriter(final DDApi api) {
+  private DDAgentWriter(final DDAgentApi api) {
     this(api, new Monitor.Noop());
   }
 
@@ -67,7 +69,7 @@ public class DDAgentWriter implements Writer {
    * @param flushFrequencySeconds value < 1 disables scheduled flushes
    */
   private DDAgentWriter(
-      final DDApi api,
+      final DDAgentApi api,
       final int disruptorSize,
       final int senderQueueSize,
       final int flushFrequencySeconds) {
@@ -76,7 +78,7 @@ public class DDAgentWriter implements Writer {
 
   // DQH - TODO - Update the tests & remove this
   private DDAgentWriter(
-      final DDApi api,
+      final DDAgentApi api,
       final Monitor monitor,
       final int disruptorSize,
       final int flushFrequencySeconds) {
@@ -84,12 +86,13 @@ public class DDAgentWriter implements Writer {
   }
 
   // DQH - TODO - Update the tests & remove this
-  private DDAgentWriter(final DDApi api, final int disruptorSize, final int flushFrequencySeconds) {
+  private DDAgentWriter(
+      final DDAgentApi api, final int disruptorSize, final int flushFrequencySeconds) {
     this(api, new Monitor.Noop(), disruptorSize, SENDER_QUEUE_SIZE, flushFrequencySeconds);
   }
 
   private DDAgentWriter(
-      final DDApi api,
+      final DDAgentApi api,
       final Monitor monitor,
       final int disruptorSize,
       final int senderQueueSize,
@@ -147,7 +150,7 @@ public class DDAgentWriter implements Writer {
     traceCount.incrementAndGet();
   }
 
-  public DDApi getApi() {
+  public DDAgentApi getApi() {
     return api;
   }
 

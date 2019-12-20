@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lmax.disruptor.EventHandler;
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.writer.DDAgentWriter;
-import datadog.trace.common.writer.DDApi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
@@ -74,7 +73,7 @@ public class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>>
       }
       if (writer.scheduledWriterExecutor.isShutdown()) {
         writer.monitor.onFailedSend(
-            writer, traceCount.get(), payloadSize, DDApi.Response.failed(-1));
+            writer, traceCount.get(), payloadSize, DDAgentApi.Response.failed(-1));
         writer.apiPhaser.arrive(); // Allow flush to return
         return;
       }
@@ -93,7 +92,7 @@ public class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>>
           senderSemaphore.acquire();
         } catch (final InterruptedException e) {
           writer.monitor.onFailedSend(
-              writer, representativeCount, sizeInBytes, DDApi.Response.failed(e));
+              writer, representativeCount, sizeInBytes, DDAgentApi.Response.failed(e));
 
           // Finally, we'll schedule another flush
           // Any threads awaiting the flush will continue to wait
@@ -106,7 +105,7 @@ public class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>>
                 senderSemaphore.release();
 
                 try {
-                  final DDApi.Response response =
+                  final DDAgentApi.Response response =
                       writer
                           .getApi()
                           .sendSerializedTraces(representativeCount, sizeInBytes, toSend);
@@ -132,7 +131,7 @@ public class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>>
                   // However, just to be safe to start, create a failed Response to handle any
                   // spurious Throwable-s.
                   writer.monitor.onFailedSend(
-                      writer, representativeCount, sizeInBytes, DDApi.Response.failed(e));
+                      writer, representativeCount, sizeInBytes, DDAgentApi.Response.failed(e));
                 } finally {
                   writer.apiPhaser.arrive(); // Flush completed.
                 }
@@ -140,7 +139,7 @@ public class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>>
             });
       } catch (final RejectedExecutionException ex) {
         writer.monitor.onFailedSend(
-            writer, representativeCount, sizeInBytes, DDApi.Response.failed(ex));
+            writer, representativeCount, sizeInBytes, DDAgentApi.Response.failed(ex));
         writer.apiPhaser.arrive(); // Allow flush to return
       }
     } finally {

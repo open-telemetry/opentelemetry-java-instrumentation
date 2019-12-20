@@ -5,7 +5,6 @@ import com.timgroup.statsd.StatsDClient;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
 import datadog.trace.common.writer.DDAgentWriter;
-import datadog.trace.common.writer.DDApi;
 import java.util.List;
 
 /**
@@ -43,13 +42,13 @@ public interface Monitor {
       final DDAgentWriter agentWriter,
       final int representativeCount,
       final int sizeInBytes,
-      final DDApi.Response response);
+      final DDAgentApi.Response response);
 
   void onFailedSend(
       final DDAgentWriter agentWriter,
       final int representativeCount,
       final int sizeInBytes,
-      final DDApi.Response response);
+      final DDAgentApi.Response response);
 
   final class StatsD implements Monitor {
     public static final String PREFIX = "datadog.tracer";
@@ -138,7 +137,7 @@ public interface Monitor {
         final DDAgentWriter agentWriter,
         final int representativeCount,
         final int sizeInBytes,
-        final DDApi.Response response) {
+        final DDAgentApi.Response response) {
       onSendAttempt(agentWriter, representativeCount, sizeInBytes, response);
     }
 
@@ -147,7 +146,7 @@ public interface Monitor {
         final DDAgentWriter agentWriter,
         final int representativeCount,
         final int sizeInBytes,
-        final DDApi.Response response) {
+        final DDAgentApi.Response response) {
       onSendAttempt(agentWriter, representativeCount, sizeInBytes, response);
     }
 
@@ -155,7 +154,7 @@ public interface Monitor {
         final DDAgentWriter agentWriter,
         final int representativeCount,
         final int sizeInBytes,
-        final DDApi.Response response) {
+        final DDAgentApi.Response response) {
       statsd.incrementCounter("api.requests");
       statsd.recordGaugeValue("queue.length", representativeCount);
       // TODO: missing queue.spans (# of spans being sent)
@@ -215,14 +214,14 @@ public interface Monitor {
         final DDAgentWriter agentWriter,
         final int representativeCount,
         final int sizeInBytes,
-        final DDApi.Response response) {}
+        final DDAgentApi.Response response) {}
 
     @Override
     public void onFailedSend(
         final DDAgentWriter agentWriter,
         final int representativeCount,
         final int sizeInBytes,
-        final DDApi.Response response) {}
+        final DDAgentApi.Response response) {}
 
     @Override
     public String toString() {

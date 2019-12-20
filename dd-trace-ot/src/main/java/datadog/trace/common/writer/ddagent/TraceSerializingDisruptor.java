@@ -1,5 +1,7 @@
 package datadog.trace.common.writer.ddagent;
 
+import static datadog.trace.common.writer.ddagent.DisruptorEvent.FlushTranslator.FLUSH_TRANSLATOR;
+import static datadog.trace.common.writer.ddagent.DisruptorEvent.TraceTranslator.TRACE_TRANSLATOR;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.lmax.disruptor.SleepingWaitStrategy;
@@ -20,10 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 public class TraceSerializingDisruptor implements Closeable {
   private static final ThreadFactory DISRUPTOR_THREAD_FACTORY =
       new DaemonThreadFactory("dd-trace-disruptor");
-  private static final DisruptorEvent.TraceTranslator TRACE_TRANSLATOR =
-      new DisruptorEvent.TraceTranslator();
-  private static final DisruptorEvent.FlushTranslator FLUSH_TRANSLATOR =
-      new DisruptorEvent.FlushTranslator();
   private final FlushTask flushTask = new FlushTask();
 
   private final Disruptor<DisruptorEvent<List<DDSpan>>> disruptor;

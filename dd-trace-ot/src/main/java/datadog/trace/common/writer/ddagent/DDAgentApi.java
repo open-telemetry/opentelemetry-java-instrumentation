@@ -1,4 +1,4 @@
-package datadog.trace.common.writer;
+package datadog.trace.common.writer.ddagent;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,7 +28,7 @@ import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 /** The API pointing to a DD agent */
 @Slf4j
-public class DDApi {
+public class DDAgentApi {
   private static final String DATADOG_META_LANG = "Datadog-Meta-Lang";
   private static final String DATADOG_META_LANG_VERSION = "Datadog-Meta-Lang-Version";
   private static final String DATADOG_META_LANG_INTERPRETER = "Datadog-Meta-Lang-Interpreter";
@@ -53,7 +53,7 @@ public class DDApi {
   private final OkHttpClient httpClient;
   private final HttpUrl tracesUrl;
 
-  public DDApi(final String host, final int port, final String unixDomainSocketPath) {
+  public DDAgentApi(final String host, final int port, final String unixDomainSocketPath) {
     this(
         host,
         port,
@@ -61,7 +61,7 @@ public class DDApi {
         unixDomainSocketPath);
   }
 
-  DDApi(
+  DDAgentApi(
       final String host,
       final int port,
       final boolean v4EndpointsAvailable,
@@ -89,7 +89,7 @@ public class DDApi {
    * @return a Response object -- encapsulating success of communication, sending, and result
    *     parsing
    */
-  public Response sendTraces(final List<List<DDSpan>> traces) {
+  Response sendTraces(final List<List<DDSpan>> traces) {
     final List<byte[]> serializedTraces = new ArrayList<>(traces.size());
     int sizeInBytes = 0;
     for (final List<DDSpan> trace : traces) {
@@ -107,11 +107,11 @@ public class DDApi {
     return sendSerializedTraces(serializedTraces.size(), sizeInBytes, serializedTraces);
   }
 
-  public byte[] serializeTrace(final List<DDSpan> trace) throws JsonProcessingException {
+  byte[] serializeTrace(final List<DDSpan> trace) throws JsonProcessingException {
     return OBJECT_MAPPER.writeValueAsBytes(trace);
   }
 
-  public Response sendSerializedTraces(
+  Response sendSerializedTraces(
       final int representativeCount, final Integer sizeInBytes, final List<byte[]> traces) {
     try {
       final RequestBody body =

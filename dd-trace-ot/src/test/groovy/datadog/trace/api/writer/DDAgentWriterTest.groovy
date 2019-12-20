@@ -7,7 +7,7 @@ import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDAgentWriter
-import datadog.trace.common.writer.DDApi
+import datadog.trace.common.writer.ddagent.DDAgentApi
 import datadog.trace.common.writer.ddagent.Monitor
 import datadog.trace.common.writer.ddagent.TraceConsumer
 import datadog.trace.util.test.DDSpecification
@@ -24,7 +24,7 @@ import static datadog.trace.common.writer.DDAgentWriter.DISRUPTOR_BUFFER_SIZE
 @Timeout(20)
 class DDAgentWriterTest extends DDSpecification {
 
-  def api = Mock(DDApi)
+  def api = Mock(DDAgentApi)
 
   def "test happy path"() {
     setup:
@@ -180,7 +180,7 @@ class DDAgentWriterTest extends DDSpecification {
       Mock(DDTracer))
     minimalSpan = new DDSpan(0, minimalContext)
     minimalTrace = [minimalSpan]
-    traceSize = DDApi.OBJECT_MAPPER.writeValueAsBytes(minimalTrace).length
+    traceSize = DDAgentApi.OBJECT_MAPPER.writeValueAsBytes(minimalTrace).length
     maxedPayloadTraceCount = ((int) (TraceConsumer.FLUSH_PAYLOAD_BYTES / traceSize)) + 1
   }
 
@@ -253,7 +253,7 @@ class DDAgentWriterTest extends DDSpecification {
         }
       }
     }
-    def api = new DDApi("localhost", agent.address.port, null)
+    def api = new DDAgentApi("localhost", agent.address.port, null)
     def monitor = Mock(Monitor)
     def writer = new DDAgentWriter(api, monitor)
 
@@ -302,7 +302,7 @@ class DDAgentWriterTest extends DDSpecification {
         }
       }
     }
-    def api = new DDApi("localhost", agent.address.port, null)
+    def api = new DDAgentApi("localhost", agent.address.port, null)
     def monitor = Mock(Monitor)
     def writer = new DDAgentWriter(api, monitor)
 
@@ -336,13 +336,13 @@ class DDAgentWriterTest extends DDSpecification {
     setup:
     def minimalTrace = createMinimalTrace()
 
-    def api = new DDApi("localhost", 8192, null) {
-      DDApi.Response sendSerializedTraces(
+    def api = new DDAgentApi("localhost", 8192, null) {
+      DDAgentApi.Response sendSerializedTraces(
         int representativeCount,
         Integer sizeInBytes,
         List<byte[]> traces) {
         // simulating a communication failure to a server
-        return DDApi.Response.failed(new IOException("comm error"))
+        return DDAgentApi.Response.failed(new IOException("comm error"))
       }
     }
     def monitor = Mock(Monitor)
@@ -400,7 +400,7 @@ class DDAgentWriterTest extends DDSpecification {
         }
       }
     }
-    def api = new DDApi("localhost", agent.address.port, null)
+    def api = new DDAgentApi("localhost", agent.address.port, null)
 
     // This test focuses just on failed publish, so not verifying every callback
     def monitor = Stub(Monitor)
@@ -505,7 +505,7 @@ class DDAgentWriterTest extends DDSpecification {
         }
       }
     }
-    def api = new DDApi("localhost", agent.address.port, null)
+    def api = new DDAgentApi("localhost", agent.address.port, null)
 
     // This test focuses just on failed publish, so not verifying every callback
     def monitor = Stub(Monitor)
@@ -566,7 +566,7 @@ class DDAgentWriterTest extends DDSpecification {
         }
       }
     }
-    def api = new DDApi("localhost", agent.address.port, null)
+    def api = new DDAgentApi("localhost", agent.address.port, null)
 
     def statsd = Stub(StatsDClient)
     statsd.incrementCounter("queue.accepted") >> { stat ->
@@ -606,13 +606,13 @@ class DDAgentWriterTest extends DDSpecification {
     def minimalTrace = createMinimalTrace()
 
     // DQH -- need to set-up a dummy agent for the final send callback to work
-    def api = new DDApi("localhost", 8192, null) {
-      DDApi.Response sendSerializedTraces(
+    def api = new DDAgentApi("localhost", 8192, null) {
+      DDAgentApi.Response sendSerializedTraces(
         int representativeCount,
         Integer sizeInBytes,
         List<byte[]> traces) {
         // simulating a communication failure to a server
-        return DDApi.Response.failed(new IOException("comm error"))
+        return DDAgentApi.Response.failed(new IOException("comm error"))
       }
     }
 
