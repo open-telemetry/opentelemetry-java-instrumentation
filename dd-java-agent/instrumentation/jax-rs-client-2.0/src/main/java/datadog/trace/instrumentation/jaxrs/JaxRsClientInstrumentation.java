@@ -8,10 +8,11 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.Map;
-import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Client;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
@@ -48,9 +49,10 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   public static class ClientBuilderAdvice {
 
-    @Advice.OnMethodEnter
-    public static void registerFeature(@Advice.This final ClientBuilder builder) {
-      builder.register(ClientTracingFeature.class);
+    @Advice.OnMethodExit
+    public static void registerFeature(
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Client client) {
+      client.register(ClientTracingFeature.class);
     }
   }
 }
