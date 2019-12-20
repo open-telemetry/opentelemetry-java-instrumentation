@@ -57,7 +57,6 @@ public class DDAgentWriter implements Writer {
   private final int flushFrequencySeconds;
   private final Disruptor<DisruptorEvent<List<DDSpan>>> disruptor;
 
-  private final Semaphore senderSemaphore;
   private final ScheduledExecutorService scheduledWriterExecutor;
   private final AtomicInteger traceCount = new AtomicInteger(0);
   private final AtomicReference<ScheduledFuture<?>> flushSchedule = new AtomicReference<>();
@@ -126,10 +125,9 @@ public class DDAgentWriter implements Writer {
             DISRUPTOR_THREAD_FACTORY,
             ProducerType.MULTI,
             new SleepingWaitStrategy(0, TimeUnit.MILLISECONDS.toNanos(5)));
-    disruptor.handleEventsWith(new TraceConsumer());
+    disruptor.handleEventsWith(new TraceConsumer(traceCount, senderQueueSize, this));
 
     this.flushFrequencySeconds = flushFrequencySeconds;
-    senderSemaphore = new Semaphore(senderQueueSize);
     scheduledWriterExecutor = Executors.newScheduledThreadPool(1, SCHEDULED_FLUSH_THREAD_FACTORY);
 
     apiPhaser = new Phaser(); // Ensure API calls are completed when flushing
@@ -274,9 +272,20 @@ public class DDAgentWriter implements Writer {
   }
 
   /** This class is intentionally not threadsafe. */
-  private class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>> {
+  private static class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>> {
+    private final AtomicInteger traceCount;
+    private final Semaphore senderSemaphore;
+    private final DDAgentWriter writer;
+
     private List<byte[]> serializedTraces = new ArrayList<>();
     private int payloadSize = 0;
+
+    private TraceConsumer(
+      final AtomicInteger traceCount, final int senderQueueSize, final DDAgentWriter writer) {
+      this.traceCount = traceCount;
+      senderSemaphore = new Semaphore(senderQueueSize);
+      this.writer = writer;
+    }
 
     @Override
     public void onEvent(
@@ -286,19 +295,19 @@ public class DDAgentWriter implements Writer {
       if (trace != null) {
         traceCount.incrementAndGet();
         try {
-          final byte[] serializedTrace = api.serializeTrace(trace);
+          final byte[] serializedTrace = writer.api.serializeTrace(trace);
           payloadSize += serializedTrace.length;
           serializedTraces.add(serializedTrace);
 
-          monitor.onSerialize(DDAgentWriter.this, trace, serializedTrace);
+          writer.monitor.onSerialize(writer, trace, serializedTrace);
         } catch (final JsonProcessingException e) {
           log.warn("Error serializing trace", e);
 
-          monitor.onFailedSerialize(DDAgentWriter.this, trace, e);
+          writer.monitor.onFailedSerialize(writer, trace, e);
         } catch (final Throwable e) {
           log.debug("Error while serializing trace", e);
 
-          monitor.onFailedSerialize(DDAgentWriter.this, trace, e);
+          writer.monitor.onFailedSerialize(writer, trace, e);
         }
       }
 
@@ -313,16 +322,16 @@ public class DDAgentWriter implements Writer {
     private void reportTraces(final boolean early) {
       try {
         if (serializedTraces.isEmpty()) {
-          monitor.onFlush(DDAgentWriter.this, early);
+          writer.monitor.onFlush(writer, early);
 
-          apiPhaser.arrive(); // Allow flush to return
+          writer.apiPhaser.arrive(); // Allow flush to return
           return;
           // scheduleFlush called in finally block.
         }
-        if (scheduledWriterExecutor.isShutdown()) {
-          monitor.onFailedSend(
-              DDAgentWriter.this, traceCount.get(), payloadSize, DDApi.Response.failed(-1));
-          apiPhaser.arrive(); // Allow flush to return
+        if (writer.scheduledWriterExecutor.isShutdown()) {
+          writer.monitor.onFailedSend(
+              writer, traceCount.get(), payloadSize, DDApi.Response.failed(-1));
+          writer.apiPhaser.arrive(); // Allow flush to return
           return;
         }
         final List<byte[]> toSend = serializedTraces;
@@ -333,20 +342,20 @@ public class DDAgentWriter implements Writer {
         final int sizeInBytes = payloadSize;
 
         try {
-          monitor.onFlush(DDAgentWriter.this, early);
+          writer.monitor.onFlush(writer, early);
 
           // Run the actual IO task on a different thread to avoid blocking the consumer.
           try {
             senderSemaphore.acquire();
           } catch (final InterruptedException e) {
-            monitor.onFailedSend(
-                DDAgentWriter.this, representativeCount, sizeInBytes, DDApi.Response.failed(e));
+            writer.monitor.onFailedSend(
+                writer, representativeCount, sizeInBytes, DDApi.Response.failed(e));
 
             // Finally, we'll schedule another flush
             // Any threads awaiting the flush will continue to wait
             return;
           }
-          scheduledWriterExecutor.execute(
+          writer.scheduledWriterExecutor.execute(
               new Runnable() {
                 @Override
                 public void run() {
@@ -354,13 +363,12 @@ public class DDAgentWriter implements Writer {
 
                   try {
                     final DDApi.Response response =
-                        api.sendSerializedTraces(representativeCount, sizeInBytes, toSend);
+                        writer.api.sendSerializedTraces(representativeCount, sizeInBytes, toSend);
 
                     if (response.success()) {
                       log.debug("Successfully sent {} traces to the API", toSend.size());
 
-                      monitor.onSend(
-                          DDAgentWriter.this, representativeCount, sizeInBytes, response);
+                      writer.monitor.onSend(writer, representativeCount, sizeInBytes, response);
                     } else {
                       log.debug(
                           "Failed to send {} traces (representing {}) of size {} bytes to the API",
@@ -368,8 +376,8 @@ public class DDAgentWriter implements Writer {
                           representativeCount,
                           sizeInBytes);
 
-                      monitor.onFailedSend(
-                          DDAgentWriter.this, representativeCount, sizeInBytes, response);
+                      writer.monitor.onFailedSend(
+                          writer, representativeCount, sizeInBytes, response);
                     }
                   } catch (final Throwable e) {
                     log.debug("Failed to send traces to the API: {}", e.getMessage());
@@ -378,24 +386,21 @@ public class DDAgentWriter implements Writer {
                     // shouldn't occur.
                     // However, just to be safe to start, create a failed Response to handle any
                     // spurious Throwable-s.
-                    monitor.onFailedSend(
-                        DDAgentWriter.this,
-                        representativeCount,
-                        sizeInBytes,
-                        DDApi.Response.failed(e));
+                    writer.monitor.onFailedSend(
+                        writer, representativeCount, sizeInBytes, DDApi.Response.failed(e));
                   } finally {
-                    apiPhaser.arrive(); // Flush completed.
+                    writer.apiPhaser.arrive(); // Flush completed.
                   }
                 }
               });
         } catch (final RejectedExecutionException ex) {
-          monitor.onFailedSend(
-              DDAgentWriter.this, representativeCount, sizeInBytes, DDApi.Response.failed(ex));
-          apiPhaser.arrive(); // Allow flush to return
+          writer.monitor.onFailedSend(
+              writer, representativeCount, sizeInBytes, DDApi.Response.failed(ex));
+          writer.apiPhaser.arrive(); // Allow flush to return
         }
       } finally {
         payloadSize = 0;
-        scheduleFlush();
+        writer.scheduleFlush();
       }
     }
   }
