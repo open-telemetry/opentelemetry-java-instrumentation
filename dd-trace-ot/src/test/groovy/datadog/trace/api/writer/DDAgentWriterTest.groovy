@@ -198,6 +198,25 @@ class DDAgentWriterTest extends DDSpecification {
     writer.traceCount.get() == 0
   }
 
+  def "check shutdown if executor stopped first"() {
+    setup:
+    def writer = new DDAgentWriter(api)
+    writer.start()
+    writer.scheduledWriterExecutor.shutdown()
+
+    when:
+    writer.write([])
+    writer.flush()
+
+    then:
+    1 * api.serializeTrace(_) >> { trace -> callRealMethod() }
+    0 * _
+    writer.traceCount.get() == 1
+
+    cleanup:
+    writer.close()
+  }
+
   def createMinimalTrace() {
     def minimalContext = new DDSpanContext(
       1G,
