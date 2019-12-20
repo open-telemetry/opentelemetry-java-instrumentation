@@ -1,7 +1,9 @@
 package datadog.trace.instrumentation.rmi.server;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.bootstrap.instrumentation.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.rmi.server.RmiServerDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -14,12 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
-import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -31,11 +30,6 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   public RmiServerInstrumentation() {
     super("rmi", "rmi-server");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return Collections.singletonMap(Thread.class.getName(), AgentSpan.Context.class.getName());
   }
 
   @Override
@@ -55,22 +49,24 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(isPublic()).and(not(isStatic())),
-        packageName + ".RmiServerInstrumentation$ServerAdvice");
+        isMethod().and(isPublic()).and(not(isStatic())), getClass().getName() + "$ServerAdvice");
   }
 
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = true)
     public static AgentScope onEnter(
         @Advice.This final Object thiz, @Advice.Origin final Method method) {
-      final ContextStore<Thread, AgentSpan.Context> threadContextStore =
-          InstrumentationContext.get(Thread.class, AgentSpan.Context.class);
+      final AgentSpan.Context context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      final AgentSpan span =
-          DECORATE
-              .startSpanWithContext(threadContextStore)
-              .setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
-              .setTag("span.origin.type", thiz.getClass().getCanonicalName());
+      final AgentSpan span;
+      if (context == null) {
+        span = startSpan("rmi.request");
+      } else {
+        span = startSpan("rmi.request", context);
+      }
+
+      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
+          .setTag("span.origin.type", thiz.getClass().getCanonicalName());
 
       DECORATE.afterStart(span);
       return activateSpan(span, true);

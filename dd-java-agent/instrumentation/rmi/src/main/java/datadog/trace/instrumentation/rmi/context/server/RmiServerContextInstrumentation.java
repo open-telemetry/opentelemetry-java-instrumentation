@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.rmi.context.server;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.rmi.context.ContextPropagator.DD_CONTEXT_CALL_ID;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,9 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.Map;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import sun.rmi.transport.Target;
 
 @AutoService(Instrumenter.class)
 public class RmiServerContextInstrumentation extends Instrumenter.Default {
@@ -29,11 +32,6 @@ public class RmiServerContextInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("java.lang.Thread", "datadog.trace.instrumentation.api.AgentSpan$Context");
-  }
-
-  @Override
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.rmi.context.ContextPayload$InjectAdapter",
@@ -41,7 +39,7 @@ public class RmiServerContextInstrumentation extends Instrumenter.Default {
       "datadog.trace.instrumentation.rmi.context.ContextPayload",
       "datadog.trace.instrumentation.rmi.context.ContextPropagator",
       packageName + ".ContextDispatcher",
-      packageName + ".ObjectTableAdvice$NoopRemote"
+      packageName + ".ContextDispatcher$NoopRemote"
     };
   }
 
@@ -52,6 +50,22 @@ public class RmiServerContextInstrumentation extends Instrumenter.Default {
             .and(isStatic())
             .and(named("getTarget"))
             .and((takesArgument(0, named("sun.rmi.transport.ObjectEndpoint")))),
-        packageName + ".ObjectTableAdvice");
+        getClass().getName() + "$ObjectTableAdvice");
+  }
+
+  public static class ObjectTableAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void methodExit(
+        @Advice.Argument(0) final Object oe, @Advice.Return(readOnly = false) Target result) {
+      // comparing toString() output allows us to avoid using reflection to be able to compare
+      // ObjID and ObjectEndpoint objects
+      // ObjectEndpoint#toString() only returns this.objId.toString() value which is exactly
+      // what we're interested in here.
+      if (!DD_CONTEXT_CALL_ID.toString().equals(oe.toString())) {
+        return;
+      }
+      result = ContextDispatcher.newDispatcherTarget();
+    }
   }
 }

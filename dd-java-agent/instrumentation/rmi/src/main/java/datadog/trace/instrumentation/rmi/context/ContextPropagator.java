@@ -1,8 +1,5 @@
 package datadog.trace.instrumentation.rmi.context;
 
-import static datadog.trace.instrumentation.api.AgentTracer.propagate;
-import static datadog.trace.instrumentation.rmi.context.ContextPayload.SETTER;
-
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.io.IOException;
@@ -16,44 +13,55 @@ import sun.rmi.transport.TransportConstants;
 
 @Slf4j
 public class ContextPropagator {
+  // Internal RMI object ids that we don't want to trace
   private static final ObjID ACTIVATOR_ID = new ObjID(ObjID.ACTIVATOR_ID);
   private static final ObjID DGC_ID = new ObjID(ObjID.DGC_ID);
   private static final ObjID REGISTRY_ID = new ObjID(ObjID.REGISTRY_ID);
-  public static final ObjID DD_CONTEXT_CALL_ID = new ObjID("Datadog.v1.context_call".hashCode());
-  private static final int CONTEXT_CHECK_CALL_OP_ID = -1;
-  public static final int CONTEXT_PASS_OPERATION_ID = -2;
 
-  public static boolean isRMIInternalObject(final ObjID id) {
-    return ACTIVATOR_ID.equals(id) || DGC_ID.equals(id) || REGISTRY_ID.equals(id);
-  }
+  // RMI object id used to identify DataDog instrumentation
+  public static final ObjID DD_CONTEXT_CALL_ID = new ObjID("Datadog.v1.context_call".hashCode());
+
+  // Operation id used for checking context propagation is possible
+  // RMI expects these operations to have negative identifier, as positive ones mean legacy
+  // precompiled Stubs would be used instead
+  private static final int CONTEXT_CHECK_CALL_OPERATION_ID = -1;
+  // Seconds step of context propagation which contains actual payload
+  private static final int CONTEXT_PAYLOAD_OPERATION_ID = -2;
 
   public static final ContextPropagator PROPAGATOR = new ContextPropagator();
 
+  public boolean isRMIInternalObject(final ObjID id) {
+    return ACTIVATOR_ID.equals(id) || DGC_ID.equals(id) || REGISTRY_ID.equals(id);
+  }
+
+  public boolean isOperationWithPayload(final int operationId) {
+    return operationId == CONTEXT_PAYLOAD_OPERATION_ID;
+  }
+
   public void attemptToPropagateContext(
-      final ContextStore<Connection, Boolean> contextStore,
+      final ContextStore<Connection, Boolean> knownConnections,
       final Connection c,
       final AgentSpan span) {
-    if (checkIfContextCanBePassed(contextStore, c)) {
-      final ContextPayload payload = new ContextPayload();
-      propagate().inject(span, payload, SETTER);
-      if (!syntheticCall(c, payload, CONTEXT_PASS_OPERATION_ID)) {
-        log.debug("Couldn't propagate context");
+    if (checkIfContextCanBePassed(knownConnections, c)) {
+      if (!syntheticCall(c, ContextPayload.from(span), CONTEXT_PAYLOAD_OPERATION_ID)) {
+        log.debug("Couldn't send context payload");
       }
     }
   }
 
   private boolean checkIfContextCanBePassed(
-      final ContextStore<Connection, Boolean> contextStore, final Connection c) {
-    final Boolean storedResult = contextStore.get(c);
+      final ContextStore<Connection, Boolean> knownConnections, final Connection c) {
+    final Boolean storedResult = knownConnections.get(c);
     if (storedResult != null) {
       return storedResult;
     }
 
-    final boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OP_ID);
-    contextStore.put(c, result);
+    final boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OPERATION_ID);
+    knownConnections.put(c, result);
     return result;
   }
 
+  /** @returns true when no error happened during call */
   private boolean syntheticCall(
       final Connection c, final ContextPayload payload, final int operationId) {
     final StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
@@ -68,9 +76,10 @@ public class ContextPropagator {
       out.writeInt(operationId); // in normal call this is method number (operation index)
       out.writeLong(operationId); // in normal RMI call this holds stub/skeleton hash
 
-      // if method is not found by uninstrumented code then writing payload will cause an exception
-      // in
-      // RMI server - as the payload will be interpreted as another call
+      // Payload should be sent only after we make sure we're connected to instrumented server
+      //
+      // if method is not found by un-instrumented code then writing payload will cause an exception
+      // in RMI server - as the payload will be interpreted as another call
       // but it will not be parsed correctly - closing connection
       if (payload != null) {
         payload.write(out);
