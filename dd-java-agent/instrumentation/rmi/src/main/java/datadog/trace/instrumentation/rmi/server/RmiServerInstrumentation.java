@@ -2,8 +2,7 @@ package datadog.trace.instrumentation.rmi.server;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
-import static datadog.trace.instrumentation.rmi.server.ServerDecorator.DECORATE;
+import static datadog.trace.instrumentation.rmi.server.RmiServerDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -19,7 +18,7 @@ import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.AgentTracer;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -42,9 +41,9 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ServerDecorator",
-      packageName + ".RmiServerInstrumentation$ServerAdvice",
-      "datadog.trace.agent.decorator.BaseDecorator"
+      "datadog.trace.agent.decorator.ServerDecorator",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      packageName + ".RmiServerDecorator"
     };
   }
 
@@ -63,31 +62,18 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = true)
     public static AgentScope onEnter(
-        @Advice.This final Object thiz, @Advice.Origin(value = "#m") final String method) {
-      final ContextStore<Thread, AgentSpan.Context> callableContextStore =
+        @Advice.This final Object thiz, @Advice.Origin final Method method) {
+      final ContextStore<Thread, AgentSpan.Context> threadContextStore =
           InstrumentationContext.get(Thread.class, AgentSpan.Context.class);
 
       final AgentSpan span =
-          startSpan(callableContextStore)
-              .setTag(DDTags.RESOURCE_NAME, thiz.getClass().getSimpleName() + "#" + method)
+          DECORATE
+              .startSpanWithContext(threadContextStore)
+              .setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
               .setTag("span.origin.type", thiz.getClass().getCanonicalName());
+
       DECORATE.afterStart(span);
       return activateSpan(span, true);
-    }
-
-    public static AgentSpan startSpan(
-        final ContextStore<Thread, AgentSpan.Context> callableContextStore) {
-      if (activeSpan() != null) {
-        return AgentTracer.startSpan("rmi.request");
-      }
-
-      final AgentSpan.Context context = callableContextStore.get(Thread.currentThread());
-
-      if (context == null) {
-        return AgentTracer.startSpan("rmi.request");
-      } else {
-        return AgentTracer.startSpan("rmi.request", context);
-      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

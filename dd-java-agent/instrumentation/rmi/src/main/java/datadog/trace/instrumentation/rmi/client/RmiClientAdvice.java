@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.rmi.client;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.rmi.client.ClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.rmi.client.RmiClientDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
@@ -11,7 +11,7 @@ import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 
-public class ClientAdvice {
+public class RmiClientAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static AgentScope onEnter(@Advice.Argument(value = 1) final Method method) {
     if (activeSpan() == null) {
@@ -19,9 +19,7 @@ public class ClientAdvice {
     }
     final AgentSpan span =
         startSpan("rmi.invoke")
-            .setTag(
-                DDTags.RESOURCE_NAME,
-                method.getDeclaringClass().getSimpleName() + "#" + method.getName())
+            .setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
             .setTag("span.origin.type", method.getDeclaringClass().getCanonicalName());
 
     DECORATE.afterStart(span);

@@ -31,8 +31,8 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.agent.decorator.BaseDecorator",
-      packageName + ".ClientDecorator",
-      packageName + ".ClientAdvice"
+      "datadog.trace.agent.decorator.ClientDecorator",
+      packageName + ".RmiClientDecorator"
     };
   }
 
@@ -43,6 +43,6 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
             .and(named("invoke"))
             .and(takesArgument(0, named("java.rmi.Remote")))
             .and(takesArgument(1, named("java.lang.reflect.Method"))),
-        packageName + ".ClientAdvice");
+        packageName + ".RmiClientAdvice");
   }
 }

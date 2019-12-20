@@ -1,18 +1,15 @@
-package datadog.trace.instrumentation.rmi.context;
+package datadog.trace.instrumentation.rmi.context.server;
 
-import static datadog.trace.instrumentation.rmi.context.StreamRemoteCallConstructorAdvice.DD_CONTEXT_CALL_ID;
+import static datadog.trace.instrumentation.rmi.context.ContextPropagator.DD_CONTEXT_CALL_ID;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.rmi.Remote;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import sun.rmi.transport.Target;
 
-@Slf4j
 public class ObjectTableAdvice {
-  public static final DummyRemote DUMMY_REMOTE = new DummyRemote();
 
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void methodExit(
@@ -31,12 +28,14 @@ public class ObjectTableAdvice {
 
     result =
         new Target(
-            DUMMY_REMOTE,
+            NoopRemote.NOOP_REMOTE,
             new ContextDispatcher(callableContextStore),
-            DUMMY_REMOTE,
+            NoopRemote.NOOP_REMOTE,
             DD_CONTEXT_CALL_ID,
             false);
   }
 
-  public static class DummyRemote implements Remote {}
+  public static class NoopRemote implements Remote {
+    public static final NoopRemote NOOP_REMOTE = new NoopRemote();
+  }
 }

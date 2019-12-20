@@ -1,10 +1,12 @@
-package datadog.trace.instrumentation.rmi.context;
+package datadog.trace.instrumentation.rmi.context.server;
 
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.rmi.context.ContextPayload.GETTER;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.rmi.context.ContextPayload;
+import datadog.trace.instrumentation.rmi.context.ContextPropagator;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.rmi.Remote;
@@ -25,7 +27,7 @@ public class ContextDispatcher implements Dispatcher {
     final int operationId = in.readInt();
     in.readLong(); // skip 8 bytes
 
-    if (operationId == StreamRemoteCallConstructorAdvice.CONTEXT_PASS_OPERATION_ID) {
+    if (operationId == ContextPropagator.CONTEXT_PASS_OPERATION_ID) {
       final ContextPayload payload = ContextPayload.read(in);
       if (payload != null) {
         final AgentSpan.Context context = propagate().extract(payload, GETTER);

@@ -1,10 +1,10 @@
 package datadog.trace.instrumentation.rmi.client;
 
-import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 
-public class ClientDecorator extends BaseDecorator {
-  public static final ClientDecorator DECORATE = new ClientDecorator();
+public class RmiClientDecorator extends ClientDecorator {
+  public static final RmiClientDecorator DECORATE = new RmiClientDecorator();
 
   @Override
   protected String[] instrumentationNames() {
@@ -19,5 +19,10 @@ public class ClientDecorator extends BaseDecorator {
   @Override
   protected String component() {
     return "rmi-client";
+  }
+
+  @Override
+  protected String service() {
+    return "rmi";
   }
 }
