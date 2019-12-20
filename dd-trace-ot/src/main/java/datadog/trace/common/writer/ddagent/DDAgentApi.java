@@ -43,7 +43,7 @@ public class DDAgentApi {
   private static final String TRACES_ENDPOINT_V4 = "v0.4/traces";
   private static final long MILLISECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toMillis(5);
 
-  private final List<ResponseListener> responseListeners = new ArrayList<>();
+  private final List<DDAgentResponseListener> responseListeners = new ArrayList<>();
 
   private volatile long nextAllowedLogTime = 0;
 
@@ -76,7 +76,7 @@ public class DDAgentApi {
     }
   }
 
-  public void addResponseListener(final ResponseListener listener) {
+  public void addResponseListener(final DDAgentResponseListener listener) {
     if (!responseListeners.contains(listener)) {
       responseListeners.add(listener);
     }
@@ -186,7 +186,7 @@ public class DDAgentApi {
             final JsonNode parsedResponse = OBJECT_MAPPER.readTree(responseString);
             final String endpoint = tracesUrl.toString();
 
-            for (final ResponseListener listener : responseListeners) {
+            for (final DDAgentResponseListener listener : responseListeners) {
               listener.onResponse(endpoint, parsedResponse);
             }
             return Response.success(response.code(), parsedResponse);
@@ -363,10 +363,5 @@ public class DDAgentApi {
     public final Throwable exception() {
       return exception;
     }
-  }
-
-  public interface ResponseListener {
-    /** Invoked after the api receives a response from the core agent. */
-    void onResponse(String endpoint, JsonNode responseJson);
   }
 }

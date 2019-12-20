@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import datadog.opentracing.SpanFactory
 import datadog.trace.common.writer.ddagent.DDAgentApi
-import datadog.trace.common.writer.ddagent.DDAgentApi.ResponseListener
+import datadog.trace.common.writer.ddagent.DDAgentResponseListener
 import datadog.trace.util.test.DDSpecification
 
 import java.util.concurrent.atomic.AtomicLong
@@ -125,7 +125,7 @@ class DDAgentApiTest extends DDSpecification {
   def "Api ResponseListeners see 200 responses"() {
     setup:
     def agentResponse = new AtomicReference<String>(null)
-    ResponseListener responseListener = { String endpoint, JsonNode responseJson ->
+    DDAgentResponseListener responseListener = { String endpoint, JsonNode responseJson ->
       agentResponse.set(responseJson.toString())
     }
     def agent = httpServer {

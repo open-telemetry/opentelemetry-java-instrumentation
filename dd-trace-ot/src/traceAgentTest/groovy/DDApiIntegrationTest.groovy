@@ -6,6 +6,7 @@ import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.ddagent.DDAgentApi
+import datadog.trace.common.writer.ddagent.DDAgentResponseListener
 import datadog.trace.util.test.DDSpecification
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.startupcheck.MinimumDurationRunningStartupCheckStrategy
@@ -64,7 +65,7 @@ class DDApiIntegrationTest {
     def endpoint = new AtomicReference<String>(null)
     def agentResponse = new AtomicReference<String>(null)
 
-    DDAgentApi.ResponseListener responseListener = { String receivedEndpoint, JsonNode responseJson ->
+    DDAgentResponseListener responseListener = { String receivedEndpoint, JsonNode responseJson ->
       endpoint.set(receivedEndpoint)
       agentResponse.set(responseJson.toString())
     }

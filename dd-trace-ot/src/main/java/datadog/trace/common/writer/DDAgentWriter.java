@@ -8,6 +8,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.util.DaemonThreadFactory;
 import datadog.trace.common.writer.ddagent.DDAgentApi;
+import datadog.trace.common.writer.ddagent.DDAgentResponseListener;
 import datadog.trace.common.writer.ddagent.Monitor;
 import datadog.trace.common.writer.ddagent.TraceConsumer;
 import datadog.trace.common.writer.ddagent.TraceSerializingDisruptor;
@@ -108,6 +109,10 @@ public class DDAgentWriter implements Writer {
     scheduledWriterExecutor = Executors.newScheduledThreadPool(1, SCHEDULED_FLUSH_THREAD_FACTORY);
 
     apiPhaser.register(); // Register on behalf of the scheduled executor thread.
+  }
+
+  public void addResponseListener(final DDAgentResponseListener listener) {
+    api.addResponseListener(listener);
   }
 
   // Exposing some statistics for consumption by monitors
