@@ -8,6 +8,7 @@ import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
+import datadog.trace.common.writer.ddagent.Monitor
 import datadog.trace.util.test.DDSpecification
 import spock.lang.Timeout
 
@@ -252,7 +253,7 @@ class DDAgentWriterTest extends DDSpecification {
       }
     }
     def api = new DDApi("localhost", agent.address.port, null)
-    def monitor = Mock(DDAgentWriter.Monitor)
+    def monitor = Mock(Monitor)
     def writer = new DDAgentWriter(api, monitor)
 
     when:
@@ -301,7 +302,7 @@ class DDAgentWriterTest extends DDSpecification {
       }
     }
     def api = new DDApi("localhost", agent.address.port, null)
-    def monitor = Mock(DDAgentWriter.Monitor)
+    def monitor = Mock(Monitor)
     def writer = new DDAgentWriter(api, monitor)
 
     when:
@@ -343,7 +344,7 @@ class DDAgentWriterTest extends DDSpecification {
         return DDApi.Response.failed(new IOException("comm error"))
       }
     }
-    def monitor = Mock(DDAgentWriter.Monitor)
+    def monitor = Mock(Monitor)
     def writer = new DDAgentWriter(api, monitor)
 
     when:
@@ -401,7 +402,7 @@ class DDAgentWriterTest extends DDSpecification {
     def api = new DDApi("localhost", agent.address.port, null)
 
     // This test focuses just on failed publish, so not verifying every callback
-    def monitor = Stub(DDAgentWriter.Monitor)
+    def monitor = Stub(Monitor)
     monitor.onPublish(_, _) >> {
       numPublished.incrementAndGet()
     }
@@ -506,7 +507,7 @@ class DDAgentWriterTest extends DDSpecification {
     def api = new DDApi("localhost", agent.address.port, null)
 
     // This test focuses just on failed publish, so not verifying every callback
-    def monitor = Stub(DDAgentWriter.Monitor)
+    def monitor = Stub(Monitor)
     monitor.onPublish(_, _) >> {
       numPublished.incrementAndGet()
     }
@@ -577,7 +578,7 @@ class DDAgentWriterTest extends DDSpecification {
       numResponses += 1
     }
 
-    def monitor = new DDAgentWriter.StatsDMonitor(statsd)
+    def monitor = new Monitor.StatsD(statsd)
     def writer = new DDAgentWriter(api, monitor)
     writer.start()
 
@@ -625,7 +626,7 @@ class DDAgentWriterTest extends DDSpecification {
       numErrors += 1
     }
 
-    def monitor = new DDAgentWriter.StatsDMonitor(statsd)
+    def monitor = new Monitor.StatsD(statsd)
     def writer = new DDAgentWriter(api, monitor)
     writer.start()
 

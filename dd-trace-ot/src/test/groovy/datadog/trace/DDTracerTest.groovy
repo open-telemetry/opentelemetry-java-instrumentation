@@ -14,6 +14,7 @@ import datadog.trace.common.sampling.Sampler
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
+import datadog.trace.common.writer.ddagent.Monitor
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInject
 import org.junit.Rule
@@ -49,7 +50,7 @@ class DDTracerTest extends DDSpecification {
     ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
     ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.3/traces" ||
       ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.4/traces"
-    tracer.writer.monitor instanceof DDAgentWriter.NoopMonitor
+    tracer.writer.monitor instanceof Monitor.Noop
 
     tracer.spanContextDecorators.size() == 15
 
@@ -65,7 +66,7 @@ class DDTracerTest extends DDSpecification {
     def tracer = new DDTracer(new Config())
 
     then:
-    tracer.writer.monitor instanceof DDAgentWriter.StatsDMonitor
+    tracer.writer.monitor instanceof Monitor.StatsD
     tracer.writer.monitor.hostInfo == "localhost:8125"
   }
 
