@@ -6,15 +6,13 @@ import static datadog.trace.api.Config.DEFAULT_TRACE_AGENT_PORT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventTranslator;
-import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.util.DaemonThreadFactory;
+import datadog.trace.common.writer.ddagent.DisruptorEvent;
 import datadog.trace.common.writer.ddagent.Monitor;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,21 +42,10 @@ public class DDAgentWriter implements Writer {
   private static final int FLUSH_PAYLOAD_BYTES = 5_000_000; // 5 MB
   private static final int FLUSH_PAYLOAD_DELAY = 1; // 1/second
 
-  private static final EventTranslatorOneArg<Event<List<DDSpan>>, List<DDSpan>> TRANSLATOR =
-      new EventTranslatorOneArg<Event<List<DDSpan>>, List<DDSpan>>() {
-        @Override
-        public void translateTo(
-            final Event<List<DDSpan>> event, final long sequence, final List<DDSpan> trace) {
-          event.data = trace;
-        }
-      };
-  private static final EventTranslator<Event<List<DDSpan>>> FLUSH_TRANSLATOR =
-      new EventTranslator<Event<List<DDSpan>>>() {
-        @Override
-        public void translateTo(final Event<List<DDSpan>> event, final long sequence) {
-          event.shouldFlush = true;
-        }
-      };
+  private static final DisruptorEvent.TraceTranslator TRANSLATOR =
+      new DisruptorEvent.TraceTranslator();
+  private static final DisruptorEvent.FlushTranslator FLUSH_TRANSLATOR =
+      new DisruptorEvent.FlushTranslator();
 
   private static final ThreadFactory DISRUPTOR_THREAD_FACTORY =
       new DaemonThreadFactory("dd-trace-disruptor");
@@ -68,7 +55,7 @@ public class DDAgentWriter implements Writer {
   private final Runnable flushTask = new FlushTask();
   private final DDApi api;
   private final int flushFrequencySeconds;
-  private final Disruptor<Event<List<DDSpan>>> disruptor;
+  private final Disruptor<DisruptorEvent<List<DDSpan>>> disruptor;
 
   private final Semaphore senderSemaphore;
   private final ScheduledExecutorService scheduledWriterExecutor;
@@ -134,7 +121,7 @@ public class DDAgentWriter implements Writer {
 
     disruptor =
         new Disruptor<>(
-            new DisruptorEventFactory<List<DDSpan>>(),
+            new DisruptorEvent.Factory<List<DDSpan>>(),
             Math.max(2, Integer.highestOneBit(disruptorSize - 1) << 1), // Next power of 2
             DISRUPTOR_THREAD_FACTORY,
             ProducerType.MULTI,
@@ -287,13 +274,13 @@ public class DDAgentWriter implements Writer {
   }
 
   /** This class is intentionally not threadsafe. */
-  private class TraceConsumer implements EventHandler<Event<List<DDSpan>>> {
+  private class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>> {
     private List<byte[]> serializedTraces = new ArrayList<>();
     private int payloadSize = 0;
 
     @Override
     public void onEvent(
-        final Event<List<DDSpan>> event, final long sequence, final boolean endOfBatch) {
+        final DisruptorEvent<List<DDSpan>> event, final long sequence, final boolean endOfBatch) {
       final List<DDSpan> trace = event.data;
       event.data = null; // clear the event for reuse.
       if (trace != null) {
@@ -410,18 +397,6 @@ public class DDAgentWriter implements Writer {
         payloadSize = 0;
         scheduleFlush();
       }
-    }
-  }
-
-  private static class Event<T> {
-    private volatile boolean shouldFlush = false;
-    private volatile T data = null;
-  }
-
-  private static class DisruptorEventFactory<T> implements EventFactory<Event<T>> {
-    @Override
-    public Event<T> newInstance() {
-      return new Event<>();
     }
   }
 }
