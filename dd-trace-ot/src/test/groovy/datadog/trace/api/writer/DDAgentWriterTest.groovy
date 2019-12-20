@@ -34,7 +34,7 @@ class DDAgentWriterTest extends DDSpecification {
     when:
     writer.write(trace)
     writer.write(trace)
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     2 * api.serializeTrace(_) >> { trace -> callRealMethod() }
@@ -57,7 +57,7 @@ class DDAgentWriterTest extends DDSpecification {
     (1..traceCount).each {
       writer.write(trace)
     }
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     _ * api.serializeTrace(_) >> { trace -> callRealMethod() }
@@ -97,7 +97,7 @@ class DDAgentWriterTest extends DDSpecification {
       writer.write(trace)
     }
     // Flush the remaining 2
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     2 * api.serializeTrace(_) >> { trace -> callRealMethod() }
@@ -118,7 +118,7 @@ class DDAgentWriterTest extends DDSpecification {
     def phaser = writer.apiPhaser
     phaser.register()
     writer.start()
-    writer.flush()
+    writer.disruptor.flush()
 
     when:
     (1..5).each {
@@ -153,7 +153,7 @@ class DDAgentWriterTest extends DDSpecification {
         // Busywait because we don't want to fill up the ring buffer
       }
     }
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     (maxedPayloadTraceCount + 1) * api.serializeTrace(_) >> { trace -> callRealMethod() }
@@ -193,7 +193,7 @@ class DDAgentWriterTest extends DDSpecification {
     when:
     writer.close()
     writer.write([])
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     0 * _
@@ -208,7 +208,7 @@ class DDAgentWriterTest extends DDSpecification {
 
     when:
     writer.write([])
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     1 * api.serializeTrace(_) >> { trace -> callRealMethod() }
@@ -265,7 +265,7 @@ class DDAgentWriterTest extends DDSpecification {
 
     when:
     writer.write(minimalTrace)
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     1 * monitor.onPublish(writer, minimalTrace)
@@ -314,7 +314,7 @@ class DDAgentWriterTest extends DDSpecification {
 
     when:
     writer.write(minimalTrace)
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     1 * monitor.onPublish(writer, minimalTrace)
@@ -356,7 +356,7 @@ class DDAgentWriterTest extends DDSpecification {
 
     when:
     writer.write(minimalTrace)
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     1 * monitor.onPublish(writer, minimalTrace)
@@ -438,7 +438,7 @@ class DDAgentWriterTest extends DDSpecification {
     // sanity check coordination mechanism of test
     // release to allow response to be generated
     responseSemaphore.release()
-    writer.flush()
+    writer.disruptor.flush()
 
     // reacquire semaphore to stall further responses
     responseSemaphore.acquire()
@@ -538,7 +538,7 @@ class DDAgentWriterTest extends DDSpecification {
     t1.join()
     t2.join()
 
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     def totalTraces = 100 + 100
@@ -585,7 +585,7 @@ class DDAgentWriterTest extends DDSpecification {
 
     when:
     writer.write(minimalTrace)
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     numTracesAccepted == 1
@@ -633,7 +633,7 @@ class DDAgentWriterTest extends DDSpecification {
 
     when:
     writer.write(minimalTrace)
-    writer.flush()
+    writer.disruptor.flush()
 
     then:
     numRequests == 1

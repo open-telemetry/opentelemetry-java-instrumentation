@@ -5,23 +5,17 @@ import static datadog.trace.api.Config.DEFAULT_AGENT_UNIX_DOMAIN_SOCKET;
 import static datadog.trace.api.Config.DEFAULT_TRACE_AGENT_PORT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.lmax.disruptor.SleepingWaitStrategy;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.util.DaemonThreadFactory;
-import datadog.trace.common.writer.ddagent.DisruptorEvent;
 import datadog.trace.common.writer.ddagent.Monitor;
 import datadog.trace.common.writer.ddagent.TraceConsumer;
+import datadog.trace.common.writer.ddagent.TraceSerializingDisruptor;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -37,26 +31,16 @@ public class DDAgentWriter implements Writer {
   private static final int SENDER_QUEUE_SIZE = 16;
   private static final int FLUSH_PAYLOAD_DELAY = 1; // 1/second
 
-  private static final DisruptorEvent.TraceTranslator TRANSLATOR =
-      new DisruptorEvent.TraceTranslator();
-  private static final DisruptorEvent.FlushTranslator FLUSH_TRANSLATOR =
-      new DisruptorEvent.FlushTranslator();
-
-  private static final ThreadFactory DISRUPTOR_THREAD_FACTORY =
-      new DaemonThreadFactory("dd-trace-disruptor");
   private static final ThreadFactory SCHEDULED_FLUSH_THREAD_FACTORY =
       new DaemonThreadFactory("dd-trace-writer");
 
-  private final Runnable flushTask = new FlushTask();
   private final DDApi api;
-  private final int flushFrequencySeconds;
-  private final Disruptor<DisruptorEvent<List<DDSpan>>> disruptor;
+  public final int flushFrequencySeconds;
+  public final TraceSerializingDisruptor disruptor;
 
   public final ScheduledExecutorService scheduledWriterExecutor;
   private final AtomicInteger traceCount = new AtomicInteger(0);
-  private final AtomicReference<ScheduledFuture<?>> flushSchedule = new AtomicReference<>();
-  public final Phaser apiPhaser;
-  private volatile boolean running = false;
+  public final Phaser apiPhaser = new Phaser(); // Ensure API calls are completed when flushing;
 
   public final Monitor monitor;
 
@@ -114,24 +98,18 @@ public class DDAgentWriter implements Writer {
     this.monitor = monitor;
 
     disruptor =
-        new Disruptor<>(
-            new DisruptorEvent.Factory<List<DDSpan>>(),
-            Math.max(2, Integer.highestOneBit(disruptorSize - 1) << 1), // Next power of 2
-            DISRUPTOR_THREAD_FACTORY,
-            ProducerType.MULTI,
-            new SleepingWaitStrategy(0, TimeUnit.MILLISECONDS.toNanos(5)));
-    disruptor.handleEventsWith(new TraceConsumer(traceCount, senderQueueSize, this));
+        new TraceSerializingDisruptor(
+            disruptorSize, this, new TraceConsumer(traceCount, senderQueueSize, this));
 
     this.flushFrequencySeconds = flushFrequencySeconds;
     scheduledWriterExecutor = Executors.newScheduledThreadPool(1, SCHEDULED_FLUSH_THREAD_FACTORY);
 
-    apiPhaser = new Phaser(); // Ensure API calls are completed when flushing
     apiPhaser.register(); // Register on behalf of the scheduled executor thread.
   }
 
   // Exposing some statistics for consumption by monitors
   public final long getDisruptorCapacity() {
-    return disruptor.getRingBuffer().getBufferSize();
+    return disruptor.getDisruptorCapacity();
   }
 
   public final long getDisruptorUtilizedCapacity() {
@@ -139,14 +117,14 @@ public class DDAgentWriter implements Writer {
   }
 
   public final long getDisruptorRemainingCapacity() {
-    return disruptor.getRingBuffer().remainingCapacity();
+    return disruptor.getDisruptorRemainingCapacity();
   }
 
   @Override
   public void write(final List<DDSpan> trace) {
     // We can't add events after shutdown otherwise it will never complete shutting down.
-    if (running) {
-      final boolean published = disruptor.getRingBuffer().tryPublishEvent(TRANSLATOR, trace);
+    if (disruptor.running) {
+      final boolean published = disruptor.tryPublish(trace);
 
       if (published) {
         monitor.onPublish(DDAgentWriter.this, trace);
@@ -176,15 +154,12 @@ public class DDAgentWriter implements Writer {
   @Override
   public void start() {
     disruptor.start();
-    running = true;
-    scheduleFlush();
 
     monitor.onStart(this);
   }
 
   @Override
   public void close() {
-    running = false;
 
     boolean flushSuccess = true;
 
@@ -199,32 +174,11 @@ public class DDAgentWriter implements Writer {
 
       flushSuccess = false;
     }
-    flushSuccess |= flush();
-    disruptor.shutdown();
+    flushSuccess |= disruptor.flush();
+
+    disruptor.close();
 
     monitor.onShutdown(this, flushSuccess);
-  }
-
-  /** This method will block until the flush is complete. */
-  public boolean flush() {
-    if (running) {
-      log.info("Flushing any remaining traces.");
-      // Register with the phaser so we can block until the flush completion.
-      apiPhaser.register();
-      disruptor.publishEvent(FLUSH_TRANSLATOR);
-      try {
-        // Allow thread to be interrupted.
-        apiPhaser.awaitAdvanceInterruptibly(apiPhaser.arriveAndDeregister());
-
-        return true;
-      } catch (final InterruptedException e) {
-        log.warn("Waiting for flush interrupted.", e);
-
-        return false;
-      }
-    } else {
-      return false;
-    }
   }
 
   @Override
@@ -241,28 +195,5 @@ public class DDAgentWriter implements Writer {
     str += " }";
 
     return str;
-  }
-
-  public void scheduleFlush() {
-    if (flushFrequencySeconds > 0 && !scheduledWriterExecutor.isShutdown()) {
-      final ScheduledFuture<?> previous =
-          flushSchedule.getAndSet(
-              scheduledWriterExecutor.schedule(flushTask, flushFrequencySeconds, SECONDS));
-
-      final boolean previousIncomplete = (previous != null);
-      if (previousIncomplete) {
-        previous.cancel(true);
-      }
-
-      monitor.onScheduleFlush(this, previousIncomplete);
-    }
-  }
-
-  private class FlushTask implements Runnable {
-    @Override
-    public void run() {
-      // Don't call flush() because it would block the thread also used for sending the traces.
-      disruptor.publishEvent(FLUSH_TRANSLATOR);
-    }
   }
 }

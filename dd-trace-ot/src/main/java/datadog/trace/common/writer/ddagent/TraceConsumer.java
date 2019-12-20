@@ -145,7 +145,7 @@ public class TraceConsumer implements EventHandler<DisruptorEvent<List<DDSpan>>>
       }
     } finally {
       payloadSize = 0;
-      writer.scheduleFlush();
+      writer.disruptor.scheduleFlush();
     }
   }
 }
