@@ -6,6 +6,7 @@ import ratpack.test.embed.EmbeddedApp
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -28,6 +29,17 @@ class RatpackAsyncHttpServerTest extends RatpackHttpServerTest {
             } then { ServerEndpoint endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(endpoint.body)
+              }
+            }
+          }
+        }
+        prefix(QUERY_PARAM.rawPath()) {
+          all {
+            Promise.sync {
+              QUERY_PARAM
+            } then { ServerEndpoint endpoint ->
+              controller(endpoint) {
+                context.response.status(endpoint.status).send(request.query)
               }
             }
           }

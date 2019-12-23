@@ -18,6 +18,7 @@ import java.util.function.Supplier
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -29,6 +30,11 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
         .GET(SUCCESS.getPath()).routeTo({
         controller(SUCCESS) {
           Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
+        }
+      } as Supplier)
+        .GET(QUERY_PARAM.getPath()).routeTo({
+        controller(QUERY_PARAM) {
+          Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
         }
       } as Supplier)
         .GET(REDIRECT.getPath()).routeTo({
@@ -98,6 +104,9 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
+        }
       }
     }
   }
@@ -123,6 +132,9 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
+        }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
         }
       }
     }

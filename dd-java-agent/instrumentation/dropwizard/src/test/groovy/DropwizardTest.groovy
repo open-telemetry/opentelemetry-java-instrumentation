@@ -12,14 +12,15 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
-import org.eclipse.jetty.servlet.ServletHandler
-
 import javax.ws.rs.GET
 import javax.ws.rs.Path
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
+import org.eclipse.jetty.servlet.ServletHandler
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -121,6 +122,9 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
+        }
       }
     }
   }
@@ -147,6 +151,14 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
     Response success() {
       controller(SUCCESS) {
         Response.status(SUCCESS.status).entity(SUCCESS.body).build()
+      }
+    }
+
+    @GET
+    @Path("query")
+    Response query_param(@QueryParam("some") String param) {
+      controller(QUERY_PARAM) {
+        Response.status(QUERY_PARAM.status).entity("some=$param".toString()).build()
       }
     }
 

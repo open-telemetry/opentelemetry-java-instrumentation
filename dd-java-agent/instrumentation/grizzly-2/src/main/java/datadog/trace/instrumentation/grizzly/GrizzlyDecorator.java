@@ -16,7 +16,14 @@ public class GrizzlyDecorator extends HttpServerDecorator<Request, Request, Resp
 
   @Override
   protected URI url(final Request request) throws URISyntaxException {
-    return new URI(request.getRequestURL().toString());
+    return new URI(
+        request.getScheme(),
+        null,
+        request.getServerName(),
+        request.getServerPort(),
+        request.getRequestURI(),
+        request.getQueryString(),
+        null);
   }
 
   @Override

@@ -15,6 +15,7 @@ import ratpack.test.embed.EmbeddedApp
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -34,6 +35,13 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
           all {
             controller(SUCCESS) {
               context.response.status(SUCCESS.status).send(SUCCESS.body)
+            }
+          }
+        }
+        prefix(QUERY_PARAM.rawPath()) {
+          all {
+            controller(QUERY_PARAM) {
+              context.response.status(QUERY_PARAM.status).send(request.query)
             }
           }
         }
@@ -118,6 +126,9 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
+        }
       }
     }
   }
@@ -143,6 +154,9 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
+        }
       }
     }
   }
