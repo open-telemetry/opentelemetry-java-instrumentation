@@ -8,7 +8,7 @@ public class RmiClientDecorator extends ClientDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"rmi"};
+    return new String[] {"rmi", "rmi-client"};
   }
 
   @Override
