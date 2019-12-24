@@ -23,6 +23,6 @@ public class RmiClientDecorator extends ClientDecorator {
 
   @Override
   protected String service() {
-    return "rmi";
+    return null;
   }
 }
