@@ -190,7 +190,6 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         completeDelegate(result);
       } else {
         try (final TraceScope scope = parentContinuation.activate()) {
-          scope.setAsyncPropagation(true);
           completeDelegate(result);
         }
       }
@@ -207,7 +206,6 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         failDelegate(ex);
       } else {
         try (final TraceScope scope = parentContinuation.activate()) {
-          scope.setAsyncPropagation(true);
           failDelegate(ex);
         }
       }
@@ -223,7 +221,6 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         cancelDelegate();
       } else {
         try (final TraceScope scope = parentContinuation.activate()) {
-          scope.setAsyncPropagation(true);
           cancelDelegate();
         }
       }

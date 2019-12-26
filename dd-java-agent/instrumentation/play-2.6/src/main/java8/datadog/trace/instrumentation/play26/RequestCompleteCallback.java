@@ -1,9 +1,7 @@
 package datadog.trace.instrumentation.play26;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.instrumentation.play26.PlayHttpServerDecorator.DECORATE;
 
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Result;
@@ -26,10 +24,6 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
         DECORATE.onResponse(span, result.get());
       }
       DECORATE.beforeFinish(span);
-      final TraceScope scope = activeScope();
-      if (scope != null) {
-        scope.setAsyncPropagation(false);
-      }
     } catch (final Throwable t) {
       log.debug("error in play instrumentation", t);
     } finally {

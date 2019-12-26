@@ -31,7 +31,6 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCES
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
 import static org.junit.Assume.assumeTrue
 
@@ -165,7 +164,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
     assert activeSpan() != null: "Controller should have a parent span."
-    assert activeScope().asyncPropagating: "Scope should be propagating async."
     if (endpoint == NOT_FOUND) {
       return closure()
     }

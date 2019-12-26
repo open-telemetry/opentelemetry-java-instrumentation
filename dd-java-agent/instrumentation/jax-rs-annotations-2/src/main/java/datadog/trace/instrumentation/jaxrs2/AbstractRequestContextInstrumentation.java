@@ -72,7 +72,6 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
           span = startSpan("jax-rs.request.abort");
 
           final AgentScope scope = activateSpan(span, false);
-          scope.setAsyncPropagation(true);
 
           DECORATE.afterStart(span);
           DECORATE.onJaxRsSpan(span, parent, resourceClass, method);

@@ -203,11 +203,6 @@ public class AgentTracer {
     }
 
     @Override
-    public AgentScope setAsyncPropagation(final boolean value) {
-      return this;
-    }
-
-    @Override
     public void close() {}
   }
 
@@ -237,10 +232,7 @@ public class AgentTracer {
     }
 
     @Override
-    public void close() {}
-
-    @Override
-    public void close(final boolean closeContinuationScope) {}
+    public void cancel() {}
   }
 
   static class NoopTraceScope implements TraceScope {
@@ -253,14 +245,6 @@ public class AgentTracer {
 
     @Override
     public void close() {}
-
-    @Override
-    public boolean isAsyncPropagating() {
-      return false;
-    }
-
-    @Override
-    public void setAsyncPropagation(final boolean value) {}
   }
 
   static class NoopContext implements Context {

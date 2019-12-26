@@ -89,7 +89,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope enter() {
       final TraceScope scope = activeScope();
-      if (scope != null && scope.isAsyncPropagating()) {
+      if (scope != null) {
         return activateSpan(noopSpan(), false);
       }
       return null;

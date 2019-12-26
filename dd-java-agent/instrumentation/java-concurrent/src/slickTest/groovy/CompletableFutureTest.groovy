@@ -9,8 +9,6 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import java.util.function.Supplier
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
-
 /**
  * Note: ideally this should live with the rest of ExecutorInstrumentationTest,
  * but this code needs java8 so we put it here for now.
@@ -38,18 +36,16 @@ class CompletableFutureTest extends AgentTestRunner {
       }
     }
 
-    def future = new Supplier<CompletableFuture<String>>() {
+    def result = new Supplier<String>() {
       @Override
       @Trace(operationName = "parent")
-      CompletableFuture<String> get() {
-        activeScope().setAsyncPropagation(true)
+      String get() {
         return CompletableFuture.supplyAsync(supplier, pool)
           .thenCompose({ s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), differentPool) })
           .thenApply(function)
+          .get()
       }
     }.get()
-
-    def result = future.get()
 
     TEST_WRITER.waitForTraces(1)
     List<DDSpan> trace = TEST_WRITER.get(0)

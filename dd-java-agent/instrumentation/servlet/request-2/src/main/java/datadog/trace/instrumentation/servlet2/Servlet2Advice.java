@@ -54,9 +54,7 @@ public class Servlet2Advice {
 
     httpServletRequest.setAttribute(DD_SPAN_ATTRIBUTE, span);
 
-    final AgentScope scope = activateSpan(span, true);
-    scope.setAsyncPropagation(true);
-    return scope;
+    return activateSpan(span, true);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -91,7 +89,6 @@ public class Servlet2Advice {
     }
     DECORATE.beforeFinish(span);
 
-    scope.setAsyncPropagation(false);
     scope.close();
   }
 }

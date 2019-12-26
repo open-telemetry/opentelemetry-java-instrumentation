@@ -32,8 +32,8 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncCl
 
       @Override
       void completed(HttpResponse result) {
-        responseFuture.complete(result.statusLine.statusCode)
         callback?.call()
+        responseFuture.complete(result.statusLine.statusCode)
       }
 
       @Override
@@ -47,7 +47,12 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncCl
       }
     })
 
-    return responseFuture.get()
+    try {
+      return responseFuture.get()
+    } finally {
+      // child span is reported asynchronously, this is needed for consistent span ordering during test verification
+      blockUntilChildSpansFinished(1)
+    }
   }
 
   @Override

@@ -1,5 +1,7 @@
+import java.util.concurrent.CountDownLatch
+
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.{activeScope, activeSpan}
+import datadog.trace.instrumentation.api.AgentTracer.activeSpan
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -12,28 +14,35 @@ class ScalaConcurrentTests {
     */
   @Trace
   def traceWithFutureAndCallbacks(): Integer = {
-    activeScope().setAsyncPropagation(true)
+    val latch = new CountDownLatch(2)
     val goodFuture: Future[Integer] = Future {
       tracedChild("goodFuture")
       1
     }
     goodFuture onSuccess {
-      case _ => tracedChild("successCallback")
+      case _ => {
+        tracedChild("successCallback")
+        latch.countDown()
+      }
     }
     val badFuture: Future[Integer] = Future {
       tracedChild("badFuture")
       throw new RuntimeException("Uh-oh")
     }
     badFuture onFailure {
-      case t: Throwable => tracedChild("failureCallback")
+      case t: Throwable => {
+        tracedChild("failureCallback")
+        latch.countDown()
+      }
     }
 
+    latch.await()
     return 5
   }
 
   @Trace
   def tracedAcrossThreadsWithNoTrace(): Integer = {
-    activeScope().setAsyncPropagation(true)
+    val latch = new CountDownLatch(1)
     val goodFuture: Future[Integer] = Future {
       1
     }
@@ -41,10 +50,14 @@ class ScalaConcurrentTests {
       case _ => Future {
         2
       } onSuccess {
-        case _ => tracedChild("callback")
+        case _ => {
+          tracedChild("callback")
+          latch.countDown()
+        }
       }
     }
 
+    latch.await()
     return 2
   }
 
@@ -53,7 +66,6 @@ class ScalaConcurrentTests {
     */
   @Trace
   def traceWithPromises(): Integer = {
-    activeScope().setAsyncPropagation(true)
     val keptPromise = Promise[Boolean]()
     val brokenPromise = Promise[Boolean]()
     val afterPromise = keptPromise.future
@@ -67,17 +79,28 @@ class ScalaConcurrentTests {
       brokenPromise failure new IllegalStateException()
     }
 
+    val latch = new CountDownLatch(3)
     afterPromise onSuccess {
-      case b => tracedChild("keptPromise")
+      case b => {
+        tracedChild("keptPromise")
+        latch.countDown()
+      }
     }
     afterPromise2 onSuccess {
-      case b => tracedChild("keptPromise2")
+      case b => {
+        tracedChild("keptPromise2")
+        latch.countDown()
+      }
     }
 
     failedAfterPromise onFailure {
-      case t => tracedChild("brokenPromise")
+      case t => {
+        tracedChild("brokenPromise")
+        latch.countDown()
+      }
     }
 
+    latch.await()
     return 5
   }
 
@@ -86,7 +109,6 @@ class ScalaConcurrentTests {
     */
   @Trace
   def tracedWithFutureFirstCompletions(): Integer = {
-    activeScope().setAsyncPropagation(true)
     val completedVal = Future.firstCompletedOf(
       List(
         Future {
@@ -110,7 +132,6 @@ class ScalaConcurrentTests {
     */
   @Trace
   def tracedTimeout(): Integer = {
-    activeScope().setAsyncPropagation(true)
     val f: Future[String] = Future {
       tracedChild("timeoutChild")
       while (true) {

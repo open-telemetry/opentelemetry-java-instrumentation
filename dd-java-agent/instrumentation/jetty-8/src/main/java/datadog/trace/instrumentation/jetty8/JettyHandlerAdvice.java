@@ -39,7 +39,6 @@ public class JettyHandlerAdvice {
     span.setTag(DDTags.RESOURCE_NAME, resourceName);
 
     final AgentScope scope = activateSpan(span, false);
-    scope.setAsyncPropagation(true);
     req.setAttribute(DD_SPAN_ATTRIBUTE, span);
     return scope;
   }

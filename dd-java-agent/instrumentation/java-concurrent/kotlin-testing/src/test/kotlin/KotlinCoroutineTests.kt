@@ -1,5 +1,4 @@
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.activeScope
 import datadog.trace.instrumentation.api.AgentTracer.activeSpan
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.actor
@@ -131,8 +130,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     activeSpan().setSpanName(opName)
   }
 
-  private fun <T> runTest(asyncPropagation: Boolean = true, block: suspend CoroutineScope.() -> T): T {
-    activeScope().setAsyncPropagation(asyncPropagation)
+  private fun <T> runTest(block: suspend CoroutineScope.() -> T): T {
     return runBlocking(dispatcher, block = block)
   }
 }

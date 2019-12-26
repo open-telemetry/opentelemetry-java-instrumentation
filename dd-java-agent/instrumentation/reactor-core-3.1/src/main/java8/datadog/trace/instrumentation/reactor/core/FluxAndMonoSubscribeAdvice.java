@@ -25,9 +25,7 @@ public class FluxAndMonoSubscribeAdvice {
             .currentContext()
             .getOrDefault(ReactorCoreAdviceUtils.PUBLISHER_CONTEXT_KEY, null);
     if (span != null) {
-      final AgentScope scope = activateSpan(span, false);
-      scope.setAsyncPropagation(true);
-      return scope;
+      return activateSpan(span, false);
     }
     return null;
   }

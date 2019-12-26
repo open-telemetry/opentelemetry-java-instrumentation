@@ -16,16 +16,6 @@ public interface TraceScope extends Closeable {
   @Override
   void close();
 
-  /** If true, this context will propagate across async boundaries. */
-  boolean isAsyncPropagating();
-
-  /**
-   * Enable or disable async propagation. Async propagation is initially set to false.
-   *
-   * @param value The new propagation value. True == propagate. False == don't propagate.
-   */
-  void setAsyncPropagation(boolean value);
-
   /** Used to pass async context between workers. */
   interface Continuation {
     /**
@@ -35,19 +25,7 @@ public interface TraceScope extends Closeable {
      */
     TraceScope activate();
 
-    /**
-     * Cancel the continuation. This also closes parent scope.
-     *
-     * <p>FIXME: the fact that this is closing parent scope is confusing, we should review this in
-     * new API.
-     */
-    void close();
-
-    /**
-     * Close the continuation.
-     *
-     * @param closeContinuationScope true iff parent scope should also be closed
-     */
-    void close(boolean closeContinuationScope);
+    /** Cancel the continuation. */
+    void cancel();
   }
 }

@@ -81,7 +81,7 @@ public class KafkaStreamsProcessorInstrumentation {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        activateSpan(span, true).setAsyncPropagation(true);
+        activateSpan(span, true);
       }
     }
   }

@@ -37,7 +37,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
     DECORATE.afterStart(span);
 
     final AgentScope scope = activateSpan(span, false);
-    scope.setAsyncPropagation(true);
 
     final ServerCall.Listener<ReqT> result;
     try {
@@ -53,7 +52,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
       span.finish();
       throw e;
     } finally {
-      scope.setAsyncPropagation(false);
       scope.close();
     }
 
@@ -74,9 +72,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void close(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
       try (final AgentScope scope = activateSpan(span, false)) {
-        scope.setAsyncPropagation(true);
         delegate().close(status, trailers);
-        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;
@@ -100,7 +96,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
               .setTag("message.type", message.getClass().getName());
       DECORATE.afterStart(span);
       final AgentScope scope = activateSpan(span, true);
-      scope.setAsyncPropagation(true);
       try {
         delegate().onMessage(message);
       } catch (final Throwable e) {
@@ -109,7 +104,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
         this.span.finish();
         throw e;
       } finally {
-        scope.setAsyncPropagation(false);
         DECORATE.beforeFinish(span);
         scope.close();
       }
@@ -118,9 +112,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onHalfClose() {
       try (final AgentScope scope = activateSpan(span, false)) {
-        scope.setAsyncPropagation(true);
         delegate().onHalfClose();
-        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
@@ -133,10 +125,8 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onCancel() {
       // Finishes span.
       try (final AgentScope scope = activateSpan(span, false)) {
-        scope.setAsyncPropagation(true);
         delegate().onCancel();
         span.setTag("canceled", true);
-        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;
@@ -150,9 +140,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onComplete() {
       // Finishes span.
       try (final AgentScope scope = activateSpan(span, false)) {
-        scope.setAsyncPropagation(true);
         delegate().onComplete();
-        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;
@@ -165,9 +153,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onReady() {
       try (final AgentScope scope = activateSpan(span, false)) {
-        scope.setAsyncPropagation(true);
         delegate().onReady();
-        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);

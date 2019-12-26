@@ -1,6 +1,5 @@
 package datadog.opentracing;
 
-import datadog.opentracing.scopemanager.ContinuableScope;
 import datadog.trace.common.util.Clock;
 import java.io.Closeable;
 import java.lang.ref.Reference;
@@ -155,38 +154,6 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   public DDSpan getRootSpan() {
     final WeakReference<DDSpan> rootRef = rootSpan.get();
     return rootRef == null ? null : rootRef.get();
-  }
-
-  /**
-   * When using continuations, it's possible one may be used after all existing spans are otherwise
-   * completed, so we need to wait till continuations are de-referenced before reporting.
-   */
-  public void registerContinuation(final ContinuableScope.Continuation continuation) {
-    synchronized (continuation) {
-      if (continuation.ref == null) {
-        continuation.ref =
-            new WeakReference<ContinuableScope.Continuation>(continuation, referenceQueue);
-        weakReferences.add(continuation.ref);
-        final int count = pendingReferenceCount.incrementAndGet();
-        log.debug(
-            "traceId: {} -- registered continuation {}. count = {}", traceId, continuation, count);
-      } else {
-        log.debug("continuation {} already registered in trace {}", continuation, traceId);
-      }
-    }
-  }
-
-  public void cancelContinuation(final ContinuableScope.Continuation continuation) {
-    synchronized (continuation) {
-      if (continuation.ref == null) {
-        log.debug("continuation {} not registered in trace {}", continuation, traceId);
-      } else {
-        weakReferences.remove(continuation.ref);
-        continuation.ref.clear();
-        continuation.ref = null;
-        expireReference();
-      }
-    }
   }
 
   private void expireReference() {

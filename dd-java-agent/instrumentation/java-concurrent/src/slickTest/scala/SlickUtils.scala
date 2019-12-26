@@ -1,9 +1,8 @@
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.activeScope
 import slick.jdbc.H2Profile.api._
 
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
 
 class SlickUtils {
 
@@ -20,12 +19,8 @@ class SlickUtils {
   Await.result(database.run(sqlu"""CREATE ALIAS IF NOT EXISTS SLEEP FOR "java.lang.Thread.sleep(long)""""), Duration.Inf)
 
   @Trace
-  def startQuery(query: String): Future[Vector[Int]] = {
-    activeScope().setAsyncPropagation(true)
-    database.run(sql"#$query".as[Int])
-  }
-
-  def getResults(future: Future[Vector[Int]]): Int = {
+  def runQuery(query: String): Int = {
+    val future = database.run(sql"#$query".as[Int])
     Await.result(future, Duration.Inf).head
   }
 

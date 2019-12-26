@@ -85,16 +85,23 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
     and:
     assertTraces(1) {
-      trace(0, 2) {
+      def size = TEST_WRITER.get(0).size()
+      trace(0, size) {
         basicSpan(it, 0, "parent", null, null, thrownException)
 
-        span(1) {
-          operationName "netty.connect"
-          childOf span(0)
-          errored true
-          tags {
-            "$Tags.COMPONENT" "netty"
-            errorTags AbstractChannel.AnnotatedConnectException, "Connection refused: localhost/127.0.0.1:$UNUSABLE_PORT"
+        // AsyncHttpClient retries across multiple resolved IP addresses (e.g. 127.0.0.1 and 0:0:0:0:0:0:0:1)
+        // for up to a total of 10 seconds (default connection time limit)
+        for (def i = 1; i < size; i++) {
+          span(i) {
+            operationName "netty.connect"
+            childOf span(0)
+            errored true
+            tags {
+              "$Tags.COMPONENT" "netty"
+              "error.type" AbstractChannel.AnnotatedConnectException.name
+              "error.stack" String
+              "error.msg" ~/Connection refused: localhost\/[0-9.:]+:$UNUSABLE_PORT/
+            }
           }
         }
       }

@@ -28,7 +28,6 @@ public class ExecutorInstrumentationUtils {
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
     final TraceScope scope = activeScope();
     return (scope != null
-        && scope.isAsyncPropagating()
         && task != null
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
   }
@@ -49,7 +48,7 @@ public class ExecutorInstrumentationUtils {
     if (state.setContinuation(continuation)) {
       log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
     } else {
-      continuation.close(false);
+      continuation.cancel();
     }
     return state;
   }

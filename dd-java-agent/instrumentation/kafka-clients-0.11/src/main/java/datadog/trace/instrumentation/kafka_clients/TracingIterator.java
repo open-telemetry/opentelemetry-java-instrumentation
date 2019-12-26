@@ -59,7 +59,6 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         decorator.afterStart(span);
         decorator.onConsume(span, next);
         currentScope = activateSpan(span, true);
-        currentScope.setAsyncPropagation(true);
       }
     } catch (final Exception e) {
       log.debug("Error during decoration", e);

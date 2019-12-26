@@ -34,7 +34,6 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
     // We want the callback in the scope of the parent, not the client span
     try (final AgentScope scope = activateSpan(parent, false)) {
-      scope.setAsyncPropagation(true);
       ctx.fireChannelRead(msg);
     }
   }

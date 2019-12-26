@@ -1,8 +1,9 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import datadog.trace.agent.test.AgentTestRunner.blockUntilChildSpansFinished
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.{activeScope, activeSpan}
+import datadog.trace.instrumentation.api.AgentTracer.activeSpan
 
 import scala.concurrent.duration._
 
@@ -33,23 +34,23 @@ class AkkaActors {
 
   @Trace
   def basicTell(): Unit = {
-    activeScope().setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ! Greet
+    blockUntilChildSpansFinished(1)
   }
 
   @Trace
   def basicAsk(): Unit = {
-    activeScope().setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ? Greet
+    blockUntilChildSpansFinished(1)
   }
 
   @Trace
   def basicForward(): Unit = {
-    activeScope().setAsyncPropagation(true)
     helloGreeter ! WhoToGreet("Akka")
     helloGreeter ? Greet
+    blockUntilChildSpansFinished(1)
   }
 }
 

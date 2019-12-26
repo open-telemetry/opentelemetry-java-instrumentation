@@ -200,7 +200,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       final TraceScope scope = activeScope();
-      if (scope != null && scope.isAsyncPropagating() && tasks != null) {
+      if (scope != null && tasks != null) {
         final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (final Callable<?> task : tasks) {
           if (task != null) {
