@@ -154,9 +154,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         if (null != continuation) {
           final Attribute<TraceScope.Continuation> attribute =
               pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY);
-          if (!attribute.compareAndSet(null, continuation)) {
-            continuation.cancel();
-          }
+          attribute.compareAndSet(null, continuation);
         }
       }
     }

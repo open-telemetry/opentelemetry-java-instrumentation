@@ -24,8 +24,5 @@ public interface TraceScope extends Closeable {
      * <p>Should be called on the child thread.
      */
     TraceScope activate();
-
-    /** Cancel the continuation. */
-    void cancel();
   }
 }

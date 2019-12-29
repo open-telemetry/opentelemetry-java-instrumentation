@@ -97,14 +97,5 @@ public class ContinuableScope implements DDScope, TraceScope {
         return new ContinuableScope(scopeManager, spanUnderScope, false);
       }
     }
-
-    @Override
-    public void cancel() {
-      if (used.compareAndSet(false, true)) {
-        // FIXME trask: anything to do here?
-      } else {
-        log.debug("Failed to cancel continuation {}. Already used.", this);
-      }
-    }
   }
 }

@@ -230,9 +230,6 @@ public class AgentTracer {
     public TraceScope activate() {
       return NoopTraceScope.INSTANCE;
     }
-
-    @Override
-    public void cancel() {}
   }
 
   static class NoopTraceScope implements TraceScope {
