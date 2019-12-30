@@ -2,12 +2,11 @@ package datadog.opentracing.scopemanager;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.context.ScopeListener;
-import datadog.trace.context.TraceScope;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContinuableScope implements DDScope, TraceScope {
+public class ContinuableScope implements DDScope {
   /** ScopeManager holding the thread-local to this scope. */
   private final ContextualScopeManager scopeManager;
   /**
@@ -69,7 +68,6 @@ public class ContinuableScope implements DDScope, TraceScope {
    *
    * @return The new continuation, or null if this scope is not async propagating.
    */
-  @Override
   public Continuation capture() {
     return new Continuation();
   }
@@ -79,13 +77,12 @@ public class ContinuableScope implements DDScope, TraceScope {
     return super.toString() + "->" + spanUnderScope;
   }
 
-  public class Continuation implements TraceScope.Continuation {
+  public class Continuation {
 
     private final AtomicBoolean used = new AtomicBoolean(false);
 
     private Continuation() {}
 
-    @Override
     public ContinuableScope activate() {
       if (used.compareAndSet(false, true)) {
         final ContinuableScope scope = new ContinuableScope(scopeManager, spanUnderScope, false);

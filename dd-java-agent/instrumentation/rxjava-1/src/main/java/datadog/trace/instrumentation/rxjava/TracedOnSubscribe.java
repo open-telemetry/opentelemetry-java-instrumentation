@@ -5,9 +5,9 @@ import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 
 import datadog.trace.agent.decorator.BaseDecorator;
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.TraceScope;
 import rx.DDTracingUtil;
 import rx.Observable;
 import rx.Subscriber;

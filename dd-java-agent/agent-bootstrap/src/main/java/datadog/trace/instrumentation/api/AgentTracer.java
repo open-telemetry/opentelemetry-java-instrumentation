@@ -1,8 +1,7 @@
 package datadog.trace.instrumentation.api;
 
-import datadog.trace.context.TraceScope;
-import datadog.trace.context.TraceScope.Continuation;
 import datadog.trace.instrumentation.api.AgentSpan.Context;
+import datadog.trace.instrumentation.api.TraceScope.Continuation;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class AgentTracer {

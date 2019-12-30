@@ -12,7 +12,7 @@ import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.TraceScope;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

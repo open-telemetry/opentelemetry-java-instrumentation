@@ -7,7 +7,7 @@ import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.TraceScope;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
 

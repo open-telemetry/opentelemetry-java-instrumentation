@@ -12,10 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
+import datadog.trace.instrumentation.api.TraceScope;
 import datadog.trace.instrumentation.netty41.server.NettyHttpServerDecorator;
 import io.netty.channel.ChannelFuture;
 import java.util.Map;

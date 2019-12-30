@@ -1,7 +1,5 @@
 package datadog.trace.instrumentation.api;
 
-import datadog.trace.context.TraceScope;
-
 public interface AgentPropagation {
 
   TraceScope.Continuation capture();

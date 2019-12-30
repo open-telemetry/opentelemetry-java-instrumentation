@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.netty40;
 
 import datadog.trace.bootstrap.WeakMap;
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.TraceScope;
 import datadog.trace.instrumentation.netty40.client.HttpClientTracingHandler;
 import datadog.trace.instrumentation.netty40.server.HttpServerTracingHandler;
 import io.netty.util.AttributeKey;
@@ -42,8 +42,8 @@ public class AttributeKeys {
    * while the Attribute class is loaded by a third class loader and used internally for the
    * cassandra driver.
    */
-  private static <T> AttributeKey<T> attributeKey(String key) {
-    Map<String, AttributeKey<?>> classLoaderMap =
+  private static <T> AttributeKey<T> attributeKey(final String key) {
+    final Map<String, AttributeKey<?>> classLoaderMap =
         map.getOrCreate(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
       return (AttributeKey<T>) classLoaderMap.get(key);

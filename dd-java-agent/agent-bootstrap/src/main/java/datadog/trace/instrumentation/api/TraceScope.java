@@ -1,4 +1,4 @@
-package datadog.trace.context;
+package datadog.trace.instrumentation.api;
 
 import java.io.Closeable;
 

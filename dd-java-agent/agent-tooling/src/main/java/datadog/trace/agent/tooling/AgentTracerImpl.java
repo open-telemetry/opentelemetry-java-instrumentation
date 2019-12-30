@@ -7,13 +7,14 @@ import datadog.opentracing.Span;
 import datadog.opentracing.SpanContext;
 import datadog.opentracing.propagation.TextMapExtract;
 import datadog.opentracing.propagation.TextMapInject;
+import datadog.opentracing.scopemanager.ContinuableScope;
 import datadog.opentracing.scopemanager.DDScope;
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
+import datadog.trace.instrumentation.api.TraceScope;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -78,8 +79,8 @@ public final class AgentTracerImpl implements TracerAPI {
   @Override
   public TraceScope activeScope() {
     final DDScope scope = tracer.scopeManager().active();
-    if (scope instanceof TraceScope) {
-      return (TraceScope) scope;
+    if (scope instanceof ContinuableScope) {
+      return new TraceScopeImpl((ContinuableScope) scope);
     } else {
       return null;
     }
@@ -239,13 +240,60 @@ public final class AgentTracerImpl implements TracerAPI {
     }
   }
 
+  private static class TraceScopeImpl implements TraceScope {
+
+    private final ContinuableScope scope;
+
+    private TraceScopeImpl(final ContinuableScope scope) {
+      this.scope = scope;
+    }
+
+    @Override
+    public Continuation capture() {
+      return new ContinuationImpl(scope.capture());
+    }
+
+    @Override
+    public void close() {
+      scope.close();
+    }
+
+    @Override
+    public int hashCode() {
+      return scope.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      if (!(obj instanceof TraceScopeImpl)) {
+        return false;
+      }
+      final TraceScopeImpl other = (TraceScopeImpl) obj;
+      return scope.equals(other.scope);
+    }
+  }
+
+  private static class ContinuationImpl implements TraceScope.Continuation {
+
+    private final ContinuableScope.Continuation continuation;
+
+    private ContinuationImpl(final ContinuableScope.Continuation continuation) {
+      this.continuation = continuation;
+    }
+
+    @Override
+    public TraceScope activate() {
+      return new TraceScopeImpl(continuation.activate());
+    }
+  }
+
   private final class AgentPropagationImpl implements AgentPropagation {
 
     @Override
     public TraceScope.Continuation capture() {
       final DDScope active = tracer.scopeManager().active();
-      if (active instanceof TraceScope) {
-        return ((TraceScope) active).capture();
+      if (active instanceof ContinuableScope) {
+        return new ContinuationImpl(((ContinuableScope) active).capture());
       } else {
         return null;
       }
@@ -289,7 +337,9 @@ public final class AgentTracerImpl implements TracerAPI {
         // extracted header value
         String s = getter.get(carrier, key);
         // in case of multiple values in the header, need to parse
-        if (s != null) s = s.split(",")[0].trim();
+        if (s != null) {
+          s = s.split(",")[0].trim();
+        }
         extracted.put(key, s);
       }
     }
