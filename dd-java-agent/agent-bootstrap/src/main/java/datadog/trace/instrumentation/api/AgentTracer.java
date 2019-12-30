@@ -209,11 +209,6 @@ public class AgentTracer {
     static final NoopAgentPropagation INSTANCE = new NoopAgentPropagation();
 
     @Override
-    public Continuation capture() {
-      return NoopContinuation.INSTANCE;
-    }
-
-    @Override
     public <C> void inject(final AgentSpan span, final C carrier, final Setter<C> setter) {}
 
     @Override

@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.playws1;
 
-import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.instrumentation.playws1.PlayWSClientDecorator.DECORATE;
 
 import datadog.trace.instrumentation.api.AgentSpan;
@@ -21,7 +21,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   public AsyncHandlerWrapper(final AsyncHandler delegate, final AgentSpan span) {
     this.delegate = delegate;
     this.span = span;
-    continuation = propagate().capture();
+    continuation = activeScope().capture();
   }
 
   @Override

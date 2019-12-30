@@ -290,16 +290,6 @@ public final class AgentTracerImpl implements TracerAPI {
   private final class AgentPropagationImpl implements AgentPropagation {
 
     @Override
-    public TraceScope.Continuation capture() {
-      final DDScope active = tracer.scopeManager().active();
-      if (active instanceof ContinuableScope) {
-        return new ContinuationImpl(((ContinuableScope) active).capture());
-      } else {
-        return null;
-      }
-    }
-
-    @Override
     public <C> void inject(final AgentSpan span, final C carrier, final Setter<C> setter) {
       assert span instanceof AgentSpanImpl;
       tracer.inject(

@@ -2,8 +2,6 @@ package datadog.trace.instrumentation.api;
 
 public interface AgentPropagation {
 
-  TraceScope.Continuation capture();
-
   <C> void inject(AgentSpan span, C carrier, Setter<C> setter);
 
   interface Setter<C> {

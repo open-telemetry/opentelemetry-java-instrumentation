@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rxjava;
 
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 
 import datadog.trace.agent.decorator.BaseDecorator;
@@ -27,7 +27,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
     this.operationName = operationName;
     this.decorator = decorator;
 
-    continuation = propagate().capture();
+    continuation = activeScope().capture();
   }
 
   @Override
