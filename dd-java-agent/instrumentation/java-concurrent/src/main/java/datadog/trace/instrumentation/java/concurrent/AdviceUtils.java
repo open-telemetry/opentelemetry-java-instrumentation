@@ -1,8 +1,11 @@
 package datadog.trace.instrumentation.java.concurrent;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import lombok.extern.slf4j.Slf4j;
 
 /** Helper utils for Runnable/Callable instrumentation */
@@ -21,9 +24,9 @@ public class AdviceUtils {
       final ContextStore<T, State> contextStore, final T task) {
     final State state = contextStore.get(task);
     if (state != null) {
-      final AgentScope.Continuation continuation = state.getAndResetContinuation();
-      if (continuation != null) {
-        return continuation.activate();
+      final AgentSpan parentSpan = state.getAndResetParentSpan();
+      if (parentSpan != null) {
+        return activateSpan(parentSpan, false);
       }
     }
     return null;

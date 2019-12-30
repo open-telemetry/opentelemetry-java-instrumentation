@@ -1,7 +1,7 @@
 package datadog.trace.bootstrap.instrumentation.java.concurrent;
 
 import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,28 +16,27 @@ public class State {
         }
       };
 
-  private final AtomicReference<AgentScope.Continuation> continuationRef =
-      new AtomicReference<>(null);
+  private final AtomicReference<AgentSpan> parentSpanRef = new AtomicReference<>(null);
 
   private State() {}
 
-  public boolean setContinuation(final AgentScope.Continuation continuation) {
-    final boolean result = continuationRef.compareAndSet(null, continuation);
+  public boolean setParentSpan(final AgentSpan parentSpan) {
+    final boolean result = parentSpanRef.compareAndSet(null, parentSpan);
     if (!result) {
       log.debug(
-          "Failed to set continuation because another continuation is already set {}: new: {}, old: {}",
+          "Failed to set parent span because another parent span is already set {}: new: {}, old: {}",
           this,
-          continuation,
-          continuationRef.get());
+          parentSpan,
+          parentSpanRef.get());
     }
     return result;
   }
 
-  public void closeContinuation() {
-    continuationRef.set(null);
+  public void clearParentSpan() {
+    parentSpanRef.set(null);
   }
 
-  public AgentScope.Continuation getAndResetContinuation() {
-    return continuationRef.getAndSet(null);
+  public AgentSpan getAndResetParentSpan() {
+    return parentSpanRef.getAndSet(null);
   }
 }

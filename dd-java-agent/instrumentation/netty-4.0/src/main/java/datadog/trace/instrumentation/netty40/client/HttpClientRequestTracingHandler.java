@@ -28,10 +28,10 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
 
     AgentScope parentScope = null;
-    final AgentScope.Continuation continuation =
-        ctx.channel().attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY).getAndRemove();
-    if (continuation != null) {
-      parentScope = continuation.activate();
+    final AgentSpan parentSpan =
+        ctx.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY).getAndRemove();
+    if (parentSpan != null) {
+      parentScope = activateSpan(parentSpan, false);
     }
 
     final HttpRequest request = (HttpRequest) msg;

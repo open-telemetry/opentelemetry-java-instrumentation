@@ -1,13 +1,13 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,8 +26,8 @@ public class ExecutorInstrumentationUtils {
    * @return true iff given task object should be wrapped
    */
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
-    final AgentScope scope = activeScope();
-    return (scope != null
+    final AgentSpan span = activeSpan();
+    return (span != null
         && task != null
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
   }
@@ -37,15 +37,14 @@ public class ExecutorInstrumentationUtils {
    *
    * @param contextStore context storage
    * @param task task instance
-   * @param scope current scope
+   * @param span current span
    * @param <T> task class type
    * @return new state
    */
   public static <T> State setupState(
-      final ContextStore<T, State> contextStore, final T task, final AgentScope scope) {
+      final ContextStore<T, State> contextStore, final T task, final AgentSpan span) {
     final State state = contextStore.putIfAbsent(task, State.FACTORY);
-    final AgentScope.Continuation continuation = scope.capture();
-    state.setContinuation(continuation);
+    state.setParentSpan(span);
     return state;
   }
 
@@ -67,7 +66,7 @@ public class ExecutorInstrumentationUtils {
       but this may potentially lead to memory leaks if callers do not properly handle
       exceptions.
        */
-      state.closeContinuation();
+      state.clearParentSpan();
     }
   }
 

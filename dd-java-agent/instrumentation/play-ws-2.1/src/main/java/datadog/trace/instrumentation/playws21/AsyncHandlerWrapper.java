@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.playws21;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.playws21.PlayWSClientDecorator.DECORATE;
 
 import datadog.trace.instrumentation.api.AgentScope;
@@ -19,14 +20,14 @@ import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
   private final AgentSpan span;
-  private final AgentScope.Continuation continuation;
+  private final AgentSpan parentSpan;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
   public AsyncHandlerWrapper(final AsyncHandler delegate, final AgentSpan span) {
     this.delegate = delegate;
     this.span = span;
-    continuation = activeScope().capture();
+    parentSpan = activeSpan();
   }
 
   @Override
@@ -57,8 +58,8 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.finish();
 
-    if (continuation != null) {
-      try (final AgentScope scope = continuation.activate()) {
+    if (parentSpan != null) {
+      try (final AgentScope scope = activateSpan(parentSpan, false)) {
         return delegate.onCompleted();
       }
     } else {
@@ -72,8 +73,8 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.finish();
 
-    if (continuation != null) {
-      try (final AgentScope scope = continuation.activate()) {
+    if (parentSpan != null) {
+      try (final AgentScope scope = activateSpan(parentSpan, false)) {
         delegate.onThrowable(throwable);
       }
     } else {

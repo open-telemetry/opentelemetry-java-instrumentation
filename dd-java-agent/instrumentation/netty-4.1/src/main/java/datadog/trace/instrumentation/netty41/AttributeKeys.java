@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.netty41;
 
 import datadog.trace.bootstrap.WeakMap;
-import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler;
 import datadog.trace.instrumentation.netty41.server.HttpServerTracingHandler;
@@ -22,9 +21,8 @@ public class AttributeKeys {
         }
       };
 
-  public static final AttributeKey<AgentScope.Continuation>
-      PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY =
-          attributeKey("datadog.trace.instrumentation.netty41.parent.connect.continuation");
+  public static final AttributeKey<AgentSpan> PARENT_CONNECT_SPAN_ATTRIBUTE_KEY =
+      attributeKey("datadog.trace.instrumentation.netty41.parent.connect.span");
 
   /**
    * This constant is copied over to datadog.trace.instrumentation.ratpack.server.TracingHandler, so

@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.netty41;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.netty41.client.HttpClientRequestTracingHandler;
 import datadog.trace.instrumentation.netty41.client.HttpClientResponseTracingHandler;
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler;
@@ -157,14 +157,11 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
-      final AgentScope scope = activeScope();
-      if (scope != null) {
-        final AgentScope.Continuation continuation = scope.capture();
-        if (null != continuation) {
-          final Attribute<AgentScope.Continuation> attribute =
-              pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY);
-          attribute.compareAndSet(null, continuation);
-        }
+      final AgentSpan span = activeSpan();
+      if (span != null) {
+        final Attribute<AgentSpan> attribute =
+            pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);
+        attribute.compareAndSet(null, span);
       }
     }
   }

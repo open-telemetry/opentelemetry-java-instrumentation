@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rxjava;
 
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 
 import datadog.trace.agent.decorator.BaseDecorator;
@@ -15,7 +15,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
 
   private final Observable.OnSubscribe<?> delegate;
   private final String operationName;
-  private final AgentScope.Continuation continuation;
+  private final AgentSpan parentSpan;
   private final BaseDecorator decorator;
 
   public TracedOnSubscribe(
@@ -26,14 +26,14 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
     this.operationName = operationName;
     this.decorator = decorator;
 
-    continuation = activeScope().capture();
+    parentSpan = activeSpan();
   }
 
   @Override
   public void call(final Subscriber<? super T> subscriber) {
     final AgentSpan span; // span finished by TracedSubscriber
-    if (continuation != null) {
-      try (final AgentScope scope = continuation.activate()) {
+    if (parentSpan != null) {
+      try (final AgentScope scope = activateSpan(parentSpan, false)) {
         span = startSpan(operationName);
       }
     } else {

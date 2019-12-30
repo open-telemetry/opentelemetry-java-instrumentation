@@ -84,15 +84,12 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (cause == null) {
         return null;
       }
-      final AgentScope.Continuation continuation =
-          future
-              .channel()
-              .attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY)
-              .getAndRemove();
-      if (continuation == null) {
+      final AgentSpan parentSpan =
+          future.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY).getAndRemove();
+      if (parentSpan == null) {
         return null;
       }
-      final AgentScope parentScope = continuation.activate();
+      final AgentScope parentScope = activateSpan(parentSpan, false);
 
       final AgentSpan errorSpan = startSpan("netty.connect").setTag(Tags.COMPONENT, "netty");
       try (final AgentScope scope = activateSpan(errorSpan, false)) {
