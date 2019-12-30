@@ -53,8 +53,11 @@ public class MuzzleVersionScanPlugin {
         final ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
         final List<Reference.Mismatch> mismatches =
             muzzle.getMismatchedReferenceSources(userClassLoader);
-        final boolean passed = mismatches.size() == 0;
-        if (mismatches.size() > 0) {}
+
+        final boolean classLoaderMatch =
+            ((Instrumenter.Default) instrumenter).classLoaderMatcher().matches(userClassLoader);
+        final boolean passed = mismatches.isEmpty() && classLoaderMatch;
+
         if (passed && !assertPass) {
           System.err.println(
               "MUZZLE PASSED "
@@ -64,6 +67,11 @@ public class MuzzleVersionScanPlugin {
         } else if (!passed && assertPass) {
           System.err.println(
               "FAILED MUZZLE VALIDATION: " + instrumenter.getClass().getName() + " mismatches:");
+
+          if (!classLoaderMatch) {
+            System.err.println("-- classloader mismatch");
+          }
+
           for (final Reference.Mismatch mismatch : mismatches) {
             System.err.println("-- " + mismatch);
           }

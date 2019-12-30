@@ -3,8 +3,8 @@ muzzle {
     group = "redis.clients"
     module = "jedis"
     versions = "[1.4.0,3.0.0)"
+    assertInverse = true
   }
-  // Muzzle doesn't detect the classLoaderMatcher, so we can't assert fail for 3.0+
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
