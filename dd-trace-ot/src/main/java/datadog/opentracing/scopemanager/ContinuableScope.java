@@ -2,7 +2,6 @@ package datadog.opentracing.scopemanager;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.context.ScopeListener;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -63,36 +62,8 @@ public class ContinuableScope implements DDScope {
     return spanUnderScope;
   }
 
-  /**
-   * The continuation returned must be closed or activated or the trace will not finish.
-   *
-   * @return The new continuation, or null if this scope is not async propagating.
-   */
-  public Continuation capture() {
-    return new Continuation();
-  }
-
   @Override
   public String toString() {
     return super.toString() + "->" + spanUnderScope;
-  }
-
-  public class Continuation {
-
-    private final AtomicBoolean used = new AtomicBoolean(false);
-
-    private Continuation() {}
-
-    public ContinuableScope activate() {
-      if (used.compareAndSet(false, true)) {
-        final ContinuableScope scope = new ContinuableScope(scopeManager, spanUnderScope, false);
-        log.debug("Activating continuation {}, scope: {}", this, scope);
-        return scope;
-      } else {
-        log.debug(
-            "Failed to activate continuation. Reusing a continuation not allowed.  Returning a new scope. Spans will not be linked.");
-        return new ContinuableScope(scopeManager, spanUnderScope, false);
-      }
-    }
   }
 }

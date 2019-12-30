@@ -11,7 +11,6 @@ minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.5
 excludedClassesCoverage += [
   'datadog.opentracing.NoopSpan',
-  'datadog.opentracing.scopemanager.ContinuableScope.Continuation',
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.writer.LoggingWriter'
 ]

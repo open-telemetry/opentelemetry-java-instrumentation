@@ -15,7 +15,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.instrumentation.api.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,14 +79,14 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
      * need to use that state.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static TraceScope enter(@Advice.This final ForkJoinTask thiz) {
+    public static AgentScope enter(@Advice.This final ForkJoinTask thiz) {
       final ContextStore<ForkJoinTask, State> contextStore =
           InstrumentationContext.get(ForkJoinTask.class, State.class);
-      TraceScope scope = AdviceUtils.startTaskScope(contextStore, thiz);
+      AgentScope scope = AdviceUtils.startTaskScope(contextStore, thiz);
       if (thiz instanceof Runnable) {
         final ContextStore<Runnable, State> runnableContextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        final TraceScope newScope =
+        final AgentScope newScope =
             AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
@@ -99,7 +99,7 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
       if (thiz instanceof Callable) {
         final ContextStore<Callable, State> callableContextStore =
             InstrumentationContext.get(Callable.class, State.class);
-        final TraceScope newScope =
+        final AgentScope newScope =
             AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
         if (null != newScope) {
           if (null != scope) {
@@ -113,7 +113,7 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final TraceScope scope) {
+    public static void exit(@Advice.Enter final AgentScope scope) {
       AdviceUtils.endTaskScope(scope);
     }
   }

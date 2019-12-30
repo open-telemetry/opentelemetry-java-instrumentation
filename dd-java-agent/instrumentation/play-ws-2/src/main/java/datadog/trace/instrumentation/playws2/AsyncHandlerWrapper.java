@@ -3,8 +3,8 @@ package datadog.trace.instrumentation.playws2;
 import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.instrumentation.playws2.PlayWSClientDecorator.DECORATE;
 
+import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.TraceScope;
 import java.net.InetSocketAddress;
 import java.util.List;
 import play.shaded.ahc.io.netty.channel.Channel;
@@ -18,7 +18,7 @@ import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
   private final AgentSpan span;
-  private final TraceScope.Continuation continuation;
+  private final AgentScope.Continuation continuation;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
@@ -57,7 +57,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     span.finish();
 
     if (continuation != null) {
-      try (final TraceScope scope = continuation.activate()) {
+      try (final AgentScope scope = continuation.activate()) {
         return delegate.onCompleted();
       }
     } else {
@@ -72,7 +72,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     span.finish();
 
     if (continuation != null) {
-      try (final TraceScope scope = continuation.activate()) {
+      try (final AgentScope scope = continuation.activate()) {
         delegate.onThrowable(throwable);
       }
     } else {

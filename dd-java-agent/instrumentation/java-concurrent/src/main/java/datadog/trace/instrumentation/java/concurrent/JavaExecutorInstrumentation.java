@@ -12,7 +12,7 @@ import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.instrumentation.api.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -79,7 +79,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -107,7 +107,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         final ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
@@ -131,7 +131,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -165,7 +165,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       final Callable newTask = CallableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -199,7 +199,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static Collection<?> submitEnter(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       if (scope != null && tasks != null) {
         final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (final Callable<?> task : tasks) {

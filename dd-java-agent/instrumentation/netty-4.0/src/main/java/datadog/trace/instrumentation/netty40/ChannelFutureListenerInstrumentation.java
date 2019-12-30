@@ -15,7 +15,6 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
-import datadog.trace.instrumentation.api.TraceScope;
 import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator;
 import io.netty.channel.ChannelFuture;
 import java.util.Map;
@@ -75,7 +74,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   public static class OperationCompleteAdvice {
     @Advice.OnMethodEnter
-    public static TraceScope activateScope(@Advice.Argument(0) final ChannelFuture future) {
+    public static AgentScope activateScope(@Advice.Argument(0) final ChannelFuture future) {
       /*
       Idea here is:
        - To return scope only if we have captured it.
@@ -85,7 +84,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (cause == null) {
         return null;
       }
-      final TraceScope.Continuation continuation =
+      final AgentScope.Continuation continuation =
           future
               .channel()
               .attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY)
@@ -93,7 +92,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (continuation == null) {
         return null;
       }
-      final TraceScope parentScope = continuation.activate();
+      final AgentScope parentScope = continuation.activate();
 
       final AgentSpan errorSpan = startSpan("netty.connect").setTag(Tags.COMPONENT, "netty");
       try (final AgentScope scope = activateSpan(errorSpan, false)) {
@@ -106,7 +105,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void deactivateScope(@Advice.Enter final TraceScope scope) {
+    public static void deactivateScope(@Advice.Enter final AgentScope scope) {
       if (scope != null) {
         scope.close();
       }

@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.java.concurrent;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.instrumentation.api.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import lombok.extern.slf4j.Slf4j;
 
 /** Helper utils for Runnable/Callable instrumentation */
@@ -17,11 +17,11 @@ public class AdviceUtils {
    * @param <T> task's type
    * @return scope if scope was started, or null
    */
-  public static <T> TraceScope startTaskScope(
+  public static <T> AgentScope startTaskScope(
       final ContextStore<T, State> contextStore, final T task) {
     final State state = contextStore.get(task);
     if (state != null) {
-      final TraceScope.Continuation continuation = state.getAndResetContinuation();
+      final AgentScope.Continuation continuation = state.getAndResetContinuation();
       if (continuation != null) {
         return continuation.activate();
       }
@@ -29,7 +29,7 @@ public class AdviceUtils {
     return null;
   }
 
-  public static void endTaskScope(final TraceScope scope) {
+  public static void endTaskScope(final AgentScope scope) {
     if (scope != null) {
       scope.close();
     }

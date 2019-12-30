@@ -10,7 +10,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.instrumentation.api.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +59,7 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         final ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);

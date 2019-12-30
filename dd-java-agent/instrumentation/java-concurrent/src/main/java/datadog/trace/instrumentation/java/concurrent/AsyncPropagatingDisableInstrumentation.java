@@ -11,7 +11,6 @@ import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.TraceScope;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -88,7 +87,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope enter() {
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       if (scope != null) {
         return activateSpan(noopSpan(), false);
       }

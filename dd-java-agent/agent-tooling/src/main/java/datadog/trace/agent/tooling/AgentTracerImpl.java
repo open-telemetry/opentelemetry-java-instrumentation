@@ -7,14 +7,13 @@ import datadog.opentracing.Span;
 import datadog.opentracing.SpanContext;
 import datadog.opentracing.propagation.TextMapExtract;
 import datadog.opentracing.propagation.TextMapInject;
-import datadog.opentracing.scopemanager.ContinuableScope;
 import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentTracer;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
-import datadog.trace.instrumentation.api.TraceScope;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -77,13 +76,16 @@ public final class AgentTracerImpl implements TracerAPI {
   }
 
   @Override
-  public TraceScope activeScope() {
-    final DDScope scope = tracer.scopeManager().active();
-    if (scope instanceof ContinuableScope) {
-      return new TraceScopeImpl((ContinuableScope) scope);
-    } else {
-      return null;
+  public AgentScope activeScope() {
+    final AgentSpan span = activeSpan();
+    if (span == null) {
+      return AgentTracer.NoopAgentScope.INSTANCE;
     }
+    final DDScope scope = tracer.scopeManager().active();
+    if (scope == null) {
+      return AgentTracer.NoopAgentScope.INSTANCE;
+    }
+    return new AgentScopeImpl(span, scope);
   }
 
   @Override
@@ -238,24 +240,10 @@ public final class AgentTracerImpl implements TracerAPI {
     public AgentSpan span() {
       return span;
     }
-  }
-
-  private static class TraceScopeImpl implements TraceScope {
-
-    private final ContinuableScope scope;
-
-    private TraceScopeImpl(final ContinuableScope scope) {
-      this.scope = scope;
-    }
 
     @Override
-    public Continuation capture() {
-      return new ContinuationImpl(scope.capture());
-    }
-
-    @Override
-    public void close() {
-      scope.close();
+    public AgentScope.Continuation capture() {
+      return new AgentScopeContinuationImpl(span);
     }
 
     @Override
@@ -265,25 +253,25 @@ public final class AgentTracerImpl implements TracerAPI {
 
     @Override
     public boolean equals(final Object obj) {
-      if (!(obj instanceof TraceScopeImpl)) {
+      if (!(obj instanceof AgentScopeImpl)) {
         return false;
       }
-      final TraceScopeImpl other = (TraceScopeImpl) obj;
+      final AgentScopeImpl other = (AgentScopeImpl) obj;
       return scope.equals(other.scope);
     }
   }
 
-  private static class ContinuationImpl implements TraceScope.Continuation {
+  private final class AgentScopeContinuationImpl implements AgentScope.Continuation {
 
-    private final ContinuableScope.Continuation continuation;
+    private final AgentSpanImpl span;
 
-    private ContinuationImpl(final ContinuableScope.Continuation continuation) {
-      this.continuation = continuation;
+    private AgentScopeContinuationImpl(final AgentSpanImpl span) {
+      this.span = span;
     }
 
     @Override
-    public TraceScope activate() {
-      return new TraceScopeImpl(continuation.activate());
+    public AgentScope activate() {
+      return activateSpan(span, false);
     }
   }
 

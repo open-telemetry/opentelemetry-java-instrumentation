@@ -1,7 +1,7 @@
 package datadog.trace.bootstrap.instrumentation.java.concurrent;
 
 import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.instrumentation.api.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,12 +16,12 @@ public class State {
         }
       };
 
-  private final AtomicReference<TraceScope.Continuation> continuationRef =
+  private final AtomicReference<AgentScope.Continuation> continuationRef =
       new AtomicReference<>(null);
 
   private State() {}
 
-  public boolean setContinuation(final TraceScope.Continuation continuation) {
+  public boolean setContinuation(final AgentScope.Continuation continuation) {
     final boolean result = continuationRef.compareAndSet(null, continuation);
     if (!result) {
       log.debug(
@@ -37,7 +37,7 @@ public class State {
     continuationRef.set(null);
   }
 
-  public TraceScope.Continuation getAndResetContinuation() {
+  public AgentScope.Continuation getAndResetContinuation() {
     return continuationRef.getAndSet(null);
   }
 }

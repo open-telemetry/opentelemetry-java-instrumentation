@@ -17,9 +17,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentSpan.Context;
-import datadog.trace.instrumentation.api.TraceScope;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -125,7 +125,7 @@ public class KafkaStreamsProcessorInstrumentation {
           CONSUMER_DECORATE.onError(span, throwable);
           CONSUMER_DECORATE.beforeFinish(span);
         }
-        final TraceScope scope = activeScope();
+        final AgentScope scope = activeScope();
         if (scope != null) {
           scope.close();
         }

@@ -14,8 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.TraceScope;
 import java.io.IOException;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -77,7 +77,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(2) final HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      final TraceScope parentScope = activeScope();
+      final AgentScope parentScope = activeScope();
       final AgentSpan clientSpan = startSpan("http.request");
       DECORATE.afterStart(clientSpan);
 
@@ -159,13 +159,13 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
-    private final TraceScope.Continuation parentContinuation;
+    private final AgentScope.Continuation parentContinuation;
     private final AgentSpan clientSpan;
     private final HttpContext context;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        final TraceScope parentScope,
+        final AgentScope parentScope,
         final AgentSpan clientSpan,
         final HttpContext context,
         final FutureCallback<T> delegate) {
@@ -189,7 +189,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContinuation == null) {
         completeDelegate(result);
       } else {
-        try (final TraceScope scope = parentContinuation.activate()) {
+        try (final AgentScope scope = parentContinuation.activate()) {
           completeDelegate(result);
         }
       }
@@ -205,7 +205,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContinuation == null) {
         failDelegate(ex);
       } else {
-        try (final TraceScope scope = parentContinuation.activate()) {
+        try (final AgentScope scope = parentContinuation.activate()) {
           failDelegate(ex);
         }
       }
@@ -220,7 +220,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentContinuation == null) {
         cancelDelegate();
       } else {
-        try (final TraceScope scope = parentContinuation.activate()) {
+        try (final AgentScope scope = parentContinuation.activate()) {
           cancelDelegate();
         }
       }

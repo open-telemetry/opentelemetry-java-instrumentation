@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.api;
 
 import datadog.trace.instrumentation.api.AgentSpan.Context;
-import datadog.trace.instrumentation.api.TraceScope.Continuation;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class AgentTracer {
@@ -35,7 +34,7 @@ public class AgentTracer {
     return get().activeSpan();
   }
 
-  public static TraceScope activeScope() {
+  public static AgentScope activeScope() {
     return get().activeScope();
   }
 
@@ -75,7 +74,7 @@ public class AgentTracer {
 
     AgentSpan activeSpan();
 
-    TraceScope activeScope();
+    AgentScope activeScope();
 
     AgentPropagation propagate();
 
@@ -118,7 +117,7 @@ public class AgentTracer {
     }
 
     @Override
-    public TraceScope activeScope() {
+    public AgentScope activeScope() {
       return null;
     }
 
@@ -193,8 +192,8 @@ public class AgentTracer {
     public void setSpanName(final String spanName) {}
   }
 
-  static class NoopAgentScope implements AgentScope {
-    static final NoopAgentScope INSTANCE = new NoopAgentScope();
+  public static class NoopAgentScope implements AgentScope {
+    public static final NoopAgentScope INSTANCE = new NoopAgentScope();
 
     @Override
     public AgentSpan span() {
@@ -202,7 +201,21 @@ public class AgentTracer {
     }
 
     @Override
+    public AgentScope.Continuation capture() {
+      return NoopAgentScopeContinuation.INSTANCE;
+    }
+
+    @Override
     public void close() {}
+  }
+
+  static class NoopAgentScopeContinuation implements AgentScope.Continuation {
+    static final NoopAgentScopeContinuation INSTANCE = new NoopAgentScopeContinuation();
+
+    @Override
+    public AgentScope activate() {
+      return NoopAgentScope.INSTANCE;
+    }
   }
 
   static class NoopAgentPropagation implements AgentPropagation {
@@ -215,27 +228,6 @@ public class AgentTracer {
     public <C> Context extract(final C carrier, final Getter<C> getter) {
       return NoopContext.INSTANCE;
     }
-  }
-
-  static class NoopContinuation implements Continuation {
-    static final NoopContinuation INSTANCE = new NoopContinuation();
-
-    @Override
-    public TraceScope activate() {
-      return NoopTraceScope.INSTANCE;
-    }
-  }
-
-  static class NoopTraceScope implements TraceScope {
-    static final NoopTraceScope INSTANCE = new NoopTraceScope();
-
-    @Override
-    public Continuation capture() {
-      return NoopContinuation.INSTANCE;
-    }
-
-    @Override
-    public void close() {}
   }
 
   static class NoopContext implements Context {

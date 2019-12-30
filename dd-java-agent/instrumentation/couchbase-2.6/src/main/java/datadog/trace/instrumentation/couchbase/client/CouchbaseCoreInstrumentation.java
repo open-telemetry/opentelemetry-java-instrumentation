@@ -13,8 +13,8 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
+import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.TraceScope;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -55,7 +55,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) final CouchbaseRequest request) {
 
-      final TraceScope scope = activeScope();
+      final AgentScope scope = activeScope();
       if (scope != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store

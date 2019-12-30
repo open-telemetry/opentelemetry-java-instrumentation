@@ -7,7 +7,7 @@ import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.instrumentation.api.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +26,7 @@ public class ExecutorInstrumentationUtils {
    * @return true iff given task object should be wrapped
    */
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
-    final TraceScope scope = activeScope();
+    final AgentScope scope = activeScope();
     return (scope != null
         && task != null
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
@@ -42,9 +42,9 @@ public class ExecutorInstrumentationUtils {
    * @return new state
    */
   public static <T> State setupState(
-      final ContextStore<T, State> contextStore, final T task, final TraceScope scope) {
+      final ContextStore<T, State> contextStore, final T task, final AgentScope scope) {
     final State state = contextStore.putIfAbsent(task, State.FACTORY);
-    final TraceScope.Continuation continuation = scope.capture();
+    final AgentScope.Continuation continuation = scope.capture();
     state.setContinuation(continuation);
     return state;
   }
