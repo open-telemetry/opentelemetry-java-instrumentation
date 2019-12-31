@@ -60,10 +60,10 @@ public class ExecutorInstrumentationUtils {
       final Executor executor, final State state, final Throwable throwable) {
     if (null != state && null != throwable) {
       /*
-      Note: this may potentially close somebody else's continuation if we didn't set it
+      Note: this may potentially clear somebody else's parent span if we didn't set it
       up in setupState because it was already present before us. This should be safe but
       may lead to non-attributed async work in some very rare cases.
-      Alternative is to not close continuation here if we did not set it up in setupState
+      Alternative is to not clear parent span here if we did not set it up in setupState
       but this may potentially lead to memory leaks if callers do not properly handle
       exceptions.
        */
