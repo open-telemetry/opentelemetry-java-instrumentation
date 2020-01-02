@@ -2,24 +2,25 @@ package datadog.trace.instrumentation.aws.v0;
 
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.aws.v0.AwsSdkClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.aws.v0.RequestMeta.SCOPE_CONTEXT_KEY;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
+import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 
 /** Tracing Request Handler */
 public class TracingRequestHandler extends RequestHandler2 {
-  public static TracingRequestHandler INSTANCE = new TracingRequestHandler();
 
-  // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
-  // safely.
-  public static final HandlerContextKey<AgentScope> SCOPE_CONTEXT_KEY =
-      new HandlerContextKey<>("DatadogScope");
+  private final AwsSdkClientDecorator decorate;
+
+  public TracingRequestHandler(
+      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+    decorate = new AwsSdkClientDecorator(contextStore);
+  }
 
   @Override
   public AmazonWebServiceRequest beforeMarshalling(final AmazonWebServiceRequest request) {
@@ -29,8 +30,8 @@ public class TracingRequestHandler extends RequestHandler2 {
   @Override
   public void beforeRequest(final Request<?> request) {
     final AgentSpan span = startSpan("aws.command");
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, request);
+    decorate.afterStart(span);
+    decorate.onRequest(span, request);
     request.addHandlerContext(SCOPE_CONTEXT_KEY, activateSpan(span, true));
   }
 
@@ -39,8 +40,8 @@ public class TracingRequestHandler extends RequestHandler2 {
     final AgentScope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
     if (scope != null) {
       request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
-      DECORATE.onResponse(scope.span(), response);
-      DECORATE.beforeFinish(scope.span());
+      decorate.onResponse(scope.span(), response);
+      decorate.beforeFinish(scope.span());
       scope.close();
     }
   }
@@ -50,8 +51,8 @@ public class TracingRequestHandler extends RequestHandler2 {
     final AgentScope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
     if (scope != null) {
       request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
-      DECORATE.onError(scope.span(), e);
-      DECORATE.beforeFinish(scope.span());
+      decorate.onError(scope.span(), e);
+      decorate.beforeFinish(scope.span());
       scope.close();
     }
   }

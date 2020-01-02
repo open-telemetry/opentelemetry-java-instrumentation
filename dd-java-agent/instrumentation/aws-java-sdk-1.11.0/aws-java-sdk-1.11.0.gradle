@@ -39,9 +39,16 @@ dependencies {
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
+
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.106'
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.106'
+
+  // needed for kinesis:
+  testCompile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor', version: versions.jackson
 
   test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.0') {
     force = true
@@ -52,10 +59,22 @@ dependencies {
   test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.0') {
     force = true
   }
+  test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.0') {
+    force = true
+  }
+  test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.0') {
+    force = true
+  }
+  test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.0') {
+    force = true
+  }
 
   latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '+'
   latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '+'
   latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '+'
+  latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '+'
+  latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '+'
+  latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '+'
 }
 
 test.dependsOn test_before_1_11_106
