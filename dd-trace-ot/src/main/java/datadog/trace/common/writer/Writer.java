@@ -64,6 +64,7 @@ public interface Writer extends Closeable {
     }
 
     private static Writer createAgentWriter(final Config config) {
+      // TODO: switch to using DDAgentWriter.Spec constructor...
       return new DDAgentWriter(createApi(config), createMonitor(config));
     }
 

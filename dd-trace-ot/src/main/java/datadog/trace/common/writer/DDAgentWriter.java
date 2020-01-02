@@ -3,21 +3,16 @@ package datadog.trace.common.writer;
 import static datadog.trace.api.Config.DEFAULT_AGENT_HOST;
 import static datadog.trace.api.Config.DEFAULT_AGENT_UNIX_DOMAIN_SOCKET;
 import static datadog.trace.api.Config.DEFAULT_TRACE_AGENT_PORT;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import datadog.opentracing.DDSpan;
-import datadog.trace.common.util.DaemonThreadFactory;
+import datadog.trace.common.writer.ddagent.BatchWritingDisruptor;
 import datadog.trace.common.writer.ddagent.DDAgentApi;
 import datadog.trace.common.writer.ddagent.DDAgentResponseListener;
 import datadog.trace.common.writer.ddagent.Monitor;
-import datadog.trace.common.writer.ddagent.TraceConsumer;
-import datadog.trace.common.writer.ddagent.TraceSerializingDisruptor;
+import datadog.trace.common.writer.ddagent.TraceProcessingDisruptor;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Phaser;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,86 +24,65 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DDAgentWriter implements Writer {
-  private static final int DISRUPTOR_BUFFER_SIZE = 1024;
-  private static final int SENDER_QUEUE_SIZE = 16;
-  private static final int FLUSH_PAYLOAD_DELAY = 1; // 1/second
+  @Value
+  @lombok.Builder
+  public static class Spec {
+    @lombok.Builder.Default public String agentHost = DEFAULT_AGENT_HOST;
+    @lombok.Builder.Default public int traceAgentPort = DEFAULT_TRACE_AGENT_PORT;
+    @lombok.Builder.Default public String unixDomainSocket = DEFAULT_AGENT_UNIX_DOMAIN_SOCKET;
+    @lombok.Builder.Default public int traceBufferSize = DISRUPTOR_BUFFER_SIZE;
+    @lombok.Builder.Default public Monitor monitor = new Monitor.Noop();
+    @lombok.Builder.Default public int flushFrequencySeconds = 1;
+  }
 
-  private static final ThreadFactory SCHEDULED_FLUSH_THREAD_FACTORY =
-      new DaemonThreadFactory("dd-trace-writer");
+  private static final int DISRUPTOR_BUFFER_SIZE = 1024;
 
   private final DDAgentApi api;
-  public final int flushFrequencySeconds;
-  public final TraceSerializingDisruptor disruptor;
+  public final TraceProcessingDisruptor traceProcessingDisruptor;
+  public final BatchWritingDisruptor batchWritingDisruptor;
 
-  public final ScheduledExecutorService scheduledWriterExecutor;
   private final AtomicInteger traceCount = new AtomicInteger(0);
-  public final Phaser apiPhaser = new Phaser(); // Ensure API calls are completed when flushing;
 
   public final Monitor monitor;
 
   public DDAgentWriter() {
-    this(
-        new DDAgentApi(
-            DEFAULT_AGENT_HOST, DEFAULT_TRACE_AGENT_PORT, DEFAULT_AGENT_UNIX_DOMAIN_SOCKET),
-        new Monitor.Noop());
+    this(Spec.builder().build());
   }
 
+  public DDAgentWriter(final Spec spec) {
+    api = new DDAgentApi(spec.agentHost, spec.traceAgentPort, spec.unixDomainSocket);
+    monitor = spec.monitor;
+
+    batchWritingDisruptor =
+        new BatchWritingDisruptor(
+            spec.traceBufferSize, spec.flushFrequencySeconds, api, monitor, this);
+    traceProcessingDisruptor =
+        new TraceProcessingDisruptor(
+            spec.traceBufferSize, api, batchWritingDisruptor, monitor, this);
+  }
+
+  @Deprecated
   public DDAgentWriter(final DDAgentApi api, final Monitor monitor) {
-    this(api, monitor, DISRUPTOR_BUFFER_SIZE, SENDER_QUEUE_SIZE, FLUSH_PAYLOAD_DELAY);
-  }
-
-  /** Old signature (pre-Monitor) used in tests */
-  private DDAgentWriter(final DDAgentApi api) {
-    this(api, new Monitor.Noop());
-  }
-
-  /**
-   * Used in the tests.
-   *
-   * @param api
-   * @param disruptorSize Rounded up to next power of 2
-   * @param flushFrequencySeconds value < 1 disables scheduled flushes
-   */
-  private DDAgentWriter(
-      final DDAgentApi api,
-      final int disruptorSize,
-      final int senderQueueSize,
-      final int flushFrequencySeconds) {
-    this(api, new Monitor.Noop(), disruptorSize, senderQueueSize, flushFrequencySeconds);
-  }
-
-  // DQH - TODO - Update the tests & remove this
-  private DDAgentWriter(
-      final DDAgentApi api,
-      final Monitor monitor,
-      final int disruptorSize,
-      final int flushFrequencySeconds) {
-    this(api, monitor, disruptorSize, SENDER_QUEUE_SIZE, flushFrequencySeconds);
-  }
-
-  // DQH - TODO - Update the tests & remove this
-  private DDAgentWriter(
-      final DDAgentApi api, final int disruptorSize, final int flushFrequencySeconds) {
-    this(api, new Monitor.Noop(), disruptorSize, SENDER_QUEUE_SIZE, flushFrequencySeconds);
-  }
-
-  private DDAgentWriter(
-      final DDAgentApi api,
-      final Monitor monitor,
-      final int disruptorSize,
-      final int senderQueueSize,
-      final int flushFrequencySeconds) {
     this.api = api;
     this.monitor = monitor;
 
-    disruptor =
-        new TraceSerializingDisruptor(
-            disruptorSize, this, new TraceConsumer(traceCount, senderQueueSize, this));
+    batchWritingDisruptor = new BatchWritingDisruptor(DISRUPTOR_BUFFER_SIZE, 1, api, monitor, this);
+    traceProcessingDisruptor =
+        new TraceProcessingDisruptor(
+            DISRUPTOR_BUFFER_SIZE, api, batchWritingDisruptor, monitor, this);
+  }
 
-    this.flushFrequencySeconds = flushFrequencySeconds;
-    scheduledWriterExecutor = Executors.newScheduledThreadPool(1, SCHEDULED_FLUSH_THREAD_FACTORY);
+  @Deprecated
+  // DQH - TODO - Update the tests & remove this
+  private DDAgentWriter(
+      final DDAgentApi api, final int disruptorSize, final int flushFrequencySeconds) {
+    this.api = api;
+    monitor = new Monitor.Noop();
 
-    apiPhaser.register(); // Register on behalf of the scheduled executor thread.
+    batchWritingDisruptor =
+        new BatchWritingDisruptor(disruptorSize, flushFrequencySeconds, api, monitor, this);
+    traceProcessingDisruptor =
+        new TraceProcessingDisruptor(disruptorSize, api, batchWritingDisruptor, monitor, this);
   }
 
   public void addResponseListener(final DDAgentResponseListener listener) {
@@ -117,7 +91,7 @@ public class DDAgentWriter implements Writer {
 
   // Exposing some statistics for consumption by monitors
   public final long getDisruptorCapacity() {
-    return disruptor.getDisruptorCapacity();
+    return traceProcessingDisruptor.getDisruptorCapacity();
   }
 
   public final long getDisruptorUtilizedCapacity() {
@@ -125,20 +99,21 @@ public class DDAgentWriter implements Writer {
   }
 
   public final long getDisruptorRemainingCapacity() {
-    return disruptor.getDisruptorRemainingCapacity();
+    return traceProcessingDisruptor.getDisruptorRemainingCapacity();
   }
 
   @Override
   public void write(final List<DDSpan> trace) {
     // We can't add events after shutdown otherwise it will never complete shutting down.
-    if (disruptor.running) {
-      final boolean published = disruptor.tryPublish(trace);
+    if (traceProcessingDisruptor.running) {
+      final int representativeCount = traceCount.getAndSet(0) + 1;
+      final boolean published = traceProcessingDisruptor.publish(trace, representativeCount);
 
       if (published) {
         monitor.onPublish(DDAgentWriter.this, trace);
       } else {
         // We're discarding the trace, but we still want to count it.
-        traceCount.incrementAndGet();
+        traceCount.addAndGet(representativeCount);
         log.debug("Trace written to overfilled buffer. Counted but dropping trace: {}", trace);
 
         monitor.onFailedPublish(this, trace);
@@ -148,6 +123,10 @@ public class DDAgentWriter implements Writer {
 
       monitor.onFailedPublish(this, trace);
     }
+  }
+
+  public boolean flush() {
+    return traceProcessingDisruptor.flush(traceCount.getAndSet(0));
   }
 
   @Override
@@ -161,32 +140,16 @@ public class DDAgentWriter implements Writer {
 
   @Override
   public void start() {
-    disruptor.start();
-
+    batchWritingDisruptor.start();
+    traceProcessingDisruptor.start();
     monitor.onStart(this);
   }
 
   @Override
   public void close() {
-
-    boolean flushSuccess = true;
-
-    // We have to shutdown scheduled executor first to make sure no flush events issued after
-    // disruptor has been shutdown.
-    // Otherwise those events will never be processed and flush call will wait forever.
-    scheduledWriterExecutor.shutdown();
-    try {
-      scheduledWriterExecutor.awaitTermination(flushFrequencySeconds, SECONDS);
-    } catch (final InterruptedException e) {
-      log.warn("Waiting for flush executor shutdown interrupted.", e);
-
-      flushSuccess = false;
-    }
-    flushSuccess |= disruptor.flush();
-
-    disruptor.close();
-
-    monitor.onShutdown(this, flushSuccess);
+    monitor.onShutdown(this, traceProcessingDisruptor.flush(traceCount.getAndSet(0)));
+    traceProcessingDisruptor.close();
+    batchWritingDisruptor.close();
   }
 
   @Override
