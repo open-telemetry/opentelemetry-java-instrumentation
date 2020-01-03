@@ -1,4 +1,4 @@
-package datadog.trace.common.writer;
+package datadog.trace.common.writer.ddagent;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +21,6 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import okio.BufferedSink;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
@@ -29,7 +28,7 @@ import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 /** The API pointing to a DD agent */
 @Slf4j
-public class DDApi {
+public class DDAgentApi {
   private static final String DATADOG_META_LANG = "Datadog-Meta-Lang";
   private static final String DATADOG_META_LANG_VERSION = "Datadog-Meta-Lang-Version";
   private static final String DATADOG_META_LANG_INTERPRETER = "Datadog-Meta-Lang-Interpreter";
@@ -44,7 +43,7 @@ public class DDApi {
   private static final String TRACES_ENDPOINT_V4 = "v0.4/traces";
   private static final long MILLISECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toMillis(5);
 
-  private final List<ResponseListener> responseListeners = new ArrayList<>();
+  private final List<DDAgentResponseListener> responseListeners = new ArrayList<>();
 
   private volatile long nextAllowedLogTime = 0;
 
@@ -54,7 +53,7 @@ public class DDApi {
   private final OkHttpClient httpClient;
   private final HttpUrl tracesUrl;
 
-  public DDApi(final String host, final int port, final String unixDomainSocketPath) {
+  public DDAgentApi(final String host, final int port, final String unixDomainSocketPath) {
     this(
         host,
         port,
@@ -62,7 +61,7 @@ public class DDApi {
         unixDomainSocketPath);
   }
 
-  DDApi(
+  DDAgentApi(
       final String host,
       final int port,
       final boolean v4EndpointsAvailable,
@@ -77,7 +76,7 @@ public class DDApi {
     }
   }
 
-  public void addResponseListener(final ResponseListener listener) {
+  public void addResponseListener(final DDAgentResponseListener listener) {
     if (!responseListeners.contains(listener)) {
       responseListeners.add(listener);
     }
@@ -90,7 +89,7 @@ public class DDApi {
    * @return a Response object -- encapsulating success of communication, sending, and result
    *     parsing
    */
-  public Response sendTraces(final List<List<DDSpan>> traces) {
+  Response sendTraces(final List<List<DDSpan>> traces) {
     final List<byte[]> serializedTraces = new ArrayList<>(traces.size());
     int sizeInBytes = 0;
     for (final List<DDSpan> trace : traces) {
@@ -187,7 +186,7 @@ public class DDApi {
             final JsonNode parsedResponse = OBJECT_MAPPER.readTree(responseString);
             final String endpoint = tracesUrl.toString();
 
-            for (final ResponseListener listener : responseListeners) {
+            for (final DDAgentResponseListener listener : responseListeners) {
               listener.onResponse(endpoint, parsedResponse);
             }
             return Response.success(response.code(), parsedResponse);
@@ -348,26 +347,21 @@ public class DDApi {
     }
 
     public final boolean success() {
-      return this.success;
+      return success;
     }
 
     // TODO: DQH - In Java 8, switch to OptionalInteger
     public final Integer status() {
-      return this.status;
+      return status;
     }
 
     public final JsonNode json() {
-      return this.json;
+      return json;
     }
 
     // TODO: DQH - In Java 8, switch to Optional<Throwable>?
     public final Throwable exception() {
-      return this.exception;
+      return exception;
     }
-  }
-
-  public interface ResponseListener {
-    /** Invoked after the api receives a response from the core agent. */
-    void onResponse(String endpoint, JsonNode responseJson);
   }
 }

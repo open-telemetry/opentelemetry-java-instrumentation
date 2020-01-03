@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.sampling.PrioritySampling;
-import datadog.trace.common.writer.DDApi.ResponseListener;
+import datadog.trace.common.writer.ddagent.DDAgentResponseListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>The configuration of (serviceName,env)->rate is configured by the core agent.
  */
 @Slf4j
-public class RateByServiceSampler implements Sampler, PrioritySampler, ResponseListener {
+public class RateByServiceSampler implements Sampler, PrioritySampler, DDAgentResponseListener {
   public static final String SAMPLING_AGENT_RATE = "_dd.agent_psr";
 
   /** Key for setting the default/baseline rate */

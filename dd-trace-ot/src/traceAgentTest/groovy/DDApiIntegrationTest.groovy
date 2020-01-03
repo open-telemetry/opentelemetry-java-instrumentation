@@ -4,8 +4,9 @@ import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
-import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.common.writer.ddagent.DDAgentApi
+import datadog.trace.common.writer.ddagent.DDAgentResponseListener
 import datadog.trace.util.test.DDSpecification
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.startupcheck.MinimumDurationRunningStartupCheckStrategy
@@ -20,7 +21,7 @@ class DDApiIntegrationTest {
   // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
   // It is fine to run on CI because CI provides rabbitmq externally, not through testcontainers
   @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
-  static class DDApiIntegrationV4Test extends DDSpecification {
+  static class DDAgentApiIntegrationV4Test extends DDSpecification {
     static final WRITER = new ListWriter()
     static final TRACER = new DDTracer(WRITER)
     static final CONTEXT = new DDSpanContext(
@@ -64,7 +65,7 @@ class DDApiIntegrationTest {
     def endpoint = new AtomicReference<String>(null)
     def agentResponse = new AtomicReference<String>(null)
 
-    DDApi.ResponseListener responseListener = { String receivedEndpoint, JsonNode responseJson ->
+    DDAgentResponseListener responseListener = { String receivedEndpoint, JsonNode responseJson ->
       endpoint.set(receivedEndpoint)
       agentResponse.set(responseJson.toString())
     }
@@ -109,10 +110,10 @@ class DDApiIntegrationTest {
     }
 
     def setup() {
-      api = new DDApi(agentContainerHost, agentContainerPort, v4(), null)
+      api = new DDAgentApi(agentContainerHost, agentContainerPort, v4(), null)
       api.addResponseListener(responseListener)
 
-      unixDomainSocketApi = new DDApi(SOMEHOST, SOMEPORT, v4(), socketPath.toString())
+      unixDomainSocketApi = new DDAgentApi(SOMEHOST, SOMEPORT, v4(), socketPath.toString())
       unixDomainSocketApi.addResponseListener(responseListener)
     }
 
@@ -159,7 +160,7 @@ class DDApiIntegrationTest {
   }
 
   @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
-  static class DDApiIntegrationV3Test extends DDApiIntegrationV4Test {
+  static class DDAgentApiIntegrationV3Test extends DDAgentApiIntegrationV4Test {
     boolean v4() {
       return false
     }

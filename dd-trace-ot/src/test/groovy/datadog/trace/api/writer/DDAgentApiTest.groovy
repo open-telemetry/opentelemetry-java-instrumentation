@@ -3,8 +3,8 @@ package datadog.trace.api.writer
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import datadog.opentracing.SpanFactory
-import datadog.trace.common.writer.DDApi
-import datadog.trace.common.writer.DDApi.ResponseListener
+import datadog.trace.common.writer.ddagent.DDAgentApi
+import datadog.trace.common.writer.ddagent.DDAgentResponseListener
 import datadog.trace.util.test.DDSpecification
 
 import java.util.concurrent.atomic.AtomicLong
@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
-class DDApiTest extends DDSpecification {
-  static mapper = DDApi.OBJECT_MAPPER
+class DDAgentApiTest extends DDSpecification {
+  static mapper = DDAgentApi.OBJECT_MAPPER
 
   def "sending an empty list of traces returns no errors"() {
     setup:
@@ -30,7 +30,7 @@ class DDApiTest extends DDSpecification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port, null)
+    def client = new DDAgentApi("localhost", agent.address.port, null)
 
     expect:
     client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.4/traces"
@@ -51,7 +51,7 @@ class DDApiTest extends DDSpecification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port, null)
+    def client = new DDAgentApi("localhost", agent.address.port, null)
 
     expect:
     client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.3/traces"
@@ -73,7 +73,7 @@ class DDApiTest extends DDSpecification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port, null)
+    def client = new DDAgentApi("localhost", agent.address.port, null)
 
     expect:
     client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.4/traces"
@@ -125,7 +125,7 @@ class DDApiTest extends DDSpecification {
   def "Api ResponseListeners see 200 responses"() {
     setup:
     def agentResponse = new AtomicReference<String>(null)
-    ResponseListener responseListener = { String endpoint, JsonNode responseJson ->
+    DDAgentResponseListener responseListener = { String endpoint, JsonNode responseJson ->
       agentResponse.set(responseJson.toString())
     }
     def agent = httpServer {
@@ -136,7 +136,7 @@ class DDApiTest extends DDSpecification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port, null)
+    def client = new DDAgentApi("localhost", agent.address.port, null)
     client.addResponseListener(responseListener)
 
     when:
@@ -162,7 +162,7 @@ class DDApiTest extends DDSpecification {
         }
       }
     }
-    def client = new DDApi("localhost", v3Agent.address.port, null)
+    def client = new DDAgentApi("localhost", v3Agent.address.port, null)
 
     expect:
     client.tracesUrl.toString() == "http://localhost:${v3Agent.address.port}/v0.3/traces"
@@ -189,7 +189,7 @@ class DDApiTest extends DDSpecification {
       }
     }
     def port = badPort ? 999 : agent.address.port
-    def client = new DDApi("localhost", port, null)
+    def client = new DDAgentApi("localhost", port, null)
 
     expect:
     client.tracesUrl.toString() == "http://localhost:${port}/$endpointVersion/traces"
@@ -216,7 +216,7 @@ class DDApiTest extends DDSpecification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port, null)
+    def client = new DDAgentApi("localhost", agent.address.port, null)
 
     when:
     def success = client.sendTraces(traces).success()
