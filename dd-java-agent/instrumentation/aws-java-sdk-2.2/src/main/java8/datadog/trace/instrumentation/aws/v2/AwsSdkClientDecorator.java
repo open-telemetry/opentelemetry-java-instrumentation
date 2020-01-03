@@ -22,21 +22,21 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     request
         .getValueForField("Bucket", String.class)
         .ifPresent(name -> span.setTag("aws.bucket.name", name));
-    // DynamoDB
-    request
-        .getValueForField("TableName", String.class)
-        .ifPresent(name -> span.setTag("aws.table.name", name));
     // SQS
-    request
-        .getValueForField("QueueName", String.class)
-        .ifPresent(name -> span.setTag("aws.queue.name", name));
     request
         .getValueForField("QueueUrl", String.class)
         .ifPresent(name -> span.setTag("aws.queue.url", name));
+    request
+        .getValueForField("QueueName", String.class)
+        .ifPresent(name -> span.setTag("aws.queue.name", name));
     // Kinesis
     request
         .getValueForField("StreamName", String.class)
         .ifPresent(name -> span.setTag("aws.stream.name", name));
+    // DynamoDB
+    request
+        .getValueForField("TableName", String.class)
+        .ifPresent(name -> span.setTag("aws.table.name", name));
     return span;
   }
 

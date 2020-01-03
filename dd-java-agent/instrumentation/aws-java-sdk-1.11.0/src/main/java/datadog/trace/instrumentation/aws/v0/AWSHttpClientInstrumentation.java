@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.aws.v0;
 
-import static datadog.trace.instrumentation.aws.v0.AwsSdkClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.aws.v0.OnErrorDecorator.DECORATE;
+import static datadog.trace.instrumentation.aws.v0.RequestMeta.SCOPE_CONTEXT_KEY;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -40,10 +41,8 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.HttpClientDecorator",
-      packageName + ".AwsSdkClientDecorator",
-      packageName + ".TracingRequestHandler",
+      packageName + ".OnErrorDecorator",
+      packageName + ".RequestMeta",
     };
   }
 
@@ -60,9 +59,9 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final AgentScope scope = request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
+        final AgentScope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
         if (scope != null) {
-          request.addHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY, null);
+          request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
           DECORATE.onError(scope.span(), throwable);
           DECORATE.beforeFinish(scope.span());
           scope.close();
@@ -96,10 +95,9 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           @Advice.FieldValue("request") final Request<?> request,
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
-          final AgentScope scope =
-              request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
+          final AgentScope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
           if (scope != null) {
-            request.addHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY, null);
+            request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
             DECORATE.onError(scope.span(), throwable);
             DECORATE.beforeFinish(scope.span());
             scope.close();

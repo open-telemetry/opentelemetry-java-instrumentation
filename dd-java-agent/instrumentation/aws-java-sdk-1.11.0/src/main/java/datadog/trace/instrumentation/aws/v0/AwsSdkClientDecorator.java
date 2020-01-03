@@ -1,10 +1,12 @@
 package datadog.trace.instrumentation.aws.v0;
 
+import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import datadog.trace.api.DDTags;
+import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,12 +14,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
   private final Map<String, String> serviceNames = new ConcurrentHashMap<>();
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
+  private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
+
+  public AwsSdkClientDecorator(
+      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+    this.contextStore = contextStore;
+  }
 
   @Override
   public AgentSpan onRequest(final AgentSpan span, final Request request) {
@@ -25,7 +32,8 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     super.onRequest(span, request);
 
     final String awsServiceName = request.getServiceName();
-    final Class<?> awsOperation = request.getOriginalRequest().getClass();
+    final AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
+    final Class<?> awsOperation = originalRequest.getClass();
 
     span.setTag("aws.agent", COMPONENT_NAME);
     span.setTag("aws.service", awsServiceName);
@@ -35,6 +43,17 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     span.setTag(
         DDTags.RESOURCE_NAME,
         remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
+
+    if (contextStore != null) {
+      final RequestMeta requestMeta = contextStore.get(originalRequest);
+      if (requestMeta != null) {
+        span.setTag("aws.bucket.name", requestMeta.getBucketName());
+        span.setTag("aws.queue.url", requestMeta.getQueueUrl());
+        span.setTag("aws.queue.name", requestMeta.getQueueName());
+        span.setTag("aws.stream.name", requestMeta.getStreamName());
+        span.setTag("aws.table.name", requestMeta.getTableName());
+      }
+    }
 
     return span;
   }
