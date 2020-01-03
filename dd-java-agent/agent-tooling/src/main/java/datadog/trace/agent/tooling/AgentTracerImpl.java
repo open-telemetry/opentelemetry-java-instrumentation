@@ -171,6 +171,14 @@ public final class AgentTracerImpl implements TracerAPI {
     }
 
     @Override
+    public AgentSpan setErrorMessage(final String errorMessage) {
+      if (span instanceof DDSpan) {
+        ((DDSpan) span).setErrorMessage(errorMessage);
+      }
+      return this;
+    }
+
+    @Override
     public AgentSpan addThrowable(final Throwable throwable) {
       if (span instanceof DDSpan) {
         ((DDSpan) span).setErrorMeta(throwable);
