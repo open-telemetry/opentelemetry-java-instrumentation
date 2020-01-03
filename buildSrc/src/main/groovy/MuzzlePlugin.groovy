@@ -103,15 +103,19 @@ class MuzzlePlugin implements Plugin<Project> {
       Task runAfter = project.tasks.muzzle
 
       for (MuzzleDirective muzzleDirective : project.muzzle.directives) {
-        project.getLogger().info("configured ${muzzleDirective.assertPass ? 'pass' : 'fail'} directive: ${muzzleDirective.group}:${muzzleDirective.module}:${muzzleDirective.versions}")
+        project.getLogger().info("configured $muzzleDirective")
 
-        muzzleDirectiveToArtifacts(muzzleDirective, system, session).collect() { Artifact singleVersion ->
-          runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
-        }
-        if (muzzleDirective.assertInverse) {
-          inverseOf(muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
-            muzzleDirectiveToArtifacts(inverseDirective, system, session).collect() { Artifact singleVersion ->
-              runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+        if (muzzleDirective.coreJdk) {
+          runAfter = addMuzzleTask(muzzleDirective, null, project, runAfter, bootstrapProject, toolingProject)
+        } else {
+          muzzleDirectiveToArtifacts(muzzleDirective, system, session).collect() { Artifact singleVersion ->
+            runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+          }
+          if (muzzleDirective.assertInverse) {
+            inverseOf(muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
+              muzzleDirectiveToArtifacts(inverseDirective, system, session).collect() { Artifact singleVersion ->
+                runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+              }
             }
           }
         }
@@ -258,17 +262,25 @@ class MuzzlePlugin implements Plugin<Project> {
    * @return The created muzzle task.
    */
   private static Task addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
-    def taskName = "muzzle-Assert${muzzleDirective.assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version${muzzleDirective.name ? "-${muzzleDirective.getNameSlug()}" : ""}"
-    def config = instrumentationProject.configurations.create(taskName)
-    def dep = instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
-      transitive = true
+    def taskName
+    if (muzzleDirective.coreJdk) {
+      taskName = "muzzle-Assert$muzzleDirective"
+    } else {
+      taskName = "muzzle-Assert${muzzleDirective.assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version${muzzleDirective.name ? "-${muzzleDirective.getNameSlug()}" : ""}"
     }
-    // The following optional transitive dependencies are brought in by some legacy module such as log4j 1.x but are no
-    // longer bundled with the JVM and have to be excluded for the muzzle tests to be able to run.
-    dep.exclude group: 'com.sun.jdmk', module: 'jmxtools'
-    dep.exclude group: 'com.sun.jmx', module: 'jmxri'
+    def config = instrumentationProject.configurations.create(taskName)
 
-    config.dependencies.add(dep)
+    if (!muzzleDirective.coreJdk) {
+      def dep = instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
+        transitive = true
+      }
+      // The following optional transitive dependencies are brought in by some legacy module such as log4j 1.x but are no
+      // longer bundled with the JVM and have to be excluded for the muzzle tests to be able to run.
+      dep.exclude group: 'com.sun.jdmk', module: 'jmxtools'
+      dep.exclude group: 'com.sun.jmx', module: 'jmxri'
+
+      config.dependencies.add(dep)
+    }
     for (String additionalDependency : muzzleDirective.additionalDependencies) {
       config.dependencies.add(instrumentationProject.dependencies.create(additionalDependency) {
         transitive = true
@@ -369,6 +381,11 @@ class MuzzleDirective {
   List<String> additionalDependencies = new ArrayList<>()
   boolean assertPass
   boolean assertInverse = false
+  boolean coreJdk = false
+
+  void coreJdk() {
+    coreJdk = true
+  }
 
   /**
    * Adds extra dependencies to the current muzzle test.
@@ -390,6 +407,14 @@ class MuzzleDirective {
     }
 
     return name.trim().replaceAll("[^a-zA-Z0-9]+", "-")
+  }
+
+  String toString() {
+    if (coreJdk) {
+      return "${assertPass ? 'Pass' : 'Fail'}-core-jdk"
+    } else {
+      return "${assertPass ? 'pass' : 'fail'} $group:$module:$versions"
+    }
   }
 }
 

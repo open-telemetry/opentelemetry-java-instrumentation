@@ -81,7 +81,7 @@ public class KafkaStreamsProcessorInstrumentation {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        activateSpan(span, true);
+        activateSpan(span, true).setAsyncPropagation(true);
       }
     }
   }
@@ -119,6 +119,7 @@ public class KafkaStreamsProcessorInstrumentation {
 
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void stopSpan(@Advice.Thrown final Throwable throwable) {
+        // This is dangerous... we assume the span/scope is the one we expect, but it may not be.
         final AgentSpan span = activeSpan();
         if (span != null) {
           CONSUMER_DECORATE.onError(span, throwable);

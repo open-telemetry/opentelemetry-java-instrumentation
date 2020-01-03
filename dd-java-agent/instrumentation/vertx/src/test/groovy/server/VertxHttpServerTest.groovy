@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -81,6 +82,11 @@ class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator
       router.route(SUCCESS.path).handler { ctx ->
         controller(SUCCESS) {
           ctx.response().setStatusCode(SUCCESS.status).end(SUCCESS.body)
+        }
+      }
+      router.route(QUERY_PARAM.path).handler { ctx ->
+        controller(QUERY_PARAM) {
+          ctx.response().setStatusCode(QUERY_PARAM.status).end(ctx.request().query())
         }
       }
       router.route(REDIRECT.path).handler { ctx ->
