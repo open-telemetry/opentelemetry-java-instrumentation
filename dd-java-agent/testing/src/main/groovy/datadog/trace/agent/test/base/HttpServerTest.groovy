@@ -80,15 +80,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     false
   }
 
-  // Return the handler span's name
-  String reorderHandlerSpan() {
-    null
-  }
-
-  boolean reorderControllerSpan() {
-    false
-  }
-
   boolean redirectHasBody() {
     false
   }
@@ -417,37 +408,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     }
     assert toRemove.size() == size
     TEST_WRITER.removeAll(toRemove)
-
-    if (reorderControllerSpan() || reorderHandlerSpan()) {
-      // this is needed temporarily to get DropWizardAsyncTest and GrizzlyAsyncTest to pass
-      // but no worries, this will go away later in this PR once the span re-ordering is no longer needed
-      Thread.sleep(100)
-    }
-
-    if (reorderHandlerSpan()) {
-      TEST_WRITER.each {
-        def controllerSpan = it.find {
-          it.name == reorderHandlerSpan()
-        }
-        if (controllerSpan) {
-          it.remove(controllerSpan)
-          it.add(controllerSpan)
-        }
-      }
-    }
-
-    if (reorderControllerSpan() || reorderHandlerSpan()) {
-      // Some frameworks close the handler span before the controller returns, so we need to manually reorder it.
-      TEST_WRITER.each {
-        def controllerSpan = it.find {
-          it.name == "controller"
-        }
-        if (controllerSpan) {
-          it.remove(controllerSpan)
-          it.add(controllerSpan)
-        }
-      }
-    }
 
     assertTraces(size, spec)
   }

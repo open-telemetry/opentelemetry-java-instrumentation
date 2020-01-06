@@ -74,12 +74,6 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
     true
   }
 
-  @Override
-  // Return the handler span's name
-  String reorderHandlerSpan() {
-    "play.request"
-  }
-
   boolean testExceptionBody() {
     // I can't figure out how to set a proper exception handler to customize the response body.
     false

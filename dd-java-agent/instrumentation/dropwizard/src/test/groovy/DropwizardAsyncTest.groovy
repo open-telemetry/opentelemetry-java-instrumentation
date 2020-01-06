@@ -38,17 +38,6 @@ class DropwizardAsyncTest extends DropwizardTest {
     }
   }
 
-  @Override
-  // Return the handler span's name
-  String reorderHandlerSpan() {
-    "jax-rs.request"
-  }
-
-  @Override
-  boolean reorderControllerSpan() {
-    true
-  }
-
   @Path("/")
   static class AsyncServiceResource {
     final executor = Executors.newSingleThreadExecutor()

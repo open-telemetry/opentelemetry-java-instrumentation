@@ -238,11 +238,6 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
     assertTraces(size) {
       (1..size).each {
         trace(it - 1, 3) {
-          if (trace[1].attributes["servlet.dispatch"]) {
-            def tmp = trace[1]
-            trace[1] = trace[0]
-            trace[0] = tmp
-          }
           def endpoint = lastRequest
           span(0) {
             operationName expectedOperationName()
