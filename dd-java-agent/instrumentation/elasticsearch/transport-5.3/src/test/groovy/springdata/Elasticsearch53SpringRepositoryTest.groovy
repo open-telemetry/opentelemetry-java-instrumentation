@@ -111,29 +111,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
     and:
     waitForTracesAndSortSpans(2)
-    // need to normalize trace ordering since they are finished by different threads
-    if (TEST_WRITER[1][0].attributes[DDTags.RESOURCE_NAME].stringValue == "PutMappingAction") {
-      def tmp = TEST_WRITER[1]
-      TEST_WRITER[1] = TEST_WRITER[0]
-      TEST_WRITER[0] = tmp
-    }
     assertTraces(2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "elasticsearch.query"
-          tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "PutMappingAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
-          }
-        }
-      }
-      trace(1, 3) {
+      trace(0, 3) {
         span(0) {
           operationName "repository.operation"
           tags {
@@ -179,6 +158,21 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          operationName "elasticsearch.query"
+          tags {
+            "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "PutMappingAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "PutMappingAction"
+            "elasticsearch.request" "PutMappingRequest"
           }
         }
       }
