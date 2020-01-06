@@ -190,8 +190,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     when:
     def status = doRequest(method, server.address.resolve("/success"), ["is-dd-server": "false"]) {
       runUnderTrace("callback") {
-        // Ensure consistent ordering of traces for assertion.
-        TEST_WRITER.waitForTraces(1)
       }
     }
 

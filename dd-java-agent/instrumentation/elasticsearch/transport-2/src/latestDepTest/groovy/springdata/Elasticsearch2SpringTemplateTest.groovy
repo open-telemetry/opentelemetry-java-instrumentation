@@ -104,9 +104,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   def "test elasticsearch get"() {
     expect:
     template.createIndex(indexName)
-    TEST_WRITER.waitForTraces(1)
     template.getClient().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
-    TEST_WRITER.waitForTraces(2)
 
     when:
     NativeSearchQuery query = new NativeSearchQueryBuilder()
@@ -272,9 +270,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   def "test results extractor"() {
     setup:
     template.createIndex(indexName)
-    TEST_WRITER.waitForTraces(1)
     testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
-    TEST_WRITER.waitForTraces(2)
 
     template.index(IndexQueryBuilder.newInstance()
       .withObject(new Doc(id: 1, data: "doc a"))

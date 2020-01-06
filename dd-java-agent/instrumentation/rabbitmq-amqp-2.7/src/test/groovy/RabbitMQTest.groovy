@@ -24,7 +24,6 @@ import spock.lang.Requires
 import spock.lang.Shared
 
 import java.time.Duration
-import java.util.concurrent.Phaser
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
@@ -152,15 +151,11 @@ class RabbitMQTest extends AgentTestRunner {
       channel.queueDeclare("some-queue", false, true, true, null).getQueue()
     channel.queueBind(queueName, exchangeName, "")
 
-    def phaser = new Phaser()
-    phaser.register()
-    phaser.register()
     def deliveries = []
 
     Consumer callback = new DefaultConsumer(channel) {
       @Override
       void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        phaser.arriveAndAwaitAdvance() // Ensure publish spans are reported first.
         deliveries << new String(body)
       }
     }
@@ -169,8 +164,6 @@ class RabbitMQTest extends AgentTestRunner {
 
     (1..messageCount).each {
       channel.basicPublish(exchangeName, "", null, "msg $it".getBytes())
-      TEST_WRITER.waitForTraces(3 + it)
-      phaser.arriveAndAwaitAdvance()
     }
     def resource = messageCount % 2 == 0 ? "basic.deliver <generated>" : "basic.deliver $queueName"
 
@@ -210,14 +203,9 @@ class RabbitMQTest extends AgentTestRunner {
     String queueName = channel.queueDeclare().getQueue()
     channel.queueBind(queueName, exchangeName, "")
 
-    def phaser = new Phaser()
-    phaser.register()
-    phaser.register()
-
     Consumer callback = new DefaultConsumer(channel) {
       @Override
       void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        phaser.arriveAndAwaitAdvance() // Ensure publish spans are reported first.
         throw error
         // Unfortunately this doesn't seem to be observable in the test outside of the span generated.
       }
@@ -225,10 +213,7 @@ class RabbitMQTest extends AgentTestRunner {
 
     channel.basicConsume(queueName, callback)
 
-    TEST_WRITER.waitForTraces(2)
     channel.basicPublish(exchangeName, "", null, "msg".getBytes())
-    TEST_WRITER.waitForTraces(3)
-    phaser.arriveAndAwaitAdvance()
 
     expect:
     assertTraces(5) {

@@ -33,10 +33,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     expect:
     new AnnotationTracedCallable().call() == "Hello!"
 
-    when:
-    TEST_WRITER.waitForTraces(1)
-
-    then:
+    and:
     assertTraces(1) {
       trace(0, 1) {
         span(0) {

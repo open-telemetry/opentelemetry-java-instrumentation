@@ -313,7 +313,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
         return "Howdy!"
       }
     }.call()
-    TEST_WRITER.waitForTraces(2)
 
     then:
     assertTraces(2) {

@@ -334,7 +334,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     hmsetFuture.thenApplyAsync(new Function<String, Object>() {
       @Override
       Object apply(String setResult) {
-        TEST_WRITER.waitForTraces(1) // Wait for 'hmset' trace to get written
         conds.evaluate {
           assert setResult == "OK"
         }

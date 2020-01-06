@@ -65,9 +65,6 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
 
-      // Make sure that first pair of send/receive traces has landed to simplify assertions
-      TEST_WRITER.waitForTraces(1)
-
       template.send(msg.getJMSReplyTo()) {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
@@ -75,8 +72,6 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     TextMessage receivedMessage = template.sendAndReceive(destination) {
       session -> template.getMessageConverter().toMessage(messageText, session)
     }
-
-    TEST_WRITER.waitForTraces(2)
 
     expect:
     receivedMessage.text == "responded!"
