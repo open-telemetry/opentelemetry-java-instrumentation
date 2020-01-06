@@ -70,6 +70,11 @@ class ListWriterAssert {
     assertTrace(writer.get(index), expectedSize, spec)
   }
 
+  // this doesn't provide any functionality, just a self-documenting marker
+  void sortTraces(Closure callback) {
+    callback.call()
+  }
+
   void assertTracesAllVerified() {
     assert assertedIndexes.size() == size
   }

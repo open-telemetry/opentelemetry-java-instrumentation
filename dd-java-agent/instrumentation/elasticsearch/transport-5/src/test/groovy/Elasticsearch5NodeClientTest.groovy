@@ -170,14 +170,15 @@ class Elasticsearch5NodeClientTest extends AgentTestRunner {
     result.index == indexName
 
     and:
-    // IndexAction and PutMappingAction run in separate threads and order in which
-    // these spans are closed is not defined. So we force the order if it is wrong.
-    if (TEST_WRITER[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
-      def tmp = TEST_WRITER[3]
-      TEST_WRITER[3] = TEST_WRITER[4]
-      TEST_WRITER[4] = tmp
-    }
     assertTraces(6) {
+      sortTraces {
+        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
+        if (TEST_WRITER[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = TEST_WRITER[3]
+          TEST_WRITER[3] = TEST_WRITER[4]
+          TEST_WRITER[4] = tmp
+        }
+      }
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
