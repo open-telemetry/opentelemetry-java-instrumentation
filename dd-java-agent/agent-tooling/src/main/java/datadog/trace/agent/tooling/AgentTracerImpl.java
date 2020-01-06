@@ -242,11 +242,6 @@ public final class AgentTracerImpl implements TracerAPI {
     }
 
     @Override
-    public AgentScope.Continuation capture() {
-      return new AgentScopeContinuationImpl(span);
-    }
-
-    @Override
     public int hashCode() {
       return scope.hashCode();
     }
@@ -258,20 +253,6 @@ public final class AgentTracerImpl implements TracerAPI {
       }
       final AgentScopeImpl other = (AgentScopeImpl) obj;
       return scope.equals(other.scope);
-    }
-  }
-
-  private final class AgentScopeContinuationImpl implements AgentScope.Continuation {
-
-    private final AgentSpanImpl span;
-
-    private AgentScopeContinuationImpl(final AgentSpanImpl span) {
-      this.span = span;
-    }
-
-    @Override
-    public AgentScope activate() {
-      return activateSpan(span, false);
     }
   }
 

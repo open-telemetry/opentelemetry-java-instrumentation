@@ -190,21 +190,7 @@ public class AgentTracer {
     }
 
     @Override
-    public AgentScope.Continuation capture() {
-      return NoopAgentScopeContinuation.INSTANCE;
-    }
-
-    @Override
     public void close() {}
-  }
-
-  static class NoopAgentScopeContinuation implements AgentScope.Continuation {
-    static final NoopAgentScopeContinuation INSTANCE = new NoopAgentScopeContinuation();
-
-    @Override
-    public AgentScope activate() {
-      return NoopAgentScope.INSTANCE;
-    }
   }
 
   static class NoopAgentPropagation implements AgentPropagation {
