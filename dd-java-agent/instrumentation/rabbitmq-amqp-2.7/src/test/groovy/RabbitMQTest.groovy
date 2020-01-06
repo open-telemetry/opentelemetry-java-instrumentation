@@ -7,6 +7,7 @@ import com.rabbitmq.client.Consumer
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
+import com.rabbitmq.client.ShutdownSignalException
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
@@ -79,7 +80,7 @@ class RabbitMQTest extends AgentTestRunner {
     try {
       channel.close()
       conn.close()
-    } catch (AlreadyClosedException e) {
+    } catch (AlreadyClosedException | ShutdownSignalException e) {
       // Ignore
     }
   }
