@@ -47,12 +47,7 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncCl
       }
     })
 
-    try {
-      return responseFuture.get()
-    } finally {
-      // child span is reported asynchronously, this is needed for consistent span ordering during test verification
-      blockUntilChildSpansFinished(1)
-    }
+    return responseFuture.get()
   }
 
   @Override

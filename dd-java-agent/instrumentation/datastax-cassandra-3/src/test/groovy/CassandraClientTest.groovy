@@ -82,7 +82,6 @@ class CassandraClientTest extends AgentTestRunner {
       withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
         session.executeAsync(statement)
       }
-      blockUntilChildSpansFinished(1)
     }
 
     expect:

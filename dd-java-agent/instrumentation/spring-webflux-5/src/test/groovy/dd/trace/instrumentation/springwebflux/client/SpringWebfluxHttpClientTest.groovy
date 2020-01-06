@@ -13,8 +13,6 @@ import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Ignore
 import spock.lang.Shared
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
-
 // FIXME this instrumentation is not currently reliable and so is currently disabled
 // see DefaultWebClientInstrumentation and DefaultWebClientAdvice
 @Ignore
@@ -25,20 +23,15 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def hasParent = activeSpan() != null
     ClientResponse response = client.method(HttpMethod.resolve(method))
       .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
       .uri(uri)
       .exchange()
       .doOnSuccessOrError { success, error ->
-        blockUntilChildSpansFinished(1)
         callback?.call()
       }
       .block()
 
-    if (hasParent) {
-      blockUntilChildSpansFinished(callback ? 3 : 2)
-    }
     response.statusCode().value()
   }
 

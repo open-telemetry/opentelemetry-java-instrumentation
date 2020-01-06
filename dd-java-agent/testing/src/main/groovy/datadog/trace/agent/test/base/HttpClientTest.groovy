@@ -102,9 +102,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   def "basic #method request with parent"() {
     when:
     def status = runUnderTrace("parent") {
-      def val = doRequest(method, server.address.resolve("/success"))
-      blockUntilChildSpansFinished(2)
-      return val
+      doRequest(method, server.address.resolve("/success"))
     }
 
     then:

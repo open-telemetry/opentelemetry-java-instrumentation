@@ -44,7 +44,6 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
         return response
       }
     }).get()
-    blockUntilChildSpansFinished(1)
     return response.statusCode
   }
 

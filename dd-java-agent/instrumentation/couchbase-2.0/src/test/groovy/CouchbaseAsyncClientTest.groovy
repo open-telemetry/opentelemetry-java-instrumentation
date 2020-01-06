@@ -59,8 +59,6 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       cluster.openBucket(bucketSettings.name(), bucketSettings.password()).subscribe({ bkt ->
         bkt.upsert(JsonDocument.create("helloworld", content)).subscribe({ result -> inserted.set(result) })
       })
-
-      blockUntilChildSpansFinished(2) // Improve span ordering consistency
     }
 
     then:
@@ -104,8 +102,6 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
               })
           })
       })
-
-      blockUntilChildSpansFinished(3) // Improve span ordering consistency
     }
 
     // Create a JSON document and store it with the ID "helloworld"
@@ -153,8 +149,6 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
             .single()
             .subscribe({ row -> queryResult.set(row.value()) })
       })
-
-      blockUntilChildSpansFinished(2) // Improve span ordering consistency
     }
 
     then:

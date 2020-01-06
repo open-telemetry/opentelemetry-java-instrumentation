@@ -52,8 +52,6 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     runUnderTrace("someTrace") {
       inserted = bkt.upsert(JsonDocument.create("helloworld", content))
       found = bkt.get("helloworld")
-
-      blockUntilChildSpansFinished(2)
     }
 
     then:

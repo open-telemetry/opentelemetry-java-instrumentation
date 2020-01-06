@@ -112,8 +112,6 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     runUnderTrace("someTrace") {
       repo.save(doc)
       result = FIND(repo, "1")
-
-      blockUntilChildSpansFinished(2)
     }
 
     then: // RETRIEVE
@@ -141,8 +139,6 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       repo.save(doc)
       doc.data = "other data"
       repo.save(doc)
-
-      blockUntilChildSpansFinished(2)
     }
 
 
@@ -171,8 +167,6 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       repo.save(doc)
       repo.delete("1")
       result = repo.findAll().iterator().hasNext()
-
-      blockUntilChildSpansFinished(3)
     }
 
     then:

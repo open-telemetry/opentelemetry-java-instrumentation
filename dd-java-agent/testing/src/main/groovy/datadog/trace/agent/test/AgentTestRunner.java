@@ -15,9 +15,6 @@ import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.SpanData;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.TraceId;
 import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -25,9 +22,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -190,30 +185,6 @@ public abstract class AgentTestRunner extends DDSpecification {
           @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
           final Closure spec) {
     ListWriterAssert.assertTraces(TEST_WRITER, size, spec);
-  }
-
-  @SneakyThrows
-  public static void blockUntilChildSpansFinished(final int numberOfSpans) {
-    final Span span = getTestTracer().getCurrentSpan();
-    final long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
-    if (span.getContext().isValid()) {
-      final TraceId traceId = span.getContext().getTraceId();
-      int foundSpans = 0;
-      while (System.currentTimeMillis() < deadline) {
-        for (final List<SpanData> trace : TEST_WRITER) {
-          if (trace.get(0).getTraceId().equals(traceId)) {
-            foundSpans = trace.size();
-            if (foundSpans >= numberOfSpans) {
-              return;
-            } else {
-              break; // breaks inner for loop
-            }
-          }
-        }
-        Thread.sleep(10);
-      }
-      throw new TimeoutException("Timed out waiting for child spans.  Received: " + foundSpans);
-    }
   }
 
   public static class TestRunnerListener implements AgentBuilder.Listener {

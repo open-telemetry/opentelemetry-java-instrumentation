@@ -45,7 +45,6 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     runUnderTrace("getting info") {
       templates = [new CouchbaseTemplate(couchbaseManager.info(), bucketCouchbase),
                    new CouchbaseTemplate(memcacheManager.info(), bucketMemcache)]
-      blockUntilChildSpansFinished(2)
     }
   }
 
@@ -65,8 +64,6 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     runUnderTrace("someTrace") {
       template.save(doc)
       result = template.findById("1", Doc)
-
-      blockUntilChildSpansFinished(2)
     }
 
 
@@ -94,8 +91,6 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     runUnderTrace("someTrace") {
       template.save(doc)
       template.remove(doc)
-
-      blockUntilChildSpansFinished(2)
     }
 
 

@@ -47,7 +47,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
         new HystrixObservableCommand<String>(asKey("OtherGroup")) {
           @Trace
           private String tracedMethod() {
-            blockUntilChildSpansFinished(2)
             return "$str!"
           }
 
@@ -61,9 +60,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }.toObservable()
           .subscribeOn(Schedulers.trampoline())
       }.toBlocking().first()
-      // when this is running in different threads, we don't know when the other span is done
-      // adding sleep to improve ordering consistency
-      blockUntilChildSpansFinished(4)
       return val
     }
 
