@@ -69,8 +69,32 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    assertTraces(2) {
+    assertTraces(3) {
+      sortTraces {
+        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
+        if (TEST_WRITER[0][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = TEST_WRITER[0]
+          TEST_WRITER[0] = TEST_WRITER[1]
+          TEST_WRITER[1] = tmp
+        }
+      }
       trace(0, 1) {
+        span(0) {
+          operationName "elasticsearch.query"
+          tags {
+            "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "PutMappingAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "PutMappingAction"
+            "elasticsearch.request" "PutMappingRequest"
+            "elasticsearch.request.indices" indexName
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           operationName "elasticsearch.query"
           tags {
@@ -87,7 +111,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
           }
         }
       }
-      trace(1, 1) {
+      trace(2, 1) {
         span(0) {
           operationName "elasticsearch.query"
           tags {
