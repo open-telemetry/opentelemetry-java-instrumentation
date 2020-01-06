@@ -82,23 +82,23 @@ class GrpcStreamingTest extends AgentTestRunner {
     then:
     error.get() == null
 
-    // sort for consistent ordering
-    TEST_WRITER.waitForTraces(1)
-    List<SpanData> serverMessages = new ArrayList<>()
-    for (SpanData span : TEST_WRITER[0]) {
-      if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
-        serverMessages.add(span)
-      }
-      if (span.name == "grpc.server" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
-        serverMessages.add(0, span)
-      }
-    }
-    // move the server messages to the end
-    TEST_WRITER[0].removeAll(serverMessages)
-    TEST_WRITER[0].addAll(serverMessages)
-
     assertTraces(1) {
       trace(0, clientMessageCount * serverMessageCount + 1 + clientMessageCount + 1) {
+        sortSpans {
+          // sort for consistent ordering
+          List<SpanData> serverMessages = new ArrayList<>()
+          for (SpanData span : trace) {
+            if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
+              serverMessages.add(span)
+            }
+            if (span.name == "grpc.server" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
+              serverMessages.add(0, span)
+            }
+          }
+          // move the server messages to the end
+          trace.removeAll(serverMessages)
+          trace.addAll(serverMessages)
+        }
         span(0) {
           operationName "grpc.client"
           parent()

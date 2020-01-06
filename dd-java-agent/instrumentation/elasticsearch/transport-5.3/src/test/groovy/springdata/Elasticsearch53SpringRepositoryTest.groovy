@@ -65,9 +65,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     !result.iterator().hasNext()
 
     and:
-    waitForTracesAndSortSpans(1)
     assertTraces(1) {
       trace(0, 2) {
+        sortSpans {
+          sort(trace)
+        }
         span(0) {
           operationName "repository.operation"
           tags {
@@ -110,9 +112,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    waitForTracesAndSortSpans(2)
     assertTraces(2) {
       trace(0, 3) {
+        sortSpans {
+          sort(trace)
+        }
         span(0) {
           operationName "repository.operation"
           tags {
@@ -183,9 +187,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     repo.findById("1").get() == doc
 
     and:
-    waitForTracesAndSortSpans(1)
     assertTraces(1) {
       trace(0, 2) {
+        sortSpans {
+          sort(trace)
+        }
         span(0) {
           operationName "repository.operation"
           tags {
@@ -225,9 +231,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     repo.findById("1").get() == doc
 
     and:
-    waitForTracesAndSortSpans(2)
     assertTraces(2) {
       trace(0, 3) {
+        sortSpans {
+          sort(trace)
+        }
         span(0) {
           operationName "repository.operation"
           tags {
@@ -277,6 +285,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
       trace(1, 2) {
+        sortSpans {
+          sort(trace)
+        }
         span(0) {
           operationName "repository.operation"
           tags {
@@ -315,9 +326,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     !repo.findAll().iterator().hasNext()
 
     and:
-    waitForTracesAndSortSpans(2)
     assertTraces(2) {
       trace(0, 3) {
+        sortSpans {
+          sort(trace)
+        }
         span(0) {
           operationName "repository.operation"
           tags {
@@ -368,6 +381,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
       }
 
       trace(1, 2) {
+        sortSpans {
+          sort(trace)
+        }
         span(0) {
           operationName "repository.operation"
           tags {
@@ -400,16 +416,12 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     indexName = "test-index"
   }
 
-  def waitForTracesAndSortSpans(int number) {
-    TEST_WRITER.waitForTraces(number)
-    for (List<SpanData> trace : TEST_WRITER) {
-      // need to normalize span ordering since they are finished by different threads
-      if (trace.size() > 1 && trace[1].name == "repository.operation") {
-        def tmp = trace[1]
-        trace[1] = trace[0]
-        trace[0] = tmp
-      }
+  def sort(List<SpanData> spans) {
+    // need to normalize span ordering since they are finished by different threads
+    if (spans[1].name == "repository.operation") {
+      def tmp = spans[1]
+      spans[1] = spans[0]
+      spans[0] = tmp
     }
-    return true
   }
 }

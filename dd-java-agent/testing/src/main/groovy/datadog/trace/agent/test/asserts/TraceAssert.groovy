@@ -64,6 +64,11 @@ class TraceAssert {
     span(index, spec)
   }
 
+  // this doesn't provide any functionality, just a self-documenting marker
+  void sortSpans(Closure callback) {
+    callback.call()
+  }
+
   void assertSpansAllVerified() {
     assert assertedIndexes.size() == size
   }
