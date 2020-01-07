@@ -5,7 +5,6 @@ plugins {
 description = 'dd-java-agent'
 
 apply from: "${rootDir}/gradle/java.gradle"
-apply from: "${rootDir}/gradle/publish.gradle"
 
 configurations {
   shadowInclude
@@ -93,11 +92,6 @@ shadowJar {
 
   // relocate OpenTelemetry SDK
   relocate "io.opentelemetry.sdk", "io.opentelemetry.auto.shaded.io.opentelemetry.sdk"
-}
-
-// We don't want bundled dependencies to show up in the pom.
-modifyPom {
-  dependencies.removeAll { true }
 }
 
 dependencies {

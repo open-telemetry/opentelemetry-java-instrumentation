@@ -1,5 +1,4 @@
 apply from: "${rootDir}/gradle/java.gradle"
-apply from: "${rootDir}/gradle/publish.gradle"
 
 minimumBranchCoverage = 0.8
 
