@@ -6,11 +6,12 @@ import com.lmax.disruptor.EventTranslatorTwoArg;
 import java.util.concurrent.CountDownLatch;
 
 class DisruptorEvent<T> {
-  public volatile T data = null;
-  public volatile int representativeCount = 0;
-  public volatile CountDownLatch flushLatch = null;
+  // Memory ordering enforced by disruptor's memory fences, so volatile not required.
+  T data = null;
+  int representativeCount = 0;
+  CountDownLatch flushLatch = null;
 
-  public void reset() {
+  void reset() {
     data = null;
     representativeCount = 0;
     flushLatch = null;

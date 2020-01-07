@@ -11,6 +11,7 @@ import datadog.trace.common.writer.ddagent.BatchWritingDisruptor
 import datadog.trace.common.writer.ddagent.DDAgentApi
 import datadog.trace.common.writer.ddagent.Monitor
 import datadog.trace.util.test.DDSpecification
+import spock.lang.Retry
 import spock.lang.Timeout
 
 import java.util.concurrent.Phaser
@@ -396,6 +397,8 @@ class DDAgentWriterTest extends DDSpecification {
     1 * monitor.onShutdown(writer, true)
   }
 
+  @Retry(delay = 10)
+  // if execution is too slow, the http client timeout may trigger.
   def "slow response test"() {
     def numWritten = 0
     def numFlushes = new AtomicInteger(0)
@@ -407,7 +410,6 @@ class DDAgentWriterTest extends DDSpecification {
     def responseSemaphore = new Semaphore(1)
 
     setup:
-    def minimalTrace = createMinimalTrace()
 
     // Need to set-up a dummy agent for the final send callback to work
     def agent = httpServer {
@@ -445,9 +447,6 @@ class DDAgentWriterTest extends DDSpecification {
       }
     }
 
-    // sender queue is sized in requests -- not traces
-    def bufferSize = 32
-    def senderQueueSize = 2
     def writer = new DDAgentWriter(DDAgentWriter.Spec.builder().traceAgentPort(agent.address.port).monitor(monitor).traceBufferSize(bufferSize).build())
     writer.start()
 
@@ -477,13 +476,10 @@ class DDAgentWriterTest extends DDSpecification {
     when:
     // send many traces to fill the sender queue...
     //   loop until outstanding requests > finished requests
-    while (numFlushes.get() - (numRequests.get() + numFailedRequests.get()) < senderQueueSize) {
-      // chunk the loop & wait to allow for flushing to send queue
-      (1..1_000).each {
-        writer.write(minimalTrace)
-        numWritten += 1
-      }
-      Thread.sleep(100)
+    while (writer.traceProcessingDisruptor.disruptorRemainingCapacity + writer.batchWritingDisruptor.disruptorRemainingCapacity > 0 || numFailedPublish.get() == 0) {
+      writer.write(minimalTrace)
+      numWritten += 1
+      Thread.sleep(1) // Allow traces to get serialized.
     }
 
     then:
@@ -494,17 +490,18 @@ class DDAgentWriterTest extends DDSpecification {
     def priorNumFailed = numFailedPublish.get()
 
     // with both disruptor & queue full, should reject everything
-    def expectedRejects = 100_000
+    def expectedRejects = 100
     (1..expectedRejects).each {
       writer.write(minimalTrace)
       numWritten += 1
     }
 
     then:
-    // If the in-flight requests timeouts and frees up a slot in the sending queue, then
-    // many of traces will be accepted and batched into a new failing request.
+    // If the in-flight request times out (we don't currently retry),
+    // then a new batch will begin processing and many of traces will
+    // be accepted and batched into a new failing request.
     // In that case, the reject number will be low.
-    numFailedPublish.get() - priorNumFailed > expectedRejects * 0.40
+    numFailedPublish.get() - priorNumFailed >= expectedRejects * 0.80
     numPublished.get() + numFailedPublish.get() == numWritten
 
     cleanup:
@@ -512,6 +509,10 @@ class DDAgentWriterTest extends DDSpecification {
 
     writer.close()
     agent.close()
+
+    where:
+    bufferSize = 16
+    minimalTrace = createMinimalTrace()
   }
 
   def "multi threaded"() {

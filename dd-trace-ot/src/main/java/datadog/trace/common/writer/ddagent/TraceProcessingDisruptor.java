@@ -9,6 +9,13 @@ import java.util.List;
 import java.util.concurrent.ThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Disruptor that takes completed traces and applies processing to them. Upon completion, the
+ * serialized trace is published to {@link BatchWritingDisruptor}.
+ *
+ * <p>publishing to the buffer will not block the calling thread, but instead will return false if
+ * the buffer is full. This is to avoid impacting an application thread.
+ */
 @Slf4j
 public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
 
@@ -58,8 +65,8 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
         if (event.data != null) {
           try {
             final byte[] serializedTrace = api.serializeTrace(event.data);
-            monitor.onSerialize(writer, event.data, serializedTrace);
             batchWritingDisruptor.publish(serializedTrace, event.representativeCount);
+            monitor.onSerialize(writer, event.data, serializedTrace);
             event.representativeCount = 0; // reset in case flush is invoked below.
           } catch (final JsonProcessingException e) {
             log.debug("Error serializing trace", e);

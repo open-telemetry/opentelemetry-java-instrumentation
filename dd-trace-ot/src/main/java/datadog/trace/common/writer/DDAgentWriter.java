@@ -16,11 +16,18 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This writer buffers traces and sends them to the provided DDApi instance.
+ * This writer buffers traces and sends them to the provided DDApi instance. Buffering is done with
+ * a distruptor to limit blocking the application threads. Internally, the trace is serialized and
+ * put onto a separate disruptor that does block to decouple the CPU intensive from the IO bound
+ * threads.
  *
- * <p>Written traces are passed off to a disruptor so as to avoid blocking the application's thread.
- * If a flood of traces arrives that exceeds the disruptor ring size, the traces exceeding the
- * threshold will be counted and sampled.
+ * <p>[Application] -> [trace processing buffer] -> [serialized trace batching buffer] -> [dd-agent]
+ *
+ * <p>Note: the first buffer is non-blocking and will discard if full, the second is blocking and
+ * will cause back pressure on the trace processing (serializing) thread.
+ *
+ * <p>If the buffer is filled traces are discarded before serializing. Once serialized every effort
+ * is made to keep, to avoid wasting the serialization effort.
  */
 @Slf4j
 public class DDAgentWriter implements Writer {
@@ -38,8 +45,8 @@ public class DDAgentWriter implements Writer {
   private static final int DISRUPTOR_BUFFER_SIZE = 1024;
 
   private final DDAgentApi api;
-  public final TraceProcessingDisruptor traceProcessingDisruptor;
-  public final BatchWritingDisruptor batchWritingDisruptor;
+  private final TraceProcessingDisruptor traceProcessingDisruptor;
+  private final BatchWritingDisruptor batchWritingDisruptor;
 
   private final AtomicInteger traceCount = new AtomicInteger(0);
 
@@ -147,9 +154,13 @@ public class DDAgentWriter implements Writer {
 
   @Override
   public void close() {
-    monitor.onShutdown(this, traceProcessingDisruptor.flush(traceCount.getAndSet(0)));
-    traceProcessingDisruptor.close();
-    batchWritingDisruptor.close();
+    final boolean flushSuccess = traceProcessingDisruptor.flush(traceCount.getAndSet(0));
+    try {
+      traceProcessingDisruptor.close();
+    } finally { // in case first close fails.
+      batchWritingDisruptor.close();
+    }
+    monitor.onShutdown(this, flushSuccess);
   }
 
   @Override

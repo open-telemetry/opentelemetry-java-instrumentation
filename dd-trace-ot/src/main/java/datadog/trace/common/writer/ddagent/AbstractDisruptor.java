@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AbstractDisruptor<T> implements Closeable {
+abstract class AbstractDisruptor<T> implements Closeable {
 
   protected final Disruptor<DisruptorEvent<T>> disruptor;
 
@@ -46,6 +46,13 @@ public abstract class AbstractDisruptor<T> implements Closeable {
     disruptor.shutdown();
   }
 
+  /**
+   * Allows the underlying publish to be defined as a blocking or non blocking call.
+   *
+   * @param data
+   * @param representativeCount
+   * @return
+   */
   public abstract boolean publish(final T data, int representativeCount);
 
   /**

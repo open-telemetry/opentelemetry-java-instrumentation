@@ -12,10 +12,16 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Disruptor that takes serialized traces and batches them into appropriately sized requests.
+ *
+ * <p>publishing to the buffer will block if the buffer is full.
+ */
 @Slf4j
 public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
   private static final int FLUSH_PAYLOAD_BYTES = 5_000_000; // 5 MB
 
+  // TODO: move executor to tracer for sharing with other tasks.
   private final ScheduledExecutorService heartbeatExecutor =
       Executors.newScheduledThreadPool(1, new DaemonThreadFactory("dd-trace-heartbeat"));
 
@@ -53,6 +59,7 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
 
   @Override
   public boolean publish(final byte[] data, final int representativeCount) {
+    // blocking call to ensure serialized traces aren't discarded and apply back pressure.
     disruptor.getRingBuffer().publishEvent(dataTranslator, data, representativeCount);
     return true;
   }
@@ -81,6 +88,7 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
       this.writer = writer;
     }
 
+    // TODO: reduce byte[] garbage by keeping the byte[] on the event and copy before returning.
     @Override
     public void onEvent(
         final DisruptorEvent<byte[]> event, final long sequence, final boolean endOfBatch) {
@@ -111,10 +119,11 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
           return;
         }
 
-        monitor.onFlush(writer, early);
         // TODO add retry and rate limiting
         final DDAgentApi.Response response =
             api.sendSerializedTraces(representativeCount, sizeInBytes, serializedTraces);
+
+        monitor.onFlush(writer, early);
 
         if (response.success()) {
           log.debug("Successfully sent {} traces to the API", serializedTraces.size());
