@@ -120,6 +120,10 @@ public class DDSpan implements Span {
     return context().getTrace().getRootSpan();
   }
 
+  public void setErrorMessage(final String errorMessage) {
+    setTag(DDTags.ERROR_MSG, errorMessage);
+  }
+
   public void setErrorMeta(final Throwable error) {
     setError(true);
 

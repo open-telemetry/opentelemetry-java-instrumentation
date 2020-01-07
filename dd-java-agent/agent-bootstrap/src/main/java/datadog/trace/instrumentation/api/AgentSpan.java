@@ -13,6 +13,8 @@ public interface AgentSpan {
 
   AgentSpan setError(boolean error);
 
+  AgentSpan setErrorMessage(String errorMessage);
+
   AgentSpan addThrowable(Throwable throwable);
 
   AgentSpan getLocalRootSpan();

@@ -121,6 +121,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
           // for a failed request.  Thus, check the response code
           if (response != null && !response.isSuccessStatusCode()) {
             span.setError(true);
+            span.setErrorMessage(response.getStatusMessage());
           }
 
           DECORATE.beforeFinish(span);
