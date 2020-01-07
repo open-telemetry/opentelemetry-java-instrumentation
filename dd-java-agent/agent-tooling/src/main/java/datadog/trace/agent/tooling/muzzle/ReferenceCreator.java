@@ -70,7 +70,7 @@ public class ReferenceCreator extends ClassVisitor {
 
         final Map<String, Reference> instrumentationReferences = cv.getReferences();
         for (final Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
-          // Don't generate references created outside of the datadog instrumentation package.
+          // Don't generate references created outside of the instrumentation package.
           if (!visitedSources.contains(entry.getKey())
               && entry.getKey().startsWith(REFERENCE_CREATION_PACKAGE)) {
             instrumentationQueue.add(entry.getKey());

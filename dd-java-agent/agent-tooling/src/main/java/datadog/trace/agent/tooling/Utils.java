@@ -2,8 +2,8 @@ package datadog.trace.agent.tooling;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import datadog.trace.bootstrap.DatadogClassLoader;
-import datadog.trace.bootstrap.DatadogClassLoader.BootstrapClassLoaderProxy;
+import datadog.trace.bootstrap.AgentClassLoader;
+import datadog.trace.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
 import java.lang.reflect.Method;
 import java.net.URL;
 import net.bytebuddy.description.method.MethodDescription;
@@ -32,8 +32,8 @@ public class Utils {
 
   /** Return a classloader which can be used to look up bootstrap resources. */
   public static BootstrapClassLoaderProxy getBootstrapProxy() {
-    if (getAgentClassLoader() instanceof DatadogClassLoader) {
-      return ((DatadogClassLoader) getAgentClassLoader()).getBootstrapProxy();
+    if (getAgentClassLoader() instanceof AgentClassLoader) {
+      return ((AgentClassLoader) getAgentClassLoader()).getBootstrapProxy();
     } else {
       // in a unit test
       return unitTestBootstrapProxy;
@@ -86,10 +86,10 @@ public class Utils {
 
   /** @return The current stack trace with multiple entries on new lines. */
   public static String getStackTraceAsString() {
-    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    StringBuilder stringBuilder = new StringBuilder();
-    String lineSeparator = System.getProperty("line.separator");
-    for (StackTraceElement element : stackTrace) {
+    final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    final StringBuilder stringBuilder = new StringBuilder();
+    final String lineSeparator = System.getProperty("line.separator");
+    for (final StackTraceElement element : stackTrace) {
       stringBuilder.append(element.toString());
       stringBuilder.append(lineSeparator);
     }

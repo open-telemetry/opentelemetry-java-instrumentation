@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * <p>This class is loaded and called by {@code datadog.trace.agent.AgentBootstrap}
  *
  * <p>The intention is for this class to be loaded by bootstrap classloader to make sure we have
- * unimpeded access to the rest of Datadog's agent parts.
+ * unimpeded access to the rest of agent parts.
  */
 // We cannot use lombok here because we need to configure logger first
 public class Agent {
@@ -41,7 +41,7 @@ public class Agent {
   private static ClassLoader AGENT_CLASSLOADER = null;
 
   public static void start(final Instrumentation inst, final URL bootstrapURL) {
-    startDatadogAgent(inst, bootstrapURL);
+    startAgent(inst, bootstrapURL);
 
     final boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
 
@@ -60,15 +60,15 @@ public class Agent {
      */
 
     /*
-     * Similar thing happens with DatadogTracer on (at least) zulu-8 because it uses OkHttp which indirectly loads JFR
+     * Similar thing happens with AgentTracer on (at least) zulu-8 because it uses OkHttp which indirectly loads JFR
      * events which in turn loads LogManager. This is not a problem on newer JDKs because there JFR uses different
      * logging facility.
      */
     if (isJavaBefore9WithJFR() && appUsingCustomLogManager) {
-      log.debug("Custom logger detected. Delaying Datadog Tracer initialization.");
-      registerLogManagerCallback(new InstallDatadogTracerCallback(bootstrapURL));
+      log.debug("Custom logger detected. Delaying Agent Tracer initialization.");
+      registerLogManagerCallback(new InstallAgentTracerCallback(bootstrapURL));
     } else {
-      installDatadogTracer();
+      installAgentTracer();
     }
   }
 
@@ -121,29 +121,28 @@ public class Agent {
     public abstract void execute();
   }
 
-  protected static class InstallDatadogTracerCallback extends ClassLoadCallBack {
-    InstallDatadogTracerCallback(final URL bootstrapURL) {
+  protected static class InstallAgentTracerCallback extends ClassLoadCallBack {
+    InstallAgentTracerCallback(final URL bootstrapURL) {
       super(bootstrapURL);
     }
 
     @Override
     public String getName() {
-      return "datadog-tracer";
+      return "agent-tracer";
     }
 
     @Override
     public void execute() {
-      installDatadogTracer();
+      installAgentTracer();
     }
   }
 
-  private static synchronized void startDatadogAgent(
-      final Instrumentation inst, final URL bootstrapURL) {
+  private static synchronized void startAgent(final Instrumentation inst, final URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         final ClassLoader agentClassLoader =
-            createDatadogClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
+            createAgentClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
         Thread.currentThread().setContextClassLoader(agentClassLoader);
         final Class<?> agentInstallerClass =
             agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
@@ -152,20 +151,20 @@ public class Agent {
         agentInstallerMethod.invoke(null, inst);
         AGENT_CLASSLOADER = agentClassLoader;
       } catch (final Throwable ex) {
-        log.error("Throwable thrown while installing the Datadog Agent", ex);
+        log.error("Throwable thrown while installing the agent", ex);
       } finally {
         Thread.currentThread().setContextClassLoader(contextLoader);
       }
     }
   }
 
-  private static synchronized void installDatadogTracer() {
+  private static synchronized void installAgentTracer() {
     if (AGENT_CLASSLOADER == null) {
-      throw new IllegalStateException("Datadog agent should have been started already");
+      throw new IllegalStateException("Agent should have been started already");
     }
     final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
     // TracerInstaller.installAgentTracer can be called multiple times without any problem
-    // so there is no need to have a 'datadogTracerInstalled' flag here.
+    // so there is no need to have a 'agentTracerInstalled' flag here.
     try {
       Thread.currentThread().setContextClassLoader(AGENT_CLASSLOADER);
       // install global tracer
@@ -176,7 +175,7 @@ public class Agent {
       final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
       logVersionInfoMethod.invoke(null);
     } catch (final Throwable ex) {
-      log.error("Throwable thrown while installing the Datadog Tracer", ex);
+      log.error("Throwable thrown while installing the agent tracer", ex);
     } finally {
       Thread.currentThread().setContextClassLoader(contextLoader);
     }
@@ -199,15 +198,15 @@ public class Agent {
   }
 
   /**
-   * Create the datadog classloader. This must be called after the bootstrap jar has been appened to
+   * Create the agent classloader. This must be called after the bootstrap jar has been appened to
    * the bootstrap classpath.
    *
-   * @param innerJarFilename Filename of internal jar to use for the classpath of the datadog
+   * @param innerJarFilename Filename of internal jar to use for the classpath of the agent
    *     classloader
    * @param bootstrapURL
-   * @return Datadog Classloader
+   * @return Agent Classloader
    */
-  private static ClassLoader createDatadogClassLoader(
+  private static ClassLoader createAgentClassLoader(
       final String innerJarFilename, final URL bootstrapURL) throws Exception {
     final ClassLoader agentParent;
     if (isJavaBefore9()) {
@@ -218,7 +217,7 @@ public class Agent {
     }
 
     final Class<?> loaderClass =
-        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
+        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.AgentClassLoader");
     final Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
     return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);
@@ -257,8 +256,8 @@ public class Agent {
   }
 
   /**
-   * Search for java or datadog-tracer sysprops which indicate that a custom log manager will be
-   * used. Also search for any app classes known to set a custom log manager.
+   * Search for java or agent-tracer sysprops which indicate that a custom log manager will be used.
+   * Also search for any app classes known to set a custom log manager.
    *
    * @return true if we detect a custom log manager being used.
    */

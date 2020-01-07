@@ -31,7 +31,7 @@ public final class JBossClassloadingInstrumentation extends Instrumenter.Default
       final JavaModule module,
       final Class<?> classBeingRedefined,
       final ProtectionDomain protectionDomain) {
-    // Set the system prop to tell jboss to delegate classloads for datadog bootstrap classes
+    // Set the system prop to tell jboss to delegate classloads for agent bootstrap classes
     final StringBuilder prefixes = new StringBuilder("");
     for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
       if (i > 0) {

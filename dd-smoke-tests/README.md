@@ -1,5 +1,5 @@
-# Datadog Smoke Tests
-Assert that various applications will start up with the Datadog JavaAgent without any obvious ill effects.
+# Smoke Tests
+Assert that various applications will start up with the JavaAgent without any obvious ill effects.
 
 Each subproject underneath `dd-smoke-tests` is a single smoke test. Each test does the following
 * Launch the application with stdout and stderr logged to `$buildDir/reports/server.log`

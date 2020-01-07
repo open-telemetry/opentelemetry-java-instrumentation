@@ -111,7 +111,7 @@ public class HelperInjector implements Transformer {
             classes = new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
           }
 
-          // All datadog helper classes are in the unnamed module
+          // All agent helper classes are in the unnamed module
           // And there's exactly one unnamed module per classloader
           // Use the module of the first class for convenience
           if (JavaModule.isSupported()) {

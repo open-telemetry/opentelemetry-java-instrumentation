@@ -2,7 +2,7 @@ package datadog.trace.agent.tooling;
 
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
-import datadog.trace.bootstrap.DatadogClassLoader;
+import datadog.trace.bootstrap.AgentClassLoader;
 import datadog.trace.bootstrap.PatchLogger;
 import datadog.trace.bootstrap.WeakMap;
 import java.util.Collections;
@@ -53,7 +53,7 @@ public class ClassLoaderMatcher {
       classesToSkip.add("jdk.internal.reflect.DelegatingClassLoader");
       classesToSkip.add("clojure.lang.DynamicClassLoader");
       classesToSkip.add("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader");
-      classesToSkip.add(DatadogClassLoader.class.getName());
+      classesToSkip.add(AgentClassLoader.class.getName());
       CLASSLOADER_CLASSES_TO_SKIP = Collections.unmodifiableSet(classesToSkip);
     }
 
@@ -101,7 +101,7 @@ public class ClassLoaderMatcher {
     private boolean delegatesToBootstrap(final ClassLoader loader) {
       boolean delegates = true;
       if (!loadsExpectedClass(loader, PatchLogger.class)) {
-        log.debug("loader {} failed to delegate bootstrap datadog class", loader);
+        log.debug("loader {} failed to delegate bootstrap agent class", loader);
         delegates = false;
       }
       return delegates;

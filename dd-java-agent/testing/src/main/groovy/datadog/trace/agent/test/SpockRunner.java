@@ -28,7 +28,7 @@ public class SpockRunner extends Sputnik {
    * An exact copy of {@link datadog.trace.agent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}.
    *
    * <p>This list is needed to initialize the bootstrap classpath because Utils' static initializer
-   * references bootstrap classes (e.g. DatadogClassLoader).
+   * references bootstrap classes (e.g. AgentClassLoader).
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
     "datadog.slf4j",

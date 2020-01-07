@@ -135,8 +135,8 @@ jar {
     attributes(
       "Implementation-Title": project.name,
       "Implementation-Version": project.version,
-      "Implementation-Vendor": "Datadog",
-      "Implementation-URL": "https://github.com/datadog/dd-trace-java",
+      "Implementation-Vendor": "OpenTelemetry",
+      "Implementation-URL": "https://github.com/open-telemetry/opentelemetry-auto-instr-java",
     )
   }
 }

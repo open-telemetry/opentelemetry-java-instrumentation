@@ -14,7 +14,7 @@ class TomcatClassloadingTest extends AgentTestRunner {
   }
   ParallelWebappClassLoader classloader = new ParallelWebappClassLoader(null)
 
-  def "tomcat class loading delegates to parent for Datadog classes"() {
+  def "tomcat class loading delegates to parent for agent classes"() {
     setup:
     classloader.setResources(resources)
     classloader.init()

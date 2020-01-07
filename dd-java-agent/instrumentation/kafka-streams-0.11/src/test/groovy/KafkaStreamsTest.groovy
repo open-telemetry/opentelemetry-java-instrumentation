@@ -1,6 +1,9 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.shaded.io.opentelemetry.context.propagation.HttpTextFormat
+import io.opentelemetry.auto.shaded.io.opentelemetry.trace.SpanContext
+import io.opentelemetry.auto.shaded.io.opentelemetry.trace.propagation.HttpTraceContext
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -214,8 +217,15 @@ class KafkaStreamsTest extends AgentTestRunner {
 
     def headers = received.headers()
     headers.iterator().hasNext()
-    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "${TEST_WRITER[2][0].traceId}"
-    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "${TEST_WRITER[2][0].spanId}"
+    def traceparent = new String(headers.headers("traceparent").iterator().next().value())
+    SpanContext spanContext = new HttpTraceContext().extract(traceparent, new HttpTextFormat.Getter<String>() {
+      @Override
+      String get(String carrier, String key) {
+        return carrier
+      }
+    })
+    spanContext.traceId == TEST_WRITER[2][0].traceId
+    spanContext.spanId == TEST_WRITER[2][0].spanId
 
 
     cleanup:

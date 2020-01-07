@@ -1,7 +1,7 @@
 package datadog.trace.agent.test
 
 import datadog.trace.agent.tooling.ClassLoaderMatcher
-import datadog.trace.bootstrap.DatadogClassLoader
+import datadog.trace.bootstrap.AgentClassLoader
 import datadog.trace.util.test.DDSpecification
 
 class ClassLoaderMatcherTest extends DDSpecification {
@@ -16,7 +16,7 @@ class ClassLoaderMatcherTest extends DDSpecification {
   def "skips agent classloader"() {
     setup:
     URL root = new URL("file://")
-    final URLClassLoader agentLoader = new DatadogClassLoader(root, null, null)
+    final URLClassLoader agentLoader = new AgentClassLoader(root, null, null)
     expect:
     ClassLoaderMatcher.skipClassLoader().matches(agentLoader)
   }

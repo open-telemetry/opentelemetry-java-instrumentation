@@ -1,5 +1,5 @@
-# Datadog Java Agent Performance Tests
-Integration level performance tests for the Datadog Java Agent.
+# Java Agent Performance Tests
+Integration level performance tests for the Java Agent.
 
 ## Perf Script Dependencies
 

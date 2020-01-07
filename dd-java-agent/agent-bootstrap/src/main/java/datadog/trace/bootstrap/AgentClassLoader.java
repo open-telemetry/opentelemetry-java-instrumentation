@@ -6,13 +6,13 @@ import java.net.URLClassLoader;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Classloader used to run the core datadog agent.
+ * Classloader used to run the core agent.
  *
  * <p>It is built around the concept of a jar inside another jar. This classloader loads the files
  * of the internal jar to load classes and resources.
  */
 @Slf4j
-public class DatadogClassLoader extends URLClassLoader {
+public class AgentClassLoader extends URLClassLoader {
   static {
     ClassLoader.registerAsParallelCapable();
   }
@@ -23,14 +23,14 @@ public class DatadogClassLoader extends URLClassLoader {
   // to use only for resource lookups.
   private final BootstrapClassLoaderProxy bootstrapProxy;
   /**
-   * Construct a new DatadogClassLoader
+   * Construct a new AgentClassLoader
    *
    * @param bootstrapJarLocation Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
    * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
    *     9+.
    */
-  public DatadogClassLoader(
+  public AgentClassLoader(
       final URL bootstrapJarLocation, final String internalJarFileName, final ClassLoader parent) {
     super(new URL[] {}, parent);
 

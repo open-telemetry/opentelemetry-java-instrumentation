@@ -19,7 +19,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
   // safely.
   public static final HandlerContextKey<AgentScope> SCOPE_CONTEXT_KEY =
-      new HandlerContextKey<>("DatadogScope");
+      new HandlerContextKey<>("io.opentelemetry.auto.Scope");
 
   @Override
   public AmazonWebServiceRequest beforeMarshalling(final AmazonWebServiceRequest request) {

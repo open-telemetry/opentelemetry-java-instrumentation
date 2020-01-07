@@ -6,14 +6,14 @@ import spock.lang.Timeout
 import java.util.concurrent.Phaser
 import java.util.concurrent.TimeUnit
 
-class DatadogClassLoaderTest extends Specification {
+class AgentClassLoaderTest extends Specification {
   @Timeout(value = 60, unit = TimeUnit.SECONDS)
   def "DD classloader does not lock classloading around instance"() {
     setup:
     def className1 = 'some/class/Name1'
     def className2 = 'some/class/Name2'
     final URL loc = getClass().getProtectionDomain().getCodeSource().getLocation()
-    final DatadogClassLoader ddLoader = new DatadogClassLoader(loc, null, null)
+    final AgentClassLoader ddLoader = new AgentClassLoader(loc, null, null)
     final Phaser threadHoldLockPhase = new Phaser(2)
     final Phaser acquireLockFromMainThreadPhase = new Phaser(2)
 

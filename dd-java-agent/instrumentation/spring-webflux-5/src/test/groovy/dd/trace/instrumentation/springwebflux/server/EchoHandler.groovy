@@ -8,7 +8,7 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
 
 /**
- * Note: this class has to stay outside of 'datadog.*' package because we need
+ * Note: this class has to stay outside of 'io.opentelemetry.auto.*' package because we need
  * it transformed by {@code @Trace} annotation.
  */
 @Component

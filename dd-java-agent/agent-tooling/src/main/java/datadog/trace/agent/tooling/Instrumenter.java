@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- * Built-in bytebuddy-based instrumentation for the datadog javaagent.
+ * Built-in bytebuddy-based instrumentation for the agent.
  *
  * <p>It is strongly recommended to extend {@link Default} rather than implement this interface
  * directly.

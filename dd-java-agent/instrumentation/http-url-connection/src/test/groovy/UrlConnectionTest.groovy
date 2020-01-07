@@ -2,7 +2,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import datadog.trace.bootstrap.DatadogClassLoader
+import datadog.trace.bootstrap.AgentClassLoader
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
 
@@ -113,10 +113,10 @@ class UrlConnectionTest extends AgentTestRunner {
     renameService << [false, true]
   }
 
-  def "DatadogClassloader ClassNotFoundException doesn't create span"() {
+  def "AgentClassloader ClassNotFoundException doesn't create span"() {
     given:
-    ClassLoader datadogLoader = new DatadogClassLoader(null, null, null)
-    ClassLoader childLoader = new URLClassLoader(new URL[0], datadogLoader)
+    ClassLoader agentLoader = new AgentClassLoader(null, null, null)
+    ClassLoader childLoader = new URLClassLoader(new URL[0], agentLoader)
 
     when:
     runUnderTrace("someTrace") {

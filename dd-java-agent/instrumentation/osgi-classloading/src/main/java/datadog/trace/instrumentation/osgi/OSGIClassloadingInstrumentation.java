@@ -46,7 +46,7 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Default 
       final JavaModule module,
       final Class<?> classBeingRedefined,
       final ProtectionDomain protectionDomain) {
-    // Set the system prop to tell OSGi to delegate classloads for datadog bootstrap classes
+    // Set the system prop to tell OSGi to delegate classloads for agent bootstrap classes
     System.setProperty(
         Helper.PROPERTY_KEY, Helper.getNewValue(System.getProperty(Helper.PROPERTY_KEY)));
   }
@@ -78,7 +78,7 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Default 
     public static final String PROPERTY_VALUE;
 
     static {
-      // Set the config option to tell osgi to delegate classloads for datadog bootstrap classes
+      // Set the config option to tell osgi to delegate classloads for agent bootstrap classes
       final StringBuilder prefixes = new StringBuilder("");
       for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
         if (i > 0) {

@@ -18,9 +18,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Instrument Tomcat's web app classloader so it loads Datadog's bootstrap classes from parent
- * classloader. Without this change web apps get their oen versions of Datadog's classes leading to
- * there being multiple {@link AgentTracer}s in existance, some of them not configured properly.
+ * Instrument Tomcat's web app classloader so it loads agent bootstrap classes from parent
+ * classloader. Without this change web apps get their own versions of agent classes leading to
+ * there being multiple {@link AgentTracer}s in existence, some of them not configured properly.
  * This is really the same idea we have for OSGi and JBoss.
  */
 @AutoService(Instrumenter.class)

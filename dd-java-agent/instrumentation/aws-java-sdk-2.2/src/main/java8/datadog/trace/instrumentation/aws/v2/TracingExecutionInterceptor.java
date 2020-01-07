@@ -24,7 +24,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
           builder -> builder.addExecutionInterceptor(new TracingExecutionInterceptor());
 
   private static final ExecutionAttribute<AgentSpan> SPAN_ATTRIBUTE =
-      new ExecutionAttribute<>("DatadogSpan");
+      new ExecutionAttribute<>("io.opentelemetry.auto.Span");
 
   @Override
   public void beforeExecution(

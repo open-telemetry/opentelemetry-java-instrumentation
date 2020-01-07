@@ -18,8 +18,9 @@ public class ContextPropagator {
   private static final ObjID DGC_ID = new ObjID(ObjID.DGC_ID);
   private static final ObjID REGISTRY_ID = new ObjID(ObjID.REGISTRY_ID);
 
-  // RMI object id used to identify DataDog instrumentation
-  public static final ObjID DD_CONTEXT_CALL_ID = new ObjID("Datadog.v1.context_call".hashCode());
+  // RMI object id used to identify agent instrumentation
+  public static final ObjID DD_CONTEXT_CALL_ID =
+      new ObjID("io.opentelemetry.auto.v1.context_call".hashCode());
 
   // Operation id used for checking context propagation is possible
   // RMI expects these operations to have negative identifier, as positive ones mean legacy

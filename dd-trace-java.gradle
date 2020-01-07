@@ -15,8 +15,8 @@ plugins {
 def isCI = System.getenv("CI") != null
 
 allprojects {
-  group = 'com.datadoghq'
-  version = '0.41.0-SNAPSHOT'
+  group = 'io.opentelemetry.auto'
+  version = '0.1.0-SNAPSHOT'
 
   if (isCI) {
     buildDir = "${rootDir}/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"

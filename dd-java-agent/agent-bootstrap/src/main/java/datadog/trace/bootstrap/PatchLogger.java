@@ -11,7 +11,7 @@ import java.util.logging.LogRecord;
  * <p>Shadow rewrites will redirect those calls to this class, which will return a safe logger.
  */
 public class PatchLogger {
-  private static final PatchLogger SAFE_LOGGER = new PatchLogger("datadogSafeLogger", "bundle");
+  private static final PatchLogger SAFE_LOGGER = new PatchLogger("agentSafeLogger", "bundle");
 
   public static PatchLogger getLogger(final String name) {
     return SAFE_LOGGER;
