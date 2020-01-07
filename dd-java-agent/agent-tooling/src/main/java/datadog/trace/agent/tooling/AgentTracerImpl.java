@@ -12,6 +12,7 @@ import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentTracer;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -72,6 +73,19 @@ public final class AgentTracerImpl implements TracerAPI {
       spanName = "";
     }
     return new AgentSpanImpl(spanName, span);
+  }
+
+  @Override
+  public AgentScope activeScope() {
+    final AgentSpan span = activeSpan();
+    if (span == null) {
+      return AgentTracer.NoopAgentScope.INSTANCE;
+    }
+    final DDScope scope = tracer.scopeManager().active();
+    if (scope == null) {
+      return AgentTracer.NoopAgentScope.INSTANCE;
+    }
+    return new AgentScopeImpl(span, scope);
   }
 
   @Override
