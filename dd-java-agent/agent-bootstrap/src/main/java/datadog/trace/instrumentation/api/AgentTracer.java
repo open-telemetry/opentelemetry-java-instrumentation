@@ -155,6 +155,11 @@ public class AgentTracer {
     }
 
     @Override
+    public AgentSpan setErrorMessage(final String errorMessage) {
+      return this;
+    }
+
+    @Override
     public AgentSpan addThrowable(final Throwable throwable) {
       return this;
     }
