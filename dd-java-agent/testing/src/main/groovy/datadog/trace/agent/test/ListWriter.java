@@ -5,28 +5,38 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+import groovy.lang.Closure;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.trace.SpanId;
+import io.opentelemetry.trace.TraceId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements SpanProcessor {
+public class ListWriter implements SpanProcessor {
+
+  private volatile List<List<SpanData>> traces = new CopyOnWriteArrayList<>();
 
   // not using span startEpochNanos since that is not strictly increasing so can lead to ties
   private final Map<SpanId, Integer> spanOrders = new ConcurrentHashMap<>();
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
-  private final Object lock = new Object();
+
+  private final Object structuralChangeLock = new Object();
+
+  private boolean needsTraceSorting; // guarded by structuralChangeLock
+  private final Set<TraceId> needsSpanSorting = new HashSet<>(); // guarded by structuralChangeLock
 
   @Override
   public void onStart(final ReadableSpan readableSpan) {
@@ -36,9 +46,9 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
   @Override
   public void onEnd(final ReadableSpan readableSpan) {
     final SpanData span = readableSpan.toSpanData();
-    synchronized (lock) {
+    synchronized (structuralChangeLock) {
       boolean found = false;
-      for (final List<SpanData> trace : this) {
+      for (final List<SpanData> trace : traces) {
         if (trace.get(0).getTraceId().equals(span.getTraceId())) {
           trace.add(span);
           found = true;
@@ -48,19 +58,47 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
       if (!found) {
         final List<SpanData> trace = new CopyOnWriteArrayList<>();
         trace.add(span);
-        add(trace);
+        traces.add(trace);
+        needsTraceSorting = true;
       }
-      sort();
-      lock.notifyAll();
+      needsSpanSorting.add(span.getTraceId());
+      structuralChangeLock.notifyAll();
+    }
+  }
+
+  public void doUnderStructuralChangeLock(final Closure<Void> callback) {
+    synchronized (structuralChangeLock) {
+      callback.call();
+    }
+  }
+
+  public List<List<SpanData>> getTraces() {
+    synchronized (structuralChangeLock) {
+      // important not to sort trace or span lists in place so that any tests that are currently
+      // iterating over them are not affected
+      if (needsTraceSorting) {
+        traces = sortTraces(traces);
+        needsTraceSorting = false;
+      }
+      if (!needsSpanSorting.isEmpty()) {
+        for (int i = 0; i < traces.size(); i++) {
+          final List<SpanData> trace = traces.get(i);
+          if (needsSpanSorting.contains(trace.get(0).getTraceId())) {
+            traces.set(i, sort(trace));
+          }
+        }
+        needsSpanSorting.clear();
+      }
+      return traces;
     }
   }
 
   public void waitForTraces(final int number) throws InterruptedException, TimeoutException {
-    synchronized (lock) {
+    synchronized (structuralChangeLock) {
       long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
       while (completedTraceCount() < number && remainingWaitMillis > 0) {
         final Stopwatch stopwatch = Stopwatch.createStarted();
-        lock.wait(remainingWaitMillis);
+        structuralChangeLock.wait(remainingWaitMillis);
         remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
       }
       final int completedTraceCount = completedTraceCount();
@@ -71,15 +109,16 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
                 + " completed trace(s), found "
                 + completedTraceCount
                 + " completed trace(s) and "
-                + size()
+                + traces.size()
                 + " total trace(s)");
       }
     }
   }
 
-  @Override
   public void clear() {
-    super.clear();
+    synchronized (structuralChangeLock) {
+      traces.clear();
+    }
     spanOrders.clear();
   }
 
@@ -88,7 +127,7 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
 
   private int completedTraceCount() {
     int count = 0;
-    for (final List<SpanData> trace : this) {
+    for (final List<SpanData> trace : traces) {
       if (isCompleted(trace)) {
         count++;
       }
@@ -110,16 +149,8 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
     return false;
   }
 
-  private void sort() {
-    sortTraces();
-    for (final List<SpanData> trace : this) {
-      sort(trace);
-    }
-  }
-
-  private void sortTraces() {
-    // cannot sort CopyOnWriteArrayList in Java 7 (leads to UnsupportedOperationException)
-    final List<List<SpanData>> copy = new ArrayList<>(this);
+  private List<List<SpanData>> sortTraces(final List<List<SpanData>> traces) {
+    final List<List<SpanData>> copy = new ArrayList<>(traces);
     Collections.sort(
         copy,
         new Comparator<List<SpanData>>() {
@@ -128,8 +159,7 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
             return Longs.compare(getMinSpanOrder(trace1), getMinSpanOrder(trace2));
           }
         });
-    super.clear(); // explicitly calling super in order to bypass clearing spanOrders
-    addAll(copy);
+    return copy;
   }
 
   private long getMinSpanOrder(final List<SpanData> spans) {
@@ -140,7 +170,7 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
     return min;
   }
 
-  private void sort(final List<SpanData> trace) {
+  private List<SpanData> sort(final List<SpanData> trace) {
 
     final Map<SpanId, Node> lookup = new HashMap<>();
     for (final SpanData span : trace) {
@@ -183,8 +213,7 @@ public class ListWriter extends CopyOnWriteArrayList<List<SpanData>> implements 
     for (final Node node : orderedNodes) {
       orderedSpans.add(node.span);
     }
-    trace.clear();
-    trace.addAll(orderedSpans);
+    return orderedSpans;
   }
 
   private void sortOneLevel(final List<Node> nodes) {
