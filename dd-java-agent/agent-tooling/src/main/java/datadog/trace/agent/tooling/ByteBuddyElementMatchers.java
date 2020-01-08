@@ -328,9 +328,8 @@ public class ByteBuddyElementMatchers {
       final Set<TypeDefinition> checkedInterfaces = new HashSet<>();
 
       while (declaringType != null) {
-        for (final MethodDescription methodDescription :
-            declaringType.getDeclaredMethods().filter(signatureMatcher)) {
-          if (matcher.matches(methodDescription)) {
+        for (final MethodDescription methodDescription : declaringType.getDeclaredMethods()) {
+          if (signatureMatcher.matches(methodDescription) && matcher.matches(methodDescription)) {
             return true;
           }
         }
