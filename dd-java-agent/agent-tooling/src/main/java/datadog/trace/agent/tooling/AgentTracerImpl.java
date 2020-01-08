@@ -8,11 +8,11 @@ import datadog.opentracing.SpanContext;
 import datadog.opentracing.propagation.TextMapExtract;
 import datadog.opentracing.propagation.TextMapInject;
 import datadog.opentracing.scopemanager.DDScope;
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentTracer;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -76,13 +76,16 @@ public final class AgentTracerImpl implements TracerAPI {
   }
 
   @Override
-  public TraceScope activeScope() {
-    final DDScope scope = tracer.scopeManager().active();
-    if (scope instanceof TraceScope) {
-      return (TraceScope) scope;
-    } else {
-      return null;
+  public AgentScope activeScope() {
+    final AgentSpan span = activeSpan();
+    if (span == null) {
+      return AgentTracer.NoopAgentScope.INSTANCE;
     }
+    final DDScope scope = tracer.scopeManager().active();
+    if (scope == null) {
+      return AgentTracer.NoopAgentScope.INSTANCE;
+    }
+    return new AgentScopeImpl(span, scope);
   }
 
   @Override
@@ -223,6 +226,20 @@ public final class AgentTracerImpl implements TracerAPI {
     private Span getSpan() {
       return span;
     }
+
+    @Override
+    public int hashCode() {
+      return span.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      if (!(obj instanceof AgentSpanImpl)) {
+        return false;
+      }
+      final AgentSpanImpl other = (AgentSpanImpl) obj;
+      return span.equals(other.span);
+    }
   }
 
   private final class AgentScopeImpl implements AgentScope {
@@ -242,30 +259,26 @@ public final class AgentTracerImpl implements TracerAPI {
     }
 
     @Override
-    public AgentScope setAsyncPropagation(final boolean value) {
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(value);
-      }
-      return this;
+    public AgentSpan span() {
+      return span;
     }
 
     @Override
-    public AgentSpan span() {
-      return span;
+    public int hashCode() {
+      return scope.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      if (!(obj instanceof AgentScopeImpl)) {
+        return false;
+      }
+      final AgentScopeImpl other = (AgentScopeImpl) obj;
+      return scope.equals(other.scope);
     }
   }
 
   private final class AgentPropagationImpl implements AgentPropagation {
-
-    @Override
-    public TraceScope.Continuation capture() {
-      final DDScope active = tracer.scopeManager().active();
-      if (active instanceof TraceScope) {
-        return ((TraceScope) active).capture();
-      } else {
-        return null;
-      }
-    }
 
     @Override
     public <C> void inject(final AgentSpan span, final C carrier, final Setter<C> setter) {
@@ -305,7 +318,9 @@ public final class AgentTracerImpl implements TracerAPI {
         // extracted header value
         String s = getter.get(carrier, key);
         // in case of multiple values in the header, need to parse
-        if (s != null) s = s.split(",")[0].trim();
+        if (s != null) {
+          s = s.split(",")[0].trim();
+        }
         extracted.put(key, s);
       }
     }

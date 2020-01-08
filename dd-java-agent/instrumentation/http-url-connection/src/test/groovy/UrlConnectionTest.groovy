@@ -9,7 +9,7 @@ import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class UrlConnectionTest extends AgentTestRunner {
@@ -21,7 +21,7 @@ class UrlConnectionTest extends AgentTestRunner {
         URLConnection connection = url.openConnection()
         connection.setConnectTimeout(10000)
         connection.setReadTimeout(10000)
-        assert activeScope() != null
+        assert activeSpan() != null
         connection.inputStream
       }
     }

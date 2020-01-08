@@ -45,8 +45,6 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
 
     try (final AgentScope scope = activateSpan(span, false)) {
 
-      scope.setAsyncPropagation(true);
-
       final ClientRequest mutatedRequest =
           ClientRequest.from(clientRequest)
               .headers(httpHeaders -> propagate().inject(span, httpHeaders, SETTER))

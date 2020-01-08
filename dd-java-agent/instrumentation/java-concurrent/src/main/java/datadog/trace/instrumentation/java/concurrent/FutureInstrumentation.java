@@ -110,14 +110,14 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   public static class CanceledFutureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void exit(@Advice.This final Future<?> future) {
-      // Try to close continuation even if future was not cancelled:
-      // the expectation is that continuation should be closed after 'cancel'
+      // Try to clear parent span even if future was not cancelled:
+      // the expectation is that parent span should be cleared after 'cancel'
       // is called, one way or another
       final ContextStore<Future, State> contextStore =
           InstrumentationContext.get(Future.class, State.class);
       final State state = contextStore.get(future);
       if (state != null) {
-        state.closeContinuation();
+        state.clearParentSpan();
       }
     }
   }

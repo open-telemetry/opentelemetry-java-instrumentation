@@ -44,8 +44,6 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
 
     try (final AgentScope scope = activateSpan(span, false)) {
 
-      scope.setAsyncPropagation(true);
-
       DECORATE.onRequest(span, clientRequest);
 
       subscriber.onSubscribe(
@@ -79,8 +77,6 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
 
     try (final AgentScope scope = activateSpan(parentSpan, false)) {
 
-      scope.setAsyncPropagation(true);
-
       subscriber.onNext(clientResponse);
     }
   }
@@ -96,8 +92,6 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
 
     try (final AgentScope scope = activateSpan(parentSpan, false)) {
 
-      scope.setAsyncPropagation(true);
-
       subscriber.onError(throwable);
     }
   }
@@ -111,8 +105,6 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
     }
 
     try (final AgentScope scope = activateSpan(parentSpan, false)) {
-
-      scope.setAsyncPropagation(true);
 
       subscriber.onComplete();
     }

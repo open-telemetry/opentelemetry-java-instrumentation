@@ -32,9 +32,7 @@ public class PlayAdvice {
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
 
-    final AgentScope scope = activateSpan(span, false);
-    scope.setAsyncPropagation(true);
-    return scope;
+    return activateSpan(span, false);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

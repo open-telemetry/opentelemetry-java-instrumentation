@@ -47,9 +47,7 @@ public class Servlet3Advice {
 
     httpServletRequest.setAttribute(DD_SPAN_ATTRIBUTE, span);
 
-    final AgentScope scope = activateSpan(span, false);
-    scope.setAsyncPropagation(true);
-    return scope;
+    return activateSpan(span, false);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

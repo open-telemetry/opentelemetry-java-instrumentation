@@ -39,7 +39,6 @@ public final class TracingHandler implements Handler {
     ctx.getExecution().add(ratpackSpan);
 
     try (final AgentScope scope = activateSpan(ratpackSpan, false)) {
-      scope.setAsyncPropagation(true);
 
       ctx.getResponse()
           .beforeSend(

@@ -1,7 +1,5 @@
 package datadog.trace.instrumentation.api;
 
-import datadog.trace.context.TraceScope;
-import datadog.trace.context.TraceScope.Continuation;
 import datadog.trace.instrumentation.api.AgentSpan.Context;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -36,7 +34,7 @@ public class AgentTracer {
     return get().activeSpan();
   }
 
-  public static TraceScope activeScope() {
+  public static AgentScope activeScope() {
     return get().activeScope();
   }
 
@@ -76,7 +74,7 @@ public class AgentTracer {
 
     AgentSpan activeSpan();
 
-    TraceScope activeScope();
+    AgentScope activeScope();
 
     AgentPropagation propagate();
 
@@ -119,7 +117,7 @@ public class AgentTracer {
     }
 
     @Override
-    public TraceScope activeScope() {
+    public AgentScope activeScope() {
       return null;
     }
 
@@ -199,17 +197,12 @@ public class AgentTracer {
     public void setSpanName(final String spanName) {}
   }
 
-  static class NoopAgentScope implements AgentScope {
-    static final NoopAgentScope INSTANCE = new NoopAgentScope();
+  public static class NoopAgentScope implements AgentScope {
+    public static final NoopAgentScope INSTANCE = new NoopAgentScope();
 
     @Override
     public AgentSpan span() {
       return NoopAgentSpan.INSTANCE;
-    }
-
-    @Override
-    public AgentScope setAsyncPropagation(final boolean value) {
-      return this;
     }
 
     @Override
@@ -220,52 +213,12 @@ public class AgentTracer {
     static final NoopAgentPropagation INSTANCE = new NoopAgentPropagation();
 
     @Override
-    public Continuation capture() {
-      return NoopContinuation.INSTANCE;
-    }
-
-    @Override
     public <C> void inject(final AgentSpan span, final C carrier, final Setter<C> setter) {}
 
     @Override
     public <C> Context extract(final C carrier, final Getter<C> getter) {
       return NoopContext.INSTANCE;
     }
-  }
-
-  static class NoopContinuation implements Continuation {
-    static final NoopContinuation INSTANCE = new NoopContinuation();
-
-    @Override
-    public TraceScope activate() {
-      return NoopTraceScope.INSTANCE;
-    }
-
-    @Override
-    public void close() {}
-
-    @Override
-    public void close(final boolean closeContinuationScope) {}
-  }
-
-  static class NoopTraceScope implements TraceScope {
-    static final NoopTraceScope INSTANCE = new NoopTraceScope();
-
-    @Override
-    public Continuation capture() {
-      return NoopContinuation.INSTANCE;
-    }
-
-    @Override
-    public void close() {}
-
-    @Override
-    public boolean isAsyncPropagating() {
-      return false;
-    }
-
-    @Override
-    public void setAsyncPropagation(final boolean value) {}
   }
 
   static class NoopContext implements Context {

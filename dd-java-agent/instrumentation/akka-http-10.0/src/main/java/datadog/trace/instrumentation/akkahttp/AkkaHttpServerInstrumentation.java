@@ -3,7 +3,6 @@ package datadog.trace.instrumentation.akkahttp;
 import static datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator.DECORATE;
 import static datadog.trace.instrumentation.akkahttp.AkkaHttpServerHeaders.GETTER;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +13,6 @@ import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -104,19 +102,13 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       DECORATE.onConnection(span, request);
       DECORATE.onRequest(span, request);
 
-      final AgentScope scope = activateSpan(span, false);
-      scope.setAsyncPropagation(true);
-      return scope;
+      return activateSpan(span, false);
     }
 
     public static void finishSpan(final AgentSpan span, final HttpResponse response) {
       DECORATE.onResponse(span, response);
       DECORATE.beforeFinish(span);
 
-      final TraceScope scope = activeScope();
-      if (scope != null) {
-        scope.setAsyncPropagation(false);
-      }
       span.finish();
     }
 
@@ -126,10 +118,6 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       span.setError(true);
       DECORATE.beforeFinish(span);
 
-      final TraceScope scope = activeScope();
-      if (scope != null) {
-        scope.setAsyncPropagation(false);
-      }
       span.finish();
     }
   }

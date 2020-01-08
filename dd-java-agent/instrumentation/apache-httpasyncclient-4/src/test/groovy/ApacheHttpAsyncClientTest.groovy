@@ -7,6 +7,8 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
+import java.util.concurrent.CountDownLatch
+
 class ApacheHttpAsyncClientTest extends HttpClientTest<ApacheHttpAsyncClientDecorator> {
 
   @AutoCleanup
@@ -24,24 +26,41 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<ApacheHttpAsyncClientDeco
       request.addHeader(new BasicHeader(it.key, it.value))
     }
 
+    def latch = callback == null ? null : new CountDownLatch(1)
     def handler = callback == null ? null : new FutureCallback<HttpResponse>() {
 
       @Override
       void completed(HttpResponse result) {
         callback()
+        latch.countDown()
       }
 
       @Override
       void failed(Exception ex) {
+        latch.countDown()
       }
 
       @Override
       void cancelled() {
+        latch.countDown()
       }
     }
 
-    def response = client.execute(request, handler).get()
+    def future = client.execute(request, handler)
+    def response
+    try {
+      response = future.get()
+    } finally {
+      // child span is reported asynchronously, this is needed for consistent span ordering during test verification
+      blockUntilChildSpansFinished(1)
+    }
     response.entity?.content?.close() // Make sure the connection is closed.
+    if (callback != null) {
+      // need to wait for callback to complete in case test is expecting span from it
+      latch.await()
+    }
+    // child span is reported asynchronously, this is needed for consistent span ordering during test verification
+    blockUntilChildSpansFinished(1)
     response.statusLine.statusCode
   }
 

@@ -1,9 +1,10 @@
 package datadog.trace.instrumentation.playws1;
 
-import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.playws1.PlayWSClientDecorator.DECORATE;
 
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
@@ -14,14 +15,14 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
   private final AgentSpan span;
-  private final TraceScope.Continuation continuation;
+  private final AgentSpan parentSpan;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
   public AsyncHandlerWrapper(final AsyncHandler delegate, final AgentSpan span) {
     this.delegate = delegate;
     this.span = span;
-    continuation = propagate().capture();
+    parentSpan = activeSpan();
   }
 
   @Override
@@ -52,9 +53,8 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.finish();
 
-    if (continuation != null) {
-      try (final TraceScope scope = continuation.activate()) {
-        scope.setAsyncPropagation(true);
+    if (parentSpan != null) {
+      try (final AgentScope scope = activateSpan(parentSpan, false)) {
         return delegate.onCompleted();
       }
     } else {
@@ -68,9 +68,8 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.finish();
 
-    if (continuation != null) {
-      try (final TraceScope scope = continuation.activate()) {
-        scope.setAsyncPropagation(true);
+    if (parentSpan != null) {
+      try (final AgentScope scope = activateSpan(parentSpan, false)) {
         delegate.onThrowable(throwable);
       }
     } else {

@@ -7,7 +7,6 @@ import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.netty40.client.NettyHttpClientDecorator.DECORATE;
 import static datadog.trace.instrumentation.netty40.client.NettyResponseInjectAdapter.SETTER;
 
-import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.netty40.AttributeKeys;
@@ -28,11 +27,11 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       return;
     }
 
-    TraceScope parentScope = null;
-    final TraceScope.Continuation continuation =
-        ctx.channel().attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY).getAndRemove();
-    if (continuation != null) {
-      parentScope = continuation.activate();
+    AgentScope parentScope = null;
+    final AgentSpan parentSpan =
+        ctx.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY).getAndRemove();
+    if (parentSpan != null) {
+      parentScope = activateSpan(parentSpan, false);
     }
 
     final HttpRequest request = (HttpRequest) msg;

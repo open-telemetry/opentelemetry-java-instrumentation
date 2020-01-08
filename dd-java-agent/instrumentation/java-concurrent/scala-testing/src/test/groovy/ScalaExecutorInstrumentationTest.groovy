@@ -13,8 +13,6 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
-
 /**
  * Test executor instrumentation for Scala specific classes.
  * This is to large extent a copy of ExecutorInstrumentationTest.
@@ -43,11 +41,14 @@ class ScalaExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        activeScope().setAsyncPropagation(true)
         // this child will have a span
-        m(pool, new ScalaAsyncChild())
+        def child1 = new ScalaAsyncChild()
         // this child won't
-        m(pool, new ScalaAsyncChild(false, false))
+        def child2 = new ScalaAsyncChild(false, false)
+        m(pool, child1)
+        m(pool, child2)
+        child1.waitForCompletion()
+        child2.waitForCompletion()
       }
     }.run()
 
@@ -91,12 +92,11 @@ class ScalaExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        activeScope().setAsyncPropagation(true)
         try {
           for (int i = 0; i < 20; ++i) {
             // Our current instrumentation instrumentation does not behave very well
             // if we try to reuse Callable/Runnable. Namely we would be getting 'orphaned'
-            // child traces sometimes since state can contain only one continuation - and
+            // child traces sometimes since state can contain only one parent span - and
             // we do not really have a good way for attributing work to correct parent span
             // if we reuse Callable/Runnable.
             // Solution for now is to never reuse a Callable/Runnable.
@@ -124,7 +124,6 @@ class ScalaExecutorInstrumentationTest extends AgentTestRunner {
     TEST_WRITER.waitForTraces(1)
 
     expect:
-    // FIXME: we should improve this test to make sure continuations are actually closed
     TEST_WRITER.size() == 1
 
     where:

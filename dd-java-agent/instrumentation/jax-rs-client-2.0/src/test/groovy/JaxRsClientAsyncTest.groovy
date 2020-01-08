@@ -12,6 +12,7 @@ import javax.ws.rs.client.InvocationCallback
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import java.util.concurrent.CountDownLatch
 
 abstract class JaxRsClientAsyncTest extends HttpClientTest<JaxRsClientDecorator> {
 
@@ -24,17 +25,22 @@ abstract class JaxRsClientAsyncTest extends HttpClientTest<JaxRsClientDecorator>
     AsyncInvoker request = builder.async()
 
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+    def latch = new CountDownLatch(1)
     Response response = request.method(method, (Entity) body, new InvocationCallback<Response>() {
       @Override
       void completed(Response s) {
         callback?.call()
+        latch.countDown()
       }
 
       @Override
       void failed(Throwable throwable) {
+        latch.countDown()
       }
     }).get()
 
+    // need to wait for callback to complete in case test is expecting span from it
+    latch.await()
     return response.status
   }
 

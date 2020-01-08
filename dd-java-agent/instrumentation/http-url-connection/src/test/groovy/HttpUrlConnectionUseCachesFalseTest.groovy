@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
 
 class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 
@@ -13,9 +13,9 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnecti
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = false
-      def parentSpan = activeScope()
+      def parentSpan = activeSpan()
       def stream = connection.inputStream
-      assert activeScope() == parentSpan
+      assert activeSpan() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()

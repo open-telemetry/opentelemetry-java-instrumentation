@@ -12,7 +12,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,14 +68,14 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   public static class RunnableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static TraceScope enter(@Advice.This final Runnable thiz) {
+    public static AgentScope enter(@Advice.This final Runnable thiz) {
       final ContextStore<Runnable, State> contextStore =
           InstrumentationContext.get(Runnable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final TraceScope scope) {
+    public static void exit(@Advice.Enter final AgentScope scope) {
       AdviceUtils.endTaskScope(scope);
     }
   }
@@ -83,14 +83,14 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static TraceScope enter(@Advice.This final Callable thiz) {
+    public static AgentScope enter(@Advice.This final Callable thiz) {
       final ContextStore<Callable, State> contextStore =
           InstrumentationContext.get(Callable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final TraceScope scope) {
+    public static void exit(@Advice.Enter final AgentScope scope) {
       AdviceUtils.endTaskScope(scope);
     }
   }

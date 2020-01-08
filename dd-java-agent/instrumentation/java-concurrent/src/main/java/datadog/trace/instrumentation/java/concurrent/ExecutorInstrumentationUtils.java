@@ -1,13 +1,13 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,9 +26,8 @@ public class ExecutorInstrumentationUtils {
    * @return true iff given task object should be wrapped
    */
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
-    final TraceScope scope = activeScope();
-    return (scope != null
-        && scope.isAsyncPropagating()
+    final AgentSpan span = activeSpan();
+    return (span != null
         && task != null
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
   }
@@ -38,19 +37,14 @@ public class ExecutorInstrumentationUtils {
    *
    * @param contextStore context storage
    * @param task task instance
-   * @param scope current scope
+   * @param span current span
    * @param <T> task class type
    * @return new state
    */
   public static <T> State setupState(
-      final ContextStore<T, State> contextStore, final T task, final TraceScope scope) {
+      final ContextStore<T, State> contextStore, final T task, final AgentSpan span) {
     final State state = contextStore.putIfAbsent(task, State.FACTORY);
-    final TraceScope.Continuation continuation = scope.capture();
-    if (state.setContinuation(continuation)) {
-      log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
-    } else {
-      continuation.close(false);
-    }
+    state.setParentSpan(span);
     return state;
   }
 
@@ -65,14 +59,14 @@ public class ExecutorInstrumentationUtils {
       final Executor executor, final State state, final Throwable throwable) {
     if (null != state && null != throwable) {
       /*
-      Note: this may potentially close somebody else's continuation if we didn't set it
+      Note: this may potentially clear somebody else's parent span if we didn't set it
       up in setupState because it was already present before us. This should be safe but
       may lead to non-attributed async work in some very rare cases.
-      Alternative is to not close continuation here if we did not set it up in setupState
+      Alternative is to not clear parent span here if we did not set it up in setupState
       but this may potentially lead to memory leaks if callers do not properly handle
       exceptions.
        */
-      state.closeContinuation();
+      state.clearParentSpan();
     }
   }
 

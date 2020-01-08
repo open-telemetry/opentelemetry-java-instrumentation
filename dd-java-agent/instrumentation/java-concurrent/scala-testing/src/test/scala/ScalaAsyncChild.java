@@ -1,11 +1,13 @@
 import datadog.trace.api.Trace;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import scala.concurrent.forkjoin.ForkJoinTask;
 
 public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
+  private final CountDownLatch latch = new CountDownLatch(1);
 
   public ScalaAsyncChild() {
     this(true, false);
@@ -45,6 +47,10 @@ public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable 
     return null;
   }
 
+  public void waitForCompletion() throws InterruptedException {
+    latch.await();
+  }
+
   private void runImpl() {
     while (blockThread.get()) {
       // busy-wait to block thread
@@ -52,6 +58,7 @@ public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable 
     if (doTraceableWork) {
       asyncChild();
     }
+    latch.countDown();
   }
 
   @Trace(operationName = "asyncChild", resourceName = "asyncChild")

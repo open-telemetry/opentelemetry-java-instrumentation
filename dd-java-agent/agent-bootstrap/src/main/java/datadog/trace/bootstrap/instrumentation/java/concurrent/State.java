@@ -1,7 +1,7 @@
 package datadog.trace.bootstrap.instrumentation.java.concurrent;
 
 import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,33 +16,27 @@ public class State {
         }
       };
 
-  private final AtomicReference<TraceScope.Continuation> continuationRef =
-      new AtomicReference<>(null);
+  private final AtomicReference<AgentSpan> parentSpanRef = new AtomicReference<>(null);
 
   private State() {}
 
-  public boolean setContinuation(final TraceScope.Continuation continuation) {
-    final boolean result = continuationRef.compareAndSet(null, continuation);
+  public boolean setParentSpan(final AgentSpan parentSpan) {
+    final boolean result = parentSpanRef.compareAndSet(null, parentSpan);
     if (!result) {
       log.debug(
-          "Failed to set continuation because another continuation is already set {}: new: {}, old: {}",
+          "Failed to set parent span because another parent span is already set {}: new: {}, old: {}",
           this,
-          continuation,
-          continuationRef.get());
+          parentSpan,
+          parentSpanRef.get());
     }
     return result;
   }
 
-  public void closeContinuation() {
-    final TraceScope.Continuation continuation = continuationRef.getAndSet(null);
-    if (continuation != null) {
-      // We have opened this continuation, we shall not close parent scope when we close it,
-      // otherwise owners of that scope will get confused.
-      continuation.close(false);
-    }
+  public void clearParentSpan() {
+    parentSpanRef.set(null);
   }
 
-  public TraceScope.Continuation getAndResetContinuation() {
-    return continuationRef.getAndSet(null);
+  public AgentSpan getAndResetParentSpan() {
+    return parentSpanRef.getAndSet(null);
   }
 }

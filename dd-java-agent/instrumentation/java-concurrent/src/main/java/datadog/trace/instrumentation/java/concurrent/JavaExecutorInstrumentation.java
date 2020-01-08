@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -12,7 +12,7 @@ import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -79,7 +79,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final TraceScope scope = activeScope();
+      final AgentSpan span = activeSpan();
       final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -87,7 +87,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         task = newTask;
         final ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(contextStore, newTask, scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, newTask, span);
       }
       return null;
     }
@@ -107,11 +107,11 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
-      final TraceScope scope = activeScope();
+      final AgentSpan span = activeSpan();
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         final ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(contextStore, task, scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, task, span);
       }
       return null;
     }
@@ -131,7 +131,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final TraceScope scope = activeScope();
+      final AgentSpan span = activeSpan();
       final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -139,7 +139,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         task = newTask;
         final ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(contextStore, newTask, scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, newTask, span);
       }
       return null;
     }
@@ -165,7 +165,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
-      final TraceScope scope = activeScope();
+      final AgentSpan span = activeSpan();
       final Callable newTask = CallableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -173,7 +173,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         task = newTask;
         final ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
-        return ExecutorInstrumentationUtils.setupState(contextStore, newTask, scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, newTask, span);
       }
       return null;
     }
@@ -199,8 +199,8 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static Collection<?> submitEnter(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
-      final TraceScope scope = activeScope();
-      if (scope != null && scope.isAsyncPropagating() && tasks != null) {
+      final AgentSpan span = activeSpan();
+      if (span != null && tasks != null) {
         final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (final Callable<?> task : tasks) {
           if (task != null) {
@@ -211,7 +211,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
               wrappedTasks.add(newTask);
               final ContextStore<Callable, State> contextStore =
                   InstrumentationContext.get(Callable.class, State.class);
-              ExecutorInstrumentationUtils.setupState(contextStore, newTask, scope);
+              ExecutorInstrumentationUtils.setupState(contextStore, newTask, span);
             }
           }
         }
@@ -250,7 +250,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
               but this may potentially lead to memory leaks if callers do not properly handle
               exceptions.
                */
-              state.closeContinuation();
+              state.clearParentSpan();
             }
           }
         }
