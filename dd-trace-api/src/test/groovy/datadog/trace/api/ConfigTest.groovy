@@ -22,8 +22,8 @@ class ConfigTest extends DDSpecification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
-  private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
+  private static final TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
+  private static final WRITER_TYPE_ENV = "DD_WRITER_TYPE"
 
   def "verify defaults"() {
     when:
@@ -101,8 +101,8 @@ class ConfigTest extends DDSpecification {
 
   def "specify overrides via env vars"() {
     setup:
-    environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
-    environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
+    environmentVariables.set(TRACE_ENABLED_ENV, "false")
+    environmentVariables.set(WRITER_TYPE_ENV, "LoggingWriter")
 
     when:
     def config = new Config()
@@ -114,7 +114,7 @@ class ConfigTest extends DDSpecification {
 
   def "sys props override env vars"() {
     setup:
-    environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
+    environmentVariables.set(WRITER_TYPE_ENV, "LoggingWriter")
 
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
 

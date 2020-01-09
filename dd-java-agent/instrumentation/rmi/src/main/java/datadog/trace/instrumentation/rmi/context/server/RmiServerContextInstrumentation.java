@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rmi.context.server;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.rmi.context.ContextPropagator.DD_CONTEXT_CALL_ID;
+import static datadog.trace.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -62,7 +62,7 @@ public class RmiServerContextInstrumentation extends Instrumenter.Default {
       // ObjID and ObjectEndpoint objects
       // ObjectEndpoint#toString() only returns this.objId.toString() value which is exactly
       // what we're interested in here.
-      if (!DD_CONTEXT_CALL_ID.toString().equals(oe.toString())) {
+      if (!CONTEXT_CALL_ID.toString().equals(oe.toString())) {
         return;
       }
       result = ContextDispatcher.newDispatcherTarget();

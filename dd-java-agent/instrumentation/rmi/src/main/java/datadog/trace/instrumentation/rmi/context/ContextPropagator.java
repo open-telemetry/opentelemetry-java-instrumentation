@@ -19,7 +19,7 @@ public class ContextPropagator {
   private static final ObjID REGISTRY_ID = new ObjID(ObjID.REGISTRY_ID);
 
   // RMI object id used to identify agent instrumentation
-  public static final ObjID DD_CONTEXT_CALL_ID =
+  public static final ObjID CONTEXT_CALL_ID =
       new ObjID("io.opentelemetry.auto.v1.context_call".hashCode());
 
   // Operation id used for checking context propagation is possible
@@ -71,7 +71,7 @@ public class ContextPropagator {
 
       final ObjectOutput out = shareContextCall.getOutputStream();
 
-      DD_CONTEXT_CALL_ID.write(out);
+      CONTEXT_CALL_ID.write(out);
 
       // call header, part 2 (read by Dispatcher)
       out.writeInt(operationId); // in normal call this is method number (operation index)

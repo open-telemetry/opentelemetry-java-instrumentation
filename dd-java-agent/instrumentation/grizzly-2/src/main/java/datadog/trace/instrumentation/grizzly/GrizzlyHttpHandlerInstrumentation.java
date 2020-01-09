@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.grizzly;
 
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.agent.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
@@ -67,7 +67,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope methodEnter(@Advice.Argument(0) final Request request) {
-      if (request.getAttribute(DD_SPAN_ATTRIBUTE) != null) {
+      if (request.getAttribute(SPAN_ATTRIBUTE) != null) {
         return null;
       }
 
@@ -79,7 +79,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
       final AgentScope scope = activateSpan(span, false);
 
-      request.setAttribute(DD_SPAN_ATTRIBUTE, span);
+      request.setAttribute(SPAN_ATTRIBUTE, span);
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       return scope;
@@ -107,9 +107,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onAfterService(final Request request) {
-      final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
+      final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
       if (spanAttr instanceof AgentSpan) {
-        request.removeAttribute(DD_SPAN_ATTRIBUTE);
+        request.removeAttribute(SPAN_ATTRIBUTE);
         final AgentSpan span = (AgentSpan) spanAttr;
         DECORATE.onResponse(span, request.getResponse());
         DECORATE.beforeFinish(span);

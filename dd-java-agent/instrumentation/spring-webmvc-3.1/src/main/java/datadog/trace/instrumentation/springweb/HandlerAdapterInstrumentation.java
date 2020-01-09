@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springweb;
 
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.agent.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
@@ -69,7 +69,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
-      final Object parentSpan = request.getAttribute(DD_SPAN_ATTRIBUTE);
+      final Object parentSpan = request.getAttribute(SPAN_ATTRIBUTE);
       if (parentSpan instanceof AgentSpan) {
         DECORATE.onRequest((AgentSpan) parentSpan, request);
       }

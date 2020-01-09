@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jetty8;
 
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.agent.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
@@ -22,7 +22,7 @@ public class JettyHandlerAdvice {
   public static AgentScope onEnter(
       @Advice.This final Object source, @Advice.Argument(2) final HttpServletRequest req) {
 
-    if (req.getAttribute(DD_SPAN_ATTRIBUTE) != null) {
+    if (req.getAttribute(SPAN_ATTRIBUTE) != null) {
       // Request already being traced elsewhere.
       return null;
     }
@@ -39,7 +39,7 @@ public class JettyHandlerAdvice {
     span.setTag(DDTags.RESOURCE_NAME, resourceName);
 
     final AgentScope scope = activateSpan(span, false);
-    req.setAttribute(DD_SPAN_ATTRIBUTE, span);
+    req.setAttribute(SPAN_ATTRIBUTE, span);
     return scope;
   }
 

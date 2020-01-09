@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet3;
 
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.agent.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.servlet3.HttpServletRequestInjectAdapter.SETTER;
@@ -64,9 +64,9 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
       }
 
       final ServletRequest request = context.getRequest();
-      final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
+      final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
       if (spanAttr instanceof AgentSpan) {
-        request.removeAttribute(DD_SPAN_ATTRIBUTE);
+        request.removeAttribute(SPAN_ATTRIBUTE);
         final AgentSpan span = (AgentSpan) spanAttr;
         // Override propagation headers by injecting attributes from the current span
         // into the new request

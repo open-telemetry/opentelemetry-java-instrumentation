@@ -36,7 +36,7 @@ import sun.rmi.transport.Connection;
  * <p>As well as optional baggage items
  *
  * <p>On the other side of the communication a special Dispatcher is created when a message with
- * DD_CONTEXT_CALL_ID is received.
+ * CONTEXT_CALL_ID is received.
  *
  * <p>If the server is not instrumented first call will gracefully fail just like any other unknown
  * call. With small caveat that this first call needs to *not* have any parameters, since those will

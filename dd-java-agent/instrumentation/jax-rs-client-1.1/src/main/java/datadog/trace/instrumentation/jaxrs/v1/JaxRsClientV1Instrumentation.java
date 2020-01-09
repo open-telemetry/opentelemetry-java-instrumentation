@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jaxrs.v1;
 
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.agent.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
@@ -67,12 +67,12 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
-      final boolean isRootClientHandler = null == request.getProperties().get(DD_SPAN_ATTRIBUTE);
+      final boolean isRootClientHandler = null == request.getProperties().get(SPAN_ATTRIBUTE);
       if (isRootClientHandler) {
         final AgentSpan span = startSpan("jax-rs.client.call");
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
-        request.getProperties().put(DD_SPAN_ATTRIBUTE, span);
+        request.getProperties().put(SPAN_ATTRIBUTE, span);
 
         propagate().inject(span, request.getHeaders(), SETTER);
         return activateSpan(span, true);

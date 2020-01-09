@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet2;
 
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.agent.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
@@ -29,7 +29,7 @@ public class Servlet2Advice {
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
           ServletResponse response) {
     final boolean hasActiveTrace = activeSpan() != null;
-    final boolean hasServletTrace = request.getAttribute(DD_SPAN_ATTRIBUTE) instanceof AgentSpan;
+    final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof AgentSpan;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
     if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
@@ -52,7 +52,7 @@ public class Servlet2Advice {
     DECORATE.onConnection(span, httpServletRequest);
     DECORATE.onRequest(span, httpServletRequest);
 
-    httpServletRequest.setAttribute(DD_SPAN_ATTRIBUTE, span);
+    httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
 
     return activateSpan(span, true);
   }
@@ -64,7 +64,7 @@ public class Servlet2Advice {
       @Advice.Enter final AgentScope scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
-    final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
+    final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
     if (spanAttr instanceof AgentSpan && request instanceof HttpServletRequest) {
       final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
       if (principal != null) {

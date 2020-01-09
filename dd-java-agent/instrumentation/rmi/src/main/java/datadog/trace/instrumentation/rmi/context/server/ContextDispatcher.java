@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.rmi.context.server;
 import static datadog.trace.bootstrap.instrumentation.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.rmi.context.ContextPayload.GETTER;
-import static datadog.trace.instrumentation.rmi.context.ContextPropagator.DD_CONTEXT_CALL_ID;
+import static datadog.trace.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static datadog.trace.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 
 import datadog.trace.instrumentation.api.AgentSpan;
@@ -31,7 +31,7 @@ public class ContextDispatcher implements Dispatcher {
   private static final NoopRemote NOOP_REMOTE = new NoopRemote();
 
   public static Target newDispatcherTarget() {
-    return new Target(NOOP_REMOTE, CONTEXT_DISPATCHER, NOOP_REMOTE, DD_CONTEXT_CALL_ID, false);
+    return new Target(NOOP_REMOTE, CONTEXT_DISPATCHER, NOOP_REMOTE, CONTEXT_CALL_ID, false);
   }
 
   @Override
