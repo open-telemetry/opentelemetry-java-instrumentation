@@ -38,27 +38,4 @@ class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
   boolean testRedirects() {
     false
   }
-
-  def "request to agent not traced"() {
-    when:
-    def status = doRequest(method, url, ["Datadog-Meta-Lang": "java"])
-
-    then:
-    status == 200
-    assertTraces(1) {
-      server.distributedRequestTrace(it, 0)
-    }
-
-    where:
-    path                                | tagQueryString
-    "/success"                          | false
-    "/success"                          | true
-    "/success?with=params"              | false
-    "/success?with=params"              | true
-    "/success#with+fragment"            | true
-    "/success?with=params#and=fragment" | true
-
-    method = "GET"
-    url = server.address.resolve(path)
-  }
 }
