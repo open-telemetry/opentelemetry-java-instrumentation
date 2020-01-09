@@ -640,4 +640,49 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     "normal"  | "compileError.jsp"                     | "compileError_jsp"            | ""
     "forward" | "forwards/forwardWithCompileError.jsp" | "forwardWithCompileError_jsp" | "forwards."
   }
+
+  def "direct static file reference"() {
+    setup:
+    String reqUrl = baseUrl + "/$staticFile"
+    def req = new Request.Builder().url(new URL(reqUrl)).get().build()
+
+    when:
+    Response res = client.newCall(req).execute()
+
+    then:
+    res.code() == HttpStatus.OK_200
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          parent()
+          serviceName jspWebappContext
+          operationName "servlet.request"
+          // FIXME: this is not a great resource name for serving static content.
+          resourceName "GET /$jspWebappContext/$staticFile"
+          spanType DDSpanTypes.HTTP_SERVER
+          errored false
+          tags {
+            "$Tags.COMPONENT" "java-web-servlet"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.PEER_HOSTNAME" "127.0.0.1"
+            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+            "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$staticFile"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" 200
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
+            "servlet.context" "/$jspWebappContext"
+            "servlet.path" "/$staticFile"
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    cleanup:
+    res.close()
+
+    where:
+    staticFile = "common/hello.html"
+  }
 }
