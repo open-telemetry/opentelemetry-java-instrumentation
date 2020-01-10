@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class DataSourceInstrumentation extends Instrumenter.Default {
   public DataSourceInstrumentation() {
-    super("jdbc-beta", "jdbc-datasource");
+    super("jdbc-datasource");
   }
 
   @Override

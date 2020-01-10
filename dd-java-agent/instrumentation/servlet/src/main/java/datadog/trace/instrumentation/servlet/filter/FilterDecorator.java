@@ -7,7 +7,7 @@ public class FilterDecorator extends BaseDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"servlet-beta", "servlet-filter"};
+    return new String[] {"servlet-filter"};
   }
 
   @Override

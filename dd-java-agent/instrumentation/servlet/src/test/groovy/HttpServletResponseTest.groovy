@@ -1,18 +1,16 @@
 import datadog.trace.agent.test.AgentTestRunner
 import groovy.servlet.AbstractHttpServlet
+import spock.lang.Subject
+
 import javax.servlet.ServletOutputStream
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import spock.lang.Subject
 
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class HttpServletResponseTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.servlet-beta.enabled", "true")
-  }
 
   @Subject
   def response = new TestResponse()

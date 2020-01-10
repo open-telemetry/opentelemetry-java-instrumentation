@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import groovy.servlet.AbstractHttpServlet
+
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -8,7 +9,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class HttpServletTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.servlet-beta.enabled", "true")
+    System.setProperty("dd.integration.servlet-service.enabled", "true")
   }
 
   def req = Mock(HttpServletRequest) {

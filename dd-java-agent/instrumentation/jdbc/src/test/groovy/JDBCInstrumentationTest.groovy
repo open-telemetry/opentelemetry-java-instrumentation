@@ -5,7 +5,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
-import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -29,7 +28,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class JDBCInstrumentationTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.jdbc-beta.enabled", "true")
+    System.setProperty("dd.integration.jdbc-datasource.enabled", "true")
   }
 
   @Shared

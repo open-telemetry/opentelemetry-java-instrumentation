@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.servlet.dispatcher;
 
+import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
@@ -31,12 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class RequestDispatcherInstrumentation extends Instrumenter.Default {
   public RequestDispatcherInstrumentation() {
-    super("servlet-beta", "servlet-dispatcher");
-  }
-
-  @Override
-  public boolean defaultEnabled() {
-    return false;
+    super("servlet", "servlet-dispatcher");
   }
 
   @Override
@@ -91,15 +87,24 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       // In case we lose context, inject trace into to the request.
       propagate().inject(span, request, SETTER);
 
+      // temporarily remove from request to avoid spring resource name bubbling up:
+      request.removeAttribute(DD_SPAN_ATTRIBUTE);
+
       return activateSpan(span, true).setAsyncPropagation(true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope,
+        @Advice.Argument(0) final ServletRequest request,
+        @Advice.Thrown final Throwable throwable) {
       if (scope == null) {
         return;
       }
+
+      // now add it back...
+      request.setAttribute(DD_SPAN_ATTRIBUTE, scope.span());
+
       DECORATE.onError(scope, throwable);
       DECORATE.beforeFinish(scope);
       scope.close();
