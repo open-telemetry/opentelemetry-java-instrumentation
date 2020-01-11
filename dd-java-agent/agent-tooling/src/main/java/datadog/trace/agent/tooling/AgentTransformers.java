@@ -6,16 +6,16 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
 
-public class DDTransformers {
+public class AgentTransformers {
 
   private static final AgentBuilder.Transformer CONSTANT_ADJUSTER =
       new AgentBuilder.Transformer() {
         @Override
         public DynamicType.Builder<?> transform(
-            DynamicType.Builder<?> builder,
-            TypeDescription typeDescription,
-            ClassLoader classLoader,
-            JavaModule javaModule) {
+          final DynamicType.Builder<?> builder,
+          final TypeDescription typeDescription,
+          final ClassLoader classLoader,
+          final JavaModule javaModule) {
           return builder.visit(TypeConstantAdjustment.INSTANCE);
         }
       };

@@ -75,7 +75,7 @@ public interface Instrumenter {
                           + getClass().getName()))
               .and(new MuzzleMatcher())
               .and(new PostMatchHook())
-              .transform(DDTransformers.defaultTransformers());
+              .transform(AgentTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
       agentBuilder = contextProvider.instrumentationTransformer(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
