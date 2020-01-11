@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
@@ -30,9 +30,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "hsqldb"
+            "$MoreTags.RESOURCE_NAME" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -59,9 +59,9 @@ class SpringJpaTest extends AgentTestRunner {
         trace(0, 1) {
           span(0) {
             tags {
-              "$DDTags.SERVICE_NAME" "hsqldb"
-              "$DDTags.RESOURCE_NAME" "call next value for hibernate_sequence"
-              "$DDTags.SPAN_TYPE" "sql"
+              "$MoreTags.SERVICE_NAME" "hsqldb"
+              "$MoreTags.RESOURCE_NAME" "call next value for hibernate_sequence"
+              "$MoreTags.SPAN_TYPE" "sql"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" "hsqldb"
@@ -76,9 +76,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(extraTrace ? 1 : 0, 1) {
         span(0) {
           tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "hsqldb"
+            "$MoreTags.RESOURCE_NAME" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -102,9 +102,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "hsqldb"
+            "$MoreTags.RESOURCE_NAME" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -118,9 +118,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" "update Customer set firstName=?, lastName=? where id=?"
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "hsqldb"
+            "$MoreTags.RESOURCE_NAME" "update Customer set firstName=?, lastName=? where id=?"
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -144,9 +144,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "hsqldb"
+            "$MoreTags.RESOURCE_NAME" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -168,9 +168,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "hsqldb"
+            "$MoreTags.RESOURCE_NAME" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -184,9 +184,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" "delete from Customer where id=?"
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "hsqldb"
+            "$MoreTags.RESOURCE_NAME" "delete from Customer where id=?"
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"

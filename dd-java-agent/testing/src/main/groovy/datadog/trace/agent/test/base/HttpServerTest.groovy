@@ -5,8 +5,8 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
+import datadog.trace.api.MoreTags
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 import okhttp3.HttpUrl
@@ -382,7 +382,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         parent()
       }
       tags {
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
@@ -392,11 +392,11 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         if (endpoint.query) {
-          "$DDTags.HTTP_QUERY" endpoint.query
+          "$MoreTags.HTTP_QUERY" endpoint.query
         }
         // OkHttp never sends the fragment in the request.
 //        if (endpoint.fragment) {
-//          "$DDTags.HTTP_FRAGMENT" endpoint.fragment
+//          "$MoreTags.HTTP_FRAGMENT" endpoint.fragment
 //        }
       }
     }

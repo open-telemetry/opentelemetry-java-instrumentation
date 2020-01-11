@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import example.GreeterGrpc
 import example.Helloworld
@@ -62,8 +62,8 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
@@ -74,7 +74,7 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "message.type" "example.Helloworld\$Response"
@@ -85,8 +85,8 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
@@ -97,7 +97,7 @@ class GrpcTest extends AgentTestRunner {
           childOf span(2)
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
@@ -142,8 +142,8 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "${status.code.name()}"
@@ -155,8 +155,8 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "${status.code.name()}"
@@ -171,7 +171,7 @@ class GrpcTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
@@ -222,8 +222,8 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "UNKNOWN"
@@ -234,8 +234,8 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "example.Greeter/SayHello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             errorTags error.class, error.message
@@ -246,7 +246,7 @@ class GrpcTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"

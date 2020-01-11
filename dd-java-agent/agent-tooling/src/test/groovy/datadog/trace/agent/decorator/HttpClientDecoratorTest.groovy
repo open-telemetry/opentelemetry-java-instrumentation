@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator
 
 import datadog.trace.api.Config
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.AgentSpan
 import datadog.trace.instrumentation.api.Tags
 import spock.lang.Shared
@@ -31,7 +31,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setTag(Tags.PEER_HOSTNAME, req.host)
       1 * span.setTag(Tags.PEER_PORT, req.port)
       if (renameService) {
-        1 * span.setTag(DDTags.SERVICE_NAME, req.host)
+        1 * span.setTag(MoreTags.SERVICE_NAME, req.host)
       }
     }
     0 * _
@@ -58,8 +58,8 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setTag(Tags.HTTP_URL, expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
-      1 * span.setTag(DDTags.HTTP_QUERY, expectedQuery)
-      1 * span.setTag(DDTags.HTTP_FRAGMENT, expectedFragment)
+      1 * span.setTag(MoreTags.HTTP_QUERY, expectedQuery)
+      1 * span.setTag(MoreTags.HTTP_FRAGMENT, expectedFragment)
     }
     1 * span.setTag(Tags.HTTP_METHOD, null)
     1 * span.setTag(Tags.PEER_HOSTNAME, null)

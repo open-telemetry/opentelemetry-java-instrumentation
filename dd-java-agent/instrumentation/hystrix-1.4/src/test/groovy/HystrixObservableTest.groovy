@@ -2,7 +2,7 @@ import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import rx.Observable
@@ -66,7 +66,7 @@ class HystrixObservableTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.SPAN_TYPE" null
           }
         }
         span(1) {
@@ -74,8 +74,8 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$1.execute"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$1.execute"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -87,8 +87,8 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "HystrixObservableTest\$1.tracedMethod"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "HystrixObservableTest\$1.tracedMethod"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -168,7 +168,7 @@ class HystrixObservableTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.SPAN_TYPE" null
           }
         }
         span(1) {
@@ -176,8 +176,8 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.execute"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.execute"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -190,8 +190,8 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.fallback"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.fallback"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -273,7 +273,7 @@ class HystrixObservableTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.SPAN_TYPE" null
             errorTags(HystrixRuntimeException, "HystrixObservableTest\$3 failed and no fallback available.")
           }
         }
@@ -282,8 +282,8 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.execute"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.execute"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
@@ -296,8 +296,8 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.fallback"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.fallback"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"

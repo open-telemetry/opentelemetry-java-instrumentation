@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -57,7 +57,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       }
       final AgentSpan span =
           startSpan("view.render")
-              .setTag(DDTags.RESOURCE_NAME, "View " + view.getTemplateName())
+              .setTag(MoreTags.RESOURCE_NAME, "View " + view.getTemplateName())
               .setTag(Tags.COMPONENT, "dropwizard-view")
               .setTag("span.origin.type", obj.getClass().getSimpleName());
       return activateSpan(span, true);

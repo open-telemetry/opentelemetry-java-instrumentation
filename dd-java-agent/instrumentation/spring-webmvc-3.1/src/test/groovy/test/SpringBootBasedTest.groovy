@@ -3,7 +3,7 @@ package test
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
 import datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator
@@ -66,7 +66,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       operationName "response.render"
       errored false
       tags {
-        "$DDTags.SPAN_TYPE" "web"
+        "$MoreTags.SPAN_TYPE" "web"
         "$Tags.COMPONENT" "spring-webmvc"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "view.type" RedirectView.name
@@ -81,8 +81,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$DDTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         if (endpoint == EXCEPTION) {
@@ -104,8 +104,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
         parent()
       }
       tags {
-        "$DDTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
@@ -122,7 +122,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$DDTags.HTTP_QUERY" endpoint.query
+          "$MoreTags.HTTP_QUERY" endpoint.query
         }
       }
     }

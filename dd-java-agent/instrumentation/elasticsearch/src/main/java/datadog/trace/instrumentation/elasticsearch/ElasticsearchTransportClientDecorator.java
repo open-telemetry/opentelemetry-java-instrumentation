@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.elasticsearch;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 
 public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorator {
@@ -46,7 +46,7 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
 
   public AgentSpan onRequest(final AgentSpan span, final Class action, final Class request) {
     if (action != null) {
-      span.setTag(DDTags.RESOURCE_NAME, action.getSimpleName());
+      span.setTag(MoreTags.RESOURCE_NAME, action.getSimpleName());
       span.setTag("elasticsearch.action", action.getSimpleName());
     }
     if (request != null) {

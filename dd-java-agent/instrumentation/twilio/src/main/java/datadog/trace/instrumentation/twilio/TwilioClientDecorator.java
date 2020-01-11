@@ -5,7 +5,7 @@ import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +47,7 @@ public class TwilioClientDecorator extends ClientDecorator {
     final String simpleClassName =
         serviceExecutor.getClass().getCanonicalName().replaceFirst("^com\\.twilio\\.rest\\.", "");
 
-    span.setTag(DDTags.RESOURCE_NAME, String.format("%s.%s", simpleClassName, methodName));
+    span.setTag(MoreTags.RESOURCE_NAME, String.format("%s.%s", simpleClassName, methodName));
 
     return span;
   }

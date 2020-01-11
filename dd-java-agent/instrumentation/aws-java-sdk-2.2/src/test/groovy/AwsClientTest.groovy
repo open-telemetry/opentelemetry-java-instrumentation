@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.api.SpanTypes
 import datadog.trace.instrumentation.api.Tags
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -79,9 +79,9 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$DDTags.SERVICE_NAME" "java-aws-sdk"
-            "$DDTags.RESOURCE_NAME" "$service.$operation"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
+            "$MoreTags.RESOURCE_NAME" "$service.$operation"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -111,7 +111,7 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           childOf(span(0))
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -179,7 +179,7 @@ class AwsClientTest extends AgentTestRunner {
     response != null
 
     // Order is not guaranteed in these traces, so reorder them if needed to put aws trace first
-    if (TEST_WRITER[0][0].attributes[DDTags.SERVICE_NAME].stringValue != "java-aws-sdk") {
+    if (TEST_WRITER[0][0].attributes[MoreTags.SERVICE_NAME].stringValue != "java-aws-sdk") {
       def tmp = TEST_WRITER[0]
       TEST_WRITER[0] = TEST_WRITER[1]
       TEST_WRITER[1] = tmp
@@ -192,9 +192,9 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$DDTags.SERVICE_NAME" "java-aws-sdk"
-            "$DDTags.RESOURCE_NAME" "$service.$operation"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
+            "$MoreTags.RESOURCE_NAME" "$service.$operation"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -227,7 +227,7 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "netty-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -309,9 +309,9 @@ class AwsClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$DDTags.SERVICE_NAME" "java-aws-sdk"
-            "$DDTags.RESOURCE_NAME" "S3.GetObject"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
+            "$MoreTags.RESOURCE_NAME" "S3.GetObject"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -331,7 +331,7 @@ class AwsClientTest extends AgentTestRunner {
             errored true
             childOf(span(0))
             tags {
-              "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+              "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.PEER_HOSTNAME" "localhost"

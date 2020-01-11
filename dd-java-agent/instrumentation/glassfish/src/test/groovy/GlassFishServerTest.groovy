@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
 import org.apache.catalina.servlets.DefaultServlet
@@ -93,7 +93,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
         parent()
       }
       tags {
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
@@ -111,7 +111,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$DDTags.HTTP_QUERY" endpoint.query
+          "$MoreTags.HTTP_QUERY" endpoint.query
         }
       }
     }

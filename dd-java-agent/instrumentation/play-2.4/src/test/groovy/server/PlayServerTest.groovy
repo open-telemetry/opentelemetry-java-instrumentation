@@ -3,7 +3,7 @@ package server
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.play24.PlayHttpServerDecorator
@@ -86,7 +86,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
@@ -97,7 +97,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
           errorTags(Exception, EXCEPTION.body)
         }
         if (endpoint.query) {
-          "$DDTags.HTTP_QUERY" endpoint.query
+          "$MoreTags.HTTP_QUERY" endpoint.query
         }
       }
     }

@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
@@ -65,7 +65,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
         span = startSpan("rmi.request", context);
       }
 
-      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
+      span.setTag(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
           .setTag("span.origin.type", thiz.getClass().getCanonicalName());
 
       DECORATE.afterStart(span);

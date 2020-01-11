@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -174,9 +174,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -234,9 +234,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" driver
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" driver
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -286,9 +286,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" driver
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" driver
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -338,9 +338,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" driver
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" driver
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -390,9 +390,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" driver
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" driver
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -445,9 +445,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" driver
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" driver
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -513,9 +513,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" driver
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" driver
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             if (prepareStatement) {
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             } else {
@@ -588,9 +588,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           operationName "database.query"
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" dbType
-            "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" SpanTypes.SQL
+            "$MoreTags.SERVICE_NAME" dbType
+            "$MoreTags.RESOURCE_NAME" query
+            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" dbType
@@ -607,9 +607,9 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             operationName "database.query"
             errored false
             tags {
-              "$DDTags.SERVICE_NAME" dbType
-              "$DDTags.RESOURCE_NAME" query
-              "$DDTags.SPAN_TYPE" SpanTypes.SQL
+              "$MoreTags.SERVICE_NAME" dbType
+              "$MoreTags.RESOURCE_NAME" query
+              "$MoreTags.SPAN_TYPE" SpanTypes.SQL
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" dbType

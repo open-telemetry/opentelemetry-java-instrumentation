@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
 import datadog.trace.agent.decorator.BaseDecorator;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 
 public class HystrixDecorator extends BaseDecorator {
@@ -32,7 +32,7 @@ public class HystrixDecorator extends BaseDecorator {
 
       final String resourceName = groupName + "." + commandName + "." + methodName;
 
-      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+      span.setTag(MoreTags.RESOURCE_NAME, resourceName);
       span.setTag("hystrix.command", commandName);
       span.setTag("hystrix.group", groupName);
       span.setTag("hystrix.circuit-open", circuitOpen);

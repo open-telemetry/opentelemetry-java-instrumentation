@@ -6,7 +6,7 @@ import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.grpc.client.GrpcClientDecorator.DECORATE;
 import static datadog.trace.instrumentation.grpc.client.GrpcInjectAdapter.SETTER;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import io.grpc.CallOptions;
@@ -30,7 +30,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
       final Channel next) {
 
     final AgentSpan span =
-        startSpan("grpc.client").setTag(DDTags.RESOURCE_NAME, method.getFullMethodName());
+        startSpan("grpc.client").setTag(MoreTags.RESOURCE_NAME, method.getFullMethodName());
     try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.afterStart(span);
 

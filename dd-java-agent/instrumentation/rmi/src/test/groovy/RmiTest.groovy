@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import rmi.app.Greeter
 import rmi.app.Server
@@ -43,9 +43,9 @@ class RmiTest extends AgentTestRunner {
           operationName "rmi.invoke"
           childOf span(0)
           tags {
-            "$DDTags.SERVICE_NAME" "rmi"
-            "$DDTags.RESOURCE_NAME" "Greeter.hello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.SERVICE_NAME" "rmi"
+            "$MoreTags.RESOURCE_NAME" "Greeter.hello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
@@ -54,8 +54,8 @@ class RmiTest extends AgentTestRunner {
         span(2) {
           operationName "rmi.request"
           tags {
-            "$DDTags.RESOURCE_NAME" "Server.hello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "Server.hello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
@@ -64,8 +64,8 @@ class RmiTest extends AgentTestRunner {
         span(3) {
           operationName "rmi.request"
           tags {
-            "$DDTags.RESOURCE_NAME" "Server.someMethod"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "Server.someMethod"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
@@ -118,9 +118,9 @@ class RmiTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$DDTags.SERVICE_NAME" "rmi"
-            "$DDTags.RESOURCE_NAME" "Greeter.exceptional"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.SERVICE_NAME" "rmi"
+            "$MoreTags.RESOURCE_NAME" "Greeter.exceptional"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
@@ -131,8 +131,8 @@ class RmiTest extends AgentTestRunner {
           operationName "rmi.request"
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "Server.exceptional"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "Server.exceptional"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
@@ -166,9 +166,9 @@ class RmiTest extends AgentTestRunner {
           operationName "rmi.invoke"
           childOf span(0)
           tags {
-            "$DDTags.SERVICE_NAME" "rmi"
-            "$DDTags.RESOURCE_NAME" "Greeter.hello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.SERVICE_NAME" "rmi"
+            "$MoreTags.RESOURCE_NAME" "Greeter.hello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
@@ -178,8 +178,8 @@ class RmiTest extends AgentTestRunner {
           childOf span(1)
           operationName "rmi.request"
           tags {
-            "$DDTags.RESOURCE_NAME" "ServerLegacy.hello"
-            "$DDTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RESOURCE_NAME" "ServerLegacy.hello"
+            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "span.origin.type" server.class.canonicalName

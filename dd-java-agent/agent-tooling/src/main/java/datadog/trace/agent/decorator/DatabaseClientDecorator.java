@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator;
 
 import datadog.trace.api.Config;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 
@@ -35,7 +35,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
       span.setTag(Tags.DB_INSTANCE, instanceName);
 
       if (instanceName != null && Config.get().isDbClientSplitByInstance()) {
-        span.setTag(DDTags.SERVICE_NAME, instanceName);
+        span.setTag(MoreTags.SERVICE_NAME, instanceName);
       }
     }
     return span;

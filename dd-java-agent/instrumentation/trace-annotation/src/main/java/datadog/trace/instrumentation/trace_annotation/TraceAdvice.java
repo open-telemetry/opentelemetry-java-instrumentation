@@ -4,7 +4,7 @@ import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.trace_annotation.TraceDecorator.DECORATE;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.api.Trace;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
@@ -28,7 +28,7 @@ public class TraceAdvice {
     if (resourceName == null || resourceName.isEmpty()) {
       resourceName = DECORATE.spanNameForMethod(method);
     }
-    span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
     DECORATE.afterStart(span);
 
     return activateSpan(span, true);

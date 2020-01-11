@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator
 
 import datadog.trace.api.Config
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.AgentSpan
 import datadog.trace.instrumentation.api.Tags
 
@@ -20,12 +20,12 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (serviceName != null) {
-      1 * span.setTag(DDTags.SERVICE_NAME, serviceName)
+      1 * span.setTag(MoreTags.SERVICE_NAME, serviceName)
     }
     1 * span.setTag(Tags.COMPONENT, "test-component")
     1 * span.setTag(Tags.SPAN_KIND, "client")
     1 * span.setTag(Tags.DB_TYPE, "test-db")
-    1 * span.setTag(DDTags.SPAN_TYPE, "test-type")
+    1 * span.setTag(MoreTags.SPAN_TYPE, "test-type")
     0 * _
 
     where:
@@ -46,7 +46,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setTag(Tags.DB_USER, session.user)
       1 * span.setTag(Tags.DB_INSTANCE, session.instance)
       if (renameService && session.instance) {
-        1 * span.setTag(DDTags.SERVICE_NAME, session.instance)
+        1 * span.setTag(MoreTags.SERVICE_NAME, session.instance)
       }
     }
     0 * _

@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 
 class AkkaActorTest extends AgentTestRunner {
@@ -15,7 +15,7 @@ class AkkaActorTest extends AgentTestRunner {
         span(0) {
           operationName "trace.annotation"
           tags {
-            "$DDTags.RESOURCE_NAME" "AkkaActors.$testMethod"
+            "$MoreTags.RESOURCE_NAME" "AkkaActors.$testMethod"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -23,7 +23,7 @@ class AkkaActorTest extends AgentTestRunner {
           operationName "$expectedGreeting, Akka"
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "AkkaActors\$.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "AkkaActors\$.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }

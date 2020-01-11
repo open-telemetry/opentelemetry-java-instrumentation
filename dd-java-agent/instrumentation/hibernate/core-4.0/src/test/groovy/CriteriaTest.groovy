@@ -1,5 +1,5 @@
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import org.hibernate.Criteria
 import org.hibernate.Session
@@ -26,8 +26,8 @@ class CriteriaTest extends AbstractHibernateTest {
           operationName "hibernate.session"
           parent()
           tags {
-            "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
+            "$MoreTags.SERVICE_NAME" "hibernate"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -36,8 +36,8 @@ class CriteriaTest extends AbstractHibernateTest {
           operationName "hibernate.criteria.$methodName"
           childOf span(0)
           tags {
-            "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
+            "$MoreTags.SERVICE_NAME" "hibernate"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -45,9 +45,9 @@ class CriteriaTest extends AbstractHibernateTest {
         span(2) {
           childOf span(1)
           tags {
-            "$DDTags.SERVICE_NAME" "h2"
-            "$DDTags.RESOURCE_NAME" ~/^select /
-            "$DDTags.SPAN_TYPE" "sql"
+            "$MoreTags.SERVICE_NAME" "h2"
+            "$MoreTags.RESOURCE_NAME" ~/^select /
+            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "h2"
@@ -61,8 +61,8 @@ class CriteriaTest extends AbstractHibernateTest {
           operationName "hibernate.transaction.commit"
           childOf span(0)
           tags {
-            "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
+            "$MoreTags.SERVICE_NAME" "hibernate"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }

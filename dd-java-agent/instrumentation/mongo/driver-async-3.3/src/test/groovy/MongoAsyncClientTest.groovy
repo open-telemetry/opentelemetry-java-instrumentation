@@ -10,7 +10,7 @@ import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 import org.bson.BsonDocument
@@ -281,9 +281,9 @@ class MongoAsyncClientTest extends MongoBaseTest {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$DDTags.SERVICE_NAME" "mongo"
-        "$DDTags.RESOURCE_NAME" statementEval
-        "$DDTags.SPAN_TYPE" SpanTypes.MONGO
+        "$MoreTags.SERVICE_NAME" "mongo"
+        "$MoreTags.RESOURCE_NAME" statementEval
+        "$MoreTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
@@ -85,8 +85,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$DDTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.component()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -107,8 +107,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
         parent()
       }
       tags {
-        "$DDTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
@@ -124,7 +124,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$DDTags.HTTP_QUERY" endpoint.query
+          "$MoreTags.HTTP_QUERY" endpoint.query
         }
       }
     }

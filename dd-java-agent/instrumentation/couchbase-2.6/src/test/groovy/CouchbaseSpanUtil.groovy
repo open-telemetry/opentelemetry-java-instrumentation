@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 
@@ -17,9 +17,9 @@ class CouchbaseSpanUtil {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$DDTags.SERVICE_NAME" "couchbase"
-        "$DDTags.RESOURCE_NAME" name
-        "$DDTags.SPAN_TYPE" SpanTypes.COUCHBASE
+        "$MoreTags.SERVICE_NAME" "couchbase"
+        "$MoreTags.RESOURCE_NAME" name
+        "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
 

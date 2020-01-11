@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.ratpack;
 
 import com.google.common.net.HostAndPort;
 import datadog.trace.agent.decorator.HttpServerDecorator;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
     }
 
     final String resourceName = ctx.getRequest().getMethod().getName() + " " + description;
-    span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
 
     return span;
   }

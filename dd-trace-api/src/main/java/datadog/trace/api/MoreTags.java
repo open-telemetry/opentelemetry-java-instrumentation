@@ -1,6 +1,6 @@
 package datadog.trace.api;
 
-public class DDTags {
+public class MoreTags {
   public static final String SPAN_TYPE = "span.type";
   public static final String SERVICE_NAME = "service.name";
   public static final String RESOURCE_NAME = "resource.name";

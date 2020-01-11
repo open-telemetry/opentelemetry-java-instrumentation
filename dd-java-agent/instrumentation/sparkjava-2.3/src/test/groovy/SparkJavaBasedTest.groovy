@@ -2,7 +2,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -49,8 +49,8 @@ class SparkJavaBasedTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$DDTags.RESOURCE_NAME" "GET /param/:param"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.RESOURCE_NAME" "GET /param/:param"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jetty-handler"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"

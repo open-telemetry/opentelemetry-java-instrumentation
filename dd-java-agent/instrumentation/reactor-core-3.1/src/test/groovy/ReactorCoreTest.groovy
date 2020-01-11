@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.AgentSpan
 import datadog.trace.instrumentation.api.Tags
@@ -36,7 +36,7 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           parent()
           tags {
-            "$DDTags.RESOURCE_NAME" "trace-parent"
+            "$MoreTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -51,7 +51,7 @@ class ReactorCoreTest extends AgentTestRunner {
             operationName "addOne"
             childOf(span(1))
             tags {
-              "$DDTags.RESOURCE_NAME" "addOne"
+              "$MoreTags.RESOURCE_NAME" "addOne"
               "$Tags.COMPONENT" "trace"
             }
           }
@@ -88,7 +88,7 @@ class ReactorCoreTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "trace-parent"
+            "$MoreTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
           }
@@ -125,7 +125,7 @@ class ReactorCoreTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "trace-parent"
+            "$MoreTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
           }
@@ -143,7 +143,7 @@ class ReactorCoreTest extends AgentTestRunner {
             operationName "addOne"
             childOf(span(1))
             tags {
-              "$DDTags.RESOURCE_NAME" "addOne"
+              "$MoreTags.RESOURCE_NAME" "addOne"
               "$Tags.COMPONENT" "trace"
             }
           }
@@ -168,7 +168,7 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           parent()
           tags {
-            "$DDTags.RESOURCE_NAME" "trace-parent"
+            "$MoreTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
           }
         }

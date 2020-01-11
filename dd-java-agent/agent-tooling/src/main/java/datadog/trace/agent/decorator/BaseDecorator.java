@@ -1,6 +1,6 @@
 package datadog.trace.agent.decorator;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -24,7 +24,7 @@ public abstract class BaseDecorator {
   public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
     if (spanType() != null) {
-      span.setTag(DDTags.SPAN_TYPE, spanType());
+      span.setTag(MoreTags.SPAN_TYPE, spanType());
     }
     span.setTag(Tags.COMPONENT, component());
     return span;

@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.springwebflux.server;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import net.bytebuddy.asm.Advice;
@@ -46,7 +46,7 @@ public class HandlerAdapterAdvice {
         exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     if (parentSpan != null && bestPattern != null) {
       parentSpan.setTag(
-          DDTags.RESOURCE_NAME,
+          MoreTags.RESOURCE_NAME,
           exchange.getRequest().getMethodValue() + " " + bestPattern.getPatternString());
     }
 

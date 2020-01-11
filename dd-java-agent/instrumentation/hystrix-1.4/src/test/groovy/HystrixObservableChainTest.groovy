@@ -1,6 +1,6 @@
 import com.netflix.hystrix.HystrixObservableCommand
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import rx.Observable
@@ -73,7 +73,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.SPAN_TYPE" null
           }
         }
         span(1) {
@@ -81,8 +81,8 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableChainTest\$1.execute"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableChainTest\$1.execute"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -94,8 +94,8 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -104,8 +104,8 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "OtherGroup.HystrixObservableChainTest\$2.execute"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "OtherGroup.HystrixObservableChainTest\$2.execute"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
@@ -117,8 +117,8 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(3)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
-            "$DDTags.SPAN_TYPE" null
+            "$MoreTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
+            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
           }
         }

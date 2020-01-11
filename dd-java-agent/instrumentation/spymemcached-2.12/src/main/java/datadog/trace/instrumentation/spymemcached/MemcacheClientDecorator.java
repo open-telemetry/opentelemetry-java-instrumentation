@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.spymemcached;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import net.spy.memcached.MemcachedConnection;
 
@@ -56,7 +56,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
     // Lowercase first letter
     chars[0] = Character.toLowerCase(chars[0]);
 
-    span.setTag(DDTags.RESOURCE_NAME, new String(chars));
+    span.setTag(MoreTags.RESOURCE_NAME, new String(chars));
     return span;
   }
 }

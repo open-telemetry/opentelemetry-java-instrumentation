@@ -4,7 +4,7 @@ import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import net.bytebuddy.asm.Advice;
@@ -25,7 +25,7 @@ public abstract class HttpServerTestAdvice {
       if (activeSpan() != null) {
         return null;
       } else {
-        final AgentSpan span = startSpan("TEST_SPAN").setTag(DDTags.RESOURCE_NAME, "ServerEntry");
+        final AgentSpan span = startSpan("TEST_SPAN").setTag(MoreTags.RESOURCE_NAME, "ServerEntry");
         return activateSpan(span, true);
       }
     }

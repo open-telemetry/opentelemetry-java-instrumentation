@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import io.dropwizard.testing.junit.ResourceTestRule
 import org.jboss.resteasy.core.Dispatcher
@@ -61,7 +61,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
         span(0) {
           operationName "test.span"
           tags {
-            "$DDTags.RESOURCE_NAME" parentResourceName
+            "$MoreTags.RESOURCE_NAME" parentResourceName
             "$Tags.COMPONENT" "jax-rs"
           }
         }
@@ -69,8 +69,8 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
           childOf span(0)
           operationName abort ? "jax-rs.request.abort" : "jax-rs.request"
           tags {
-            "$DDTags.RESOURCE_NAME" controllerName
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.RESOURCE_NAME" controllerName
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }

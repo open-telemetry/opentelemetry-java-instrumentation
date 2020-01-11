@@ -3,7 +3,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -91,7 +91,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -110,7 +110,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$forwardFromFileName"
+            "$MoreTags.RESOURCE_NAME" "/$forwardFromFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
@@ -122,7 +122,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$forwardFromFileName"
+            "$MoreTags.RESOURCE_NAME" "/$forwardFromFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspForwardFromClassName
             "servlet.context" "/$jspWebappContext"
@@ -134,7 +134,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$forwardDestFileName"
+            "$MoreTags.RESOURCE_NAME" "/$forwardDestFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardDestClassPrefix$jspForwardDestClassName"
@@ -146,7 +146,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$forwardDestFileName"
+            "$MoreTags.RESOURCE_NAME" "/$forwardDestFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspForwardDestClassName
             "servlet.context" "/$jspWebappContext"
@@ -183,7 +183,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -202,7 +202,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToHtml_jsp"
@@ -214,7 +214,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToHtml_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -245,7 +245,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -264,7 +264,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
@@ -276,7 +276,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToIncludeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -288,7 +288,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
+            "$MoreTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
@@ -300,7 +300,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
+            "$MoreTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -313,7 +313,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -325,7 +325,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -338,7 +338,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -350,7 +350,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -382,7 +382,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -401,7 +401,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
@@ -413,7 +413,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToJspForward_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -425,7 +425,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
@@ -437,7 +437,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToSimpleJava_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -450,7 +450,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/loop.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/loop.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.loop_jsp"
@@ -462,7 +462,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/loop.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/loop.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "loop_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -494,7 +494,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -514,7 +514,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
@@ -526,7 +526,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToCompileError_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -539,7 +539,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "/compileError.jsp"
+            "$MoreTags.RESOURCE_NAME" "/compileError.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.compileError_jsp"
@@ -571,7 +571,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -590,7 +590,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToNonExistent_jsp"
@@ -602,7 +602,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
+            "$MoreTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToNonExistent_jsp"
             "servlet.context" "/$jspWebappContext"

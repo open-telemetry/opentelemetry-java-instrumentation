@@ -3,7 +3,7 @@
 package datadog.trace.instrumentation.springdata;
 
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 
@@ -37,7 +37,7 @@ public final class SpringDataDecorator extends ClientDecorator {
     assert method != null;
 
     if (method != null) {
-      span.setTag(DDTags.RESOURCE_NAME, spanNameForMethod(method));
+      span.setTag(MoreTags.RESOURCE_NAME, spanNameForMethod(method));
     }
     return span;
   }

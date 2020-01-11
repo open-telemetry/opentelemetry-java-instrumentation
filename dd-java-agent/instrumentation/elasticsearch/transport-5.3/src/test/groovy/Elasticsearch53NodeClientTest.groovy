@@ -2,7 +2,7 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.common.io.FileSystemUtils
@@ -82,9 +82,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
         span(0) {
           operationName "elasticsearch.query"
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "ClusterHealthAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -110,9 +110,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
           operationName "elasticsearch.query"
           errored true
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "GetAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "GetAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -173,7 +173,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     assertTraces(6) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (traces[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+        if (traces[3][0].attributes[MoreTags.RESOURCE_NAME].stringValue == "IndexAction") {
           def tmp = traces[3]
           traces[3] = traces[4]
           traces[4] = tmp
@@ -183,9 +183,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
         span(0) {
           operationName "elasticsearch.query"
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "CreateIndexAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "CreateIndexAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -199,9 +199,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
         span(0) {
           operationName "elasticsearch.query"
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "ClusterHealthAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -214,9 +214,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
         span(0) {
           operationName "elasticsearch.query"
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "GetAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "GetAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -233,9 +233,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
         span(0) {
           operationName "elasticsearch.query"
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "PutMappingAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -248,9 +248,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
         span(0) {
           operationName "elasticsearch.query"
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "IndexAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "IndexAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -270,9 +270,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
         span(0) {
           operationName "elasticsearch.query"
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "GetAction"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "GetAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"

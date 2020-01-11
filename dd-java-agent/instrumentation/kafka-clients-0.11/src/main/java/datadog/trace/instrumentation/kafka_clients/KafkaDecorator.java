@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.kafka_clients;
 
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -56,7 +56,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
   public void onConsume(final AgentSpan span, final ConsumerRecord record) {
     if (record != null) {
       final String topic = record.topic() == null ? "kafka" : record.topic();
-      span.setTag(DDTags.RESOURCE_NAME, "Consume Topic " + topic);
+      span.setTag(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
       span.setTag("partition", record.partition());
       span.setTag("offset", record.offset());
     }
@@ -70,7 +70,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
         span.setTag("kafka.partition", record.partition());
       }
 
-      span.setTag(DDTags.RESOURCE_NAME, "Produce Topic " + topic);
+      span.setTag(MoreTags.RESOURCE_NAME, "Produce Topic " + topic);
     }
   }
 }

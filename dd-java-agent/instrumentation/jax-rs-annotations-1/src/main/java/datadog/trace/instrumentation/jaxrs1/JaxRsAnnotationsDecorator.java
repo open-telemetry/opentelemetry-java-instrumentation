@@ -5,7 +5,7 @@ import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.agent.tooling.ClassHierarchyIterable;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -41,14 +41,14 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     final String resourceName = getPathResourceName(target, method);
     updateParent(parent, resourceName);
 
-    span.setTag(DDTags.SPAN_TYPE, SpanTypes.HTTP_SERVER);
+    span.setTag(MoreTags.SPAN_TYPE, SpanTypes.HTTP_SERVER);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     final boolean isRootScope = parent == null;
     if (isRootScope && !resourceName.isEmpty()) {
-      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+      span.setTag(MoreTags.RESOURCE_NAME, resourceName);
     } else {
-      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForClass(target) + "." + method.getName());
+      span.setTag(MoreTags.RESOURCE_NAME, DECORATE.spanNameForClass(target) + "." + method.getName());
     }
   }
 
@@ -59,7 +59,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     span.setTag(Tags.COMPONENT, "jax-rs");
 
     if (!resourceName.isEmpty()) {
-      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+      span.setTag(MoreTags.RESOURCE_NAME, resourceName);
     }
   }
 

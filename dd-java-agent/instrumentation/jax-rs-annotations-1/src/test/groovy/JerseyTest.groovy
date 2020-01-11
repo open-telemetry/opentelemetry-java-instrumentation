@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import io.dropwizard.testing.junit.ResourceTestRule
 import org.junit.ClassRule
@@ -33,7 +33,7 @@ class JerseyTest extends AgentTestRunner {
         span(0) {
           operationName "test.span"
           tags {
-            "$DDTags.RESOURCE_NAME" expectedResourceName
+            "$MoreTags.RESOURCE_NAME" expectedResourceName
             "$Tags.COMPONENT" "jax-rs"
           }
         }
@@ -42,8 +42,8 @@ class JerseyTest extends AgentTestRunner {
           childOf span(0)
           operationName "jax-rs.request"
           tags {
-            "$DDTags.RESOURCE_NAME" controllerName
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.RESOURCE_NAME" controllerName
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }

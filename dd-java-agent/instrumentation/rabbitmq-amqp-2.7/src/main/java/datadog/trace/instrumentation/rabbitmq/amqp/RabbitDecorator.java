@@ -4,7 +4,7 @@ import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 
@@ -69,8 +69,8 @@ public class RabbitDecorator extends ClientDecorator {
         routingKey == null || routingKey.isEmpty()
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
-    span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
-    span.setTag(DDTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
+    span.setTag(MoreTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
+    span.setTag(MoreTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
     span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
     span.setTag("amqp.command", "basic.publish");
     span.setTag("amqp.exchange", exchange);
@@ -79,7 +79,7 @@ public class RabbitDecorator extends ClientDecorator {
 
   public void onGet(final AgentSpan span, final String queue) {
     final String queueName = queue.startsWith("amq.gen-") ? "<generated>" : queue;
-    span.setTag(DDTags.RESOURCE_NAME, "basic.get " + queueName);
+    span.setTag(MoreTags.RESOURCE_NAME, "basic.get " + queueName);
 
     span.setTag("amqp.command", "basic.get");
     span.setTag("amqp.queue", queue);
@@ -92,7 +92,7 @@ public class RabbitDecorator extends ClientDecorator {
     } else if (queue.startsWith("amq.gen-")) {
       queueName = "<generated>";
     }
-    span.setTag(DDTags.RESOURCE_NAME, "basic.deliver " + queueName);
+    span.setTag(MoreTags.RESOURCE_NAME, "basic.deliver " + queueName);
     span.setTag("amqp.command", "basic.deliver");
 
     if (envelope != null) {
@@ -106,7 +106,7 @@ public class RabbitDecorator extends ClientDecorator {
 
     if (!name.equals("basic.publish")) {
       // Don't overwrite the name already set.
-      span.setTag(DDTags.RESOURCE_NAME, name);
+      span.setTag(MoreTags.RESOURCE_NAME, name);
     }
     span.setTag("amqp.command", name);
   }

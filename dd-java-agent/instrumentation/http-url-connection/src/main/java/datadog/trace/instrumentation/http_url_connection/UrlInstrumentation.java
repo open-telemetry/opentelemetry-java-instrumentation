@@ -9,7 +9,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.bootstrap.InternalJarURLHandler;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
@@ -64,7 +64,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
         final AgentSpan span =
             startSpan(protocol + ".request")
                 .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT)
-                .setTag(DDTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT)
+                .setTag(MoreTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT)
                 .setTag(Tags.COMPONENT, COMPONENT);
 
         try (final AgentScope scope = activateSpan(span, false)) {
@@ -72,7 +72,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
           span.setTag(Tags.PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
           span.setTag(Tags.PEER_HOSTNAME, url.getHost());
           if (Config.get().isHttpClientSplitByDomain()) {
-            span.setTag(DDTags.SERVICE_NAME, url.getHost());
+            span.setTag(MoreTags.SERVICE_NAME, url.getHost());
           }
 
           span.setError(true);

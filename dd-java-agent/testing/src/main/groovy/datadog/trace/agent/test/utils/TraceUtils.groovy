@@ -2,7 +2,7 @@ package datadog.trace.agent.test.utils
 
 import datadog.trace.agent.decorator.BaseDecorator
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.AgentScope
 import datadog.trace.instrumentation.api.AgentSpan
 import io.opentelemetry.sdk.trace.SpanData
@@ -57,7 +57,7 @@ class TraceUtils {
       operationName operation
       errored exception != null
       tags {
-        "$DDTags.RESOURCE_NAME" resource
+        "$MoreTags.RESOURCE_NAME" resource
         if (exception) {
           errorTags(exception.class, exception.message)
         }

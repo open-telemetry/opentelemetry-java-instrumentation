@@ -2,7 +2,7 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.json.JsonSlurper
 import org.apache.http.HttpHost
@@ -89,8 +89,8 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
           operationName "elasticsearch.rest.query"
           parent()
           tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -104,7 +104,7 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
           operationName "http.request"
           childOf span(0)
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpasyncclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "_cluster/health"

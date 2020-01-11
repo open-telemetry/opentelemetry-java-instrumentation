@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
 import datadog.trace.instrumentation.api.Tags
 
@@ -47,7 +47,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
         parent()
       }
       tags {
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
@@ -59,7 +59,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$DDTags.HTTP_QUERY" endpoint.query
+          "$MoreTags.HTTP_QUERY" endpoint.query
         }
       }
     }

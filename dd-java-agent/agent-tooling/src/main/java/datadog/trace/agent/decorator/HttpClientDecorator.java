@@ -2,7 +2,7 @@ package datadog.trace.agent.decorator;
 
 import datadog.trace.api.Config;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 import java.net.URI;
@@ -63,8 +63,8 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           span.setTag(Tags.HTTP_URL, urlNoParams.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
-            span.setTag(DDTags.HTTP_QUERY, url.getQuery());
-            span.setTag(DDTags.HTTP_FRAGMENT, url.getFragment());
+            span.setTag(MoreTags.HTTP_QUERY, url.getQuery());
+            span.setTag(MoreTags.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {
@@ -79,7 +79,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       }
 
       if (Config.get().isHttpClientSplitByDomain()) {
-        span.setTag(DDTags.SERVICE_NAME, hostname(request));
+        span.setTag(MoreTags.SERVICE_NAME, hostname(request));
       }
     }
     return span;

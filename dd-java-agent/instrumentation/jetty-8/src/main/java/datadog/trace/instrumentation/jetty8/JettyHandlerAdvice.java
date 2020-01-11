@@ -7,7 +7,7 @@ import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter.GETTER;
 import static datadog.trace.instrumentation.jetty8.JettyDecorator.DECORATE;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -36,7 +36,7 @@ public class JettyHandlerAdvice {
     DECORATE.onConnection(span, req);
     DECORATE.onRequest(span, req);
     final String resourceName = req.getMethod() + " " + source.getClass().getName();
-    span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
 
     final AgentScope scope = activateSpan(span, false);
     req.setAttribute(SPAN_ATTRIBUTE, span);
@@ -54,7 +54,7 @@ public class JettyHandlerAdvice {
     }
     final AgentSpan span = scope.span();
     if (req.getUserPrincipal() != null) {
-      span.setTag(DDTags.USER_NAME, req.getUserPrincipal().getName());
+      span.setTag(MoreTags.USER_NAME, req.getUserPrincipal().getName());
     }
     if (throwable != null) {
       DECORATE.onResponse(span, resp);

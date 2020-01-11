@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.Config
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import spock.lang.Ignore
@@ -93,9 +93,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$DDTags.RESOURCE_NAME" "GET $url.path"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
+            "$MoreTags.RESOURCE_NAME" "GET $url.path"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -110,9 +110,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$DDTags.RESOURCE_NAME" "GET $url.path"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
+            "$MoreTags.RESOURCE_NAME" "GET $url.path"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -175,9 +175,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$DDTags.RESOURCE_NAME" "GET $url.path"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
+            "$MoreTags.RESOURCE_NAME" "GET $url.path"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -192,9 +192,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$DDTags.RESOURCE_NAME" "GET $url.path"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
+            "$MoreTags.RESOURCE_NAME" "GET $url.path"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -242,9 +242,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$DDTags.RESOURCE_NAME" "GET $url.path"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
+            "$MoreTags.RESOURCE_NAME" "GET $url.path"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -308,9 +308,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$DDTags.RESOURCE_NAME" "POST $url.path"
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
+            "$MoreTags.RESOURCE_NAME" "POST $url.path"
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"

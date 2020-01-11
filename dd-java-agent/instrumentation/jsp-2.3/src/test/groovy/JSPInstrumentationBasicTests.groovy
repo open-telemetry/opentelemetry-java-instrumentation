@@ -3,7 +3,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -92,7 +92,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -111,7 +111,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$jspFileName"
+            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
@@ -123,7 +123,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$jspFileName"
+            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -161,7 +161,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -180,7 +180,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/getQuery.jsp"
+            "$MoreTags.RESOURCE_NAME" "/getQuery.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
@@ -192,7 +192,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/getQuery.jsp"
+            "$MoreTags.RESOURCE_NAME" "/getQuery.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -227,7 +227,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -246,7 +246,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/post.jsp"
+            "$MoreTags.RESOURCE_NAME" "/post.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
@@ -258,7 +258,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/post.jsp"
+            "$MoreTags.RESOURCE_NAME" "/post.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -290,7 +290,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "servlet.request"
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -316,7 +316,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$jspFileName"
+            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
@@ -328,7 +328,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "/$jspFileName"
+            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -372,7 +372,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -391,7 +391,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
+            "$MoreTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
@@ -403,7 +403,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
+            "$MoreTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -434,7 +434,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -453,7 +453,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
+            "$MoreTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
@@ -465,7 +465,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
+            "$MoreTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -477,7 +477,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -489,7 +489,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -501,7 +501,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -513,7 +513,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -544,7 +544,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "servlet.request"
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -564,7 +564,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "jsp.compile"
           errored true
           tags {
-            "$DDTags.RESOURCE_NAME" "/$jspFileName"
+            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"

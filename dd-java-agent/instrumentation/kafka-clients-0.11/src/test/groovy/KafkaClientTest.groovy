@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -85,9 +85,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$DDTags.SERVICE_NAME" "kafka"
-            "$DDTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
-            "$DDTags.SPAN_TYPE" "queue"
+            "$MoreTags.SERVICE_NAME" "kafka"
+            "$MoreTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
+            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           }
@@ -97,9 +97,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$DDTags.SERVICE_NAME" "kafka"
-            "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
-            "$DDTags.SPAN_TYPE" "queue"
+            "$MoreTags.SERVICE_NAME" "kafka"
+            "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
+            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
@@ -156,9 +156,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$DDTags.SERVICE_NAME" "kafka"
-            "$DDTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
-            "$DDTags.SPAN_TYPE" "queue"
+            "$MoreTags.SERVICE_NAME" "kafka"
+            "$MoreTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
+            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "kafka.partition" { it >= 0 }
@@ -169,9 +169,9 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$DDTags.SERVICE_NAME" "kafka"
-            "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
-            "$DDTags.SPAN_TYPE" "queue"
+            "$MoreTags.SERVICE_NAME" "kafka"
+            "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
+            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }

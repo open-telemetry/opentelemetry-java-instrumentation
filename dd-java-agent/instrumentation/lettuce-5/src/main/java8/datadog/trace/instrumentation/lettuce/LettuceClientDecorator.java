@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.lettuce;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.SpanTypes;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 import io.lettuce.core.RedisURI;
@@ -54,7 +54,7 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
 
       span.setTag("db.redis.dbIndex", connection.getDatabase());
       span.setTag(
-          DDTags.RESOURCE_NAME,
+          MoreTags.RESOURCE_NAME,
           "CONNECT:"
               + connection.getHost()
               + ":"
@@ -68,7 +68,7 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   public AgentSpan onCommand(final AgentSpan span, final RedisCommand command) {
     final String commandName = LettuceInstrumentationUtil.getCommandName(command);
     span.setTag(
-        DDTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
+        MoreTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
     return span;
   }
 }

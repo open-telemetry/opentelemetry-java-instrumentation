@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.aws.v2;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -46,7 +46,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
     // Resource Name has to be set after the HTTP_URL because otherwise decorators overwrite it
-    span.setTag(DDTags.RESOURCE_NAME, awsServiceName + "." + awsOperation);
+    span.setTag(MoreTags.RESOURCE_NAME, awsServiceName + "." + awsOperation);
 
     span.setTag("aws.agent", COMPONENT_NAME);
     span.setTag("aws.service", awsServiceName);

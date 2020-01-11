@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.trace_annotation.TraceAnnotationsInstrumentation
 import dd.test.trace.annotation.SayTracedHello
@@ -39,7 +39,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           operationName "trace.annotation"
           tags {
-            "$DDTags.RESOURCE_NAME" "AnnotationTracedCallable.call"
+            "$MoreTags.RESOURCE_NAME" "AnnotationTracedCallable.call"
             "$Tags.COMPONENT" "trace"
           }
         }

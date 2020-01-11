@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler
@@ -200,7 +200,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           operationName "trace.annotation"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "AnnotatedClass.makeRequestUnderTrace"
+            "$MoreTags.RESOURCE_NAME" "AnnotatedClass.makeRequestUnderTrace"
             "$Tags.COMPONENT" "trace"
           }
         }

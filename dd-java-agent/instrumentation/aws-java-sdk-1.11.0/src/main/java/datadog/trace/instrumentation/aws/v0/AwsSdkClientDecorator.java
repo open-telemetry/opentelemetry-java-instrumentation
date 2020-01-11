@@ -4,7 +4,7 @@ import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import datadog.trace.agent.decorator.HttpClientDecorator;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,7 +33,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     span.setTag("aws.endpoint", request.getEndpoint().toString());
 
     span.setTag(
-        DDTags.RESOURCE_NAME,
+        MoreTags.RESOURCE_NAME,
         remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
 
     return span;

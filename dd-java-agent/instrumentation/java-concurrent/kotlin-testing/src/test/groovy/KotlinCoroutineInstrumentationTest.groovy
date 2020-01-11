@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadPoolDispatcherKt
@@ -26,7 +26,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedAcrossChannels"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedAcrossChannels"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -34,14 +34,14 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
           span("produce_$it") {
             childOf span(0)
             tags {
-              "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+              "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
               "$Tags.COMPONENT" "trace"
             }
           }
           span("consume_$it") {
             childOf span(0)
             tags {
-              "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+              "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
               "$Tags.COMPONENT" "trace"
             }
           }
@@ -65,14 +65,14 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracePreventedByCancellation"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracePreventedByCancellation"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("preLaunch") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -95,14 +95,14 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedAcrossThreadsWithNested"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedAcrossThreadsWithNested"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("nested") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -125,35 +125,35 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.traceWithDeferred"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.traceWithDeferred"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("future1") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("keptPromise") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("keptPromise2") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("brokenPromise") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -176,28 +176,28 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedWithDeferredFirstCompletions"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedWithDeferredFirstCompletions"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("timeout1") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("timeout2") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }
         span("timeout3") {
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$MoreTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
             "$Tags.COMPONENT" "trace"
           }
         }

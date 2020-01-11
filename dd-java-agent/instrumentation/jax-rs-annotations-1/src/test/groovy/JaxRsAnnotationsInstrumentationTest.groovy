@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.bootstrap.WeakMap
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.jaxrs1.JaxRsAnnotationsDecorator
@@ -32,8 +32,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         span(0) {
           operationName "jax-rs.request"
           tags {
-            "$DDTags.RESOURCE_NAME" "POST /a"
-            "$DDTags.SPAN_TYPE" "web"
+            "$MoreTags.RESOURCE_NAME" "POST /a"
+            "$MoreTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
@@ -55,7 +55,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           operationName "test"
           parent()
           tags {
-            "$DDTags.RESOURCE_NAME" name
+            "$MoreTags.RESOURCE_NAME" name
             "$Tags.COMPONENT" "jax-rs"
           }
         }
@@ -63,8 +63,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           operationName "jax-rs.request"
           childOf span(0)
           tags {
-            "$DDTags.RESOURCE_NAME" "${className}.call"
-            "$DDTags.SPAN_TYPE" "web"
+            "$MoreTags.RESOURCE_NAME" "${className}.call"
+            "$MoreTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }

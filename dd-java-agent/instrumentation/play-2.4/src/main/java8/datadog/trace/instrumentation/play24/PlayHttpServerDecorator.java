@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.play24;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 import java.lang.reflect.InvocationTargetException;
@@ -66,7 +66,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
       final Option pathOption = request.tags().get("ROUTE_PATTERN");
       if (!pathOption.isEmpty()) {
         final String path = (String) pathOption.get();
-        span.setTag(DDTags.RESOURCE_NAME, request.method() + " " + path);
+        span.setTag(MoreTags.RESOURCE_NAME, request.method() + " " + path);
       }
     }
     return span;

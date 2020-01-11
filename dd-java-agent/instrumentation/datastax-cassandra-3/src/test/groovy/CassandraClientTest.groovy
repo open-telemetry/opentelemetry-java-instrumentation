@@ -4,7 +4,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
@@ -118,8 +118,8 @@ class CassandraClientTest extends AgentTestRunner {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$DDTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
-        "$DDTags.SPAN_TYPE" SpanTypes.CASSANDRA
+        "$MoreTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
+        "$MoreTags.SPAN_TYPE" SpanTypes.CASSANDRA
         "$Tags.COMPONENT" "java-cassandra"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

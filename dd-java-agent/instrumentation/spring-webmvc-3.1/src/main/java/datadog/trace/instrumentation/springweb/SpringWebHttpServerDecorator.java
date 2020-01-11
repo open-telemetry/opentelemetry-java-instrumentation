@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.springweb;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -83,7 +83,7 @@ public class SpringWebHttpServerDecorator
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
-        span.setTag(DDTags.RESOURCE_NAME, resourceName);
+        span.setTag(MoreTags.RESOURCE_NAME, resourceName);
       }
     }
     return span;
@@ -117,14 +117,14 @@ public class SpringWebHttpServerDecorator
     }
 
     final String resourceName = DECORATE.spanNameForClass(clazz) + "." + methodName;
-    span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
   }
 
   public AgentSpan onRender(final AgentSpan span, final ModelAndView mv) {
     final String viewName = mv.getViewName();
     if (viewName != null) {
       span.setTag("view.name", viewName);
-      span.setTag(DDTags.RESOURCE_NAME, viewName);
+      span.setTag(MoreTags.RESOURCE_NAME, viewName);
     }
     if (mv.getView() != null) {
       span.setTag("view.type", mv.getView().getClass().getName());

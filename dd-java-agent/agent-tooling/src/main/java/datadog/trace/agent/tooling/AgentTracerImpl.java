@@ -2,7 +2,7 @@ package datadog.trace.agent.tooling;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
@@ -160,7 +160,7 @@ public final class AgentTracerImpl implements TracerAPI {
 
     @Override
     public AgentSpan setErrorMessage(final String errorMessage) {
-      span.setAttribute(DDTags.ERROR_MSG, errorMessage);
+      span.setAttribute(MoreTags.ERROR_MSG, errorMessage);
       return this;
     }
 
@@ -168,13 +168,13 @@ public final class AgentTracerImpl implements TracerAPI {
     public AgentSpan addThrowable(final Throwable throwable) {
       final String message = throwable.getMessage();
       if (message != null) {
-        span.setAttribute(DDTags.ERROR_MSG, message);
+        span.setAttribute(MoreTags.ERROR_MSG, message);
       }
-      span.setAttribute(DDTags.ERROR_TYPE, throwable.getClass().getName());
+      span.setAttribute(MoreTags.ERROR_TYPE, throwable.getClass().getName());
 
       final StringWriter errorString = new StringWriter();
       throwable.printStackTrace(new PrintWriter(errorString));
-      span.setAttribute(DDTags.ERROR_STACK, errorString.toString());
+      span.setAttribute(MoreTags.ERROR_STACK, errorString.toString());
       return this;
     }
 

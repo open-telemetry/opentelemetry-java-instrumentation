@@ -6,7 +6,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.SpanTypes
-import datadog.trace.api.DDTags
+import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.AutoCleanup
@@ -320,8 +320,8 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       operationName expectedOperationName()
       errored exception != null
       tags {
-        "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
+        "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
         "$Tags.COMPONENT" clientDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"
@@ -333,8 +333,8 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
           "$Tags.HTTP_STATUS" status
         }
         if (tagQueryString) {
-          "$DDTags.HTTP_QUERY" uri.query
-          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
+          "$MoreTags.HTTP_QUERY" uri.query
+          "$MoreTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
         }
         if (exception) {
           errorTags(exception.class, exception.message)

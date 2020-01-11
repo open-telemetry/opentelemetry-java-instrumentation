@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
-import datadog.trace.api.DDTags;
+import datadog.trace.api.MoreTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
@@ -35,7 +35,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
         final AgentSpan parentSpan =
             (AgentSpan) serverRequest.attributes().get(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
         if (parentSpan != null) {
-          parentSpan.setTag(DDTags.RESOURCE_NAME, parseResourceName(predicateString));
+          parentSpan.setTag(MoreTags.RESOURCE_NAME, parseResourceName(predicateString));
         }
       }
     }
