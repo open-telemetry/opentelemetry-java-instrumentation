@@ -11,7 +11,7 @@ import net.bytebuddy.utility.JavaModule;
  * to the bootstrap classpath work, we first check our bootstrap proxy. If the loading classloader
  * cannot find the desired resource, check up the classloader hierarchy until a resource is found.
  */
-public class DDLocationStrategy implements AgentBuilder.LocationStrategy {
+public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
   public ClassFileLocator classFileLocator(final ClassLoader classLoader) {
     return classFileLocator(classLoader, null);
   }

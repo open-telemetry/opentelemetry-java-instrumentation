@@ -1,6 +1,6 @@
 package datadog.trace.agent.test
 
-import datadog.trace.agent.tooling.DDLocationStrategy
+import datadog.trace.agent.tooling.AgentLocationStrategy
 import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Shared
@@ -36,7 +36,7 @@ class ResourceLocatingTest extends DDSpecification {
 
     where:
     locator                                                                                 | usesProvidedClassloader
-    new DDLocationStrategy().classFileLocator(childLoader, null)                            | true
+    new AgentLocationStrategy().classFileLocator(childLoader, null)                         | true
     AgentBuilder.LocationStrategy.ForClassLoader.STRONG.classFileLocator(childLoader, null) | false
   }
 }

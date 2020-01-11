@@ -15,14 +15,14 @@ public class AgentTooling {
     registerWeakMapProvider(CLEANER);
   }
 
-  private static final DDLocationStrategy LOCATION_STRATEGY = new DDLocationStrategy();
+  private static final AgentLocationStrategy LOCATION_STRATEGY = new AgentLocationStrategy();
   private static final DDCachingPoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy(CLEANER);
 
   public static void init() {
     // Only need to trigger static initializers for now.
   }
 
-  public static DDLocationStrategy locationStrategy() {
+  public static AgentLocationStrategy locationStrategy() {
     return LOCATION_STRATEGY;
   }
 
