@@ -1,13 +1,13 @@
 package datadog.trace.agent.test
 
 import datadog.trace.agent.tooling.AgentLocationStrategy
-import datadog.trace.util.test.DDSpecification
+import datadog.trace.util.test.AgentSpecification
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
-class ResourceLocatingTest extends DDSpecification {
+class ResourceLocatingTest extends AgentSpecification {
   @Shared
   def lastLookup = new AtomicReference<String>()
   @Shared

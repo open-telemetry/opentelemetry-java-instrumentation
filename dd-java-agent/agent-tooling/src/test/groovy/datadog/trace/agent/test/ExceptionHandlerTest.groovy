@@ -5,7 +5,7 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
 import datadog.trace.agent.tooling.ExceptionHandlers
 import datadog.trace.bootstrap.ExceptionLogger
-import datadog.trace.util.test.DDSpecification
+import datadog.trace.util.test.AgentSpecification
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer
@@ -16,7 +16,7 @@ import spock.lang.Shared
 import static net.bytebuddy.matcher.ElementMatchers.isMethod
 import static net.bytebuddy.matcher.ElementMatchers.named
 
-class ExceptionHandlerTest extends DDSpecification {
+class ExceptionHandlerTest extends AgentSpecification {
   @Shared
   ListAppender testAppender = new ListAppender()
   @Shared

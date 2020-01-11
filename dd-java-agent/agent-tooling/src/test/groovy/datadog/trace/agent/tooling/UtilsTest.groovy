@@ -1,8 +1,8 @@
 package datadog.trace.agent.tooling
 
-import datadog.trace.util.test.DDSpecification
+import datadog.trace.util.test.AgentSpecification
 
-class UtilsTest extends DDSpecification {
+class UtilsTest extends AgentSpecification {
 
   def "getStackTraceAsString() returns the stack trace as a single new line separated string"() {
     setup:

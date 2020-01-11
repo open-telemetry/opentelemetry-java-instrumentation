@@ -5,10 +5,10 @@ import datadog.trace.api.MoreTags
 import datadog.trace.instrumentation.api.AgentScope
 import datadog.trace.instrumentation.api.AgentSpan
 import datadog.trace.instrumentation.api.Tags
-import datadog.trace.util.test.DDSpecification
+import datadog.trace.util.test.AgentSpecification
 import spock.lang.Shared
 
-class BaseDecoratorTest extends DDSpecification {
+class BaseDecoratorTest extends AgentSpecification {
 
   @Shared
   def decorator = newDecorator()

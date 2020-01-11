@@ -12,7 +12,7 @@ import static net.bytebuddy.description.modifier.Visibility.PUBLIC
 import static net.bytebuddy.matcher.ElementMatchers.named
 import static net.bytebuddy.matcher.ElementMatchers.none
 
-abstract class DDSpecification extends Specification {
+abstract class AgentSpecification extends Specification {
   private static final String CONFIG = "datadog.trace.api.Config"
 
   static {

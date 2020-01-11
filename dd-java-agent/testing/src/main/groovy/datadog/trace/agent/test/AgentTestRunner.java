@@ -8,7 +8,7 @@ import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.AgentTracerImpl;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.api.AgentTracer;
-import datadog.trace.util.test.DDSpecification;
+import datadog.trace.util.test.AgentSpecification;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
@@ -54,7 +54,7 @@ import org.spockframework.runtime.model.SpecMetadata;
 @RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 @Slf4j
-public abstract class AgentTestRunner extends DDSpecification {
+public abstract class AgentTestRunner extends AgentSpecification {
   private static final long TIMEOUT_MILLIS = 10 * 1000;
   /**
    * For test runs, agent's global tracer will report to this list writer.

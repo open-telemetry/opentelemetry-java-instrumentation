@@ -1,6 +1,6 @@
 package datadog.trace.api
 
-import datadog.trace.util.test.DDSpecification
+import datadog.trace.util.test.AgentSpecification
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
@@ -16,7 +16,7 @@ import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
 
-class ConfigTest extends DDSpecification {
+class ConfigTest extends AgentSpecification {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
   @Rule

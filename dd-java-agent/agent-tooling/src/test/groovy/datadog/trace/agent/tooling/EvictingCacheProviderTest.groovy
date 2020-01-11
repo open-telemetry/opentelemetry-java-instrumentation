@@ -1,7 +1,7 @@
 package datadog.trace.agent.tooling
 
 import datadog.trace.util.gc.GCUtils
-import datadog.trace.util.test.DDSpecification
+import datadog.trace.util.test.AgentSpecification
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.pool.TypePool
 import spock.lang.Timeout
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference
 import static datadog.trace.agent.tooling.AgentTooling.CLEANER
 
 @Timeout(5)
-class EvictingCacheProviderTest extends DDSpecification {
+class EvictingCacheProviderTest extends AgentSpecification {
 
   def "test provider"() {
     setup:
