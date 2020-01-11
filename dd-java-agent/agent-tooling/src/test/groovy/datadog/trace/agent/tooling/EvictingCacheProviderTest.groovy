@@ -17,7 +17,7 @@ class EvictingCacheProviderTest extends DDSpecification {
 
   def "test provider"() {
     setup:
-    def provider = new DDCachingPoolStrategy.EvictingCacheProvider(CLEANER, 2, TimeUnit.MINUTES)
+    def provider = new AgentCachingPoolStrategy.EvictingCacheProvider(CLEANER, 2, TimeUnit.MINUTES)
 
     expect:
     provider.size() == 0
@@ -43,7 +43,7 @@ class EvictingCacheProviderTest extends DDSpecification {
 
   def "test timeout eviction"() {
     setup:
-    def provider = new DDCachingPoolStrategy.EvictingCacheProvider(CLEANER, timeout, TimeUnit.MILLISECONDS)
+    def provider = new AgentCachingPoolStrategy.EvictingCacheProvider(CLEANER, timeout, TimeUnit.MILLISECONDS)
     def resolutionRef = new AtomicReference<TypePool.Resolution>(new TypePool.Resolution.Simple(TypeDescription.VOID))
     def weakRef = new WeakReference(resolutionRef.get())
 
@@ -84,7 +84,7 @@ class EvictingCacheProviderTest extends DDSpecification {
 
   def "test size limit"() {
     setup:
-    def provider = new DDCachingPoolStrategy.EvictingCacheProvider(CLEANER, 2, TimeUnit.MINUTES)
+    def provider = new AgentCachingPoolStrategy.EvictingCacheProvider(CLEANER, 2, TimeUnit.MINUTES)
     def typeDef = new TypePool.Resolution.Simple(TypeDescription.VOID)
     for (int i = 0; i < 10000; i++) {
       provider.register("ClassName$i", typeDef)

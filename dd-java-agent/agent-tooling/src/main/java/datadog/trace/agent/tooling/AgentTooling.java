@@ -16,7 +16,8 @@ public class AgentTooling {
   }
 
   private static final AgentLocationStrategy LOCATION_STRATEGY = new AgentLocationStrategy();
-  private static final DDCachingPoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy(CLEANER);
+  private static final AgentCachingPoolStrategy POOL_STRATEGY =
+      new AgentCachingPoolStrategy(CLEANER);
 
   public static void init() {
     // Only need to trigger static initializers for now.
@@ -26,7 +27,7 @@ public class AgentTooling {
     return LOCATION_STRATEGY;
   }
 
-  public static DDCachingPoolStrategy poolStrategy() {
+  public static AgentCachingPoolStrategy poolStrategy() {
     return POOL_STRATEGY;
   }
 

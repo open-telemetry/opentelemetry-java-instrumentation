@@ -28,12 +28,12 @@ import net.bytebuddy.pool.TypePool;
  *
  * <p>See eviction policy below.
  */
-public class DDCachingPoolStrategy implements PoolStrategy {
+public class AgentCachingPoolStrategy implements PoolStrategy {
   private final WeakMap<ClassLoader, TypePool.CacheProvider> typePoolCache =
       WeakMap.Provider.newWeakMap();
   private final Cleaner cleaner;
 
-  public DDCachingPoolStrategy(final Cleaner cleaner) {
+  public AgentCachingPoolStrategy(final Cleaner cleaner) {
     this.cleaner = cleaner;
   }
 
