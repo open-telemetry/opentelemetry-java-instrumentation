@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import redis.clients.jedis.Jedis
@@ -54,7 +54,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "redis.query"
           tags {
             "$DDTags.SERVICE_NAME" "redis"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -79,7 +79,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "redis.query"
           tags {
             "$DDTags.SERVICE_NAME" "redis"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -92,7 +92,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "redis.query"
           tags {
             "$DDTags.SERVICE_NAME" "redis"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -117,7 +117,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "redis.query"
           tags {
             "$DDTags.SERVICE_NAME" "redis"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -130,7 +130,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           operationName "redis.query"
           tags {
             "$DDTags.SERVICE_NAME" "redis"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"

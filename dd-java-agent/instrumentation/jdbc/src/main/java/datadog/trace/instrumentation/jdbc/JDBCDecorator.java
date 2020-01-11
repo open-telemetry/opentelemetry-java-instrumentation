@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jdbc;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -32,7 +32,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.SQL;
+    return SpanTypes.SQL;
   }
 
   @Override

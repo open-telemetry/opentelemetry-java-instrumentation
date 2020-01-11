@@ -1,4 +1,4 @@
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.hibernate.Criteria
@@ -27,7 +27,7 @@ class CriteriaTest extends AbstractHibernateTest {
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -37,7 +37,7 @@ class CriteriaTest extends AbstractHibernateTest {
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -62,7 +62,7 @@ class CriteriaTest extends AbstractHibernateTest {
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }

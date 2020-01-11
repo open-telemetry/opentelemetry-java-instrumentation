@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
@@ -21,7 +21,7 @@ public class TwilioClientDecorator extends ClientDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.HTTP_CLIENT;
+    return SpanTypes.HTTP_CLIENT;
   }
 
   @Override

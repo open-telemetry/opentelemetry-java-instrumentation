@@ -2,7 +2,7 @@ package dd.trace.instrumentation.springwebflux.client
 
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
@@ -52,7 +52,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
         errored exception != null
         tags {
           "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-          "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+          "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
           "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.component()
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           "$Tags.PEER_HOSTNAME" "localhost"

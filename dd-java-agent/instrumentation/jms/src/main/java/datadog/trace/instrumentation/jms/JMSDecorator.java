@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jms;
 
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -23,7 +23,7 @@ public abstract class JMSDecorator extends ClientDecorator {
 
         @Override
         protected String spanType() {
-          return DDSpanTypes.MESSAGE_PRODUCER;
+          return SpanTypes.MESSAGE_PRODUCER;
         }
       };
 
@@ -36,7 +36,7 @@ public abstract class JMSDecorator extends ClientDecorator {
 
         @Override
         protected String spanType() {
-          return DDSpanTypes.MESSAGE_CONSUMER;
+          return SpanTypes.MESSAGE_CONSUMER;
         }
       };
 

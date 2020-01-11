@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.jetty8.JettyDecorator
@@ -128,7 +128,7 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
       }
       tags {
         "$DDTags.RESOURCE_NAME" "$method $handlerName"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

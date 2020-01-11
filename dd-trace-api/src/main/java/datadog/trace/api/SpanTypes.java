@@ -1,6 +1,6 @@
 package datadog.trace.api;
 
-public class DDSpanTypes {
+public class SpanTypes {
   public static final String HTTP_CLIENT = "http";
   public static final String HTTP_SERVER = "web";
   @Deprecated public static final String WEB_SERVLET = HTTP_SERVER;

@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.dropwizard.testing.junit.ResourceTestRule
@@ -70,7 +70,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
           operationName abort ? "jax-rs.request.abort" : "jax-rs.request"
           tags {
             "$DDTags.RESOURCE_NAME" controllerName
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }

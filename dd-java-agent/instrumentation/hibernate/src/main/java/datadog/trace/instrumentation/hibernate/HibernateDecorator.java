@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.hibernate;
 
 import datadog.trace.agent.decorator.OrmClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +22,7 @@ public class HibernateDecorator extends OrmClientDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.HIBERNATE;
+    return SpanTypes.HIBERNATE;
   }
 
   @Override

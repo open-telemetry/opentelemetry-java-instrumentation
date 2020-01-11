@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.HttpUrl
@@ -69,7 +69,7 @@ class RatpackOtherTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "GET /$route"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"
@@ -86,7 +86,7 @@ class RatpackOtherTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "GET /$route"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "ratpack"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"

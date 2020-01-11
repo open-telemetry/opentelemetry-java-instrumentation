@@ -22,7 +22,7 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.http.conn.HttpHostConnectException
@@ -134,7 +134,7 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$DDTags.RESOURCE_NAME" "$service.$operation"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
@@ -151,7 +151,7 @@ class AWSClientTest extends AgentTestRunner {
           errored false
           childOf(span(0))
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -204,7 +204,7 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$DDTags.RESOURCE_NAME" "$service.$operation"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
@@ -221,7 +221,7 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           childOf(span(0))
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -264,7 +264,7 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$DDTags.RESOURCE_NAME" "S3.HeadBucket"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
@@ -309,7 +309,7 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$DDTags.RESOURCE_NAME" "S3.GetObject"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
@@ -331,7 +331,7 @@ class AWSClientTest extends AgentTestRunner {
             errored true
             childOf(span(0))
             tags {
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+              "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.PEER_HOSTNAME" "localhost"

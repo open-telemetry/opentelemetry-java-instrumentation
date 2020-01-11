@@ -3,7 +3,7 @@ import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
 import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator
@@ -59,7 +59,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
         span(0) {
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "google-http-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"

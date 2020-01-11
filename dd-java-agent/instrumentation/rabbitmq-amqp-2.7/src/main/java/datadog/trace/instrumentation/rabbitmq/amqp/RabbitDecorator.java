@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.rabbitmq.amqp;
 import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -21,7 +21,7 @@ public class RabbitDecorator extends ClientDecorator {
 
         @Override
         protected String spanType() {
-          return DDSpanTypes.MESSAGE_PRODUCER;
+          return SpanTypes.MESSAGE_PRODUCER;
         }
       };
 
@@ -34,7 +34,7 @@ public class RabbitDecorator extends ClientDecorator {
 
         @Override
         protected String spanType() {
-          return DDSpanTypes.MESSAGE_CONSUMER;
+          return SpanTypes.MESSAGE_CONSUMER;
         }
       };
 
@@ -60,7 +60,7 @@ public class RabbitDecorator extends ClientDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.MESSAGE_CLIENT;
+    return SpanTypes.MESSAGE_CLIENT;
   }
 
   public void onPublish(final AgentSpan span, final String exchange, final String routingKey) {
@@ -70,7 +70,7 @@ public class RabbitDecorator extends ClientDecorator {
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
     span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
-    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER);
+    span.setTag(DDTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
     span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
     span.setTag("amqp.command", "basic.publish");
     span.setTag("amqp.exchange", exchange);

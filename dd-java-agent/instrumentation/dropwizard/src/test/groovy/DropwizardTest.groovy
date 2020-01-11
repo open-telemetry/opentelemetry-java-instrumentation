@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
@@ -86,7 +86,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       childOf((SpanData) parent)
       tags {
         "$DDTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.component()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -108,7 +108,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       }
       tags {
         "$DDTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

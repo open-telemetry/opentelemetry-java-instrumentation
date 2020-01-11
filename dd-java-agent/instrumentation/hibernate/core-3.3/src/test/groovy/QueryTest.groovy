@@ -1,4 +1,4 @@
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.hibernate.Query
@@ -32,7 +32,7 @@ class QueryTest extends AbstractHibernateTest {
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -43,7 +43,7 @@ class QueryTest extends AbstractHibernateTest {
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
             "$DDTags.RESOURCE_NAME" resource
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
@@ -69,7 +69,7 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -83,7 +83,7 @@ class QueryTest extends AbstractHibernateTest {
             parent()
             tags {
               "$DDTags.SERVICE_NAME" "hibernate"
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+              "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             }
@@ -94,7 +94,7 @@ class QueryTest extends AbstractHibernateTest {
             tags {
               "$DDTags.SERVICE_NAME" "hibernate"
               "$DDTags.RESOURCE_NAME" resource
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+              "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
@@ -164,7 +164,7 @@ class QueryTest extends AbstractHibernateTest {
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -175,7 +175,7 @@ class QueryTest extends AbstractHibernateTest {
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
             "$DDTags.RESOURCE_NAME" "from Value"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
@@ -200,7 +200,7 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$DDTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }

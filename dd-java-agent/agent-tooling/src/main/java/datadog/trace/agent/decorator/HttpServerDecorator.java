@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator;
 
 import datadog.trace.api.Config;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -33,7 +33,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.HTTP_SERVER;
+    return SpanTypes.HTTP_SERVER;
   }
 
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {

@@ -14,7 +14,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
@@ -117,7 +117,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       tags {
         "$DDTags.SERVICE_NAME" "couchbase"
         "$DDTags.RESOURCE_NAME" name
-        "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+        "$DDTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" "couchbase"

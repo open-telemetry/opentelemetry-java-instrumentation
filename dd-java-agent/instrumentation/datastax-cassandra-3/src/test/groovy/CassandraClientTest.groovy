@@ -3,7 +3,7 @@ import com.datastax.driver.core.Session
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
@@ -119,7 +119,7 @@ class CassandraClientTest extends AgentTestRunner {
       }
       tags {
         "$DDTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.CASSANDRA
+        "$DDTags.SPAN_TYPE" SpanTypes.CASSANDRA
         "$Tags.COMPONENT" "java-cassandra"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

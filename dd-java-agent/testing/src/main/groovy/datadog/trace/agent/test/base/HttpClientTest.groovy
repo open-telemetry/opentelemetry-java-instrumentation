@@ -5,7 +5,7 @@ import datadog.trace.agent.decorator.HttpClientDecorator
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
@@ -321,7 +321,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       errored exception != null
       tags {
         "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
         "$Tags.COMPONENT" clientDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

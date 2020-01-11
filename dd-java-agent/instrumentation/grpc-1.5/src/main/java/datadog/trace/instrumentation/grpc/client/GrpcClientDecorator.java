@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.grpc.client;
 
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.instrumentation.api.AgentSpan;
 import io.grpc.Status;
 
@@ -20,7 +20,7 @@ public class GrpcClientDecorator extends ClientDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.RPC;
+    return SpanTypes.RPC;
   }
 
   @Override

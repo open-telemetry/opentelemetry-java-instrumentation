@@ -3,7 +3,7 @@ import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import play.inject.guice.GuiceApplicationBuilder
@@ -63,7 +63,7 @@ class LagomTest extends AgentTestRunner {
           operationName "akka-http.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
@@ -102,7 +102,7 @@ class LagomTest extends AgentTestRunner {
           operationName "akka-http.request"
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"

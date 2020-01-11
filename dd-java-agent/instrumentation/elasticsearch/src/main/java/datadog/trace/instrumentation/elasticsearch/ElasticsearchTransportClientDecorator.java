@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.elasticsearch;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 
@@ -26,7 +26,7 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.ELASTICSEARCH;
+    return SpanTypes.ELASTICSEARCH;
   }
 
   @Override

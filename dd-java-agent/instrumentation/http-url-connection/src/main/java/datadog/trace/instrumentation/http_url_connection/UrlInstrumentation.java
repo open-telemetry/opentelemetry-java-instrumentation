@@ -8,7 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.InternalJarURLHandler;
 import datadog.trace.instrumentation.api.AgentScope;
@@ -64,7 +64,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
         final AgentSpan span =
             startSpan(protocol + ".request")
                 .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT)
-                .setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
+                .setTag(DDTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT)
                 .setTag(Tags.COMPONENT, COMPONENT);
 
         try (final AgentScope scope = activateSpan(span, false)) {

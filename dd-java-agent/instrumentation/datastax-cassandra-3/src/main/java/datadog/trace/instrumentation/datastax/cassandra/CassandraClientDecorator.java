@@ -4,7 +4,7 @@ import com.datastax.driver.core.Host;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 
@@ -28,7 +28,7 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.CASSANDRA;
+    return SpanTypes.CASSANDRA;
   }
 
   @Override

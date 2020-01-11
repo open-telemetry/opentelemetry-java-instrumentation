@@ -6,7 +6,7 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
@@ -245,7 +245,7 @@ class MongoClientTest extends MongoBaseTest {
       tags {
         "$DDTags.SERVICE_NAME" renameService ? instance : "mongo"
         "$DDTags.RESOURCE_NAME" { it.replace(" ", "") == statement }
-        "$DDTags.SPAN_TYPE" DDSpanTypes.MONGO
+        "$DDTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

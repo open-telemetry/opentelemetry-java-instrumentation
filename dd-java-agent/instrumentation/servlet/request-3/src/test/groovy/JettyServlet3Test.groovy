@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
@@ -222,7 +222,7 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
       childOf((SpanData) parent)
       errored endpoint.errored
       tags {
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
@@ -130,7 +130,7 @@ class JMS1Test extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "jms"
             "$DDTags.RESOURCE_NAME" "JMS receiveNoWait"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+            "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -167,7 +167,7 @@ class JMS1Test extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "jms"
             "$DDTags.RESOURCE_NAME" "JMS receive"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+            "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -219,7 +219,7 @@ class JMS1Test extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "jms"
             "$DDTags.RESOURCE_NAME" "Consumed from $jmsResourceName"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+            "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -249,7 +249,7 @@ class JMS1Test extends AgentTestRunner {
       tags {
         "$DDTags.SERVICE_NAME" "jms"
         "$DDTags.RESOURCE_NAME" "Produced for $jmsResourceName"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
+        "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
         "$Tags.COMPONENT" "jms"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
         "span.origin.type" ActiveMQMessageProducer.name
@@ -270,7 +270,7 @@ class JMS1Test extends AgentTestRunner {
       tags {
         "$DDTags.SERVICE_NAME" "jms"
         "$DDTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+        "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
         "$Tags.COMPONENT" "jms"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
         "span.origin.type" origin.name

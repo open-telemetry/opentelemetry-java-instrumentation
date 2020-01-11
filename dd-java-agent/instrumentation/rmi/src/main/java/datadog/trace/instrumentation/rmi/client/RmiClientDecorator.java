@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rmi.client;
 
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 
 public class RmiClientDecorator extends ClientDecorator {
   public static final RmiClientDecorator DECORATE = new RmiClientDecorator();
@@ -13,7 +13,7 @@ public class RmiClientDecorator extends ClientDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.RPC;
+    return SpanTypes.RPC;
   }
 
   @Override

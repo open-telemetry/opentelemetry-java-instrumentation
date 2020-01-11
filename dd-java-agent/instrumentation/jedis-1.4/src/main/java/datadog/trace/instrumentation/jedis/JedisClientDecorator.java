@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jedis;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import redis.clients.jedis.Protocol;
 
 public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Command> {
@@ -24,7 +24,7 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Comma
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.REDIS;
+    return SpanTypes.REDIS;
   }
 
   @Override

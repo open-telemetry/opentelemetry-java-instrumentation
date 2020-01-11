@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import example.GreeterGrpc
@@ -105,7 +105,7 @@ class GrpcStreamingTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/Conversation"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$DDTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
@@ -118,7 +118,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             childOf span(0)
             errored false
             tags {
-              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+              "$DDTags.SPAN_TYPE" SpanTypes.RPC
               "$Tags.COMPONENT" "grpc-client"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "message.type" "example.Helloworld\$Response"
@@ -131,7 +131,7 @@ class GrpcStreamingTest extends AgentTestRunner {
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/Conversation"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$DDTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
@@ -143,7 +143,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             childOf span(clientMessageCount * serverMessageCount + 1)
             errored false
             tags {
-              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+              "$DDTags.SPAN_TYPE" SpanTypes.RPC
               "$Tags.COMPONENT" "grpc-server"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
               "message.type" "example.Helloworld\$Response"

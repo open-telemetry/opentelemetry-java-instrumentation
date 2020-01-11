@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
 import datadog.trace.agent.decorator.ServerDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -16,7 +16,7 @@ public class SpringWebfluxHttpServerDecorator extends ServerDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.HTTP_SERVER;
+    return SpanTypes.HTTP_SERVER;
   }
 
   @Override

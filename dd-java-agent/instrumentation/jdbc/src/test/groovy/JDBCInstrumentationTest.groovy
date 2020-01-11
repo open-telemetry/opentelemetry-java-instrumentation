@@ -3,7 +3,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.derby.jdbc.EmbeddedDriver
@@ -176,7 +176,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -236,7 +236,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" driver
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -288,7 +288,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" driver
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -340,7 +340,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" driver
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -392,7 +392,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" driver
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -447,7 +447,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" driver
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
@@ -515,7 +515,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" driver
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             if (prepareStatement) {
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             } else {
@@ -590,7 +590,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" dbType
             "$DDTags.RESOURCE_NAME" query
-            "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+            "$DDTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" dbType
@@ -609,7 +609,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             tags {
               "$DDTags.SERVICE_NAME" dbType
               "$DDTags.RESOURCE_NAME" query
-              "$DDTags.SPAN_TYPE" DDSpanTypes.SQL
+              "$DDTags.SPAN_TYPE" SpanTypes.SQL
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" dbType

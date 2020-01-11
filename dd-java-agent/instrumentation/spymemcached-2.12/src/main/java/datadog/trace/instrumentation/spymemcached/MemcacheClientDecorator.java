@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.spymemcached;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import net.spy.memcached.MemcachedConnection;
@@ -26,7 +26,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.MEMCACHED;
+    return SpanTypes.MEMCACHED;
   }
 
   @Override

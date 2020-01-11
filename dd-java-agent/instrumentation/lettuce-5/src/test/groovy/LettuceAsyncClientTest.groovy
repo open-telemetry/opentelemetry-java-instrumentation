@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.lettuce.core.ClientOptions
@@ -122,7 +122,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "CONNECT:" + dbAddr
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
@@ -160,7 +160,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "CONNECT:" + dbAddrNonExistent
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
@@ -190,7 +190,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "SET"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -227,7 +227,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "GET"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -278,7 +278,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "GET"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -315,7 +315,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "RANDOMKEY"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -370,7 +370,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "HMSET"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -385,7 +385,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "HGETALL"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -430,7 +430,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "DEL"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -470,7 +470,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "SADD"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -495,7 +495,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -520,7 +520,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "redis"
             "$DDTags.RESOURCE_NAME" "SHUTDOWN"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
+            "$DDTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"

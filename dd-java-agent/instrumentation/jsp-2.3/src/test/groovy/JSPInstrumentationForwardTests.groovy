@@ -2,7 +2,7 @@ import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import okhttp3.OkHttpClient
@@ -91,7 +91,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -183,7 +183,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -245,7 +245,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -382,7 +382,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -494,7 +494,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
@@ -571,7 +571,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "servlet.request"
           errored false
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"

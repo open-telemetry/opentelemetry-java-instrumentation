@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.kafka_streams;
 
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
@@ -32,7 +32,7 @@ public class KafkaStreamsDecorator extends ClientDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.MESSAGE_CONSUMER;
+    return SpanTypes.MESSAGE_CONSUMER;
   }
 
   public void onConsume(final AgentSpan span, final StampedRecord record) {

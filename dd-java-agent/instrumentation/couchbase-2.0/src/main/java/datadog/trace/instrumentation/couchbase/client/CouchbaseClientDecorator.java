@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.couchbase.client;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 
 class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
@@ -23,7 +23,7 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.COUCHBASE;
+    return SpanTypes.COUCHBASE;
   }
 
   @Override

@@ -1,7 +1,7 @@
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
@@ -96,7 +96,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "ClusterHealthAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
@@ -127,7 +127,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "GetAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -199,7 +199,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "CreateIndexAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
@@ -218,7 +218,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "GetAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
@@ -240,7 +240,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "PutMappingAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -255,7 +255,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "IndexAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
@@ -279,7 +279,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "GetAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$DDTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String

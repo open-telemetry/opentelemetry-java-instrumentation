@@ -10,7 +10,7 @@ import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
@@ -334,7 +334,7 @@ class RabbitMQTest extends AgentTestRunner {
 
         switch (tag("amqp.command")?.stringValue) {
           case "basic.publish":
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
+            "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
@@ -345,14 +345,14 @@ class RabbitMQTest extends AgentTestRunner {
             "message.size" Long
             break
           case "basic.get":
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+            "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.get"
             "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "message.size" { it == null || it instanceof Long }
             break
           case "basic.deliver":
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+            "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.deliver"
             "span.origin.type" { it == "RabbitMQTest\$1" || it == "RabbitMQTest\$2" }
@@ -360,7 +360,7 @@ class RabbitMQTest extends AgentTestRunner {
             "message.size" Long
             break
           default:
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.MESSAGE_CLIENT
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "amqp.command" { it == null || it == resource }
         }

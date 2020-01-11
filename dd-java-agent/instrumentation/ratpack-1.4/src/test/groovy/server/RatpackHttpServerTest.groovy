@@ -2,7 +2,7 @@ package server
 
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.server.NettyHttpServerDecorator
@@ -109,7 +109,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
       childOf((SpanData) parent)
       tags {
         "$DDTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" "localhost"
@@ -140,7 +140,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
       }
       tags {
         "$DDTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+        "$DDTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

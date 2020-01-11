@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator;
 
 import datadog.trace.api.Config;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -24,7 +24,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.HTTP_CLIENT;
+    return SpanTypes.HTTP_CLIENT;
   }
 
   @Override

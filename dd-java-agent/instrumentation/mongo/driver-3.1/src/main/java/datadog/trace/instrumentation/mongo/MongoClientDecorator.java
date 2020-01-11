@@ -6,7 +6,7 @@ import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Arrays;
@@ -37,7 +37,7 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.MONGO;
+    return SpanTypes.MONGO;
   }
 
   @Override

@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.lettuce;
 
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
-import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.SpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -28,7 +28,7 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
 
   @Override
   protected String spanType() {
-    return DDSpanTypes.REDIS;
+    return SpanTypes.REDIS;
   }
 
   @Override

@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
-import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.SpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.AgentClassLoader
 import datadog.trace.instrumentation.api.Tags
@@ -46,7 +46,7 @@ class UrlConnectionTest extends AgentTestRunner {
           errored true
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -97,7 +97,7 @@ class UrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$DDTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" UrlInstrumentation.COMPONENT
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_PORT" 80
