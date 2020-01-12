@@ -106,7 +106,6 @@ dependencies {
 }
 
 tasks.withType(Test).configureEach {
-  jvmArgs "-Ddd.service.name=java-agent-tests"
   jvmArgs "-Ddd.writer.type=LoggingWriter"
   // Multi-threaded logging seems to be causing deadlocks with Gradle's log capture.
 //  jvmArgs "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug"

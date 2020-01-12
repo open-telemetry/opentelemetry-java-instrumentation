@@ -11,7 +11,7 @@ dependencies {
 task launch(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   main = 'io.opentelemetry.loadgenerator.LoadGenerator'
-  jvmArgs = ["-javaagent:${project(':java-agent').shadowJar.archivePath}", "-Ddd.service.name=loadtest"]
+  jvmArgs = ["-javaagent:${project(':java-agent').shadowJar.archivePath}"]
   systemProperties System.properties
 
   dependsOn project(':java-agent').shadowJar

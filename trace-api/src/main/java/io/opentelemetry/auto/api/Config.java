@@ -387,10 +387,10 @@ public class Config {
   }
 
   /**
-   * Converts the property name, e.g. 'service.name' into a public system property name, e.g.
-   * `dd.service.name`.
+   * Converts the property name, e.g. 'trace.config' into a public system property name, e.g.
+   * `dd.trace.config`.
    *
-   * @param setting The setting name, e.g. `service.name`
+   * @param setting The setting name, e.g. `trace.config`
    * @return The public facing system property name
    */
   private static String propertyNameToSystemPropertyName(final String setting) {
