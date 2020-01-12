@@ -164,14 +164,14 @@ public class Agent {
       throw new IllegalStateException("Datadog agent should have been started already");
     }
     final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-    // TracerInstaller.installGlobalTracer can be called multiple times without any problem
+    // TracerInstaller.installAgentTracer can be called multiple times without any problem
     // so there is no need to have a 'datadogTracerInstalled' flag here.
     try {
       Thread.currentThread().setContextClassLoader(AGENT_CLASSLOADER);
       // install global tracer
       final Class<?> tracerInstallerClass =
           AGENT_CLASSLOADER.loadClass("datadog.trace.agent.tooling.TracerInstaller");
-      final Method tracerInstallerMethod = tracerInstallerClass.getMethod("installGlobalTracer");
+      final Method tracerInstallerMethod = tracerInstallerClass.getMethod("installAgentTracer");
       tracerInstallerMethod.invoke(null);
       final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
       logVersionInfoMethod.invoke(null);

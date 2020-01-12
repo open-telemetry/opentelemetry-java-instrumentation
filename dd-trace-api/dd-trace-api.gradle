@@ -6,8 +6,6 @@ minimumBranchCoverage = 0.8
 // These are tested outside of this module since this module mainly just defines 'API'
 excludedClassesCoverage += [
   'datadog.trace.api.DDSpanTypes',
-  'datadog.trace.api.GlobalTracer*',
-  'datadog.trace.api.CorrelationIdentifier',
   'datadog.trace.api.DDTags',
   'datadog.trace.api.LogFields',
   'datadog.trace.api.Config'

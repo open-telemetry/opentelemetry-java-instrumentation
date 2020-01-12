@@ -17,7 +17,6 @@ public final class Constants {
     "datadog.slf4j",
     "datadog.trace.api",
     "datadog.trace.bootstrap",
-    "datadog.trace.context",
     "datadog.trace.instrumentation.api"
   };
 
