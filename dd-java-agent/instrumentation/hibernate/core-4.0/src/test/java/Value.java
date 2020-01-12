@@ -1,4 +1,4 @@
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.Trace;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

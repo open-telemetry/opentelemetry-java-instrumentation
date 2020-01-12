@@ -1,16 +1,16 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.Config
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.bootstrap.AgentClassLoader
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.Config
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.bootstrap.AgentClassLoader
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.http_url_connection.UrlInstrumentation
 
-import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
-import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
-import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
+import static io.opentelemetry.auto.agent.test.utils.ConfigUtils.withConfigOverride
+import static io.opentelemetry.auto.agent.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
+import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class UrlConnectionTest extends AgentTestRunner {
 

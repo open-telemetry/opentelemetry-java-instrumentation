@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.instrumentation.netty40.server.NettyHttpServerDecorator
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -21,12 +21,12 @@ import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
 
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR

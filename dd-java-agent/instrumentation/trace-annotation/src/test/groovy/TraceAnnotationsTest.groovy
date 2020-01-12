@@ -1,8 +1,8 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.ConfigUtils
-import datadog.trace.api.MoreTags
-import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.ConfigUtils
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.Tags
 import dd.test.trace.annotation.SayTracedHello
 
 import java.util.concurrent.Callable

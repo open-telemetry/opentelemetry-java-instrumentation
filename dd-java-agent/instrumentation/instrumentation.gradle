@@ -24,7 +24,7 @@ subprojects { Project subProj ->
     transformation {
       // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
       tasks = ['compileJava', 'compileScala', 'compileKotlin']
-      plugin = 'datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin$NoOp'
+      plugin = 'io.opentelemetry.auto.agent.tooling.muzzle.MuzzleGradlePlugin$NoOp'
     }
   }
 
@@ -32,7 +32,7 @@ subprojects { Project subProj ->
     subProj.byteBuddy {
       transformation {
         tasks = ['compileJava', 'compileScala', 'compileKotlin']
-        plugin = 'datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin'
+        plugin = 'io.opentelemetry.auto.agent.tooling.muzzle.MuzzleGradlePlugin'
         classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
       }
     }

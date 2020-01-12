@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.okhttp3.OkHttpClientDecorator
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient

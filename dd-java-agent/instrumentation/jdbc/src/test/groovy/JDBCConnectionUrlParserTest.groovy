@@ -1,8 +1,8 @@
-import datadog.trace.instrumentation.jdbc.DBInfo
-import datadog.trace.util.test.AgentSpecification
+import io.opentelemetry.auto.instrumentation.jdbc.DBInfo
+import io.opentelemetry.auto.util.test.AgentSpecification
 import spock.lang.Shared
 
-import static datadog.trace.instrumentation.jdbc.JDBCConnectionUrlParser.parse
+import static io.opentelemetry.auto.instrumentation.jdbc.JDBCConnectionUrlParser.parse
 
 class JDBCConnectionUrlParserTest extends AgentSpecification {
 

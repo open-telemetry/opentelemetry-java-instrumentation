@@ -1,8 +1,8 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.MoreTags
-import datadog.trace.bootstrap.WeakMap
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.jaxrs1.JaxRsAnnotationsDecorator
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.bootstrap.WeakMap
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.jaxrs1.JaxRsAnnotationsDecorator
 
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -13,7 +13,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import java.lang.reflect.Method
 
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 
 class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 

@@ -1,9 +1,9 @@
 package muzzle;
 
-import datadog.trace.agent.tooling.muzzle.Reference;
-import datadog.trace.agent.tooling.muzzle.ReferenceCreator;
-import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
-import datadog.trace.util.gc.GCUtils;
+import io.opentelemetry.auto.agent.tooling.muzzle.Reference;
+import io.opentelemetry.auto.agent.tooling.muzzle.ReferenceCreator;
+import io.opentelemetry.auto.agent.tooling.muzzle.ReferenceMatcher;
+import io.opentelemetry.auto.util.gc.GCUtils;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;

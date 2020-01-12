@@ -2,11 +2,11 @@ import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator
 import spock.lang.Shared
 
 abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpClientDecorator> {

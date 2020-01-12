@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.instrumentation.osgi.OSGIClassloadingInstrumentation
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.instrumentation.osgi.OSGIClassloadingInstrumentation
 import org.eclipse.osgi.launch.EquinoxFactory
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
@@ -10,7 +10,7 @@ class OSGIClassloadingTest extends AgentTestRunner {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
 
-  static final String BOOT_DELEGATION_ADDITION = "datadog.slf4j.*,datadog.slf4j,datadog.trace.api.*,datadog.trace.api,datadog.trace.bootstrap.*,datadog.trace.bootstrap,datadog.trace.instrumentation.api.*,datadog.trace.instrumentation.api,io.opentelemetry.auto.shaded.*,io.opentelemetry.auto.shaded"
+  static final String BOOT_DELEGATION_ADDITION = "datadog.slf4j.*,datadog.slf4j,io.opentelemetry.auto.api.*,io.opentelemetry.auto.api,io.opentelemetry.auto.bootstrap.*,io.opentelemetry.auto.bootstrap,io.opentelemetry.auto.instrumentation.api.*,io.opentelemetry.auto.instrumentation.api,io.opentelemetry.auto.shaded.*,io.opentelemetry.auto.shaded"
 
   def "delegation property set on module load"() {
     when:

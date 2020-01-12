@@ -1,8 +1,8 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.ConfigUtils
-import datadog.trace.api.Trace
-import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper
-import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.ConfigUtils
+import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper
+import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper
 import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.Shared
 

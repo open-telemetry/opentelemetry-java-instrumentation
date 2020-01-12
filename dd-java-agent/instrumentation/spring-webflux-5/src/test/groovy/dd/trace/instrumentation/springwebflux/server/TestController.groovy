@@ -1,6 +1,6 @@
 package dd.trace.instrumentation.springwebflux.server
 
-import datadog.trace.api.Trace
+import io.opentelemetry.auto.api.Trace
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController

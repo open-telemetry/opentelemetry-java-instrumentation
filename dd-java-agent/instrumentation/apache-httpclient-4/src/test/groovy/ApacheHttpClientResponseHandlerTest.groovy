@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.apachehttpclient.ApacheHttpClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator
 import org.apache.http.HttpResponse
 import org.apache.http.client.ResponseHandler
 import org.apache.http.impl.client.DefaultHttpClient

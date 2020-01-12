@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.instrumentation.TestBean
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.instrumentation.TestBean
 import org.jboss.weld.environment.se.Weld
 import org.jboss.weld.environment.se.WeldContainer
 import org.jboss.weld.environment.se.threading.RunnableDecorator

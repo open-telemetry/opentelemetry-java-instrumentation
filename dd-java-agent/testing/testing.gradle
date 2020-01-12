@@ -3,12 +3,12 @@ apply from: "${rootDir}/gradle/java.gradle"
 minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.5
 excludedClassesCoverage += [
-  'datadog.trace.agent.test.asserts.*Assert',
-  'datadog.trace.agent.test.base.*',
-  'datadog.trace.agent.test.log.*',
-  'datadog.trace.agent.test.AgentTestRunner',
-  'datadog.trace.agent.test.ListWriter.*',
-  'datadog.trace.agent.test.utils.*',
+  'io.opentelemetry.auto.agent.test.asserts.*Assert',
+  'io.opentelemetry.auto.agent.test.base.*',
+  'io.opentelemetry.auto.agent.test.log.*',
+  'io.opentelemetry.auto.agent.test.AgentTestRunner',
+  'io.opentelemetry.auto.agent.test.ListWriter.*',
+  'io.opentelemetry.auto.agent.test.utils.*',
   // Avoid applying jacoco instrumentation to classes instrumented by tested agent
   'context.ContextTestInstrumentation**',
 ]

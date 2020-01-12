@@ -1,9 +1,9 @@
 package context
 
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.ClasspathUtils
-import datadog.trace.api.Config
-import datadog.trace.util.gc.GCUtils
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.ClasspathUtils
+import io.opentelemetry.auto.api.Config
+import io.opentelemetry.auto.util.gc.GCUtils
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.utility.JavaModule
 import net.sf.cglib.proxy.Enhancer
@@ -59,10 +59,10 @@ class FieldBackedProviderTest extends AgentTestRunner {
     boolean hasMarkerInterface = false
     boolean hasAccessorInterface = false
     for (Class inter : keyClass.getInterfaces()) {
-      if (inter.getName() == 'datadog.trace.bootstrap.FieldBackedContextStoreAppliedMarker') {
+      if (inter.getName() == 'io.opentelemetry.auto.bootstrap.FieldBackedContextStoreAppliedMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('datadog.trace.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
+      if (inter.getName().startsWith('io.opentelemetry.auto.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
         hasAccessorInterface = true
       }
     }
@@ -206,10 +206,10 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
     boolean hasMarkerInterface = false
     boolean hasAccessorInterface = false
     for (Class inter : keyClass.getInterfaces()) {
-      if (inter.getName() == 'datadog.trace.bootstrap.FieldBackedContextStoreAppliedMarker') {
+      if (inter.getName() == 'io.opentelemetry.auto.bootstrap.FieldBackedContextStoreAppliedMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('datadog.trace.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
+      if (inter.getName().startsWith('io.opentelemetry.auto.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
         hasAccessorInterface = true
       }
     }

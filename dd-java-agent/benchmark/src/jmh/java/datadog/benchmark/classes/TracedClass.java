@@ -1,6 +1,6 @@
 package datadog.benchmark.classes;
 
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.Trace;
 
 public class TracedClass extends UntracedClass {
   @Trace

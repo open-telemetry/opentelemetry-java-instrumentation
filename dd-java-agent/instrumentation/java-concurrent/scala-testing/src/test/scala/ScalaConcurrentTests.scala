@@ -1,7 +1,7 @@
 import java.util.concurrent.CountDownLatch
 
-import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.activeSpan
+import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

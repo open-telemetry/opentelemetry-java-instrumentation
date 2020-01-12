@@ -1,9 +1,9 @@
 package dd.test.trace.annotation;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 
-import datadog.trace.api.MoreTags;
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.api.Trace;
 import java.util.concurrent.Callable;
 
 public class SayTracedHello {

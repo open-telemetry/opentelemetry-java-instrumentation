@@ -1,4 +1,4 @@
-import datadog.trace.agent.test.base.HttpServerTest;
+import io.opentelemetry.auto.agent.test.base.HttpServerTest;
 import groovy.lang.Closure;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;

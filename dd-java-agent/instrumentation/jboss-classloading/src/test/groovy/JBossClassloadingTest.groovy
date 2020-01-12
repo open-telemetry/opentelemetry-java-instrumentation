@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.tooling.Constants
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.tooling.Constants
 
 class JBossClassloadingTest extends AgentTestRunner {
   def "delegation property set on module load"() {

@@ -1,20 +1,20 @@
-import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.servlet3.Servlet3Decorator
+import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
 import okhttp3.Request
 import org.apache.catalina.core.ApplicationFilterChain
 
 import javax.servlet.Servlet
 
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER, Servlet3Decorator> {
   @Override

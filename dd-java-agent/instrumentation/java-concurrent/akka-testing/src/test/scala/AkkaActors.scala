@@ -1,8 +1,8 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.activeSpan
+import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 
 import scala.concurrent.duration._
 

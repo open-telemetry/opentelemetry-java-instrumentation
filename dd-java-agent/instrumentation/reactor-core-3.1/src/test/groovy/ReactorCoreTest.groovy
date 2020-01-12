@@ -1,9 +1,9 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.MoreTags
-import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentSpan
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.AgentSpan
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
@@ -12,7 +12,7 @@ import spock.lang.Shared
 
 import java.time.Duration
 
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 
 class ReactorCoreTest extends AgentTestRunner {
 

@@ -1,7 +1,7 @@
 package client
 
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod

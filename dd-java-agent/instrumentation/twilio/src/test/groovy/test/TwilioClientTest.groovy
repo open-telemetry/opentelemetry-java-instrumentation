@@ -10,10 +10,10 @@ import com.twilio.http.TwilioRestClient
 import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
@@ -24,8 +24,8 @@ import org.apache.http.impl.client.HttpClientBuilder
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 
 class TwilioClientTest extends AgentTestRunner {
 

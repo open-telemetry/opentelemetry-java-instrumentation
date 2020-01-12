@@ -1,6 +1,6 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 
 class ScalaInstrumentationTest extends AgentTestRunner {
 

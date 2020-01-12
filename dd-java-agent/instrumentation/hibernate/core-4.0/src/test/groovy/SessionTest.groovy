@@ -1,7 +1,7 @@
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.AgentScope
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.AgentScope
+import io.opentelemetry.auto.instrumentation.api.Tags
 import org.hibernate.LockMode
 import org.hibernate.MappingException
 import org.hibernate.Query
@@ -9,8 +9,8 @@ import org.hibernate.ReplicationMode
 import org.hibernate.Session
 import spock.lang.Shared
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 
 class SessionTest extends AbstractHibernateTest {
 

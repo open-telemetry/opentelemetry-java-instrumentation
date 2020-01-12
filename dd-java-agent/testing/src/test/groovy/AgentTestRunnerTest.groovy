@@ -1,15 +1,15 @@
 import com.google.common.reflect.ClassPath
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.SpockRunner
-import datadog.trace.agent.test.utils.ClasspathUtils
-import datadog.trace.agent.test.utils.ConfigUtils
-import datadog.trace.agent.tooling.Constants
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.SpockRunner
+import io.opentelemetry.auto.agent.test.utils.ClasspathUtils
+import io.opentelemetry.auto.agent.test.utils.ConfigUtils
+import io.opentelemetry.auto.agent.tooling.Constants
 
 import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
 
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.api.Config.TRACE_CLASSES_EXCLUDE
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.api.Config.TRACE_CLASSES_EXCLUDE
 
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null

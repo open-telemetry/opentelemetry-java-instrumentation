@@ -1,5 +1,5 @@
-import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.activeSpan
+import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.consumeEach

@@ -1,15 +1,15 @@
 package springdata
 
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 
 @RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {

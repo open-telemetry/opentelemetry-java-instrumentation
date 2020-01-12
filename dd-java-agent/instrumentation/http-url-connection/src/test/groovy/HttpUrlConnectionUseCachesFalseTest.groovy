@@ -1,7 +1,7 @@
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 
 class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 

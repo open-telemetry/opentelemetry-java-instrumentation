@@ -1,6 +1,6 @@
 package datadog.test;
 
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.Trace;
 
 /** Note: this has to stay in 'datadog.test' package to be considered for instrumentation */
 public class ClassToInstrument {

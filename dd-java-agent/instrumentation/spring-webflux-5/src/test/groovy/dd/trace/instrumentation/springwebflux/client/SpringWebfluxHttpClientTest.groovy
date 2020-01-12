@@ -1,12 +1,12 @@
 package dd.trace.instrumentation.springwebflux.client
 
-import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
-import datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
+import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient

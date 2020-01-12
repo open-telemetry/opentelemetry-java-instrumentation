@@ -1,17 +1,17 @@
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.api.Config
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.api.Config
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import spock.lang.Ignore
 import spock.lang.Requires
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
-import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
+import static io.opentelemetry.auto.agent.test.utils.ConfigUtils.withConfigOverride
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
+import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 

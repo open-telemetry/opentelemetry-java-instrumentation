@@ -1,8 +1,8 @@
 package controllers
 
-import datadog.trace.instrumentation.api.AgentTracer.activeSpan
+import io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 
-import datadog.trace.api.Trace
+import io.opentelemetry.auto.api.Trace
 import javax.inject.Inject
 
 import play.api.mvc._

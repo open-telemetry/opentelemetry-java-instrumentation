@@ -1,15 +1,15 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
 
 import java.nio.charset.StandardCharsets
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.agent.test.asserts.ListWriterAssert.assertTraces
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 
 class ViewRenderTest extends AgentTestRunner {
 

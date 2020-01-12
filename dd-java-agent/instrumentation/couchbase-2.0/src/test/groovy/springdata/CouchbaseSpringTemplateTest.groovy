@@ -10,8 +10,8 @@ import spock.lang.Shared
 import spock.lang.Unroll
 import util.AbstractCouchbaseTest
 
-import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
 class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {

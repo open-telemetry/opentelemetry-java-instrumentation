@@ -10,13 +10,13 @@ import com.couchbase.mock.Bucket
 import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.Config
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.agent.test.utils.PortUtils
+import io.opentelemetry.auto.api.Config
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.Shared
 

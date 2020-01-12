@@ -1,4 +1,4 @@
-import datadog.trace.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.agent.test.asserts.TraceAssert
 
 class CouchbaseClient26Test extends CouchbaseClientTest {
   @Override

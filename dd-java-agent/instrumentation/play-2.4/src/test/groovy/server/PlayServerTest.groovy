@@ -1,12 +1,12 @@
 package server
 
-import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
-import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator
-import datadog.trace.instrumentation.play24.PlayHttpServerDecorator
+import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.netty40.server.NettyHttpServerDecorator
+import io.opentelemetry.auto.instrumentation.play24.PlayHttpServerDecorator
 import io.opentelemetry.sdk.trace.SpanData
 import play.mvc.Results
 import play.routing.RoutingDsl
@@ -14,11 +14,11 @@ import play.server.Server
 
 import java.util.function.Supplier
 
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
   @Override

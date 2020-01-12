@@ -1,8 +1,8 @@
 package muzzle
 
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.tooling.muzzle.Reference
-import datadog.trace.agent.tooling.muzzle.ReferenceCreator
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.tooling.muzzle.Reference
+import io.opentelemetry.auto.agent.tooling.muzzle.ReferenceCreator
 
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice

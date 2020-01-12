@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.instrumentation.api.AgentTracer
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.instrumentation.api.AgentTracer
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot
 import org.apache.catalina.loader.ParallelWebappClassLoader
@@ -22,7 +22,7 @@ class TomcatClassloadingTest extends AgentTestRunner {
 
     when:
     // If instrumentation didn't work this would blow up with NPE due to incomplete resources mocking
-    def clazz = classloader.loadClass("datadog.trace.instrumentation.api.AgentTracer")
+    def clazz = classloader.loadClass("io.opentelemetry.auto.instrumentation.api.AgentTracer")
 
     then:
     clazz == AgentTracer

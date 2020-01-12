@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.PortUtils
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.PortUtils
 import de.flapdoodle.embed.mongo.MongodExecutable
 import de.flapdoodle.embed.mongo.MongodProcess
 import de.flapdoodle.embed.mongo.MongodStarter

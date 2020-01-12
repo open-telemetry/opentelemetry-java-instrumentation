@@ -1,6 +1,6 @@
 package config.exclude;
 
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.Trace;
 
 public class SomeClass implements Runnable {
 

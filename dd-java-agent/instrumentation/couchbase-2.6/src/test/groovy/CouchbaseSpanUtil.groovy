@@ -1,7 +1,7 @@
-import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 
 class CouchbaseSpanUtil {

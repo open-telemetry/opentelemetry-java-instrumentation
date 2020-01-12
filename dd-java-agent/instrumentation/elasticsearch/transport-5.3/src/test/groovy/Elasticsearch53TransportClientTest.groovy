@@ -1,9 +1,9 @@
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.PortUtils
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
@@ -18,7 +18,7 @@ import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 @RetryOnFailure(times = 3, delaySeconds = 1)

@@ -1,16 +1,16 @@
 package server
 
-import datadog.trace.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.AbstractVerticle
 import io.vertx.reactivex.ext.web.Router
 
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
 

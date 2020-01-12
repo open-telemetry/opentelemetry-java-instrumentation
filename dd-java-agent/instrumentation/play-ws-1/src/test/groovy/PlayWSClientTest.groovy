@@ -1,8 +1,8 @@
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.playws1.PlayWSClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.playws1.PlayWSClientDecorator
 import play.libs.ws.StandaloneWSClient
 import play.libs.ws.StandaloneWSRequest
 import play.libs.ws.StandaloneWSResponse

@@ -1,6 +1,6 @@
 package dd.trace.instrumentation.springwebflux.server
 
-import datadog.trace.api.Trace
+import io.opentelemetry.auto.api.Trace
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType

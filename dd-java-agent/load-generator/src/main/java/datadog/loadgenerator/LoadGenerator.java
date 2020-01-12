@@ -1,11 +1,11 @@
 package datadog.loadgenerator;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 
 import com.google.common.util.concurrent.RateLimiter;
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;

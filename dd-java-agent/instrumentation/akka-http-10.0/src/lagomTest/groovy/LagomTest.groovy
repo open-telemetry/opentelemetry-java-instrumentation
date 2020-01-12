@@ -2,10 +2,10 @@ import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
 

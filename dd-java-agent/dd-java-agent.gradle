@@ -40,7 +40,7 @@ def includeShadowJar(subproject, jarname) {
       // Prevents conflict with other SLF4J instances. Important for premain.
       relocate 'org.slf4j', 'datadog.slf4j'
       // rewrite dependencies calling Logger.getLogger
-      relocate 'java.util.logging.Logger', 'datadog.trace.bootstrap.PatchLogger'
+      relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
     }
   }
 }
@@ -52,9 +52,9 @@ jar {
 
   manifest {
     attributes(
-      "Main-Class": "datadog.trace.bootstrap.AgentBootstrap",
-      "Agent-Class": "datadog.trace.bootstrap.AgentBootstrap",
-      "Premain-Class": "datadog.trace.bootstrap.AgentBootstrap",
+      "Main-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",
+      "Agent-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",
+      "Premain-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
     )
@@ -77,7 +77,7 @@ shadowJar {
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate 'org.slf4j', 'datadog.slf4j'
   // rewrite dependencies calling Logger.getLogger
-  relocate 'java.util.logging.Logger', 'datadog.trace.bootstrap.PatchLogger'
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
 
   // relocate OpenTelemetry API
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"

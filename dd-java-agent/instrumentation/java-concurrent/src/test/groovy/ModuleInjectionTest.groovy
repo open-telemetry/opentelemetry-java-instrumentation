@@ -1,4 +1,4 @@
-import datadog.trace.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.AgentTestRunner
 
 import javax.swing.*
 

@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.instrumentation.grizzly.GrizzlyDecorator
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.Path
@@ -10,11 +10,11 @@ import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
 import org.glassfish.jersey.server.ResourceConfig
 
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
 

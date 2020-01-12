@@ -1,11 +1,11 @@
 package springdata
 
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.PortUtils
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings

@@ -1,4 +1,4 @@
-import datadog.trace.api.Trace
+import io.opentelemetry.auto.api.Trace
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.Await

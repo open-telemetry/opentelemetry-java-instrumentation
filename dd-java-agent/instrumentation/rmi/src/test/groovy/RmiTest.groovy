@@ -1,8 +1,8 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.PortUtils
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 import rmi.app.Greeter
 import rmi.app.Server
 import rmi.app.ServerLegacy
@@ -10,9 +10,9 @@ import rmi.app.ServerLegacy
 import java.rmi.registry.LocateRegistry
 import java.rmi.server.UnicastRemoteObject
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.agent.test.asserts.ListWriterAssert.assertTraces
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 
 class RmiTest extends AgentTestRunner {
   def registryPort = PortUtils.randomOpenPort()

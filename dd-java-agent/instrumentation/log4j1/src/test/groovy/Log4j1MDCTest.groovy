@@ -1,4 +1,4 @@
-import datadog.trace.agent.test.log.injection.LogContextInjectionTestBase
+import io.opentelemetry.auto.agent.test.log.injection.LogContextInjectionTestBase
 import org.apache.log4j.MDC
 import spock.lang.Requires
 

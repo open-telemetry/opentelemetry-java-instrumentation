@@ -1,7 +1,7 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.MoreTags
-import datadog.trace.api.SpanTypes
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.Tags
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
@@ -34,7 +34,7 @@ import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
-import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.auto.agent.test.server.http.TestHttpServer.httpServer
 
 class AwsClientTest extends AgentTestRunner {
 

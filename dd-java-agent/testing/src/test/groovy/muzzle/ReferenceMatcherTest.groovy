@@ -1,24 +1,24 @@
 package muzzle
 
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.ClasspathUtils
-import datadog.trace.agent.tooling.muzzle.Reference
-import datadog.trace.agent.tooling.muzzle.Reference.Source
-import datadog.trace.agent.tooling.muzzle.ReferenceCreator
-import datadog.trace.agent.tooling.muzzle.ReferenceMatcher
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.ClasspathUtils
+import io.opentelemetry.auto.agent.tooling.muzzle.Reference
+import io.opentelemetry.auto.agent.tooling.muzzle.Reference.Source
+import io.opentelemetry.auto.agent.tooling.muzzle.ReferenceCreator
+import io.opentelemetry.auto.agent.tooling.muzzle.ReferenceMatcher
 import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
 
-import static datadog.trace.agent.tooling.muzzle.Reference.Flag.INTERFACE
-import static datadog.trace.agent.tooling.muzzle.Reference.Flag.NON_INTERFACE
-import static datadog.trace.agent.tooling.muzzle.Reference.Flag.NON_STATIC
-import static datadog.trace.agent.tooling.muzzle.Reference.Flag.PRIVATE_OR_HIGHER
-import static datadog.trace.agent.tooling.muzzle.Reference.Flag.PROTECTED_OR_HIGHER
-import static datadog.trace.agent.tooling.muzzle.Reference.Flag.STATIC
-import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingClass
-import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingField
-import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingFlag
-import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingMethod
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Flag.INTERFACE
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Flag.NON_INTERFACE
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Flag.NON_STATIC
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Flag.PRIVATE_OR_HIGHER
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Flag.PROTECTED_OR_HIGHER
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Flag.STATIC
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Mismatch.MissingClass
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Mismatch.MissingField
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Mismatch.MissingFlag
+import static io.opentelemetry.auto.agent.tooling.muzzle.Reference.Mismatch.MissingMethod
 import static muzzle.TestClasses.MethodBodyAdvice
 
 class ReferenceMatcherTest extends AgentTestRunner {

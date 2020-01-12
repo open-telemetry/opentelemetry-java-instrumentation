@@ -3,8 +3,8 @@ package server;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.test.base.HttpServerTestAdvice;
-import datadog.trace.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.agent.test.base.HttpServerTestAdvice;
+import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 @AutoService(Instrumenter.class)

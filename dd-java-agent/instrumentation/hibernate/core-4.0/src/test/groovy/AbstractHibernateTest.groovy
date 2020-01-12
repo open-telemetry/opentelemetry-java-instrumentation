@@ -1,4 +1,4 @@
-import datadog.trace.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.AgentTestRunner
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration

@@ -1,7 +1,7 @@
 package client
 
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.netty40.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.netty40.client.NettyHttpClientDecorator
 import play.libs.ws.WS
 import spock.lang.AutoCleanup
 import spock.lang.Shared

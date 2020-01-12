@@ -1,9 +1,9 @@
 package datadog.perftest;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 
-import datadog.trace.api.Trace;
-import datadog.trace.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.api.Trace;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.concurrent.TimeUnit;
 
 public class Worker {

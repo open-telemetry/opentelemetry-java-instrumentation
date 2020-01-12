@@ -1,5 +1,5 @@
 import akka.dispatch.forkjoin.ForkJoinTask;
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.Trace;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;

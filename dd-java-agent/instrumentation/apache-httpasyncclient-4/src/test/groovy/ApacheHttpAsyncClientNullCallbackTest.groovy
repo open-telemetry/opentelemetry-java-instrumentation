@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup

@@ -1,6 +1,6 @@
 package datadog.smoketest.cli;
 
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.Trace;
 
 /** Simple application that sleeps then quits. */
 public class CliApplication {

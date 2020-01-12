@@ -1,7 +1,7 @@
 import akka.NotUsed;
 import akka.stream.javadsl.Source;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
-import datadog.trace.api.Trace;
+import io.opentelemetry.auto.api.Trace;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 

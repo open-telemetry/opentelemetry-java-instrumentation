@@ -1,6 +1,6 @@
 package dd.trace.instrumentation.springwebflux.server
 
-import datadog.trace.api.Trace
+import io.opentelemetry.auto.api.Trace
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest

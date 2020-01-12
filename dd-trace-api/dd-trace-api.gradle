@@ -4,10 +4,10 @@ minimumBranchCoverage = 0.8
 
 // These are tested outside of this module since this module mainly just defines 'API'
 excludedClassesCoverage += [
-  'datadog.trace.api.SpanTypes',
-  'datadog.trace.api.MoreTags',
-  'datadog.trace.api.LogFields',
-  'datadog.trace.api.Config'
+  'io.opentelemetry.auto.api.SpanTypes',
+  'io.opentelemetry.auto.api.MoreTags',
+  'io.opentelemetry.auto.api.LogFields',
+  'io.opentelemetry.auto.api.Config'
 ]
 
 description = 'dd-trace-api'

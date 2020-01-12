@@ -1,7 +1,7 @@
 import akka.dispatch.forkjoin.ForkJoinPool
 import akka.dispatch.forkjoin.ForkJoinTask
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.Trace
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.Shared
 

@@ -1,10 +1,10 @@
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.MoreTags
-import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.Tags
 import rx.Observable
 import rx.schedulers.Schedulers
 import spock.lang.Retry
@@ -14,7 +14,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 
 @Retry
 @Timeout(5)

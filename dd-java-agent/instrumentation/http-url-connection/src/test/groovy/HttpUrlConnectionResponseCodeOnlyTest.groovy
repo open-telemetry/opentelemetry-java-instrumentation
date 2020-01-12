@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 
 class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 

@@ -1,8 +1,8 @@
 package datadog.smoketest
 
 
-import datadog.trace.agent.test.utils.OkHttpUtils
-import datadog.trace.agent.test.utils.PortUtils
+import io.opentelemetry.auto.agent.test.utils.OkHttpUtils
+import io.opentelemetry.auto.agent.test.utils.PortUtils
 import okhttp3.OkHttpClient
 import spock.lang.Shared
 

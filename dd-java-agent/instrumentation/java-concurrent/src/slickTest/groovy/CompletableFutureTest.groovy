@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.Trace
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.ArrayBlockingQueue

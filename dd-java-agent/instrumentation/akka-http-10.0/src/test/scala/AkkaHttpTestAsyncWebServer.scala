@@ -4,8 +4,8 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.HttpMethods.GET
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint._
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint._
 import groovy.lang.Closure
 
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}

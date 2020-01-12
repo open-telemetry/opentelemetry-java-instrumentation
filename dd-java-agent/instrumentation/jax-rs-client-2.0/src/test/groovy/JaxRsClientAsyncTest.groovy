@@ -1,5 +1,5 @@
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.jaxrs.JaxRsClientDecorator
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder

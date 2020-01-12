@@ -4,11 +4,11 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
-import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.api.SpanTypes
-import datadog.trace.api.MoreTags
-import datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator
-import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.auto.agent.test.base.HttpClientTest
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator
+import io.opentelemetry.auto.instrumentation.api.Tags
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {
