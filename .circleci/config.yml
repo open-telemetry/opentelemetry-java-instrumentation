@@ -9,9 +9,9 @@ defaults: &defaults
 cache_keys: &cache_keys
   # Reset the cache approx every release
   keys:
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+  - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+  - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}
+  - trace-java-{{ checksum "trace-java.gradle" }}
 
 jobs:
   build:
@@ -42,7 +42,7 @@ jobs:
         - workspace
 
     - save_cache:
-        key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+        key: trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
         paths: ~/.gradle
 
 
@@ -174,14 +174,14 @@ jobs:
     - restore_cache:
         # Reset the cache approx every release
         keys:
-        - dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
+        - trace-java-muzzle-{{ checksum "trace-java.gradle" }}
 
     - run:
         name: Verify Muzzle
         command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dio.opentelemetry.auto.forkedMaxHeapSize=4G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
 
     - save_cache:
-        key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
+        key: trace-java-muzzle-{{ checksum "trace-java.gradle" }}
         paths: ~/.gradle
 
   publish: &publish

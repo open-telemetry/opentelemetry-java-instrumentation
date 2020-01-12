@@ -17,14 +17,14 @@ Integration level performance tests for the Java Agent.
 ### Example
 #### Jetty
 ```
-./gradlew dd-java-agent:benchmark-integration:jetty-perftest:shadowJar
+./gradlew java-agent:benchmark-integration:jetty-perftest:shadowJar
 # Compare a baseline (no agent) to the 0.18.0 and 0.19.0 releases.
 /usr/local/bin/bash ./run-perf-test.sh jar jetty-perftest/build/libs/jetty-perftest-*-all.jar NoAgent ~/Downloads/dd-java-agent-0.18.0.jar ~/Downloads/dd-java-agent-0.19.0.jar
 cp /tmp/perf_results.csv ~/somewhere_else/
 ```
 #### Play
 ```
-./gradlew :dd-java-agent:benchmark-integration:play-perftest:dist
+./gradlew :java-agent:benchmark-integration:play-perftest:dist
 # Compare a baseline (no agent) to the 0.18.0 and 0.19.0 releases.
 /usr/local/bin/bash ./run-perf-test.sh play-zip play-perftest/build/distributions/playBinary NoAgent ~/Downloads/dd-java-agent-0.18.0.jar ~/Downloads/dd-java-agent-0.19.0.jar
 cp /tmp/perf_results.csv ~/somewhere_else/

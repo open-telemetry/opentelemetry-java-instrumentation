@@ -10,7 +10,7 @@ Generates a simulated trace load.  Run with
 **OR**
 
 ```
-./gradlew :dd-java-agent:load-generator:launch --args='--rate 10'
+./gradlew :java-agent:load-generator:launch --args='--rate 10'
 ```
 
 from the root of the repo.

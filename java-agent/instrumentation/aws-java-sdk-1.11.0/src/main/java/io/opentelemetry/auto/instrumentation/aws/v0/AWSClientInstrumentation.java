@@ -54,14 +54,14 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addHandler(
         @Advice.FieldValue("requestHandler2s") final List<RequestHandler2> handlers) {
-      boolean hasDDHandler = false;
+      boolean hasAgentHandler = false;
       for (final RequestHandler2 handler : handlers) {
         if (handler instanceof TracingRequestHandler) {
-          hasDDHandler = true;
+          hasAgentHandler = true;
           break;
         }
       }
-      if (!hasDDHandler) {
+      if (!hasAgentHandler) {
         handlers.add(TracingRequestHandler.INSTANCE);
       }
     }

@@ -12,7 +12,7 @@ class ConfigUtils {
 
   @SneakyThrows
   synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
-    // Ensure the class was retransformed properly in DDSpecification.makeConfigInstanceModifiable()
+    // Ensure the class was retransformed properly in AgentSpecification.makeConfigInstanceModifiable()
     assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
     assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
     assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
@@ -45,7 +45,7 @@ class ConfigUtils {
    * Reset the global configuration. Please note that Runtime ID is preserved to the pre-existing value.
    */
   static void resetConfig() {
-    // Ensure the class was re-transformed properly in DDSpecification.makeConfigInstanceModifiable()
+    // Ensure the class was re-transformed properly in AgentSpecification.makeConfigInstanceModifiable()
     assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
     assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
     assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())

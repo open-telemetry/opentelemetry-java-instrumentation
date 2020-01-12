@@ -17,7 +17,7 @@ class Cleaner {
       new ThreadFactory() {
         @Override
         public Thread newThread(final Runnable r) {
-          final Thread thread = new Thread(r, "dd-cleaner");
+          final Thread thread = new Thread(r, "agent-cleaner");
           thread.setDaemon(true);
           thread.setPriority(Thread.MIN_PRIORITY);
           return thread;

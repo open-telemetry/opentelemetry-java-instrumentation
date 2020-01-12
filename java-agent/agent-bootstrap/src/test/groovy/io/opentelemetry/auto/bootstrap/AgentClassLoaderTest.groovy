@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 class AgentClassLoaderTest extends Specification {
   @Timeout(value = 60, unit = TimeUnit.SECONDS)
-  def "DD classloader does not lock classloading around instance"() {
+  def "agent classloader does not lock classloading around instance"() {
     setup:
     def className1 = 'some/class/Name1'
     def className2 = 'some/class/Name2'

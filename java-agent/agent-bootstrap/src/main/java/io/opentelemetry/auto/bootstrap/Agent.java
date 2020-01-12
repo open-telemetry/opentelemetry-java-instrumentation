@@ -24,7 +24,7 @@ public class Agent {
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY =
       "io.opentelemetry.auto.slf4j.simpleLogger.dateTimeFormat";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT =
-      "'[dd.trace 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
+      "'[opentelemetry.auto.trace 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
   private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
       "io.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel";
 
@@ -112,7 +112,7 @@ public class Agent {
                   }
                 }
               });
-      thread.setName("dd-agent-startup-" + getName());
+      thread.setName("agent-startup-" + getName());
       thread.setDaemon(true);
       thread.start();
     }
@@ -264,7 +264,7 @@ public class Agent {
    * @return true if we detect a custom log manager being used.
    */
   private static boolean isAppUsingCustomLogManager() {
-    final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
+    final String tracerCustomLogManSysprop = "opentelemetry.auto.app.customlogmanager";
     final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
     final String customLogManagerEnv =
         System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
