@@ -2,8 +2,8 @@
 
 package io.opentelemetry.auto.instrumentation.springdata;
 
-import io.opentelemetry.auto.agent.decorator.ClientDecorator;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 

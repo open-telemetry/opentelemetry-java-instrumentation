@@ -1,4 +1,4 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.glassfish.jersey.client.JerseyClientBuilder
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -6,7 +6,7 @@ import spock.util.concurrent.AsyncConditions
 
 import javax.ws.rs.client.Client
 
-import static io.opentelemetry.auto.agent.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 
 class JaxMultithreadedClientTest extends AgentTestRunner {
 

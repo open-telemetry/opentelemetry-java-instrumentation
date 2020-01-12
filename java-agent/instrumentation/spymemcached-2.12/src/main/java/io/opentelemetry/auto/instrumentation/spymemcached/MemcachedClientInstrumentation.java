@@ -7,8 +7,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -37,9 +37,9 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
-      "io.opentelemetry.auto.agent.decorator.ClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       packageName + ".MemcacheClientDecorator",
       packageName + ".CompletionListener",
       packageName + ".SyncCompletionListener",

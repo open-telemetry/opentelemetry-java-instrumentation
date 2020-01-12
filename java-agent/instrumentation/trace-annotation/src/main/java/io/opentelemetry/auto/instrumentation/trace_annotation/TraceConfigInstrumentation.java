@@ -1,13 +1,13 @@
 package io.opentelemetry.auto.instrumentation.trace_annotation;
 
-import static io.opentelemetry.auto.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -123,7 +123,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        "io.opentelemetry.auto.agent.decorator.BaseDecorator", packageName + ".TraceDecorator",
+        "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".TraceDecorator",
       };
     }
 

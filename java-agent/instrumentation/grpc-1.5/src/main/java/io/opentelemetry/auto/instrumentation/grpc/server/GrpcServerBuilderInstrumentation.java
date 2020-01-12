@@ -6,7 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.grpc.ServerInterceptor;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -32,8 +32,8 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor",
       "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCall",
       "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCallListener",
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
-      "io.opentelemetry.auto.agent.decorator.ServerDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ServerDecorator",
       packageName + ".GrpcServerDecorator",
       packageName + ".GrpcExtractAdapter"
     };

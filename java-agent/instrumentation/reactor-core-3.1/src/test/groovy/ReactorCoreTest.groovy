@@ -1,9 +1,9 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.instrumentation.api.AgentSpan
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux

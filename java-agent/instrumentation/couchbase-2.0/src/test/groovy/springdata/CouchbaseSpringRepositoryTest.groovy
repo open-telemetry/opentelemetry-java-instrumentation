@@ -12,8 +12,8 @@ import spock.lang.Shared
 import spock.lang.Unroll
 import util.AbstractCouchbaseTest
 
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
 class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {

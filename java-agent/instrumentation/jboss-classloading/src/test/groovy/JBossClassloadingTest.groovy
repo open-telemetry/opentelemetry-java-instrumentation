@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.tooling.Constants
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.tooling.Constants
 
 class JBossClassloadingTest extends AgentTestRunner {
   def "delegation property set on module load"() {

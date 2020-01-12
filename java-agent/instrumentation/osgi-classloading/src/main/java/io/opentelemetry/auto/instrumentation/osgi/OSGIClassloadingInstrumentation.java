@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.osgi;
 
-import static io.opentelemetry.auto.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -8,8 +8,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Constants;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.Constants;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.security.ProtectionDomain;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

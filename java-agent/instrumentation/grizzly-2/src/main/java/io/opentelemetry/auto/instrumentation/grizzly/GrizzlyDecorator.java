@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
-import io.opentelemetry.auto.agent.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.decorator.HttpServerDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.http.server.Request;

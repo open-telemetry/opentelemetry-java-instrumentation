@@ -1,4 +1,4 @@
-import io.opentelemetry.auto.agent.test.log.injection.LogContextInjectionTestBase
+import io.opentelemetry.auto.test.log.injection.LogContextInjectionTestBase
 import org.slf4j.MDC
 
 class Slf4jMDCTest extends LogContextInjectionTestBase {

@@ -8,10 +8,10 @@ import com.mongodb.async.client.MongoDatabase
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
-import io.opentelemetry.auto.agent.test.asserts.TraceAssert
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.SpanData
 import org.bson.BsonDocument
 import org.bson.BsonString
@@ -22,7 +22,7 @@ import spock.lang.Timeout
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Timeout(10)
 class MongoAsyncClientTest extends MongoBaseTest {

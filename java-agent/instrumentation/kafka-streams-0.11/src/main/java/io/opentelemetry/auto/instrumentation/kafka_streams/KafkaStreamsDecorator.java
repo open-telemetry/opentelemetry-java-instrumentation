@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.kafka_streams;
 
-import io.opentelemetry.auto.agent.decorator.ClientDecorator;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.auto.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import org.apache.kafka.streams.processor.internals.StampedRecord;

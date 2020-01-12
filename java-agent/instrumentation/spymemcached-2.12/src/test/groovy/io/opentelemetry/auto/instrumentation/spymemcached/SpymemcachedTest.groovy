@@ -1,12 +1,12 @@
 package io.opentelemetry.auto.instrumentation.spymemcached
 
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.test.asserts.TraceAssert
 import io.opentelemetry.auto.api.Config
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.asserts.TraceAssert
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock
 import static CompletionListener.COMPONENT_NAME
 import static CompletionListener.OPERATION_NAME
 import static CompletionListener.SERVICE_NAME
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7

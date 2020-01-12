@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jedis30;
 
-import io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 public class JedisClientDecorator extends DatabaseClientDecorator<ProtocolCommand> {

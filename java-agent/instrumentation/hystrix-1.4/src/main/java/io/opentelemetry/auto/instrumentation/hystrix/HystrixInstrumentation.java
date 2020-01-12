@@ -1,15 +1,15 @@
 package io.opentelemetry.auto.instrumentation.hystrix;
 
-import static io.opentelemetry.auto.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.instrumentation.hystrix.HystrixDecorator.DECORATE;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -38,7 +38,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.instrumentation.rxjava.SpanFinishingSubscription",
       "io.opentelemetry.auto.instrumentation.rxjava.TracedSubscriber",
       "io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe",

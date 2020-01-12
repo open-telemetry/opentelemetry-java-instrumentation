@@ -6,7 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -30,9 +30,9 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
-      "io.opentelemetry.auto.agent.decorator.ClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.HttpClientDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".RequestBuilderInjectAdapter",
       packageName + ".OkHttpClientDecorator",
       packageName + ".TracingInterceptor",

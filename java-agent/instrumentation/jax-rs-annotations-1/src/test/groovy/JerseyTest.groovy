@@ -1,12 +1,12 @@
 import io.dropwizard.testing.junit.ResourceTestRule
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.junit.ClassRule
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class JerseyTest extends AgentTestRunner {
 

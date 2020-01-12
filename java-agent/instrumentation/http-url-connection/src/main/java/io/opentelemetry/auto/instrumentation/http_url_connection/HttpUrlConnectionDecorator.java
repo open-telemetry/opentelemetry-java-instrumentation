@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.http_url_connection;
 
-import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;

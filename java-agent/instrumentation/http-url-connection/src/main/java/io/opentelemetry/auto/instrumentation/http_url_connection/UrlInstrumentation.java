@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.api.Config;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
@@ -17,6 +16,7 @@ import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.util.Map;

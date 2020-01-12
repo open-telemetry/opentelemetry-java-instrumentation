@@ -7,7 +7,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -35,9 +35,9 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
-      "io.opentelemetry.auto.agent.decorator.ClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.HttpClientDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".AwsSdkClientDecorator",
       packageName + ".TracingRequestHandler",
     };

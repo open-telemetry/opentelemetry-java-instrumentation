@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.SpanData
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.concurrent.forkjoin.ForkJoinTask

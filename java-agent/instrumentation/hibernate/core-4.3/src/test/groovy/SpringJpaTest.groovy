@@ -1,6 +1,6 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 import spring.jpa.Customer

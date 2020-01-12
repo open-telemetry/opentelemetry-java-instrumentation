@@ -1,12 +1,12 @@
 package server
 
-import io.opentelemetry.auto.agent.test.asserts.TraceAssert
-import io.opentelemetry.auto.agent.test.base.HttpServerTest
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.play26.PlayHttpServerDecorator
+import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.SpanData
 import play.BuiltInComponents
 import play.Mode
@@ -16,11 +16,11 @@ import play.server.Server
 
 import java.util.function.Supplier
 
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   @Override

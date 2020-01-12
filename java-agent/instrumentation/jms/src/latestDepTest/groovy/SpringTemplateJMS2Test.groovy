@@ -1,5 +1,5 @@
 import com.google.common.io.Files
-import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient

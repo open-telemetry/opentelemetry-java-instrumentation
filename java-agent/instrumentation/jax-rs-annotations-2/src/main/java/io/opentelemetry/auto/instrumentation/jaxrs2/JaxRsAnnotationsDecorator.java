@@ -2,13 +2,13 @@ package io.opentelemetry.auto.instrumentation.jaxrs2;
 
 import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.auto.agent.decorator.BaseDecorator;
-import io.opentelemetry.auto.agent.tooling.ClassHierarchyIterable;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.bootstrap.WeakMap;
+import io.opentelemetry.auto.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;

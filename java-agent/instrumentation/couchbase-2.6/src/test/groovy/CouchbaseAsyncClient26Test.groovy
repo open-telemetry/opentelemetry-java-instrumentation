@@ -1,4 +1,4 @@
-import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.asserts.TraceAssert
 
 class CouchbaseAsyncClient26Test extends CouchbaseAsyncClientTest {
 

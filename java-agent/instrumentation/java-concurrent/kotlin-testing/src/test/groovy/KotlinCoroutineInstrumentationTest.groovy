@@ -1,6 +1,6 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadPoolDispatcherKt
 

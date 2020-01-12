@@ -1,9 +1,9 @@
-import io.opentelemetry.test.annotation.SayTracedHello
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.test.utils.ConfigUtils
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.trace_annotation.TraceAnnotationsInstrumentation
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ConfigUtils
+import io.opentelemetry.test.annotation.SayTracedHello
 
 import java.util.concurrent.Callable
 

@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.apachehttpclient;
 
-import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import java.net.URI;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;

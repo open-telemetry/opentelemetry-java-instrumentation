@@ -3,8 +3,8 @@ package io.opentelemetry.auto.instrumentation.jboss;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Constants;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.Constants;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.Map;

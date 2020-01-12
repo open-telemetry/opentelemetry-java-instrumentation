@@ -1,6 +1,6 @@
 package io.opentelemetry.smoketest
 
-import io.opentelemetry.auto.agent.test.utils.PortUtils
+import io.opentelemetry.auto.test.utils.PortUtils
 import okhttp3.Request
 import spock.lang.Shared
 

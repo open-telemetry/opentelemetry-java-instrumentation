@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.base.HttpClientTest
 import io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator
+import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder

@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
-import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;

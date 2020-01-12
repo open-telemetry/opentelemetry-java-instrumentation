@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 

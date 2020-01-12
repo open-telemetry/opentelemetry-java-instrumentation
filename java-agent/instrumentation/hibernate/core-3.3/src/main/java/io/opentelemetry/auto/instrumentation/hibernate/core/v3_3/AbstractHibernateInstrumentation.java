@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.hibernate.core.v3_3;
 
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import org.hibernate.classic.Validatable;
 import org.hibernate.transaction.JBossTransactionManagerLookup;
 
@@ -15,10 +15,10 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
     return new String[] {
       "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
       "io.opentelemetry.auto.instrumentation.hibernate.SessionState",
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
-      "io.opentelemetry.auto.agent.decorator.ClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.OrmClientDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
+      "io.opentelemetry.auto.decorator.OrmClientDecorator",
       "io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator",
       packageName + ".AbstractHibernateInstrumentation$V3Advice",
     };

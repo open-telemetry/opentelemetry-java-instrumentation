@@ -4,7 +4,7 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 
-import io.opentelemetry.auto.agent.decorator.BaseDecorator;
+import io.opentelemetry.auto.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import rx.Observable;

@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.hibernate;
 
-import io.opentelemetry.auto.agent.decorator.OrmClientDecorator;
 import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.auto.decorator.OrmClientDecorator;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;

@@ -1,9 +1,9 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.shaded.io.opentelemetry.context.propagation.HttpTextFormat
 import io.opentelemetry.auto.shaded.io.opentelemetry.trace.SpanContext
 import io.opentelemetry.auto.shaded.io.opentelemetry.trace.propagation.HttpTraceContext
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams

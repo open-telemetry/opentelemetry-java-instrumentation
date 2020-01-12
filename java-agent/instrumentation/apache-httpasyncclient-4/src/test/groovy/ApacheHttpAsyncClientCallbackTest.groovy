@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.base.HttpClientTest
 import io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
+import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.http.HttpResponse
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.impl.nio.client.HttpAsyncClients

@@ -1,8 +1,8 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.test.utils.PortUtils
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.PortUtils
 import rmi.app.Greeter
 import rmi.app.Server
 import rmi.app.ServerLegacy
@@ -10,9 +10,9 @@ import rmi.app.ServerLegacy
 import java.rmi.registry.LocateRegistry
 import java.rmi.server.UnicastRemoteObject
 
-import static io.opentelemetry.auto.agent.test.asserts.ListWriterAssert.assertTraces
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.asserts.ListWriterAssert.assertTraces
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class RmiTest extends AgentTestRunner {
   def registryPort = PortUtils.randomOpenPort()

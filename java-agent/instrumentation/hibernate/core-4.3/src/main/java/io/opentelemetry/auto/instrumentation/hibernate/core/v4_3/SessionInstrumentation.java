@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_3;
 
-import static io.opentelemetry.auto.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -8,11 +8,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,10 +43,10 @@ public class SessionInstrumentation extends Instrumenter.Default {
     return new String[] {
       "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
       "io.opentelemetry.auto.instrumentation.hibernate.SessionState",
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
-      "io.opentelemetry.auto.agent.decorator.ClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.OrmClientDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
+      "io.opentelemetry.auto.decorator.OrmClientDecorator",
       "io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator",
     };
   }

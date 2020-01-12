@@ -1,8 +1,8 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.test.utils.ConfigUtils
 import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.Shared
 

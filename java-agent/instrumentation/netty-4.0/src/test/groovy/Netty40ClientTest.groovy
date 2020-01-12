@@ -1,6 +1,6 @@
-import io.opentelemetry.auto.agent.test.base.HttpClientTest
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty40.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -11,9 +11,9 @@ import spock.lang.Shared
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import static io.opentelemetry.auto.agent.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
 class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {

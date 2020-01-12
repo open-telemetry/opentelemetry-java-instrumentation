@@ -1,15 +1,15 @@
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 
 import java.nio.charset.StandardCharsets
 
-import static io.opentelemetry.auto.agent.test.asserts.ListWriterAssert.assertTraces
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.asserts.ListWriterAssert.assertTraces
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class ViewRenderTest extends AgentTestRunner {
 

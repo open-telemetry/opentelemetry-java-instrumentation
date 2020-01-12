@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
 import io.grpc.Status;
-import io.opentelemetry.auto.agent.decorator.ClientDecorator;
 import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.auto.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 
 public class GrpcClientDecorator extends ClientDecorator {

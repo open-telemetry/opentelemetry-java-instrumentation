@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.rmi.server;
 
-import io.opentelemetry.auto.agent.decorator.ServerDecorator;
 import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.auto.decorator.ServerDecorator;
 
 public class RmiServerDecorator extends ServerDecorator {
   public static final RmiServerDecorator DECORATE = new RmiServerDecorator();

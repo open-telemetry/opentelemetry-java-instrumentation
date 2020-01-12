@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
-import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;

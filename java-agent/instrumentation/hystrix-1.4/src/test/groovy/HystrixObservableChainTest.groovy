@@ -1,15 +1,15 @@
 import com.netflix.hystrix.HystrixObservableCommand
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 import rx.Observable
 import rx.schedulers.Schedulers
 import spock.lang.Retry
 import spock.lang.Timeout
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Retry
 @Timeout(5)

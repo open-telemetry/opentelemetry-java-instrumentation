@@ -1,12 +1,12 @@
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;

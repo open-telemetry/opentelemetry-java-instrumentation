@@ -1,10 +1,10 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import static io.opentelemetry.auto.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -14,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -50,9 +50,9 @@ public final class StatementInstrumentation extends Instrumenter.Default {
     helpers.add(packageName + ".JDBCMaps");
     helpers.add(packageName + ".JDBCConnectionUrlParser");
 
-    helpers.add("io.opentelemetry.auto.agent.decorator.BaseDecorator");
-    helpers.add("io.opentelemetry.auto.agent.decorator.ClientDecorator");
-    helpers.add("io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator");
+    helpers.add("io.opentelemetry.auto.decorator.BaseDecorator");
+    helpers.add("io.opentelemetry.auto.decorator.ClientDecorator");
+    helpers.add("io.opentelemetry.auto.decorator.DatabaseClientDecorator");
     helpers.add(packageName + ".JDBCDecorator");
 
     for (final JDBCConnectionUrlParser parser : JDBCConnectionUrlParser.values()) {

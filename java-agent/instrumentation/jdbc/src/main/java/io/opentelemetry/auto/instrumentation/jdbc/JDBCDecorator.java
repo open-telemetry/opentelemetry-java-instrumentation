@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import java.sql.Connection;

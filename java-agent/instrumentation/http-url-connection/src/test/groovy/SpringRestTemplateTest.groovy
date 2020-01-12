@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.base.HttpClientTest
 import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import io.opentelemetry.auto.test.base.HttpClientTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod

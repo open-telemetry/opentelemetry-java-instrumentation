@@ -1,4 +1,4 @@
-import io.opentelemetry.auto.agent.test.log.injection.LogContextInjectionTestBase
+import io.opentelemetry.auto.test.log.injection.LogContextInjectionTestBase
 import org.apache.logging.log4j.ThreadContext
 
 class Log4jThreadContextTest extends LogContextInjectionTestBase {

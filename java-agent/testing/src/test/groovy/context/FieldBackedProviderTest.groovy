@@ -1,8 +1,8 @@
 package context
 
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.test.utils.ClasspathUtils
 import io.opentelemetry.auto.api.Config
+import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.util.gc.GCUtils
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.utility.JavaModule

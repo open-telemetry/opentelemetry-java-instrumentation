@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.instrumentation.osgi.OSGIClassloadingInstrumentation
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.eclipse.osgi.launch.EquinoxFactory
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.RestoreSystemProperties

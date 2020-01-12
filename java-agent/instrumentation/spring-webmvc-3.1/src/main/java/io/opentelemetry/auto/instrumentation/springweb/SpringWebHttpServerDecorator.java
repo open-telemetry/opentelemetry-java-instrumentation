@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.springweb;
 
-import io.opentelemetry.auto.agent.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.net.URI;

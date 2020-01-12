@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.netty41;
 
-import static io.opentelemetry.auto.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,11 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.netty.channel.ChannelFuture;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -43,18 +43,18 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".AttributeKeys",
       packageName + ".AttributeKeys$1",
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
       // client helpers
-      "io.opentelemetry.auto.agent.decorator.ClientDecorator",
-      "io.opentelemetry.auto.agent.decorator.HttpClientDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".client.NettyHttpClientDecorator",
       packageName + ".client.NettyResponseInjectAdapter",
       packageName + ".client.HttpClientRequestTracingHandler",
       packageName + ".client.HttpClientResponseTracingHandler",
       packageName + ".client.HttpClientTracingHandler",
       // server helpers
-      "io.opentelemetry.auto.agent.decorator.ServerDecorator",
-      "io.opentelemetry.auto.agent.decorator.HttpServerDecorator",
+      "io.opentelemetry.auto.decorator.ServerDecorator",
+      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".server.NettyHttpServerDecorator",
       packageName + ".server.NettyRequestExtractAdapter",
       packageName + ".server.HttpServerRequestTracingHandler",

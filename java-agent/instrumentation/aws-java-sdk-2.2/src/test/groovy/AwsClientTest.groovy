@@ -1,7 +1,7 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
@@ -34,7 +34,7 @@ import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
-import static io.opentelemetry.auto.agent.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 
 class AwsClientTest extends AgentTestRunner {
 

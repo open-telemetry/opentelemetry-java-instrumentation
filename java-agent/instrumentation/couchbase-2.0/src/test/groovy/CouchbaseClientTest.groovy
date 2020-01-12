@@ -8,8 +8,8 @@ import com.couchbase.client.java.query.N1qlQuery
 import spock.lang.Unroll
 import util.AbstractCouchbaseTest
 
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
 class CouchbaseClientTest extends AbstractCouchbaseTest {

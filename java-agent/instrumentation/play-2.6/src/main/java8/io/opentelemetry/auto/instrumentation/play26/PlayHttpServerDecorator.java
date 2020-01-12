@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.play26;
 
-import io.opentelemetry.auto.agent.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import java.lang.reflect.InvocationTargetException;

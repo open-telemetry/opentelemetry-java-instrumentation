@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.instrumentation.api.AgentTracer
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot
 import org.apache.catalina.loader.ParallelWebappClassLoader

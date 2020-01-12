@@ -1,16 +1,16 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.Config
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.bootstrap.AgentClassLoader
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.http_url_connection.UrlInstrumentation
+import io.opentelemetry.auto.test.AgentTestRunner
 
-import static io.opentelemetry.auto.agent.test.utils.ConfigUtils.withConfigOverride
-import static io.opentelemetry.auto.agent.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
+import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
+import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class UrlConnectionTest extends AgentTestRunner {
 

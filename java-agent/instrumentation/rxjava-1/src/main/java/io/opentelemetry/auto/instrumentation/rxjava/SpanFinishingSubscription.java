@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.rxjava;
 
-import io.opentelemetry.auto.agent.decorator.BaseDecorator;
+import io.opentelemetry.auto.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscription;

@@ -1,6 +1,6 @@
 package springdata
 
-import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.test.asserts.TraceAssert
 
 class CouchbaseSpringRepository26Test extends CouchbaseSpringRepositoryTest {
   @Override

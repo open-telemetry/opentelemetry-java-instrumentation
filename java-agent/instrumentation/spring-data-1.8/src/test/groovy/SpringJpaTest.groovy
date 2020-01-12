@@ -1,13 +1,14 @@
 // This file includes software developed at SignalFx
-import io.opentelemetry.auto.agent.test.AgentTestRunner
+
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
 import spring.jpa.JpaPersistenceConfig
 
-import static io.opentelemetry.auto.agent.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class SpringJpaTest extends AgentTestRunner {
   def "test object method"() {

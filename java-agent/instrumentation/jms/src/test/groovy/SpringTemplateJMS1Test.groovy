@@ -1,4 +1,4 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker

@@ -5,10 +5,10 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
-import io.opentelemetry.auto.agent.tooling.log.LogContextScopeListener;
 import io.opentelemetry.auto.api.Config;
 import io.opentelemetry.auto.api.GlobalTracer;
+import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.log.LogContextScopeListener;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jsp;
 
-import io.opentelemetry.auto.agent.decorator.BaseDecorator;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.net.URI;

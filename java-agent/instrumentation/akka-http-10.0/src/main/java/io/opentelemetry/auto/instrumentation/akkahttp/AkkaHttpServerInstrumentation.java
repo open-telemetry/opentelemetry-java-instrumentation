@@ -12,10 +12,10 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -49,9 +49,9 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$1",
       AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$2",
       packageName + ".AkkaHttpServerHeaders",
-      "io.opentelemetry.auto.agent.decorator.BaseDecorator",
-      "io.opentelemetry.auto.agent.decorator.ServerDecorator",
-      "io.opentelemetry.auto.agent.decorator.HttpServerDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ServerDecorator",
+      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".AkkaHttpServerDecorator",
     };
   }

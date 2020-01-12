@@ -21,10 +21,10 @@ import com.amazonaws.services.rds.AmazonRDSClientBuilder
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.http.conn.HttpHostConnectException
 import org.apache.http.impl.execchain.RequestAbortedException
 import spock.lang.AutoCleanup
@@ -32,9 +32,9 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
-import static io.opentelemetry.auto.agent.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.auto.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
+import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 
 class AWSClientTest extends AgentTestRunner {
 

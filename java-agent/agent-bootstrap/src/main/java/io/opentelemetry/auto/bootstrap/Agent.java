@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Agent start up logic.
  *
- * <p>This class is loaded and called by {@code io.opentelemetry.auto.agent.AgentBootstrap}
+ * <p>This class is loaded and called by {@code io.opentelemetry.auto.AgentBootstrap}
  *
  * <p>The intention is for this class to be loaded by bootstrap classloader to make sure we have
  * unimpeded access to the rest of agent parts.
@@ -32,7 +32,7 @@ public class Agent {
   private static final Logger log;
 
   static {
-    // We can configure logger here because io.opentelemetry.auto.agent.AgentBootstrap doesn't touch
+    // We can configure logger here because io.opentelemetry.auto.AgentBootstrap doesn't touch
     // it.
     configureLogger();
     log = LoggerFactory.getLogger(Agent.class);
@@ -76,7 +76,7 @@ public class Agent {
   private static void registerLogManagerCallback(final ClassLoadCallBack callback) {
     try {
       final Class<?> agentInstallerClass =
-          AGENT_CLASSLOADER.loadClass("io.opentelemetry.auto.agent.tooling.AgentInstaller");
+          AGENT_CLASSLOADER.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");
       final Method registerCallbackMethod =
           agentInstallerClass.getMethod("registerClassLoadCallback", String.class, Runnable.class);
       registerCallbackMethod.invoke(null, "java.util.logging.LogManager", callback);
@@ -146,7 +146,7 @@ public class Agent {
             createAgentClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
         Thread.currentThread().setContextClassLoader(agentClassLoader);
         final Class<?> agentInstallerClass =
-            agentClassLoader.loadClass("io.opentelemetry.auto.agent.tooling.AgentInstaller");
+            agentClassLoader.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");
         final Method agentInstallerMethod =
             agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
         agentInstallerMethod.invoke(null, inst);
@@ -170,7 +170,7 @@ public class Agent {
       Thread.currentThread().setContextClassLoader(AGENT_CLASSLOADER);
       // install global tracer
       final Class<?> tracerInstallerClass =
-          AGENT_CLASSLOADER.loadClass("io.opentelemetry.auto.agent.tooling.TracerInstaller");
+          AGENT_CLASSLOADER.loadClass("io.opentelemetry.auto.tooling.TracerInstaller");
       final Method tracerInstallerMethod = tracerInstallerClass.getMethod("installAgentTracer");
       tracerInstallerMethod.invoke(null);
       final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");

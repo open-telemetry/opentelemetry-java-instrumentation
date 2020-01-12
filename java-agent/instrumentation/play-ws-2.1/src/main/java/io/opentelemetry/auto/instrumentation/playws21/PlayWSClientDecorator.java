@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.playws21;
 
-import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import play.shaded.ahc.org.asynchttpclient.Request;

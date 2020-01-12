@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.agent.test.base.HttpClientTest
 import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import io.opentelemetry.auto.test.base.HttpClientTest
 
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 

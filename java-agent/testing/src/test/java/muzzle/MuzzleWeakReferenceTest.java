@@ -1,8 +1,8 @@
 package muzzle;
 
-import io.opentelemetry.auto.agent.tooling.muzzle.Reference;
-import io.opentelemetry.auto.agent.tooling.muzzle.ReferenceCreator;
-import io.opentelemetry.auto.agent.tooling.muzzle.ReferenceMatcher;
+import io.opentelemetry.auto.tooling.muzzle.Reference;
+import io.opentelemetry.auto.tooling.muzzle.ReferenceCreator;
+import io.opentelemetry.auto.tooling.muzzle.ReferenceMatcher;
 import io.opentelemetry.auto.util.gc.GCUtils;
 import java.lang.ref.WeakReference;
 import java.net.URL;

@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import io.opentelemetry.auto.agent.decorator.ServerDecorator;
 import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.auto.decorator.ServerDecorator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

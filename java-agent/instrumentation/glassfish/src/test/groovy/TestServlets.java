@@ -1,5 +1,5 @@
 import groovy.lang.Closure;
-import io.opentelemetry.auto.agent.test.base.HttpServerTest;
+import io.opentelemetry.auto.test.base.HttpServerTest;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
-import static io.opentelemetry.auto.agent.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;

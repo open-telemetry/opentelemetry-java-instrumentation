@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.ratpack;
 
 import com.google.common.net.HostAndPort;
-import io.opentelemetry.auto.agent.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;

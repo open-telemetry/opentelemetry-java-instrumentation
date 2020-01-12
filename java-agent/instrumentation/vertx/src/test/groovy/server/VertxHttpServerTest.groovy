@@ -1,8 +1,7 @@
 package server
 
-
-import io.opentelemetry.auto.agent.test.base.HttpServerTest
 import io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator
+import io.opentelemetry.auto.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
@@ -13,11 +12,11 @@ import io.vertx.ext.web.Router
 
 import java.util.concurrent.CompletableFuture
 
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator> {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"

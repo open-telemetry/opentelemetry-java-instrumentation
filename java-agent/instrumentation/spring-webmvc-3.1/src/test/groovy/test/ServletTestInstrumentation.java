@@ -3,8 +3,8 @@ package test;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.agent.test.base.HttpServerTestAdvice;
-import io.opentelemetry.auto.agent.tooling.Instrumenter;
+import io.opentelemetry.auto.test.base.HttpServerTestAdvice;
+import io.opentelemetry.auto.tooling.Instrumenter;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 @AutoService(Instrumenter.class)

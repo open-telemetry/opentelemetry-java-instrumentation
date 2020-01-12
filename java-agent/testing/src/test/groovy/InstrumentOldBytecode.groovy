@@ -1,5 +1,5 @@
 import com.ibm.as400.resource.ResourceLevel
-import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.test.AgentTestRunner
 
 class InstrumentOldBytecode extends AgentTestRunner {
   def "can instrument old bytecode"() {

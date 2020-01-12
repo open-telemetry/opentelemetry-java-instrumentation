@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.rxjava;
 
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
 
-import io.opentelemetry.auto.agent.decorator.BaseDecorator;
+import io.opentelemetry.auto.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;

@@ -2,7 +2,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 minimumBranchCoverage = 0.6
 minimumInstructionCoverage = 0.8
-excludedClassesCoverage += ['io.opentelemetry.auto.agent.tooling.*']
+excludedClassesCoverage += ['io.opentelemetry.auto.tooling.*']
 
 configurations {
   // classpath used by the instrumentation muzzle plugin

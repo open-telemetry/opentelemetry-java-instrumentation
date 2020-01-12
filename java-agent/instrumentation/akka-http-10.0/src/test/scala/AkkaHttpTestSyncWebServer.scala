@@ -4,9 +4,9 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.HttpMethods.GET
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import io.opentelemetry.auto.agent.test.base.HttpServerTest
-import io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint._
 import groovy.lang.Closure
+import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint._
 
 import scala.concurrent.Await
 
