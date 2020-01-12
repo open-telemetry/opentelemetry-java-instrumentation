@@ -14,7 +14,7 @@ import static io.opentelemetry.auto.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static io.opentelemetry.auto.api.Config.PREFIX
 import static io.opentelemetry.auto.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static io.opentelemetry.auto.api.Config.TRACE_ENABLED
-import static io.opentelemetry.auto.api.Config.WRITER_TYPE
+import static io.opentelemetry.auto.api.Config.TRACE_METHODS
 
 class ConfigTest extends AgentSpecification {
   @Rule
@@ -23,7 +23,7 @@ class ConfigTest extends AgentSpecification {
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
   private static final TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
-  private static final WRITER_TYPE_ENV = "DD_WRITER_TYPE"
+  private static final TRACE_METHODS_ENV = "DD_TRACE_METHODS"
 
   def "verify defaults"() {
     when:
@@ -31,14 +31,13 @@ class ConfigTest extends AgentSpecification {
 
     then:
     config.traceEnabled == true
-    config.writerType == "LoggingWriter"
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..599).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
     config.partialFlushMinSpans == 1000
     config.runtimeContextFieldInjection == true
-    config.toString().contains("LoggingWriter")
+    config.toString().contains("traceEnabled=true")
 
     where:
     provider << [{ new Config() }, { Config.get() }, {
@@ -52,7 +51,7 @@ class ConfigTest extends AgentSpecification {
     setup:
     def prop = new Properties()
     prop.setProperty(TRACE_ENABLED, "false")
-    prop.setProperty(WRITER_TYPE, "LoggingWriter")
+    prop.setProperty(TRACE_METHODS, "mypackage.MyClass[myMethod]")
     prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -65,7 +64,7 @@ class ConfigTest extends AgentSpecification {
 
     then:
     config.traceEnabled == false
-    config.writerType == "LoggingWriter"
+    config.traceMethods == "mypackage.MyClass[myMethod]"
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -77,7 +76,7 @@ class ConfigTest extends AgentSpecification {
   def "specify overrides via system properties"() {
     setup:
     System.setProperty(PREFIX + TRACE_ENABLED, "false")
-    System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
+    System.setProperty(PREFIX + TRACE_METHODS, "mypackage.MyClass[myMethod]")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -90,7 +89,7 @@ class ConfigTest extends AgentSpecification {
 
     then:
     config.traceEnabled == false
-    config.writerType == "LoggingWriter"
+    config.traceMethods == "mypackage.MyClass[myMethod]"
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -102,33 +101,33 @@ class ConfigTest extends AgentSpecification {
   def "specify overrides via env vars"() {
     setup:
     environmentVariables.set(TRACE_ENABLED_ENV, "false")
-    environmentVariables.set(WRITER_TYPE_ENV, "LoggingWriter")
+    environmentVariables.set(TRACE_METHODS_ENV, "mypackage.MyClass[myMethod]")
 
     when:
     def config = new Config()
 
     then:
     config.traceEnabled == false
-    config.writerType == "LoggingWriter"
+    config.traceMethods == "mypackage.MyClass[myMethod]"
   }
 
   def "sys props override env vars"() {
     setup:
-    environmentVariables.set(WRITER_TYPE_ENV, "LoggingWriter")
+    environmentVariables.set(TRACE_METHODS_ENV, "mypackage.MyClass[myMethod]")
 
-    System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
+    System.setProperty(PREFIX + TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
 
     when:
     def config = new Config()
 
     then:
-    config.writerType == "LoggingWriter"
+    config.traceMethods == "mypackage2.MyClass2[myMethod2]"
   }
 
   def "default when configured incorrectly"() {
     setup:
     System.setProperty(PREFIX + TRACE_ENABLED, " ")
-    System.setProperty(PREFIX + WRITER_TYPE, " ")
+    System.setProperty(PREFIX + TRACE_METHODS, " ")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
@@ -139,7 +138,7 @@ class ConfigTest extends AgentSpecification {
 
     then:
     config.traceEnabled == true
-    config.writerType == " "
+    config.traceMethods == " "
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..599).toSet()
     config.httpClientSplitByDomain == false
@@ -150,7 +149,7 @@ class ConfigTest extends AgentSpecification {
     setup:
     Properties properties = new Properties()
     properties.setProperty(TRACE_ENABLED, "false")
-    properties.setProperty(WRITER_TYPE, "LoggingWriter")
+    properties.setProperty(TRACE_METHODS, "mypackage.MyClass[myMethod]")
     properties.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -162,7 +161,7 @@ class ConfigTest extends AgentSpecification {
 
     then:
     config.traceEnabled == false
-    config.writerType == "LoggingWriter"
+    config.traceMethods == "mypackage.MyClass[myMethod]"
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -175,7 +174,7 @@ class ConfigTest extends AgentSpecification {
     def config = Config.get(null)
 
     then:
-    config.writerType == "LoggingWriter"
+    config.traceEnabled == true
   }
 
   def "override empty properties"() {
@@ -186,7 +185,7 @@ class ConfigTest extends AgentSpecification {
     def config = Config.get(properties)
 
     then:
-    config.writerType == "LoggingWriter"
+    config.traceEnabled == true
   }
 
   def "override non empty properties"() {
@@ -198,7 +197,7 @@ class ConfigTest extends AgentSpecification {
     def config = Config.get(properties)
 
     then:
-    config.writerType == "LoggingWriter"
+    config.traceEnabled == true
   }
 
   def "verify integration config"() {
@@ -311,7 +310,7 @@ class ConfigTest extends AgentSpecification {
     def config = new Config()
 
     then:
-    config.writerType == "set-in-properties"
+    config.traceMethods == "mypackage.MyClass[myMethod]"
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
@@ -320,34 +319,34 @@ class ConfigTest extends AgentSpecification {
   def "verify fallback to properties file has lower priority than system property"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
-    System.setProperty(PREFIX + WRITER_TYPE, "set-in-system")
+    System.setProperty(PREFIX + TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
 
     when:
     def config = new Config()
 
     then:
-    config.writerType == "set-in-system"
+    config.traceMethods == "mypackage2.MyClass2[myMethod2]"
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
-    System.clearProperty(PREFIX + WRITER_TYPE)
+    System.clearProperty(PREFIX + TRACE_METHODS)
   }
 
   def "verify fallback to properties file has lower priority than env var"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
-    environmentVariables.set("DD_WRITER_TYPE", "set-in-env")
+    environmentVariables.set("DD_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
 
     when:
     def config = new Config()
 
     then:
-    config.writerType == "set-in-env"
+    config.traceMethods == "mypackage2.MyClass2[myMethod2]"
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
-    System.clearProperty(PREFIX + WRITER_TYPE)
-    environmentVariables.clear("DD_WRITER_TYPE")
+    System.clearProperty(PREFIX + TRACE_METHODS)
+    environmentVariables.clear("DD_TRACE_METHODS")
   }
 
   def "verify fallback to properties file that does not exist does not crash app"() {
@@ -358,7 +357,7 @@ class ConfigTest extends AgentSpecification {
     def config = new Config()
 
     then:
-    config.writerType == 'LoggingWriter'
+    config.traceEnabled == true
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)

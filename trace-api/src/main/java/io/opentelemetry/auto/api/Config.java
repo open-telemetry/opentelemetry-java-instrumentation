@@ -39,7 +39,6 @@ public class Config {
   public static final String CONFIGURATION_FILE = "trace.config";
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
-  public static final String WRITER_TYPE = "writer.type";
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_EXECUTORS_ALL = "trace.executors.all";
   public static final String TRACE_EXECUTORS = "trace.executors";
@@ -59,8 +58,6 @@ public class Config {
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
-  public static final String LOGGING_WRITER_TYPE = "LoggingWriter";
-  private static final String DEFAULT_WRITER_TYPE = LOGGING_WRITER_TYPE;
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
@@ -85,7 +82,6 @@ public class Config {
 
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
-  @Getter private final String writerType;
   @Getter private final List<String> excludedClasses;
   @Getter private final Set<Integer> httpServerErrorStatuses;
   @Getter private final Set<Integer> httpClientErrorStatuses;
@@ -116,7 +112,6 @@ public class Config {
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     integrationsEnabled =
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
-    writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_WRITER_TYPE);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
 
@@ -172,7 +167,6 @@ public class Config {
     traceEnabled = getPropertyBooleanValue(properties, TRACE_ENABLED, parent.traceEnabled);
     integrationsEnabled =
         getPropertyBooleanValue(properties, INTEGRATIONS_ENABLED, parent.integrationsEnabled);
-    writerType = properties.getProperty(WRITER_TYPE, parent.writerType);
 
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);
