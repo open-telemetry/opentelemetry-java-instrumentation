@@ -38,29 +38,26 @@ public final class TracingHandler implements Handler {
     DECORATE.onRequest(ratpackSpan, request);
     ctx.getExecution().add(ratpackSpan);
 
-    try (final AgentScope scope = activateSpan(ratpackSpan, false)) {
-
-      ctx.getResponse()
-          .beforeSend(
-              response -> {
-                try (final AgentScope ignored = activateSpan(ratpackSpan, false)) {
-                  if (nettySpan != null) {
-                    // Rename the netty span resource name with the ratpack route.
-                    DECORATE.onContext(nettySpan, ctx);
-                  }
-                  DECORATE.onResponse(ratpackSpan, response);
-                  DECORATE.onContext(ratpackSpan, ctx);
-                  DECORATE.beforeFinish(ratpackSpan);
-                  ratpackSpan.finish();
+    ctx.getResponse()
+        .beforeSend(
+            response -> {
+              try (final AgentScope ignored = activateSpan(ratpackSpan, false)) {
+                if (nettySpan != null) {
+                  // Rename the netty span resource name with the ratpack route.
+                  DECORATE.onContext(nettySpan, ctx);
                 }
-              });
+                DECORATE.onResponse(ratpackSpan, response);
+                DECORATE.onContext(ratpackSpan, ctx);
+                DECORATE.beforeFinish(ratpackSpan);
+                ratpackSpan.finish();
+              }
+            });
 
+    try (final AgentScope scope = activateSpan(ratpackSpan, false)) {
       ctx.next();
     } catch (final Throwable e) {
       DECORATE.onError(ratpackSpan, e);
-      DECORATE.beforeFinish(ratpackSpan);
-      // finish since the callback probably didn't get added.
-      ratpackSpan.finish();
+      // will be finished in above response handler
       throw e;
     }
   }
