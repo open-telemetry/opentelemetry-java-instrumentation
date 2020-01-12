@@ -1,4 +1,4 @@
-package dd.trace.instrumentation.springwebflux.client
+package io.opentelemetry.test.instrumentation.springwebflux.client
 
 import io.opentelemetry.auto.agent.test.asserts.TraceAssert
 import io.opentelemetry.auto.agent.test.base.HttpClientTest

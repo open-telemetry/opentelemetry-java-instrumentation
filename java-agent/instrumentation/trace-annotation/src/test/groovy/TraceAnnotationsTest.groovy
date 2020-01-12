@@ -1,4 +1,4 @@
-import dd.test.trace.annotation.SayTracedHello
+import io.opentelemetry.test.annotation.SayTracedHello
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.utils.ConfigUtils
 import io.opentelemetry.auto.api.MoreTags

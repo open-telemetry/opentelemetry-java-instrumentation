@@ -1,4 +1,4 @@
-package dd.trace.instrumentation.springwebflux.server
+package io.opentelemetry.test.instrumentation.springwebflux.server
 
 class FooModel {
   public long id

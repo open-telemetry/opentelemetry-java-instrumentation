@@ -1,4 +1,4 @@
-package dd.trace.instrumentation.springwebflux.server;
+package io.opentelemetry.test.instrumentation.springwebflux.server;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;

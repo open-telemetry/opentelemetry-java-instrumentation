@@ -1,4 +1,4 @@
-package dd.trace.instrumentation.springwebflux.server
+package io.opentelemetry.test.instrumentation.springwebflux.server
 
 import io.opentelemetry.auto.api.Trace
 import org.springframework.boot.autoconfigure.SpringBootApplication

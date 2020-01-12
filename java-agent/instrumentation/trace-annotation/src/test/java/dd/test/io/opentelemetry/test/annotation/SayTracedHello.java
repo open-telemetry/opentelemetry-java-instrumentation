@@ -1,4 +1,4 @@
-package dd.test.trace.annotation;
+package io.opentelemetry.test.annotation;
 
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 
