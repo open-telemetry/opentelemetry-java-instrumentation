@@ -1,0 +1,15 @@
+// The shadowJar of this project will be injected into the JVM's bootstrap classloader
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile project(':trace-api')
+  compile deps.opentelemetryApi
+  compile(project(path: ':java-agent:opentelemetry-sdk', configuration: 'shadow'))
+  compile deps.slf4j
+  compile group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
+  // ^ Generally a bad idea for libraries, but we're shadowing.
+}

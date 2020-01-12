@@ -1,0 +1,51 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+muzzle {
+  pass {
+    group = "org.elasticsearch.client"
+    module = "transport"
+    versions = "[6.0.0,6.8.4)"
+    // Work around for a bad release of 6.8.4
+//    assertInverse = true
+  }
+  pass {
+    group = "org.elasticsearch"
+    module = "elasticsearch"
+    versions = "[6.0.0,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '6.0.0'
+
+  compile project(':java-agent:instrumentation:elasticsearch')
+
+  // Ensure no cross interference
+  testCompile project(':java-agent:instrumentation:elasticsearch:rest-5')
+  testCompile project(':java-agent:instrumentation:apache-httpasyncclient-4')
+  testCompile project(':java-agent:instrumentation:netty-4.1')
+
+  testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.0.0'
+  testCompile group: 'org.elasticsearch.client', name: 'transport', version: '6.0.0'
+
+  testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+
+  // Limit tests to <6.5 as the latest versions have a breaking change for the tests.
+  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '(6.1,6.5)'
+  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '(6.1,6.5)'
+}

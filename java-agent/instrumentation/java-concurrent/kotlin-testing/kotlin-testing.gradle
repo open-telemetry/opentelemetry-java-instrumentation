@@ -1,0 +1,12 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/test-with-kotlin.gradle"
+
+dependencies {
+  testCompile project(':trace-api')
+
+  testCompile deps.kotlin
+  testCompile deps.coroutines
+
+  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':java-agent:instrumentation:trace-annotation')
+}

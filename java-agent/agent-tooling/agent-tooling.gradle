@@ -1,0 +1,30 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+minimumBranchCoverage = 0.6
+minimumInstructionCoverage = 0.8
+excludedClassesCoverage += ['io.opentelemetry.auto.agent.tooling.*']
+
+configurations {
+  // classpath used by the instrumentation muzzle plugin
+  instrumentationMuzzle
+}
+
+dependencies {
+  compile(project(':java-agent:agent-bootstrap')) {
+    // This only needs to exist in the bootstrap, not the instrumentation jar.
+    exclude group: 'org.slf4j', module: 'slf4j-simple'
+  }
+  compile deps.opentelemetryApi
+  compile(project(path: ':java-agent:opentelemetry-sdk', configuration: 'shadow'))
+  compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
+  compile deps.bytebuddy
+  compile deps.bytebuddyagent
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':java-agent:testing')
+  testCompile project(':utils:gc-utils')
+
+  instrumentationMuzzle sourceSets.main.output
+  instrumentationMuzzle configurations.compile
+}

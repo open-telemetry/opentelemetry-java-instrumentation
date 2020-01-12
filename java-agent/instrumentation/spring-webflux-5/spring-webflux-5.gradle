@@ -1,0 +1,49 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+muzzle {
+  pass {
+    group = "org.springframework"
+    module = "spring-webflux"
+    versions = "[5.0.0.RELEASE,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  // We use helpers from this project
+  main_java8CompileOnly project(':java-agent:instrumentation:reactor-core-3.1')
+  main_java8CompileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
+
+  // We are using utils class from reactor-core instrumentation.
+  // TODO: It is unclear why we need to use `compile` here (instead of 'compileOnly')
+  compile project(':java-agent:instrumentation:reactor-core-3.1')
+
+  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':java-agent:instrumentation:trace-annotation')
+  testCompile project(':java-agent:instrumentation:netty-4.1')
+  testCompile project(':java-agent:instrumentation:reactor-core-3.1')
+
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
+  testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
+
+  // FIXME: Tests need to be updated to support 2.1+
+  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.+'
+  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'
+  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.+'
+}

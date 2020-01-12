@@ -1,0 +1,40 @@
+// This won't work until the akka and scala integrations are split into separate projects.
+//muzzle {
+//  pass {
+//    coreJdk()
+//  }
+//}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/test-with-scala.gradle"
+apply from: "${rootDir}/gradle/test-with-kotlin.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  slickTest
+}
+
+compileSlickTestGroovy {
+  classpath = classpath.plus(files(compileSlickTestScala.destinationDir))
+  dependsOn compileSlickTestScala
+}
+
+dependencies {
+  // This is needed for Scala ForJoinTask/Pool instrumentation
+  compileOnly deps.scala
+  // This is needed for Akka ForJoinTask/Pool instrumentation
+  compileOnly group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
+
+  testCompile project(':java-agent:instrumentation:trace-annotation')
+
+  slickTestCompile project(':java-agent:instrumentation:java-concurrent')
+  slickTestCompile project(':java-agent:instrumentation:trace-annotation')
+  slickTestCompile project(':java-agent:instrumentation:jdbc')
+  slickTestCompile deps.scala
+  slickTestCompile group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
+  slickTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
+}
+
+// Run Slick library tests along with the rest of unit tests
+test.dependsOn slickTest

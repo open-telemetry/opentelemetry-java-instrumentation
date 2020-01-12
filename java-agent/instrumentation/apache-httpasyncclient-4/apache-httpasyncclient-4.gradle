@@ -1,0 +1,31 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+muzzle {
+  pass {
+    group = "org.apache.httpcomponents"
+    module = "httpasyncclient"
+    versions = "[4.0,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
+
+  testCompile project(':java-agent:instrumentation:java-concurrent')
+
+  testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
+
+  latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '+'
+}

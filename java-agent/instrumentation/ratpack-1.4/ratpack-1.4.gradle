@@ -1,0 +1,38 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+muzzle {
+  pass {
+    group = "io.ratpack"
+    module = 'ratpack-core'
+    versions = "[1.4.0,)"
+  }
+  // Some maven dependencies are missing for pre 1.0 ratpack, so we can't assertInverse.
+  fail {
+    group = "io.ratpack"
+    module = 'ratpack-core'
+    versions = "[1.0,1.4.0)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
+
+  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':java-agent:instrumentation:netty-4.1')
+  testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
+  latestDepTestCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
+}
