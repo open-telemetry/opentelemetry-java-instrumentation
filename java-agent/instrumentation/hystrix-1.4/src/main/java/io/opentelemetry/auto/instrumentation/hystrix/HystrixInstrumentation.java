@@ -37,7 +37,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "rx.DDTracingUtil",
+      "rx.__OpenTelemetryTracingUtil",
       "io.opentelemetry.auto.agent.decorator.BaseDecorator",
       "io.opentelemetry.auto.instrumentation.rxjava.SpanFinishingSubscription",
       "io.opentelemetry.auto.instrumentation.rxjava.TracedSubscriber",

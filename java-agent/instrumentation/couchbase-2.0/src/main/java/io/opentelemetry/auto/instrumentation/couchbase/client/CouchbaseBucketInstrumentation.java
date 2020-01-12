@@ -38,7 +38,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "rx.DDTracingUtil",
+      "rx.__OpenTelemetryTracingUtil",
       "io.opentelemetry.auto.agent.decorator.BaseDecorator",
       "io.opentelemetry.auto.agent.decorator.ClientDecorator",
       "io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator",

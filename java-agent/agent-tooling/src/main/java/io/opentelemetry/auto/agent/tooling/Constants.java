@@ -43,7 +43,7 @@ public final class Constants {
     "org.objectweb.asm",
     "com.kenai",
     // Custom RxJava Utility
-    "rx.DDTracingUtil",
+    "rx.__OpenTelemetryTracingUtil",
   };
 
   private Constants() {}

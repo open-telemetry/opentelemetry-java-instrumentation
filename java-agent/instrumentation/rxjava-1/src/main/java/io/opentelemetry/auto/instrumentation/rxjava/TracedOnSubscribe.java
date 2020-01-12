@@ -7,9 +7,9 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import io.opentelemetry.auto.agent.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import rx.DDTracingUtil;
 import rx.Observable;
 import rx.Subscriber;
+import rx.__OpenTelemetryTracingUtil;
 
 public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
 
@@ -22,7 +22,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
       final Observable originalObservable,
       final String operationName,
       final BaseDecorator decorator) {
-    delegate = DDTracingUtil.extractOnSubscribe(originalObservable);
+    delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
     this.operationName = operationName;
     this.decorator = decorator;
 
