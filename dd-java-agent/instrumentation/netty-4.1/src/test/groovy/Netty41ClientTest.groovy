@@ -1,4 +1,3 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDTags
 import datadog.trace.api.Trace
@@ -194,12 +193,11 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
     then:
     status == 200
-    assertTraces(2) {
-      server.distributedRequestTrace(it, 0, trace(1).last())
-      trace(1, size(3)) {
+    assertTraces(1) {
+      trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          childOf((DDSpan) span(0))
+          childOf(span(0))
           operationName "trace.annotation"
           errored false
           tags {
@@ -208,6 +206,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           }
         }
         clientSpan(it, 2, span(1), method)
+        server.distributedRequestSpan(it, 3, span(2))
       }
     }
 

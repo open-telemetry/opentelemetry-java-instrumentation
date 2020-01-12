@@ -36,8 +36,8 @@ class RmiTest extends AgentTestRunner {
 
     then:
     response.contains("Hello you")
-    assertTraces(TEST_WRITER, 2) {
-      trace(1, 2) {
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "rmi.invoke"
@@ -51,9 +51,7 @@ class RmiTest extends AgentTestRunner {
             "span.origin.type" Greeter.canonicalName
           }
         }
-      }
-      trace(0, 2) {
-        span(0) {
+        span(2) {
           operationName "rmi.request"
           tags {
             "$DDTags.RESOURCE_NAME" "Server.hello"
@@ -63,7 +61,7 @@ class RmiTest extends AgentTestRunner {
             "span.origin.type" server.class.canonicalName
           }
         }
-        span(1) {
+        span(3) {
           operationName "rmi.request"
           tags {
             "$DDTags.RESOURCE_NAME" "Server.someMethod"
@@ -112,8 +110,8 @@ class RmiTest extends AgentTestRunner {
 
     then:
     def thrownException = thrown(RuntimeException)
-    assertTraces(TEST_WRITER, 2) {
-      trace(1, 2) {
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent", null, null, thrownException)
         span(1) {
           operationName "rmi.invoke"
@@ -129,9 +127,7 @@ class RmiTest extends AgentTestRunner {
             errorTags(RuntimeException, String)
           }
         }
-      }
-      trace(0, 1) {
-        span(0) {
+        span(2) {
           operationName "rmi.request"
           errored true
           tags {
@@ -163,9 +159,8 @@ class RmiTest extends AgentTestRunner {
 
     then:
     response.contains("Hello you")
-    assertTraces(TEST_WRITER, 2) {
-      def parentSpan = TEST_WRITER[1][1]
-      trace(1, 2) {
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "rmi.invoke"
@@ -179,11 +174,8 @@ class RmiTest extends AgentTestRunner {
             "span.origin.type" Greeter.canonicalName
           }
         }
-      }
-
-      trace(0, 1) {
-        span(0) {
-          childOf parentSpan
+        span(2) {
+          childOf span(1)
           operationName "rmi.request"
           tags {
             "$DDTags.RESOURCE_NAME" "ServerLegacy.hello"

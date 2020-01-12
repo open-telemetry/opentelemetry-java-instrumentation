@@ -1,8 +1,8 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
@@ -14,7 +14,7 @@ class CouchbaseSpanUtil {
       if (parentSpan == null) {
         parent()
       } else {
-        childOf((DDSpan) parentSpan)
+        childOf((SpanData) parentSpan)
       }
       tags {
         "$DDTags.SERVICE_NAME" "couchbase"

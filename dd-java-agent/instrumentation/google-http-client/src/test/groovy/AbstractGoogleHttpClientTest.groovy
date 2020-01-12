@@ -54,9 +54,8 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
 
     then:
     status == 500
-    assertTraces(2) {
-      server.distributedRequestTrace(it, 0, trace(1).last())
-      trace(1, size(1)) {
+    assertTraces(1) {
+      trace(0, 2) {
         span(0) {
           errored true
           tags {
@@ -64,13 +63,14 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
             "$Tags.COMPONENT" "google-http-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
             "$Tags.HTTP_METHOD" method
             "$Tags.HTTP_STATUS" 500
             "$DDTags.ERROR_MSG" "Server Error"
           }
         }
+        server.distributedRequestSpan(it, 1, span(0))
       }
     }
 

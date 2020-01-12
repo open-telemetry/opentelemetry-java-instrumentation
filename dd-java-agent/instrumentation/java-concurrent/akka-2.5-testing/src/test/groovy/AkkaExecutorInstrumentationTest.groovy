@@ -1,8 +1,8 @@
 import akka.dispatch.forkjoin.ForkJoinPool
 import akka.dispatch.forkjoin.ForkJoinTask
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
+import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException
@@ -53,14 +53,14 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
     }.run()
 
     TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
+    List<SpanData> trace = TEST_WRITER.get(0)
 
     expect:
     TEST_WRITER.size() == 1
     trace.size() == 2
-    trace.get(0).operationName == "parent"
-    trace.get(1).operationName == "asyncChild"
-    trace.get(1).parentId == trace.get(0).spanId
+    trace.get(0).name == "parent"
+    trace.get(1).name == "asyncChild"
+    trace.get(1).parentSpanId == trace.get(0).spanId
 
     cleanup:
     pool?.shutdown()

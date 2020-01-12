@@ -133,8 +133,7 @@ class AWSClientTest extends AgentTestRunner {
         }
       }
     }
-    server.lastRequest.headers.get("x-datadog-trace-id") == null
-    server.lastRequest.headers.get("x-datadog-parent-id") == null
+    server.lastRequest.headers.get("traceparent") == null
 
     where:
     service | operation           | method | url                  | handlerCount | call                                                                                                                                   | body               | client

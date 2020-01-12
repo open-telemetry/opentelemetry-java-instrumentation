@@ -1,6 +1,6 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
+import datadog.trace.instrumentation.api.Tags
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadPoolDispatcherKt
 
@@ -17,15 +17,37 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
   def "kotlin traced across channels"() {
     setup:
     KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
-    int expectedNumberOfSpans = kotlinTest.tracedAcrossChannels()
-    TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
 
-    expect:
-    trace.size() == expectedNumberOfSpans
-    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.tracedAcrossChannels"
-    findSpan(trace, "produce_2").context().getParentId() == trace[0].context().getSpanId()
-    findSpan(trace, "consume_2").context().getParentId() == trace[0].context().getSpanId()
+    when:
+    kotlinTest.tracedAcrossChannels()
+
+    then:
+    assertTraces(1) {
+      trace(0, 7) {
+        span(0) {
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedAcrossChannels"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        (0..2).each {
+          span("produce_$it") {
+            childOf span(0)
+            tags {
+              "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+              "$Tags.COMPONENT" "trace"
+            }
+          }
+          span("consume_$it") {
+            childOf span(0)
+            tags {
+              "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+              "$Tags.COMPONENT" "trace"
+            }
+          }
+        }
+      }
+    }
 
     where:
     dispatcher << dispatchersToTest
@@ -34,15 +56,28 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
   def "kotlin cancellation prevents trace"() {
     setup:
     KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
-    int expectedNumberOfSpans = kotlinTest.tracePreventedByCancellation()
-    TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
 
-    expect:
-    trace.size() == expectedNumberOfSpans
-    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.tracePreventedByCancellation"
-    findSpan(trace, "preLaunch").context().getParentId() == trace[0].context().getSpanId()
-    findSpan(trace, "postLaunch") == null
+    when:
+    kotlinTest.tracePreventedByCancellation()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracePreventedByCancellation"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("preLaunch") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+      }
+    }
 
     where:
     dispatcher << dispatchersToTest
@@ -51,14 +86,28 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
   def "kotlin propagates across nested jobs"() {
     setup:
     KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
-    int expectedNumberOfSpans = kotlinTest.tracedAcrossThreadsWithNested()
-    TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
 
-    expect:
-    trace.size() == expectedNumberOfSpans
-    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.tracedAcrossThreadsWithNested"
-    findSpan(trace, "nested").context().getParentId() == trace[0].context().getSpanId()
+    when:
+    kotlinTest.tracedAcrossThreadsWithNested()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedAcrossThreadsWithNested"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("nested") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+      }
+    }
 
     where:
     dispatcher << dispatchersToTest
@@ -67,17 +116,49 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
   def "kotlin either deferred completion"() {
     setup:
     KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(Dispatchers.Default)
-    int expectedNumberOfSpans = kotlinTest.traceWithDeferred()
-    TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
 
-    expect:
-    TEST_WRITER.size() == 1
-    trace.size() == expectedNumberOfSpans
-    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.traceWithDeferred"
-    findSpan(trace, "keptPromise").context().getParentId() == trace[0].context().getSpanId()
-    findSpan(trace, "keptPromise2").context().getParentId() == trace[0].context().getSpanId()
-    findSpan(trace, "brokenPromise").context().getParentId() == trace[0].context().getSpanId()
+    when:
+    kotlinTest.traceWithDeferred()
+
+    then:
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.traceWithDeferred"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("future1") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("keptPromise") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("keptPromise2") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("brokenPromise") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+      }
+    }
 
     where:
     dispatcher << dispatchersToTest
@@ -86,27 +167,44 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
   def "kotlin first completed deferred"() {
     setup:
     KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(Dispatchers.Default)
-    int expectedNumberOfSpans = kotlinTest.tracedWithDeferredFirstCompletions()
-    TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
 
-    expect:
-    TEST_WRITER.size() == 1
-    trace.size() == expectedNumberOfSpans
-    findSpan(trace, "timeout1").context().getParentId() == trace[0].context().getSpanId()
-    findSpan(trace, "timeout2").context().getParentId() == trace[0].context().getSpanId()
-    findSpan(trace, "timeout3").context().getParentId() == trace[0].context().getSpanId()
+    when:
+    kotlinTest.tracedWithDeferredFirstCompletions()
+
+    then:
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedWithDeferredFirstCompletions"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("timeout1") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("timeout2") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span("timeout3") {
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "KotlinCoroutineTests.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+      }
+    }
 
     where:
     dispatcher << dispatchersToTest
-  }
-
-  private static DDSpan findSpan(List<DDSpan> trace, String opName) {
-    for (DDSpan span : trace) {
-      if (span.getOperationName() == opName) {
-        return span
-      }
-    }
-    return null
   }
 }

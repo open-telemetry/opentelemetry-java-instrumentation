@@ -13,7 +13,7 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   @Trace
-  def traceWithFutureAndCallbacks(): Integer = {
+  def traceWithFutureAndCallbacks() {
     val latch = new CountDownLatch(2)
     val goodFuture: Future[Integer] = Future {
       tracedChild("goodFuture")
@@ -37,11 +37,10 @@ class ScalaConcurrentTests {
     }
 
     latch.await()
-    return 5
   }
 
   @Trace
-  def tracedAcrossThreadsWithNoTrace(): Integer = {
+  def tracedAcrossThreadsWithNoTrace() {
     val latch = new CountDownLatch(1)
     val goodFuture: Future[Integer] = Future {
       1
@@ -58,14 +57,13 @@ class ScalaConcurrentTests {
     }
 
     latch.await()
-    return 2
   }
 
   /**
     * @return Number of expected spans in the trace
     */
   @Trace
-  def traceWithPromises(): Integer = {
+  def traceWithPromises() {
     val keptPromise = Promise[Boolean]()
     val brokenPromise = Promise[Boolean]()
     val afterPromise = keptPromise.future
@@ -101,14 +99,13 @@ class ScalaConcurrentTests {
     }
 
     latch.await()
-    return 5
   }
 
   /**
     * @return Number of expected spans in the trace
     */
   @Trace
-  def tracedWithFutureFirstCompletions(): Integer = {
+  def tracedWithFutureFirstCompletions() {
     val completedVal = Future.firstCompletedOf(
       List(
         Future {
@@ -124,7 +121,6 @@ class ScalaConcurrentTests {
           true
         }))
     Await.result(completedVal, 30 seconds)
-    return 4
   }
 
   /**

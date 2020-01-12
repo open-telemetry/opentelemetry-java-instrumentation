@@ -1,11 +1,11 @@
 package springdata
 
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
@@ -112,7 +112,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     waitForTracesAndSortSpans(2)
     // need to normalize trace ordering since they are finished by different threads
-    if (TEST_WRITER[1][0].tags[DDTags.RESOURCE_NAME] == "PutMappingAction") {
+    if (TEST_WRITER[1][0].attributes[DDTags.RESOURCE_NAME].stringValue == "PutMappingAction") {
       def tmp = TEST_WRITER[1]
       TEST_WRITER[1] = TEST_WRITER[0]
       TEST_WRITER[0] = tmp
@@ -410,9 +410,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
   def waitForTracesAndSortSpans(int number) {
     TEST_WRITER.waitForTraces(number)
-    for (List<DDSpan> trace : TEST_WRITER) {
+    for (List<SpanData> trace : TEST_WRITER) {
       // need to normalize span ordering since they are finished by different threads
-      if (trace.size() > 1 && trace[1].operationName == "repository.operation") {
+      if (trace.size() > 1 && trace[1].name == "repository.operation") {
         def tmp = trace[1]
         trace[1] = trace[0]
         trace[0] = tmp

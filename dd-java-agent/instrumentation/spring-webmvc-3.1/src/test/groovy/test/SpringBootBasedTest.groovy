@@ -1,6 +1,5 @@
 package test
 
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.asserts.SpanAssert
 import datadog.trace.agent.test.asserts.TraceAssert
@@ -12,6 +11,7 @@ import datadog.trace.instrumentation.servlet3.Servlet3Decorator
 import datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.sdk.trace.SpanData
 import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
@@ -69,7 +69,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
 
     TEST_WRITER.each {
       def renderSpan = it.find {
-        it.operationName == "response.render"
+        it.name == "response.render"
       }
       if (renderSpan) {
         SpanAssert.assertSpan(renderSpan) {
@@ -94,7 +94,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
     trace.span(index) {
       operationName "spring.handler"
       errored endpoint == EXCEPTION
-      childOf(parent as DDSpan)
+      childOf((SpanData) parent)
       tags {
         "$DDTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
         "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
@@ -108,7 +108,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
       errored endpoint.errored
@@ -125,7 +125,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_PORT" Long
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status

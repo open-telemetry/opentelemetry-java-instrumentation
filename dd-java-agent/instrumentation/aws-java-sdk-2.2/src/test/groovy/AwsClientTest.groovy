@@ -180,7 +180,7 @@ class AwsClientTest extends AgentTestRunner {
     response != null
 
     // Order is not guaranteed in these traces, so reorder them if needed to put aws trace first
-    if (TEST_WRITER[0][0].tags[DDTags.SERVICE_NAME] != "java-aws-sdk") {
+    if (TEST_WRITER[0][0].attributes[DDTags.SERVICE_NAME].stringValue != "java-aws-sdk") {
       def tmp = TEST_WRITER[0]
       TEST_WRITER[0] = TEST_WRITER[1]
       TEST_WRITER[1] = tmp

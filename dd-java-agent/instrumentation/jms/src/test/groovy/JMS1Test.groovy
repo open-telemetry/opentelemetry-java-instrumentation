@@ -1,9 +1,9 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.asserts.ListWriterAssert
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.ActiveMQMessageProducer
@@ -53,9 +53,11 @@ class JMS1Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(2) {
-      producerTrace(it, 0, jmsResourceName)
-      consumerTrace(it, 1, jmsResourceName, false, ActiveMQMessageConsumer)
+    assertTraces(1) {
+      trace(0, 2) {
+        producerSpan(it, 1, jmsResourceName)
+        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, span(1))
+      }
     }
 
     cleanup:
@@ -88,9 +90,11 @@ class JMS1Test extends AgentTestRunner {
     lock.countDown()
 
     expect:
-    assertTraces(2) {
-      producerTrace(it, 0, jmsResourceName)
-      consumerTrace(it, 1, jmsResourceName, true, consumer.messageListener.class)
+    assertTraces(1) {
+      trace(0, 2) {
+        producerSpan(it, 1, jmsResourceName)
+        consumerSpan(it, 0, jmsResourceName, true, consumer.messageListener.class, span(1))
+      }
     }
     // This check needs to go after all traces have been accounted for
     messageRef.get().text == messageText
@@ -203,8 +207,10 @@ class JMS1Test extends AgentTestRunner {
     // write properties in MessagePropertyTextMap when readOnlyProperties = true.
     // The consumer span will also not be linked to the parent.
     assertTraces(2) {
-      producerTrace(it, 0, jmsResourceName)
-      trace(1, 1) { // Consumer trace
+      trace(0, 1) {
+        producerSpan(it, 0, jmsResourceName)
+      }
+      trace(1, 1) {
         span(0) {
           parent()
           operationName "jms.consume"
@@ -234,44 +240,40 @@ class JMS1Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "Temporary Topic"
   }
 
-  static producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
-    writer.trace(index, 1) {
-      span(0) {
-        operationName "jms.produce"
-        errored false
-        parent()
+  static producerSpan(TraceAssert trace, int index, String jmsResourceName) {
+    trace.span(index) {
+      operationName "jms.produce"
+      errored false
+      parent()
 
-        tags {
-          "$DDTags.SERVICE_NAME" "jms"
-          "$DDTags.RESOURCE_NAME" "Produced for $jmsResourceName"
-          "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
-          "$Tags.COMPONENT" "jms"
-          "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
-          "span.origin.type" ActiveMQMessageProducer.name
-        }
+      tags {
+        "$DDTags.SERVICE_NAME" "jms"
+        "$DDTags.RESOURCE_NAME" "Produced for $jmsResourceName"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
+        "$Tags.COMPONENT" "jms"
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
+        "span.origin.type" ActiveMQMessageProducer.name
       }
     }
   }
 
-  static consumerTrace(ListWriterAssert writer, int index, String jmsResourceName, boolean messageListener, Class origin, DDSpan parentSpan = TEST_WRITER[0][0]) {
-    writer.trace(index, 1) {
-      span(0) {
-        if (messageListener) {
-          operationName "jms.onMessage"
-        } else {
-          operationName "jms.consume"
-        }
-        errored false
-        childOf parentSpan
+  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentSpan) {
+    trace.span(index) {
+      if (messageListener) {
+        operationName "jms.onMessage"
+      } else {
+        operationName "jms.consume"
+      }
+      errored false
+      childOf((SpanData) parentSpan)
 
-        tags {
-          "$DDTags.SERVICE_NAME" "jms"
-          "$DDTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
-          "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
-          "$Tags.COMPONENT" "jms"
-          "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
-          "span.origin.type" origin.name
-        }
+      tags {
+        "$DDTags.SERVICE_NAME" "jms"
+        "$DDTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+        "$Tags.COMPONENT" "jms"
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
+        "span.origin.type" origin.name
       }
     }
   }

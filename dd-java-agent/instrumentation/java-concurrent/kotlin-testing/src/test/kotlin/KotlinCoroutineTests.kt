@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
 
   @Trace
-  fun tracedAcrossChannels(): Int = runTest {
+  fun tracedAcrossChannels() = runTest {
     val producer = produce {
       repeat(3) {
         tracedChild("produce_$it")
@@ -27,12 +27,10 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
 
     producer.toChannel(actor)
     actor.close()
-
-    7
   }
 
   @Trace
-  fun tracePreventedByCancellation(): Int {
+  fun tracePreventedByCancellation() {
 
     kotlin.runCatching {
       runTest {
@@ -47,24 +45,20 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
         tracedChild("postLaunch")
       }
     }
-
-    return 2
   }
 
   @Trace
-  fun tracedAcrossThreadsWithNested(): Int = runTest {
+  fun tracedAcrossThreadsWithNested() = runTest {
     val goodDeferred = async { 1 }
 
     launch {
       goodDeferred.await()
       launch { tracedChild("nested") }
     }
-
-    2
   }
 
   @Trace
-  fun traceWithDeferred(): Int = runTest {
+  fun traceWithDeferred() = runTest {
 
     val keptPromise = CompletableDeferred<Boolean>()
     val brokenPromise = CompletableDeferred<Boolean>()
@@ -89,15 +83,13 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     }
 
     listOf(afterPromise, afterPromise2, failedAfterPromise).awaitAll()
-
-    5
   }
 
   /**
    * @return Number of expected spans in the trace
    */
   @Trace
-  fun tracedWithDeferredFirstCompletions(): Int = runTest {
+  fun tracedWithDeferredFirstCompletions() = runTest {
 
     val children = listOf(
       async {
@@ -121,8 +113,6 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
         }
       }
     }
-
-    4
   }
 
   @Trace

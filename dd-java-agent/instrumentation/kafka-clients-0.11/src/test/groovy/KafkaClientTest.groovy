@@ -79,10 +79,10 @@ class KafkaClientTest extends AgentTestRunner {
     received.value() == greeting
     received.key() == null
 
-    assertTraces(2) {
-      trace(0, 1) {
-        // PRODUCER span 0
-        span(0) {
+    assertTraces(1) {
+      trace(0, 2) {
+        // PRODUCER span 1
+        span(1) {
           operationName "kafka.produce"
           errored false
           parent()
@@ -94,13 +94,11 @@ class KafkaClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           }
         }
-      }
-      trace(1, 1) {
         // CONSUMER span 0
         span(0) {
           operationName "kafka.consume"
           errored false
-          childOf TEST_WRITER[0][0]
+          childOf span(1)
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
@@ -113,11 +111,6 @@ class KafkaClientTest extends AgentTestRunner {
         }
       }
     }
-
-    def headers = received.headers()
-    headers.iterator().hasNext()
-    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "${TEST_WRITER[0][0].traceId}"
-    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "${TEST_WRITER[0][0].spanId}"
 
     cleanup:
     producerFactory.stop()
@@ -159,10 +152,10 @@ class KafkaClientTest extends AgentTestRunner {
     first.value() == greeting
     first.key() == null
 
-    assertTraces(2) {
-      trace(0, 1) {
-        // PRODUCER span 0
-        span(0) {
+    assertTraces(1) {
+      trace(0, 2) {
+        // PRODUCER span 1
+        span(1) {
           operationName "kafka.produce"
           errored false
           parent()
@@ -175,13 +168,11 @@ class KafkaClientTest extends AgentTestRunner {
             "kafka.partition" { it >= 0 }
           }
         }
-      }
-      trace(1, 1) {
         // CONSUMER span 0
         span(0) {
           operationName "kafka.consume"
           errored false
-          childOf TEST_WRITER[0][0]
+          childOf span(1)
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"

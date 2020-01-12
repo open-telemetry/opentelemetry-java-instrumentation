@@ -1,6 +1,5 @@
 package server
 
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
@@ -8,6 +7,7 @@ import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.ratpack.RatpackServerDecorator
+import io.opentelemetry.sdk.trace.SpanData
 import ratpack.error.ServerErrorHandler
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
@@ -111,7 +111,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
     trace.span(index) {
       operationName "ratpack.handler"
       errored endpoint == ERROR || endpoint == EXCEPTION
-      childOf(parent as DDSpan)
+      childOf((SpanData) parent)
       tags {
         "$DDTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
         "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
@@ -119,10 +119,10 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_PORT" Long
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
-        "$Tags.HTTP_STATUS" Integer
+        "$Tags.HTTP_STATUS" Long
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
@@ -133,7 +133,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
     }
   }
 
-  void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
       errored endpoint.errored
@@ -149,7 +149,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
-        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_PORT" Long
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method

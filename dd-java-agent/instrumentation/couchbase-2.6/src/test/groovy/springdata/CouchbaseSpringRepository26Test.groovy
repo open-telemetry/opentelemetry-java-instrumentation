@@ -1,6 +1,5 @@
 package springdata
 
-
 import datadog.trace.agent.test.asserts.TraceAssert
 
 class CouchbaseSpringRepository26Test extends CouchbaseSpringRepositoryTest {

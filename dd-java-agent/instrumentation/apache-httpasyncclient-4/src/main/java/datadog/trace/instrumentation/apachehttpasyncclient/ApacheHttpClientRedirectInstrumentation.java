@@ -54,7 +54,7 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
 
       for (final Header header : original.getAllHeaders()) {
         final String name = header.getName().toLowerCase();
-        if (name.startsWith("x-datadog-") || name.startsWith("x-b3-")) {
+        if (name.equals("traceparent")) {
           if (!redirect.containsHeader(header.getName())) {
             redirect.setHeader(header.getName(), header.getValue());
           }

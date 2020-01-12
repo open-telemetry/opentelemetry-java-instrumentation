@@ -4,12 +4,12 @@ import com.mongodb.MongoTimeoutException
 import com.mongodb.ServerAddress
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -240,7 +240,7 @@ class MongoClientTest extends MongoBaseTest {
       if (parentSpan == null) {
         parent()
       } else {
-        childOf((DDSpan) parentSpan)
+        childOf((SpanData) parentSpan)
       }
       tags {
         "$DDTags.SERVICE_NAME" renameService ? instance : "mongo"

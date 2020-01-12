@@ -40,7 +40,7 @@ class JedisClientTest extends AgentTestRunner {
 
   def setup() {
     jedis.flushAll()
-    TEST_WRITER.start()
+    TEST_WRITER.clear()
   }
 
   def "set command"() {

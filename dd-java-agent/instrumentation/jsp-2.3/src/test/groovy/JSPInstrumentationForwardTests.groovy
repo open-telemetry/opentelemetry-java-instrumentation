@@ -96,7 +96,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$forwardFromFileName"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -188,7 +188,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToHtml.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -250,7 +250,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -387,7 +387,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToJspForward.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -499,7 +499,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToCompileError.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
@@ -576,7 +576,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToNonExistent.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 404
