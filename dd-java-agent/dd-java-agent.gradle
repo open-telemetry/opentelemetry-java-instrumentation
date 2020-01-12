@@ -42,12 +42,6 @@ def includeShadowJar(subproject, jarname) {
       relocate 'org.slf4j', 'datadog.slf4j'
       // rewrite dependencies calling Logger.getLogger
       relocate 'java.util.logging.Logger', 'datadog.trace.bootstrap.PatchLogger'
-
-      if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
-        // shadow OT impl to prevent casts to implementation
-        relocate 'datadog.trace.common', 'datadog.trace.agent.common'
-        relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
-      }
     }
   }
 }
@@ -85,12 +79,6 @@ shadowJar {
   relocate 'org.slf4j', 'datadog.slf4j'
   // rewrite dependencies calling Logger.getLogger
   relocate 'java.util.logging.Logger', 'datadog.trace.bootstrap.PatchLogger'
-
-  if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
-    // shadow OT impl to prevent casts to implementation
-    relocate 'datadog.trace.common', 'datadog.trace.agent.common'
-    relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
-  }
 }
 
 // We don't want bundled dependencies to show up in the pom.
@@ -123,10 +111,6 @@ tasks.withType(Test).configureEach {
 
   testLogging {
     events "started"
-  }
-
-  if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
-    exclude 'datadog/trace/agent/integration/classloading/ShadowPackageRenamingTest.class'
   }
 
   dependsOn shadowJar
