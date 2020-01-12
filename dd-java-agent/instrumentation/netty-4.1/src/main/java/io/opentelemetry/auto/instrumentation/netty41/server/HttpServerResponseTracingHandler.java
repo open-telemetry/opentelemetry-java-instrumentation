@@ -2,13 +2,13 @@ package io.opentelemetry.auto.instrumentation.netty41.server;
 
 import static io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.Tags;
-import io.opentelemetry.auto.instrumentation.netty41.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.instrumentation.netty41.AttributeKeys;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 

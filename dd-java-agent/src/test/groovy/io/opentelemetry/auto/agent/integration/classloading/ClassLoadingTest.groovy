@@ -1,9 +1,9 @@
 package io.opentelemetry.auto.agent.integration.classloading
 
-import io.opentelemetry.test.ClassToInstrument
-import io.opentelemetry.test.ClassToInstrumentChild
 import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.util.gc.GCUtils
+import io.opentelemetry.test.ClassToInstrument
+import io.opentelemetry.test.ClassToInstrumentChild
 import spock.lang.Specification
 import spock.lang.Timeout
 
@@ -107,7 +107,7 @@ class ClassLoadingTest extends Specification {
 
 
     where:
-    name                      | onTestClasspath
+    name                              | onTestClasspath
     "io.opentelemetry.auto.api.Trace" | true
     // This test case fails on ibm j9.  Perhaps this rule only applies to OpenJdk based jvms?
 //    "io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State" | false

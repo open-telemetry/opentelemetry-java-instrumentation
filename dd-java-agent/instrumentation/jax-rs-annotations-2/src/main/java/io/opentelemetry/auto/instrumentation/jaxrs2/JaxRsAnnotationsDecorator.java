@@ -4,8 +4,8 @@ import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.auto.agent.decorator.BaseDecorator;
 import io.opentelemetry.auto.agent.tooling.ClassHierarchyIterable;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
@@ -23,7 +23,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
       "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.handled";
   public static final String ABORT_PARENT =
       "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.parent";
-  public static final String ABORT_SPAN = "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.span";
+  public static final String ABORT_SPAN =
+      "io.opentelemetry.auto.instrumentation.jaxrs2.filter.abort.span";
 
   public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 

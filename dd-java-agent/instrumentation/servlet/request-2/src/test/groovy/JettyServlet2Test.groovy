@@ -1,13 +1,14 @@
 import io.opentelemetry.auto.agent.test.asserts.TraceAssert
 import io.opentelemetry.auto.agent.test.base.HttpServerTest
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator
-import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
+
+import javax.servlet.http.HttpServletRequest
 
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR

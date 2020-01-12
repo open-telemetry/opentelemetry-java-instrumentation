@@ -16,8 +16,8 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import org.apache.http.conn.HttpHostConnectException
 import org.apache.http.impl.execchain.RequestAbortedException

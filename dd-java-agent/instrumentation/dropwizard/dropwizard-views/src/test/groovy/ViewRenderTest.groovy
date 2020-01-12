@@ -1,9 +1,9 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.Tags
 
 import java.nio.charset.StandardCharsets
 

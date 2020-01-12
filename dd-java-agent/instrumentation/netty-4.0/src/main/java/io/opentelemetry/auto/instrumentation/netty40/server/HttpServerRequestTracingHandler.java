@@ -6,13 +6,13 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.netty40.server.NettyHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.netty40.server.NettyRequestExtractAdapter.GETTER;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
 import io.opentelemetry.auto.instrumentation.netty40.AttributeKeys;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.http.HttpRequest;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 

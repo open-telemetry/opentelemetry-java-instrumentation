@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
 import io.grpc.Metadata;
+import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
 
 public final class GrpcInjectAdapter implements AgentPropagation.Setter<Metadata> {
 

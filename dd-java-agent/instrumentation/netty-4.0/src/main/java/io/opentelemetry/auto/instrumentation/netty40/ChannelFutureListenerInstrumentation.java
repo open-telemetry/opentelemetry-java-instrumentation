@@ -11,12 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.netty.channel.ChannelFuture;
 import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.instrumentation.netty40.server.NettyHttpServerDecorator;
-import io.netty.channel.ChannelFuture;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;

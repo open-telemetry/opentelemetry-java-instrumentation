@@ -2,8 +2,8 @@ package test
 
 import io.opentelemetry.auto.agent.test.asserts.TraceAssert
 import io.opentelemetry.auto.agent.test.base.HttpServerTest
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
 import io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator

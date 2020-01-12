@@ -4,10 +4,10 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
+import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 import ratpack.http.Request;
@@ -16,8 +16,8 @@ public final class TracingHandler implements Handler {
   public static Handler INSTANCE = new TracingHandler();
 
   /**
-   * This constant is copied over from io.opentelemetry.auto.instrumentation.netty41.AttributeKeys. The key
-   * string must be kept consistent.
+   * This constant is copied over from io.opentelemetry.auto.instrumentation.netty41.AttributeKeys.
+   * The key string must be kept consistent.
    */
   public static final AttributeKey<AgentSpan> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(

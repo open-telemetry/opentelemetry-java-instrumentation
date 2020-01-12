@@ -3,8 +3,8 @@ package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
 import io.opentelemetry.auto.agent.decorator.ClientDecorator;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 

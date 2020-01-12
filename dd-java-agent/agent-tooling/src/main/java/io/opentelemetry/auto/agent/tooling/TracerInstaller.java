@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.agent.tooling;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.Config;
 import io.opentelemetry.auto.instrumentation.api.AgentTracer;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 

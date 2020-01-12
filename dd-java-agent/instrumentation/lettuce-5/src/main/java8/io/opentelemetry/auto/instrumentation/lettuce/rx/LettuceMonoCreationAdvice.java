@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.lettuce.rx;
 
-import io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentationUtil;
 import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentationUtil;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import reactor.core.publisher.Mono;

@@ -2,8 +2,8 @@ import com.google.common.io.Files
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.utils.OkHttpUtils
 import io.opentelemetry.auto.agent.test.utils.PortUtils
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request

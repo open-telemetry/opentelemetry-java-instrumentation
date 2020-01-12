@@ -189,7 +189,8 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
           mv.visitVarInsn(Opcodes.ALOAD, 0);
 
-          mv.visitTypeInsn(Opcodes.NEW, "io/opentelemetry/auto/agent/tooling/muzzle/ReferenceMatcher");
+          mv.visitTypeInsn(
+              Opcodes.NEW, "io/opentelemetry/auto/agent/tooling/muzzle/ReferenceMatcher");
           mv.visitInsn(Opcodes.DUP);
 
           mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -202,12 +203,14 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
           final Reference[] references = generateReferences();
           mv.visitLdcInsn(references.length);
-          mv.visitTypeInsn(Opcodes.ANEWARRAY, "io/opentelemetry/auto/agent/tooling/muzzle/Reference");
+          mv.visitTypeInsn(
+              Opcodes.ANEWARRAY, "io/opentelemetry/auto/agent/tooling/muzzle/Reference");
 
           for (int i = 0; i < references.length; ++i) {
             mv.visitInsn(Opcodes.DUP);
             mv.visitLdcInsn(i);
-            mv.visitTypeInsn(Opcodes.NEW, "io/opentelemetry/auto/agent/tooling/muzzle/Reference$Builder");
+            mv.visitTypeInsn(
+                Opcodes.NEW, "io/opentelemetry/auto/agent/tooling/muzzle/Reference$Builder");
             mv.visitInsn(Opcodes.DUP);
             mv.visitLdcInsn(references[i].getClassName());
             mv.visitMethodInsn(
@@ -261,7 +264,8 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
               { // sources
                 mv.visitLdcInsn(field.getSources().size());
                 mv.visitTypeInsn(
-                    Opcodes.ANEWARRAY, "io/opentelemetry/auto/agent/tooling/muzzle/Reference$Source");
+                    Opcodes.ANEWARRAY,
+                    "io/opentelemetry/auto/agent/tooling/muzzle/Reference$Source");
 
                 int j = 0;
                 for (Reference.Source source : field.getSources()) {

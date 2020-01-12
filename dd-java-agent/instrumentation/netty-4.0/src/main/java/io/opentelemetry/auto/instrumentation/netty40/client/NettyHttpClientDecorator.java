@@ -2,9 +2,9 @@ package io.opentelemetry.auto.instrumentation.netty40.client;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.auto.agent.decorator.HttpClientDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;

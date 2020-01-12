@@ -6,10 +6,6 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
 
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
@@ -17,6 +13,10 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
 
 public class TracingServerInterceptor implements ServerInterceptor {
 

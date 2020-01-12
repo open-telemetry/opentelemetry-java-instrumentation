@@ -1,10 +1,10 @@
 package io.opentelemetry.auto.agent.test.log.injection
 
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.utils.ConfigUtils
 import io.opentelemetry.auto.instrumentation.api.AgentScope
 import io.opentelemetry.auto.instrumentation.api.AgentSpan
-import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.trace.Tracer
 
 import java.util.concurrent.atomic.AtomicReference

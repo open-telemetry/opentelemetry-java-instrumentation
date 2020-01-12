@@ -1,7 +1,7 @@
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.asserts.TraceAssert
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 import org.apache.activemq.ActiveMQConnectionFactory

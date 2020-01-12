@@ -1,10 +1,10 @@
 package io.opentelemetry.auto.instrumentation.netty41;
 
+import io.netty.util.AttributeKey;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.netty41.client.HttpClientTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty41.server.HttpServerTracingHandler;
-import io.netty.util.AttributeKey;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,8 +25,9 @@ public class AttributeKeys {
       attributeKey("io.opentelemetry.auto.instrumentation.netty41.parent.connect.span");
 
   /**
-   * This constant is copied over to io.opentelemetry.auto.instrumentation.ratpack.server.TracingHandler, so
-   * if this changes, that must also change.
+   * This constant is copied over to
+   * io.opentelemetry.auto.instrumentation.ratpack.server.TracingHandler, so if this changes, that
+   * must also change.
    */
   public static final AttributeKey<AgentSpan> SERVER_ATTRIBUTE_KEY =
       attributeKey(HttpServerTracingHandler.class.getName() + ".span");

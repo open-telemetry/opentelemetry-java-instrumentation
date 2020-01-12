@@ -1,6 +1,6 @@
 import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 
 class SlickTest extends AgentTestRunner {

@@ -1,8 +1,8 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.api.SpanTypes
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.dropwizard.testing.junit.ResourceTestRule
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.Tags
 import org.jboss.resteasy.core.Dispatcher
 import org.jboss.resteasy.mock.MockDispatcherFactory
 import org.jboss.resteasy.mock.MockHttpRequest

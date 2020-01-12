@@ -12,7 +12,8 @@ import org.springframework.web.server.ServerWebExchange;
 @Slf4j
 public class AdviceUtils {
 
-  public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.instrumentation.springwebflux.Span";
+  public static final String SPAN_ATTRIBUTE =
+      "io.opentelemetry.auto.instrumentation.springwebflux.Span";
   public static final String PARENT_SPAN_ATTRIBUTE =
       "io.opentelemetry.auto.instrumentation.springwebflux.ParentSpan";
 

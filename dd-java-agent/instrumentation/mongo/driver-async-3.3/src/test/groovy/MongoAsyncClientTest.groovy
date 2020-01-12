@@ -9,8 +9,8 @@ import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
 import io.opentelemetry.auto.agent.test.asserts.TraceAssert
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 import org.bson.BsonDocument

@@ -7,13 +7,13 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.netty40.client.NettyHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.netty40.client.NettyResponseInjectAdapter.SETTER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.netty40.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
+import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.netty40.AttributeKeys;
 import java.net.InetSocketAddress;
 import lombok.extern.slf4j.Slf4j;
 

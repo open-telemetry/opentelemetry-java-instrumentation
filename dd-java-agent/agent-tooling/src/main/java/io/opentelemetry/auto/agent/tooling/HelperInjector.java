@@ -44,9 +44,9 @@ public class HelperInjector implements Transformer {
    *
    * @param helperClassNames binary names of the helper classes to inject. These class names must be
    *     resolvable by the classloader returned by
-   *     io.opentelemetry.auto.agent.tooling.Utils#getAgentClassLoader(). Classes are injected in the order
-   *     provided. This is important if there is interdependency between helper classes that
-   *     requires them to be injected in a specific order.
+   *     io.opentelemetry.auto.agent.tooling.Utils#getAgentClassLoader(). Classes are injected in
+   *     the order provided. This is important if there is interdependency between helper classes
+   *     that requires them to be injected in a specific order.
    */
   public HelperInjector(final String... helperClassNames) {
     this.helperClassNames = new LinkedHashSet<>(Arrays.asList(helperClassNames));

@@ -2,10 +2,10 @@ package io.opentelemetry.auto.instrumentation.netty41.server;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
-import io.opentelemetry.auto.agent.decorator.HttpServerDecorator;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.auto.agent.decorator.HttpServerDecorator;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;

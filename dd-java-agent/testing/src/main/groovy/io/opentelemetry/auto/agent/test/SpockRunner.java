@@ -25,7 +25,8 @@ import org.spockframework.runtime.Sputnik;
  */
 public class SpockRunner extends Sputnik {
   /**
-   * An exact copy of {@link io.opentelemetry.auto.agent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}.
+   * An exact copy of {@link
+   * io.opentelemetry.auto.agent.tooling.Constants#BOOTSTRAP_PACKAGE_PREFIXES}.
    *
    * <p>This list is needed to initialize the bootstrap classpath because Utils' static initializer
    * references bootstrap classes (e.g. AgentClassLoader).
@@ -149,7 +150,8 @@ public class SpockRunner extends Sputnik {
           .appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
       // Utils cannot be referenced before this line, as its static initializers load bootstrap
       // classes (for example, the bootstrap proxy).
-      io.opentelemetry.auto.agent.tooling.Utils.getBootstrapProxy().addURL(bootstrapJar.toURI().toURL());
+      io.opentelemetry.auto.agent.tooling.Utils.getBootstrapProxy()
+          .addURL(bootstrapJar.toURI().toURL());
     } catch (final IOException e) {
       throw new RuntimeException(e);
     }

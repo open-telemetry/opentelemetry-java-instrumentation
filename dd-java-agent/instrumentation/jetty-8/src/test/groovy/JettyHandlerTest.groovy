@@ -1,7 +1,7 @@
 import io.opentelemetry.auto.agent.test.asserts.TraceAssert
 import io.opentelemetry.auto.agent.test.base.HttpServerTest
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator
 import org.eclipse.jetty.server.Request

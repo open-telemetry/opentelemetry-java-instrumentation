@@ -1,5 +1,3 @@
-import io.opentelemetry.auto.agent.test.base.HttpServerTest
-import io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -19,17 +17,19 @@ import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
 class Netty41ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDecorator> {
 

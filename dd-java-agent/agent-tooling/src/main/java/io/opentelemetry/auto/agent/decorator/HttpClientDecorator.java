@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.agent.decorator;
 
 import io.opentelemetry.auto.api.Config;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import java.net.URI;

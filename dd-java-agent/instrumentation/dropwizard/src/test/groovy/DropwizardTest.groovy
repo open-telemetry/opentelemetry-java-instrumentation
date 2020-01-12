@@ -1,16 +1,16 @@
-import io.opentelemetry.auto.agent.test.asserts.TraceAssert
-import io.opentelemetry.auto.agent.test.base.HttpServerTest
-import io.opentelemetry.auto.api.SpanTypes
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
-import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
+import io.opentelemetry.auto.agent.test.asserts.TraceAssert
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
+import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
 import io.opentelemetry.sdk.trace.SpanData
 import org.eclipse.jetty.servlet.ServletHandler
 

@@ -1,10 +1,10 @@
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
+import groovy.json.JsonSlurper
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.utils.PortUtils
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
-import groovy.json.JsonSlurper
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils

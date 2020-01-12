@@ -1,5 +1,6 @@
-import io.opentelemetry.auto.agent.test.base.HttpServerTest
 import groovy.servlet.AbstractHttpServlet
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 

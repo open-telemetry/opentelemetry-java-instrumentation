@@ -1,8 +1,3 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.test.utils.PortUtils
-import io.opentelemetry.auto.api.SpanTypes
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
@@ -13,6 +8,11 @@ import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.protocol.AsyncCommand
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.PortUtils
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.Tags
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions

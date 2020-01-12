@@ -6,9 +6,6 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcInjectAdapter.SETTER;
 
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -18,6 +15,9 @@ import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
+import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 
 public class TracingClientInterceptor implements ClientInterceptor {
 

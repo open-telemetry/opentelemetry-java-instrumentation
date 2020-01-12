@@ -32,7 +32,8 @@ public class Agent {
   private static final Logger log;
 
   static {
-    // We can configure logger here because io.opentelemetry.auto.agent.AgentBootstrap doesn't touch it.
+    // We can configure logger here because io.opentelemetry.auto.agent.AgentBootstrap doesn't touch
+    // it.
     configureLogger();
     log = LoggerFactory.getLogger(Agent.class);
   }
@@ -217,7 +218,8 @@ public class Agent {
     }
 
     final Class<?> loaderClass =
-        ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.AgentClassLoader");
+        ClassLoader.getSystemClassLoader()
+            .loadClass("io.opentelemetry.auto.bootstrap.AgentClassLoader");
     final Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
     return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);

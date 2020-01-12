@@ -1,7 +1,7 @@
 muzzle {
   // Cant assert fails because muzzle assumes all instrumentations will fail
   // Instrumentations in jax-rs-annotations-2 will pass
-  
+
   // Resteasy changes a class's package in 3.1.0 then moves it back in 3.5.0 
   pass {
     group = "org.jboss.resteasy"

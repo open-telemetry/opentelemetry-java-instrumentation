@@ -2,9 +2,9 @@ package io.opentelemetry.perftest.jetty;
 
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 
-import io.opentelemetry.perftest.Worker;
 import io.opentelemetry.auto.api.Trace;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.perftest.Worker;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

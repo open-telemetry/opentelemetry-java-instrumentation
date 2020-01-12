@@ -2,8 +2,8 @@ package springdata
 
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext

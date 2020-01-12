@@ -1,10 +1,10 @@
 package io.opentelemetry.auto.instrumentation.netty40;
 
+import io.netty.util.AttributeKey;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.netty40.client.HttpClientTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty40.server.HttpServerTracingHandler;
-import io.netty.util.AttributeKey;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

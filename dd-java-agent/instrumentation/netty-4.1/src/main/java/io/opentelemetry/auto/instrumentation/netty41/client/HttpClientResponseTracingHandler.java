@@ -4,13 +4,13 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.noopSpan;
 import static io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.netty41.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.Attribute;
+import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.netty41.AttributeKeys;
 
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 

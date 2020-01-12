@@ -41,14 +41,14 @@ dependencies {
   testCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
 
   latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
-  
+
   // Resteasy
   testCompile group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
-  
+
   resteasy31TestCompile(group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.1.0.Final') {
     force = true
   }
-  
+
   latestDepTestCompile group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '+'
 }
 

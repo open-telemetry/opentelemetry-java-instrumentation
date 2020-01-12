@@ -3,8 +3,8 @@ package io.opentelemetry.auto.instrumentation.lettuce.rx;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.LoggerFactory;

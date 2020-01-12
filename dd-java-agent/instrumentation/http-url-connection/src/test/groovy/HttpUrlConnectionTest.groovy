@@ -1,7 +1,7 @@
 import io.opentelemetry.auto.agent.test.base.HttpClientTest
 import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import spock.lang.Ignore

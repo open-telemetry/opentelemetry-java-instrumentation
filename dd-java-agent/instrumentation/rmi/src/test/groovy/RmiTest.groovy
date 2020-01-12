@@ -1,7 +1,7 @@
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.utils.PortUtils
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import rmi.app.Greeter
 import rmi.app.Server

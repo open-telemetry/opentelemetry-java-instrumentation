@@ -1,7 +1,3 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.api.SpanTypes
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
@@ -12,6 +8,10 @@ import io.grpc.StatusRuntimeException
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.TimeUnit

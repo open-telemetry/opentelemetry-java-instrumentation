@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.grpc.server;
 
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
 import io.grpc.Metadata;
+import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
 
 public final class GrpcExtractAdapter implements AgentPropagation.Getter<Metadata> {
 

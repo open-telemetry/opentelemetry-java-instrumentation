@@ -4,10 +4,10 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
+import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import net.bytebuddy.asm.Advice;
 
 public class ConnectionFutureAdvice {

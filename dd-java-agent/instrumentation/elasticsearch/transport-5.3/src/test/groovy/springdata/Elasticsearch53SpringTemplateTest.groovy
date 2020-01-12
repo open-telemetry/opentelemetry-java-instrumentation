@@ -4,8 +4,8 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import com.google.common.collect.ImmutableSet
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.utils.PortUtils
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils

@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.AgentScope
 import io.opentelemetry.auto.instrumentation.api.Tags
 import org.hibernate.LockMode

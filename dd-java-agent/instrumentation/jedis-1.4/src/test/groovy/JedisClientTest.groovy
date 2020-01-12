@@ -1,8 +1,8 @@
 import io.opentelemetry.auto.agent.test.AgentTestRunner
 import io.opentelemetry.auto.agent.test.utils.PortUtils
 import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer

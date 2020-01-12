@@ -3,13 +3,16 @@ package io.opentelemetry.auto.instrumentation.http_url_connection;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.is;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.agent.tooling.Instrumenter;
 import io.opentelemetry.auto.api.Config;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;

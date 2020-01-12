@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.elasticsearch;
 
 import io.opentelemetry.auto.agent.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 
 public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorator {

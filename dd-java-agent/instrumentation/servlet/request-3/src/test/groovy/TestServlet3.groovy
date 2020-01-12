@@ -1,9 +1,9 @@
-import io.opentelemetry.auto.agent.test.base.HttpServerTest
 import groovy.servlet.AbstractHttpServlet
+import io.opentelemetry.auto.agent.test.base.HttpServerTest
+
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
 import java.util.concurrent.Phaser
 
 import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoint.ERROR

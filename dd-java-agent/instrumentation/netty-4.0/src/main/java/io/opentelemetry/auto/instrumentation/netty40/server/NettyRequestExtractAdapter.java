@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.netty40.server;
 
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
 
 public class NettyRequestExtractAdapter implements AgentPropagation.Getter<HttpHeaders> {
 

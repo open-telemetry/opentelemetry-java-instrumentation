@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.agent.test.asserts
 
-import io.opentelemetry.auto.agent.test.ListWriter
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.auto.agent.test.ListWriter
 import io.opentelemetry.sdk.trace.SpanData
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition

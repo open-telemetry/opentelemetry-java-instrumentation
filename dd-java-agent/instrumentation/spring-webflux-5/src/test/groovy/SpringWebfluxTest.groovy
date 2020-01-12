@@ -1,12 +1,12 @@
-import io.opentelemetry.auto.agent.test.AgentTestRunner
-import io.opentelemetry.auto.agent.test.utils.OkHttpUtils
-import io.opentelemetry.auto.api.SpanTypes
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import dd.trace.instrumentation.springwebflux.server.EchoHandlerFunction
 import dd.trace.instrumentation.springwebflux.server.FooModel
 import dd.trace.instrumentation.springwebflux.server.SpringWebFluxTestApplication
 import dd.trace.instrumentation.springwebflux.server.TestController
+import io.opentelemetry.auto.agent.test.AgentTestRunner
+import io.opentelemetry.auto.agent.test.utils.OkHttpUtils
+import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
