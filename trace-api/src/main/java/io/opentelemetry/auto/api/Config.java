@@ -50,7 +50,6 @@ public class Config {
   public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
-  public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
@@ -69,7 +68,6 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
-  private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
 
   public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
 
@@ -89,7 +87,6 @@ public class Config {
   @Getter private final boolean httpClientTagQueryString;
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final boolean dbClientSplitByInstance;
-  @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
 
   @Getter private final boolean logsInjectionEnabled;
@@ -138,9 +135,6 @@ public class Config {
     dbClientSplitByInstance =
         getBooleanSettingFromEnvironment(
             DB_CLIENT_HOST_SPLIT_BY_INSTANCE, DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE);
-
-    partialFlushMinSpans =
-        getIntegerSettingFromEnvironment(PARTIAL_FLUSH_MIN_SPANS, DEFAULT_PARTIAL_FLUSH_MIN_SPANS);
 
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
@@ -194,9 +188,6 @@ public class Config {
     dbClientSplitByInstance =
         getPropertyBooleanValue(
             properties, DB_CLIENT_HOST_SPLIT_BY_INSTANCE, parent.dbClientSplitByInstance);
-
-    partialFlushMinSpans =
-        getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);
 
     runtimeContextFieldInjection =
         getPropertyBooleanValue(

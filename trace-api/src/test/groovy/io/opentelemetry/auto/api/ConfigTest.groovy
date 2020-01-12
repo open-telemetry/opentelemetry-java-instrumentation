@@ -10,7 +10,6 @@ import static io.opentelemetry.auto.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static io.opentelemetry.auto.api.Config.HTTP_CLIENT_ERROR_STATUSES
 import static io.opentelemetry.auto.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
 import static io.opentelemetry.auto.api.Config.HTTP_SERVER_ERROR_STATUSES
-import static io.opentelemetry.auto.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static io.opentelemetry.auto.api.Config.PREFIX
 import static io.opentelemetry.auto.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static io.opentelemetry.auto.api.Config.TRACE_ENABLED
@@ -35,7 +34,6 @@ class ConfigTest extends AgentSpecification {
     config.httpClientErrorStatuses == (400..599).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
-    config.partialFlushMinSpans == 1000
     config.runtimeContextFieldInjection == true
     config.toString().contains("traceEnabled=true")
 
@@ -56,7 +54,6 @@ class ConfigTest extends AgentSpecification {
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     prop.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
-    prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
 
     when:
@@ -69,7 +66,6 @@ class ConfigTest extends AgentSpecification {
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
-    config.partialFlushMinSpans == 15
     config.runtimeContextFieldInjection == false
   }
 
@@ -81,7 +77,6 @@ class ConfigTest extends AgentSpecification {
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     System.setProperty(PREFIX + DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
-    System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
 
     when:
@@ -94,7 +89,6 @@ class ConfigTest extends AgentSpecification {
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
-    config.partialFlushMinSpans == 25
     config.runtimeContextFieldInjection == false
   }
 
@@ -154,7 +148,6 @@ class ConfigTest extends AgentSpecification {
     properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
-    properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
 
     when:
     def config = Config.get(properties)
@@ -166,7 +159,6 @@ class ConfigTest extends AgentSpecification {
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
-    config.partialFlushMinSpans == 15
   }
 
   def "override null properties"() {
