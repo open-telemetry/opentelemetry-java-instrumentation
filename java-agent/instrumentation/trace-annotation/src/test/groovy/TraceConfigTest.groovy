@@ -10,13 +10,13 @@ class TraceConfigTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("dd.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
+      System.setProperty("opentelemetry.auto.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("dd.trace.methods")
+      System.clearProperty("opentelemetry.auto.trace.methods")
     }
   }
 
@@ -49,9 +49,9 @@ class TraceConfigTest extends AgentTestRunner {
     setup:
     ConfigUtils.updateConfig {
       if (value) {
-        System.properties.setProperty("dd.trace.methods", value)
+        System.properties.setProperty("opentelemetry.auto.trace.methods", value)
       } else {
-        System.clearProperty("dd.trace.methods")
+        System.clearProperty("opentelemetry.auto.trace.methods")
       }
     }
 
@@ -59,7 +59,7 @@ class TraceConfigTest extends AgentTestRunner {
     new TraceConfigInstrumentation().classMethodsToTrace == expected
 
     cleanup:
-    System.clearProperty("dd.trace.methods")
+    System.clearProperty("opentelemetry.auto.trace.methods")
 
     where:
     value                                                           | expected

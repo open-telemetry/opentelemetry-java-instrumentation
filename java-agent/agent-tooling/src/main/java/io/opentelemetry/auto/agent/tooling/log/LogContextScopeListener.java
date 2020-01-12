@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class LogContextScopeListener {
-  private static final String TRACE_ID_KEY = "dd.trace_id";
-  private static final String SPAN_ID_KEY = "dd.span_id";
+  private static final String TRACE_ID_KEY = "opentelemetry.auto.trace_id";
+  private static final String SPAN_ID_KEY = "opentelemetry.auto.span_id";
 
   /** A reference to the log context method that sets a new attribute in the log context */
   private final Method putMethod;

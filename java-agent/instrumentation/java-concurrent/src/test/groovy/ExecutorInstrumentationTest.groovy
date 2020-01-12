@@ -29,7 +29,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("dd.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+      System.setProperty("opentelemetry.auto.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
     }
   }
 

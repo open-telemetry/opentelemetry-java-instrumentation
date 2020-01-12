@@ -32,7 +32,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("dd.logs.injection", "true")
+      System.setProperty("opentelemetry.auto.logs.injection", "true")
     }
   }
 
@@ -43,8 +43,8 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     AgentScope rootScope = activateSpan(rootSpan, true)
 
     then:
-    get("dd.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
-    get("dd.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
+    get("opentelemetry.auto.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
+    get("opentelemetry.auto.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
     get("foo") == "bar"
 
     when:
@@ -52,31 +52,31 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     AgentScope childScope = activateSpan(childSpan, true)
 
     then:
-    get("dd.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
-    get("dd.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
+    get("opentelemetry.auto.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
+    get("opentelemetry.auto.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
     get("foo") == "bar"
 
     when:
     childScope.close()
 
     then:
-    get("dd.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
-    get("dd.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
+    get("opentelemetry.auto.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
+    get("opentelemetry.auto.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
     get("foo") == "bar"
 
     when:
     rootScope.close()
 
     then:
-    get("dd.trace_id") == null
-    get("dd.span_id") == null
+    get("opentelemetry.auto.trace_id") == null
+    get("opentelemetry.auto.span_id") == null
     get("foo") == "bar"
   }
 
   def "Log context is scoped by thread"() {
     setup:
     ConfigUtils.updateConfig {
-      System.setProperty("dd.logs.injection", "true")
+      System.setProperty("opentelemetry.auto.logs.injection", "true")
     }
     AtomicReference<String> thread1TraceId = new AtomicReference<>()
     AtomicReference<String> thread2TraceId = new AtomicReference<>()
@@ -85,7 +85,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
       @Override
       void run() {
         // no trace in scope
-        thread1TraceId.set(get("dd.trace_id"))
+        thread1TraceId.set(get("opentelemetry.auto.trace_id"))
       }
     }
 
@@ -96,7 +96,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
         final AgentSpan thread2Span = startSpan("root2")
         final AgentScope thread2Scope = activateSpan(thread2Span, true)
         try {
-          thread2TraceId.set(get("dd.trace_id"))
+          thread2TraceId.set(get("opentelemetry.auto.trace_id"))
         } finally {
           thread2Scope.close()
         }
@@ -106,7 +106,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     final AgentScope mainScope = activateSpan(mainSpan, true)
     thread1.start()
     thread2.start()
-    final String mainThreadTraceId = get("dd.trace_id")
+    final String mainThreadTraceId = get("opentelemetry.auto.trace_id")
     final String expectedMainThreadTraceId = tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
 
     thread1.join()

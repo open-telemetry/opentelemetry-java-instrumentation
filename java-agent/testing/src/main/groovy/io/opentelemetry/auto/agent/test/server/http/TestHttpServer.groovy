@@ -231,11 +231,11 @@ class TestHttpServer implements AutoCloseable {
     }
 
     void handleDistributedRequest() {
-      boolean isDDServer = true
-      if (request.getHeader("is-dd-server") != null) {
-        isDDServer = Boolean.parseBoolean(request.getHeader("is-dd-server"))
+      boolean isTestServer = true
+      if (request.getHeader("is-test-server") != null) {
+        isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
       }
-      if (isDDServer) {
+      if (isTestServer) {
         final AgentSpan.Context extractedContext = propagate().extract(req, GETTER)
         if (extractedContext != null) {
           startSpan("test-http-server", extractedContext)

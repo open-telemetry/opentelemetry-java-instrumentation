@@ -143,7 +143,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     when:
     def status = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("parent") {
-        doRequest(method, server.address.resolve("/success"), ["is-dd-server": "false"])
+        doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"])
       }
     }
 
@@ -165,7 +165,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   def "trace request with callback and parent"() {
     when:
     def status = runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/success"), ["is-dd-server": "false"]) {
+      doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
       }
     }
@@ -187,7 +187,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
   def "trace request with callback and no parent"() {
     when:
-    def status = doRequest(method, server.address.resolve("/success"), ["is-dd-server": "false"]) {
+    def status = doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
     }
@@ -263,7 +263,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     def uri = server.address.resolve("/circular-redirect")
 
     when:
-    doRequest(method, uri)//, ["is-dd-server": "false"])
+    doRequest(method, uri)//, ["is-test-server": "false"])
 
     then:
     def ex = thrown(Exception)

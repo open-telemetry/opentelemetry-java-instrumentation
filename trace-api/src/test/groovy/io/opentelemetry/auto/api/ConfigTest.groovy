@@ -21,8 +21,8 @@ class ConfigTest extends AgentSpecification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  private static final TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
-  private static final TRACE_METHODS_ENV = "DD_TRACE_METHODS"
+  private static final TRACE_ENABLED_ENV = "OPENTELEMETRY_AUTO_TRACE_ENABLED"
+  private static final TRACE_METHODS_ENV = "OPENTELEMETRY_AUTO_TRACE_METHODS"
 
   def "verify defaults"() {
     when:
@@ -194,13 +194,13 @@ class ConfigTest extends AgentSpecification {
 
   def "verify integration config"() {
     setup:
-    environmentVariables.set("DD_INTEGRATION_ORDER_ENABLED", "false")
-    environmentVariables.set("DD_INTEGRATION_TEST_ENV_ENABLED", "true")
-    environmentVariables.set("DD_INTEGRATION_DISABLED_ENV_ENABLED", "false")
+    environmentVariables.set("OPENTELEMETRY_AUTO_INTEGRATION_ORDER_ENABLED", "false")
+    environmentVariables.set("OPENTELEMETRY_AUTO_INTEGRATION_TEST_ENV_ENABLED", "true")
+    environmentVariables.set("OPENTELEMETRY_AUTO_INTEGRATION_DISABLED_ENV_ENABLED", "false")
 
-    System.setProperty("dd.integration.order.enabled", "true")
-    System.setProperty("dd.integration.test-prop.enabled", "true")
-    System.setProperty("dd.integration.disabled-prop.enabled", "false")
+    System.setProperty("opentelemetry.auto.integration.order.enabled", "true")
+    System.setProperty("opentelemetry.auto.integration.test-prop.enabled", "true")
+    System.setProperty("opentelemetry.auto.integration.disabled-prop.enabled", "false")
 
     expect:
     Config.get().isIntegrationEnabled(integrationNames, defaultEnabled) == expected
@@ -228,15 +228,15 @@ class ConfigTest extends AgentSpecification {
 
   def "test getFloatSettingFromEnvironment(#name)"() {
     setup:
-    environmentVariables.set("DD_ENV_ZERO_TEST", "0.0")
-    environmentVariables.set("DD_ENV_FLOAT_TEST", "1.0")
-    environmentVariables.set("DD_FLOAT_TEST", "0.2")
+    environmentVariables.set("OPENTELEMETRY_AUTO_ENV_ZERO_TEST", "0.0")
+    environmentVariables.set("OPENTELEMETRY_AUTO_ENV_FLOAT_TEST", "1.0")
+    environmentVariables.set("OPENTELEMETRY_AUTO_FLOAT_TEST", "0.2")
 
-    System.setProperty("dd.prop.zero.test", "0")
-    System.setProperty("dd.prop.float.test", "0.3")
-    System.setProperty("dd.float.test", "0.4")
-    System.setProperty("dd.garbage.test", "garbage")
-    System.setProperty("dd.negative.test", "-1")
+    System.setProperty("opentelemetry.auto.prop.zero.test", "0")
+    System.setProperty("opentelemetry.auto.prop.float.test", "0.3")
+    System.setProperty("opentelemetry.auto.float.test", "0.4")
+    System.setProperty("opentelemetry.auto.garbage.test", "garbage")
+    System.setProperty("opentelemetry.auto.negative.test", "-1")
 
     expect:
     Config.getFloatSettingFromEnvironment(name, defaultValue) == (float) expected
@@ -327,7 +327,7 @@ class ConfigTest extends AgentSpecification {
   def "verify fallback to properties file has lower priority than env var"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
-    environmentVariables.set("DD_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
+    environmentVariables.set("OPENTELEMETRY_AUTO_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
 
     when:
     def config = new Config()
@@ -338,7 +338,7 @@ class ConfigTest extends AgentSpecification {
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
     System.clearProperty(PREFIX + TRACE_METHODS)
-    environmentVariables.clear("DD_TRACE_METHODS")
+    environmentVariables.clear("OPENTELEMETRY_AUTO_TRACE_METHODS")
   }
 
   def "verify fallback to properties file that does not exist does not crash app"() {

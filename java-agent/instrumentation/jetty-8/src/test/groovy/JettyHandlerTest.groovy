@@ -24,7 +24,7 @@ import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoin
 class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
 
   static {
-    System.setProperty("dd.integration.jetty.enabled", "true")
+    System.setProperty("opentelemetry.auto.integration.jetty.enabled", "true")
   }
 
   static errorHandler = new ErrorHandler() {

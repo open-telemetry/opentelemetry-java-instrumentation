@@ -17,7 +17,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("dd." + TRACE_CLASSES_EXCLUDE, "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+      System.setProperty("opentelemetry.auto." + TRACE_CLASSES_EXCLUDE, "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
     }
 
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null

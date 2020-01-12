@@ -13,12 +13,12 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("dd.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
+      System.setProperty("opentelemetry.auto.trace.annotations", "package.Class\$Name;${OuterClass.InterestingMethod.name}")
     }
   }
 
   def specCleanup() {
-    System.clearProperty("dd.trace.annotations")
+    System.clearProperty("opentelemetry.auto.trace.annotations")
   }
 
   def "test disabled nr annotation"() {
@@ -51,9 +51,9 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     setup:
     ConfigUtils.updateConfig {
       if (value) {
-        System.properties.setProperty("dd.trace.annotations", value)
+        System.properties.setProperty("opentelemetry.auto.trace.annotations", value)
       } else {
-        System.clearProperty("dd.trace.annotations")
+        System.clearProperty("opentelemetry.auto.trace.annotations")
       }
     }
 

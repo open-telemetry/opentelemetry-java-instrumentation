@@ -138,7 +138,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = url.openConnection()
         connection.useCaches = useCaches
-        connection.addRequestProperty("is-dd-server", "false")
+        connection.addRequestProperty("is-test-server", "false")
         assert activeSpan() != null
         def stream = connection.inputStream
         connection.inputStream // one more to ensure state is working
@@ -150,7 +150,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         // call again to ensure the cycling is ok
         connection = url.openConnection()
         connection.useCaches = useCaches
-        connection.addRequestProperty("is-dd-server", "false")
+        connection.addRequestProperty("is-test-server", "false")
         assert activeSpan() != null
         assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
         stream = connection.inputStream
@@ -220,7 +220,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = url.openConnection()
         connection.setRequestProperty("Connection", "close")
-        connection.addRequestProperty("is-dd-server", "false")
+        connection.addRequestProperty("is-test-server", "false")
         assert activeSpan() != null
         assert connection.getResponseCode() == STATUS
         return connection

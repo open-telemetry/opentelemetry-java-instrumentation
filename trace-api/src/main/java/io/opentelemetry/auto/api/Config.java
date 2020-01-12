@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString(includeFieldNames = true)
 public class Config {
   /** Config keys below */
-  private static final String PREFIX = "dd.";
+  private static final String PREFIX = "opentelemetry.auto.";
 
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
@@ -237,10 +237,11 @@ public class Config {
   }
 
   /**
-   * Helper method that takes the name, adds a "dd." prefix then checks for System Properties of
-   * that name. If none found, the name is converted to an Environment Variable and used to check
-   * the env. If none of the above returns a value, then an optional properties file if checked. If
-   * setting is not configured in either location, <code>defaultValue</code> is returned.
+   * Helper method that takes the name, adds a "opentelemetry.auto." prefix then checks for System
+   * Properties of that name. If none found, the name is converted to an Environment Variable and
+   * used to check the env. If none of the above returns a value, then an optional properties file
+   * if checked. If setting is not configured in either location, <code>defaultValue</code> is
+   * returned.
    *
    * @param name
    * @param defaultValue
@@ -360,7 +361,7 @@ public class Config {
 
   /**
    * Converts the property name, e.g. 'trace.enabled' into a public environment variable name, e.g.
-   * `DD_TRACE_ENABLED`.
+   * `OPENTELEMETRY_AUTO_TRACE_ENABLED`.
    *
    * @param setting The setting name, e.g. `trace.enabled`
    * @return The public facing environment variable name
@@ -373,7 +374,7 @@ public class Config {
 
   /**
    * Converts the property name, e.g. 'trace.config' into a public system property name, e.g.
-   * `dd.trace.config`.
+   * `opentelemetry.auto.trace.config`.
    *
    * @param setting The setting name, e.g. `trace.config`
    * @return The public facing system property name

@@ -23,7 +23,7 @@ import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoin
 class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
 
 //  static {
-//    System.setProperty("dd.integration.grizzly.enabled", "true")
+//    System.setProperty("opentelemetry.auto.integration.grizzly.enabled", "true")
 //  }
 
   @Override

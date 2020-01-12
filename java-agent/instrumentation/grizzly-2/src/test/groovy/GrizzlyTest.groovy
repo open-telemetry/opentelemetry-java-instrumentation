@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.agent.test.base.HttpServerTest.ServerEndpoin
 class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
 
   static {
-    System.setProperty("dd.integration.grizzly.enabled", "true")
+    System.setProperty("opentelemetry.auto.integration.grizzly.enabled", "true")
   }
 
   @Override
