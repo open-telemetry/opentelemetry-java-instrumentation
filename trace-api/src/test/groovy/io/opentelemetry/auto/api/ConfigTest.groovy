@@ -296,7 +296,7 @@ class ConfigTest extends AgentSpecification {
 
   def "verify fallback to properties file"() {
     setup:
-    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/java-tracer.properties")
 
     when:
     def config = new Config()
@@ -310,7 +310,7 @@ class ConfigTest extends AgentSpecification {
 
   def "verify fallback to properties file has lower priority than system property"() {
     setup:
-    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/java-tracer.properties")
     System.setProperty(PREFIX + TRACE_METHODS, "mypackage2.MyClass2[myMethod2]")
 
     when:
@@ -326,7 +326,7 @@ class ConfigTest extends AgentSpecification {
 
   def "verify fallback to properties file has lower priority than env var"() {
     setup:
-    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/java-tracer.properties")
     environmentVariables.set("OPENTELEMETRY_AUTO_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
 
     when:
