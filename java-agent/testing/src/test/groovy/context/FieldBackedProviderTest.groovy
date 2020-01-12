@@ -48,7 +48,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
     boolean isPrivate = false
     boolean isTransient = false
     for (Field field : keyClass.getDeclaredFields()) {
-      if (field.getName().startsWith("__datadog")) {
+      if (field.getName().startsWith("__opentelemetry")) {
         isPrivate = Modifier.isPrivate(field.getModifiers())
         isTransient = Modifier.isTransient(field.getModifiers())
         hasField = true
@@ -197,7 +197,7 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
     def keyClass = ContextTestInstrumentation.DisabledKeyClass
     boolean hasField = false
     for (Field field : keyClass.getDeclaredFields()) {
-      if (field.getName().startsWith("__datadog")) {
+      if (field.getName().startsWith("__opentelemetry")) {
         hasField = true
         break
       }

@@ -57,7 +57,7 @@ public final class GlassFishInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, readOnly = false) String name) {
       for (final String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
         if (name.startsWith(prefix)) {
-          name = "__datadog_no_blacklist." + name;
+          name = "__opentelemetry_auto_no_blacklist." + name;
           break;
         }
       }
