@@ -1,6 +1,5 @@
 package datadog.trace.agent.test.base
 
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.decorator.HttpServerDecorator
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
@@ -12,6 +11,7 @@ import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.sdk.trace.SpanData
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -209,11 +209,10 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   def "test success with parent"() {
     setup:
-    def traceId = 123G
-    def parentId = 456G
+    def traceId = "00000000000000000000000000000123"
+    def parentId = "0000000000000456"
     def request = request(SUCCESS, method, body)
-      .header("x-datadog-trace-id", traceId.toString())
-      .header("x-datadog-parent-id", parentId.toString())
+      .header("traceparent", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
       .build()
     def response = client.newCall(request).execute()
 
@@ -273,42 +272,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     method = "GET"
     body = null
     endpoint << [SUCCESS, QUERY_PARAM]
-  }
-
-  def "test success with multiple header attached parent"() {
-    setup:
-    def traceId = 123G
-    def parentId = 456G
-    def request = request(SUCCESS, method, body)
-      .header("x-datadog-trace-id", traceId.toString() + ", " + traceId.toString())
-      .header("x-datadog-parent-id", parentId.toString() + ", " + parentId.toString())
-      .header("x-datadog-sampling-priority", "1, 1")
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == SUCCESS.status
-    response.body().string() == SUCCESS.body
-
-    and:
-    cleanAndAssertTraces(1) {
-      if (hasHandlerSpan()) {
-        trace(0, 3) {
-          serverSpan(it, 0, traceId, parentId)
-          handlerSpan(it, 1, span(0))
-          controllerSpan(it, 2, span(1))
-        }
-      } else {
-        trace(0, 2) {
-          serverSpan(it, 0, traceId, parentId)
-          controllerSpan(it, 1, span(0))
-        }
-      }
-    }
-
-    where:
-    method = "GET"
-    body = null
   }
 
   def "test redirect"() {
@@ -445,7 +408,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     TEST_WRITER.waitForTraces(size * 2)
     // TEST_WRITER is a CopyOnWriteArrayList, which doesn't support remove()
     def toRemove = TEST_WRITER.findAll {
-      it.size() == 1 && it.get(0).operationName == "TEST_SPAN"
+      it.size() == 1 && it.get(0).name == "TEST_SPAN"
     }
     toRemove.each {
       assertTrace(it, 1) {
@@ -455,10 +418,16 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     assert toRemove.size() == size
     TEST_WRITER.removeAll(toRemove)
 
+    if (reorderControllerSpan() || reorderHandlerSpan()) {
+      // this is needed temporarily to get DropWizardAsyncTest and GrizzlyAsyncTest to pass
+      // but no worries, this will go away later in this PR once the span re-ordering is no longer needed
+      Thread.sleep(100)
+    }
+
     if (reorderHandlerSpan()) {
       TEST_WRITER.each {
         def controllerSpan = it.find {
-          it.operationName == reorderHandlerSpan()
+          it.name == reorderHandlerSpan()
         }
         if (controllerSpan) {
           it.remove(controllerSpan)
@@ -471,7 +440,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       // Some frameworks close the handler span before the controller returns, so we need to manually reorder it.
       TEST_WRITER.each {
         def controllerSpan = it.find {
-          it.operationName == "controller"
+          it.name == "controller"
         }
         if (controllerSpan) {
           it.remove(controllerSpan)
@@ -487,7 +456,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     trace.span(index) {
       operationName "controller"
       errored errorMessage != null
-      childOf(parent as DDSpan)
+      childOf((SpanData) parent)
       tags {
         if (errorMessage) {
           errorTags(Exception, errorMessage)
@@ -501,7 +470,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
       errored endpoint.errored
@@ -516,7 +485,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
-        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_PORT" Long
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method

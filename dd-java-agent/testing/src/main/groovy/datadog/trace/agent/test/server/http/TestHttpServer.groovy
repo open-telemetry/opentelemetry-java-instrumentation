@@ -1,9 +1,10 @@
 package datadog.trace.agent.test.server.http
 
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.instrumentation.api.AgentSpan
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
@@ -93,19 +94,23 @@ class TestHttpServer implements AutoCloseable {
     clone(handlers)
   }
 
-  static distributedRequestTrace(ListWriterAssert traces, int index, DDSpan parentSpan = null) {
+  static distributedRequestTrace(ListWriterAssert traces, int index, SpanData parentSpan = null) {
     traces.trace(index, 1) {
-      span(0) {
-        operationName "test-http-server"
-        errored false
-        if (parentSpan == null) {
-          parent()
-        } else {
-          childOf(parentSpan)
-        }
-        tags {
-          "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-        }
+      distributedRequestSpan(it, 0, parentSpan)
+    }
+  }
+
+  static distributedRequestSpan(TraceAssert trace, int index, SpanData parentSpan = null) {
+    trace.span(index) {
+      operationName "test-http-server"
+      errored false
+      if (parentSpan == null) {
+        parent()
+      } else {
+        childOf(parentSpan)
+      }
+      tags {
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
       }
     }
   }

@@ -1,11 +1,11 @@
 package datadog.trace.agent.test.utils
 
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.decorator.BaseDecorator
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.AgentScope
 import datadog.trace.instrumentation.api.AgentSpan
+import io.opentelemetry.sdk.trace.SpanData
 import lombok.SneakyThrows
 
 import java.util.concurrent.Callable
@@ -52,7 +52,7 @@ class TraceUtils {
       if (parentSpan == null) {
         parent()
       } else {
-        childOf((DDSpan) parentSpan)
+        childOf((SpanData) parentSpan)
       }
       operationName operation
       errored exception != null

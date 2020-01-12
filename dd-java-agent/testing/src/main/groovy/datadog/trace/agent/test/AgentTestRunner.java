@@ -3,22 +3,23 @@ package datadog.trace.agent.test;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.collect.Sets;
-import datadog.opentracing.DDSpan;
-import datadog.opentracing.DDTracer;
-import datadog.opentracing.PendingTrace;
-import datadog.opentracing.Span;
 import datadog.trace.agent.test.asserts.ListWriterAssert;
-import datadog.trace.agent.test.utils.GlobalTracerUtils;
 import datadog.trace.agent.tooling.AgentInstaller;
+import datadog.trace.agent.tooling.AgentTracerImpl;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.GlobalTracer;
-import datadog.trace.common.writer.ListWriter;
-import datadog.trace.common.writer.Writer;
+import datadog.trace.instrumentation.api.AgentTracer;
 import datadog.trace.util.test.DDSpecification;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.SpanData;
+import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TraceId;
+import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
@@ -68,7 +69,7 @@ public abstract class AgentTestRunner extends DDSpecification {
    */
   public static final ListWriter TEST_WRITER;
 
-  protected static final DDTracer TEST_TRACER;
+  protected static final Tracer TEST_TRACER;
 
   protected static final Set<String> TRANSFORMED_CLASSES = Sets.newConcurrentHashSet();
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
@@ -83,24 +84,19 @@ public abstract class AgentTestRunner extends DDSpecification {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
-    TEST_WRITER =
-        new ListWriter() {
-          @Override
-          public boolean add(final List<DDSpan> trace) {
-            final boolean result = super.add(trace);
-            return result;
-          }
-        };
-    TEST_TRACER = new DDTracer(TEST_WRITER);
-    GlobalTracerUtils.registerOrReplaceGlobalTracer(TEST_TRACER);
-    GlobalTracer.registerIfAbsent(TEST_TRACER);
+    TEST_WRITER = new ListWriter();
+    OpenTelemetrySdk.getTracerFactory()
+        .addSpanProcessor(SimpleSpansProcessor.newBuilder(TEST_WRITER).build());
+    TEST_TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
+    AgentTracer.registerIfAbsent(new AgentTracerImpl(TEST_TRACER));
   }
 
-  protected static DDTracer getTestTracer() {
+  protected static Tracer getTestTracer() {
     return TEST_TRACER;
   }
 
-  protected static Writer getTestWriter() {
+  protected static ListWriter getTestWriter() {
     return TEST_WRITER;
   }
 
@@ -165,10 +161,10 @@ public abstract class AgentTestRunner extends DDSpecification {
 
   @Before
   public void beforeTest() {
-    assert getTestTracer().activeSpan() == null
-        : "Span is active before test has started: " + getTestTracer().activeSpan();
+    assert !getTestTracer().getCurrentSpan().getContext().isValid()
+        : "Span is active before test has started: " + getTestTracer().getCurrentSpan();
     log.debug("Starting test: '{}'", getSpecificationContext().getCurrentIteration().getName());
-    TEST_WRITER.start();
+    TEST_WRITER.clear();
   }
 
   /** See comment for {@code #setupBeforeTests} above. */
@@ -200,18 +196,25 @@ public abstract class AgentTestRunner extends DDSpecification {
 
   @SneakyThrows
   public static void blockUntilChildSpansFinished(final int numberOfSpans) {
-    final Span span = ((DDTracer) GlobalTracer.get()).activeSpan();
+    final Span span = getTestTracer().getCurrentSpan();
     final long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
-    if (span instanceof DDSpan) {
-      final PendingTrace pendingTrace = ((DDSpan) span).context().getTrace();
-
-      while (pendingTrace.size() < numberOfSpans) {
-        if (System.currentTimeMillis() > deadline) {
-          throw new TimeoutException(
-              "Timed out waiting for child spans.  Received: " + pendingTrace.size());
+    if (span.getContext().isValid()) {
+      final TraceId traceId = span.getContext().getTraceId();
+      int foundSpans = 0;
+      while (System.currentTimeMillis() < deadline) {
+        for (final List<SpanData> trace : TEST_WRITER) {
+          if (trace.get(0).getTraceId().equals(traceId)) {
+            foundSpans = trace.size();
+            if (foundSpans >= numberOfSpans) {
+              return;
+            } else {
+              break; // breaks inner for loop
+            }
+          }
         }
         Thread.sleep(10);
       }
+      throw new TimeoutException("Timed out waiting for child spans.  Received: " + foundSpans);
     }
   }
 

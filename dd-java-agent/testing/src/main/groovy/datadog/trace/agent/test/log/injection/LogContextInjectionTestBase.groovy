@@ -2,9 +2,10 @@ package datadog.trace.agent.test.log.injection
 
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
-import datadog.trace.api.CorrelationIdentifier
 import datadog.trace.instrumentation.api.AgentScope
 import datadog.trace.instrumentation.api.AgentSpan
+import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.trace.Tracer
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -16,6 +17,8 @@ import static datadog.trace.instrumentation.api.AgentTracer.startSpan
  * satisfy in order to support log injection.
  */
 abstract class LogContextInjectionTestBase extends AgentTestRunner {
+
+  final Tracer tracer = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.test")
 
   /**
    * Set in the framework-specific context the given value at the given key
@@ -40,8 +43,8 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     AgentScope rootScope = activateSpan(rootSpan, true)
 
     then:
-    get(CorrelationIdentifier.getTraceIdKey()) == CorrelationIdentifier.getTraceId()
-    get(CorrelationIdentifier.getSpanIdKey()) == CorrelationIdentifier.getSpanId()
+    get("dd.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
+    get("dd.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
     get("foo") == "bar"
 
     when:
@@ -49,24 +52,24 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     AgentScope childScope = activateSpan(childSpan, true)
 
     then:
-    get(CorrelationIdentifier.getTraceIdKey()) == CorrelationIdentifier.getTraceId()
-    get(CorrelationIdentifier.getSpanIdKey()) == CorrelationIdentifier.getSpanId()
+    get("dd.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
+    get("dd.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
     get("foo") == "bar"
 
     when:
     childScope.close()
 
     then:
-    get(CorrelationIdentifier.getTraceIdKey()) == CorrelationIdentifier.getTraceId()
-    get(CorrelationIdentifier.getSpanIdKey()) == CorrelationIdentifier.getSpanId()
+    get("dd.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
+    get("dd.span_id") == tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16()
     get("foo") == "bar"
 
     when:
     rootScope.close()
 
     then:
-    get(CorrelationIdentifier.getTraceIdKey()) == null
-    get(CorrelationIdentifier.getSpanIdKey()) == null
+    get("dd.trace_id") == null
+    get("dd.span_id") == null
     get("foo") == "bar"
   }
 
@@ -82,7 +85,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
       @Override
       void run() {
         // no trace in scope
-        thread1TraceId.set(get(CorrelationIdentifier.getTraceIdKey()))
+        thread1TraceId.set(get("dd.trace_id"))
       }
     }
 
@@ -93,7 +96,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
         final AgentSpan thread2Span = startSpan("root2")
         final AgentScope thread2Scope = activateSpan(thread2Span, true)
         try {
-          thread2TraceId.set(get(CorrelationIdentifier.getTraceIdKey()))
+          thread2TraceId.set(get("dd.trace_id"))
         } finally {
           thread2Scope.close()
         }
@@ -103,8 +106,8 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     final AgentScope mainScope = activateSpan(mainSpan, true)
     thread1.start()
     thread2.start()
-    final String mainThreadTraceId = get(CorrelationIdentifier.getTraceIdKey())
-    final String expectedMainThreadTraceId = CorrelationIdentifier.getTraceId()
+    final String mainThreadTraceId = get("dd.trace_id")
+    final String expectedMainThreadTraceId = tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
 
     thread1.join()
     thread2.join()
