@@ -17,7 +17,8 @@ public final class Constants {
     "datadog.slf4j",
     "datadog.trace.api",
     "datadog.trace.bootstrap",
-    "datadog.trace.instrumentation.api"
+    "datadog.trace.instrumentation.api",
+    "io.opentelemetry.auto.shaded"
   };
 
   // This is used in IntegrationTestUtils.java

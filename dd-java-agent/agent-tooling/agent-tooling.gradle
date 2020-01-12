@@ -14,6 +14,8 @@ dependencies {
     // This only needs to exist in the bootstrap, not the instrumentation jar.
     exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
+  compile deps.opentelemetryApi
+  compile(project(path: ':dd-java-agent:opentelemetry-sdk', configuration: 'shadow'))
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy
   compile deps.bytebuddyagent

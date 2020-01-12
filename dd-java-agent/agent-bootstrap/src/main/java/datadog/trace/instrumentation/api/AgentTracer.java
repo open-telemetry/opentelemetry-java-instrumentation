@@ -34,10 +34,6 @@ public class AgentTracer {
     return get().activeSpan();
   }
 
-  public static AgentScope activeScope() {
-    return get().activeScope();
-  }
-
   public static AgentPropagation propagate() {
     return get().propagate();
   }
@@ -73,8 +69,6 @@ public class AgentTracer {
     AgentScope activateSpan(AgentSpan span, boolean finishSpanOnClose);
 
     AgentSpan activeSpan();
-
-    AgentScope activeScope();
 
     AgentPropagation propagate();
 
@@ -114,11 +108,6 @@ public class AgentTracer {
     @Override
     public AgentSpan activeSpan() {
       return NoopAgentSpan.INSTANCE;
-    }
-
-    @Override
-    public AgentScope activeScope() {
-      return null;
     }
 
     @Override
@@ -172,11 +161,6 @@ public class AgentTracer {
 
     @Override
     public AgentSpan addThrowable(final Throwable throwable) {
-      return this;
-    }
-
-    @Override
-    public AgentSpan getLocalRootSpan() {
       return this;
     }
 

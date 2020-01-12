@@ -23,6 +23,7 @@ include ':dd-trace-api'
 
 // agent projects
 include ':dd-java-agent'
+include ':dd-java-agent:opentelemetry-sdk'
 include ':dd-java-agent:agent-bootstrap'
 include ':dd-java-agent:agent-tooling'
 include ':dd-java-agent:load-generator'

@@ -17,8 +17,6 @@ public interface AgentSpan {
 
   AgentSpan addThrowable(Throwable throwable);
 
-  AgentSpan getLocalRootSpan();
-
   Context context();
 
   void finish();
