@@ -76,7 +76,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
     INSTRUMENTATION = ByteBuddyAgent.getInstrumentation();
 
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
-    ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
+    ((Logger) LoggerFactory.getLogger("io.opentelemetry.auto")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new ListWriter();
     OpenTelemetrySdk.getTracerFactory().addSpanProcessor(TEST_WRITER);

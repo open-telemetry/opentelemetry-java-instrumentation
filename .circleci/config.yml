@@ -25,7 +25,7 @@ jobs:
 
     - run:
         name: Build Project
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Ddatadog.forkedMaxHeapSize=1G -Ddatadog.forkedMinHeapSize=64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dio.opentelemetry.auto.forkedMaxHeapSize=1G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
     - run:
         name: Collect Libs
@@ -67,7 +67,7 @@ jobs:
 
     - run:
         name: Run Tests
-        command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=6
+        command: GRADLE_OPTS="-Dio.opentelemetry.auto.forkedMaxHeapSize=4G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=6
 
     - run:
         name: Collect Reports
@@ -156,7 +156,7 @@ jobs:
 
     - run:
         name: Build Project
-        command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+        command: GRADLE_OPTS="-Dio.opentelemetry.auto.forkedMaxHeapSize=4G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
     - run:
         name: Collect Reports
@@ -178,7 +178,7 @@ jobs:
 
     - run:
         name: Verify Muzzle
-        command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
+        command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dio.opentelemetry.auto.forkedMaxHeapSize=4G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
 
     - save_cache:
         key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}

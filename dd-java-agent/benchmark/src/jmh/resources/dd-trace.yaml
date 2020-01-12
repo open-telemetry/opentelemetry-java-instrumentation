@@ -1,1 +1,1 @@
-enableCustomAnnotationTracingOver: ["datadog.benchmark"]
+enableCustomAnnotationTracingOver: ["io.opentelemetry.benchmark"]

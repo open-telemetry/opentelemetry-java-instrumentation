@@ -42,8 +42,8 @@ wrapper {
 
 allprojects {
   tasks.withType(JavaForkOptions).configureEach {
-    maxHeapSize = System.properties["datadog.forkedMaxHeapSize"]
-    minHeapSize = System.properties["datadog.forkedMinHeapSize"]
+    maxHeapSize = System.properties["io.opentelemetry.auto.forkedMaxHeapSize"]
+    minHeapSize = System.properties["io.opentelemetry.auto.forkedMinHeapSize"]
     jvmArgs "-XX:ErrorFile=/tmp/hs_err_pid%p.log"
   }
 }

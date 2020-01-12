@@ -120,7 +120,7 @@ class UrlConnectionTest extends AgentTestRunner {
 
     when:
     runUnderTrace("someTrace") {
-      childLoader.loadClass("datadog.doesnotexist")
+      childLoader.loadClass("io.opentelemetry.auto.doesnotexist")
     }
 
     then:
