@@ -20,8 +20,6 @@ dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
-  compile project(':dd-trace-ot')
-
   testCompile project(':dd-java-agent:testing')
   testCompile project(':utils:gc-utils')
 

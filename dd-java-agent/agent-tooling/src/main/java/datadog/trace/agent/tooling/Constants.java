@@ -23,7 +23,6 @@ public final class Constants {
 
   // This is used in IntegrationTestUtils.java
   public static final String[] AGENT_PACKAGE_PREFIXES = {
-    "datadog.trace.common",
     "datadog.trace.agent",
     "datadog.trace.instrumentation",
     // guava

@@ -20,7 +20,6 @@ rootProject.name = 'dd-trace-java'
 
 // external apis
 include ':dd-trace-api'
-include ':dd-trace-ot'
 
 // agent projects
 include ':dd-java-agent'
