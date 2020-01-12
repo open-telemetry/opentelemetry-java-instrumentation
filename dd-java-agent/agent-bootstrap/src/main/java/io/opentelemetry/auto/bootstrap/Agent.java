@@ -20,13 +20,13 @@ import org.slf4j.LoggerFactory;
 public class Agent {
 
   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
-      "datadog.slf4j.simpleLogger.showDateTime";
+      "io.opentelemetry.auto.slf4j.simpleLogger.showDateTime";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY =
-      "datadog.slf4j.simpleLogger.dateTimeFormat";
+      "io.opentelemetry.auto.slf4j.simpleLogger.dateTimeFormat";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT =
       "'[dd.trace 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
   private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
-      "datadog.slf4j.simpleLogger.defaultLogLevel";
+      "io.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel";
 
   // We cannot use lombok here because we need to configure logger first
   private static final Logger log;

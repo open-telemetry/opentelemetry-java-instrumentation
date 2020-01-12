@@ -9,7 +9,7 @@ description = 'SpringBoot Smoke Tests.'
 jar {
   manifest {
     attributes(
-      'Main-Class': 'datadog.smoketest.springboot.SpringbootApplication'
+      'Main-Class': 'io.opentelemetry.smoketest.springboot.SpringbootApplication'
     )
   }
 }
@@ -23,5 +23,5 @@ dependencies {
 tasks.withType(Test).configureEach {
   dependsOn shadowJar
 
-  jvmArgs "-Ddatadog.smoketest.springboot.shadowJar.path=${tasks.shadowJar.archivePath}"
+  jvmArgs "-Dio.opentelemetry.smoketest.springboot.shadowJar.path=${tasks.shadowJar.archivePath}"
 }

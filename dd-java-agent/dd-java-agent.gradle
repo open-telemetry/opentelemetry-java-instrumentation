@@ -38,7 +38,7 @@ def includeShadowJar(subproject, jarname) {
       }
 
       // Prevents conflict with other SLF4J instances. Important for premain.
-      relocate 'org.slf4j', 'datadog.slf4j'
+      relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
       // rewrite dependencies calling Logger.getLogger
       relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
     }
@@ -75,7 +75,7 @@ shadowJar {
   }
 
   // Prevents conflict with other SLF4J instances. Important for premain.
-  relocate 'org.slf4j', 'datadog.slf4j'
+  relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
   // rewrite dependencies calling Logger.getLogger
   relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
 
@@ -109,7 +109,7 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Ddd.service.name=java-agent-tests"
   jvmArgs "-Ddd.writer.type=LoggingWriter"
   // Multi-threaded logging seems to be causing deadlocks with Gradle's log capture.
-//  jvmArgs "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
+//  jvmArgs "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug"
 //  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
 
   doFirst {

@@ -7,7 +7,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 jar {
   manifest {
     attributes(
-      'Main-Class': 'datadog.smoketest.moduleapp.ModuleApplication'
+      'Main-Class': 'io.opentelemetry.smoketest.moduleapp.ModuleApplication'
     )
   }
 }
@@ -71,12 +71,12 @@ tasks.withType(Test).each {
     // Run the jlink command to create the image
     exec {
       commandLine jlinkExecutable, '--no-man-pages', '--no-header-files',
-        '--add-modules', 'java.instrument,datadog.smoketest.moduleapp',
+        '--add-modules', 'java.instrument,io.opentelemetry.smoketest.moduleapp',
         "--module-path", "${jdkModulesPath}:" + jar.archiveFile.get().toString(), "--output", generatedImageDir
     }
   }
 
-  it.jvmArgs "-Ddatadog.smoketest.module.image=${generatedImageDir}"
+  it.jvmArgs "-Dio.opentelemetry.smoketest.module.image=${generatedImageDir}"
   it.dependsOn jar
 }
 

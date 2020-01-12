@@ -83,7 +83,7 @@ public class AgentInstaller {
                                 .or(
                                     named(
                                         "io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper")))))
-            .or(nameStartsWith("datadog.slf4j."))
+            .or(nameStartsWith("io.opentelemetry.auto.slf4j."))
             .or(nameStartsWith("net.bytebuddy."))
             .or(
                 nameStartsWith("java.")

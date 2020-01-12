@@ -14,7 +14,7 @@ public final class Constants {
    * io.opentelemetry.auto.agent.test.SpockRunner#BOOTSTRAP_PACKAGE_PREFIXES_COPY
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
-    "datadog.slf4j",
+    "io.opentelemetry.auto.slf4j",
     "io.opentelemetry.auto.api",
     "io.opentelemetry.auto.bootstrap",
     "io.opentelemetry.auto.instrumentation.api",

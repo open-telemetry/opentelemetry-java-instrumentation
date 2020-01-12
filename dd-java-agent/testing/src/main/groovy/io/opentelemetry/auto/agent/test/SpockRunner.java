@@ -31,7 +31,7 @@ public class SpockRunner extends Sputnik {
    * references bootstrap classes (e.g. AgentClassLoader).
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
-    "datadog.slf4j",
+    "io.opentelemetry.auto.slf4j",
     "io.opentelemetry.auto.api",
     "io.opentelemetry.auto.bootstrap",
     "io.opentelemetry.auto.instrumentation.api",

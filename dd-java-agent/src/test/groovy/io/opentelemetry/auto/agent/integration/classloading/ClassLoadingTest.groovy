@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.agent.integration.classloading
 
-import datadog.test.ClassToInstrument
-import datadog.test.ClassToInstrumentChild
+import io.opentelemetry.test.ClassToInstrument
+import io.opentelemetry.test.ClassToInstrumentChild
 import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.util.gc.GCUtils
 import spock.lang.Specification

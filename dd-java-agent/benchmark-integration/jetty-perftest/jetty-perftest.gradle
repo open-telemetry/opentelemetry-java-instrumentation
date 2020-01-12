@@ -10,7 +10,7 @@ dependencies {
 jar {
   manifest {
     attributes(
-      "Main-Class": "datadog.perftest.jetty.JettyPerftest"
+      "Main-Class": "io.opentelemetry.perftest.jetty.JettyPerftest"
     )
   }
 }

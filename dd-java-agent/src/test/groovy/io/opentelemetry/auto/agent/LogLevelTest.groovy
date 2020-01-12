@@ -9,7 +9,7 @@ import spock.lang.Specification
 class LogLevelTest extends Specification {
 
 
-  /* Priority: datadog.slf4j.simpleLogger.defaultLogLevel > dd.trace.debug > DD_TRACE_DEBUG
+  /* Priority: io.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel > dd.trace.debug > DD_TRACE_DEBUG
   1: INFO LOGS
   0: DEBUG Logs
    */
@@ -25,7 +25,7 @@ class LogLevelTest extends Specification {
   def "SLF4J DEBUG &&  dd.trace.debug is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Ddd.trace.debug=false","-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug","-Ddd.trace.enabled=false"] as String[]
+      , ["-Ddd.trace.debug=false","-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug","-Ddd.trace.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 0
@@ -72,7 +72,7 @@ class LogLevelTest extends Specification {
   def "SLF4J DEBUG && DD_TRACE_DEBUG is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug","-Ddd.trace.enabled=false"] as String[]
+      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug","-Ddd.trace.enabled=false"] as String[]
       , "" as String[]
       , ["DD_TRACE_DEBUG": "false"]
       , true) == 0
@@ -81,7 +81,7 @@ class LogLevelTest extends Specification {
   def "SLF4J INFO && DD_TRACE_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Ddatadog.slf4j.simpleLogger.defaultLogLevel=info","-Ddd.trace.enabled=false"] as String[]
+      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=info","-Ddd.trace.enabled=false"] as String[]
       , "" as String[]
       , ["DD_TRACE_DEBUG": "true"]
       , true) == 1

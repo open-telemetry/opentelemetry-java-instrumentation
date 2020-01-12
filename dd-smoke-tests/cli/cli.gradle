@@ -7,7 +7,7 @@ description = 'Command Line Application Smoke Tests.'
 jar {
   manifest {
     attributes(
-      'Main-Class': 'datadog.smoketest.cli.CliApplication'
+      'Main-Class': 'io.opentelemetry.smoketest.cli.CliApplication'
     )
   }
 }
@@ -21,5 +21,5 @@ dependencies {
 tasks.withType(Test).configureEach {
   dependsOn shadowJar
 
-  jvmArgs "-Ddatadog.smoketest.cli.shadowJar.path=${tasks.shadowJar.archivePath}"
+  jvmArgs "-Dio.opentelemetry.smoketest.cli.shadowJar.path=${tasks.shadowJar.archivePath}"
 }
