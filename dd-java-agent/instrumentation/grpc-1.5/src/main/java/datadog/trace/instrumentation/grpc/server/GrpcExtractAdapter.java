@@ -14,7 +14,7 @@ public final class GrpcExtractAdapter implements AgentPropagation.Getter<Metadat
     List<String> keys = new ArrayList<>();
 
     for (String key : carrier.keys()) {
-      if (!key.endsWith(Metadata.BINARY_HEADER_SUFFIX)){
+      if (!key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
         keys.add(key);
       }
     }
