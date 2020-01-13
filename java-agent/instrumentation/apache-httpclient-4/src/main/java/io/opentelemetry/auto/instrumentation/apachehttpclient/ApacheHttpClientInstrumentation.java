@@ -2,9 +2,6 @@ package io.opentelemetry.auto.instrumentation.apachehttpclient;
 
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -15,10 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +37,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 
 @AutoService(Instrumenter.class)
 public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   public ApacheHttpClientInstrumentation() {
     super("httpclient", "apache-httpclient", "apache-http-client");
@@ -149,9 +150,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class HelperMethods {
-    public static AgentScope doMethodEnter(final HttpUriRequest request) {
-      final AgentSpan span = startSpan("http.request");
-      final AgentScope scope = activateSpan(span, true);
+    public static SpanScopePair doMethodEnter(final HttpUriRequest request) {
+      final Span span = TRACER.spanBuilder("http.request").startSpan();
+      final Scope scope = TRACER.withSpan(span);
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
@@ -159,18 +160,18 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!awsClientCall) {
-        propagate().inject(span, request, SETTER);
+        TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
       }
-      return scope;
+      return new SpanScopePair(span, scope);
     }
 
     public static void doMethodExit(
-        final AgentScope scope, final Object result, final Throwable throwable) {
-      if (scope == null) {
+        final SpanScopePair spanScopePair, final Object result, final Throwable throwable) {
+      if (spanScopePair == null) {
         return;
       }
       try {
-        final AgentSpan span = scope.span();
+        final Span span = spanScopePair.getSpan();
 
         if (result instanceof HttpResponse) {
           DECORATE.onResponse(span, (HttpResponse) result);
@@ -178,8 +179,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
+        span.end();
       } finally {
-        scope.close();
+        spanScopePair.getScope().close();
         CallDepthThreadLocalMap.reset(HttpClient.class);
       }
     }
@@ -187,7 +189,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class UriRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
+    public static SpanScopePair methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
@@ -198,18 +200,18 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(scope, result, throwable);
+      HelperMethods.doMethodExit(spanScopePair, result, throwable);
     }
   }
 
   public static class UriRequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope methodEnter(
+    public static SpanScopePair methodEnter(
         @Advice.Argument(0) final HttpUriRequest request,
         @Advice.Argument(
                 value = 1,
@@ -222,28 +224,30 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final AgentScope scope = HelperMethods.doMethodEnter(request);
+      final SpanScopePair spanScopePair = HelperMethods.doMethodEnter(request);
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(scope.span(), (ResponseHandler) handler);
+        handler =
+            new WrappingStatusSettingResponseHandler(
+                spanScopePair.getSpan(), (ResponseHandler) handler);
       }
-      return scope;
+      return spanScopePair;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(scope, result, throwable);
+      HelperMethods.doMethodExit(spanScopePair, result, throwable);
     }
   }
 
   public static class RequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope methodEnter(
+    public static SpanScopePair methodEnter(
         @Advice.Argument(0) final HttpHost host, @Advice.Argument(1) final HttpRequest request) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
@@ -259,18 +263,18 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(scope, result, throwable);
+      HelperMethods.doMethodExit(spanScopePair, result, throwable);
     }
   }
 
   public static class RequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope methodEnter(
+    public static SpanScopePair methodEnter(
         @Advice.Argument(0) final HttpHost host,
         @Advice.Argument(1) final HttpRequest request,
         @Advice.Argument(
@@ -284,37 +288,39 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final AgentScope scope;
+      final SpanScopePair spanScopePair;
 
       if (request instanceof HttpUriRequest) {
-        scope = HelperMethods.doMethodEnter((HttpUriRequest) request);
+        spanScopePair = HelperMethods.doMethodEnter((HttpUriRequest) request);
       } else {
-        scope = HelperMethods.doMethodEnter(new HostAndRequestAsHttpUriRequest(host, request));
+        spanScopePair =
+            HelperMethods.doMethodEnter(new HostAndRequestAsHttpUriRequest(host, request));
       }
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(scope.span(), (ResponseHandler) handler);
+        handler =
+            new WrappingStatusSettingResponseHandler(
+                spanScopePair.getSpan(), (ResponseHandler) handler);
       }
-      return scope;
+      return spanScopePair;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(scope, result, throwable);
+      HelperMethods.doMethodExit(spanScopePair, result, throwable);
     }
   }
 
   public static class WrappingStatusSettingResponseHandler implements ResponseHandler {
-    final AgentSpan span;
+    final Span span;
     final ResponseHandler handler;
 
-    public WrappingStatusSettingResponseHandler(
-        final AgentSpan span, final ResponseHandler handler) {
+    public WrappingStatusSettingResponseHandler(final Span span, final ResponseHandler handler) {
       this.span = span;
       this.handler = handler;
     }
