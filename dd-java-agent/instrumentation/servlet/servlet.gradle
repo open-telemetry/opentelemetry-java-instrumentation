@@ -1,1 +1,29 @@
+muzzle {
+  pass {
+    group = "javax.servlet"
+    module = 'javax.servlet-api'
+    versions = "[,]"
+    assertInverse = true
+  }
+  pass {
+    group = "javax.servlet"
+    module = 'servlet-api'
+    versions = "[,]"
+  }
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
+
+  testCompile group: 'javax.servlet', name: 'servlet-api', version: '2.3'
+
+  // servlet request instrumentation required for linking request to response.
+  testCompile project(':dd-java-agent:instrumentation:servlet:request-2')
+
+  // Don't want to conflict with jetty from the test server.
+  testCompile(project(':dd-java-agent:testing')) {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
+}

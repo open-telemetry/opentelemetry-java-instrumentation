@@ -49,6 +49,12 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
                 named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet"))));
   }
 
+  @Override
+  public Map<String, String> contextStore() {
+    return singletonMap(
+        "javax.servlet.http.HttpServletResponse", "javax.servlet.http.HttpServletRequest");
+  }
+
   /**
    * Here we are instrumenting the public method for HttpServlet. This should ensure that this
    * advice is always called before HttpServletInstrumentation which is instrumenting the protected

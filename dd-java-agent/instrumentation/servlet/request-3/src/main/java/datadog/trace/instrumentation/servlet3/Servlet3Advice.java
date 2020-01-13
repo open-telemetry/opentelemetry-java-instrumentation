@@ -9,6 +9,7 @@ import static datadog.trace.instrumentation.servlet3.HttpServletRequestExtractAd
 import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 
 import datadog.trace.api.DDTags;
+import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -24,7 +25,10 @@ public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static AgentScope onEnter(
-      @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest request) {
+      @Advice.This final Object servlet,
+      @Advice.Argument(0) final ServletRequest request,
+      @Advice.Argument(1) final ServletResponse response) {
+
     final boolean hasActiveTrace = activeSpan() != null;
     final boolean hasServletTrace = request.getAttribute(DD_SPAN_ATTRIBUTE) instanceof AgentSpan;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
@@ -34,6 +38,10 @@ public class Servlet3Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    // For use by HttpServletResponseInstrumentation:
+    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+        .put((HttpServletResponse) response, httpServletRequest);
 
     final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
 
