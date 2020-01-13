@@ -81,8 +81,8 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
 
     if (dbInfo != null) {
-      span.setTag(Tags.DB_TYPE, dbInfo.getType());
-      span.setTag(MoreTags.SERVICE_NAME, dbInfo.getType());
+      span.setAttribute(Tags.DB_TYPE, dbInfo.getType());
+      span.setAttribute(MoreTags.SERVICE_NAME, dbInfo.getType());
     }
     return super.onConnection(span, dbInfo);
   }
@@ -90,16 +90,16 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   @Override
   public AgentSpan onStatement(final AgentSpan span, final String statement) {
     final String resourceName = statement == null ? DB_QUERY : statement;
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
-    span.setTag(Tags.COMPONENT, "java-jdbc-statement");
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(Tags.COMPONENT, "java-jdbc-statement");
     return super.onStatement(span, statement);
   }
 
   public AgentSpan onPreparedStatement(final AgentSpan span, final PreparedStatement statement) {
     final String sql = JDBCMaps.preparedStatements.get(statement);
     final String resourceName = sql == null ? DB_QUERY : sql;
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
-    span.setTag(Tags.COMPONENT, "java-jdbc-prepared_statement");
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(Tags.COMPONENT, "java-jdbc-prepared_statement");
     return super.onStatement(span, sql);
   }
 }

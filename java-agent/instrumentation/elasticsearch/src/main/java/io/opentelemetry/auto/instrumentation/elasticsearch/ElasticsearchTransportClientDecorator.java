@@ -46,11 +46,11 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
 
   public AgentSpan onRequest(final AgentSpan span, final Class action, final Class request) {
     if (action != null) {
-      span.setTag(MoreTags.RESOURCE_NAME, action.getSimpleName());
-      span.setTag("elasticsearch.action", action.getSimpleName());
+      span.setAttribute(MoreTags.RESOURCE_NAME, action.getSimpleName());
+      span.setAttribute("elasticsearch.action", action.getSimpleName());
     }
     if (request != null) {
-      span.setTag("elasticsearch.request", request.getSimpleName());
+      span.setAttribute("elasticsearch.request", request.getSimpleName());
     }
     return span;
   }

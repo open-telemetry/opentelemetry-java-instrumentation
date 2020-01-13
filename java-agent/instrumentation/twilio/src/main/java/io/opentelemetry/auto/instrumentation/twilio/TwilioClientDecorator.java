@@ -47,7 +47,7 @@ public class TwilioClientDecorator extends ClientDecorator {
     final String simpleClassName =
         serviceExecutor.getClass().getCanonicalName().replaceFirst("^com\\.twilio\\.rest\\.", "");
 
-    span.setTag(MoreTags.RESOURCE_NAME, String.format("%s.%s", simpleClassName, methodName));
+    span.setAttribute(MoreTags.RESOURCE_NAME, String.format("%s.%s", simpleClassName, methodName));
 
     return span;
   }
@@ -70,23 +70,23 @@ public class TwilioClientDecorator extends ClientDecorator {
     }
 
     // Provide helpful metadata for some of the more common response types
-    span.setTag("twilio.type", result.getClass().getCanonicalName());
+    span.setAttribute("twilio.type", result.getClass().getCanonicalName());
 
     // Instrument the most popular resource types directly
     if (result instanceof Message) {
       final Message message = (Message) result;
-      span.setTag("twilio.account", message.getAccountSid());
-      span.setTag("twilio.sid", message.getSid());
+      span.setAttribute("twilio.account", message.getAccountSid());
+      span.setAttribute("twilio.sid", message.getSid());
       if (message.getStatus() != null) {
-        span.setTag("twilio.status", message.getStatus().toString());
+        span.setAttribute("twilio.status", message.getStatus().toString());
       }
     } else if (result instanceof Call) {
       final Call call = (Call) result;
-      span.setTag("twilio.account", call.getAccountSid());
-      span.setTag("twilio.sid", call.getSid());
-      span.setTag("twilio.parentSid", call.getParentCallSid());
+      span.setAttribute("twilio.account", call.getAccountSid());
+      span.setAttribute("twilio.sid", call.getSid());
+      span.setAttribute("twilio.parentSid", call.getParentCallSid());
       if (call.getStatus() != null) {
-        span.setTag("twilio.status", call.getStatus().toString());
+        span.setAttribute("twilio.status", call.getStatus().toString());
       }
     } else {
       // Use reflection to gather insight from other types; note that Twilio requests take close to
@@ -111,7 +111,7 @@ public class TwilioClientDecorator extends ClientDecorator {
       final Object value = method.invoke(result);
 
       if (value != null) {
-        span.setTag(tag, value.toString());
+        span.setAttribute(tag, value.toString());
       }
 
     } catch (final Exception e) {

@@ -69,7 +69,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
           request.attrs().get(Router.Attrs.HANDLER_DEF.underlying());
       if (!defOption.isEmpty()) {
         final String path = defOption.get().path();
-        span.setTag(MoreTags.RESOURCE_NAME, request.method() + " " + path);
+        span.setAttribute(MoreTags.RESOURCE_NAME, request.method() + " " + path);
       }
     }
     return span;
@@ -77,7 +77,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
 
   @Override
   public AgentSpan onError(final AgentSpan span, Throwable throwable) {
-    span.setTag(Tags.HTTP_STATUS, 500);
+    span.setAttribute(Tags.HTTP_STATUS, 500);
     span.setError(true);
     if (throwable != null
         // This can be moved to instanceof check when using Java 8.

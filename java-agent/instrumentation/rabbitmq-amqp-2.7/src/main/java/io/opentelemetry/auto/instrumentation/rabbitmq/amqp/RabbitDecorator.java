@@ -69,20 +69,20 @@ public class RabbitDecorator extends ClientDecorator {
         routingKey == null || routingKey.isEmpty()
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
-    span.setTag(MoreTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
-    span.setTag(MoreTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
-    span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
-    span.setTag("amqp.command", "basic.publish");
-    span.setTag("amqp.exchange", exchange);
-    span.setTag("amqp.routing_key", routingKey);
+    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
+    span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
+    span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
+    span.setAttribute("amqp.command", "basic.publish");
+    span.setAttribute("amqp.exchange", exchange);
+    span.setAttribute("amqp.routing_key", routingKey);
   }
 
   public void onGet(final AgentSpan span, final String queue) {
     final String queueName = queue.startsWith("amq.gen-") ? "<generated>" : queue;
-    span.setTag(MoreTags.RESOURCE_NAME, "basic.get " + queueName);
+    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.get " + queueName);
 
-    span.setTag("amqp.command", "basic.get");
-    span.setTag("amqp.queue", queue);
+    span.setAttribute("amqp.command", "basic.get");
+    span.setAttribute("amqp.queue", queue);
   }
 
   public void onDeliver(final AgentSpan span, final String queue, final Envelope envelope) {
@@ -92,12 +92,12 @@ public class RabbitDecorator extends ClientDecorator {
     } else if (queue.startsWith("amq.gen-")) {
       queueName = "<generated>";
     }
-    span.setTag(MoreTags.RESOURCE_NAME, "basic.deliver " + queueName);
-    span.setTag("amqp.command", "basic.deliver");
+    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.deliver " + queueName);
+    span.setAttribute("amqp.command", "basic.deliver");
 
     if (envelope != null) {
-      span.setTag("amqp.exchange", envelope.getExchange());
-      span.setTag("amqp.routing_key", envelope.getRoutingKey());
+      span.setAttribute("amqp.exchange", envelope.getExchange());
+      span.setAttribute("amqp.routing_key", envelope.getRoutingKey());
     }
   }
 
@@ -106,8 +106,8 @@ public class RabbitDecorator extends ClientDecorator {
 
     if (!name.equals("basic.publish")) {
       // Don't overwrite the name already set.
-      span.setTag(MoreTags.RESOURCE_NAME, name);
+      span.setAttribute(MoreTags.RESOURCE_NAME, name);
     }
-    span.setTag("amqp.command", name);
+    span.setAttribute("amqp.command", name);
   }
 }

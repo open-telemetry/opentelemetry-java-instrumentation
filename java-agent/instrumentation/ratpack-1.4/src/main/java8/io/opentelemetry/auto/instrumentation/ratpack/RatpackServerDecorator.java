@@ -78,7 +78,7 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
     }
 
     final String resourceName = ctx.getRequest().getMethod().getName() + " " + description;
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
     return span;
   }

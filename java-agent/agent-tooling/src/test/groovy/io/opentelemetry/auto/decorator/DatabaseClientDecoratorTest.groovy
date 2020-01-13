@@ -20,12 +20,12 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (serviceName != null) {
-      1 * span.setTag(MoreTags.SERVICE_NAME, serviceName)
+      1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     }
-    1 * span.setTag(Tags.COMPONENT, "test-component")
-    1 * span.setTag(Tags.SPAN_KIND, "client")
-    1 * span.setTag(Tags.DB_TYPE, "test-db")
-    1 * span.setTag(MoreTags.SPAN_TYPE, "test-type")
+    1 * span.setAttribute(Tags.COMPONENT, "test-component")
+    1 * span.setAttribute(Tags.SPAN_KIND, "client")
+    1 * span.setAttribute(Tags.DB_TYPE, "test-db")
+    1 * span.setAttribute(MoreTags.SPAN_TYPE, "test-type")
     0 * _
 
     where:
@@ -43,10 +43,10 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (session) {
-      1 * span.setTag(Tags.DB_USER, session.user)
-      1 * span.setTag(Tags.DB_INSTANCE, session.instance)
+      1 * span.setAttribute(Tags.DB_USER, session.user)
+      1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
       if (renameService && session.instance) {
-        1 * span.setTag(MoreTags.SERVICE_NAME, session.instance)
+        1 * span.setAttribute(MoreTags.SERVICE_NAME, session.instance)
       }
     }
     0 * _
@@ -67,7 +67,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.onStatement(span, statement)
 
     then:
-    1 * span.setTag(Tags.DB_STATEMENT, statement)
+    1 * span.setAttribute(Tags.DB_STATEMENT, statement)
     0 * _
 
     where:

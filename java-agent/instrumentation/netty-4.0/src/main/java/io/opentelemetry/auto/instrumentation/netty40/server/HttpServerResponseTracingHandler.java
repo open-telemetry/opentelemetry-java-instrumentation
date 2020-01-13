@@ -26,7 +26,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       ctx.write(msg, prm);
     } catch (final Throwable throwable) {
       DECORATE.onError(span, throwable);
-      span.setTag(Tags.HTTP_STATUS, 500);
+      span.setAttribute(Tags.HTTP_STATUS, 500);
       span.finish(); // Finish the span manually since finishSpanOnClose was false
       throw throwable;
     }

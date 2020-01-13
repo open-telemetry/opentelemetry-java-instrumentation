@@ -39,7 +39,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      span.setTag(Tags.HTTP_METHOD, method(request));
+      span.setAttribute(Tags.HTTP_METHOD, method(request));
 
       // Copy of HttpClientDecorator url handling
       try {
@@ -64,11 +64,11 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
             urlNoParams.append(path);
           }
 
-          span.setTag(Tags.HTTP_URL, urlNoParams.toString());
+          span.setAttribute(Tags.HTTP_URL, urlNoParams.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
-            span.setTag(MoreTags.HTTP_QUERY, url.getQuery());
-            span.setTag(MoreTags.HTTP_FRAGMENT, url.getFragment());
+            span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
+            span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {
@@ -82,19 +82,19 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setTag(Tags.PEER_HOSTNAME, peerHostname(connection));
+      span.setAttribute(Tags.PEER_HOSTNAME, peerHostname(connection));
       final String ip = peerHostIP(connection);
       if (ip != null) {
         if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {
-          span.setTag(Tags.PEER_HOST_IPV4, ip);
+          span.setAttribute(Tags.PEER_HOST_IPV4, ip);
         } else if (ip.contains(":")) {
-          span.setTag(Tags.PEER_HOST_IPV6, ip);
+          span.setAttribute(Tags.PEER_HOST_IPV6, ip);
         }
       }
       final Integer port = peerPort(connection);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setTag(Tags.PEER_PORT, port);
+        span.setAttribute(Tags.PEER_PORT, port);
       }
     }
     return span;
@@ -105,7 +105,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     if (response != null) {
       final Integer status = status(response);
       if (status != null) {
-        span.setTag(Tags.HTTP_STATUS, status);
+        span.setAttribute(Tags.HTTP_STATUS, status);
 
         if (Config.get().getHttpServerErrorStatuses().contains(status)) {
           span.setError(true);
@@ -122,7 +122,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   //    final Object status = span.getTag("http.status");
   //    if (status == null || status.equals(200)) {
   //      // Ensure status set correctly
-  //      span.setTag("http.status", 500);
+  //      span.setAttribute("http.status", 500);
   //    }
   //    return super.onError(span, throwable);
   //  }

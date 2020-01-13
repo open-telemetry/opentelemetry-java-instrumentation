@@ -35,7 +35,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      span.setTag(Tags.HTTP_METHOD, method(request));
+      span.setAttribute(Tags.HTTP_METHOD, method(request));
 
       // Copy of HttpServerDecorator url handling
       try {
@@ -60,26 +60,26 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
             urlNoParams.append(path);
           }
 
-          span.setTag(Tags.HTTP_URL, urlNoParams.toString());
+          span.setAttribute(Tags.HTTP_URL, urlNoParams.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
-            span.setTag(MoreTags.HTTP_QUERY, url.getQuery());
-            span.setTag(MoreTags.HTTP_FRAGMENT, url.getFragment());
+            span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
+            span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {
         log.debug("Error tagging url", e);
       }
 
-      span.setTag(Tags.PEER_HOSTNAME, hostname(request));
+      span.setAttribute(Tags.PEER_HOSTNAME, hostname(request));
       final Integer port = port(request);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setTag(Tags.PEER_PORT, port);
+        span.setAttribute(Tags.PEER_PORT, port);
       }
 
       if (Config.get().isHttpClientSplitByDomain()) {
-        span.setTag(MoreTags.SERVICE_NAME, hostname(request));
+        span.setAttribute(MoreTags.SERVICE_NAME, hostname(request));
       }
     }
     return span;
@@ -90,7 +90,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     if (response != null) {
       final Integer status = status(response);
       if (status != null) {
-        span.setTag(Tags.HTTP_STATUS, status);
+        span.setAttribute(Tags.HTTP_STATUS, status);
 
         if (Config.get().getHttpClientErrorStatuses().contains(status)) {
           span.setError(true);

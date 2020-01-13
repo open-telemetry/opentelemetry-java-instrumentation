@@ -20,9 +20,9 @@ class BaseDecoratorTest extends AgentSpecification {
     decorator.afterStart(span)
 
     then:
-    1 * span.setTag(MoreTags.SPAN_TYPE, decorator.spanType())
-    1 * span.setTag(Tags.COMPONENT, "test-component")
-    _ * span.setTag(_, _) // Want to allow other calls from child implementations.
+    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.spanType())
+    1 * span.setAttribute(Tags.COMPONENT, "test-component")
+    _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _
   }
 
@@ -32,16 +32,16 @@ class BaseDecoratorTest extends AgentSpecification {
 
     then:
     if (connection.getAddress()) {
-      2 * span.setTag(Tags.PEER_HOSTNAME, connection.hostName)
+      2 * span.setAttribute(Tags.PEER_HOSTNAME, connection.hostName)
     } else {
-      1 * span.setTag(Tags.PEER_HOSTNAME, connection.hostName)
+      1 * span.setAttribute(Tags.PEER_HOSTNAME, connection.hostName)
     }
-    1 * span.setTag(Tags.PEER_PORT, connection.port)
+    1 * span.setAttribute(Tags.PEER_PORT, connection.port)
     if (connection.address instanceof Inet4Address) {
-      1 * span.setTag(Tags.PEER_HOST_IPV4, connection.address.hostAddress)
+      1 * span.setAttribute(Tags.PEER_HOST_IPV4, connection.address.hostAddress)
     }
     if (connection.address instanceof Inet6Address) {
-      1 * span.setTag(Tags.PEER_HOST_IPV6, connection.address.hostAddress)
+      1 * span.setAttribute(Tags.PEER_HOST_IPV6, connection.address.hostAddress)
     }
     0 * _
 

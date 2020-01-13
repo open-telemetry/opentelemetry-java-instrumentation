@@ -56,9 +56,9 @@ public abstract class KafkaDecorator extends ClientDecorator {
   public void onConsume(final AgentSpan span, final ConsumerRecord record) {
     if (record != null) {
       final String topic = record.topic() == null ? "kafka" : record.topic();
-      span.setTag(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
-      span.setTag("partition", record.partition());
-      span.setTag("offset", record.offset());
+      span.setAttribute(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
+      span.setAttribute("partition", record.partition());
+      span.setAttribute("offset", record.offset());
     }
   }
 
@@ -67,10 +67,10 @@ public abstract class KafkaDecorator extends ClientDecorator {
 
       final String topic = record.topic() == null ? "kafka" : record.topic();
       if (record.partition() != null) {
-        span.setTag("kafka.partition", record.partition());
+        span.setAttribute("kafka.partition", record.partition());
       }
 
-      span.setTag(MoreTags.RESOURCE_NAME, "Produce Topic " + topic);
+      span.setAttribute(MoreTags.RESOURCE_NAME, "Produce Topic " + topic);
     }
   }
 }

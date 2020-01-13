@@ -121,31 +121,31 @@ public final class AgentTracerImpl implements TracerAPI {
     }
 
     @Override
-    public AgentSpan setTag(final String key, final boolean value) {
+    public AgentSpan setAttribute(final String key, final boolean value) {
       span.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final int value) {
+    public AgentSpan setAttribute(final String key, final int value) {
       span.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final long value) {
+    public AgentSpan setAttribute(final String key, final long value) {
       span.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final double value) {
+    public AgentSpan setAttribute(final String key, final double value) {
       span.setAttribute(key, value);
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final String value) {
+    public AgentSpan setAttribute(final String key, final String value) {
       if (value != null && !value.isEmpty()) {
         span.setAttribute(key, value);
       }

@@ -81,7 +81,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
         } else {
           path = "true";
         }
-        span.setTag("servlet.dispatch", path);
+        span.setAttribute("servlet.dispatch", path);
       }
       return true;
     }

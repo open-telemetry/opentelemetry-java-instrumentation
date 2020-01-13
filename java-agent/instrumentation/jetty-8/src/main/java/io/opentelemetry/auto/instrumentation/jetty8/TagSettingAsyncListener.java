@@ -32,7 +32,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   public void onTimeout(final AsyncEvent event) throws IOException {
     if (activated.compareAndSet(false, true)) {
       span.setError(true);
-      span.setTag("timeout", event.getAsyncContext().getTimeout());
+      span.setAttribute("timeout", event.getAsyncContext().getTimeout());
       DECORATE.beforeFinish(span);
       span.finish();
     }
@@ -45,7 +45,7 @@ public class TagSettingAsyncListener implements AsyncListener {
       if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
           == HttpServletResponse.SC_OK) {
         // exception is thrown in filter chain, but status code is incorrect
-        span.setTag(Tags.HTTP_STATUS, 500);
+        span.setAttribute(Tags.HTTP_STATUS, 500);
         span.setError(true);
       }
       DECORATE.onError(span, event.getThrowable());

@@ -25,7 +25,8 @@ public abstract class HttpServerTestAdvice {
       if (activeSpan() != null) {
         return null;
       } else {
-        final AgentSpan span = startSpan("TEST_SPAN").setTag(MoreTags.RESOURCE_NAME, "ServerEntry");
+        final AgentSpan span =
+            startSpan("TEST_SPAN").setAttribute(MoreTags.RESOURCE_NAME, "ServerEntry");
         return activateSpan(span, true);
       }
     }

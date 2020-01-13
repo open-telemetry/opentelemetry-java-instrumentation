@@ -15,8 +15,8 @@ public class SpringWebfluxHttpClientDecorator
       new SpringWebfluxHttpClientDecorator();
 
   public void onCancel(final AgentSpan span) {
-    span.setTag("event", "cancelled");
-    span.setTag("message", "The subscription was cancelled");
+    span.setAttribute("event", "cancelled");
+    span.setAttribute("message", "The subscription was cancelled");
   }
 
   @Override

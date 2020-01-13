@@ -30,7 +30,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
       final Channel next) {
 
     final AgentSpan span =
-        startSpan("grpc.client").setTag(MoreTags.RESOURCE_NAME, method.getFullMethodName());
+        startSpan("grpc.client").setAttribute(MoreTags.RESOURCE_NAME, method.getFullMethodName());
     try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.afterStart(span);
 
@@ -98,7 +98,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onMessage(final RespT message) {
       final AgentSpan messageSpan =
           startSpan("grpc.message", span.context())
-              .setTag("message.type", message.getClass().getName());
+              .setAttribute("message.type", message.getClass().getName());
       DECORATE.afterStart(messageSpan);
       final AgentScope scope = activateSpan(messageSpan, true);
       try {

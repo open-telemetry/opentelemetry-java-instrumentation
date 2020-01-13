@@ -28,7 +28,7 @@ public class TraceAdvice {
     if (resourceName == null || resourceName.isEmpty()) {
       resourceName = DECORATE.spanNameForMethod(method);
     }
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     DECORATE.afterStart(span);
 
     return activateSpan(span, true);

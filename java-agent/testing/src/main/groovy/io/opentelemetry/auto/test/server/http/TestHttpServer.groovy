@@ -239,10 +239,10 @@ class TestHttpServer implements AutoCloseable {
         final AgentSpan.Context extractedContext = propagate().extract(req, GETTER)
         if (extractedContext != null) {
           startSpan("test-http-server", extractedContext)
-            .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
+            .setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
         } else {
           startSpan("test-http-server")
-            .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
+            .setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
         }
       }
     }

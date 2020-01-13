@@ -24,9 +24,9 @@ public abstract class BaseDecorator {
   public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
     if (spanType() != null) {
-      span.setTag(MoreTags.SPAN_TYPE, spanType());
+      span.setAttribute(MoreTags.SPAN_TYPE, spanType());
     }
-    span.setTag(Tags.COMPONENT, component());
+    span.setAttribute(Tags.COMPONENT, component());
     return span;
   }
 
@@ -62,8 +62,8 @@ public abstract class BaseDecorator {
     if (remoteConnection != null) {
       onPeerConnection(span, remoteConnection.getAddress());
 
-      span.setTag(Tags.PEER_HOSTNAME, remoteConnection.getHostName());
-      span.setTag(Tags.PEER_PORT, remoteConnection.getPort());
+      span.setAttribute(Tags.PEER_HOSTNAME, remoteConnection.getHostName());
+      span.setAttribute(Tags.PEER_PORT, remoteConnection.getPort());
     }
     return span;
   }
@@ -71,11 +71,11 @@ public abstract class BaseDecorator {
   public AgentSpan onPeerConnection(final AgentSpan span, final InetAddress remoteAddress) {
     assert span != null;
     if (remoteAddress != null) {
-      span.setTag(Tags.PEER_HOSTNAME, remoteAddress.getHostName());
+      span.setAttribute(Tags.PEER_HOSTNAME, remoteAddress.getHostName());
       if (remoteAddress instanceof Inet4Address) {
-        span.setTag(Tags.PEER_HOST_IPV4, remoteAddress.getHostAddress());
+        span.setAttribute(Tags.PEER_HOST_IPV4, remoteAddress.getHostAddress());
       } else if (remoteAddress instanceof Inet6Address) {
-        span.setTag(Tags.PEER_HOST_IPV6, remoteAddress.getHostAddress());
+        span.setAttribute(Tags.PEER_HOST_IPV6, remoteAddress.getHostAddress());
       }
     }
     return span;

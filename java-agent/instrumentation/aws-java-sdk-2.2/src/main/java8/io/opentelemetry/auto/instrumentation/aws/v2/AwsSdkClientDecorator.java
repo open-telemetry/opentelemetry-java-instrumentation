@@ -21,22 +21,22 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     // S3
     request
         .getValueForField("Bucket", String.class)
-        .ifPresent(name -> span.setTag("aws.bucket.name", name));
+        .ifPresent(name -> span.setAttribute("aws.bucket.name", name));
     // DynamoDB
     request
         .getValueForField("TableName", String.class)
-        .ifPresent(name -> span.setTag("aws.table.name", name));
+        .ifPresent(name -> span.setAttribute("aws.table.name", name));
     // SQS
     request
         .getValueForField("QueueName", String.class)
-        .ifPresent(name -> span.setTag("aws.queue.name", name));
+        .ifPresent(name -> span.setAttribute("aws.queue.name", name));
     request
         .getValueForField("QueueUrl", String.class)
-        .ifPresent(name -> span.setTag("aws.queue.url", name));
+        .ifPresent(name -> span.setAttribute("aws.queue.url", name));
     // Kinesis
     request
         .getValueForField("StreamName", String.class)
-        .ifPresent(name -> span.setTag("aws.stream.name", name));
+        .ifPresent(name -> span.setAttribute("aws.stream.name", name));
     return span;
   }
 
@@ -46,11 +46,11 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
     // Resource Name has to be set after the HTTP_URL because otherwise decorators overwrite it
-    span.setTag(MoreTags.RESOURCE_NAME, awsServiceName + "." + awsOperation);
+    span.setAttribute(MoreTags.RESOURCE_NAME, awsServiceName + "." + awsOperation);
 
-    span.setTag("aws.agent", COMPONENT_NAME);
-    span.setTag("aws.service", awsServiceName);
-    span.setTag("aws.operation", awsOperation);
+    span.setAttribute("aws.agent", COMPONENT_NAME);
+    span.setAttribute("aws.service", awsServiceName);
+    span.setAttribute("aws.operation", awsOperation);
 
     return span;
   }
@@ -58,7 +58,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   // Not overriding the super.  Should call both with each type of response.
   public AgentSpan onResponse(final AgentSpan span, final SdkResponse response) {
     if (response instanceof AwsResponse) {
-      span.setTag("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
+      span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
     }
     return span;
   }

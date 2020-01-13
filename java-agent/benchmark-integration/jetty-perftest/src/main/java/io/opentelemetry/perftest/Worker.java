@@ -13,9 +13,9 @@ public class Worker {
   public static void doWork(final long workTimeMS) {
     final AgentSpan span = activeSpan();
     if (span != null) {
-      span.setTag("work-time", workTimeMS);
-      span.setTag("info", "interesting stuff");
-      span.setTag("additionalInfo", "interesting stuff");
+      span.setAttribute("work-time", workTimeMS);
+      span.setAttribute("info", "interesting stuff");
+      span.setAttribute("additionalInfo", "interesting stuff");
     }
 
     final long doneTimestamp = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(workTimeMS);

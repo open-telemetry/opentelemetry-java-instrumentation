@@ -51,14 +51,14 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     final String resourceName = getPathResourceName(target, method);
     updateParent(parent, resourceName);
 
-    span.setTag(MoreTags.SPAN_TYPE, SpanTypes.HTTP_SERVER);
+    span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_SERVER);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     final boolean isRootScope = parent == null;
     if (isRootScope && !resourceName.isEmpty()) {
-      span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+      span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     } else {
-      span.setTag(
+      span.setAttribute(
           MoreTags.RESOURCE_NAME,
           DECORATE.spanNameForClass(target) + (method == null ? "" : "." + method.getName()));
     }
@@ -68,10 +68,10 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (span == null) {
       return;
     }
-    span.setTag(Tags.COMPONENT, "jax-rs");
+    span.setAttribute(Tags.COMPONENT, "jax-rs");
 
     if (!resourceName.isEmpty()) {
-      span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+      span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     }
   }
 

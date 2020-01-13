@@ -39,7 +39,7 @@ public class Servlet3Advice {
 
     final AgentSpan span =
         startSpan("servlet.request", extractedContext)
-            .setTag("span.origin.type", servlet.getClass().getName());
+            .setAttribute("span.origin.type", servlet.getClass().getName());
 
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, httpServletRequest);
@@ -61,7 +61,7 @@ public class Servlet3Advice {
     if (spanAttr instanceof AgentSpan && request instanceof HttpServletRequest) {
       final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
       if (principal != null) {
-        ((AgentSpan) spanAttr).setTag(MoreTags.USER_NAME, principal.getName());
+        ((AgentSpan) spanAttr).setAttribute(MoreTags.USER_NAME, principal.getName());
       }
     }
 
@@ -79,7 +79,7 @@ public class Servlet3Advice {
         DECORATE.onResponse(span, resp);
         if (resp.getStatus() == HttpServletResponse.SC_OK) {
           // exception is thrown in filter chain, but status code is incorrect
-          span.setTag(Tags.HTTP_STATUS, 500);
+          span.setAttribute(Tags.HTTP_STATUS, 500);
           span.setError(true);
         }
         DECORATE.onError(span, throwable);

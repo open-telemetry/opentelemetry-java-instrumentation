@@ -16,7 +16,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   @Override
   public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
-    span.setTag(Tags.DB_TYPE, dbType());
+    span.setAttribute(Tags.DB_TYPE, dbType());
     return super.afterStart(span);
   }
 
@@ -30,12 +30,12 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setTag(Tags.DB_USER, dbUser(connection));
+      span.setAttribute(Tags.DB_USER, dbUser(connection));
       final String instanceName = dbInstance(connection);
-      span.setTag(Tags.DB_INSTANCE, instanceName);
+      span.setAttribute(Tags.DB_INSTANCE, instanceName);
 
       if (instanceName != null && Config.get().isDbClientSplitByInstance()) {
-        span.setTag(MoreTags.SERVICE_NAME, instanceName);
+        span.setAttribute(MoreTags.SERVICE_NAME, instanceName);
       }
     }
     return span;
@@ -43,7 +43,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
 
   public AgentSpan onStatement(final AgentSpan span, final String statement) {
     assert span != null;
-    span.setTag(Tags.DB_STATEMENT, statement);
+    span.setAttribute(Tags.DB_STATEMENT, statement);
     return span;
   }
 }

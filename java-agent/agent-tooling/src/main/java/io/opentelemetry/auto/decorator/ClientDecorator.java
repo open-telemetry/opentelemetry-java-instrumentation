@@ -16,9 +16,9 @@ public abstract class ClientDecorator extends BaseDecorator {
   public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
     if (service() != null) {
-      span.setTag(MoreTags.SERVICE_NAME, service());
+      span.setAttribute(MoreTags.SERVICE_NAME, service());
     }
-    span.setTag(Tags.SPAN_KIND, spanKind());
+    span.setAttribute(Tags.SPAN_KIND, spanKind());
     return super.afterStart(span);
   }
 }

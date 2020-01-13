@@ -111,7 +111,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
       final AgentSpan span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
-        span.setTag("canceled", true);
+        span.setAttribute("canceled", true);
         DECORATE.beforeFinish(span);
         span.finish();
       }
