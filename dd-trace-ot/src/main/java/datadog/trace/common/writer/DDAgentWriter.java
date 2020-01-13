@@ -113,7 +113,13 @@ public class DDAgentWriter implements Writer {
   public void write(final List<DDSpan> trace) {
     // We can't add events after shutdown otherwise it will never complete shutting down.
     if (traceProcessingDisruptor.running) {
-      final int representativeCount = traceCount.getAndSet(0) + 1;
+      final int representativeCount;
+      if (trace.isEmpty() || !(trace.get(0).isRootSpan())) {
+        // We don't want to reset the count if we can't correctly report the value.
+        representativeCount = 1;
+      } else {
+        representativeCount = traceCount.getAndSet(0) + 1;
+      }
       final boolean published = traceProcessingDisruptor.publish(trace, representativeCount);
 
       if (published) {

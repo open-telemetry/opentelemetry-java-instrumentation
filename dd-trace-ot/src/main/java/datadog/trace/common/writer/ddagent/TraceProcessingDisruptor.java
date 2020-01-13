@@ -63,6 +63,12 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
         final DisruptorEvent<List<DDSpan>> event, final long sequence, final boolean endOfBatch) {
       try {
         if (event.data != null) {
+          if (1 < event.representativeCount && !event.data.isEmpty()) {
+            // attempt to have agent scale the metrics properly
+            ((DDSpan) event.data.get(0).getLocalRootSpan())
+                .context()
+                .setMetric("_sample_rate", 1d / event.representativeCount);
+          }
           try {
             final byte[] serializedTrace = api.serializeTrace(event.data);
             batchWritingDisruptor.publish(serializedTrace, event.representativeCount);

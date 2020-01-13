@@ -131,7 +131,7 @@ class DDAgentWriterTest extends DDSpecification {
     writer.close()
 
     where:
-    span = [newSpanOf(0, "fixed-thread-name")]
+    span = newSpanOf(0, "fixed-thread-name")
     trace = (0..10000).collect { span }
   }
 
@@ -162,7 +162,7 @@ class DDAgentWriterTest extends DDSpecification {
     writer.close()
 
     where:
-    span = [newSpanOf(0, "fixed-thread-name")]
+    span = newSpanOf(0, "fixed-thread-name")
     trace = (1..10).collect { span }
   }
 
