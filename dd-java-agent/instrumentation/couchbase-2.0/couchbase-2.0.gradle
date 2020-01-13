@@ -29,7 +29,7 @@ muzzle {
   pass {
     group = 'com.couchbase.client'
     module = 'java-client'
-    versions = "[2.7.9,)"
+    versions = "[2.7.9,3.0.0)"
   }
   fail {
     group = 'com.couchbase.client'
@@ -59,6 +59,6 @@ dependencies {
   testCompile group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
 
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
-  latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.6+'
+  latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.+'
   latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '+'
 }
