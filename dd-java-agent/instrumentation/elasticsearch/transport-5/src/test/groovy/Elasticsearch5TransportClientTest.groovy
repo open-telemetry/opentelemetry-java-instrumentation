@@ -148,13 +148,13 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
 
   def "test elasticsearch get"() {
     setup:
-    assert TEST_WRITER == []
+    assert TEST_WRITER.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
     TEST_WRITER.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    TEST_WRITER.size() == 1
+    TEST_WRITER.traces.size() == 1
 
     when:
     def emptyResult = client.prepareGet(indexName, indexType, id).get()
@@ -187,10 +187,10 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     assertTraces(5) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (TEST_WRITER[2][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
-          def tmp = TEST_WRITER[2]
-          TEST_WRITER[2] = TEST_WRITER[3]
-          TEST_WRITER[3] = tmp
+        if (traces[2][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = traces[2]
+          traces[2] = traces[3]
+          traces[3] = tmp
         }
       }
       trace(0, 1) {

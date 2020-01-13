@@ -1,7 +1,5 @@
 package test
 
-import datadog.trace.agent.test.asserts.ListWriterAssert
-import datadog.trace.agent.test.asserts.SpanAssert
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
@@ -9,8 +7,6 @@ import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
 import datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.SpanData
 import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
@@ -18,6 +14,7 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.web.servlet.view.RedirectView
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static java.util.Collections.singletonMap
 
@@ -52,41 +49,29 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   }
 
   @Override
+  boolean hasRenderSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT
+  }
+
+  @Override
   boolean testNotFound() {
     // FIXME: the instrumentation adds an extra controller span which is not consistent.
     // Fix tests or remove extra span.
     false
   }
 
-  void cleanAndAssertTraces(
-    final int size,
-    @ClosureParams(value = SimpleType, options = "datadog.trace.agent.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-
-    // If this is failing, make sure HttpServerTestAdvice is applied correctly.
-    TEST_WRITER.waitForTraces(size * 2)
-
-    TEST_WRITER.each {
-      def renderSpan = it.find {
-        it.name == "response.render"
-      }
-      if (renderSpan) {
-        SpanAssert.assertSpan(renderSpan) {
-          operationName "response.render"
-          errored false
-          tags {
-            "$DDTags.SPAN_TYPE" "web"
-            "$Tags.COMPONENT" "spring-webmvc"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "view.type" RedirectView.name
-          }
-        }
-        it.remove(renderSpan)
+  @Override
+  void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      operationName "response.render"
+      errored false
+      tags {
+        "$DDTags.SPAN_TYPE" "web"
+        "$Tags.COMPONENT" "spring-webmvc"
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        "view.type" RedirectView.name
       }
     }
-
-    super.cleanAndAssertTraces(size, spec)
   }
 
   @Override

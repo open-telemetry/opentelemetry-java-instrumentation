@@ -53,7 +53,7 @@ class SpringJpaTest extends AgentTestRunner {
     then:
     customer.id != null
     // Behavior changed in new version:
-    def extraTrace = TEST_WRITER.size() == 2
+    def extraTrace = TEST_WRITER.traces.size() == 2
     assertTraces(extraTrace ? 2 : 1) {
       if (extraTrace) {
         trace(0, 1) {

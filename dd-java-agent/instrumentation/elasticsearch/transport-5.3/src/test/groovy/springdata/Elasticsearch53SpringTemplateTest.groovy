@@ -157,10 +157,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     assertTraces(7) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (TEST_WRITER[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
-          def tmp = TEST_WRITER[3]
-          TEST_WRITER[3] = TEST_WRITER[4]
-          TEST_WRITER[4] = tmp
+        if (traces[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = traces[3]
+          traces[3] = traces[4]
+          traces[4] = tmp
         }
       }
       trace(0, 1) {
@@ -374,9 +374,11 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   }
 
   void filterIgnoredActions() {
-    for (int i = 0; i < TEST_WRITER.size(); i++) {
-      if (IGNORED_ACTIONS.contains(TEST_WRITER[i][0].attributes[DDTags.RESOURCE_NAME].stringValue)) {
-        TEST_WRITER.remove(i)
+    TEST_WRITER.doUnderStructuralChangeLock {
+      for (int i = 0; i < TEST_WRITER.traces.size(); i++) {
+        if (IGNORED_ACTIONS.contains(TEST_WRITER.traces[i][0].attributes[DDTags.RESOURCE_NAME].stringValue)) {
+          TEST_WRITER.traces.remove(i)
+        }
       }
     }
   }

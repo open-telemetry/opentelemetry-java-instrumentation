@@ -263,7 +263,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     res != null
-    TEST_WRITER.size() == 0
+    TEST_WRITER.traces.size() == 0
   }
 
   def "debug segfault command (returns mono void) with no argument should produce span"() {

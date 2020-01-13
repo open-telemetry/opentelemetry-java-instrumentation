@@ -133,13 +133,13 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
 
   def "test elasticsearch get"() {
     setup:
-    assert TEST_WRITER == []
+    assert TEST_WRITER.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
     TEST_WRITER.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    TEST_WRITER.size() == 1
+    TEST_WRITER.traces.size() == 1
 
     when:
     client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
@@ -173,10 +173,10 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     assertTraces(6) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (TEST_WRITER[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
-          def tmp = TEST_WRITER[3]
-          TEST_WRITER[3] = TEST_WRITER[4]
-          TEST_WRITER[4] = tmp
+        if (traces[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = traces[3]
+          traces[3] = traces[4]
+          traces[4] = tmp
         }
       }
       trace(0, 1) {

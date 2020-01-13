@@ -68,7 +68,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         sortSpans {
-          sort(trace)
+          sort(spans)
         }
         span(0) {
           operationName "repository.operation"
@@ -115,7 +115,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 3) {
         sortSpans {
-          sort(trace)
+          sort(spans)
         }
         span(0) {
           operationName "repository.operation"
@@ -190,7 +190,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         sortSpans {
-          sort(trace)
+          sort(spans)
         }
         span(0) {
           operationName "repository.operation"
@@ -234,7 +234,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 3) {
         sortSpans {
-          sort(trace)
+          sort(spans)
         }
         span(0) {
           operationName "repository.operation"
@@ -286,7 +286,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 2) {
         sortSpans {
-          sort(trace)
+          sort(spans)
         }
         span(0) {
           operationName "repository.operation"
@@ -329,7 +329,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 3) {
         sortSpans {
-          sort(trace)
+          sort(spans)
         }
         span(0) {
           operationName "repository.operation"
@@ -382,7 +382,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
       trace(1, 2) {
         sortSpans {
-          sort(trace)
+          sort(spans)
         }
         span(0) {
           operationName "repository.operation"

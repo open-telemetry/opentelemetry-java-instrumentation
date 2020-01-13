@@ -87,7 +87,7 @@ class GrpcStreamingTest extends AgentTestRunner {
         sortSpans {
           // sort for consistent ordering
           List<SpanData> serverMessages = new ArrayList<>()
-          for (SpanData span : trace) {
+          for (SpanData span : spans) {
             if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
               serverMessages.add(span)
             }
@@ -96,8 +96,8 @@ class GrpcStreamingTest extends AgentTestRunner {
             }
           }
           // move the server messages to the end
-          trace.removeAll(serverMessages)
-          trace.addAll(serverMessages)
+          spans.removeAll(serverMessages)
+          spans.addAll(serverMessages)
         }
         span(0) {
           operationName "grpc.client"

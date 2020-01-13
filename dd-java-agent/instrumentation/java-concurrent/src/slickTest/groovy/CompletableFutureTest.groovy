@@ -48,12 +48,12 @@ class CompletableFutureTest extends AgentTestRunner {
     }.get()
 
     TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.get(0)
+    List<SpanData> trace = TEST_WRITER.traces[0]
 
     expect:
     result == "abc"
 
-    TEST_WRITER.size() == 1
+    TEST_WRITER.traces.size() == 1
     trace.size() == 4
     trace.get(0).name == "parent"
     trace.get(1).name == "supplier"

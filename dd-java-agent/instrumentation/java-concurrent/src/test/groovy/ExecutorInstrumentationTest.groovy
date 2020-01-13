@@ -80,10 +80,10 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     }.run()
 
     TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.get(0)
+    List<SpanData> trace = TEST_WRITER.traces[0]
 
     expect:
-    TEST_WRITER.size() == 1
+    TEST_WRITER.traces.size() == 1
     trace.size() == 2
     trace.get(0).name == "parent"
     trace.get(1).name == "asyncChild"
@@ -161,11 +161,11 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     TEST_WRITER.waitForTraces(2)
 
     expect:
-    TEST_WRITER.size() == 2
-    TEST_WRITER.get(0).size() == 1
-    TEST_WRITER.get(0).get(0).name == "parent"
-    TEST_WRITER.get(1).size() == 1
-    TEST_WRITER.get(1).get(0).name == "asyncChild"
+    TEST_WRITER.traces.size() == 2
+    TEST_WRITER.traces[0].size() == 1
+    TEST_WRITER.traces[0][0].name == "parent"
+    TEST_WRITER.traces[1].size() == 1
+    TEST_WRITER.traces[1][0].name == "asyncChild"
 
     cleanup:
     pool?.shutdown()
@@ -226,7 +226,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     TEST_WRITER.waitForTraces(1)
 
     expect:
-    TEST_WRITER.size() == 1
+    TEST_WRITER.traces.size() == 1
 
     where:
     name                | method           | poolImpl

@@ -26,7 +26,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     SayTracedHello.fromCallableWhenDisabled()
 
     expect:
-    TEST_WRITER == []
+    TEST_WRITER.traces == []
   }
 
   def "test custom annotation based trace"() {

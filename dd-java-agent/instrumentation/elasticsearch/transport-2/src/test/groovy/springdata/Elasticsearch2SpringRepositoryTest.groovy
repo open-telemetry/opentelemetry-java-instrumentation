@@ -72,10 +72,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(3) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (TEST_WRITER[0][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
-          def tmp = TEST_WRITER[0]
-          TEST_WRITER[0] = TEST_WRITER[1]
-          TEST_WRITER[1] = tmp
+        if (traces[0][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = traces[0]
+          traces[0] = traces[1]
+          traces[1] = tmp
         }
       }
       trace(0, 1) {
