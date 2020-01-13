@@ -134,22 +134,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
-        span(1) { // update
-          childOf(span(0))
-          tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" ~/^update /
-            "$DDTags.SPAN_TYPE" "sql"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.DB_TYPE" "hsqldb"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^update /
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-          }
-        }
-        span(2) { // select
+        span(1) { // select
           childOf(span(0))
           tags {
             "$DDTags.SERVICE_NAME" "hsqldb"
@@ -161,6 +146,21 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+          }
+        }
+        span(2) { // update
+          childOf(span(0))
+          tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
+            "$DDTags.RESOURCE_NAME" ~/^update /
+            "$DDTags.SPAN_TYPE" "sql"
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "$Tags.DB_STATEMENT" ~/^update /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -217,22 +217,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
-        span(1) { // delete
-          childOf(span(0))
-          tags {
-            "$DDTags.SERVICE_NAME" "hsqldb"
-            "$DDTags.RESOURCE_NAME" ~/^delete /
-            "$DDTags.SPAN_TYPE" "sql"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.DB_TYPE" "hsqldb"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^delete /
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
-          }
-        }
-        span(2) { // select
+        span(1) { // select
           childOf(span(0))
           tags {
             "$DDTags.SERVICE_NAME" "hsqldb"
@@ -244,6 +229,21 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+          }
+        }
+        span(2) { // delete
+          childOf(span(0))
+          tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
+            "$DDTags.RESOURCE_NAME" ~/^delete /
+            "$DDTags.SPAN_TYPE" "sql"
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "$Tags.DB_STATEMENT" ~/^delete /
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }

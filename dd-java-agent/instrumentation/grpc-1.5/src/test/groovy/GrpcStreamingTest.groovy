@@ -83,6 +83,7 @@ class GrpcStreamingTest extends AgentTestRunner {
     error.get() == null
 
     // sort for consistent ordering
+    TEST_WRITER.waitForTraces(1)
     List<SpanData> serverMessages = new ArrayList<>()
     for (SpanData span : TEST_WRITER[0]) {
       if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {

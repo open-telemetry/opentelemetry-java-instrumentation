@@ -142,27 +142,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
-
         span(1) {
-          operationName "elasticsearch.query"
-          childOf(span(0))
-          tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "RefreshAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.DB_TYPE" "elasticsearch"
-            "elasticsearch.action" "RefreshAction"
-            "elasticsearch.request" "RefreshRequest"
-            "elasticsearch.request.indices" indexName
-            "elasticsearch.shard.broadcast.failed" 0
-            "elasticsearch.shard.broadcast.successful" 5
-            "elasticsearch.shard.broadcast.total" 10
-          }
-        }
-
-        span(2) {
           operationName "elasticsearch.query"
           childOf(span(0))
           tags {
@@ -181,6 +161,24 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.replication.failed" 0
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.total" 2
+          }
+        }
+        span(2) {
+          operationName "elasticsearch.query"
+          childOf(span(0))
+          tags {
+            "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "RefreshAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.shard.broadcast.failed" 0
+            "elasticsearch.shard.broadcast.successful" 5
+            "elasticsearch.shard.broadcast.total" 10
           }
         }
       }
@@ -249,24 +247,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           childOf(span(0))
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "RefreshAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.DB_TYPE" "elasticsearch"
-            "elasticsearch.action" "RefreshAction"
-            "elasticsearch.request" "RefreshRequest"
-            "elasticsearch.request.indices" indexName
-            "elasticsearch.shard.broadcast.failed" 0
-            "elasticsearch.shard.broadcast.successful" 5
-            "elasticsearch.shard.broadcast.total" 10
-          }
-        }
-        span(2) {
-          operationName "elasticsearch.query"
-          childOf(span(0))
-          tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "IndexAction"
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
@@ -281,6 +261,24 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.replication.failed" 0
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.total" 2
+          }
+        }
+        span(2) {
+          operationName "elasticsearch.query"
+          childOf(span(0))
+          tags {
+            "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "RefreshAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.shard.broadcast.failed" 0
+            "elasticsearch.shard.broadcast.successful" 5
+            "elasticsearch.shard.broadcast.total" 10
           }
         }
       }
@@ -340,24 +338,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           childOf(span(0))
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
-            "$DDTags.RESOURCE_NAME" "RefreshAction"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.DB_TYPE" "elasticsearch"
-            "elasticsearch.action" "RefreshAction"
-            "elasticsearch.request" "RefreshRequest"
-            "elasticsearch.request.indices" indexName
-            "elasticsearch.shard.broadcast.failed" 0
-            "elasticsearch.shard.broadcast.successful" 5
-            "elasticsearch.shard.broadcast.total" 10
-          }
-        }
-        span(2) {
-          operationName "elasticsearch.query"
-          childOf(span(0))
-          tags {
-            "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "DeleteAction"
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
@@ -371,6 +351,24 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.replication.failed" 0
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.total" 2
+          }
+        }
+        span(2) {
+          operationName "elasticsearch.query"
+          childOf(span(0))
+          tags {
+            "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "RefreshAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.shard.broadcast.failed" 0
+            "elasticsearch.shard.broadcast.successful" 5
+            "elasticsearch.shard.broadcast.total" 10
           }
         }
       }

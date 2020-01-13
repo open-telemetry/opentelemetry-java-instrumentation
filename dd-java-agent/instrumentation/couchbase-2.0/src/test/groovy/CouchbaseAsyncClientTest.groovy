@@ -28,7 +28,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
     then:
     assert hasBucket.get()
-    sortAndAssertTraces(1) {
+    assertTraces(1) {
       trace(0, 2) {
         assertCouchbaseCall(it, 0, "Cluster.openBucket", null)
         assertCouchbaseCall(it, 1, "ClusterManager.hasBucket", null, span(0))
@@ -66,12 +66,12 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     then:
     inserted.get().content().getString("hello") == "world"
 
-    sortAndAssertTraces(1) {
+    assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 2, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketSettings.name(), span(2))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
       }
     }
 
@@ -113,13 +113,13 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     found.get() == inserted.get()
     found.get().content().getString("hello") == "world"
 
-    sortAndAssertTraces(1) {
+    assertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 3, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(3))
-        assertCouchbaseCall(it, 1, "Bucket.get", bucketSettings.name(), span(2))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
+        assertCouchbaseCall(it, 3, "Bucket.get", bucketSettings.name(), span(2))
       }
     }
 
@@ -160,12 +160,12 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     then:
     queryResult.get().get("row") == "value"
 
-    sortAndAssertTraces(1) {
+    assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 2, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 1, "Bucket.query", bucketCouchbase.name(), span(2))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.query", bucketCouchbase.name(), span(1))
       }
     }
 

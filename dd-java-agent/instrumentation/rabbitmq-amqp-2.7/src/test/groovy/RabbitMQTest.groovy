@@ -108,12 +108,11 @@ class RabbitMQTest extends AgentTestRunner {
           tags {
           }
         }
-        rabbitSpan(it, 1, "basic.get <generated>", true, span(2))
-        // reverse order
-        rabbitSpan(it, 2, "basic.publish $exchangeName -> $routingKey", false, span(0))
+        rabbitSpan(it, 1, "exchange.declare", false, span(0))
+        rabbitSpan(it, 2, "queue.declare", false, span(0))
         rabbitSpan(it, 3, "queue.bind", false, span(0))
-        rabbitSpan(it, 4, "queue.declare", false, span(0))
-        rabbitSpan(it, 5, "exchange.declare", false, span(0))
+        rabbitSpan(it, 4, "basic.publish $exchangeName -> $routingKey", false, span(0))
+        rabbitSpan(it, 5, "basic.get <generated>", true, span(4))
       }
     }
 
@@ -139,8 +138,8 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, 0, "queue.declare")
       }
       trace(1, 2) {
-        rabbitSpan(it, 0, "basic.get <generated>", true, span(1))
-        rabbitSpan(it, 1, "basic.publish <default> -> <generated>")
+        rabbitSpan(it, 0, "basic.publish <default> -> <generated>")
+        rabbitSpan(it, 1, "basic.get <generated>", true, span(0))
       }
     }
   }
@@ -191,8 +190,8 @@ class RabbitMQTest extends AgentTestRunner {
       }
       (1..messageCount).each {
         trace(3 + it, 2) {
-          rabbitSpan(it, 0, resource, true, span(1))
-          rabbitSpan(it, 1, "basic.publish $exchangeName -> <all>")
+          rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
+          rabbitSpan(it, 1, resource, true, span(0))
         }
       }
     }
@@ -246,8 +245,8 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "basic.consume")
       }
       trace(4, 2) {
-        rabbitSpan(it, 0, "basic.deliver <generated>", true, span(1), error, error.message)
-        rabbitSpan(it, 1, "basic.publish $exchangeName -> <all>")
+        rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
+        rabbitSpan(it, 1, "basic.deliver <generated>", true, span(0), error, error.message)
       }
     }
 
@@ -302,8 +301,8 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "queue.declare")
       }
       trace(1, 2) {
-        rabbitSpan(it, 0, "basic.get $queue.name", true, span(1))
-        rabbitSpan(it, 1, "basic.publish <default> -> some-routing-queue")
+        rabbitSpan(it, 0, "basic.publish <default> -> some-routing-queue")
+        rabbitSpan(it, 1, "basic.get $queue.name", true, span(0))
       }
     }
   }

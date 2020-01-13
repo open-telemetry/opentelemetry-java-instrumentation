@@ -19,7 +19,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
     then:
     assert hasBucket
-    sortAndAssertTraces(1) {
+    assertTraces(1) {
       trace(0, 1) {
         assertCouchbaseCall(it, 0, "ClusterManager.hasBucket")
       }
@@ -60,14 +60,14 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     found == inserted
     found.content().getString("hello") == "world"
 
-    sortAndAssertTraces(2) {
+    assertTraces(2) {
       trace(0, 1) {
         assertCouchbaseCall(it, 0, "Cluster.openBucket")
       }
       trace(1, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(0))
-        assertCouchbaseCall(it, 1, "Bucket.get", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 2, "Bucket.get", bucketSettings.name(), span(0))
       }
     }
 
@@ -101,7 +101,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     result.first().value().get("row") == "value"
 
     and:
-    sortAndAssertTraces(2) {
+    assertTraces(2) {
       trace(0, 1) {
         assertCouchbaseCall(it, 0, "Cluster.openBucket")
       }

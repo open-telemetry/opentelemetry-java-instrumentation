@@ -81,8 +81,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 2) {
-        // PRODUCER span 1
-        span(1) {
+        span(0) {
           operationName "kafka.produce"
           errored false
           parent()
@@ -94,11 +93,10 @@ class KafkaClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           }
         }
-        // CONSUMER span 0
-        span(0) {
+        span(1) {
           operationName "kafka.consume"
           errored false
-          childOf span(1)
+          childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
@@ -154,8 +152,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 2) {
-        // PRODUCER span 1
-        span(1) {
+        span(0) {
           operationName "kafka.produce"
           errored false
           parent()
@@ -168,11 +165,10 @@ class KafkaClientTest extends AgentTestRunner {
             "kafka.partition" { it >= 0 }
           }
         }
-        // CONSUMER span 0
-        span(0) {
+        span(1) {
           operationName "kafka.consume"
           errored false
-          childOf span(1)
+          childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "kafka"
             "$DDTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"

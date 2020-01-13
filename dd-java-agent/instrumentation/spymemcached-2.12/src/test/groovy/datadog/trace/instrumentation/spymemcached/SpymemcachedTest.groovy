@@ -274,8 +274,8 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null, "hit")
-        getSpan(it, 2, "add")
+        getSpan(it, 1, "add")
+        getSpan(it, 2, "get", null, "hit")
       }
     }
   }
@@ -308,8 +308,8 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null, "miss")
-        getSpan(it, 2, "delete")
+        getSpan(it, 1, "delete")
+        getSpan(it, 2, "get", null, "miss")
       }
     }
   }
@@ -340,8 +340,8 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null, "hit")
-        getSpan(it, 2, "replace")
+        getSpan(it, 1, "replace")
+        getSpan(it, 2, "get", null, "hit")
       }
     }
   }
@@ -373,9 +373,9 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null, "hit")
+        getSpan(it, 1, "gets")
         getSpan(it, 2, "append")
-        getSpan(it, 3, "gets")
+        getSpan(it, 3, "get", null, "hit")
       }
     }
   }
@@ -392,9 +392,9 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null, "hit")
+        getSpan(it, 1, "gets")
         getSpan(it, 2, "prepend")
-        getSpan(it, 3, "gets")
+        getSpan(it, 3, "get", null, "hit")
       }
     }
   }
@@ -410,8 +410,8 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "cas")
-        getSpan(it, 2, "gets")
+        getSpan(it, 1, "gets")
+        getSpan(it, 2, "cas")
       }
     }
   }
@@ -506,8 +506,8 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null, "hit")
-        getSpan(it, 2, "decr")
+        getSpan(it, 1, "decr")
+        getSpan(it, 2, "get", null, "hit")
       }
     }
   }
@@ -555,8 +555,8 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null, "hit")
-        getSpan(it, 2, "incr")
+        getSpan(it, 1, "incr")
+        getSpan(it, 2, "get", null, "hit")
       }
     }
   }

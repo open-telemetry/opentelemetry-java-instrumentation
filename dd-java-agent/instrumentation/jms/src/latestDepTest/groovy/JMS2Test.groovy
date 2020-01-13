@@ -92,8 +92,8 @@ class JMS2Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(1) {
       trace(0, 2) {
-        producerSpan(it, 1, jmsResourceName)
-        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, span(1))
+        producerSpan(it, 0, jmsResourceName)
+        consumerSpan(it, 1, jmsResourceName, false, HornetQMessageConsumer, span(0))
       }
     }
 
@@ -129,8 +129,8 @@ class JMS2Test extends AgentTestRunner {
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        producerSpan(it, 1, jmsResourceName)
-        consumerSpan(it, 0, jmsResourceName, true, consumer.messageListener.class, span(1))
+        producerSpan(it, 0, jmsResourceName)
+        consumerSpan(it, 1, jmsResourceName, true, consumer.messageListener.class, span(0))
       }
     }
     // This check needs to go after all traces have been accounted for
