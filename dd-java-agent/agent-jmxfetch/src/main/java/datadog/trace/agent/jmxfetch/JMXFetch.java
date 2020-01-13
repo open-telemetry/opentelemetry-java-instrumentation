@@ -55,11 +55,9 @@ public class JMXFetch {
     final Integer refreshBeansPeriod = config.getJmxFetchRefreshBeansPeriod();
     final Map<String, String> globalTags = config.getMergedJmxTags();
     final String reporter = getReporter(config);
-    final String logLocation = getLogLocation();
-    final String logLevel = getLogLevel();
 
     log.info(
-        "JMXFetch config: {} {} {} {} {} {} {} {} {} {}",
+        "JMXFetch config: {} {} {} {} {} {} {} {}",
         jmxFetchConfigDir,
         jmxFetchConfigs,
         internalMetricsConfigs,
@@ -67,9 +65,7 @@ public class JMXFetch {
         checkPeriod,
         refreshBeansPeriod,
         globalTags,
-        reporter,
-        logLocation,
-        logLevel);
+        reporter);
 
     final AppConfig.AppConfigBuilder configBuilder =
         AppConfig.builder()
