@@ -2,23 +2,12 @@ package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
-import java.util.ArrayList;
-import java.util.List;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 import java.util.Optional;
 
-public class AkkaHttpServerHeaders implements AgentPropagation.Getter<HttpRequest> {
+public class AkkaHttpServerHeaders implements HttpTextFormat.Getter<HttpRequest> {
 
   public static final AkkaHttpServerHeaders GETTER = new AkkaHttpServerHeaders();
-
-  @Override
-  public List<String> keys(final HttpRequest carrier) {
-    final List<String> keys = new ArrayList<>();
-    for (final HttpHeader header : carrier.getHeaders()) {
-      keys.add(header.name());
-    }
-    return keys;
-  }
 
   @Override
   public String get(final HttpRequest carrier, final String key) {

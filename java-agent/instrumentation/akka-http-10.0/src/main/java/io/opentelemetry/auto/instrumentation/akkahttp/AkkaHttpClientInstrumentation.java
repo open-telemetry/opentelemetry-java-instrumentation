@@ -1,9 +1,6 @@
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -12,11 +9,13 @@ import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +30,8 @@ import scala.util.Try;
 @Slf4j
 @AutoService(Instrumenter.class)
 public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   public AkkaHttpClientInstrumentation() {
     super("akka-http", "akka-http-client");
   }
@@ -69,7 +70,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class SingleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope methodEnter(
+    public static SpanScopePair methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
@@ -82,17 +83,17 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final AgentSpan span = startSpan("akka-http.request");
+      final Span span = TRACER.spanBuilder("akka-http.request").startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
       if (request != null) {
         final AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-        propagate().inject(span, request, headers);
+        TRACER.getHttpTextFormat().inject(span.getContext(), request, headers);
         // Request is immutable, so we have to assign new value once we update headers
         request = headers.getRequest();
       }
-      return activateSpan(span, false);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -100,30 +101,30 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0) final HttpRequest request,
         @Advice.This final HttpExt thiz,
         @Advice.Return final Future<HttpResponse> responseFuture,
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+      if (spanScopePair == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(HttpExt.class);
 
-      final AgentSpan span = scope.span();
+      final Span span = spanScopePair.getSpan();
 
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
       } else {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
-      scope.close();
+      spanScopePair.getScope().close();
     }
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
-    private final AgentSpan span;
+    private final Span span;
 
-    public OnCompleteHandler(final AgentSpan span) {
+    public OnCompleteHandler(final Span span) {
       this.span = span;
     }
 
@@ -135,12 +136,12 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         DECORATE.onError(span, result.failed().get());
       }
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
       return null;
     }
   }
 
-  public static class AkkaHttpHeaders implements AgentPropagation.Setter<HttpRequest> {
+  public static class AkkaHttpHeaders implements HttpTextFormat.Setter<HttpRequest> {
     private HttpRequest request;
 
     public AkkaHttpHeaders(final HttpRequest request) {
@@ -148,7 +149,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public void set(final HttpRequest carrier, final String key, final String value) {
+    public void put(final HttpRequest carrier, final String key, final String value) {
       // It looks like this cast is only needed in Java, Scala would have figured it out
       request = (HttpRequest) request.addHeader(RawHeader.create(key, value));
     }
