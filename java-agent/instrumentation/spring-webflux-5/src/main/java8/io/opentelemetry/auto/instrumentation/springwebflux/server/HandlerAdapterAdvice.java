@@ -36,7 +36,7 @@ public class HandlerAdapterAdvice {
       }
 
       span.setSpanName(operationName);
-      span.setTag("handler.type", handlerType);
+      span.setAttribute("handler.type", handlerType);
 
       scope = activateSpan(span, false);
     }
@@ -45,7 +45,7 @@ public class HandlerAdapterAdvice {
     final PathPattern bestPattern =
         exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     if (parentSpan != null && bestPattern != null) {
-      parentSpan.setTag(
+      parentSpan.setAttribute(
           MoreTags.RESOURCE_NAME,
           exchange.getRequest().getMethodValue() + " " + bestPattern.getPatternString());
     }

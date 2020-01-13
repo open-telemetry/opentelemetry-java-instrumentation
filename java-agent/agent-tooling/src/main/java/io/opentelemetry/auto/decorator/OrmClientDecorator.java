@@ -13,7 +13,7 @@ public abstract class OrmClientDecorator extends DatabaseClientDecorator {
     if (entity != null) {
       final String name = entityName(entity);
       if (name != null) {
-        span.setTag(MoreTags.RESOURCE_NAME, name);
+        span.setAttribute(MoreTags.RESOURCE_NAME, name);
       } // else we keep any existing resource.
     }
     return span;

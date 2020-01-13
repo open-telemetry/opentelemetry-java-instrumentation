@@ -87,7 +87,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onStatement(span, sql);
-      span.setTag("span.origin.type", statement.getClass().getName());
+      span.setAttribute("span.origin.type", statement.getClass().getName());
       return activateSpan(span, true);
     }
 

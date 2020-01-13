@@ -126,27 +126,27 @@ public class AgentTracer {
     static final NoopAgentSpan INSTANCE = new NoopAgentSpan();
 
     @Override
-    public AgentSpan setTag(final String key, final boolean value) {
+    public AgentSpan setAttribute(final String key, final boolean value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final int value) {
+    public AgentSpan setAttribute(final String key, final int value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final long value) {
+    public AgentSpan setAttribute(final String key, final long value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final double value) {
+    public AgentSpan setAttribute(final String key, final double value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final String value) {
+    public AgentSpan setAttribute(final String key, final String value) {
       return this;
     }
 

@@ -49,7 +49,7 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public AgentSpan onResponse(final AgentSpan span, final ResultSet result) {
     if (result != null) {
       final Host host = result.getExecutionInfo().getQueriedHost();
-      span.setTag(Tags.PEER_PORT, host.getSocketAddress().getPort());
+      span.setAttribute(Tags.PEER_PORT, host.getSocketAddress().getPort());
       onPeerConnection(span, host.getSocketAddress().getAddress());
     }
     return span;

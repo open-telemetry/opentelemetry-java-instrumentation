@@ -55,7 +55,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
       final AgentSpan span = activeSpan();
       if (span != null && routeMatch != null) {
         final String resourceName = method.name().toUpperCase() + " " + routeMatch.getMatchUri();
-        span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+        span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       }
     }
   }

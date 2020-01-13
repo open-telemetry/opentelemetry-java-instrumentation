@@ -63,8 +63,8 @@ public class Servlet3Decorator
   public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
-      span.setTag("servlet.context", request.getContextPath());
-      span.setTag("servlet.path", request.getServletPath());
+      span.setAttribute("servlet.context", request.getContextPath());
+      span.setAttribute("servlet.path", request.getServletPath());
     }
     return super.onRequest(span, request);
   }

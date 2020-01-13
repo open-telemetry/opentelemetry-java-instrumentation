@@ -33,16 +33,17 @@ public class JSPDecorator extends BaseDecorator {
   public void onCompile(final AgentScope scope, final JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
       final AgentSpan span = scope.span();
-      span.setTag(MoreTags.RESOURCE_NAME, jspCompilationContext.getJspFile());
+      span.setAttribute(MoreTags.RESOURCE_NAME, jspCompilationContext.getJspFile());
 
       if (jspCompilationContext.getServletContext() != null) {
-        span.setTag("servlet.context", jspCompilationContext.getServletContext().getContextPath());
+        span.setAttribute(
+            "servlet.context", jspCompilationContext.getServletContext().getContextPath());
       }
 
       if (jspCompilationContext.getCompiler() != null) {
-        span.setTag("jsp.compiler", jspCompilationContext.getCompiler().getClass().getName());
+        span.setAttribute("jsp.compiler", jspCompilationContext.getCompiler().getClass().getName());
       }
-      span.setTag("jsp.classFQCN", jspCompilationContext.getFQCN());
+      span.setAttribute("jsp.classFQCN", jspCompilationContext.getFQCN());
     }
   }
 
@@ -53,11 +54,11 @@ public class JSPDecorator extends BaseDecorator {
     if (includeServletPath instanceof String) {
       resourceName = includeServletPath.toString();
     }
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
     final Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
     if (forwardOrigin instanceof String) {
-      span.setTag("jsp.forwardOrigin", forwardOrigin.toString());
+      span.setAttribute("jsp.forwardOrigin", forwardOrigin.toString());
     }
 
     // add the request URL as a tag to provide better context when looking at spans produced by
@@ -65,7 +66,7 @@ public class JSPDecorator extends BaseDecorator {
     // HttpServletRequest#getRequestURL(),
     // normalizing the URL should remove those symbols for readability and consistency
     try {
-      span.setTag(
+      span.setAttribute(
           "jsp.requestURL", (new URI(req.getRequestURL().toString())).normalize().toString());
     } catch (final URISyntaxException uriSE) {
       LoggerFactory.getLogger(HttpJspPage.class)

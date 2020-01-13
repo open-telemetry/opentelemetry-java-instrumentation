@@ -86,7 +86,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       }
 
       final AgentSpan span =
-          startSpan("jms.produce").setTag("span.origin.type", producer.getClass().getName());
+          startSpan("jms.produce").setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, message, defaultDestination);
 
@@ -121,7 +121,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       }
 
       final AgentSpan span =
-          startSpan("jms.produce").setTag("span.origin.type", producer.getClass().getName());
+          startSpan("jms.produce").setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, message, destination);
 

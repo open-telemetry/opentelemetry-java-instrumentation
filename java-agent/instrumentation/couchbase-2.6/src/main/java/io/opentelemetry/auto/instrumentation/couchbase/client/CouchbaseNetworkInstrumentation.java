@@ -66,16 +66,17 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
 
       final AgentSpan span = contextStore.get(request);
       if (span != null) {
-        span.setTag(Tags.PEER_HOSTNAME, remoteHostname);
+        span.setAttribute(Tags.PEER_HOSTNAME, remoteHostname);
 
         if (remoteSocket != null) {
           final int splitIndex = remoteSocket.lastIndexOf(":");
           if (splitIndex != -1) {
-            span.setTag(Tags.PEER_PORT, Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
+            span.setAttribute(
+                Tags.PEER_PORT, Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
           }
         }
 
-        span.setTag("local.address", localSocket);
+        span.setAttribute("local.address", localSocket);
       }
     }
 

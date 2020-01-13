@@ -27,10 +27,10 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   protected void afterStart(final AgentSpan span) {
     super.afterStart(span);
 
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
     if (bucket != null) {
-      span.setTag("bucket", bucket);
+      span.setAttribute("bucket", bucket);
     }
   }
 }

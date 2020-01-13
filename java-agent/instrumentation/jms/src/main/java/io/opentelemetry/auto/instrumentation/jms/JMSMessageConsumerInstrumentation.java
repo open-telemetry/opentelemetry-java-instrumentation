@@ -87,7 +87,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       } else {
         span = startSpan("jms.consume", TimeUnit.MILLISECONDS.toMicros(startTime));
       }
-      span.setTag("span.origin.type", consumer.getClass().getName());
+      span.setAttribute("span.origin.type", consumer.getClass().getName());
 
       try (final AgentScope scope = activateSpan(span, false)) {
         CONSUMER_DECORATE.afterStart(span);

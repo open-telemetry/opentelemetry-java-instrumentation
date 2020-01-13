@@ -2,15 +2,15 @@ package io.opentelemetry.auto.instrumentation.api;
 
 @Deprecated
 public interface AgentSpan {
-  AgentSpan setTag(String key, boolean value);
+  AgentSpan setAttribute(String key, boolean value);
 
-  AgentSpan setTag(String key, int value);
+  AgentSpan setAttribute(String key, int value);
 
-  AgentSpan setTag(String key, long value);
+  AgentSpan setAttribute(String key, long value);
 
-  AgentSpan setTag(String key, double value);
+  AgentSpan setAttribute(String key, double value);
 
-  AgentSpan setTag(String key, String value);
+  AgentSpan setAttribute(String key, String value);
 
   AgentSpan setError(boolean error);
 

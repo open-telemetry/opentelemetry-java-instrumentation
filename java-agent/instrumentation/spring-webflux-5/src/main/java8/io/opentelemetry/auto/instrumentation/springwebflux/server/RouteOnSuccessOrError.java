@@ -30,12 +30,12 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
         final AgentSpan span =
             (AgentSpan) serverRequest.attributes().get(AdviceUtils.SPAN_ATTRIBUTE);
         if (span != null) {
-          span.setTag("request.predicate", predicateString);
+          span.setAttribute("request.predicate", predicateString);
         }
         final AgentSpan parentSpan =
             (AgentSpan) serverRequest.attributes().get(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
         if (parentSpan != null) {
-          parentSpan.setTag(MoreTags.RESOURCE_NAME, parseResourceName(predicateString));
+          parentSpan.setAttribute(MoreTags.RESOURCE_NAME, parseResourceName(predicateString));
         }
       }
     }

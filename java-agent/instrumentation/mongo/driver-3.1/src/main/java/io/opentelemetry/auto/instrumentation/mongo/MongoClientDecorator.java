@@ -79,7 +79,7 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
     final BsonDocument scrubbed = scrub(statement);
     final String mongoCmd = scrubbed.toString();
 
-    span.setTag(MoreTags.RESOURCE_NAME, mongoCmd);
+    span.setAttribute(MoreTags.RESOURCE_NAME, mongoCmd);
     return onStatement(span, mongoCmd);
   }
 

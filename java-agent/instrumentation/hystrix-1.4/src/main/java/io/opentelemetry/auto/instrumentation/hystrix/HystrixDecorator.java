@@ -32,10 +32,10 @@ public class HystrixDecorator extends BaseDecorator {
 
       final String resourceName = groupName + "." + commandName + "." + methodName;
 
-      span.setTag(MoreTags.RESOURCE_NAME, resourceName);
-      span.setTag("hystrix.command", commandName);
-      span.setTag("hystrix.group", groupName);
-      span.setTag("hystrix.circuit-open", circuitOpen);
+      span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+      span.setAttribute("hystrix.command", commandName);
+      span.setAttribute("hystrix.group", groupName);
+      span.setAttribute("hystrix.circuit-open", circuitOpen);
     }
   }
 }

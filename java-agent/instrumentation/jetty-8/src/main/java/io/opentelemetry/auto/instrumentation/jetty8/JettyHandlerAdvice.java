@@ -31,12 +31,12 @@ public class JettyHandlerAdvice {
 
     final AgentSpan span =
         startSpan("jetty.request", extractedContext)
-            .setTag("span.origin.type", source.getClass().getName());
+            .setAttribute("span.origin.type", source.getClass().getName());
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
     DECORATE.onRequest(span, req);
     final String resourceName = req.getMethod() + " " + source.getClass().getName();
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
     final AgentScope scope = activateSpan(span, false);
     req.setAttribute(SPAN_ATTRIBUTE, span);
@@ -54,13 +54,13 @@ public class JettyHandlerAdvice {
     }
     final AgentSpan span = scope.span();
     if (req.getUserPrincipal() != null) {
-      span.setTag(MoreTags.USER_NAME, req.getUserPrincipal().getName());
+      span.setAttribute(MoreTags.USER_NAME, req.getUserPrincipal().getName());
     }
     if (throwable != null) {
       DECORATE.onResponse(span, resp);
       if (resp.getStatus() == HttpServletResponse.SC_OK) {
         // exception is thrown in filter chain, but status code is incorrect
-        span.setTag(Tags.HTTP_STATUS, 500);
+        span.setAttribute(Tags.HTTP_STATUS, 500);
         span.setError(true);
       }
       DECORATE.onError(span, throwable);

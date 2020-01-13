@@ -49,11 +49,11 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   @Override
   public AgentSpan onConnection(final AgentSpan span, final RedisURI connection) {
     if (connection != null) {
-      span.setTag(Tags.PEER_HOSTNAME, connection.getHost());
-      span.setTag(Tags.PEER_PORT, connection.getPort());
+      span.setAttribute(Tags.PEER_HOSTNAME, connection.getHost());
+      span.setAttribute(Tags.PEER_PORT, connection.getPort());
 
-      span.setTag("db.redis.dbIndex", connection.getDatabase());
-      span.setTag(
+      span.setAttribute("db.redis.dbIndex", connection.getDatabase());
+      span.setAttribute(
           MoreTags.RESOURCE_NAME,
           "CONNECT:"
               + connection.getHost()
@@ -67,7 +67,7 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
 
   public AgentSpan onCommand(final AgentSpan span, final RedisCommand command) {
     final String commandName = LettuceInstrumentationUtil.getCommandName(command);
-    span.setTag(
+    span.setAttribute(
         MoreTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
     return span;
   }

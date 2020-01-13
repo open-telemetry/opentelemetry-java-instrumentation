@@ -58,8 +58,8 @@ public final class JSPInstrumentation extends Instrumenter.Default {
         @Advice.This final Object obj, @Advice.Argument(0) final HttpServletRequest req) {
       final AgentSpan span =
           startSpan("jsp.render")
-              .setTag("span.origin.type", obj.getClass().getSimpleName())
-              .setTag("servlet.context", req.getContextPath());
+              .setAttribute("span.origin.type", obj.getClass().getSimpleName())
+              .setAttribute("servlet.context", req.getContextPath());
       DECORATE.afterStart(span);
       DECORATE.onRender(span, req);
       return activateSpan(span, true);

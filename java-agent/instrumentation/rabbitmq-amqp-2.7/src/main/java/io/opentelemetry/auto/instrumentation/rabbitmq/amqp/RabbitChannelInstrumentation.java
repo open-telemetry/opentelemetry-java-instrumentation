@@ -122,8 +122,8 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final AgentSpan span =
           startSpan("amqp.command")
-              .setTag(MoreTags.RESOURCE_NAME, method)
-              .setTag(Tags.PEER_PORT, connection.getPort());
+              .setAttribute(MoreTags.RESOURCE_NAME, method)
+              .setAttribute(Tags.PEER_PORT, connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       return activateSpan(span, true);
@@ -154,7 +154,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (span != null) {
         PRODUCER_DECORATE.afterStart(span); // Overwrite tags set by generic decorator.
         PRODUCER_DECORATE.onPublish(span, exchange, routingKey);
-        span.setTag("message.size", body == null ? 0 : body.length);
+        span.setAttribute("message.size", body == null ? 0 : body.length);
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
         if (props == null) {
@@ -162,7 +162,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         }
         final Integer deliveryMode = props.getDeliveryMode();
         if (deliveryMode != null) {
-          span.setTag("amqp.delivery_mode", deliveryMode);
+          span.setAttribute("amqp.delivery_mode", deliveryMode);
         }
 
         // We need to copy the BasicProperties and provide a header map we can modify
@@ -244,9 +244,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         span = startSpan("amqp.command", TimeUnit.MILLISECONDS.toMicros(startTime));
       }
       if (response != null) {
-        span.setTag("message.size", response.getBody().length);
+        span.setAttribute("message.size", response.getBody().length);
       }
-      span.setTag(Tags.PEER_PORT, connection.getPort());
+      span.setAttribute(Tags.PEER_PORT, connection.getPort());
       try (final AgentScope scope = activateSpan(span, false)) {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onGet(span, queue);

@@ -43,12 +43,12 @@ public abstract class CompletionListener<T> {
       try {
         processResult(span, future);
       } catch (final CancellationException e) {
-        span.setTag(DB_COMMAND_CANCELLED, true);
+        span.setAttribute(DB_COMMAND_CANCELLED, true);
       } catch (final ExecutionException e) {
         if (e.getCause() instanceof CancellationException) {
           // Looks like underlying OperationFuture wraps CancellationException into
           // ExecutionException
-          span.setTag(DB_COMMAND_CANCELLED, true);
+          span.setAttribute(DB_COMMAND_CANCELLED, true);
         } else {
           DECORATE.onError(span, e.getCause());
         }
@@ -78,6 +78,6 @@ public abstract class CompletionListener<T> {
       throws ExecutionException, InterruptedException;
 
   protected void setResultTag(final AgentSpan span, final boolean hit) {
-    span.setTag(MEMCACHED_RESULT, hit ? HIT : MISS);
+    span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
   }
 }

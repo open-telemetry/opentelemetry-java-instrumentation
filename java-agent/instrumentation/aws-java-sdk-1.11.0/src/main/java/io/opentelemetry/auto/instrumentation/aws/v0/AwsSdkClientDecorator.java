@@ -27,12 +27,12 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     final String awsServiceName = request.getServiceName();
     final Class<?> awsOperation = request.getOriginalRequest().getClass();
 
-    span.setTag("aws.agent", COMPONENT_NAME);
-    span.setTag("aws.service", awsServiceName);
-    span.setTag("aws.operation", awsOperation.getSimpleName());
-    span.setTag("aws.endpoint", request.getEndpoint().toString());
+    span.setAttribute("aws.agent", COMPONENT_NAME);
+    span.setAttribute("aws.service", awsServiceName);
+    span.setAttribute("aws.operation", awsOperation.getSimpleName());
+    span.setAttribute("aws.endpoint", request.getEndpoint().toString());
 
-    span.setTag(
+    span.setAttribute(
         MoreTags.RESOURCE_NAME,
         remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
 
@@ -43,7 +43,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   public AgentSpan onResponse(final AgentSpan span, final Response response) {
     if (response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       final AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
-      span.setTag("aws.requestId", awsResp.getRequestId());
+      span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
     return super.onResponse(span, response);
   }

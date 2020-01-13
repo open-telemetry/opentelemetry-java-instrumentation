@@ -59,20 +59,21 @@ public abstract class JMSDecorator extends ClientDecorator {
   protected abstract String spanKind();
 
   public void onConsume(final AgentSpan span, final Message message) {
-    span.setTag(MoreTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
+    span.setAttribute(MoreTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
   }
 
   public void onReceive(final AgentSpan span, final Method method) {
-    span.setTag(MoreTags.RESOURCE_NAME, "JMS " + method.getName());
+    span.setAttribute(MoreTags.RESOURCE_NAME, "JMS " + method.getName());
   }
 
   public void onReceive(final AgentSpan span, final Message message) {
-    span.setTag(MoreTags.RESOURCE_NAME, "Received from " + toResourceName(message, null));
+    span.setAttribute(MoreTags.RESOURCE_NAME, "Received from " + toResourceName(message, null));
   }
 
   public void onProduce(
       final AgentSpan span, final Message message, final Destination destination) {
-    span.setTag(MoreTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination));
+    span.setAttribute(
+        MoreTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination));
   }
 
   private static final String TIBCO_TMP_PREFIX = "$TMP$";

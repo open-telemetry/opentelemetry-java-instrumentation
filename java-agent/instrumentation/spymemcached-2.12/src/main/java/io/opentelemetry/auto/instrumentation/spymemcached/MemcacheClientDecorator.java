@@ -56,7 +56,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
     // Lowercase first letter
     chars[0] = Character.toLowerCase(chars[0]);
 
-    span.setTag(MoreTags.RESOURCE_NAME, new String(chars));
+    span.setAttribute(MoreTags.RESOURCE_NAME, new String(chars));
     return span;
   }
 }

@@ -66,16 +66,16 @@ public class UrlInstrumentation extends Instrumenter.Default {
 
         final AgentSpan span =
             startSpan(protocol + ".request")
-                .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT)
-                .setTag(MoreTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT)
-                .setTag(Tags.COMPONENT, COMPONENT);
+                .setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT)
+                .setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT)
+                .setAttribute(Tags.COMPONENT, COMPONENT);
 
         try (final AgentScope scope = activateSpan(span, false)) {
-          span.setTag(Tags.HTTP_URL, url.toString());
-          span.setTag(Tags.PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
-          span.setTag(Tags.PEER_HOSTNAME, url.getHost());
+          span.setAttribute(Tags.HTTP_URL, url.toString());
+          span.setAttribute(Tags.PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
+          span.setAttribute(Tags.PEER_HOSTNAME, url.getHost());
           if (Config.get().isHttpClientSplitByDomain()) {
-            span.setTag(MoreTags.SERVICE_NAME, url.getHost());
+            span.setAttribute(MoreTags.SERVICE_NAME, url.getHost());
           }
 
           span.setError(true);

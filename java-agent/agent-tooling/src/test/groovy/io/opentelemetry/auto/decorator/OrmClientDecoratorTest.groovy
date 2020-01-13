@@ -13,7 +13,7 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
 
     then:
     if (isSet) {
-      1 * span.setTag(MoreTags.RESOURCE_NAME, entityName)
+      1 * span.setAttribute(MoreTags.RESOURCE_NAME, entityName)
     }
     0 * _
 

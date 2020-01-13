@@ -15,9 +15,9 @@ class ServerDecoratorTest extends BaseDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    1 * span.setTag(Tags.COMPONENT, "test-component")
-    1 * span.setTag(Tags.SPAN_KIND, "server")
-    1 * span.setTag(MoreTags.SPAN_TYPE, decorator.spanType())
+    1 * span.setAttribute(Tags.COMPONENT, "test-component")
+    1 * span.setAttribute(Tags.SPAN_KIND, "server")
+    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.spanType())
     0 * _
   }
 
