@@ -84,7 +84,9 @@ public class JMXFetch {
             .metricConfigFiles(metricsConfigs)
             .refreshBeansPeriod(refreshBeansPeriod)
             .globalTags(globalTags)
-            .reporter(ReporterFactory.getReporter(reporter));
+            .reporter(ReporterFactory.getReporter(reporter))
+            .logLocation(logLocation)
+            .logLevel(logLevel);
 
     if (checkPeriod != null) {
       configBuilder.checkPeriod(checkPeriod);
