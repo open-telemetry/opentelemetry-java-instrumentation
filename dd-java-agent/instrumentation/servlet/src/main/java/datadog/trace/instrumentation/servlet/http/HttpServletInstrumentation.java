@@ -17,13 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
-import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -67,22 +64,10 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
         HttpServletAdvice.class.getName());
   }
 
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(
-        "javax.servlet.http.HttpServletResponse", "javax.servlet.http.HttpServletRequest");
-  }
-
   public static class HttpServletAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope start(
-        @Advice.Origin final Method method,
-        @Advice.Argument(0) final HttpServletRequest request,
-        @Advice.Argument(1) final HttpServletResponse response) {
-      // For use by HttpServletResponseInstrumentation:
-      InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
-          .put(response, request);
+    public static AgentScope start(@Advice.Origin final Method method) {
 
       if (activeSpan() == null) {
         // Don't want to generate a new top-level span

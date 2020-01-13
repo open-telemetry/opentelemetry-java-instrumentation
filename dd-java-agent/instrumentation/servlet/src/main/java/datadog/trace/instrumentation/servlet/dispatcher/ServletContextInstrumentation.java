@@ -22,12 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class ServletContextInstrumentation extends Instrumenter.Default {
   public ServletContextInstrumentation() {
-    super("servlet-beta", "servlet-dispatcher");
-  }
-
-  @Override
-  public boolean defaultEnabled() {
-    return false;
+    super("servlet", "servlet-dispatcher");
   }
 
   @Override

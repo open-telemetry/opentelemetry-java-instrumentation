@@ -9,6 +9,7 @@ import static datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAd
 import static datadog.trace.instrumentation.servlet2.Servlet2Decorator.DECORATE;
 
 import datadog.trace.api.DDTags;
+import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
@@ -36,11 +37,15 @@ public class Servlet2Advice {
       return null;
     }
 
+    final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
     if (response instanceof HttpServletResponse) {
+      // For use by HttpServletResponseInstrumentation:
+      InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+          .put((HttpServletResponse) response, httpServletRequest);
+
       response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
     }
-
-    final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
     final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
 

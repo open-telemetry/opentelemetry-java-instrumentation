@@ -3,12 +3,15 @@ import groovy.servlet.AbstractHttpServlet
 import spock.lang.Subject
 
 import javax.servlet.ServletOutputStream
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static java.util.Collections.emptyEnumeration
 
 class HttpServletResponseTest extends AgentTestRunner {
 
@@ -17,12 +20,16 @@ class HttpServletResponseTest extends AgentTestRunner {
   def request = Mock(HttpServletRequest) {
     getMethod() >> "GET"
     getProtocol() >> "TEST"
+    getHeaderNames() >> emptyEnumeration()
+    getAttributeNames() >> emptyEnumeration()
   }
 
   def setup() {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
-    servlet.service(request, response)
+    servlet.service((ServletRequest) request, (ServletResponse) response)
+    assert response.__datadogContext$javax$servlet$http$HttpServletResponse != null
+    TEST_WRITER.clear()
   }
 
   def "test send no-parent"() {
@@ -89,7 +96,9 @@ class HttpServletResponseTest extends AgentTestRunner {
     }
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
-    servlet.service(request, response)
+    servlet.service((ServletRequest) request, (ServletResponse) response)
+    assert response.__datadogContext$javax$servlet$http$HttpServletResponse != null
+    TEST_WRITER.clear()
 
     when:
     runUnderTrace("parent") {
