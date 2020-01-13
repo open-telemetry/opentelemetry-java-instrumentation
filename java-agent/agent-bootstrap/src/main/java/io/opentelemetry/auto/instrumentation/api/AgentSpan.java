@@ -1,5 +1,6 @@
 package io.opentelemetry.auto.instrumentation.api;
 
+@Deprecated
 public interface AgentSpan {
   AgentSpan setTag(String key, boolean value);
 

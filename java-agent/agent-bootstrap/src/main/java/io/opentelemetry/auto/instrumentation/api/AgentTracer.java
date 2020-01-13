@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.api;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Deprecated
 public class AgentTracer {
 
   // Implicit parent
