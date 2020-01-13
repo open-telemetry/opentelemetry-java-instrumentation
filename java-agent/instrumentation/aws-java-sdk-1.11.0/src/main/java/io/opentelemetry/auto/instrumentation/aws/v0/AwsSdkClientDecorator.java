@@ -5,7 +5,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
 
   @Override
-  public AgentSpan onRequest(final AgentSpan span, final Request request) {
+  public Span onRequest(final Span span, final Request request) {
     // Call super first because we override the resource name below.
     super.onRequest(span, request);
 
@@ -40,7 +40,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  public AgentSpan onResponse(final AgentSpan span, final Response response) {
+  public Span onResponse(final Span span, final Response response) {
     if (response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       final AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
