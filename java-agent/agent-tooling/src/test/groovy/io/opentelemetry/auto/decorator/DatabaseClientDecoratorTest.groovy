@@ -2,14 +2,14 @@ package io.opentelemetry.auto.decorator
 
 import io.opentelemetry.auto.api.Config
 import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.AgentSpan
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.trace.Span
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
-  def span = Mock(AgentSpan)
+  def span = Mock(Span)
 
   def "test afterStart"() {
     setup:
@@ -43,8 +43,12 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (session) {
-      1 * span.setAttribute(Tags.DB_USER, session.user)
-      1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
+      if (session.user) {
+        1 * span.setAttribute(Tags.DB_USER, session.user)
+      }
+      if (session.instance) {
+        1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
+      }
       if (renameService && session.instance) {
         1 * span.setAttribute(MoreTags.SERVICE_NAME, session.instance)
       }
@@ -82,19 +86,19 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.afterStart((AgentSpan) null)
+    decorator.afterStart((Span) null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onConnection(null, null)
+    decorator.onConnection((Span) null, null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onStatement(null, null)
+    decorator.onStatement((Span) null, null)
 
     then:
     thrown(AssertionError)

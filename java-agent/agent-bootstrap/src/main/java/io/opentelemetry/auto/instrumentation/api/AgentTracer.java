@@ -1,6 +1,8 @@
 package io.opentelemetry.auto.instrumentation.api;
 
 import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
+import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Deprecated
@@ -180,6 +182,11 @@ public class AgentTracer {
 
     @Override
     public void setSpanName(final String spanName) {}
+
+    @Override
+    public Span getSpan() {
+      return DefaultSpan.getInvalid();
+    }
   }
 
   public static class NoopAgentScope implements AgentScope {

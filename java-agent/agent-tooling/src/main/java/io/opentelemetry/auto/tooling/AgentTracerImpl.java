@@ -203,7 +203,8 @@ public final class AgentTracerImpl implements TracerAPI {
       span.updateName(spanName);
     }
 
-    private Span getSpan() {
+    @Override
+    public Span getSpan() {
       return span;
     }
 

@@ -2,14 +2,15 @@ package io.opentelemetry.auto.decorator
 
 import io.opentelemetry.auto.api.Config
 import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.AgentSpan
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.Status
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class HttpServerDecoratorTest extends ServerDecoratorTest {
 
-  def span = Mock(AgentSpan)
+  def span = Mock(Span)
 
   def "test onRequest"() {
     setup:
@@ -115,7 +116,7 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_STATUS, status)
     }
     if (error) {
-      1 * span.setError(true)
+      1 * span.setStatus(Status.UNKNOWN)
     }
     0 * _
 
@@ -138,13 +139,13 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.onRequest(null, null)
+    decorator.onRequest((Span) null, null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onResponse(null, null)
+    decorator.onResponse((Span) null, null)
 
     then:
     thrown(AssertionError)

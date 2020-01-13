@@ -5,6 +5,8 @@ import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Pattern;
@@ -36,7 +38,13 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     return SpanTypes.HTTP_SERVER;
   }
 
+  @Deprecated
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
+    onRequest(span.getSpan(), request);
+    return span;
+  }
+
+  public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
       span.setAttribute(Tags.HTTP_METHOD, method(request));
@@ -79,10 +87,19 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     return span;
   }
 
+  @Deprecated
   public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
+    onConnection(span.getSpan(), connection);
+    return span;
+  }
+
+  public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setAttribute(Tags.PEER_HOSTNAME, peerHostname(connection));
+      final String peerHostname = peerHostname(connection);
+      if (peerHostname != null) {
+        span.setAttribute(Tags.PEER_HOSTNAME, peerHostname);
+      }
       final String ip = peerHostIP(connection);
       if (ip != null) {
         if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {
@@ -100,7 +117,13 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     return span;
   }
 
+  @Deprecated
   public AgentSpan onResponse(final AgentSpan span, final RESPONSE response) {
+    onResponse(span.getSpan(), response);
+    return span;
+  }
+
+  public Span onResponse(final Span span, final RESPONSE response) {
     assert span != null;
     if (response != null) {
       final Integer status = status(response);
@@ -108,7 +131,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
         span.setAttribute(Tags.HTTP_STATUS, status);
 
         if (Config.get().getHttpServerErrorStatuses().contains(status)) {
-          span.setError(true);
+          span.setStatus(Status.UNKNOWN);
         }
       }
     }

@@ -1,5 +1,7 @@
 package io.opentelemetry.auto.instrumentation.api;
 
+import io.opentelemetry.trace.Span;
+
 @Deprecated
 public interface AgentSpan {
   AgentSpan setAttribute(String key, boolean value);
@@ -25,6 +27,8 @@ public interface AgentSpan {
   String getSpanName();
 
   void setSpanName(String spanName);
+
+  Span getSpan();
 
   interface Context {}
 }

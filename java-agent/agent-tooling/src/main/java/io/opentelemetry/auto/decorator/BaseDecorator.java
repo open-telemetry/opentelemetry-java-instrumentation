@@ -4,6 +4,10 @@ import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -21,43 +25,74 @@ public abstract class BaseDecorator {
 
   protected abstract String component();
 
+  @Deprecated
   public AgentSpan afterStart(final AgentSpan span) {
-    assert span != null;
-    if (spanType() != null) {
-      span.setAttribute(MoreTags.SPAN_TYPE, spanType());
-    }
-    span.setAttribute(Tags.COMPONENT, component());
+    afterStart(span.getSpan());
     return span;
   }
 
+  public Span afterStart(final Span span) {
+    assert span != null;
+    final String spanType = spanType();
+    if (spanType != null) {
+      span.setAttribute(MoreTags.SPAN_TYPE, spanType);
+    }
+    final String component = component();
+    if (component != null) {
+      span.setAttribute(Tags.COMPONENT, component);
+    }
+    return span;
+  }
+
+  @Deprecated
   public AgentScope beforeFinish(final AgentScope scope) {
     assert scope != null;
     beforeFinish(scope.span());
     return scope;
   }
 
+  @Deprecated
   public AgentSpan beforeFinish(final AgentSpan span) {
+    beforeFinish(span.getSpan());
+    return span;
+  }
+
+  public Span beforeFinish(final Span span) {
     assert span != null;
     return span;
   }
 
+  @Deprecated
   public AgentScope onError(final AgentScope scope, final Throwable throwable) {
     assert scope != null;
     onError(scope.span(), throwable);
     return scope;
   }
 
+  @Deprecated
   public AgentSpan onError(final AgentSpan span, final Throwable throwable) {
+    onError(span.getSpan(), throwable);
+    return span;
+  }
+
+  public Span onError(final Span span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      span.setError(true);
-      span.addThrowable(throwable instanceof ExecutionException ? throwable.getCause() : throwable);
+      span.setStatus(Status.UNKNOWN);
+      addThrowable(
+          span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }
     return span;
   }
 
+  @Deprecated
   public AgentSpan onPeerConnection(
       final AgentSpan span, final InetSocketAddress remoteConnection) {
+    onPeerConnection(span.getSpan(), remoteConnection);
+    return span;
+  }
+
+  public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
       onPeerConnection(span, remoteConnection.getAddress());
@@ -68,7 +103,13 @@ public abstract class BaseDecorator {
     return span;
   }
 
+  @Deprecated
   public AgentSpan onPeerConnection(final AgentSpan span, final InetAddress remoteAddress) {
+    onPeerConnection(span.getSpan(), remoteAddress);
+    return span;
+  }
+
+  public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
     if (remoteAddress != null) {
       span.setAttribute(Tags.PEER_HOSTNAME, remoteAddress.getHostName());
@@ -79,6 +120,18 @@ public abstract class BaseDecorator {
       }
     }
     return span;
+  }
+
+  public static void addThrowable(final Span span, final Throwable throwable) {
+    final String message = throwable.getMessage();
+    if (message != null) {
+      span.setAttribute(MoreTags.ERROR_MSG, message);
+    }
+    span.setAttribute(MoreTags.ERROR_TYPE, throwable.getClass().getName());
+
+    final StringWriter errorString = new StringWriter();
+    throwable.printStackTrace(new PrintWriter(errorString));
+    span.setAttribute(MoreTags.ERROR_STACK, errorString.toString());
   }
 
   /**

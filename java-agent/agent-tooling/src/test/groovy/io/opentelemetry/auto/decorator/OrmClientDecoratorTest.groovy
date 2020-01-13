@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.decorator
 
 import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.trace.Span
 
 class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
 
@@ -29,7 +30,7 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
     decorator = newDecorator({ e -> null })
 
     when:
-    decorator.onOperation(null, null)
+    decorator.onOperation((Span) null, null)
 
     then:
     thrown(AssertionError)
