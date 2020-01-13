@@ -1,10 +1,12 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
+import datadog.trace.instrumentation.grpc.server.GrpcExtractAdapter
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
 import io.grpc.ManagedChannel
+import io.grpc.Metadata
 import io.grpc.Server
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -283,5 +285,18 @@ class GrpcTest extends AgentTestRunner {
     "Runtime - description"       | Status.UNKNOWN.withDescription("some description")
     "Status - description"        | Status.PERMISSION_DENIED.withDescription("some description")
     "StatusRuntime - description" | Status.UNIMPLEMENTED.withDescription("some description")
+  }
+
+  def "skip binary headers"() {
+    setup:
+    def meta = new Metadata()
+    meta.put(Metadata.Key.<String> of("test", Metadata.ASCII_STRING_MARSHALLER), "val")
+    meta.put(Metadata.Key.<byte[]> of("test-bin", Metadata.BINARY_BYTE_MARSHALLER), "bin-val".bytes)
+
+    when:
+    def keys = GrpcExtractAdapter.GETTER.keys(meta)
+
+    then:
+    keys == ["test"]
   }
 }

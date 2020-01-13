@@ -2,6 +2,8 @@ package datadog.trace.instrumentation.grpc.server;
 
 import datadog.trace.instrumentation.api.AgentPropagation;
 import io.grpc.Metadata;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class GrpcExtractAdapter implements AgentPropagation.Getter<Metadata> {
 
@@ -9,7 +11,15 @@ public final class GrpcExtractAdapter implements AgentPropagation.Getter<Metadat
 
   @Override
   public Iterable<String> keys(final Metadata carrier) {
-    return carrier.keys();
+    List<String> keys = new ArrayList<>();
+
+    for (String key : carrier.keys()) {
+      if (!key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+        keys.add(key);
+      }
+    }
+
+    return keys;
   }
 
   @Override
