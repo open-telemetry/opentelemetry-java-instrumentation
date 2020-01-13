@@ -3,7 +3,7 @@ package io.opentelemetry.auto.instrumentation.hystrix;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 
 public class HystrixDecorator extends BaseDecorator {
   public static HystrixDecorator DECORATE = new HystrixDecorator();
@@ -24,7 +24,7 @@ public class HystrixDecorator extends BaseDecorator {
   }
 
   public void onCommand(
-      final AgentSpan span, final HystrixInvokableInfo<?> command, final String methodName) {
+      final Span span, final HystrixInvokableInfo<?> command, final String methodName) {
     if (command != null) {
       final String commandName = command.getCommandKey().name();
       final String groupName = command.getCommandGroup().name();

@@ -3,8 +3,8 @@ package io.opentelemetry.auto.instrumentation.couchbase.client;
 import static io.opentelemetry.auto.instrumentation.couchbase.client.CouchbaseClientDecorator.DECORATE;
 
 import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import rx.Observable;
 
@@ -24,7 +24,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   }
 
   @Override
-  protected void afterStart(final AgentSpan span) {
+  protected void afterStart(final Span span) {
     super.afterStart(span);
 
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
