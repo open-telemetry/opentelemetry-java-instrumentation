@@ -1,6 +1,8 @@
 package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.HttpRequest;
@@ -14,6 +16,8 @@ import org.apache.http.protocol.HttpCoreContext;
 public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequest, HttpContext> {
   public static final ApacheHttpAsyncClientDecorator DECORATE =
       new ApacheHttpAsyncClientDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String[] instrumentationNames() {
