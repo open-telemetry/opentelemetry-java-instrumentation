@@ -16,7 +16,6 @@ import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SpanData;
-import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.TraceId;
 import io.opentelemetry.trace.Tracer;
@@ -85,8 +84,7 @@ public abstract class AgentTestRunner extends DDSpecification {
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new ListWriter();
-    OpenTelemetrySdk.getTracerFactory()
-        .addSpanProcessor(SimpleSpansProcessor.newBuilder(TEST_WRITER).build());
+    OpenTelemetrySdk.getTracerFactory().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
     AgentTracer.registerIfAbsent(new AgentTracerImpl(TEST_TRACER));
