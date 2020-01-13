@@ -29,7 +29,7 @@ muzzle {
   pass {
     group = 'com.couchbase.client'
     module = 'java-client'
-    versions = "[2.7.9,)"
+    versions = "[2.7.9,3.0.0)"
   }
   fail {
     group = 'com.couchbase.client'
