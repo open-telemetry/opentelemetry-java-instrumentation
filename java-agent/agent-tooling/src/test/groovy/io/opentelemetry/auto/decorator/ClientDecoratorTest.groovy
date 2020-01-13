@@ -1,12 +1,12 @@
 package io.opentelemetry.auto.decorator
 
 import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.AgentSpan
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.trace.Span
 
 class ClientDecoratorTest extends BaseDecoratorTest {
 
-  def span = Mock(AgentSpan)
+  def span = Mock(Span)
 
   def "test afterStart"() {
     setup:
