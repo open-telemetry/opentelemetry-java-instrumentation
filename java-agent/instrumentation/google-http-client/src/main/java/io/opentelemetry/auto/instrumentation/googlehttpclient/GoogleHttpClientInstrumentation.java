@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.googlehttpclient;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -14,11 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,16 +87,16 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       RequestState state = contextStore.get(request);
 
       if (state == null) {
-        state = new RequestState(startSpan("http.request"));
+        state = new RequestState(TRACER.spanBuilder("http.request").startSpan());
         contextStore.put(request, state);
       }
 
-      final AgentSpan span = state.getSpan();
+      final Span span = state.getSpan();
 
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
-        propagate().inject(span, request, SETTER);
+        TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
       }
     }
 
@@ -111,21 +111,21 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       final RequestState state = contextStore.get(request);
 
       if (state != null) {
-        final AgentSpan span = state.getSpan();
+        final Span span = state.getSpan();
 
-        try (final AgentScope scope = activateSpan(span, false)) {
+        try (final Scope scope = TRACER.withSpan(span)) {
           DECORATE.onResponse(span, response);
           DECORATE.onError(span, throwable);
 
           // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
           // for a failed request.  Thus, check the response code
           if (response != null && !response.isSuccessStatusCode()) {
-            span.setError(true);
-            span.setErrorMessage(response.getStatusMessage());
+            span.setStatus(Status.UNKNOWN);
+            span.setAttribute(MoreTags.ERROR_MSG, response.getStatusMessage());
           }
 
           DECORATE.beforeFinish(span);
-          span.finish();
+          span.end();
         }
       }
     }
@@ -135,7 +135,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final HttpRequest request) {
-      final AgentSpan span = startSpan("http.request");
+      final Span span = TRACER.spanBuilder("http.request").startSpan();
 
       final ContextStore<HttpRequest, RequestState> contextStore =
           InstrumentationContext.get(HttpRequest.class, RequestState.class);
@@ -155,13 +155,13 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         final RequestState state = contextStore.get(request);
 
         if (state != null) {
-          final AgentSpan span = state.getSpan();
+          final Span span = state.getSpan();
 
-          try (final AgentScope scope = activateSpan(span, false)) {
+          try (final Scope scope = TRACER.withSpan(span)) {
             DECORATE.onError(span, throwable);
 
             DECORATE.beforeFinish(span);
-            span.finish();
+            span.end();
           }
         }
       }
