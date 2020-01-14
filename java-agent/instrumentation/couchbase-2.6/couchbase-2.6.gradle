@@ -1,0 +1,63 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+muzzle {
+  // Version 2.7.5 and 2.7.8 were not released properly and muzzle cannot test against it causing failure.
+  // So we have to skip them resulting in this verbose setup.
+  fail {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[,2.6.0)"
+  }
+  pass {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[2.6.0,2.7.5)"
+  }
+  pass {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[2.7.6,2.7.8)"
+  }
+  pass {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[2.7.9,3.0.0)"
+  }
+  fail {
+    group = 'com.couchbase.client'
+    module = 'couchbase-client'
+    versions = "(,)"
+  }
+}
+
+dependencies {
+  compile project(':java-agent:instrumentation:rxjava-1')
+
+  compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
+
+  testCompile project(':java-agent:instrumentation:couchbase-2.0')
+  testCompile project(path: ':java-agent:instrumentation:couchbase-2.0', configuration: 'testArtifacts')
+  testCompile group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
+
+  testCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'
+
+  testCompile group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
+  testCompile group: 'com.couchbase.client', name: 'encryption', version: '1.0.0'
+
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1+'
+  latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.+'
+  latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '+'
+}

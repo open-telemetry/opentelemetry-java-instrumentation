@@ -9,9 +9,9 @@ defaults: &defaults
 cache_keys: &cache_keys
   # Reset the cache approx every release
   keys:
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+  - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+  - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}
+  - trace-java-{{ checksum "trace-java.gradle" }}
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
 
     - run:
         name: Build Project
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Ddatadog.forkedMaxHeapSize=1G -Ddatadog.forkedMinHeapSize=64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dio.opentelemetry.auto.forkedMaxHeapSize=1G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew clean :java-agent:shadowJar compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
     - run:
         name: Collect Libs
@@ -42,7 +42,7 @@ jobs:
         - workspace
 
     - save_cache:
-        key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+        key: trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
         paths: ~/.gradle
 
 
@@ -67,7 +67,7 @@ jobs:
 
     - run:
         name: Run Tests
-        command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=6
+        command: GRADLE_OPTS="-Dio.opentelemetry.auto.forkedMaxHeapSize=4G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=6
 
     - run:
         name: Collect Reports
@@ -156,7 +156,7 @@ jobs:
 
     - run:
         name: Build Project
-        command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+        command: GRADLE_OPTS="-Dio.opentelemetry.auto.forkedMaxHeapSize=4G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
     - run:
         name: Collect Reports
@@ -174,14 +174,14 @@ jobs:
     - restore_cache:
         # Reset the cache approx every release
         keys:
-        - dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
+        - trace-java-muzzle-{{ checksum "trace-java.gradle" }}
 
     - run:
         name: Verify Muzzle
-        command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
+        command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dio.opentelemetry.auto.forkedMaxHeapSize=4G -Dio.opentelemetry.auto.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
 
     - save_cache:
-        key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
+        key: trace-java-muzzle-{{ checksum "trace-java.gradle" }}
         paths: ~/.gradle
 
   publish: &publish

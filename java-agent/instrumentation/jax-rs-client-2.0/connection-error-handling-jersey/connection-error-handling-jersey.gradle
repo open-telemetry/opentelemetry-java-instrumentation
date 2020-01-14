@@ -1,0 +1,15 @@
+muzzle {
+  pass {
+    group = "org.glassfish.jersey.core"
+    module = "jersey-client"
+    versions = "[2.0,)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.0'
+
+  compileOnly project(':java-agent:instrumentation:jax-rs-client-2.0')
+}

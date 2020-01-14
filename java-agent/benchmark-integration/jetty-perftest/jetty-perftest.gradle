@@ -1,0 +1,16 @@
+dependencies {
+  compile project(':trace-api')
+  compile project(':java-agent:agent-bootstrap')
+  compile project(':java-agent:benchmark-integration')
+
+  compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
+  compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.1.v20170120'
+}
+
+jar {
+  manifest {
+    attributes(
+      "Main-Class": "io.opentelemetry.perftest.jetty.JettyPerftest"
+    )
+  }
+}

@@ -1,0 +1,65 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+muzzle {
+  pass {
+    group = "io.netty"
+    module = "netty-codec-http"
+    versions = "[4.0.0.Final,4.1.0.Final)"
+    assertInverse = true
+  }
+  pass {
+    group = "io.netty"
+    module = "netty-all"
+    versions = "[4.0.0.Final,4.1.0.Final)"
+    assertInverse = true
+  }
+  fail {
+    group = "io.netty"
+    module = "netty"
+    versions = "[,]"
+  }
+  pass {
+    group = "io.vertx"
+    module = "vertx-core"
+    versions = "[2.0.0,3.3.0)"
+    assertInverse = true
+  }
+}
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
+
+  testCompile project(':java-agent:instrumentation:java-concurrent')
+
+  testCompile group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
+  testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.0'
+
+  latestDepTestCompile group: 'io.netty', name: 'netty-codec-http', version: '4.0.56.Final'
+  latestDepTestCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.+'
+}
+
+// We need to force the dependency to the earliest supported version because other libraries declare newer versions.
+configurations.testCompile {
+  resolutionStrategy {
+    eachDependency { DependencyResolveDetails details ->
+      //specifying a fixed version for all libraries with io.netty' group
+      if (details.requested.group == 'io.netty') {
+        details.useVersion "4.0.0.Final"
+      }
+    }
+  }
+}

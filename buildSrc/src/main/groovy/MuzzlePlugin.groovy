@@ -41,8 +41,8 @@ class MuzzlePlugin implements Plugin<Project> {
 
   @Override
   void apply(Project project) {
-    def bootstrapProject = project.rootProject.getChildProjects().get('dd-java-agent').getChildProjects().get('agent-bootstrap')
-    def toolingProject = project.rootProject.getChildProjects().get('dd-java-agent').getChildProjects().get('agent-tooling')
+    def bootstrapProject = project.rootProject.getChildProjects().get('java-agent').getChildProjects().get('agent-bootstrap')
+    def toolingProject = project.rootProject.getChildProjects().get('java-agent').getChildProjects().get('agent-tooling')
     project.extensions.create("muzzle", MuzzleExtension, project.objects)
 
     // compileMuzzle compiles all projects required to run muzzle validation.
@@ -56,7 +56,7 @@ class MuzzlePlugin implements Plugin<Project> {
           project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
           final ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
           final ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-          Method assertionMethod = instrumentationCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, true)
         }
@@ -68,7 +68,7 @@ class MuzzlePlugin implements Plugin<Project> {
       description = "Print references created by instrumentation muzzle"
       doLast {
         final ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
-        Method assertionMethod = instrumentationCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
+        Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
           .getMethod('printMuzzleReferences', ClassLoader.class)
         assertionMethod.invoke(null, instrumentationCL)
       }
@@ -135,7 +135,7 @@ class MuzzlePlugin implements Plugin<Project> {
         }
         def loader = new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null)
         assert TOOLING_LOADER.compareAndSet(null, loader)
-        loader.loadClass("datadog.trace.agent.tooling.AgentTooling").getMethod("init").invoke(null)
+        loader.loadClass("io.opentelemetry.auto.tooling.AgentTooling").getMethod("init").invoke(null)
         return TOOLING_LOADER.get()
       } else {
         return toolingLoader
@@ -296,7 +296,7 @@ class MuzzlePlugin implements Plugin<Project> {
         final ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
         try {
           // find all instrumenters, get muzzle, and assert
-          Method assertionMethod = instrumentationCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
+          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
         } finally {

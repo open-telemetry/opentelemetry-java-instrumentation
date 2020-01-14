@@ -1,0 +1,18 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile project(':trace-api')
+  compile project(':java-agent:agent-bootstrap')
+
+  compile 'info.picocli:picocli:4.0.4'
+  compile deps.guava
+}
+
+task launch(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'io.opentelemetry.loadgenerator.LoadGenerator'
+  jvmArgs = ["-javaagent:${project(':java-agent').shadowJar.archivePath}"]
+  systemProperties System.properties
+
+  dependsOn project(':java-agent').shadowJar
+}

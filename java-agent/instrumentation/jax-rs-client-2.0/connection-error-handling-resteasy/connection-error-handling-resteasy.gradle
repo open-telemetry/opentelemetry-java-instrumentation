@@ -1,0 +1,15 @@
+muzzle {
+  pass {
+    group = "org.jboss.resteasy"
+    module = "resteasy-client"
+    versions = "[2.0,)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.0.Final'
+
+  compileOnly project(':java-agent:instrumentation:jax-rs-client-2.0')
+}

@@ -1,0 +1,62 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+minimumBranchCoverage = 0.5
+minimumInstructionCoverage = 0.5
+excludedClassesCoverage += [
+  'io.opentelemetry.auto.test.asserts.*Assert',
+  'io.opentelemetry.auto.test.base.*',
+  'io.opentelemetry.auto.test.log.*',
+  'io.opentelemetry.auto.test.AgentTestRunner',
+  'io.opentelemetry.auto.test.ListWriter.*',
+  'io.opentelemetry.auto.test.utils.*',
+  // Avoid applying jacoco instrumentation to classes instrumented by tested agent
+  'context.ContextTestInstrumentation**',
+]
+
+dependencies {
+  compile deps.opentelemetryApi
+  compile(project(path: ':java-agent:opentelemetry-sdk', configuration: 'shadow'))
+  compile deps.bytebuddy
+  compile deps.bytebuddyagent
+  compile deps.slf4j
+  compile deps.spock
+  compile deps.testLogging
+  compile deps.guava
+
+  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0' // Last version to support Java7
+
+  compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+
+  compile project(':java-agent:agent-tooling')
+  compile project(':utils:test-utils')
+
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  compile deps.groovy
+
+  testCompile project(':utils:gc-utils')
+  testCompile project(':utils:test-utils')
+  testCompile project(':java-agent:instrumentation:trace-annotation')
+
+  testCompile group: 'cglib', name: 'cglib', version: '3.2.5'
+  // test instrumenting java 1.1 bytecode
+  testCompile group: 'net.sf.jt400', name: 'jt400', version: '6.1'
+
+  // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
+  testAnnotationProcessor deps.autoservice
+  testImplementation deps.autoservice
+}
+
+// See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here
+tasks.withType(Test).configureEach {
+  if (name != "testDisabledFieldInjection") {
+    exclude "context/FieldBackedProviderFieldInjectionDisabledTest.class"
+  }
+}
+
+tasks.register("testDisabledFieldInjection", Test) {
+  systemProperties "opentelemetry.auto.trace.runtime.context.field.injection": "false"
+  include "context/FieldBackedProviderFieldInjectionDisabledTest.class"
+}
+test.dependsOn(testDisabledFieldInjection)

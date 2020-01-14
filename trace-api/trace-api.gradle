@@ -1,0 +1,17 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+minimumBranchCoverage = 0.8
+
+// These are tested outside of this module since this module mainly just defines 'API'
+excludedClassesCoverage += [
+  'io.opentelemetry.auto.api.SpanTypes',
+  'io.opentelemetry.auto.api.MoreTags',
+  'io.opentelemetry.auto.api.LogFields',
+  'io.opentelemetry.auto.api.Config'
+]
+
+description = 'trace-api'
+dependencies {
+  compile deps.slf4j
+  testCompile project(':utils:test-utils')
+}

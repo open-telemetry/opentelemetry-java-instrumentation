@@ -1,0 +1,114 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/test-with-scala.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+testSets {
+  lagomTest
+
+  version101Test {
+    dirName = 'test'
+  }
+
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+compileLagomTestJava {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+compileLagomTestGroovy {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+
+muzzle {
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-http_2.11'
+    versions = "[10.0.0,10.1.0)"
+    // later versions of akka-http expect streams to be provided
+    extraDependency 'com.typesafe.akka:akka-stream_2.11:2.4.14'
+  }
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-http_2.12'
+    versions = "[10.0.0,10.1.0)"
+    // later versions of akka-http expect streams to be provided
+    extraDependency 'com.typesafe.akka:akka-stream_2.12:2.4.14'
+  }
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-http_2.11'
+    versions = "[10.1.0,)"
+    // later versions of akka-http expect streams to be provided
+    extraDependency 'com.typesafe.akka:akka-stream_2.11:2.5.11'
+  }
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-http_2.12'
+    versions = "[10.1.0,)"
+    // later versions of akka-http expect streams to be provided
+    extraDependency 'com.typesafe.akka:akka-stream_2.12:2.5.11'
+  }
+  //There is no akka-http 10.0.x series for scala 2.13
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-http_2.13'
+    versions = "[10.1.8,)"
+    // later versions of akka-http expect streams to be provided
+    extraDependency 'com.typesafe.akka:akka-stream_2.13:2.5.23'
+  }
+}
+
+dependencies {
+  main_java8CompileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
+
+  compile project(':trace-api')
+  compile project(':java-agent:agent-tooling')
+  compile deps.autoservice
+  annotationProcessor deps.autoservice
+
+  testCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':java-agent:instrumentation:trace-annotation')
+
+  lagomTestCompile project(':java-agent:instrumentation:akka-http-10.0')
+  lagomTestCompile project(':java-agent:instrumentation:trace-annotation')
+  lagomTestCompile project(':java-agent:instrumentation:java-concurrent')
+
+  lagomTestCompile group: 'com.lightbend.lagom', name: 'lagom-javadsl-testkit_2.11', version: '1.4.0'
+
+  // There are some internal API changes in 10.1 that we would like to test separately for
+  version101TestCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.1.0'
+  version101TestCompile group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.5.11'
+  version101TestCompile project(':java-agent:instrumentation:java-concurrent')
+  version101TestCompile project(':java-agent:instrumentation:trace-annotation')
+
+  latestDepTestCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '+'
+  latestDepTestCompile group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '+'
+  latestDepTestCompile project(':java-agent:instrumentation:java-concurrent')
+  latestDepTestCompile project(':java-agent:instrumentation:trace-annotation')
+}
+
+test.dependsOn lagomTest
+test.dependsOn version101Test
+
+compileVersion101TestGroovy {
+  classpath = classpath.plus(files(compileVersion101TestScala.destinationDir))
+  dependsOn compileVersion101TestScala
+}
+
+compileLatestDepTestGroovy {
+  classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
+  dependsOn compileLatestDepTestScala
+}

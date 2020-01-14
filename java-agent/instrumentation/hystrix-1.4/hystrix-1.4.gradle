@@ -1,0 +1,33 @@
+muzzle {
+  pass {
+    group = "com.netflix.hystrix"
+    module = 'hystrix-core'
+    versions = "[1.4.0,)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compile project(':java-agent:instrumentation:rxjava-1')
+
+  compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
+  compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
+
+  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':java-agent:instrumentation:trace-annotation')
+
+  testCompile group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
+  testCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
+
+  latestDepTestCompile group: 'io.reactivex', name: 'rxjava', version: '+'
+  latestDepTestCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
+}
