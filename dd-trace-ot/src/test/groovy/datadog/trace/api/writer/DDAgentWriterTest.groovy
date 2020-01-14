@@ -148,14 +148,13 @@ class DDAgentWriterTest extends DDSpecification {
 
     then:
     5 * api.serializeTrace(_) >> { trace -> callRealMethod() }
-    1 * api.sendSerializedTraces(5, _, { it.size() == 5 }) >> {
-      phaser.arrive()
-      return DDAgentApi.Response.success(200)
-    }
+    1 * api.sendSerializedTraces(5, _, { it.size() == 5 }) >> DDAgentApi.Response.success(200)
     5 * monitor.onPublish(_, _)
     5 * monitor.onSerialize(_, _, _)
     1 * monitor.onFlush(_, _)
-    (0..1) * monitor.onSend(_, _, _, _) // This gets called after phaser.arrive(), so there's a race condition.
+    1 * monitor.onSend(_, _, _, _) >> {
+      phaser.arrive()
+    }
     0 * _
 
     cleanup:
