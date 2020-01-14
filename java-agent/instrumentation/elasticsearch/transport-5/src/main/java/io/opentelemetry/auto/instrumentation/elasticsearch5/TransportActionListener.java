@@ -3,8 +3,8 @@ package io.opentelemetry.auto.instrumentation.elasticsearch5;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
@@ -21,10 +21,10 @@ import org.elasticsearch.action.support.replication.ReplicationResponse;
 public class TransportActionListener<T extends ActionResponse> implements ActionListener<T> {
 
   private final ActionListener<T> listener;
-  private final AgentSpan span;
+  private final Span span;
 
   public TransportActionListener(
-      final ActionRequest actionRequest, final ActionListener<T> listener, final AgentSpan span) {
+      final ActionRequest actionRequest, final ActionListener<T> listener, final Span span) {
     this.listener = listener;
     this.span = span;
     onRequest(actionRequest);
@@ -33,18 +33,25 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   private void onRequest(final ActionRequest request) {
     if (request instanceof IndicesRequest) {
       final IndicesRequest req = (IndicesRequest) request;
-      if (req.indices() != null) {
-        span.setAttribute("elasticsearch.request.indices", Joiner.on(",").join(req.indices()));
+      final String[] indices = req.indices();
+      if (indices != null && indices.length > 0) {
+        span.setAttribute("elasticsearch.request.indices", Joiner.on(",").join(indices));
       }
     }
     if (request instanceof SearchRequest) {
       final SearchRequest req = (SearchRequest) request;
-      span.setAttribute("elasticsearch.request.search.types", Joiner.on(",").join(req.types()));
+      final String[] types = req.types();
+      if (types != null && types.length > 0) {
+        span.setAttribute("elasticsearch.request.search.types", Joiner.on(",").join(types));
+      }
     }
     if (request instanceof DocumentRequest) {
       final DocumentRequest req = (DocumentRequest) request;
       span.setAttribute("elasticsearch.request.write.type", req.type());
-      span.setAttribute("elasticsearch.request.write.routing", req.routing());
+      final String routing = req.routing();
+      if (routing != null) {
+        span.setAttribute("elasticsearch.request.write.routing", routing);
+      }
     }
   }
 
@@ -101,7 +108,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       listener.onResponse(response);
     } finally {
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     }
   }
 
@@ -112,7 +119,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
     try {
       listener.onFailure(e);
     } finally {
-      span.finish();
+      span.end();
     }
   }
 }
