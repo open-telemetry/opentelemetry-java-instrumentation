@@ -107,6 +107,18 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/$forwardFromFileName"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
           operationName "jsp.render"
           errored false
           tags {
@@ -117,21 +129,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" reqUrl
           }
         }
-        span(2) {
-          childOf span(1)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/$forwardDestFileName"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" jspForwardDestClassName
-            "servlet.context" "/$jspWebappContext"
-            "jsp.forwardOrigin" "/$forwardFromFileName"
-            "jsp.requestURL" baseUrl + "/$forwardDestFileName"
-          }
-        }
         span(3) {
-          childOf span(1)
+          childOf span(2)
           operationName "jsp.compile"
           errored false
           tags {
@@ -143,15 +142,16 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           }
         }
         span(4) {
-          childOf span(0)
-          operationName "jsp.compile"
+          childOf span(2)
+          operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/$forwardFromFileName"
+            "$DDTags.RESOURCE_NAME" "/$forwardDestFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" jspForwardDestClassName
             "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            "jsp.forwardOrigin" "/$forwardFromFileName"
+            "jsp.requestURL" baseUrl + "/$forwardDestFileName"
           }
         }
       }
@@ -199,18 +199,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "forwardToHtml_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.requestURL" reqUrl
-          }
-        }
-        span(2) {
-          childOf span(0)
           operationName "jsp.compile"
           errored false
           tags {
@@ -219,6 +207,18 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
+          operationName "jsp.render"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToHtml.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "forwardToHtml_jsp"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.requestURL" reqUrl
           }
         }
       }
@@ -261,6 +261,18 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
           operationName "jsp.render"
           errored false
           tags {
@@ -271,8 +283,20 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" reqUrl
           }
         }
-        span(2) {
-          childOf span(1)
+        span(3) {
+          childOf span(2)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(4) {
+          childOf span(2)
           operationName "jsp.render"
           errored false
           tags {
@@ -284,21 +308,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
         }
-        span(3) {
-          childOf span(2)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "javaLoopH2_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
-          }
-        }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(4)
           operationName "jsp.compile"
           errored false
           tags {
@@ -307,23 +318,23 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-          }
-        }
-        span(5) {
-          childOf span(2)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "javaLoopH2_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
         }
         span(6) {
-          childOf span(2)
+          childOf span(4)
+          operationName "jsp.render"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "javaLoopH2_jsp"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
+            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
+          }
+        }
+        span(7) {
+          childOf span(4)
           operationName "jsp.compile"
           errored false
           tags {
@@ -331,31 +342,20 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-          }
-        }
-        span(7) {
-          childOf span(1)
-          operationName "jsp.compile"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
         span(8) {
-          childOf span(0)
-          operationName "jsp.compile"
+          childOf span(4)
+          operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToIncludeMulti.jsp"
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
+            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
         }
       }
@@ -398,6 +398,18 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
           operationName "jsp.render"
           errored false
           tags {
@@ -408,8 +420,20 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" reqUrl
           }
         }
-        span(2) {
-          childOf span(1)
+        span(3) {
+          childOf span(2)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(4) {
+          childOf span(2)
           operationName "jsp.render"
           errored false
           tags {
@@ -421,21 +445,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
           }
         }
-        span(3) {
-          childOf span(2)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/common/loop.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "loop_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
-            "jsp.requestURL" baseUrl + "/common/loop.jsp"
-          }
-        }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(4)
           operationName "jsp.compile"
           errored false
           tags {
@@ -446,28 +457,17 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(5) {
-          childOf span(1)
-          operationName "jsp.compile"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToSimpleJava.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-          }
-        }
         span(6) {
-          childOf span(0)
-          operationName "jsp.compile"
+          childOf span(4)
+          operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToJspForward.jsp"
+            "$DDTags.RESOURCE_NAME" "/common/loop.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "loop_jsp"
             "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
+            "jsp.requestURL" baseUrl + "/common/loop.jsp"
           }
         }
       }
@@ -511,6 +511,18 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
           operationName "jsp.render"
           errored true
           tags {
@@ -522,8 +534,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             errorTags(JasperException, String)
           }
         }
-        span(2) {
-          childOf span(1)
+        span(3) {
+          childOf span(2)
           operationName "jsp.compile"
           errored true
           tags {
@@ -533,18 +545,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.classFQCN" "org.apache.jsp.compileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             errorTags(JasperException, String)
-          }
-        }
-        span(3) {
-          childOf span(0)
-          operationName "jsp.compile"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToCompileError.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
       }
@@ -587,18 +587,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "forwardToNonExistent_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.requestURL" reqUrl
-          }
-        }
-        span(2) {
-          childOf span(0)
           operationName "jsp.compile"
           errored false
           tags {
@@ -607,6 +595,18 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToNonExistent_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
+          operationName "jsp.render"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/forwards/forwardToNonExistent.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "forwardToNonExistent_jsp"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.requestURL" reqUrl
           }
         }
       }

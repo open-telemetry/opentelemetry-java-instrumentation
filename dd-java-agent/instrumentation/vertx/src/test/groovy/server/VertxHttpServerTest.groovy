@@ -67,11 +67,6 @@ class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator
     false
   }
 
-  @Override
-  boolean reorderControllerSpan() {
-    true
-  }
-
   static class VertxWebTestServer extends AbstractVerticle {
 
     @Override

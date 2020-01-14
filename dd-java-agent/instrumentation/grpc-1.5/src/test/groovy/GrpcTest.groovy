@@ -12,6 +12,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
+import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.TimeUnit
 
@@ -38,8 +39,24 @@ class GrpcTest extends AgentTestRunner {
 
     then:
     response.message == "Hello $name"
+
     assertTraces(1) {
       trace(0, 4) {
+        sortSpans {
+          // sort for consistent ordering
+          List<SpanData> serverMessages = new ArrayList<>()
+          for (SpanData span : spans) {
+            if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
+              serverMessages.add(span)
+            }
+            if (span.name == "grpc.server" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
+              serverMessages.add(0, span)
+            }
+          }
+          // move the server messages to the end
+          spans.removeAll(serverMessages)
+          spans.addAll(serverMessages)
+        }
         span(0) {
           operationName "grpc.client"
           parent()

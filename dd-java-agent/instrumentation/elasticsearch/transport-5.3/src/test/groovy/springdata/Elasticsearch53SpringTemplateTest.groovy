@@ -124,9 +124,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   def "test elasticsearch get"() {
     expect:
     template.createIndex(indexName)
-    TEST_WRITER.waitForTraces(1)
     template.getClient().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
-    TEST_WRITER.waitForTraces(2)
 
     when:
     NativeSearchQuery query = new NativeSearchQueryBuilder()
@@ -155,15 +153,16 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     // FIXME: it looks like proper approach is to provide TEST_WRITER with an API to filter traces as they are written
     TEST_WRITER.waitForTraces(7)
     filterIgnoredActions()
-    // IndexAction and PutMappingAction run in separate threads and order in which
-    // these spans are closed is not defined. So we force the order if it is wrong.
-    if (TEST_WRITER[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
-      def tmp = TEST_WRITER[3]
-      TEST_WRITER[3] = TEST_WRITER[4]
-      TEST_WRITER[4] = tmp
-    }
 
     assertTraces(7) {
+      sortTraces {
+        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
+        if (traces[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = traces[3]
+          traces[3] = traces[4]
+          traces[4] = tmp
+        }
+      }
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
@@ -299,9 +298,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   def "test results extractor"() {
     setup:
     template.createIndex(indexName)
-    TEST_WRITER.waitForTraces(1)
     testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
-    TEST_WRITER.waitForTraces(2)
 
     template.index(IndexQueryBuilder.newInstance()
       .withObject(new Doc(id: 1, data: "doc a"))
@@ -377,9 +374,11 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   }
 
   void filterIgnoredActions() {
-    for (int i = 0; i < TEST_WRITER.size(); i++) {
-      if (IGNORED_ACTIONS.contains(TEST_WRITER[i][0].attributes[DDTags.RESOURCE_NAME].stringValue)) {
-        TEST_WRITER.remove(i)
+    TEST_WRITER.doUnderStructuralChangeLock {
+      for (int i = 0; i < TEST_WRITER.traces.size(); i++) {
+        if (IGNORED_ACTIONS.contains(TEST_WRITER.traces[i][0].attributes[DDTags.RESOURCE_NAME].stringValue)) {
+          TEST_WRITER.traces.remove(i)
+        }
       }
     }
   }

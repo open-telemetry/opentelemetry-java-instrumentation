@@ -124,6 +124,16 @@ class TraceAnnotationsTest extends AgentTestRunner {
           }
         }
         span(1) {
+          operationName "trace.annotation"
+          childOf span(0)
+          errored false
+          tags {
+            "$DDTags.SERVICE_NAME" "test"
+            "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span(2) {
           operationName "SAY_HA"
           childOf span(0)
           errored false
@@ -131,16 +141,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
             "$DDTags.SPAN_TYPE" "DB"
-            "$Tags.COMPONENT" "trace"
-          }
-        }
-        span(2) {
-          operationName "trace.annotation"
-          childOf span(0)
-          errored false
-          tags {
-            "$DDTags.SERVICE_NAME" "test"
-            "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -167,6 +167,16 @@ class TraceAnnotationsTest extends AgentTestRunner {
           }
         }
         span(1) {
+          operationName "trace.annotation"
+          childOf span(0)
+          errored false
+          tags {
+            "$DDTags.SERVICE_NAME" "test"
+            "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span(2) {
           operationName "SAY_HA"
           childOf span(0)
           errored false
@@ -174,16 +184,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
             "$DDTags.SPAN_TYPE" "DB"
-            "$Tags.COMPONENT" "trace"
-          }
-        }
-        span(2) {
-          operationName "trace.annotation"
-          childOf span(0)
-          errored false
-          tags {
-            "$DDTags.SERVICE_NAME" "test"
-            "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -210,6 +210,16 @@ class TraceAnnotationsTest extends AgentTestRunner {
           }
         }
         span(1) {
+          operationName "trace.annotation"
+          childOf span(0)
+          errored false
+          tags {
+            "$DDTags.SERVICE_NAME" "test"
+            "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span(2) {
           operationName "SAY_HA"
           childOf span(0)
           errored false
@@ -217,16 +227,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "EARTH"
             "$DDTags.SPAN_TYPE" "DB"
-            "$Tags.COMPONENT" "trace"
-          }
-        }
-        span(2) {
-          operationName "trace.annotation"
-          childOf span(0)
-          errored false
-          tags {
-            "$DDTags.SERVICE_NAME" "test"
-            "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -313,7 +313,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
         return "Howdy!"
       }
     }.call()
-    TEST_WRITER.waitForTraces(2)
 
     then:
     assertTraces(2) {

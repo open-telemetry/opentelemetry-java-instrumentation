@@ -104,9 +104,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   def "test elasticsearch get"() {
     expect:
     template.createIndex(indexName)
-    TEST_WRITER.waitForTraces(1)
     template.getClient().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
-    TEST_WRITER.waitForTraces(2)
 
     when:
     NativeSearchQuery query = new NativeSearchQueryBuilder()
@@ -132,14 +130,15 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
     template.queryForList(query, Doc) == [new Doc()]
 
     and:
-    // IndexAction and PutMappingAction run in separate threads and order in which
-    // these spans are closed is not defined. So we force the order if it is wrong.
-    if (TEST_WRITER[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
-      def tmp = TEST_WRITER[3]
-      TEST_WRITER[3] = TEST_WRITER[4]
-      TEST_WRITER[4] = tmp
-    }
     assertTraces(7) {
+      sortTraces {
+        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
+        if (traces[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
+          def tmp = traces[3]
+          traces[3] = traces[4]
+          traces[4] = tmp
+        }
+      }
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
@@ -271,9 +270,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   def "test results extractor"() {
     setup:
     template.createIndex(indexName)
-    TEST_WRITER.waitForTraces(1)
     testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
-    TEST_WRITER.waitForTraces(2)
 
     template.index(IndexQueryBuilder.newInstance()
       .withObject(new Doc(id: 1, data: "doc a"))

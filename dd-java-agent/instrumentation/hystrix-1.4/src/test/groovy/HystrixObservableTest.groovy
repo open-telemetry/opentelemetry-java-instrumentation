@@ -52,9 +52,6 @@ class HystrixObservableTest extends AgentTestRunner {
           return obs
         }
       }
-      // when this is running in different threads, we don't know when the other span is done
-      // adding sleep to improve ordering consistency
-      blockUntilChildSpansFinished(2)
       return val
     }
 
@@ -157,7 +154,6 @@ class HystrixObservableTest extends AgentTestRunner {
           return Observable.just("Fallback!").repeat(1)
         }
       }
-      blockUntilChildSpansFinished(2) // Improve span ordering consistency
       return val
     }
 
@@ -247,28 +243,21 @@ class HystrixObservableTest extends AgentTestRunner {
 
     when:
     runUnderTrace("parent") {
-      try {
-        operation new HystrixObservableCommand<String>(asKey("FailingGroup")) {
+      operation new HystrixObservableCommand<String>(asKey("FailingGroup")) {
 
-          @Override
-          protected Observable<String> construct() {
-            def err = Observable.defer {
-              Observable.error(new IllegalArgumentException())
-            }
-            if (observeOnFn) {
-              err = err.observeOn(observeOnFn)
-            }
-            if (subscribeOnFn) {
-              err = err.subscribeOn(subscribeOnFn)
-            }
-            return err
+        @Override
+        protected Observable<String> construct() {
+          def err = Observable.defer {
+            Observable.error(new IllegalArgumentException())
           }
+          if (observeOnFn) {
+            err = err.observeOn(observeOnFn)
+          }
+          if (subscribeOnFn) {
+            err = err.subscribeOn(subscribeOnFn)
+          }
+          return err
         }
-      } finally {
-        // when this is running in different threads, we don't know when the other span is done
-        // adding sleep to improve ordering consistency
-        // Also an exception is being thrown here, so we need to wrap it in a try block.
-        blockUntilChildSpansFinished(2)
       }
     }
 

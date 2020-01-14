@@ -47,20 +47,12 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<ApacheHttpAsyncClientDeco
     }
 
     def future = client.execute(request, handler)
-    def response
-    try {
-      response = future.get()
-    } finally {
-      // child span is reported asynchronously, this is needed for consistent span ordering during test verification
-      blockUntilChildSpansFinished(1)
-    }
+    def response = future.get()
     response.entity?.content?.close() // Make sure the connection is closed.
     if (callback != null) {
       // need to wait for callback to complete in case test is expecting span from it
       latch.await()
     }
-    // child span is reported asynchronously, this is needed for consistent span ordering during test verification
-    blockUntilChildSpansFinished(1)
     response.statusLine.statusCode
   }
 

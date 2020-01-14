@@ -49,8 +49,8 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(1) {
       trace(0, 2) {
-        producerSpan(it, 1, jmsResourceName)
-        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, span(1))
+        producerSpan(it, 0, jmsResourceName)
+        consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0))
       }
     }
 
@@ -65,9 +65,6 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
 
-      // Make sure that first pair of send/receive traces has landed to simplify assertions
-      TEST_WRITER.waitForTraces(1)
-
       template.send(msg.getJMSReplyTo()) {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
@@ -76,29 +73,16 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
       session -> template.getMessageConverter().toMessage(messageText, session)
     }
 
-    TEST_WRITER.waitForTraces(2)
-    // Manually reorder if reported in the wrong order.
-    if (TEST_WRITER[0][0].name == "jms.produce") {
-      def producerSpan = TEST_WRITER[0][0]
-      TEST_WRITER[0][0] = TEST_WRITER[0][1]
-      TEST_WRITER[0][1] = producerSpan
-    }
-    if (TEST_WRITER[1][0].name == "jms.produce") {
-      def producerSpan = TEST_WRITER[1][0]
-      TEST_WRITER[1][0] = TEST_WRITER[1][1]
-      TEST_WRITER[1][1] = producerSpan
-    }
-
     expect:
     receivedMessage.text == "responded!"
     assertTraces(2) {
       trace(0, 2) {
-        producerSpan(it, 1, jmsResourceName)
-        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, span(1))
+        producerSpan(it, 0, jmsResourceName)
+        consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0))
       }
       trace(1, 2) {
-        producerSpan(it, 1, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
-        consumerSpan(it, 0, "Temporary Queue", false, ActiveMQMessageConsumer, span(1))
+        producerSpan(it, 0, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
+        consumerSpan(it, 1, "Temporary Queue", false, ActiveMQMessageConsumer, span(0))
       }
     }
 

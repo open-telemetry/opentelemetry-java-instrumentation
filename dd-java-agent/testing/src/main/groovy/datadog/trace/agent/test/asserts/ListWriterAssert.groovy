@@ -12,13 +12,14 @@ import org.spockframework.runtime.model.TextPosition
 import static TraceAssert.assertTrace
 
 class ListWriterAssert {
+  private final List<List<SpanData>> traces
   private final ListWriter writer
-  private final int size
+
   private final Set<Integer> assertedIndexes = new HashSet<>()
 
-  private ListWriterAssert(ListWriter writer) {
+  private ListWriterAssert(List<List<SpanData>> traces, ListWriter writer) {
+    this.traces = traces
     this.writer = writer
-    size = writer.size()
   }
 
   static void assertTraces(ListWriter writer, int expectedSize,
@@ -26,8 +27,9 @@ class ListWriterAssert {
                            @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
       writer.waitForTraces(expectedSize)
-      assert writer.size() == expectedSize
-      def asserter = new ListWriterAssert(writer)
+      def traces = new ArrayList<>(writer.traces)
+      assert traces.size() == expectedSize
+      def asserter = new ListWriterAssert(traces, writer)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter
       clone.resolveStrategy = Closure.DELEGATE_FIRST
@@ -53,24 +55,26 @@ class ListWriterAssert {
     }
   }
 
-  List<SpanData> trace(int index) {
-    return writer.get(index)
+  List<List<SpanData>> getTraces() {
+    return traces
   }
 
   void trace(int index, int expectedSize,
              @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.TraceAssert'])
              @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    if (index >= size) {
+    if (index >= traces.size()) {
       throw new ArrayIndexOutOfBoundsException(index)
     }
-    if (writer.size() != size) {
-      throw new ConcurrentModificationException("ListWriter modified during assertion")
-    }
     assertedIndexes.add(index)
-    assertTrace(writer.get(index), expectedSize, spec)
+    assertTrace(writer, traces[index][0].traceId, expectedSize, spec)
+  }
+
+  // this doesn't provide any functionality, just a self-documenting marker
+  void sortTraces(Closure callback) {
+    callback.call()
   }
 
   void assertTracesAllVerified() {
-    assert assertedIndexes.size() == size
+    assert assertedIndexes.size() == traces.size()
   }
 }

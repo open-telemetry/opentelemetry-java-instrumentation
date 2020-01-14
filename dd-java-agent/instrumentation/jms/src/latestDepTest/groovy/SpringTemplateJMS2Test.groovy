@@ -76,8 +76,8 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(1) {
       trace(0, 2) {
-        producerSpan(it, 1, jmsResourceName)
-        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, span(1))
+        producerSpan(it, 0, jmsResourceName)
+        consumerSpan(it, 1, jmsResourceName, false, HornetQMessageConsumer, span(0))
       }
     }
 
@@ -105,12 +105,12 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     receivedMessage.text == "responded!"
     assertTraces(2) {
       trace(0, 2) {
-        producerSpan(it, 1, jmsResourceName)
-        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, span(1))
+        producerSpan(it, 0, jmsResourceName)
+        consumerSpan(it, 1, jmsResourceName, false, HornetQMessageConsumer, span(0))
       }
       trace(1, 2) {
-        producerSpan(it, 1, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
-        consumerSpan(it, 0, "Temporary Queue", false, HornetQMessageConsumer, span(1))
+        producerSpan(it, 0, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
+        consumerSpan(it, 1, "Temporary Queue", false, HornetQMessageConsumer, span(0))
       }
     }
 

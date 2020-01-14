@@ -35,10 +35,7 @@ class HystrixTest extends AgentTestRunner {
       }
     }
     def result = runUnderTrace("parent") {
-      def res = operation(command)
-      // child spans are reported asynchronously, this is needed for consistent span ordering during test verification
-      blockUntilChildSpansFinished(2)
-      res
+      operation(command)
     }
     expect:
     TRANSFORMED_CLASSES.contains("com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler\$ThreadPoolWorker")
@@ -109,10 +106,7 @@ class HystrixTest extends AgentTestRunner {
       }
     }
     def result = runUnderTrace("parent") {
-      def res = operation(command)
-      // child spans are reported asynchronously, this is needed for consistent span ordering during test verification
-      blockUntilChildSpansFinished(2)
-      res
+      operation(command)
     }
     expect:
     TRANSFORMED_CLASSES.contains("com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler\$ThreadPoolWorker")

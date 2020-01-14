@@ -36,7 +36,6 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
         return response
       }
     }).get()
-    blockUntilChildSpansFinished(1)
     return response.statusCode
   }
 
@@ -75,7 +74,7 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
     and:
     assertTraces(1) {
-      def size = TEST_WRITER.get(0).size()
+      def size = traces[0].size()
       trace(0, size) {
         basicSpan(it, 0, "parent", null, null, thrownException)
 

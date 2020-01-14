@@ -67,6 +67,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    def hasDispatchSpan = hasDispatchSpan(endpoint)
     trace.span(index) {
       operationName expectedOperationName()
       errored endpoint.errored
@@ -88,7 +89,12 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         "$Tags.HTTP_STATUS" endpoint.status
         "servlet.context" "/$context"
         "servlet.path" { it == endpoint.path || it == "/dispatch$endpoint.path" }
-        "span.origin.type" { it == servlet.name || it == ApplicationFilterChain.name }
+        if (hasDispatchSpan) {
+          "servlet.dispatch" endpoint.path
+          "span.origin.type" String
+        } else {
+          "span.origin.type" { it == servlet.name || it == ApplicationFilterChain.name }
+        }
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }

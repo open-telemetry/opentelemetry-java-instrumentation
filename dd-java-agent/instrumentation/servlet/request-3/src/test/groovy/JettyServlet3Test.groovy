@@ -1,9 +1,8 @@
-import datadog.trace.agent.test.asserts.ListWriterAssert
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
+import io.opentelemetry.sdk.trace.SpanData
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -11,14 +10,12 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 import javax.servlet.Servlet
 import javax.servlet.http.HttpServletRequest
 
-import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
@@ -214,106 +211,38 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
     return new URI("http://localhost:$port/$context/dispatch/")
   }
 
+  boolean hasDispatchSpan(ServerEndpoint endpoint) {
+    true
+  }
+
   @Override
-  void cleanAndAssertTraces(
-    final int size,
-    @ClosureParams(value = SimpleType, options = "datadog.trace.agent.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-
-    // If this is failing, make sure HttpServerTestAdvice is applied correctly.
-    TEST_WRITER.waitForTraces(size * 2)
-    // TEST_WRITER is a CopyOnWriteArrayList, which doesn't support remove()
-    def toRemove = TEST_WRITER.findAll {
-      it.size() == 1 && it.get(0).name == "TEST_SPAN"
-    }
-    assert toRemove.size() == size
-    toRemove.each {
-      assertTrace(it, 1) {
-        basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
-      }
-    }
-    TEST_WRITER.removeAll(toRemove)
-
-    assertTraces(size) {
-      (1..size).each {
-        trace(it - 1, 3) {
-          if (trace[1].attributes["servlet.dispatch"]) {
-            def tmp = trace[1]
-            trace[1] = trace[0]
-            trace[0] = tmp
-          }
-          def endpoint = lastRequest
-          span(0) {
-            operationName expectedOperationName()
-            errored endpoint.errored
-            // we can't reliably assert parent or child relationship here since both are tested.
-            tags {
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
-              "$Tags.COMPONENT" serverDecorator.component()
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-              "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
-              "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-              "$Tags.PEER_PORT" Long
-              "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
-              "$Tags.HTTP_METHOD" "GET"
-              "$Tags.HTTP_STATUS" endpoint.status
-              "servlet.context" "/$context"
-              "servlet.path" endpoint.status == 404 ? endpoint.path : "/dispatch$endpoint.path"
-              "servlet.dispatch" endpoint.path
-              "span.origin.type" {
-                it == TestServlet3.DispatchImmediate.name || it == TestServlet3.DispatchAsync.name
-              }
-              if (endpoint.errored) {
-                "error.msg" { it == null || it == EXCEPTION.body }
-                "error.type" { it == null || it == Exception.name }
-                "error.stack" { it == null || it instanceof String }
-              }
-              if (endpoint.query) {
-                "$DDTags.HTTP_QUERY" endpoint.query
-              }
-            }
-          }
-          span(1) {
-            operationName expectedOperationName()
-            childOf span(0)
-            errored endpoint.errored
-            tags {
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
-              "$Tags.COMPONENT" serverDecorator.component()
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-              "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
-              "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-              "$Tags.PEER_PORT" Long
-              "$Tags.HTTP_URL" "${endpoint.resolve(address).toString().replace("/dispatch", "")}"
-              "$Tags.HTTP_METHOD" "GET"
-              "$Tags.HTTP_STATUS" endpoint.status
-              "servlet.context" "/$context"
-              "servlet.path" endpoint.path
-              "span.origin.type" {
-                it == TestServlet3.DispatchImmediate.name || it == TestServlet3.DispatchAsync.name || it == TestServlet3.Sync.name || it == TestServlet3.Async.name
-              }
-              if (endpoint.errored) {
-                "error.msg" { it == null || it == EXCEPTION.body }
-                "error.type" { it == null || it == Exception.name }
-                "error.stack" { it == null || it instanceof String }
-              }
-              if (endpoint.query) {
-                "$DDTags.HTTP_QUERY" endpoint.query
-              }
-            }
-          }
-          span(2) {
-            operationName "controller"
-            errored endpoint.path == "/exception"
-            tags {
-              if (endpoint.errored) {
-                "error.msg" { it == null || it == EXCEPTION.body }
-                "error.type" { it == null || it == Exception.name }
-                "error.stack" { it == null || it instanceof String }
-              }
-            }
-          }
+  void dispatchSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      operationName expectedOperationName()
+      childOf((SpanData) parent)
+      errored endpoint.errored
+      tags {
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.PEER_PORT" Long
+        "$Tags.HTTP_URL" "${endpoint.resolve(address).toString().replace("/dispatch", "")}"
+        "$Tags.HTTP_METHOD" "GET"
+        "$Tags.HTTP_STATUS" endpoint.status
+        "servlet.context" "/$context"
+        "servlet.path" endpoint.path
+        "span.origin.type" {
+          it == TestServlet3.DispatchImmediate.name || it == TestServlet3.DispatchAsync.name || it == TestServlet3.Sync.name || it == TestServlet3.Async.name
+        }
+        if (endpoint.errored) {
+          "error.msg" { it == null || it == EXCEPTION.body }
+          "error.type" { it == null || it == Exception.name }
+          "error.stack" { it == null || it instanceof String }
+        }
+        if (endpoint.query) {
+          "$DDTags.HTTP_QUERY" endpoint.query
         }
       }
     }

@@ -102,9 +102,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   def "basic #method request with parent"() {
     when:
     def status = runUnderTrace("parent") {
-      def val = doRequest(method, server.address.resolve("/success"))
-      blockUntilChildSpansFinished(2)
-      return val
+      doRequest(method, server.address.resolve("/success"))
     }
 
     then:
@@ -179,8 +177,8 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
-        basicSpan(it, 1, "child", null, span(0))
-        clientSpan(it, 2, span(0), method, false)
+        clientSpan(it, 1, span(0), method, false)
+        basicSpan(it, 2 + extraClientSpans(), "child", null, span(0))
       }
     }
 
@@ -192,8 +190,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     when:
     def status = doRequest(method, server.address.resolve("/success"), ["is-dd-server": "false"]) {
       runUnderTrace("callback") {
-        // Ensure consistent ordering of traces for assertion.
-        TEST_WRITER.waitForTraces(1)
       }
     }
 

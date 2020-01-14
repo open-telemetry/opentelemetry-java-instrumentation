@@ -47,7 +47,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
         new HystrixObservableCommand<String>(asKey("OtherGroup")) {
           @Trace
           private String tracedMethod() {
-            blockUntilChildSpansFinished(2)
             return "$str!"
           }
 
@@ -61,9 +60,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }.toObservable()
           .subscribeOn(Schedulers.trampoline())
       }.toBlocking().first()
-      // when this is running in different threads, we don't know when the other span is done
-      // adding sleep to improve ordering consistency
-      blockUntilChildSpansFinished(4)
       return val
     }
 
@@ -82,29 +78,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hystrix.cmd"
-          childOf span(3)
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "OtherGroup.HystrixObservableChainTest\$2.execute"
-            "$DDTags.SPAN_TYPE" null
-            "$Tags.COMPONENT" "hystrix"
-            "hystrix.command" "HystrixObservableChainTest\$2"
-            "hystrix.group" "OtherGroup"
-            "hystrix.circuit-open" false
-          }
-        }
-        span(2) {
-          operationName "trace.annotation"
-          childOf span(1)
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
-            "$DDTags.SPAN_TYPE" null
-            "$Tags.COMPONENT" "trace"
-          }
-        }
-        span(3) {
-          operationName "hystrix.cmd"
           childOf span(0)
           errored false
           tags {
@@ -116,12 +89,35 @@ class HystrixObservableChainTest extends AgentTestRunner {
             "hystrix.circuit-open" false
           }
         }
+        span(2) {
+          operationName "trace.annotation"
+          childOf span(1)
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
+            "$DDTags.SPAN_TYPE" null
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span(3) {
+          operationName "hystrix.cmd"
+          childOf span(1)
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "OtherGroup.HystrixObservableChainTest\$2.execute"
+            "$DDTags.SPAN_TYPE" null
+            "$Tags.COMPONENT" "hystrix"
+            "hystrix.command" "HystrixObservableChainTest\$2"
+            "hystrix.group" "OtherGroup"
+            "hystrix.circuit-open" false
+          }
+        }
         span(4) {
           operationName "trace.annotation"
           childOf span(3)
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
+            "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
             "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
           }

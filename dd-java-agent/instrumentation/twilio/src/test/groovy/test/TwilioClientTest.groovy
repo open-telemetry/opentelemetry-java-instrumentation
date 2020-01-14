@@ -376,7 +376,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           operationName "http.request"
-          errored false
+          errored true
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
@@ -389,7 +389,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(3) {
           operationName "http.request"
-          errored true
+          errored false
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
@@ -510,11 +510,9 @@ class TwilioClientTest extends AgentTestRunner {
             "twilio.status" "sent"
           }
         }
-        // Spans are reported in reverse order of completion,
-        // so the error span is last even though it happened first.
         span(3) {
           operationName "http.request"
-          errored false
+          errored true
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
@@ -527,7 +525,7 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(4) {
           operationName "http.request"
-          errored true
+          errored false
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"

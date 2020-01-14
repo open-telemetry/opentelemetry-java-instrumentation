@@ -2,15 +2,12 @@ package datadog.trace.agent.test.base
 
 import datadog.trace.agent.decorator.HttpServerDecorator
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.SpanData
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -21,7 +18,6 @@ import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -80,12 +76,11 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     false
   }
 
-  // Return the handler span's name
-  String reorderHandlerSpan() {
-    null
+  boolean hasRenderSpan(ServerEndpoint endpoint) {
+    false
   }
 
-  boolean reorderControllerSpan() {
+  boolean hasDispatchSpan(ServerEndpoint endpoint) {
     false
   }
 
@@ -184,22 +179,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     }
 
     and:
-    cleanAndAssertTraces(count) {
-      (1..count).eachWithIndex { val, i ->
-        if (hasHandlerSpan()) {
-          trace(i, 3) {
-            serverSpan(it, 0)
-            handlerSpan(it, 1, span(0))
-            controllerSpan(it, 2, span(1))
-          }
-        } else {
-          trace(i, 2) {
-            serverSpan(it, 0)
-            controllerSpan(it, 1, span(0))
-          }
-        }
-      }
-    }
+    assertTheTraces(count)
 
     where:
     method = "GET"
@@ -221,20 +201,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     response.body().string() == SUCCESS.body
 
     and:
-    cleanAndAssertTraces(1) {
-      if (hasHandlerSpan()) {
-        trace(0, 3) {
-          serverSpan(it, 0, traceId, parentId)
-          handlerSpan(it, 1, span(0))
-          controllerSpan(it, 2, span(1))
-        }
-      } else {
-        trace(0, 2) {
-          serverSpan(it, 0, traceId, parentId)
-          controllerSpan(it, 1, span(0))
-        }
-      }
-    }
+    assertTheTraces(1, traceId, parentId)
 
     where:
     method = "GET"
@@ -253,20 +220,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     response.body().string() == endpoint.body
 
     and:
-    cleanAndAssertTraces(1) {
-      if (hasHandlerSpan()) {
-        trace(0, 3) {
-          serverSpan(it, 0, null, null, method, endpoint)
-          handlerSpan(it, 1, span(0), method, endpoint)
-          controllerSpan(it, 2, span(1))
-        }
-      } else {
-        trace(0, 2) {
-          serverSpan(it, 0, null, null, method, endpoint)
-          controllerSpan(it, 1, span(0))
-        }
-      }
-    }
+    assertTheTraces(1, null, null, method, endpoint)
 
     where:
     method = "GET"
@@ -286,20 +240,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     response.body().contentLength() < 1 || redirectHasBody()
 
     and:
-    cleanAndAssertTraces(1) {
-      if (hasHandlerSpan()) {
-        trace(0, 3) {
-          serverSpan(it, 0, null, null, method, REDIRECT)
-          handlerSpan(it, 1, span(0), method, REDIRECT)
-          controllerSpan(it, 2, span(1))
-        }
-      } else {
-        trace(0, 2) {
-          serverSpan(it, 0, null, null, method, REDIRECT)
-          controllerSpan(it, 1, span(0))
-        }
-      }
-    }
+    assertTheTraces(1, null, null, method, REDIRECT)
 
     where:
     method = "GET"
@@ -316,20 +257,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     response.body().string() == ERROR.body
 
     and:
-    cleanAndAssertTraces(1) {
-      if (hasHandlerSpan()) {
-        trace(0, 3) {
-          serverSpan(it, 0, null, null, method, ERROR)
-          handlerSpan(it, 1, span(0), method, ERROR)
-          controllerSpan(it, 2, span(1))
-        }
-      } else {
-        trace(0, 2) {
-          serverSpan(it, 0, null, null, method, ERROR)
-          controllerSpan(it, 1, span(0))
-        }
-      }
-    }
+    assertTheTraces(1, null, null, method, ERROR)
 
     where:
     method = "GET"
@@ -348,20 +276,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     }
 
     and:
-    cleanAndAssertTraces(1) {
-      if (hasHandlerSpan()) {
-        trace(0, 3) {
-          serverSpan(it, 0, null, null, method, EXCEPTION)
-          handlerSpan(it, 1, span(0), method, EXCEPTION)
-          controllerSpan(it, 2, span(1), EXCEPTION.body)
-        }
-      } else {
-        trace(0, 2) {
-          serverSpan(it, 0, null, null, method, EXCEPTION)
-          controllerSpan(it, 1, span(0), EXCEPTION.body)
-        }
-      }
-    }
+    assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body)
 
     where:
     method = "GET"
@@ -378,18 +293,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     response.code() == NOT_FOUND.status
 
     and:
-    cleanAndAssertTraces(1) {
-      if (hasHandlerSpan()) {
-        trace(0, 2) {
-          serverSpan(it, 0, null, null, method, NOT_FOUND)
-          handlerSpan(it, 1, span(0), method, NOT_FOUND)
-        }
-      } else {
-        trace(0, 1) {
-          serverSpan(it, 0, null, null, method, NOT_FOUND)
-        }
-      }
-    }
+    assertTheTraces(1, null, null, method, NOT_FOUND)
 
     where:
     method = "GET"
@@ -398,58 +302,47 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   //FIXME: add tests for POST with large/chunked data
 
-  void cleanAndAssertTraces(
-    final int size,
-    @ClosureParams(value = SimpleType, options = "datadog.trace.agent.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-
-    // If this is failing, make sure HttpServerTestAdvice is applied correctly.
-    TEST_WRITER.waitForTraces(size * 2)
-    // TEST_WRITER is a CopyOnWriteArrayList, which doesn't support remove()
-    def toRemove = TEST_WRITER.findAll {
-      it.size() == 1 && it.get(0).name == "TEST_SPAN"
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null) {
+    def spanCount = 1 // server span
+    if (hasDispatchSpan(endpoint)) {
+      spanCount++
     }
-    toRemove.each {
-      assertTrace(it, 1) {
-        basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
+    if (hasHandlerSpan()) {
+      spanCount++
+    }
+    if (endpoint != NOT_FOUND) {
+      spanCount++ // controller span
+      if (hasRenderSpan(endpoint)) {
+        spanCount++
       }
     }
-    assert toRemove.size() == size
-    TEST_WRITER.removeAll(toRemove)
-
-    if (reorderControllerSpan() || reorderHandlerSpan()) {
-      // this is needed temporarily to get DropWizardAsyncTest and GrizzlyAsyncTest to pass
-      // but no worries, this will go away later in this PR once the span re-ordering is no longer needed
-      Thread.sleep(100)
-    }
-
-    if (reorderHandlerSpan()) {
-      TEST_WRITER.each {
-        def controllerSpan = it.find {
-          it.name == reorderHandlerSpan()
+    assertTraces(size * 2) {
+      (0..size - 1).each {
+        trace(it * 2, 1) {
+          basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
         }
-        if (controllerSpan) {
-          it.remove(controllerSpan)
-          it.add(controllerSpan)
-        }
-      }
-    }
-
-    if (reorderControllerSpan() || reorderHandlerSpan()) {
-      // Some frameworks close the handler span before the controller returns, so we need to manually reorder it.
-      TEST_WRITER.each {
-        def controllerSpan = it.find {
-          it.name == "controller"
-        }
-        if (controllerSpan) {
-          it.remove(controllerSpan)
-          it.add(controllerSpan)
+        trace(it * 2 + 1, spanCount) {
+          def spanIndex = 0
+          serverSpan(it, spanIndex++, traceID, parentID, method, endpoint)
+          if (hasDispatchSpan(endpoint)) {
+            dispatchSpan(it, spanIndex++, span(0), method, endpoint)
+          }
+          if (hasHandlerSpan()) {
+            handlerSpan(it, spanIndex++, span(0), method, endpoint)
+          }
+          if (endpoint != NOT_FOUND) {
+            if (hasHandlerSpan() || hasDispatchSpan(endpoint)) { // currently there are no tests which have both
+              controllerSpan(it, spanIndex++, span(1), errorMessage)
+            } else {
+              controllerSpan(it, spanIndex++, span(0), errorMessage)
+            }
+            if (hasRenderSpan(endpoint)) {
+              renderSpan(it, spanIndex++, span(0), method, endpoint)
+            }
+          }
         }
       }
     }
-
-    assertTraces(size, spec)
   }
 
   void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null) {
@@ -467,6 +360,14 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     throw new UnsupportedOperationException("handlerSpan not implemented in " + getClass().name)
+  }
+
+  void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    throw new UnsupportedOperationException("renderSpan not implemented in " + getClass().name)
+  }
+
+  void dispatchSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    throw new UnsupportedOperationException("dispatchSpan not implemented in " + getClass().name)
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)

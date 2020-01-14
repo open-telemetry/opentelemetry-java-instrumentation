@@ -78,8 +78,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 
     expect:
     assertTraces(3) {
-      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
-      server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
+      server.distributedRequestTrace(it, 0, traces[2][2])
+      server.distributedRequestTrace(it, 1, traces[2][1])
       trace(2, 3) {
         span(0) {
           operationName "someTrace"
@@ -294,7 +294,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 
     expect:
     assertTraces(2) {
-      server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
+      server.distributedRequestTrace(it, 0, traces[1][1])
       trace(1, 2) {
         span(0) {
           operationName "someTrace"

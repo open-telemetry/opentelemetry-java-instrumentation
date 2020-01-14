@@ -102,11 +102,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   }
 
   @Override
-  boolean reorderControllerSpan() {
-    true
-  }
-
-  @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "ratpack.handler"

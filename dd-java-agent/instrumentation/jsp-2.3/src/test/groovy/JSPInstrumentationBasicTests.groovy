@@ -108,18 +108,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/$jspFileName"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" jspClassName
-            "servlet.context" "/$jspWebappContext"
-            "jsp.requestURL" reqUrl
-          }
-        }
-        span(2) {
-          childOf span(0)
           operationName "jsp.compile"
           errored false
           tags {
@@ -128,6 +116,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
+          operationName "jsp.render"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/$jspFileName"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" jspClassName
+            "servlet.context" "/$jspWebappContext"
+            "jsp.requestURL" reqUrl
           }
         }
       }
@@ -177,18 +177,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/getQuery.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "getQuery_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.requestURL" reqUrl
-          }
-        }
-        span(2) {
-          childOf span(0)
           operationName "jsp.compile"
           errored false
           tags {
@@ -197,6 +185,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
+          operationName "jsp.render"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/getQuery.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "getQuery_jsp"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.requestURL" reqUrl
           }
         }
       }
@@ -243,18 +243,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/post.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "post_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.requestURL" reqUrl
-          }
-        }
-        span(2) {
-          childOf span(0)
           operationName "jsp.compile"
           errored false
           tags {
@@ -263,6 +251,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
+          operationName "jsp.render"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/post.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "post_jsp"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.requestURL" reqUrl
           }
         }
       }
@@ -313,6 +313,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/$jspFileName"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.$jspClassName"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
           operationName "jsp.render"
           errored true
           tags {
@@ -328,18 +340,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
               return errorMessageOptional || tagErrorMsg instanceof String
             }
             "error.stack" String
-          }
-        }
-        span(2) {
-          childOf span(0)
-          operationName "jsp.compile"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/$jspFileName"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.$jspClassName"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
       }
@@ -388,18 +388,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "includeHtml_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.requestURL" reqUrl
-          }
-        }
-        span(2) {
-          childOf span(0)
           operationName "jsp.compile"
           errored false
           tags {
@@ -408,6 +396,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
+          operationName "jsp.render"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "includeHtml_jsp"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.requestURL" reqUrl
           }
         }
       }
@@ -450,6 +450,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
+          operationName "jsp.compile"
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
+            "$Tags.COMPONENT" "jsp-http-servlet"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(2) {
+          childOf span(0)
           operationName "jsp.render"
           errored false
           tags {
@@ -460,20 +472,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "jsp.requestURL" reqUrl
           }
         }
-        span(2) {
-          childOf span(1)
-          operationName "jsp.render"
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
-            "$Tags.COMPONENT" "jsp-http-servlet"
-            "span.origin.type" "javaLoopH2_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.requestURL" reqUrl
-          }
-        }
         span(3) {
-          childOf span(1)
+          childOf span(2)
           operationName "jsp.compile"
           errored false
           tags {
@@ -485,7 +485,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           }
         }
         span(4) {
-          childOf span(1)
+          childOf span(2)
           operationName "jsp.render"
           errored false
           tags {
@@ -497,7 +497,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           }
         }
         span(5) {
-          childOf span(1)
+          childOf span(2)
           operationName "jsp.compile"
           errored false
           tags {
@@ -509,15 +509,15 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           }
         }
         span(6) {
-          childOf span(0)
-          operationName "jsp.compile"
+          childOf span(2)
+          operationName "jsp.render"
           errored false
           tags {
-            "$DDTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
+            "$DDTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
+            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            "jsp.requestURL" reqUrl
           }
         }
       }

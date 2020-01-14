@@ -24,20 +24,14 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
       .withMethod(HttpMethods.lookup(method).get())
       .addHeaders(headers.collect { RawHeader.create(it.key, it.value) })
 
-    def response
-    try {
-      response = Http.get(system)
-        .singleRequest(request, materializer)
-      //.whenComplete { result, error ->
-      // FIXME: Callback should be here instead.
-      //  callback?.call()
-      //}
-        .toCompletableFuture()
-        .get()
-    } finally {
-      // FIXME: remove this when callback above works.
-      blockUntilChildSpansFinished(1)
-    }
+    def response = Http.get(system)
+      .singleRequest(request, materializer)
+    //.whenComplete { result, error ->
+    // FIXME: Callback should be here instead.
+    //  callback?.call()
+    //}
+      .toCompletableFuture()
+      .get()
     callback?.call()
     return response.status().intValue()
   }

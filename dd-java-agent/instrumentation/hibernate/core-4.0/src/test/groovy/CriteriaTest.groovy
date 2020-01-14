@@ -33,16 +33,6 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.transaction.commit"
-          childOf span(0)
-          tags {
-            "$DDTags.SERVICE_NAME" "hibernate"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
-            "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-          }
-        }
-        span(2) {
           operationName "hibernate.criteria.$methodName"
           childOf span(0)
           tags {
@@ -52,8 +42,8 @@ class CriteriaTest extends AbstractHibernateTest {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
-        span(3) {
-          childOf span(2)
+        span(2) {
+          childOf span(1)
           tags {
             "$DDTags.SERVICE_NAME" "h2"
             "$DDTags.RESOURCE_NAME" ~/^select /
@@ -65,6 +55,16 @@ class CriteriaTest extends AbstractHibernateTest {
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+          }
+        }
+        span(3) {
+          operationName "hibernate.transaction.commit"
+          childOf span(0)
+          tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            "$Tags.COMPONENT" "java-hibernate"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
       }
