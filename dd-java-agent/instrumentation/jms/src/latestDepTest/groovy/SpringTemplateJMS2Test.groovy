@@ -19,8 +19,8 @@ import javax.jms.Session
 import javax.jms.TextMessage
 import java.util.concurrent.TimeUnit
 
-import static JMS2Test.consumerTrace
-import static JMS2Test.producerTrace
+import static JMS2Test.consumerSpan
+import static JMS2Test.producerSpan
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
   @Shared
@@ -74,9 +74,11 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(2) {
-      producerTrace(it, 0, jmsResourceName)
-      consumerTrace(it, 1, jmsResourceName, false, HornetQMessageConsumer)
+    assertTraces(1) {
+      trace(0, 2) {
+        producerSpan(it, 1, jmsResourceName)
+        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, span(1))
+      }
     }
 
     where:
@@ -87,7 +89,6 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
   def "send and receive message generates spans"() {
     setup:
     Thread.start {
-      TEST_WRITER.waitForTraces(1)
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
 
@@ -100,21 +101,17 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
       session -> template.getMessageConverter().toMessage(messageText, session)
     }
 
-    TEST_WRITER.waitForTraces(4)
-    // Manually reorder if reported in the wrong order.
-    if (TEST_WRITER[3][0].operationName == "jms.produce") {
-      def producerTrace = TEST_WRITER[3]
-      TEST_WRITER[3] = TEST_WRITER[2]
-      TEST_WRITER[2] = producerTrace
-    }
-
     expect:
     receivedMessage.text == "responded!"
-    assertTraces(4) {
-      producerTrace(it, 0, jmsResourceName)
-      consumerTrace(it, 1, jmsResourceName, false, HornetQMessageConsumer)
-      producerTrace(it, 2, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
-      consumerTrace(it, 3, "Temporary Queue", false, HornetQMessageConsumer, TEST_WRITER[2][0])
+    assertTraces(2) {
+      trace(0, 2) {
+        producerSpan(it, 1, jmsResourceName)
+        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, span(1))
+      }
+      trace(1, 2) {
+        producerSpan(it, 1, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
+        consumerSpan(it, 0, "Temporary Queue", false, HornetQMessageConsumer, span(1))
+      }
     }
 
     where:

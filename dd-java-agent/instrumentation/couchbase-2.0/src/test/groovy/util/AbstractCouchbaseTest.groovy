@@ -10,7 +10,6 @@ import com.couchbase.mock.Bucket
 import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.asserts.TraceAssert
@@ -21,6 +20,7 @@ import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
@@ -119,8 +119,8 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
     TEST_WRITER.each {
       it.sort({
         a, b ->
-          boolean aIsCouchbaseOperation = a.operationName == "couchbase.call"
-          boolean bIsCouchbaseOperation = b.operationName == "couchbase.call"
+          boolean aIsCouchbaseOperation = a.name == "couchbase.call"
+          boolean bIsCouchbaseOperation = b.name == "couchbase.call"
 
           if (aIsCouchbaseOperation && !bIsCouchbaseOperation) {
             return 1
@@ -128,7 +128,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
             return -1
           }
 
-          return a.tags[DDTags.RESOURCE_NAME].compareTo(b.tags[DDTags.RESOURCE_NAME])
+          return a.attributes[DDTags.RESOURCE_NAME].stringValue.compareTo(b.attributes[DDTags.RESOURCE_NAME].stringValue)
       })
     }
 
@@ -142,7 +142,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       if (parentSpan == null) {
         parent()
       } else {
-        childOf((DDSpan) parentSpan)
+        childOf((SpanData) parentSpan)
       }
       tags {
         "$DDTags.SERVICE_NAME" "couchbase"

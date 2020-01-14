@@ -1,12 +1,12 @@
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
 
@@ -116,7 +116,7 @@ class CassandraClientTest extends AgentTestRunner {
       if (parentSpan == null) {
         parent()
       } else {
-        childOf((DDSpan) parentSpan)
+        childOf((SpanData) parentSpan)
       }
       tags {
         "$DDTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"

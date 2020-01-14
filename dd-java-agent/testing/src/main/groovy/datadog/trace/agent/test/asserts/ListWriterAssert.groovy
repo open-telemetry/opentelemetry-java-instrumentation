@@ -1,9 +1,9 @@
 package datadog.trace.agent.test.asserts
 
-import datadog.opentracing.DDSpan
-import datadog.trace.common.writer.ListWriter
+import datadog.trace.agent.test.ListWriter
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.sdk.trace.SpanData
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
@@ -53,7 +53,7 @@ class ListWriterAssert {
     }
   }
 
-  List<DDSpan> trace(int index) {
+  List<SpanData> trace(int index) {
     return writer.get(index)
   }
 

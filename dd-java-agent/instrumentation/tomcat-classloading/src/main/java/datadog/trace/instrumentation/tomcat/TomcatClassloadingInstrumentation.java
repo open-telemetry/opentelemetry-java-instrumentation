@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Constants;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentTracer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * Instrument Tomcat's web app classloader so it loads Datadog's bootstrap classes from parent
  * classloader. Without this change web apps get their oen versions of Datadog's classes leading to
- * there being multiple {@link GlobalTracer}s in existance, some of them not configured properly.
+ * there being multiple {@link AgentTracer}s in existance, some of them not configured properly.
  * This is really the same idea we have for OSGi and JBoss.
  */
 @AutoService(Instrumenter.class)

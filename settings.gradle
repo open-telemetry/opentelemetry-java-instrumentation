@@ -20,10 +20,10 @@ rootProject.name = 'dd-trace-java'
 
 // external apis
 include ':dd-trace-api'
-include ':dd-trace-ot'
 
 // agent projects
 include ':dd-java-agent'
+include ':dd-java-agent:opentelemetry-sdk'
 include ':dd-java-agent:agent-bootstrap'
 include ':dd-java-agent:agent-tooling'
 include ':dd-java-agent:load-generator'
@@ -45,7 +45,8 @@ include ':dd-java-agent:instrumentation:akka-http-10.0'
 include ':dd-java-agent:instrumentation:apache-httpasyncclient-4'
 include ':dd-java-agent:instrumentation:apache-httpclient-4'
 include ':dd-java-agent:instrumentation:aws-java-sdk-1.11.0'
-include ':dd-java-agent:instrumentation:aws-java-sdk-2.2'
+// FIXME this instrumentation relied on activeScope
+// include ':dd-java-agent:instrumentation:aws-java-sdk-2.2'
 include ':dd-java-agent:instrumentation:cdi-1.2'
 include ':dd-java-agent:instrumentation:couchbase-2.0'
 include ':dd-java-agent:instrumentation:couchbase-2.6'
@@ -91,10 +92,13 @@ include ':dd-java-agent:instrumentation:jetty-8'
 include ':dd-java-agent:instrumentation:jms'
 include ':dd-java-agent:instrumentation:jsp-2.3'
 include ':dd-java-agent:instrumentation:kafka-clients-0.11'
-include ':dd-java-agent:instrumentation:kafka-streams-0.11'
+// FIXME this instrumentation relied on activeScope
+// include ':dd-java-agent:instrumentation:kafka-streams-0.11'
 include ':dd-java-agent:instrumentation:lettuce-5'
-include ':dd-java-agent:instrumentation:log4j1'
-include ':dd-java-agent:instrumentation:log4j2'
+// FIXME this instrumentation relied on scope listener
+// include ':dd-java-agent:instrumentation:log4j1'
+// FIXME this instrumentation relied on scope listener
+// include ':dd-java-agent:instrumentation:log4j2'
 include ':dd-java-agent:instrumentation:mongo'
 include ':dd-java-agent:instrumentation:mongo:driver-3.1'
 include ':dd-java-agent:instrumentation:mongo:driver-async-3.3'
@@ -115,7 +119,8 @@ include ':dd-java-agent:instrumentation:rxjava-1'
 include ':dd-java-agent:instrumentation:servlet'
 include ':dd-java-agent:instrumentation:servlet:request-2'
 include ':dd-java-agent:instrumentation:servlet:request-3'
-include ':dd-java-agent:instrumentation:slf4j-mdc'
+// FIXME this instrumentation relied on scope listener
+// include ':dd-java-agent:instrumentation:slf4j-mdc'
 include ':dd-java-agent:instrumentation:sparkjava-2.3'
 include ':dd-java-agent:instrumentation:spring-data-1.8'
 include ':dd-java-agent:instrumentation:spring-webmvc-3.1'

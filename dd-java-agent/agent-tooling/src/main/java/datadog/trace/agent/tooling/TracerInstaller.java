@@ -1,18 +1,18 @@
 package datadog.trace.agent.tooling;
 
-import datadog.opentracing.DDTracer;
 import datadog.trace.api.Config;
 import datadog.trace.instrumentation.api.AgentTracer;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TracerInstaller {
-  /** Register a global tracer if no global tracer is already registered. */
-  public static synchronized void installGlobalTracer() {
+  /** Register agent tracer if no agent tracer is already registered. */
+  public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
-      final DDTracer tracer = new DDTracer();
+      final Tracer tracer = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
       try {
-        datadog.trace.api.GlobalTracer.registerIfAbsent(tracer);
         AgentTracer.registerIfAbsent(new AgentTracerImpl(tracer));
       } catch (final RuntimeException re) {
         log.warn("Failed to register tracer '" + tracer + "'", re);

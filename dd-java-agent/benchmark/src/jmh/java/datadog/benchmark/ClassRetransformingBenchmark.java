@@ -2,8 +2,6 @@ package datadog.benchmark;
 
 import datadog.benchmark.classes.TracedClass;
 import datadog.benchmark.classes.UntracedClass;
-import datadog.opentracing.DDTracer;
-import datadog.trace.api.GlobalTracer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.nio.file.Paths;
@@ -13,7 +11,6 @@ import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
 
 public class ClassRetransformingBenchmark {
   public static final String BENCHMARK_HOME =
@@ -33,11 +30,6 @@ public class ClassRetransformingBenchmark {
     public void initializeInstrumentation() {
       // loading TracedClass will initialize helper injection
       TracedClass.class.getName();
-    }
-
-    @TearDown
-    public void stopAgent() {
-      ((DDTracer) GlobalTracer.get()).close();
     }
   }
 

@@ -157,7 +157,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     filterIgnoredActions()
     // IndexAction and PutMappingAction run in separate threads and order in which
     // these spans are closed is not defined. So we force the order if it is wrong.
-    if (TEST_WRITER[3][0].tags[DDTags.RESOURCE_NAME] == "IndexAction") {
+    if (TEST_WRITER[3][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
       def tmp = TEST_WRITER[3]
       TEST_WRITER[3] = TEST_WRITER[4]
       TEST_WRITER[4] = tmp
@@ -378,7 +378,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
 
   void filterIgnoredActions() {
     for (int i = 0; i < TEST_WRITER.size(); i++) {
-      if (IGNORED_ACTIONS.contains(TEST_WRITER[i][0].tags[DDTags.RESOURCE_NAME])) {
+      if (IGNORED_ACTIONS.contains(TEST_WRITER[i][0].attributes[DDTags.RESOURCE_NAME].stringValue)) {
         TEST_WRITER.remove(i)
       }
     }

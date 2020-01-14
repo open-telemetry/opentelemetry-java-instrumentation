@@ -34,8 +34,8 @@ public class SpockRunner extends Sputnik {
     "datadog.slf4j",
     "datadog.trace.api",
     "datadog.trace.bootstrap",
-    "datadog.trace.context",
-    "datadog.trace.instrumentation.api"
+    "datadog.trace.instrumentation.api",
+    "io.opentelemetry.auto.shaded"
   };
 
   private static final String[] TEST_BOOTSTRAP_PREFIXES;
@@ -43,6 +43,15 @@ public class SpockRunner extends Sputnik {
   static {
     ByteBuddyAgent.install();
     final String[] testBS = {
+      "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
+      "io.opentelemetry.context", // OpenTelemetry API
+      "io.opentelemetry.distributedcontext", // OpenTelemetry API
+      "io.opentelemetry.internal", // OpenTelemetry API
+      "io.opentelemetry.metrics", // OpenTelemetry API
+      "io.opentelemetry.trace", // OpenTelemetry API
+      "io.grpc.Context", // OpenTelemetry API dependency
+      "io.grpc.PersistentHashArrayMappedTrie", // OpenTelemetry API dependency
+      "io.grpc.ThreadLocalContextStorage", // OpenTelemetry API dependency
       "org.slf4j",
       "ch.qos.logback",
       // Tomcat's servlet classes must be on boostrap

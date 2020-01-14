@@ -31,7 +31,6 @@ class ReactorCoreTest extends AgentTestRunner {
     result == expected
     and:
     assertTraces(1) {
-      def publisherParentSpanIndex = workSpans + 1
       trace(0, workSpans + 2) {
         span(0) {
           operationName "trace-parent"
@@ -41,20 +40,20 @@ class ReactorCoreTest extends AgentTestRunner {
             "$Tags.COMPONENT" "trace"
           }
         }
+        span(1) {
+          operationName "publisher-parent"
+          childOf(span(0))
+          tags {
+          }
+        }
         for (int i = 0; i < workSpans; i++) {
-          span(i + 1) {
+          span(i + 2) {
             operationName "addOne"
-            childOf(span(publisherParentSpanIndex))
+            childOf(span(1))
             tags {
               "$DDTags.RESOURCE_NAME" "addOne"
               "$Tags.COMPONENT" "trace"
             }
-          }
-        }
-        span(publisherParentSpanIndex) {
-          operationName "publisher-parent"
-          childOf(span(0))
-          tags {
           }
         }
       }
@@ -121,7 +120,6 @@ class ReactorCoreTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, workSpans + 2) {
-        def publisherParentSpanIndex = workSpans + 1
         span(0) {
           operationName "trace-parent"
           parent()
@@ -132,22 +130,22 @@ class ReactorCoreTest extends AgentTestRunner {
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
           }
         }
-        for (int i = 0; i < workSpans; i++) {
-          span(i + 1) {
-            operationName "addOne"
-            childOf(span(publisherParentSpanIndex))
-            tags {
-              "$DDTags.RESOURCE_NAME" "addOne"
-              "$Tags.COMPONENT" "trace"
-            }
-          }
-        }
-        span(publisherParentSpanIndex) {
+        span(1) {
           operationName "publisher-parent"
           childOf(span(0))
           errored true
           tags {
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
+          }
+        }
+        for (int i = 0; i < workSpans; i++) {
+          span(i + 2) {
+            operationName "addOne"
+            childOf(span(1))
+            tags {
+              "$DDTags.RESOURCE_NAME" "addOne"
+              "$Tags.COMPONENT" "trace"
+            }
           }
         }
       }
@@ -197,7 +195,7 @@ class ReactorCoreTest extends AgentTestRunner {
     // The expectation is that then publisher is executed under 'publisher-parent', not under 'trace-parent'
     final AgentSpan span = startSpan("publisher-parent")
     publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
-    span.finish()
+    // do not finish span here, it will be finished by ReactorCoreAdviceUtils
 
     // Read all data from publisher
     if (publisher instanceof Mono) {

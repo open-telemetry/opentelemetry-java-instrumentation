@@ -283,7 +283,7 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.HTTP_STATUS" Long
           }
         }
       }
@@ -384,7 +384,7 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.HTTP_STATUS" Long
           }
         }
         span(3) {
@@ -397,7 +397,7 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.HTTP_STATUS" Long
           }
         }
       }
@@ -522,7 +522,7 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.HTTP_STATUS" Long
           }
         }
         span(4) {
@@ -535,7 +535,7 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.HTTP_STATUS" Long
           }
         }
       }

@@ -1,6 +1,6 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
+import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
@@ -48,20 +48,20 @@ class CompletableFutureTest extends AgentTestRunner {
     }.get()
 
     TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
+    List<SpanData> trace = TEST_WRITER.get(0)
 
     expect:
     result == "abc"
 
     TEST_WRITER.size() == 1
     trace.size() == 4
-    trace.get(0).operationName == "parent"
-    trace.get(1).operationName == "function"
-    trace.get(1).parentId == trace.get(0).spanId
-    trace.get(2).operationName == "appendingSupplier"
-    trace.get(2).parentId == trace.get(0).spanId
-    trace.get(3).operationName == "supplier"
-    trace.get(3).parentId == trace.get(0).spanId
+    trace.get(0).name == "parent"
+    trace.get(1).name == "function"
+    trace.get(1).parentSpanId == trace.get(0).spanId
+    trace.get(2).name == "appendingSupplier"
+    trace.get(2).parentSpanId == trace.get(0).spanId
+    trace.get(3).name == "supplier"
+    trace.get(3).parentSpanId == trace.get(0).spanId
 
     cleanup:
     pool?.shutdown()

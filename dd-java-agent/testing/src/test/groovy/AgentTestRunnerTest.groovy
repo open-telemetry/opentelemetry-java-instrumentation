@@ -35,7 +35,15 @@ class AgentTestRunnerTest extends AgentTestRunner {
       for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
         if (info.getName().startsWith(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
           Class<?> bootstrapClass = Class.forName(info.getName())
-          if (bootstrapClass.getClassLoader() != BOOTSTRAP_CLASSLOADER) {
+          def loader
+          try {
+            loader = bootstrapClass.getClassLoader()
+          } catch (NoClassDefFoundError e) {
+            // some classes in com.google.errorprone.annotations cause groovy to throw
+            // java.lang.NoClassDefFoundError: [Ljavax/lang/model/element/Modifier;
+            break
+          }
+          if (loader != BOOTSTRAP_CLASSLOADER) {
             bootstrapClassesIncorrectlyLoaded.add(bootstrapClass)
           }
           break
@@ -45,7 +53,6 @@ class AgentTestRunnerTest extends AgentTestRunner {
 
     expect:
     !AGENT_INSTALLED_IN_CLINIT
-    getTestTracer() == datadog.trace.api.GlobalTracer.get()
     getAgentTransformer() != null
     bootstrapClassesIncorrectlyLoaded == []
   }
@@ -53,7 +60,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
   def "waiting for child spans times out"() {
     when:
     runUnderTrace("parent") {
-      blockUntilChildSpansFinished(1)
+      TEST_WRITER.waitForTraces(1)
     }
 
     then:
@@ -95,7 +102,6 @@ class AgentTestRunnerTest extends AgentTestRunner {
     setup:
     runUnderTrace("parent") {
       runUnderTrace("child") {}
-      blockUntilChildSpansFinished(1)
     }
 
     expect:

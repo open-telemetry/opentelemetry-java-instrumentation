@@ -186,7 +186,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     and:
     // IndexAction and PutMappingAction run in separate threads and order in which
     // these spans are closed is not defined. So we force the order if it is wrong.
-    if (TEST_WRITER[2][0].tags[DDTags.RESOURCE_NAME] == "IndexAction") {
+    if (TEST_WRITER[2][0].attributes[DDTags.RESOURCE_NAME].stringValue == "IndexAction") {
       def tmp = TEST_WRITER[2]
       TEST_WRITER[2] = TEST_WRITER[3]
       TEST_WRITER[3] = tmp

@@ -1,0 +1,26 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile deps.opentelemetrySdk
+}
+
+// OpenTelemetry SDK with shaded dependencies so that they do not conflict with other libraries (in particular guava)
+// when running various instrumentation tests
+shadowJar {
+  mergeServiceFiles()
+
+  relocate "com.google", "io.opentelemetry.auto.shaded.com.google"
+  relocate "javax.annotation", "io.opentelemetry.auto.shaded.javax.annotation"
+  relocate "org.checkerframework", "io.opentelemetry.auto.shaded.org.checkerframework"
+  relocate "org.codehaus", "io.opentelemetry.auto.shaded.org.codehaus"
+
+  // this is brought by OpenTelemetry API
+  exclude "io/grpc/**"
+
+  exclude 'META-INF/maven/**'
+  exclude 'org/codehaus/mojo/animal_sniffer/**' // this is Java 8 bytecode
+}

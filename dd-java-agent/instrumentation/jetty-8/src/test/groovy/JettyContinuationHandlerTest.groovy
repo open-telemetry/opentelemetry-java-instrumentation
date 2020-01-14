@@ -47,7 +47,7 @@ abstract class JettyContinuationHandlerTest extends JettyHandlerTest {
 //    TEST_WRITER.waitForTraces(size * 3)
 //    // TEST_WRITER is a CopyOnWriteArrayList, which doesn't support remove()
 //    def toRemove = TEST_WRITER.findAll {
-//      it.size() == 1 && it.get(0).operationName == "TEST_SPAN"
+//      it.size() == 1 && it.get(0).name == "TEST_SPAN"
 //    }
 //    toRemove.each {
 //      assertTrace(it, 1) {

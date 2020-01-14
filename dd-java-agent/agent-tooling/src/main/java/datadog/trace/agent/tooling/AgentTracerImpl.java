@@ -1,33 +1,34 @@
 package datadog.trace.agent.tooling;
 
-import datadog.opentracing.DDSpan;
-import datadog.opentracing.DDTracer;
-import datadog.opentracing.NoopSpan;
-import datadog.opentracing.Span;
-import datadog.opentracing.SpanContext;
-import datadog.opentracing.propagation.TextMapExtract;
-import datadog.opentracing.propagation.TextMapInject;
-import datadog.opentracing.scopemanager.DDScope;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+
+import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.AgentTracer;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.Tracer;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public final class AgentTracerImpl implements TracerAPI {
 
-  private final DDTracer tracer;
+  private final Tracer tracer;
   private final AgentPropagationImpl propagation = new AgentPropagationImpl();
 
-  private final AgentSpanImpl NOOP_SPAN = new AgentSpanImpl("", NoopSpan.INSTANCE);
+  private final AgentSpanImpl noopSpan;
 
-  public AgentTracerImpl(final DDTracer tracer) {
+  public AgentTracerImpl(final Tracer tracer) {
     this.tracer = tracer;
+    noopSpan = new AgentSpanImpl(DefaultSpan.getInvalid());
   }
 
   @Override
@@ -53,39 +54,17 @@ public final class AgentTracerImpl implements TracerAPI {
 
   @Override
   public AgentScope activateSpan(final AgentSpan span, final boolean finishSpanOnClose) {
-    // when span is noopSpan(), the scope returned is not a TracerScope
-    final DDScope scope =
-        tracer.scopeManager().activate(((AgentSpanImpl) span).span, finishSpanOnClose);
-    return new AgentScopeImpl(span, scope);
+    final Scope scope = tracer.withSpan(((AgentSpanImpl) span).span);
+    return new AgentScopeImpl(span, scope, finishSpanOnClose);
   }
 
   @Override
   public AgentSpan activeSpan() {
-    final Span span = tracer.activeSpan();
-    if (span == null) {
+    final Span span = tracer.getCurrentSpan();
+    if (!span.getContext().isValid()) {
       return null;
     }
-
-    final String spanName;
-    if (span instanceof DDSpan) {
-      spanName = ((DDSpan) span).getOperationName();
-    } else {
-      spanName = "";
-    }
-    return new AgentSpanImpl(spanName, span);
-  }
-
-  @Override
-  public AgentScope activeScope() {
-    final AgentSpan span = activeSpan();
-    if (span == null) {
-      return AgentTracer.NoopAgentScope.INSTANCE;
-    }
-    final DDScope scope = tracer.scopeManager().active();
-    if (scope == null) {
-      return AgentTracer.NoopAgentScope.INSTANCE;
-    }
-    return new AgentScopeImpl(span, scope);
+    return new AgentSpanImpl(span);
   }
 
   @Override
@@ -95,132 +74,133 @@ public final class AgentTracerImpl implements TracerAPI {
 
   @Override
   public AgentSpan noopSpan() {
-    return NOOP_SPAN;
+    return noopSpan;
   }
 
   private final class AgentSpanImpl implements AgentSpan {
 
     private final Span span;
-    private volatile String spanName;
 
     private AgentSpanImpl(final String spanName) {
-      this(spanName, tracer.buildSpan(spanName).start());
+      this(tracer.spanBuilder(spanName).startSpan());
     }
 
     private AgentSpanImpl(final String spanName, final long startTimeMicros) {
-      this(spanName, tracer.buildSpan(spanName).withStartTimestamp(startTimeMicros).start());
+      this(
+          tracer
+              .spanBuilder(spanName)
+              .setStartTimestamp(MICROSECONDS.toNanos(startTimeMicros))
+              .startSpan());
     }
 
     private AgentSpanImpl(final String spanName, final AgentContextImpl parent) {
-      this(
-          spanName,
-          tracer.buildSpan(spanName).ignoreActiveSpan().asChildOf(parent.context).start());
+      final SpanContext context = parent.context;
+      final Span.Builder spanBuilder = tracer.spanBuilder(spanName);
+      if (context == null) {
+        spanBuilder.setNoParent();
+      } else {
+        spanBuilder.setParent(context);
+      }
+      span = spanBuilder.startSpan();
     }
 
     private AgentSpanImpl(final String spanName, final Context parent, final long startTimeMicros) {
-      this(
-          spanName,
-          tracer
-              .buildSpan(spanName)
-              .ignoreActiveSpan()
-              .asChildOf(((AgentContextImpl) parent).context)
-              .withStartTimestamp(startTimeMicros)
-              .start());
+      final SpanContext context = ((AgentContextImpl) parent).context;
+      final Span.Builder spanBuilder =
+          tracer.spanBuilder(spanName).setStartTimestamp(MICROSECONDS.toNanos(startTimeMicros));
+      if (context == null) {
+        spanBuilder.setNoParent();
+      } else {
+        spanBuilder.setParent(context);
+      }
+      span = spanBuilder.startSpan();
     }
 
-    private AgentSpanImpl(final String spanName, final Span span) {
-      this.spanName = spanName;
+    private AgentSpanImpl(final Span span) {
       this.span = span;
     }
 
     @Override
     public AgentSpan setTag(final String key, final boolean value) {
-      span.setTag(key, value);
+      span.setAttribute(key, value);
       return this;
     }
 
     @Override
     public AgentSpan setTag(final String key, final int value) {
-      span.setTag(key, value);
+      span.setAttribute(key, value);
       return this;
     }
 
     @Override
     public AgentSpan setTag(final String key, final long value) {
-      span.setTag(key, value);
+      span.setAttribute(key, value);
       return this;
     }
 
     @Override
     public AgentSpan setTag(final String key, final double value) {
-      span.setTag(key, value);
+      span.setAttribute(key, value);
       return this;
     }
 
     @Override
     public AgentSpan setTag(final String key, final String value) {
-      span.setTag(key, value);
+      if (value != null && !value.isEmpty()) {
+        span.setAttribute(key, value);
+      }
       return this;
     }
 
     @Override
     public AgentSpan setError(final boolean error) {
-      if (span instanceof DDSpan) {
-        ((DDSpan) span).setError(error);
-      } else {
-        span.setTag("error", error);
-      }
+      span.setStatus(Status.UNKNOWN);
       return this;
     }
 
     @Override
     public AgentSpan setErrorMessage(final String errorMessage) {
-      if (span instanceof DDSpan) {
-        ((DDSpan) span).setErrorMessage(errorMessage);
-      }
+      span.setAttribute(DDTags.ERROR_MSG, errorMessage);
       return this;
     }
 
     @Override
     public AgentSpan addThrowable(final Throwable throwable) {
-      if (span instanceof DDSpan) {
-        ((DDSpan) span).setErrorMeta(throwable);
+      final String message = throwable.getMessage();
+      if (message != null) {
+        span.setAttribute(DDTags.ERROR_MSG, message);
       }
-      return this;
-    }
+      span.setAttribute(DDTags.ERROR_TYPE, throwable.getClass().getName());
 
-    @Override
-    public AgentSpan getLocalRootSpan() {
-      if (span instanceof DDSpan) {
-        final DDSpan root = ((DDSpan) span).getLocalRootSpan();
-        if (root == span) {
-          return this;
-        }
-        return new AgentSpanImpl(root.getOperationName(), (Span) root);
-      }
+      final StringWriter errorString = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(errorString));
+      span.setAttribute(DDTags.ERROR_STACK, errorString.toString());
       return this;
     }
 
     @Override
     public AgentContextImpl context() {
-      final SpanContext context = span.context();
+      final SpanContext context = span.getContext();
       return new AgentContextImpl(context);
     }
 
     @Override
     public void finish() {
-      span.finish();
+      span.end();
     }
 
     @Override
     public String getSpanName() {
-      return spanName;
+      if (span instanceof ReadableSpan) {
+        return ((ReadableSpan) span).getName();
+      } else {
+        return "";
+      }
     }
 
     @Override
     public void setSpanName(final String spanName) {
-      this.spanName = spanName;
-      span.setOperationName(spanName);
+      span.updateName(spanName);
     }
 
     private Span getSpan() {
@@ -245,17 +225,23 @@ public final class AgentTracerImpl implements TracerAPI {
   private final class AgentScopeImpl implements AgentScope {
 
     private final AgentSpanImpl span;
-    private final DDScope scope;
+    private final Scope scope;
+    private final boolean finishSpanOnClose;
 
-    private AgentScopeImpl(final AgentSpan span, final DDScope scope) {
+    private AgentScopeImpl(
+        final AgentSpan span, final Scope scope, final boolean finishSpanOnClose) {
       assert span instanceof AgentSpanImpl;
       this.span = (AgentSpanImpl) span;
       this.scope = scope;
+      this.finishSpanOnClose = finishSpanOnClose;
     }
 
     @Override
     public void close() {
       scope.close();
+      if (finishSpanOnClose) {
+        span.finish();
+      }
     }
 
     @Override
@@ -283,55 +269,54 @@ public final class AgentTracerImpl implements TracerAPI {
     @Override
     public <C> void inject(final AgentSpan span, final C carrier, final Setter<C> setter) {
       assert span instanceof AgentSpanImpl;
-      tracer.inject(
-          ((AgentSpanImpl) span).getSpan().context(),
-          new AgentPropagationImpl.Injector<>(carrier, setter));
+      tracer
+          .getHttpTextFormat()
+          .inject(
+              ((AgentSpanImpl) span).getSpan().getContext(),
+              carrier,
+              new AgentPropagationImpl.Injector<>(setter));
     }
 
-    private final class Injector<C> implements TextMapInject {
-      private final C carrier;
+    private final class Injector<C> implements HttpTextFormat.Setter<C> {
       private final Setter<C> setter;
 
-      private Injector(final C carrier, final Setter<C> setter) {
-        this.carrier = carrier;
+      private Injector(final Setter<C> setter) {
         this.setter = setter;
       }
 
       @Override
-      public void put(final String key, final String value) {
+      public void put(final C carrier, final String key, final String value) {
         setter.set(carrier, key, value);
       }
     }
 
     @Override
     public <C> AgentSpan.Context extract(final C carrier, final Getter<C> getter) {
-      return new AgentContextImpl(tracer.extract(new Extractor(carrier, getter)));
+      SpanContext extract;
+      try {
+        extract = tracer.getHttpTextFormat().extract(carrier, new Extractor<>(getter));
+      } catch (final IllegalArgumentException e) {
+        extract = null;
+      }
+      return new AgentContextImpl(extract);
     }
   }
 
-  private static final class Extractor<C> implements TextMapExtract {
-    private final Map<String, String> extracted;
+  private static final class Extractor<C> implements HttpTextFormat.Getter<C> {
 
-    private Extractor(final C carrier, final Getter<C> getter) {
-      extracted = new HashMap<>();
-      for (final String key : getter.keys(carrier)) {
-        // extracted header value
-        String s = getter.get(carrier, key);
-        // in case of multiple values in the header, need to parse
-        if (s != null) {
-          s = s.split(",")[0].trim();
-        }
-        extracted.put(key, s);
-      }
+    private final Getter<C> getter;
+
+    private Extractor(final Getter<C> getter) {
+      this.getter = getter;
     }
 
     @Override
-    public Iterator<Entry<String, String>> iterator() {
-      return extracted.entrySet().iterator();
+    public String get(final C carrier, final String key) {
+      return getter.get(carrier, key);
     }
   }
 
-  private static final class AgentContextImpl implements AgentSpan.Context, SpanContext {
+  private static final class AgentContextImpl implements AgentSpan.Context {
     private final SpanContext context;
 
     private AgentContextImpl(final SpanContext context) {

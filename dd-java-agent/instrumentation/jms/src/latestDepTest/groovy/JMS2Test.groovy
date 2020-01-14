@@ -1,10 +1,10 @@
 import com.google.common.io.Files
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.asserts.ListWriterAssert
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -90,9 +90,11 @@ class JMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(2) {
-      producerTrace(it, 0, jmsResourceName)
-      consumerTrace(it, 1, jmsResourceName, false, HornetQMessageConsumer)
+    assertTraces(1) {
+      trace(0, 2) {
+        producerSpan(it, 1, jmsResourceName)
+        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, span(1))
+      }
     }
 
     cleanup:
@@ -125,9 +127,11 @@ class JMS2Test extends AgentTestRunner {
     lock.countDown()
 
     expect:
-    assertTraces(2) {
-      producerTrace(it, 0, jmsResourceName)
-      consumerTrace(it, 1, jmsResourceName, true, consumer.messageListener.class)
+    assertTraces(1) {
+      trace(0, 2) {
+        producerSpan(it, 1, jmsResourceName)
+        consumerSpan(it, 0, jmsResourceName, true, consumer.messageListener.class, span(1))
+      }
     }
     // This check needs to go after all traces have been accounted for
     messageRef.get().text == messageText
@@ -218,44 +222,40 @@ class JMS2Test extends AgentTestRunner {
     session.createTopic("someTopic") | "Topic someTopic"
   }
 
-  static producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
-    writer.trace(index, 1) {
-      span(0) {
-        parent()
-        operationName "jms.produce"
-        errored false
+  static producerSpan(TraceAssert trace, int index, String jmsResourceName) {
+    trace.span(index) {
+      parent()
+      operationName "jms.produce"
+      errored false
 
-        tags {
-          "$DDTags.SERVICE_NAME" "jms"
-          "$DDTags.RESOURCE_NAME" "Produced for $jmsResourceName"
-          "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
-          "$Tags.COMPONENT" "jms"
-          "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
-          "span.origin.type" HornetQMessageProducer.name
-        }
+      tags {
+        "$DDTags.SERVICE_NAME" "jms"
+        "$DDTags.RESOURCE_NAME" "Produced for $jmsResourceName"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
+        "$Tags.COMPONENT" "jms"
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
+        "span.origin.type" HornetQMessageProducer.name
       }
     }
   }
 
-  static consumerTrace(ListWriterAssert writer, int index, String jmsResourceName, boolean messageListener, Class origin, DDSpan parentSpan = TEST_WRITER[0][0]) {
-    writer.trace(index, 1) {
-      span(0) {
-        childOf parentSpan
-        if (messageListener) {
-          operationName "jms.onMessage"
-        } else {
-          operationName "jms.consume"
-        }
-        errored false
+  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentSpan) {
+    trace.span(index) {
+      childOf((SpanData) parentSpan)
+      if (messageListener) {
+        operationName "jms.onMessage"
+      } else {
+        operationName "jms.consume"
+      }
+      errored false
 
-        tags {
-          "$DDTags.SERVICE_NAME" "jms"
-          "$DDTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
-          "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
-          "${Tags.COMPONENT}" "jms"
-          "${Tags.SPAN_KIND}" "consumer"
-          "span.origin.type" origin.name
-        }
+      tags {
+        "$DDTags.SERVICE_NAME" "jms"
+        "$DDTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
+        "${Tags.COMPONENT}" "jms"
+        "${Tags.SPAN_KIND}" "consumer"
+        "span.origin.type" origin.name
       }
     }
   }

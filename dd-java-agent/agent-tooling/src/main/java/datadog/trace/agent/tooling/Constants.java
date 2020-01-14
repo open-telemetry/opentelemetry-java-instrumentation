@@ -17,13 +17,12 @@ public final class Constants {
     "datadog.slf4j",
     "datadog.trace.api",
     "datadog.trace.bootstrap",
-    "datadog.trace.context",
-    "datadog.trace.instrumentation.api"
+    "datadog.trace.instrumentation.api",
+    "io.opentelemetry.auto.shaded"
   };
 
   // This is used in IntegrationTestUtils.java
   public static final String[] AGENT_PACKAGE_PREFIXES = {
-    "datadog.trace.common",
     "datadog.trace.agent",
     "datadog.trace.instrumentation",
     // guava

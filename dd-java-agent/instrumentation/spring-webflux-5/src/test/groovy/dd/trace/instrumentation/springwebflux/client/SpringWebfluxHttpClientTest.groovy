@@ -10,10 +10,14 @@ import datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClien
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
+import spock.lang.Ignore
 import spock.lang.Shared
 
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
 
+// FIXME this instrumentation is not currently reliable and so is currently disabled
+// see DefaultWebClientInstrumentation and DefaultWebClientAdvice
+@Ignore
 class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClientDecorator> {
 
   @Shared
@@ -79,8 +83,9 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
   }
 
   @Override
-  int size(int size) {
-    return size + 1
+  int extraClientSpans() {
+    // has netty-client span inside of spring-webflux-client
+    return 1
   }
 
   boolean testRedirects() {

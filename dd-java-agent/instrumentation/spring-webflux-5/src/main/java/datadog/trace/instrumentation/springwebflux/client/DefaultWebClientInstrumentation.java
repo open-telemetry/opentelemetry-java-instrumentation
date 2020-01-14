@@ -7,14 +7,14 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(Instrumenter.class)
+// FIXME this instrumentation is not currently reliable, see DefaultWebClientAdvice
+// @AutoService(Instrumenter.class)
 public class DefaultWebClientInstrumentation extends Instrumenter.Default {
 
   public DefaultWebClientInstrumentation() {

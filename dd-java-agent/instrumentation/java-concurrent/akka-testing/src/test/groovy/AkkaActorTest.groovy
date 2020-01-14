@@ -1,6 +1,6 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
+import datadog.trace.instrumentation.api.Tags
 
 class AkkaActorTest extends AgentTestRunner {
 
@@ -9,28 +9,31 @@ class AkkaActorTest extends AgentTestRunner {
     AkkaActors akkaTester = new AkkaActors()
     akkaTester."$testMethod"()
 
-    TEST_WRITER.waitForTraces(1)
-    List<DDSpan> trace = TEST_WRITER.get(0)
-
     expect:
-    TEST_WRITER.size() == 1
-    trace.size() == 2
-    trace[0].tags[DDTags.RESOURCE_NAME] == "AkkaActors.$testMethod"
-    findSpan(trace, "$expectedGreeting, Akka").context().getParentId() == trace[0].getSpanId()
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "trace.annotation"
+          tags {
+            "$DDTags.RESOURCE_NAME" "AkkaActors.$testMethod"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+        span(1) {
+          operationName "$expectedGreeting, Akka"
+          childOf span(0)
+          tags {
+            "$DDTags.RESOURCE_NAME" "AkkaActors\$.tracedChild"
+            "$Tags.COMPONENT" "trace"
+          }
+        }
+      }
+    }
 
     where:
     testMethod     | expectedGreeting
     "basicTell"    | "Howdy"
     "basicAsk"     | "Howdy"
     "basicForward" | "Hello"
-  }
-
-  private DDSpan findSpan(List<DDSpan> trace, String opName) {
-    for (DDSpan span : trace) {
-      if (span.getOperationName() == opName) {
-        return span
-      }
-    }
-    return null
   }
 }

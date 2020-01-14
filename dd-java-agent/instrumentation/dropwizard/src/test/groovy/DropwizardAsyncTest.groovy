@@ -2,13 +2,13 @@ import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
+
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Response
-
 import java.util.concurrent.Executors
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -42,6 +42,11 @@ class DropwizardAsyncTest extends DropwizardTest {
   // Return the handler span's name
   String reorderHandlerSpan() {
     "jax-rs.request"
+  }
+
+  @Override
+  boolean reorderControllerSpan() {
+    true
   }
 
   @Path("/")

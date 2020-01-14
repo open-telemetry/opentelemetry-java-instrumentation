@@ -1,6 +1,5 @@
 package server
 
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
@@ -8,6 +7,7 @@ import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.play24.PlayHttpServerDecorator
+import io.opentelemetry.sdk.trace.SpanData
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
@@ -90,7 +90,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
     trace.span(index) {
       operationName "play.request"
       errored endpoint == ERROR || endpoint == EXCEPTION
-      childOf(parent as DDSpan)
+      childOf((SpanData) parent)
       tags {
         "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
@@ -98,7 +98,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
-        "$Tags.HTTP_STATUS" Integer
+        "$Tags.HTTP_STATUS" Long
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }

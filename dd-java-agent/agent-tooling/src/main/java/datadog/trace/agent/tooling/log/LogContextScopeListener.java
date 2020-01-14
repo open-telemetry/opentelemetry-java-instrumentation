@@ -1,7 +1,7 @@
 package datadog.trace.agent.tooling.log;
 
-import datadog.trace.api.CorrelationIdentifier;
-import datadog.trace.context.ScopeListener;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import lombok.extern.slf4j.Slf4j;
 
@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
  * and span reference anytime a new scope is activated or closed.
  */
 @Slf4j
-public class LogContextScopeListener implements ScopeListener {
+public class LogContextScopeListener {
+  private static final String TRACE_ID_KEY = "dd.trace_id";
+  private static final String SPAN_ID_KEY = "dd.span_id";
 
   /** A reference to the log context method that sets a new attribute in the log context */
   private final Method putMethod;
@@ -18,28 +20,28 @@ public class LogContextScopeListener implements ScopeListener {
   /** A reference to the log context method that removes an attribute from the log context */
   private final Method removeMethod;
 
+  final Tracer tracer = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   public LogContextScopeListener(final Method putMethod, final Method removeMethod) {
     this.putMethod = putMethod;
     this.removeMethod = removeMethod;
   }
 
-  @Override
   public void afterScopeActivated() {
     try {
       putMethod.invoke(
-          null, CorrelationIdentifier.getTraceIdKey(), CorrelationIdentifier.getTraceId());
+          null, TRACE_ID_KEY, tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16());
       putMethod.invoke(
-          null, CorrelationIdentifier.getSpanIdKey(), CorrelationIdentifier.getSpanId());
+          null, SPAN_ID_KEY, tracer.getCurrentSpan().getContext().getSpanId().toLowerBase16());
     } catch (final Exception e) {
       log.debug("Exception setting log context context", e);
     }
   }
 
-  @Override
   public void afterScopeClosed() {
     try {
-      removeMethod.invoke(null, CorrelationIdentifier.getTraceIdKey());
-      removeMethod.invoke(null, CorrelationIdentifier.getSpanIdKey());
+      removeMethod.invoke(null, TRACE_ID_KEY);
+      removeMethod.invoke(null, SPAN_ID_KEY);
     } catch (final Exception e) {
       log.debug("Exception removing log context context", e);
     }

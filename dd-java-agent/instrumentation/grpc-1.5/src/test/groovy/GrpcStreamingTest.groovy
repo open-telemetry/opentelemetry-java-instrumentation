@@ -10,6 +10,7 @@ import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
+import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -69,7 +70,6 @@ class GrpcStreamingTest extends AgentTestRunner {
 
       @Override
       void onCompleted() {
-        TEST_WRITER.waitForTraces(1)
       }
     })
 
@@ -82,35 +82,22 @@ class GrpcStreamingTest extends AgentTestRunner {
     then:
     error.get() == null
 
-    assertTraces(2) {
-      trace(0, clientMessageCount + 1) {
-        span(0) {
-          operationName "grpc.server"
-          childOf trace(1).get(0)
-          errored false
-          tags {
-            "$DDTags.RESOURCE_NAME" "example.Greeter/Conversation"
-            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
-            "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "status.code" "OK"
-          }
-        }
-        clientRange.each {
-          span(it) {
-            operationName "grpc.message"
-            childOf span(0)
-            errored false
-            tags {
-              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
-              "$Tags.COMPONENT" "grpc-server"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-              "message.type" "example.Helloworld\$Response"
-            }
-          }
-        }
+    // sort for consistent ordering
+    List<SpanData> serverMessages = new ArrayList<>()
+    for (SpanData span : TEST_WRITER[0]) {
+      if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
+        serverMessages.add(span)
       }
-      trace(1, (clientMessageCount * serverMessageCount) + 1) {
+      if (span.name == "grpc.server" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
+        serverMessages.add(0, span)
+      }
+    }
+    // move the server messages to the end
+    TEST_WRITER[0].removeAll(serverMessages)
+    TEST_WRITER[0].addAll(serverMessages)
+
+    assertTraces(1) {
+      trace(0, clientMessageCount * serverMessageCount + 1 + clientMessageCount + 1) {
         span(0) {
           operationName "grpc.client"
           parent()
@@ -124,6 +111,7 @@ class GrpcStreamingTest extends AgentTestRunner {
           }
         }
         (1..(clientMessageCount * serverMessageCount)).each {
+          println it
           span(it) {
             operationName "grpc.message"
             childOf span(0)
@@ -132,6 +120,31 @@ class GrpcStreamingTest extends AgentTestRunner {
               "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
               "$Tags.COMPONENT" "grpc-client"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+              "message.type" "example.Helloworld\$Response"
+            }
+          }
+        }
+        span(clientMessageCount * serverMessageCount + 1) {
+          operationName "grpc.server"
+          childOf span(0)
+          errored false
+          tags {
+            "$DDTags.RESOURCE_NAME" "example.Greeter/Conversation"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "status.code" "OK"
+          }
+        }
+        clientRange.each {
+          span(clientMessageCount * serverMessageCount + 1 + it) {
+            operationName "grpc.message"
+            childOf span(clientMessageCount * serverMessageCount + 1)
+            errored false
+            tags {
+              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+              "$Tags.COMPONENT" "grpc-server"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
               "message.type" "example.Helloworld\$Response"
             }
           }

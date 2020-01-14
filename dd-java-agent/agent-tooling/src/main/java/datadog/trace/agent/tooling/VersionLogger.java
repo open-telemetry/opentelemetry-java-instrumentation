@@ -9,11 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VersionLogger {
 
-  /** Log version strings for dd-trace-ot, dd-trace-pai, and dd-java-agent */
+  /** Log version strings for dd-trace-pai, and dd-java-agent */
   public static void logAllVersions() {
-    log.info(
-        "dd-trace-ot - version: {}",
-        getVersionString(Utils.getAgentClassLoader().getResourceAsStream("dd-trace-ot.version")));
     log.info(
         "dd-trace-api - version: {}",
         getVersionString(Utils.getAgentClassLoader().getResourceAsStream("dd-trace-api.version")));
@@ -29,12 +26,14 @@ public class VersionLogger {
         System.getProperty("java.vm.version"));
   }
 
-  private static String getVersionString(InputStream stream) {
+  private static String getVersionString(final InputStream stream) {
     String v;
     try {
       final StringBuilder sb = new StringBuilder();
       final BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-      for (int c = br.read(); c != -1; c = br.read()) sb.append((char) c);
+      for (int c = br.read(); c != -1; c = br.read()) {
+        sb.append((char) c);
+      }
 
       v = sb.toString().trim();
     } catch (final Exception e) {
@@ -45,7 +44,7 @@ public class VersionLogger {
         if (null != stream) {
           stream.close();
         }
-      } catch (IOException e) {
+      } catch (final IOException e) {
       }
     }
     return v;

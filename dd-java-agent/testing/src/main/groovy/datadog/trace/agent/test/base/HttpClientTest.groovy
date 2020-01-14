@@ -1,6 +1,6 @@
 package datadog.trace.agent.test.base
 
-import datadog.opentracing.DDSpan
+
 import datadog.trace.agent.decorator.HttpClientDecorator
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
@@ -8,6 +8,7 @@ import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
+import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -78,10 +79,10 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
     then:
     status == 200
-    assertTraces(2) {
-      server.distributedRequestTrace(it, 0, trace(1).last())
-      trace(1, size(1)) {
+    assertTraces(1) {
+      trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, false, tagQueryString, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
       }
     }
 
@@ -101,16 +102,18 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   def "basic #method request with parent"() {
     when:
     def status = runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/success"))
+      def val = doRequest(method, server.address.resolve("/success"))
+      blockUntilChildSpansFinished(2)
+      return val
     }
 
     then:
     status == 200
-    assertTraces(2) {
-      server.distributedRequestTrace(it, 0, trace(1).last())
-      trace(1, size(2)) {
+    assertTraces(1) {
+      trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method, false)
+        serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
       }
     }
 
@@ -128,10 +131,10 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
     then:
     status == 200
-    assertTraces(2) {
-      server.distributedRequestTrace(it, 0, trace(1).last())
-      trace(1, size(1)) {
+    assertTraces(1) {
+      trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, true)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
       }
     }
 
@@ -151,7 +154,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     status == 200
     // only one trace (client).
     assertTraces(1) {
-      trace(0, size(2)) {
+      trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method, renameService)
       }
@@ -174,7 +177,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     status == 200
     // only one trace (client).
     assertTraces(1) {
-      trace(0, size(3)) {
+      trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
         basicSpan(it, 1, "child", null, span(0))
         clientSpan(it, 2, span(0), method, false)
@@ -198,7 +201,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     status == 200
     // only one trace (client).
     assertTraces(2) {
-      trace(0, size(1)) {
+      trace(0, 1 + extraClientSpans()) {
         clientSpan(it, 0, null, method, false)
       }
       trace(1, 1) {
@@ -223,11 +226,11 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
     then:
     status == 200
-    assertTraces(3) {
-      server.distributedRequestTrace(it, 0, trace(2).last())
-      server.distributedRequestTrace(it, 1, trace(2).last())
-      trace(2, size(1)) {
+    assertTraces(1) {
+      trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, false, false, uri)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }
     }
 
@@ -245,12 +248,12 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
     then:
     status == 200
-    assertTraces(4) {
-      server.distributedRequestTrace(it, 0, trace(3).last())
-      server.distributedRequestTrace(it, 1, trace(3).last())
-      server.distributedRequestTrace(it, 2, trace(3).last())
-      trace(3, size(1)) {
+    assertTraces(1) {
+      trace(0, 4 + extraClientSpans()) {
         clientSpan(it, 0, null, method, false, false, uri)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 3 + extraClientSpans(), span(extraClientSpans()))
       }
     }
 
@@ -272,11 +275,11 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
 
     and:
-    assertTraces(3) {
-      server.distributedRequestTrace(it, 0, trace(2).last())
-      server.distributedRequestTrace(it, 1, trace(2).last())
-      trace(2, size(1)) {
+    assertTraces(1) {
+      trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, false, false, uri, statusOnRedirectError(), thrownException)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }
     }
 
@@ -300,7 +303,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
     and:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, null, thrownException)
         clientSpan(it, 1, span(0), method, false, false, uri, null, thrownException)
       }
@@ -316,7 +319,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       if (parentSpan == null) {
         parent()
       } else {
-        childOf((DDSpan) parentSpan)
+        childOf((SpanData) parentSpan)
       }
       operationName expectedOperationName()
       errored exception != null
@@ -344,12 +347,27 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     }
   }
 
+  void serverSpan(TraceAssert traces, int index, Object parentSpan = null) {
+    traces.span(index) {
+      operationName "test-http-server"
+      errored false
+      if (parentSpan == null) {
+        parent()
+      } else {
+        childOf((SpanData) parentSpan)
+      }
+      tags {
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+      }
+    }
+  }
+
   String expectedOperationName() {
     return "http.request"
   }
 
-  int size(int size) {
-    size
+  int extraClientSpans() {
+    0
   }
 
   boolean testRedirects() {
