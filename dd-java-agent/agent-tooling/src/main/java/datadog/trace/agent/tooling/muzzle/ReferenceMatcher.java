@@ -22,7 +22,8 @@ import net.bytebuddy.pool.TypePool;
 
 /** Matches a set of references against a classloader. */
 @Slf4j
-public class ReferenceMatcher {
+public class ReferenceMatcher
+    implements WeakMap.ValueSupplier<ClassLoader, List<Reference.Mismatch>> {
   private final WeakMap<ClassLoader, List<Reference.Mismatch>> mismatchCache = newWeakMap();
   private final Reference[] references;
   private final Set<String> helperClassNames;
@@ -45,7 +46,7 @@ public class ReferenceMatcher {
    * @return true if all references match the classpath of loader
    */
   public boolean matches(final ClassLoader loader) {
-    return getMismatchedReferenceSources(loader).size() == 0;
+    return getMismatchedReferenceSources(loader).isEmpty();
   }
 
   /**
@@ -56,23 +57,22 @@ public class ReferenceMatcher {
     if (loader == BOOTSTRAP_LOADER) {
       loader = Utils.getBootstrapProxy();
     }
-    List<Reference.Mismatch> mismatches = mismatchCache.get(loader);
-    if (null == mismatches) {
-      synchronized (loader) {
-        mismatches = mismatchCache.get(loader);
-        if (null == mismatches) {
-          mismatches = new ArrayList<>(0);
-          for (final Reference reference : references) {
-            // Don't reference-check helper classes.
-            // They will be injected by the instrumentation's HelperInjector.
-            if (!helperClassNames.contains(reference.getClassName())) {
-              mismatches.addAll(checkMatch(reference, loader));
-            }
-          }
-          mismatchCache.put(loader, mismatches);
-        }
+
+    return mismatchCache.computeIfAbsent(loader, this);
+  }
+
+  @Override
+  public List<Mismatch> get(final ClassLoader loader) {
+    final List<Mismatch> mismatches = new ArrayList<>(0);
+
+    for (final Reference reference : references) {
+      // Don't reference-check helper classes.
+      // They will be injected by the instrumentation's HelperInjector.
+      if (!helperClassNames.contains(reference.getClassName())) {
+        mismatches.addAll(checkMatch(reference, loader));
       }
     }
+
     return mismatches;
   }
 

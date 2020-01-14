@@ -14,13 +14,14 @@ public class AttributeKeys {
   private static final WeakMap<ClassLoader, Map<String, AttributeKey<?>>> map =
       WeakMap.Implementation.DEFAULT.get();
 
-  private static final WeakMap.ValueSupplier<Map<String, AttributeKey<?>>> mapSupplier =
-      new WeakMap.ValueSupplier<Map<String, AttributeKey<?>>>() {
-        @Override
-        public Map<String, AttributeKey<?>> get() {
-          return new ConcurrentHashMap<>();
-        }
-      };
+  private static final WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>
+      mapSupplier =
+          new WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>() {
+            @Override
+            public Map<String, AttributeKey<?>> get(final ClassLoader ignored) {
+              return new ConcurrentHashMap<>();
+            }
+          };
 
   public static final AttributeKey<TraceScope.Continuation>
       PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY =
@@ -46,9 +47,9 @@ public class AttributeKeys {
    * while the Attribute class is loaded by a third class loader and used internally for the
    * cassandra driver.
    */
-  private static <T> AttributeKey<T> attributeKey(String key) {
-    Map<String, AttributeKey<?>> classLoaderMap =
-        map.getOrCreate(AttributeKey.class.getClassLoader(), mapSupplier);
+  private static <T> AttributeKey<T> attributeKey(final String key) {
+    final Map<String, AttributeKey<?>> classLoaderMap =
+        map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
       return (AttributeKey<T>) classLoaderMap.get(key);
     }
