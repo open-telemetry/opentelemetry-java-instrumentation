@@ -3,7 +3,7 @@ package io.opentelemetry.auto.instrumentation.elasticsearch;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 
 public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorator {
   public static final ElasticsearchTransportClientDecorator DECORATE =
@@ -44,7 +44,7 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
     return null;
   }
 
-  public AgentSpan onRequest(final AgentSpan span, final Class action, final Class request) {
+  public Span onRequest(final Span span, final Class action, final Class request) {
     if (action != null) {
       span.setAttribute(MoreTags.RESOURCE_NAME, action.getSimpleName());
       span.setAttribute("elasticsearch.action", action.getSimpleName());

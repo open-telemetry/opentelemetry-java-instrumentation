@@ -2,8 +2,8 @@ package io.opentelemetry.auto.instrumentation.elasticsearch;
 
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
@@ -45,13 +45,13 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
     return null;
   }
 
-  public AgentSpan onRequest(final AgentSpan span, final String method, final String endpoint) {
+  public Span onRequest(final Span span, final String method, final String endpoint) {
     span.setAttribute(Tags.HTTP_METHOD, method);
     span.setAttribute(Tags.HTTP_URL, endpoint);
     return span;
   }
 
-  public AgentSpan onResponse(final AgentSpan span, final Response response) {
+  public Span onResponse(final Span span, final Response response) {
     if (response != null && response.getHost() != null) {
       span.setAttribute(Tags.PEER_HOSTNAME, response.getHost().getHostName());
       span.setAttribute(Tags.PEER_PORT, response.getHost().getPort());
