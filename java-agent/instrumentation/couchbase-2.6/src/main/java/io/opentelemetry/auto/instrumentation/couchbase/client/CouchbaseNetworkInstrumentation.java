@@ -12,9 +12,9 @@ import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -37,7 +37,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "com.couchbase.client.core.message.CouchbaseRequest", AgentSpan.class.getName());
+        "com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
   }
 
   @Override
@@ -61,10 +61,10 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("remoteSocket") final String remoteSocket,
         @Advice.FieldValue("localSocket") final String localSocket,
         @Advice.Argument(1) final CouchbaseRequest request) {
-      final ContextStore<CouchbaseRequest, AgentSpan> contextStore =
-          InstrumentationContext.get(CouchbaseRequest.class, AgentSpan.class);
+      final ContextStore<CouchbaseRequest, Span> contextStore =
+          InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
-      final AgentSpan span = contextStore.get(request);
+      final Span span = contextStore.get(request);
       if (span != null) {
         span.setAttribute(Tags.PEER_HOSTNAME, remoteHostname);
 
