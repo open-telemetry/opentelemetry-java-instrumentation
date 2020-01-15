@@ -109,15 +109,20 @@ public interface WeakMap<K, V> {
     @Override
     public V computeIfAbsent(final K key, final ValueSupplier<? super K, ? extends V> supplier) {
       // We can't use computeIfAbsent since it was added in 1.8.
-      if (!map.containsKey(key)) {
-        synchronized (this) {
-          if (!map.containsKey(key)) {
-            map.put(key, supplier.get(key));
-          }
-        }
+      if (map.containsKey(key)) {
+        return map.get(key);
       }
 
-      return map.get(key);
+      synchronized (this) {
+        if (map.containsKey(key)) {
+          return map.get(key);
+        } else {
+          final V value = supplier.get(key);
+
+          map.put(key, value);
+          return value;
+        }
+      }
     }
 
     @Override
