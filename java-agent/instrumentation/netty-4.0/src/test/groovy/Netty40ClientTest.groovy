@@ -71,7 +71,6 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     then:
     def ex = thrown(Exception)
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-    println "Exception: $ex"
 
     and:
     assertTraces(1) {
