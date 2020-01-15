@@ -1,21 +1,21 @@
 package io.opentelemetry.auto.instrumentation.rxjava;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
-
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import rx.Observable;
 import rx.Subscriber;
 import rx.__OpenTelemetryTracingUtil;
 
 public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
+  private static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   private final Observable.OnSubscribe<?> delegate;
   private final String operationName;
-  private final AgentSpan parentSpan;
+  private final Span parentSpan;
   private final BaseDecorator decorator;
 
   public TracedOnSubscribe(
@@ -26,28 +26,26 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
     this.operationName = operationName;
     this.decorator = decorator;
 
-    parentSpan = activeSpan();
+    parentSpan = TRACER.getCurrentSpan();
   }
 
   @Override
   public void call(final Subscriber<? super T> subscriber) {
-    final AgentSpan span; // span finished by TracedSubscriber
+    // span finished by TracedSubscriber
+    final Span.Builder spanBuilder = TRACER.spanBuilder(operationName);
     if (parentSpan != null) {
-      try (final AgentScope scope = activateSpan(parentSpan, false)) {
-        span = startSpan(operationName);
-      }
-    } else {
-      span = startSpan(operationName);
+      spanBuilder.setParent(parentSpan);
     }
+    final Span span = spanBuilder.startSpan();
 
     afterStart(span);
 
-    try (final AgentScope scope = activateSpan(span, false)) {
+    try (final Scope scope = TRACER.withSpan(span)) {
       delegate.call(new TracedSubscriber(span, subscriber, decorator));
     }
   }
 
-  protected void afterStart(final AgentSpan span) {
+  protected void afterStart(final Span span) {
     decorator.afterStart(span);
   }
 }
