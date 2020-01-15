@@ -17,7 +17,7 @@ class OT31ApiTest extends DDSpecification {
   static final WRITER = new ListWriter()
 
   @Subject
-  Tracer tracer = new DDTracer(WRITER)
+  Tracer tracer = DDTracer.builder().writer(WRITER).build()
 
   def "test startActive"() {
     when:

@@ -25,7 +25,7 @@ class HttpInjectorTest extends DDSpecification {
     def spanId = 2G
 
     def writer = new ListWriter()
-    def tracer = new DDTracer(writer)
+    def tracer = DDTracer.builder().writer(writer).build()
     final DDSpanContext mockedContext =
       new DDSpanContext(
         traceId,

@@ -40,7 +40,7 @@ class DDSpanSerializationTest extends DDSpecification {
     expected.put("trace_id", 1l)
 
     def writer = new ListWriter()
-    def tracer = new DDTracer(writer)
+    def tracer = DDTracer.builder().writer(writer).build()
     final DDSpanContext context =
       new DDSpanContext(
         1G,
@@ -81,7 +81,7 @@ class DDSpanSerializationTest extends DDSpecification {
     setup:
     def objectMapper = new ObjectMapper(new MessagePackFactory())
     def writer = new ListWriter()
-    def tracer = new DDTracer(writer)
+    def tracer = DDTracer.builder().writer(writer).build()
     def context = new DDSpanContext(
       value,
       value,

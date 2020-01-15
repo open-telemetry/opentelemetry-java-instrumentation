@@ -16,7 +16,7 @@ class DDSpanBuilderTest extends DDSpecification {
 
   def writer = new ListWriter()
   def config = Config.get()
-  def tracer = new DDTracer(writer)
+  def tracer = DDTracer.builder().writer(writer).build()
 
   def "build simple span"() {
     setup:
@@ -458,7 +458,7 @@ class DDSpanBuilderTest extends DDSpecification {
     setup:
     System.setProperty("dd.trace.span.tags", tagString)
     def config = new Config()
-    tracer = new DDTracer(config, writer)
+    tracer = DDTracer.builder().config(config).writer(writer).build()
     def span = tracer.buildSpan("op name").withServiceName("foo").start()
 
     expect:

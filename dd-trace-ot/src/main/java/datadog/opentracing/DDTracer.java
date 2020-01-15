@@ -96,28 +96,61 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final HttpCodec.Injector injector;
   private final HttpCodec.Extractor extractor;
 
+  public static class Builder {
+
+    public Builder() {
+      // Apply the default values from config.
+      config(Config.get());
+    }
+
+    public Builder withProperties(final Properties properties) {
+      return config(Config.get(properties));
+    }
+
+    public Builder config(final Config config) {
+      this.config = config;
+      serviceName(config.getServiceName());
+      // Explicitly skip setting writer to avoid allocating resources prematurely.
+      sampler(Sampler.Builder.forConfig(config));
+      injector(HttpCodec.createInjector(config));
+      extractor(HttpCodec.createExtractor(config, config.getHeaderTags()));
+      localRootSpanTags(config.getLocalRootSpanTags());
+      defaultSpanTags(config.getMergedSpanTags());
+      serviceNameMappings(config.getServiceMapping());
+      taggedHeaders(config.getHeaderTags());
+      partialFlushMinSpans(config.getPartialFlushMinSpans());
+      return this;
+    }
+  }
+
   /** By default, report to local agent and collect all traces. */
+  @Deprecated
   public DDTracer() {
     this(Config.get());
   }
 
+  @Deprecated
   public DDTracer(final String serviceName) {
     this(serviceName, Config.get());
   }
 
+  @Deprecated
   public DDTracer(final Properties config) {
     this(Config.get(config));
   }
 
+  @Deprecated
   public DDTracer(final Config config) {
     this(config.getServiceName(), config);
   }
 
   // This constructor is already used in the wild, so we have to keep it inside this API for now.
+  @Deprecated
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
     this(serviceName, writer, sampler, Config.get().getLocalRootSpanTags());
   }
 
+  @Deprecated
   private DDTracer(final String serviceName, final Config config) {
     this(
         serviceName,
@@ -132,6 +165,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /** Visible for testing */
+  @Deprecated
   DDTracer(
       final String serviceName,
       final Writer writer,
@@ -148,10 +182,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         0);
   }
 
+  @Deprecated
   public DDTracer(final Writer writer) {
     this(Config.get(), writer);
   }
 
+  @Deprecated
   public DDTracer(final Config config, final Writer writer) {
     this(
         config.getServiceName(),
@@ -164,9 +200,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         config.getPartialFlushMinSpans());
   }
 
-  /**
-   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
-   */
   @Deprecated
   public DDTracer(
       final String serviceName,
@@ -188,9 +221,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Config.get().getPartialFlushMinSpans());
   }
 
-  /**
-   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
-   */
   @Deprecated
   public DDTracer(
       final String serviceName,
@@ -211,6 +241,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Config.get().getPartialFlushMinSpans());
   }
 
+  @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
@@ -220,19 +251,55 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders,
       final int partialFlushMinSpans) {
+    this(
+        Config.get(),
+        serviceName,
+        writer,
+        sampler,
+        HttpCodec.createInjector(Config.get()),
+        HttpCodec.createExtractor(Config.get(), taggedHeaders),
+        localRootSpanTags,
+        defaultSpanTags,
+        serviceNameMappings,
+        taggedHeaders,
+        partialFlushMinSpans);
+  }
+
+  @lombok.Builder(builderClassName = "Builder")
+  // These field names must be stable to ensure the builder api is stable.
+  private DDTracer(
+      final Config config,
+      final String serviceName,
+      final Writer writer,
+      final Sampler sampler,
+      final HttpCodec.Injector injector,
+      final HttpCodec.Extractor extractor,
+      final Map<String, String> localRootSpanTags,
+      final Map<String, String> defaultSpanTags,
+      final Map<String, String> serviceNameMappings,
+      final Map<String, String> taggedHeaders,
+      final int partialFlushMinSpans) {
+
     assert localRootSpanTags != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
     assert taggedHeaders != null;
 
     this.serviceName = serviceName;
-    this.writer = writer;
-    this.writer.start();
+    if (writer == null) {
+      this.writer = Writer.Builder.forConfig(config);
+    } else {
+      this.writer = writer;
+    }
     this.sampler = sampler;
+    this.injector = injector;
+    this.extractor = extractor;
     this.localRootSpanTags = localRootSpanTags;
     this.defaultSpanTags = defaultSpanTags;
     this.serviceNameMappings = serviceNameMappings;
     this.partialFlushMinSpans = partialFlushMinSpans;
+
+    this.writer.start();
 
     shutdownCallback = new ShutdownHook(this);
     try {
@@ -240,10 +307,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     } catch (final IllegalStateException ex) {
       // The JVM is already shutting down.
     }
-
-    // TODO: we have too many constructors, we should move to some sort of builder approach
-    injector = HttpCodec.createInjector(Config.get());
-    extractor = HttpCodec.createExtractor(Config.get(), taggedHeaders);
 
     if (this.writer instanceof DDAgentWriter && sampler instanceof DDAgentResponseListener) {
       ((DDAgentWriter) this.writer).addResponseListener((DDAgentResponseListener) this.sampler);

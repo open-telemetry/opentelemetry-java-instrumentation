@@ -23,7 +23,7 @@ class DDApiIntegrationTest {
   @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
   static class DDAgentApiIntegrationV4Test extends DDSpecification {
     static final WRITER = new ListWriter()
-    static final TRACER = new DDTracer(WRITER)
+    static final TRACER = DDTracer.builder().writer(WRITER).build()
     static final CONTEXT = new DDSpanContext(
       1G,
       1G,

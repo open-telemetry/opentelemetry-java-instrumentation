@@ -10,7 +10,7 @@ class TraceCorrelationTest extends DDSpecification {
   static final WRITER = new ListWriter()
 
   @Shared
-  DDTracer tracer = new DDTracer(WRITER)
+  DDTracer tracer = DDTracer.builder().writer(WRITER).build()
 
   def scope = tracer.buildSpan("test").startActive(true)
 
