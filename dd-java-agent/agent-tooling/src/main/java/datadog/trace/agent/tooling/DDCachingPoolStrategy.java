@@ -7,6 +7,7 @@ import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import datadog.trace.bootstrap.WeakMap;
+import java.security.SecureClassLoader;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +29,13 @@ import net.bytebuddy.pool.TypePool;
  *
  * <p>See eviction policy below.
  */
-public class DDCachingPoolStrategy implements PoolStrategy {
+public class DDCachingPoolStrategy
+    implements PoolStrategy, WeakMap.ValueSupplier<ClassLoader, TypePool.CacheProvider> {
+
+  // Need this because we can't put null into the typePoolCache map.
+  private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
+      new SecureClassLoader(null) {};
+
   private final WeakMap<ClassLoader, TypePool.CacheProvider> typePoolCache =
       WeakMap.Provider.newWeakMap();
   private final Cleaner cleaner;
@@ -40,26 +47,23 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   @Override
   public TypePool typePool(final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
     final ClassLoader key =
-        BOOTSTRAP_CLASSLOADER == classLoader ? Utils.getBootstrapProxy() : classLoader;
-    TypePool.CacheProvider cache = typePoolCache.get(key);
-    if (null == cache) {
-      synchronized (key) {
-        cache = typePoolCache.get(key);
-        if (null == cache) {
-          if (skipClassLoader().matches(classLoader)) {
-            // Don't bother creating a cache for a classloader that won't match.
-            // (avoiding a lot of DelegatingClassLoader instances)
-            // This is primarily an optimization.
-            cache = TypePool.CacheProvider.NoOp.INSTANCE;
-          } else {
-            cache = EvictingCacheProvider.withObjectType(cleaner, 1, TimeUnit.MINUTES);
-          }
-          typePoolCache.put(key, cache);
-        }
-      }
-    }
+        BOOTSTRAP_CLASSLOADER == classLoader ? BOOTSTRAP_CLASSLOADER_PLACEHOLDER : classLoader;
+    final TypePool.CacheProvider cache = typePoolCache.computeIfAbsent(key, this);
+
     return new TypePool.Default.WithLazyResolution(
         cache, classFileLocator, TypePool.Default.ReaderMode.FAST);
+  }
+
+  @Override
+  public TypePool.CacheProvider get(final ClassLoader key) {
+    if (BOOTSTRAP_CLASSLOADER_PLACEHOLDER != key && skipClassLoader().matches(key)) {
+      // Don't bother creating a cache for a classloader that won't match.
+      // (avoiding a lot of DelegatingClassLoader instances)
+      // This is primarily an optimization.
+      return TypePool.CacheProvider.NoOp.INSTANCE;
+    } else {
+      return EvictingCacheProvider.withObjectType(cleaner, 1, TimeUnit.MINUTES);
+    }
   }
 
   private static class EvictingCacheProvider implements TypePool.CacheProvider {
