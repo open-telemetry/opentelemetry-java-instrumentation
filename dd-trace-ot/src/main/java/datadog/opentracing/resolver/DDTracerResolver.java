@@ -16,7 +16,7 @@ public class DDTracerResolver extends TracerResolver {
   Tracer resolve(final Config config) {
     if (config.isTraceResolverEnabled()) {
       log.info("Creating DDTracer with DDTracerResolver");
-      return DDTracer.builder().withConfig(config).build();
+      return DDTracer.builder().config(config).build();
     } else {
       log.info("DDTracerResolver disabled");
       return null;

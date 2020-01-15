@@ -97,27 +97,20 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final HttpCodec.Extractor extractor;
 
   public static class Builder {
+
     public Builder() {
       // Apply the default values from config.
-      withConfig(Config.get());
-    }
-
-    public Builder writer(final Writer writer) {
-      if (this.writer != null && this.writer != writer) {
-        // Try to avoid leaking resources
-        this.writer.close();
-      }
-      this.writer = writer;
-      return this;
+      config(Config.get());
     }
 
     public Builder withProperties(final Properties properties) {
-      return withConfig(Config.get(properties));
+      return config(Config.get(properties));
     }
 
-    public Builder withConfig(final Config config) {
+    public Builder config(final Config config) {
+      this.config = config;
       serviceName(config.getServiceName());
-      writer(Writer.Builder.forConfig(config));
+      // Explicitly skip setting writer to avoid allocating resources prematurely.
       sampler(Sampler.Builder.forConfig(config));
       injector(HttpCodec.createInjector(config));
       extractor(HttpCodec.createExtractor(config, config.getHeaderTags()));
@@ -259,6 +252,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> taggedHeaders,
       final int partialFlushMinSpans) {
     this(
+        Config.get(),
         serviceName,
         writer,
         sampler,
@@ -274,6 +268,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   @lombok.Builder(builderClassName = "Builder")
   // These field names must be stable to ensure the builder api is stable.
   private DDTracer(
+      final Config config,
       final String serviceName,
       final Writer writer,
       final Sampler sampler,
@@ -285,14 +280,17 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> taggedHeaders,
       final int partialFlushMinSpans) {
 
-    assert writer != null;
     assert localRootSpanTags != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
     assert taggedHeaders != null;
 
     this.serviceName = serviceName;
-    this.writer = writer;
+    if (writer == null) {
+      this.writer = Writer.Builder.forConfig(config);
+    } else {
+      this.writer = writer;
+    }
     this.sampler = sampler;
     this.injector = injector;
     this.extractor = extractor;

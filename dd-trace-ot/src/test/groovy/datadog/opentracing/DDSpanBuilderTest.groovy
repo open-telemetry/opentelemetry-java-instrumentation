@@ -458,7 +458,7 @@ class DDSpanBuilderTest extends DDSpecification {
     setup:
     System.setProperty("dd.trace.span.tags", tagString)
     def config = new Config()
-    tracer = DDTracer.builder().withConfig(config).writer(writer).build()
+    tracer = DDTracer.builder().config(config).writer(writer).build()
     def span = tracer.buildSpan("op name").withServiceName("foo").start()
 
     expect:

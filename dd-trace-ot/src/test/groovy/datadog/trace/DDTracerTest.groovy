@@ -63,7 +63,7 @@ class DDTracerTest extends DDSpecification {
     System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
 
     when:
-    def tracer = DDTracer.builder().withConfig(new Config()).build()
+    def tracer = DDTracer.builder().config(new Config()).build()
 
     then:
     tracer.writer.monitor instanceof Monitor.StatsD
@@ -75,7 +75,7 @@ class DDTracerTest extends DDSpecification {
     setup:
     System.setProperty(PREFIX + PRIORITY_SAMPLING, "false")
     when:
-    def tracer = DDTracer.builder().withConfig(new Config()).build()
+    def tracer = DDTracer.builder().config(new Config()).build()
     then:
     tracer.sampler instanceof AllSampler
   }
@@ -85,7 +85,7 @@ class DDTracerTest extends DDSpecification {
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
 
     when:
-    def tracer = DDTracer.builder().withConfig(new Config()).build()
+    def tracer = DDTracer.builder().config(new Config()).build()
 
     then:
     tracer.writer instanceof LoggingWriter
@@ -98,7 +98,7 @@ class DDTracerTest extends DDSpecification {
     System.setProperty(PREFIX + HEADER_TAGS, mapString)
 
     when:
-    def tracer = DDTracer.builder().withConfig(new Config()).build()
+    def tracer = DDTracer.builder().config(new Config()).build()
     // Datadog extractor gets placed first
     def taggedHeaders = tracer.extractor.extractors[0].taggedHeaders
 
@@ -116,7 +116,7 @@ class DDTracerTest extends DDSpecification {
   def "verify overriding host"() {
     when:
     System.setProperty(PREFIX + key, value)
-    def tracer = DDTracer.builder().withConfig(new Config()).build()
+    def tracer = DDTracer.builder().config(new Config()).build()
 
     then:
     tracer.writer instanceof DDAgentWriter
@@ -131,7 +131,7 @@ class DDTracerTest extends DDSpecification {
   def "verify overriding port"() {
     when:
     System.setProperty(PREFIX + key, value)
-    def tracer = DDTracer.builder().withConfig(new Config()).build()
+    def tracer = DDTracer.builder().config(new Config()).build()
 
     then:
     tracer.writer instanceof DDAgentWriter
@@ -147,7 +147,7 @@ class DDTracerTest extends DDSpecification {
   def "Writer is instance of LoggingWriter when property set"() {
     when:
     System.setProperty(PREFIX + "writer.type", "LoggingWriter")
-    def tracer = DDTracer.builder().withConfig(new Config()).build()
+    def tracer = DDTracer.builder().config(new Config()).build()
 
     then:
     tracer.writer instanceof LoggingWriter
