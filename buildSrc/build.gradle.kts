@@ -29,4 +29,7 @@ dependencies {
   compile("com.google.guava", "guava", "20.0")
   compile("org.ow2.asm", "asm", "7.0-beta")
   compile("org.ow2.asm", "asm-tree", "7.0-beta")
+
+  testCompile("org.spockframework", "spock-core", "1.3-groovy-2.5")
+  testCompile("org.codehaus.groovy", "groovy-all", "2.5.8")
 }
