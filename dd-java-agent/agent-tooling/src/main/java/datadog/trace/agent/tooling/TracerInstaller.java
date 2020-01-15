@@ -11,7 +11,7 @@ public class TracerInstaller {
   public static synchronized void installGlobalTracer() {
     if (Config.get().isTraceEnabled()) {
       if (!io.opentracing.util.GlobalTracer.isRegistered()) {
-        final DDTracer tracer = new DDTracer();
+        final DDTracer tracer = DDTracer.builder().build();
         try {
           io.opentracing.util.GlobalTracer.register(tracer);
           datadog.trace.api.GlobalTracer.registerIfAbsent(tracer);

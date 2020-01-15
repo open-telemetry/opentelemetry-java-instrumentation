@@ -74,7 +74,7 @@ class RateByServiceSamplerTest extends DDSpecification {
 
   def "sampling priority set when service later"() {
     def sampler = new RateByServiceSampler()
-    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def tracer = DDTracer.builder().writer(new LoggingWriter()).sampler(sampler).build()
 
     sampler.onResponse("test", new ObjectMapper()
       .readTree('{"rate_by_service":{"service:,env:":1.0,"service:spock,env:":0.0}}'))
@@ -103,7 +103,7 @@ class RateByServiceSamplerTest extends DDSpecification {
   def "setting forced tracing via tag"() {
     when:
     def sampler = new RateByServiceSampler()
-    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def tracer = DDTracer.builder().writer(new LoggingWriter()).sampler(sampler).build()
     def span = tracer.buildSpan("root").start()
     if (tagName) {
       span.setTag(tagName, tagValue)
@@ -122,7 +122,7 @@ class RateByServiceSamplerTest extends DDSpecification {
   def "not setting forced tracing via tag or setting it wrong value not causing exception"() {
     setup:
     def sampler = new RateByServiceSampler()
-    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def tracer = DDTracer.builder().writer(new LoggingWriter()).sampler(sampler).build()
     def span = tracer.buildSpan("root").start()
     if (tagName) {
       span.setTag(tagName, tagValue)

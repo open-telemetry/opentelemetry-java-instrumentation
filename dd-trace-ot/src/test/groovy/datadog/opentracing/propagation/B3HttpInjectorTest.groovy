@@ -20,7 +20,7 @@ class B3HttpInjectorTest extends DDSpecification {
   def "inject http headers"() {
     setup:
     def writer = new ListWriter()
-    def tracer = new DDTracer(writer)
+    def tracer = DDTracer.builder().writer(writer).build()
     final DDSpanContext mockedContext =
       new DDSpanContext(
         traceId,

@@ -12,7 +12,7 @@ import spock.lang.Subject
 class URLAsResourceNameTest extends DDSpecification {
 
   def writer = new ListWriter()
-  def tracer = new DDTracer(writer)
+  def tracer = DDTracer.builder().writer(writer).build()
 
   @Subject
   def decorator = new URLAsResourceName()
