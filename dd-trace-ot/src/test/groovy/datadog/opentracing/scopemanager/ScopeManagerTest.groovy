@@ -8,8 +8,11 @@ import datadog.trace.context.ScopeListener
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
+import io.opentracing.ScopeManager
 import io.opentracing.Span
+import io.opentracing.noop.NoopScopeManager
 import io.opentracing.noop.NoopSpan
+import spock.lang.Shared
 import spock.lang.Subject
 import spock.lang.Timeout
 
@@ -22,14 +25,19 @@ import java.util.concurrent.atomic.AtomicReference
 import static java.util.concurrent.TimeUnit.SECONDS
 
 class ScopeManagerTest extends DDSpecification {
-  def latch
-  def writer
-  def tracer
 
+  @Shared
+  CountDownLatch latch
+  @Shared
+  ListWriter writer
+  @Shared
+  DDTracer tracer
+
+  @Shared
   @Subject
-  def scopeManager
+  ScopeManager scopeManager
 
-  def setup() {
+  def setupSpec() {
     latch = new CountDownLatch(1)
     final currentLatch = latch
     writer = new ListWriter() {
@@ -37,12 +45,15 @@ class ScopeManagerTest extends DDSpecification {
         currentLatch.countDown()
       }
     }
-    tracer = new DDTracer(writer)
+    tracer = DDTracer.builder().writer(writer).build()
     scopeManager = tracer.scopeManager()
   }
 
   def cleanup() {
     scopeManager.tlsScope.remove()
+    scopeManager.scopeContexts.clear()
+    scopeManager.scopeListeners.clear()
+    writer.clear()
   }
 
   def "non-ddspan activation results in a simple scope"() {
@@ -127,6 +138,36 @@ class ScopeManagerTest extends DDSpecification {
     false      | false
     true       | true
     false      | true
+  }
+
+  def "scopemanager returns noop scope if depth exceeded"() {
+    when: "fill up the scope stack"
+    Scope scope = null
+    for (int i = 0; i <= depth; i++) {
+      scope = scopeManager.activate(NoopSpan.INSTANCE, false)
+      assert scope instanceof SimpleScope
+    }
+
+    then: "last scope is still valid"
+    (scope as SimpleScope).depth() == depth
+
+    when: "activate a scope over the limit"
+    scope = scopeManager.activate(NoopSpan.INSTANCE, false)
+
+    then: "a noop instance is returned"
+    scope instanceof NoopScopeManager.NoopScope
+
+    when: "try again for good measure"
+    scope = scopeManager.activate(NoopSpan.INSTANCE, false)
+
+    then: "still have a noop instance"
+    scope instanceof NoopScopeManager.NoopScope
+
+    and: "scope stack not effected."
+    (scopeManager.active() as SimpleScope).depth() == depth
+
+    where:
+    depth = scopeManager.depthLimit
   }
 
   def "ContinuableScope only creates continuations when propagation is set"() {

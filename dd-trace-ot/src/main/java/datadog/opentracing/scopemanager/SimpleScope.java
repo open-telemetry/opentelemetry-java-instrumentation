@@ -9,6 +9,7 @@ public class SimpleScope implements DDScope {
   private final Span spanUnderScope;
   private final boolean finishOnClose;
   private final DDScope toRestore;
+  private final int depth;
 
   public SimpleScope(
       final ContextualScopeManager scopeManager,
@@ -20,6 +21,7 @@ public class SimpleScope implements DDScope {
     this.finishOnClose = finishOnClose;
     toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
+    depth = toRestore == null ? 0 : toRestore.depth() + 1;
     for (final ScopeListener listener : scopeManager.scopeListeners) {
       listener.afterScopeActivated();
     }
@@ -47,5 +49,10 @@ public class SimpleScope implements DDScope {
   @Override
   public Span span() {
     return spanUnderScope;
+  }
+
+  @Override
+  public int depth() {
+    return depth;
   }
 }

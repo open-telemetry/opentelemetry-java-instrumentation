@@ -5,18 +5,35 @@ import datadog.trace.context.ScopeListener;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Span;
+import io.opentracing.noop.NoopScopeManager;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ContextualScopeManager implements ScopeManager {
   static final ThreadLocal<DDScope> tlsScope = new ThreadLocal<>();
   final Deque<ScopeContext> scopeContexts = new ConcurrentLinkedDeque<>();
   final List<ScopeListener> scopeListeners = new CopyOnWriteArrayList<>();
 
+  private final int depthLimit;
+
+  public ContextualScopeManager(final int depthLimit) {
+    this.depthLimit = depthLimit;
+  }
+
   @Override
   public Scope activate(final Span span, final boolean finishOnClose) {
+    final Scope active = active();
+    if (active instanceof DDScope) {
+      final int currentDepth = ((DDScope) active).depth();
+      if (depthLimit <= currentDepth) {
+        log.debug("Scope depth limit exceeded ({}).  Returning NoopScope.", currentDepth);
+        return NoopScopeManager.NoopScope.INSTANCE;
+      }
+    }
     for (final ScopeContext context : scopeContexts) {
       if (context.inContext()) {
         return context.activate(span, finishOnClose);

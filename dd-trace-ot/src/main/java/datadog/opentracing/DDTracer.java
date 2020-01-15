@@ -62,7 +62,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   final Sampler sampler;
   /** Scope manager is in charge of managing the scopes from which spans are created */
-  final ContextualScopeManager scopeManager = new ContextualScopeManager();
+  final ScopeManager scopeManager;
 
   /** A set of tags that are added only to the application's root span */
   private final Map<String, String> localRootSpanTags;
@@ -114,6 +114,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       sampler(Sampler.Builder.forConfig(config));
       injector(HttpCodec.createInjector(config));
       extractor(HttpCodec.createExtractor(config, config.getHeaderTags()));
+      scopeManager(new ContextualScopeManager(config.getScopeDepthLimit()));
       localRootSpanTags(config.getLocalRootSpanTags());
       defaultSpanTags(config.getMergedSpanTags());
       serviceNameMappings(config.getServiceMapping());
@@ -258,6 +259,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         sampler,
         HttpCodec.createInjector(Config.get()),
         HttpCodec.createExtractor(Config.get(), taggedHeaders),
+        new ContextualScopeManager(Config.get().getScopeDepthLimit()),
         localRootSpanTags,
         defaultSpanTags,
         serviceNameMappings,
@@ -274,6 +276,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Sampler sampler,
       final HttpCodec.Injector injector,
       final HttpCodec.Extractor extractor,
+      final ScopeManager scopeManager,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
@@ -294,6 +297,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.sampler = sampler;
     this.injector = injector;
     this.extractor = extractor;
+    this.scopeManager = scopeManager;
     this.localRootSpanTags = localRootSpanTags;
     this.defaultSpanTags = defaultSpanTags;
     this.serviceNameMappings = serviceNameMappings;
@@ -365,7 +369,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Deprecated
   public void addScopeContext(final ScopeContext context) {
-    scopeManager.addScopeContext(context);
+    if (scopeManager instanceof ContextualScopeManager) {
+      ((ContextualScopeManager) scopeManager).addScopeContext(context);
+    }
   }
 
   /**
@@ -386,7 +392,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   @Override
-  public ContextualScopeManager scopeManager() {
+  public ScopeManager scopeManager() {
     return scopeManager;
   }
 
@@ -510,7 +516,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public void addScopeListener(final ScopeListener listener) {
-    scopeManager.addScopeListener(listener);
+    if (scopeManager instanceof ContextualScopeManager) {
+      ((ContextualScopeManager) scopeManager).addScopeListener(listener);
+    }
   }
 
   @Override
