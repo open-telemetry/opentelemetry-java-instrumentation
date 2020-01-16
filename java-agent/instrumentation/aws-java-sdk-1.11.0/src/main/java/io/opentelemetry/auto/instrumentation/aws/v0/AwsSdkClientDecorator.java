@@ -1,9 +1,11 @@
 package io.opentelemetry.auto.instrumentation.aws.v0;
 
+import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
@@ -12,12 +14,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
   private final Map<String, String> serviceNames = new ConcurrentHashMap<>();
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
+  private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
+
+  public AwsSdkClientDecorator(
+      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+    this.contextStore = contextStore;
+  }
 
   @Override
   public Span onRequest(final Span span, final Request request) {
@@ -25,7 +32,8 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     super.onRequest(span, request);
 
     final String awsServiceName = request.getServiceName();
-    final Class<?> awsOperation = request.getOriginalRequest().getClass();
+    final AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
+    final Class<?> awsOperation = originalRequest.getClass();
 
     span.setAttribute("aws.agent", COMPONENT_NAME);
     span.setAttribute("aws.service", awsServiceName);
@@ -35,6 +43,32 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     span.setAttribute(
         MoreTags.RESOURCE_NAME,
         remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
+
+    if (contextStore != null) {
+      final RequestMeta requestMeta = contextStore.get(originalRequest);
+      if (requestMeta != null) {
+        final String bucketName = requestMeta.getBucketName();
+        if (bucketName != null) {
+          span.setAttribute("aws.bucket.name", bucketName);
+        }
+        final String queueUrl = requestMeta.getQueueUrl();
+        if (queueUrl != null) {
+          span.setAttribute("aws.queue.url", queueUrl);
+        }
+        final String queueName = requestMeta.getQueueName();
+        if (queueName != null) {
+          span.setAttribute("aws.queue.name", queueName);
+        }
+        final String streamName = requestMeta.getStreamName();
+        if (streamName != null) {
+          span.setAttribute("aws.stream.name", streamName);
+        }
+        final String tableName = requestMeta.getTableName();
+        if (tableName != null) {
+          span.setAttribute("aws.table.name", tableName);
+        }
+      }
+    }
 
     return span;
   }

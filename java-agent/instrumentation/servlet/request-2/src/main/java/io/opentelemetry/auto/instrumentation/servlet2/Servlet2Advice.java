@@ -9,6 +9,7 @@ import static io.opentelemetry.auto.instrumentation.servlet2.HttpServletRequestE
 import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.DECORATE;
 
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
@@ -36,11 +37,15 @@ public class Servlet2Advice {
       return null;
     }
 
+    final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
     if (response instanceof HttpServletResponse) {
+      // For use by HttpServletResponseInstrumentation:
+      InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+          .put((HttpServletResponse) response, httpServletRequest);
+
       response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
     }
-
-    final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
     final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
 

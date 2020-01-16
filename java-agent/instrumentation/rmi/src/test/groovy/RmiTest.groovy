@@ -43,7 +43,6 @@ class RmiTest extends AgentTestRunner {
           operationName "rmi.invoke"
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "rmi"
             "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
@@ -118,7 +117,6 @@ class RmiTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.SERVICE_NAME" "rmi"
             "$MoreTags.RESOURCE_NAME" "Greeter.exceptional"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
@@ -166,7 +164,6 @@ class RmiTest extends AgentTestRunner {
           operationName "rmi.invoke"
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "rmi"
             "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
