@@ -27,15 +27,15 @@ public interface Sampler {
 
         if ((serviceRules != null && !serviceRules.isEmpty())
             || (operationRules != null && !operationRules.isEmpty())
-            || config.getTraceSamplingDefaultRate() != null) {
+            || config.getTraceSampleRate() != null) {
 
           try {
             sampler =
                 RuleBasedSampler.build(
                     serviceRules,
                     operationRules,
-                    config.getTraceSamplingDefaultRate(),
-                    config.getTraceSamplingRateLimit());
+                    config.getTraceSampleRate(),
+                    config.getTraceRateLimit());
           } catch (final IllegalArgumentException e) {
             log.error("Invalid sampler configuration. Using AllSampler", e);
             sampler = new AllSampler();

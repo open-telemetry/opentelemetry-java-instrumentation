@@ -8,9 +8,9 @@ import datadog.trace.common.sampling.RuleBasedSampler
 import datadog.trace.common.sampling.Sampler
 import datadog.trace.util.test.DDSpecification
 
-import static datadog.trace.api.Config.TRACE_SAMPLING_DEFAULT_RATE
+import static datadog.trace.api.Config.TRACE_RATE_LIMIT
+import static datadog.trace.api.Config.TRACE_SAMPLE_RATE
 import static datadog.trace.api.Config.TRACE_SAMPLING_OPERATION_RULES
-import static datadog.trace.api.Config.TRACE_SAMPLING_RATE_LIMIT
 import static datadog.trace.api.Config.TRACE_SAMPLING_SERVICE_RULES
 import static datadog.trace.api.sampling.PrioritySampling.SAMPLER_DROP
 import static datadog.trace.api.sampling.PrioritySampling.SAMPLER_KEEP
@@ -27,7 +27,7 @@ class RuleBasedSamplingTest extends DDSpecification {
   def "Rule Based Sampler is not created when just rate limit set"() {
     when:
     Properties properties = new Properties()
-    properties.setProperty(TRACE_SAMPLING_RATE_LIMIT, "50")
+    properties.setProperty(TRACE_RATE_LIMIT, "50")
     Sampler sampler = Sampler.Builder.forConfig(properties)
 
     then:
@@ -46,11 +46,11 @@ class RuleBasedSamplingTest extends DDSpecification {
     }
 
     if (defaultRate != null) {
-      properties.setProperty(TRACE_SAMPLING_DEFAULT_RATE, defaultRate)
+      properties.setProperty(TRACE_SAMPLE_RATE, defaultRate)
     }
 
     if (rateLimit != null) {
-      properties.setProperty(TRACE_SAMPLING_RATE_LIMIT, rateLimit)
+      properties.setProperty(TRACE_RATE_LIMIT, rateLimit)
     }
 
     when:
@@ -139,7 +139,7 @@ class RuleBasedSamplingTest extends DDSpecification {
     when:
     Properties properties = new Properties()
     properties.setProperty(TRACE_SAMPLING_SERVICE_RULES, "service:1")
-    properties.setProperty(TRACE_SAMPLING_RATE_LIMIT, "1")
+    properties.setProperty(TRACE_RATE_LIMIT, "1")
     Sampler sampler = Sampler.Builder.forConfig(properties)
 
     DDSpan span1 = SpanFactory.newSpanOf("service", "bar")
@@ -165,7 +165,7 @@ class RuleBasedSamplingTest extends DDSpecification {
     when:
     Properties properties = new Properties()
     properties.setProperty(TRACE_SAMPLING_SERVICE_RULES, "service:1,foo:1")
-    properties.setProperty(TRACE_SAMPLING_RATE_LIMIT, "1")
+    properties.setProperty(TRACE_RATE_LIMIT, "1")
     Sampler sampler = Sampler.Builder.forConfig(properties)
 
     DDSpan span1 = SpanFactory.newSpanOf("service", "bar")
