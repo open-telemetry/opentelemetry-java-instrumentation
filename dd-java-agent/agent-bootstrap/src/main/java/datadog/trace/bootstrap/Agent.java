@@ -38,10 +38,13 @@ public class Agent {
   }
 
   // fields must be managed under class lock
+  private static ClassLoader PARENT_CLASSLOADER = null;
+  private static ClassLoader BOOTSTRAP_PROXY = null;
   private static ClassLoader AGENT_CLASSLOADER = null;
   private static ClassLoader JMXFETCH_CLASSLOADER = null;
 
   public static void start(final Instrumentation inst, final URL bootstrapURL) {
+    createParentClassloader(bootstrapURL);
     startDatadogAgent(inst, bootstrapURL);
 
     final boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
@@ -160,6 +163,27 @@ public class Agent {
     }
   }
 
+  private static synchronized void createParentClassloader(final URL bootstrapURL) {
+    if (PARENT_CLASSLOADER == null) {
+      try {
+        if (isJavaBefore9()) {
+          PARENT_CLASSLOADER = null; // bootstrap
+        } else {
+          // platform classloader is parent of system in java 9+
+          PARENT_CLASSLOADER = getPlatformClassLoader();
+        }
+
+        final Class<?> loaderClass =
+            ClassLoader.getSystemClassLoader()
+                .loadClass("datadog.trace.bootstrap.DatadogClassLoader$BootstrapClassLoaderProxy");
+        final Constructor constructor = loaderClass.getDeclaredConstructor(URL.class);
+        BOOTSTRAP_PROXY = (ClassLoader) constructor.newInstance(bootstrapURL);
+      } catch (final Throwable ex) {
+        log.error("Throwable thrown creating parent classloader", ex);
+      }
+    }
+  }
+
   private static synchronized void startDatadogAgent(
       final Instrumentation inst, final URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
@@ -244,19 +268,15 @@ public class Agent {
    */
   private static ClassLoader createDatadogClassLoader(
       final String innerJarFilename, final URL bootstrapURL) throws Exception {
-    final ClassLoader agentParent;
-    if (isJavaBefore9()) {
-      agentParent = null; // bootstrap
-    } else {
-      // platform classloader is parent of system in java 9+
-      agentParent = getPlatformClassLoader();
-    }
 
     final Class<?> loaderClass =
         ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
     final Constructor constructor =
-        loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
-    return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);
+        loaderClass.getDeclaredConstructor(
+            URL.class, String.class, ClassLoader.class, ClassLoader.class);
+    return (ClassLoader)
+        constructor.newInstance(
+            bootstrapURL, innerJarFilename, BOOTSTRAP_PROXY, PARENT_CLASSLOADER);
   }
 
   private static ClassLoader getPlatformClassLoader()
