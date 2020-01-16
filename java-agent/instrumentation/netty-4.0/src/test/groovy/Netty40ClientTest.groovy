@@ -61,7 +61,7 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
   def "connection error (unopened port)"() {
     given:
-    def uri = new URI("http://localhost:$UNUSABLE_PORT/")
+    def uri = new URI("http://127.0.0.1:$UNUSABLE_PORT/") // Use numeric address to avoid ipv4/ipv6 confusion
 
     when:
     runUnderTrace("parent") {
@@ -93,7 +93,7 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
               } catch (ClassNotFoundException e) {
                 // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
               }
-              errorTags errorClass, "Connection refused: localhost/127.0.0.1:$UNUSABLE_PORT"
+              errorTags errorClass, "Connection refused: /127.0.0.1:$UNUSABLE_PORT"
             }
           }
         }
