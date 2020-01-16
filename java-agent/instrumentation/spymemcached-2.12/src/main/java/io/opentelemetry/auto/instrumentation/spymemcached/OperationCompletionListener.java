@@ -1,7 +1,8 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.concurrent.ExecutionException;
+
+import io.opentelemetry.trace.Span;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.OperationFuture;
 
@@ -19,7 +20,7 @@ public class OperationCompletionListener
   }
 
   @Override
-  protected void processResult(final AgentSpan span, final OperationFuture<? extends Object> future)
+  protected void processResult(final Span span, final OperationFuture<? extends Object> future)
       throws ExecutionException, InterruptedException {
     future.get();
   }

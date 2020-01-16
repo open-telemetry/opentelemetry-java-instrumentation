@@ -1,7 +1,8 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.concurrent.ExecutionException;
+
+import io.opentelemetry.trace.Span;
 import lombok.extern.slf4j.Slf4j;
 import net.spy.memcached.MemcachedConnection;
 
@@ -12,7 +13,7 @@ public class SyncCompletionListener extends CompletionListener<Void> {
   }
 
   @Override
-  protected void processResult(final AgentSpan span, final Void future)
+  protected void processResult(final Span span, final Void future)
       throws ExecutionException, InterruptedException {
     log.error("processResult was called on SyncCompletionListener. This should never happen. ");
   }

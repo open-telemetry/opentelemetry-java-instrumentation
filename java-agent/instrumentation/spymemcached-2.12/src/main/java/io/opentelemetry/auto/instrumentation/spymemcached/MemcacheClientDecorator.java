@@ -1,13 +1,17 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import net.spy.memcached.MemcachedConnection;
 
 public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedConnection> {
   public static final MemcacheClientDecorator DECORATE = new MemcacheClientDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String[] instrumentationNames() {
@@ -44,7 +48,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
     return null;
   }
 
-  public AgentSpan onOperation(final AgentSpan span, final String methodName) {
+  public Span onOperation(final Span span, final String methodName) {
 
     final char[] chars =
         methodName

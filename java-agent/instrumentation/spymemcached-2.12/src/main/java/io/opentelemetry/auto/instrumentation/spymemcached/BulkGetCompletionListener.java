@@ -1,7 +1,8 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.util.concurrent.ExecutionException;
+
+import io.opentelemetry.trace.Span;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.BulkGetFuture;
 
@@ -18,7 +19,7 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
   }
 
   @Override
-  protected void processResult(final AgentSpan span, final BulkGetFuture<?> future)
+  protected void processResult(final Span span, final BulkGetFuture<?> future)
       throws ExecutionException, InterruptedException {
     /*
     Note: for now we do not have an affective way of representing results of bulk operations,
