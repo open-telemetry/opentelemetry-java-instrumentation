@@ -18,8 +18,6 @@ class CassandraClientTest extends AgentTestRunner {
 
   @Shared
   Cluster cluster
-  @Shared
-  int port = 9142
 
   def setupSpec() {
     /*
@@ -28,7 +26,7 @@ class CassandraClientTest extends AgentTestRunner {
      started in container like we do for memcached. Note: this will complicate things because
      tests would have to assume they run under shared Cassandra and act accordingly.
       */
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra(120000L)
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE, 120000L)
 
     cluster = EmbeddedCassandraServerHelper.getCluster()
 
@@ -124,7 +122,7 @@ class CassandraClientTest extends AgentTestRunner {
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-        "$Tags.PEER_PORT" port
+        "$Tags.PEER_PORT" EmbeddedCassandraServerHelper.getNativeTransportPort()
         "$Tags.DB_TYPE" "cassandra"
         "$Tags.DB_INSTANCE" keyspace
         "$Tags.DB_STATEMENT" statement

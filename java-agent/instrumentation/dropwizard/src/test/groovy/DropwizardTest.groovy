@@ -11,6 +11,7 @@ import io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.SpanData
 import org.eclipse.jetty.servlet.ServletHandler
 
@@ -29,9 +30,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
 
   @Override
   DropwizardTestSupport startServer(int port) {
+    println "Port: $port"
     def testSupport = new DropwizardTestSupport(testApp(),
       null,
-      ConfigOverride.config("server.applicationConnectors[0].port", "$port"))
+      ConfigOverride.config("server.applicationConnectors[0].port", "$port"),
+      ConfigOverride.config("server.adminConnectors[0].port", PortUtils.randomOpenPort().toString()))
     testSupport.before()
     return testSupport
   }
