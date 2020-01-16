@@ -3,13 +3,10 @@ package io.opentelemetry.auto.instrumentation.spymemcached;
 import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.TRACER;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-
-import io.opentelemetry.auto.instrumentation.api.AgentTracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import net.spy.memcached.MemcachedConnection;
 

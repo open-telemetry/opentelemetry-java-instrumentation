@@ -5,12 +5,14 @@ package io.opentelemetry.auto.instrumentation.springdata;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+
 import java.lang.reflect.Method;
 
 public final class SpringDataDecorator extends ClientDecorator {
   public static final SpringDataDecorator DECORATOR = new SpringDataDecorator();
 
-  private SpringDataDecorator() {}
+  private SpringDataDecorator() {
+  }
 
   @Override
   protected String service() {
@@ -19,7 +21,7 @@ public final class SpringDataDecorator extends ClientDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"spring-data"};
+    return new String[]{"spring-data"};
   }
 
   @Override

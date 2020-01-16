@@ -1,8 +1,7 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
-import java.util.concurrent.ExecutionException;
-
 import io.opentelemetry.trace.Span;
+import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.GetFuture;
 
