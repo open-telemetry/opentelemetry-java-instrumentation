@@ -83,7 +83,7 @@ public class SpringWebHttpServerDecorator
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
-        span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+        span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       }
     }
     return span;
@@ -117,17 +117,17 @@ public class SpringWebHttpServerDecorator
     }
 
     final String resourceName = DECORATE.spanNameForClass(clazz) + "." + methodName;
-    span.setTag(MoreTags.RESOURCE_NAME, resourceName);
+    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
   }
 
   public AgentSpan onRender(final AgentSpan span, final ModelAndView mv) {
     final String viewName = mv.getViewName();
     if (viewName != null) {
-      span.setTag("view.name", viewName);
-      span.setTag(MoreTags.RESOURCE_NAME, viewName);
+      span.setAttribute("view.name", viewName);
+      span.setAttribute(MoreTags.RESOURCE_NAME, viewName);
     }
     if (mv.getView() != null) {
-      span.setTag("view.type", mv.getView().getClass().getName());
+      span.setAttribute("view.type", mv.getView().getClass().getName());
     }
     return span;
   }

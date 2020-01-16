@@ -27,7 +27,7 @@ public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R ext
   @Override
   public R apply(final T t, final Throwable throwable) {
     if (throwable instanceof CancellationException) {
-      span.setTag("db.command.cancelled", true);
+      span.setAttribute("db.command.cancelled", true);
     } else {
       DECORATE.onError(span, throwable);
     }

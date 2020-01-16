@@ -1,8 +1,7 @@
 package io.opentelemetry.auto.instrumentation.elasticsearch5;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -60,30 +59,30 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
   public static class ElasticsearchRestClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(
+    public static SpanScopePair onEnter(
         @Advice.Argument(0) final String method,
         @Advice.Argument(1) final String endpoint,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
-      final AgentSpan span = startSpan("elasticsearch.rest.query");
+      final Span span = TRACER.spanBuilder("elasticsearch.rest.query").startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, method, endpoint);
 
       responseListener = new RestResponseListener(responseListener, span);
 
-      return activateSpan(span, false);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final AgentSpan span = scope.span();
+        final Span span = spanScopePair.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
-      scope.close();
+      spanScopePair.getScope().close();
     }
   }
 }

@@ -29,9 +29,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
 
   private void finishSpan(final boolean isCommandCancelled, final Throwable throwable) {
     if (span != null) {
-      span.setTag("db.command.results.count", numResults);
+      span.setAttribute("db.command.results.count", numResults);
       if (isCommandCancelled) {
-        span.setTag("db.command.cancelled", true);
+        span.setAttribute("db.command.cancelled", true);
       }
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);

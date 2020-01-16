@@ -1,12 +1,16 @@
 package io.opentelemetry.auto.instrumentation.apachehttpclient;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
   public static final ApacheHttpClientDecorator DECORATE = new ApacheHttpClientDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String[] instrumentationNames() {

@@ -37,7 +37,7 @@ public final class SpringDataDecorator extends ClientDecorator {
     assert method != null;
 
     if (method != null) {
-      span.setTag(MoreTags.RESOURCE_NAME, spanNameForMethod(method));
+      span.setAttribute(MoreTags.RESOURCE_NAME, spanNameForMethod(method));
     }
     return span;
   }

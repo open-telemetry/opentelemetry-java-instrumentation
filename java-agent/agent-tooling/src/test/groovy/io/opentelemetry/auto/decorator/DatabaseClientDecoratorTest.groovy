@@ -2,14 +2,14 @@ package io.opentelemetry.auto.decorator
 
 import io.opentelemetry.auto.api.Config
 import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.AgentSpan
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.trace.Span
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
-  def span = Mock(AgentSpan)
+  def span = Mock(Span)
 
   def "test afterStart"() {
     setup:
@@ -20,12 +20,12 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (serviceName != null) {
-      1 * span.setTag(MoreTags.SERVICE_NAME, serviceName)
+      1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     }
-    1 * span.setTag(Tags.COMPONENT, "test-component")
-    1 * span.setTag(Tags.SPAN_KIND, "client")
-    1 * span.setTag(Tags.DB_TYPE, "test-db")
-    1 * span.setTag(MoreTags.SPAN_TYPE, "test-type")
+    1 * span.setAttribute(Tags.COMPONENT, "test-component")
+    1 * span.setAttribute(Tags.SPAN_KIND, "client")
+    1 * span.setAttribute(Tags.DB_TYPE, "test-db")
+    1 * span.setAttribute(MoreTags.SPAN_TYPE, "test-type")
     0 * _
 
     where:
@@ -43,10 +43,14 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (session) {
-      1 * span.setTag(Tags.DB_USER, session.user)
-      1 * span.setTag(Tags.DB_INSTANCE, session.instance)
+      if (session.user) {
+        1 * span.setAttribute(Tags.DB_USER, session.user)
+      }
+      if (session.instance) {
+        1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
+      }
       if (renameService && session.instance) {
-        1 * span.setTag(MoreTags.SERVICE_NAME, session.instance)
+        1 * span.setAttribute(MoreTags.SERVICE_NAME, session.instance)
       }
     }
     0 * _
@@ -67,7 +71,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.onStatement(span, statement)
 
     then:
-    1 * span.setTag(Tags.DB_STATEMENT, statement)
+    1 * span.setAttribute(Tags.DB_STATEMENT, statement)
     0 * _
 
     where:
@@ -82,19 +86,19 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.afterStart((AgentSpan) null)
+    decorator.afterStart((Span) null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onConnection(null, null)
+    decorator.onConnection((Span) null, null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onStatement(null, null)
+    decorator.onStatement((Span) null, null)
 
     then:
     thrown(AssertionError)

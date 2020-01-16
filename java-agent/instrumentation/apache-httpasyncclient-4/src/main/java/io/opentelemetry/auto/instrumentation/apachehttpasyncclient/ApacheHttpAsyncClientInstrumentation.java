@@ -1,11 +1,8 @@
 package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -14,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -73,13 +70,13 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   public static class ClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentSpan methodEnter(
+    public static Span methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) final HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      final AgentSpan parentSpan = activeSpan();
-      final AgentSpan clientSpan = startSpan("http.request");
+      final Span parentSpan = TRACER.getCurrentSpan();
+      final Span clientSpan = TRACER.spanBuilder("http.request").startSpan();
       DECORATE.afterStart(clientSpan);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
@@ -91,23 +88,22 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentSpan span,
+        @Advice.Enter final Span span,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    final AgentSpan span;
+    final Span span;
     final HttpAsyncRequestProducer delegate;
 
-    public DelegatingRequestProducer(
-        final AgentSpan span, final HttpAsyncRequestProducer delegate) {
+    public DelegatingRequestProducer(final Span span, final HttpAsyncRequestProducer delegate) {
       this.span = span;
       this.delegate = delegate;
     }
@@ -122,7 +118,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       final HttpRequest request = delegate.generateRequest();
       DECORATE.onRequest(span, request);
 
-      propagate().inject(span, request, SETTER);
+      TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
 
       return request;
     }
@@ -160,14 +156,14 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
-    private final AgentSpan parentSpan;
-    private final AgentSpan clientSpan;
+    private final Span parentSpan;
+    private final Span clientSpan;
     private final HttpContext context;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        final AgentSpan parentSpan,
-        final AgentSpan clientSpan,
+        final Span parentSpan,
+        final Span clientSpan,
         final HttpContext context,
         final FutureCallback<T> delegate) {
       this.parentSpan = parentSpan;
@@ -181,12 +177,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     public void completed(final T result) {
       DECORATE.onResponse(clientSpan, context);
       DECORATE.beforeFinish(clientSpan);
-      clientSpan.finish(); // Finish span before calling delegate
+      clientSpan.end(); // end span before calling delegate
 
       if (parentSpan == null) {
         completeDelegate(result);
       } else {
-        try (final AgentScope scope = activateSpan(parentSpan, false)) {
+        try (final Scope scope = TRACER.withSpan(parentSpan)) {
           completeDelegate(result);
         }
       }
@@ -197,12 +193,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       DECORATE.onResponse(clientSpan, context);
       DECORATE.onError(clientSpan, ex);
       DECORATE.beforeFinish(clientSpan);
-      clientSpan.finish(); // Finish span before calling delegate
+      clientSpan.end(); // end span before calling delegate
 
       if (parentSpan == null) {
         failDelegate(ex);
       } else {
-        try (final AgentScope scope = activateSpan(parentSpan, false)) {
+        try (final Scope scope = TRACER.withSpan(parentSpan)) {
           failDelegate(ex);
         }
       }
@@ -212,12 +208,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     public void cancelled() {
       DECORATE.onResponse(clientSpan, context);
       DECORATE.beforeFinish(clientSpan);
-      clientSpan.finish(); // Finish span before calling delegate
+      clientSpan.end(); // end span before calling delegate
 
       if (parentSpan == null) {
         cancelDelegate();
       } else {
-        try (final AgentScope scope = activateSpan(parentSpan, false)) {
+        try (final Scope scope = TRACER.withSpan(parentSpan)) {
           cancelDelegate();
         }
       }

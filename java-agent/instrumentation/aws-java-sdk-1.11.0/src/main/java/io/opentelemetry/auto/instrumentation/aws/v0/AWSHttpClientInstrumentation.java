@@ -11,8 +11,9 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.Request;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -60,12 +61,15 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final AgentScope scope = request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
-        if (scope != null) {
-          request.addHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY, null);
-          DECORATE.onError(scope.span(), throwable);
-          DECORATE.beforeFinish(scope.span());
-          scope.close();
+        final SpanScopePair spanScopePair =
+            request.getHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY);
+        if (spanScopePair != null) {
+          request.addHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
+          final Span span = spanScopePair.getSpan();
+          DECORATE.onError(span, throwable);
+          DECORATE.beforeFinish(span);
+          span.end();
+          spanScopePair.getScope().close();
         }
       }
     }
@@ -96,13 +100,15 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           @Advice.FieldValue("request") final Request<?> request,
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
-          final AgentScope scope =
-              request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
-          if (scope != null) {
-            request.addHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY, null);
-            DECORATE.onError(scope.span(), throwable);
-            DECORATE.beforeFinish(scope.span());
-            scope.close();
+          final SpanScopePair spanScopePair =
+              request.getHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY);
+          if (spanScopePair != null) {
+            request.addHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
+            final Span span = spanScopePair.getSpan();
+            DECORATE.onError(span, throwable);
+            DECORATE.beforeFinish(span);
+            span.end();
+            spanScopePair.getScope().close();
           }
         }
       }

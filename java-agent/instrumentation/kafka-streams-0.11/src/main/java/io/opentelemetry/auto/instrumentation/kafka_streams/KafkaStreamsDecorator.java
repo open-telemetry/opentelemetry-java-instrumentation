@@ -38,9 +38,9 @@ public class KafkaStreamsDecorator extends ClientDecorator {
   public void onConsume(final AgentSpan span, final StampedRecord record) {
     if (record != null) {
       final String topic = record.topic() == null ? "kafka" : record.topic();
-      span.setTag(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
-      span.setTag("partition", record.partition());
-      span.setTag("offset", record.offset());
+      span.setAttribute(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
+      span.setAttribute("partition", record.partition());
+      span.setAttribute("offset", record.offset());
     }
   }
 }

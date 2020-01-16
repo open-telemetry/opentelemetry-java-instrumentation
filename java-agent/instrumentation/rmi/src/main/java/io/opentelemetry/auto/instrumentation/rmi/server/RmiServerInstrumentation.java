@@ -65,8 +65,8 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
         span = startSpan("rmi.request", context);
       }
 
-      span.setTag(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
-          .setTag("span.origin.type", thiz.getClass().getCanonicalName());
+      span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
+          .setAttribute("span.origin.type", thiz.getClass().getCanonicalName());
 
       DECORATE.afterStart(span);
       return activateSpan(span, true);

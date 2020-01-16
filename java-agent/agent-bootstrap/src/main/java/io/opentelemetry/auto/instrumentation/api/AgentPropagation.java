@@ -1,5 +1,6 @@
 package io.opentelemetry.auto.instrumentation.api;
 
+@Deprecated
 public interface AgentPropagation {
 
   <C> void inject(AgentSpan span, C carrier, Setter<C> setter);

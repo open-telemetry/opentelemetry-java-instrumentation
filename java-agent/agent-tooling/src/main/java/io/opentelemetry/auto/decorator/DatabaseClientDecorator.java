@@ -4,6 +4,7 @@ import io.opentelemetry.auto.api.Config;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
 
 public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorator {
 
@@ -13,10 +14,20 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
 
   protected abstract String dbInstance(CONNECTION connection);
 
+  @Deprecated
   @Override
   public AgentSpan afterStart(final AgentSpan span) {
+    afterStart(span.getSpan());
+    return span;
+  }
+
+  @Override
+  public Span afterStart(final Span span) {
     assert span != null;
-    span.setTag(Tags.DB_TYPE, dbType());
+    final String type = dbType();
+    if (type != null) {
+      span.setAttribute(Tags.DB_TYPE, type);
+    }
     return super.afterStart(span);
   }
 
@@ -27,23 +38,40 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
    * @param connection
    * @return
    */
+  @Deprecated
   public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
+    onConnection(span.getSpan(), connection);
+    return span;
+  }
+
+  public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setTag(Tags.DB_USER, dbUser(connection));
+      final String user = dbUser(connection);
+      if (user != null) {
+        span.setAttribute(Tags.DB_USER, user);
+      }
       final String instanceName = dbInstance(connection);
-      span.setTag(Tags.DB_INSTANCE, instanceName);
+      if (instanceName != null) {
+        span.setAttribute(Tags.DB_INSTANCE, instanceName);
+      }
 
       if (instanceName != null && Config.get().isDbClientSplitByInstance()) {
-        span.setTag(MoreTags.SERVICE_NAME, instanceName);
+        span.setAttribute(MoreTags.SERVICE_NAME, instanceName);
       }
     }
     return span;
   }
 
+  @Deprecated
   public AgentSpan onStatement(final AgentSpan span, final String statement) {
+    onStatement(span.getSpan(), statement);
+    return span;
+  }
+
+  public Span onStatement(final Span span, final String statement) {
     assert span != null;
-    span.setTag(Tags.DB_STATEMENT, statement);
+    span.setAttribute(Tags.DB_STATEMENT, statement);
     return span;
   }
 }

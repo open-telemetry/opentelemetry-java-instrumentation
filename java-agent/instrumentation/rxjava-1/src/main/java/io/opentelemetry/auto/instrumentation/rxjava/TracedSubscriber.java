@@ -1,21 +1,23 @@
 package io.opentelemetry.auto.instrumentation.rxjava;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 
 public class TracedSubscriber<T> extends Subscriber<T> {
+  private static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
-  private final AtomicReference<AgentSpan> spanRef;
+  private final AtomicReference<Span> spanRef;
   private final Subscriber<T> delegate;
   private final BaseDecorator decorator;
 
   public TracedSubscriber(
-      final AgentSpan span, final Subscriber<T> delegate, final BaseDecorator decorator) {
+      final Span span, final Subscriber<T> delegate, final BaseDecorator decorator) {
     spanRef = new AtomicReference<>(span);
     this.delegate = delegate;
     this.decorator = decorator;
@@ -26,9 +28,9 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onStart() {
-    final AgentSpan span = spanRef.get();
+    final Span span = spanRef.get();
     if (span != null) {
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         delegate.onStart();
       }
     } else {
@@ -38,9 +40,9 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onNext(final T value) {
-    final AgentSpan span = spanRef.get();
+    final Span span = spanRef.get();
     if (span != null) {
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         delegate.onNext(value);
       } catch (final Throwable e) {
         onError(e);
@@ -52,10 +54,10 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onCompleted() {
-    final AgentSpan span = spanRef.getAndSet(null);
+    final Span span = spanRef.getAndSet(null);
     if (span != null) {
       boolean errored = false;
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         delegate.onCompleted();
       } catch (final Throwable e) {
         // Repopulate the spanRef for onError
@@ -66,7 +68,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
         // finish called by onError, so don't finish again.
         if (!errored) {
           decorator.beforeFinish(span);
-          span.finish();
+          span.end();
         }
       }
     } else {
@@ -76,9 +78,9 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onError(final Throwable e) {
-    final AgentSpan span = spanRef.getAndSet(null);
+    final Span span = spanRef.getAndSet(null);
     if (span != null) {
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         decorator.onError(span, e);
         delegate.onError(e);
       } catch (final Throwable e2) {
@@ -86,7 +88,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
         throw e2;
       } finally {
         decorator.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     } else {
       delegate.onError(e);

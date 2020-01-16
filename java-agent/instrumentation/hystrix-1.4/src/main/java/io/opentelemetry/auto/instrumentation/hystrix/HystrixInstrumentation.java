@@ -7,9 +7,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -98,7 +98,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    protected void afterStart(final AgentSpan span) {
+    protected void afterStart(final Span span) {
       super.afterStart(span);
 
       DECORATE.onCommand(span, command, methodName);

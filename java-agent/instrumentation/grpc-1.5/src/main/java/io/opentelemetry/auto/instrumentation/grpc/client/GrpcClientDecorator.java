@@ -30,8 +30,8 @@ public class GrpcClientDecorator extends ClientDecorator {
 
   public AgentSpan onClose(final AgentSpan span, final Status status) {
 
-    span.setTag("status.code", status.getCode().name());
-    span.setTag("status.description", status.getDescription());
+    span.setAttribute("status.code", status.getCode().name());
+    span.setAttribute("status.description", status.getDescription());
 
     onError(span, status.getCause());
     if (!status.isOk()) {

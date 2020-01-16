@@ -2,12 +2,16 @@ package io.opentelemetry.auto.instrumentation.googlehttpclient;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
   public static final GoogleHttpClientDecorator DECORATE = new GoogleHttpClientDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String method(final HttpRequest httpRequest) {

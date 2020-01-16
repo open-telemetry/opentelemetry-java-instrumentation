@@ -33,7 +33,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     final Context spanContext = propagate().extract(headers, GETTER);
     final AgentSpan span =
         startSpan("grpc.server", spanContext)
-            .setTag(MoreTags.RESOURCE_NAME, call.getMethodDescriptor().getFullMethodName());
+            .setAttribute(MoreTags.RESOURCE_NAME, call.getMethodDescriptor().getFullMethodName());
     DECORATE.afterStart(span);
 
     final AgentScope scope = activateSpan(span, false);
@@ -93,7 +93,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onMessage(final ReqT message) {
       final AgentSpan span =
           startSpan("grpc.message", this.span.context())
-              .setTag("message.type", message.getClass().getName());
+              .setAttribute("message.type", message.getClass().getName());
       DECORATE.afterStart(span);
       final AgentScope scope = activateSpan(span, true);
       try {
@@ -126,7 +126,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       // Finishes span.
       try (final AgentScope scope = activateSpan(span, false)) {
         delegate().onCancel();
-        span.setTag("canceled", true);
+        span.setAttribute("canceled", true);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;

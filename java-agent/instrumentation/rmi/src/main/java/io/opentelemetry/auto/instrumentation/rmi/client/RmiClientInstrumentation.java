@@ -63,8 +63,8 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
       }
       final AgentSpan span =
           startSpan("rmi.invoke")
-              .setTag(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
-              .setTag("span.origin.type", method.getDeclaringClass().getCanonicalName());
+              .setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
+              .setAttribute("span.origin.type", method.getDeclaringClass().getCanonicalName());
 
       DECORATE.afterStart(span);
       return activateSpan(span, true);

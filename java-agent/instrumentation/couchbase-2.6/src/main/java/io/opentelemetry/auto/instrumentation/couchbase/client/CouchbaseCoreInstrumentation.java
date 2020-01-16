@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.instrumentation.couchbase.client;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -9,10 +8,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -35,7 +36,12 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "com.couchbase.client.core.message.CouchbaseRequest", AgentSpan.class.getName());
+        "com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {getClass().getName() + "$CouchbaseCoreAdvice"};
   }
 
   @Override
@@ -49,26 +55,28 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
   }
 
   public static class CouchbaseCoreAdvice {
+    public static final Tracer TRACER =
+        OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) final CouchbaseRequest request) {
 
-      final AgentSpan parentSpan = activeSpan();
+      final Span parentSpan = TRACER.getCurrentSpan();
       if (parentSpan != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store
 
-        final ContextStore<CouchbaseRequest, AgentSpan> contextStore =
-            InstrumentationContext.get(CouchbaseRequest.class, AgentSpan.class);
+        final ContextStore<CouchbaseRequest, Span> contextStore =
+            InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
-        AgentSpan span = contextStore.get(request);
+        Span span = contextStore.get(request);
 
         if (span == null) {
           span = parentSpan;
           contextStore.put(request, span);
 
           if (request.operationId() != null) {
-            span.setTag("couchbase.operation_id", request.operationId());
+            span.setAttribute("couchbase.operation_id", request.operationId());
           }
         }
       }

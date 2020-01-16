@@ -40,7 +40,7 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
     } else {
       span = startSpan("http.request");
     }
-    span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
+    span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
     DECORATE.afterStart(span);
 
     try (final AgentScope scope = activateSpan(span, false)) {

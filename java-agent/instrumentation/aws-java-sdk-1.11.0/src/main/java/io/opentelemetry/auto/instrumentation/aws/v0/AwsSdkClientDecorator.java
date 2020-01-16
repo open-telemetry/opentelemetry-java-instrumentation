@@ -5,7 +5,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -20,19 +20,19 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
 
   @Override
-  public AgentSpan onRequest(final AgentSpan span, final Request request) {
+  public Span onRequest(final Span span, final Request request) {
     // Call super first because we override the resource name below.
     super.onRequest(span, request);
 
     final String awsServiceName = request.getServiceName();
     final Class<?> awsOperation = request.getOriginalRequest().getClass();
 
-    span.setTag("aws.agent", COMPONENT_NAME);
-    span.setTag("aws.service", awsServiceName);
-    span.setTag("aws.operation", awsOperation.getSimpleName());
-    span.setTag("aws.endpoint", request.getEndpoint().toString());
+    span.setAttribute("aws.agent", COMPONENT_NAME);
+    span.setAttribute("aws.service", awsServiceName);
+    span.setAttribute("aws.operation", awsOperation.getSimpleName());
+    span.setAttribute("aws.endpoint", request.getEndpoint().toString());
 
-    span.setTag(
+    span.setAttribute(
         MoreTags.RESOURCE_NAME,
         remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
 
@@ -40,10 +40,10 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  public AgentSpan onResponse(final AgentSpan span, final Response response) {
+  public Span onResponse(final Span span, final Response response) {
     if (response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       final AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
-      span.setTag("aws.requestId", awsResp.getRequestId());
+      span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
     return super.onResponse(span, response);
   }

@@ -66,7 +66,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
       final Option pathOption = request.tags().get("ROUTE_PATTERN");
       if (!pathOption.isEmpty()) {
         final String path = (String) pathOption.get();
-        span.setTag(MoreTags.RESOURCE_NAME, request.method() + " " + path);
+        span.setAttribute(MoreTags.RESOURCE_NAME, request.method() + " " + path);
       }
     }
     return span;
@@ -74,7 +74,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
 
   @Override
   public AgentSpan onError(final AgentSpan span, Throwable throwable) {
-    span.setTag(Tags.HTTP_STATUS, 500);
+    span.setAttribute(Tags.HTTP_STATUS, 500);
     span.setError(true);
     if (throwable != null
         // This can be moved to instanceof check when using Java 8.

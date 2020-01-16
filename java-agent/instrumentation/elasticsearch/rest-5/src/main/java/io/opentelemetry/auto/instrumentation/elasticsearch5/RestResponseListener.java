@@ -2,16 +2,16 @@ package io.opentelemetry.auto.instrumentation.elasticsearch5;
 
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 
 public class RestResponseListener implements ResponseListener {
 
   private final ResponseListener listener;
-  private final AgentSpan span;
+  private final Span span;
 
-  public RestResponseListener(final ResponseListener listener, final AgentSpan span) {
+  public RestResponseListener(final ResponseListener listener, final Span span) {
     this.listener = listener;
     this.span = span;
   }
@@ -26,7 +26,7 @@ public class RestResponseListener implements ResponseListener {
       listener.onSuccess(response);
     } finally {
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     }
   }
 
@@ -38,7 +38,7 @@ public class RestResponseListener implements ResponseListener {
       listener.onFailure(e);
     } finally {
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     }
   }
 }

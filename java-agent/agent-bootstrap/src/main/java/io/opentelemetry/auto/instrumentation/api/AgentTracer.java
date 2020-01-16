@@ -1,8 +1,11 @@
 package io.opentelemetry.auto.instrumentation.api;
 
 import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
+import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Deprecated
 public class AgentTracer {
 
   // Implicit parent
@@ -125,27 +128,27 @@ public class AgentTracer {
     static final NoopAgentSpan INSTANCE = new NoopAgentSpan();
 
     @Override
-    public AgentSpan setTag(final String key, final boolean value) {
+    public AgentSpan setAttribute(final String key, final boolean value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final int value) {
+    public AgentSpan setAttribute(final String key, final int value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final long value) {
+    public AgentSpan setAttribute(final String key, final long value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final double value) {
+    public AgentSpan setAttribute(final String key, final double value) {
       return this;
     }
 
     @Override
-    public AgentSpan setTag(final String key, final String value) {
+    public AgentSpan setAttribute(final String key, final String value) {
       return this;
     }
 
@@ -179,6 +182,11 @@ public class AgentTracer {
 
     @Override
     public void setSpanName(final String spanName) {}
+
+    @Override
+    public Span getSpan() {
+      return DefaultSpan.getInvalid();
+    }
   }
 
   public static class NoopAgentScope implements AgentScope {

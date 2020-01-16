@@ -46,7 +46,7 @@ public class Servlet2Advice {
 
     final AgentSpan span =
         startSpan("servlet.request", extractedContext)
-            .setTag("span.origin.type", servlet.getClass().getName());
+            .setAttribute("span.origin.type", servlet.getClass().getName());
 
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, httpServletRequest);
@@ -68,7 +68,7 @@ public class Servlet2Advice {
     if (spanAttr instanceof AgentSpan && request instanceof HttpServletRequest) {
       final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
       if (principal != null) {
-        ((AgentSpan) spanAttr).setTag(MoreTags.USER_NAME, principal.getName());
+        ((AgentSpan) spanAttr).setAttribute(MoreTags.USER_NAME, principal.getName());
       }
     }
 
@@ -82,7 +82,7 @@ public class Servlet2Advice {
           && ((StatusSavingHttpServletResponseWrapper) response).status
               == HttpServletResponse.SC_OK) {
         // exception was thrown but status code wasn't set
-        span.setTag(Tags.HTTP_STATUS, 500);
+        span.setAttribute(Tags.HTTP_STATUS, 500);
         span.setError(true);
       }
       DECORATE.onError(span, throwable);
