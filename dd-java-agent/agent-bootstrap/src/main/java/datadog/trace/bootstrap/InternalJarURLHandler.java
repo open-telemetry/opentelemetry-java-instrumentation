@@ -1,7 +1,6 @@
 package datadog.trace.bootstrap;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,14 +23,16 @@ public class InternalJarURLHandler extends URLStreamHandler {
   private JarFile bootstrapJarFile;
 
   InternalJarURLHandler(final String internalJarFileName, final URL bootstrapJarLocation) {
+    final String filePrefix = internalJarFileName + "/";
+
     try {
       if (bootstrapJarLocation != null) {
-        bootstrapJarFile = new JarFile(new File(bootstrapJarLocation.toURI()));
+        bootstrapJarFile = new JarFile(new File(bootstrapJarLocation.toURI()), false);
         final Enumeration<JarEntry> entries = bootstrapJarFile.entries();
         while (entries.hasMoreElements()) {
           final JarEntry entry = entries.nextElement();
 
-          if (!entry.isDirectory() && entry.getName().startsWith(internalJarFileName + "/")) {
+          if (!entry.isDirectory() && entry.getName().startsWith(filePrefix)) {
             filenameToEntry.put(entry.getName().substring(internalJarFileName.length()), entry);
           }
         }
@@ -41,62 +42,33 @@ public class InternalJarURLHandler extends URLStreamHandler {
     }
 
     if (filenameToEntry.isEmpty()) {
-      log.warn("Internal jar entries found");
+      log.warn("No internal jar entries found");
     }
   }
 
   @Override
   protected URLConnection openConnection(final URL url) throws IOException {
-
-    final byte[] bytes;
-
     final String filename = url.getFile().replaceAll("\\.class$", ".classdata");
     if ("/".equals(filename)) {
       // "/" is used as the default url of the jar
       // This is called by the SecureClassLoader trying to obtain permissions
-      bytes = new byte[0];
+
+      // nullInputStream() is not available until Java 11
+      return new InternalJarURLConnection(url, new ByteArrayInputStream(new byte[0]));
     } else if (filenameToEntry.containsKey(filename)) {
       final JarEntry entry = filenameToEntry.get(filename);
-      bytes = getBytes(bootstrapJarFile.getInputStream(entry));
+      return new InternalJarURLConnection(url, bootstrapJarFile.getInputStream(entry));
     } else {
       throw new NoSuchFileException(url.getFile(), null, url.getFile() + " not in internal jar");
-    }
-
-    return new InternalJarURLConnection(url, bytes);
-  }
-
-  /**
-   * Standard "copy InputStream to byte[]" implementation using a ByteArrayOutputStream
-   *
-   * <p>IOUtils.toByteArray() or Java 9's InputStream.readAllBytes() could be replacements if they
-   * were available
-   *
-   * <p>This can be optimized using the JarEntry's size(), but its not always available
-   *
-   * @param inputStream stream to read
-   * @return a byte[] from the inputstream
-   */
-  private static byte[] getBytes(final InputStream inputStream) throws IOException {
-    final byte[] buffer = new byte[4096];
-
-    int bytesRead = inputStream.read(buffer, 0, buffer.length);
-    try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      while (bytesRead != -1) {
-        outputStream.write(buffer, 0, bytesRead);
-
-        bytesRead = inputStream.read(buffer, 0, buffer.length);
-      }
-
-      return outputStream.toByteArray();
     }
   }
 
   private static class InternalJarURLConnection extends URLConnection {
-    private final byte[] bytes;
+    private final InputStream inputStream;
 
-    private InternalJarURLConnection(final URL url, final byte[] bytes) {
+    private InternalJarURLConnection(final URL url, final InputStream inputStream) {
       super(url);
-      this.bytes = bytes;
+      this.inputStream = inputStream;
     }
 
     @Override
@@ -106,7 +78,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
 
     @Override
     public InputStream getInputStream() throws IOException {
-      return new ByteArrayInputStream(bytes);
+      return inputStream;
     }
 
     @Override
