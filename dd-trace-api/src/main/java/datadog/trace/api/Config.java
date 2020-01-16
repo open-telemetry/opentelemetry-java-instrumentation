@@ -65,8 +65,8 @@ public class Config {
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
   public static final String TRACE_SAMPLING_SERVICE_RULES = "trace.sampling.service.rules";
   public static final String TRACE_SAMPLING_OPERATION_RULES = "trace.sampling.operation.rules";
-  public static final String TRACE_SAMPLING_DEFAULT_RATE = "trace.sampling.default.rate";
-  public static final String TRACE_SAMPLING_RATE_LIMIT = "trace.sampling.rate.limit";
+  public static final String TRACE_SAMPLE_RATE = "trace.sample.rate";
+  public static final String TRACE_RATE_LIMIT = "trace.rate.limit";
   public static final String TRACE_REPORT_HOSTNAME = "trace.report-hostname";
   public static final String HEADER_TAGS = "trace.header.tags";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
@@ -149,7 +149,7 @@ public class Config {
   private static final String DEFAULT_TRACE_METHODS = null;
   public static final boolean DEFAULT_TRACE_ANALYTICS_ENABLED = false;
   public static final float DEFAULT_ANALYTICS_SAMPLE_RATE = 1.0f;
-  public static final double DEFAULT_TRACE_SAMPLING_RATE_LIMIT = 100;
+  public static final double DEFAULT_TRACE_RATE_LIMIT = 100;
 
   public enum PropagationStyle {
     DATADOG,
@@ -222,8 +222,8 @@ public class Config {
 
   @Getter private final Map<String, String> traceSamplingServiceRules;
   @Getter private final Map<String, String> traceSamplingOperationRules;
-  @Getter private final Double traceSamplingDefaultRate;
-  @Getter private final Double traceSamplingRateLimit;
+  @Getter private final Double traceSampleRate;
+  @Getter private final Double traceRateLimit;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -349,10 +349,8 @@ public class Config {
     traceSamplingServiceRules = getMapSettingFromEnvironment(TRACE_SAMPLING_SERVICE_RULES, null);
     traceSamplingOperationRules =
         getMapSettingFromEnvironment(TRACE_SAMPLING_OPERATION_RULES, null);
-    traceSamplingDefaultRate = getDoubleSettingFromEnvironment(TRACE_SAMPLING_DEFAULT_RATE, null);
-    traceSamplingRateLimit =
-        getDoubleSettingFromEnvironment(
-            TRACE_SAMPLING_RATE_LIMIT, DEFAULT_TRACE_SAMPLING_RATE_LIMIT);
+    traceSampleRate = getDoubleSettingFromEnvironment(TRACE_SAMPLE_RATE, null);
+    traceRateLimit = getDoubleSettingFromEnvironment(TRACE_RATE_LIMIT, DEFAULT_TRACE_RATE_LIMIT);
 
     log.debug("New instance: {}", this);
   }
@@ -484,12 +482,8 @@ public class Config {
     traceSamplingOperationRules =
         getPropertyMapValue(
             properties, TRACE_SAMPLING_OPERATION_RULES, parent.traceSamplingOperationRules);
-    traceSamplingDefaultRate =
-        getPropertyDoubleValue(
-            properties, TRACE_SAMPLING_DEFAULT_RATE, parent.traceSamplingDefaultRate);
-    traceSamplingRateLimit =
-        getPropertyDoubleValue(
-            properties, TRACE_SAMPLING_RATE_LIMIT, parent.traceSamplingRateLimit);
+    traceSampleRate = getPropertyDoubleValue(properties, TRACE_SAMPLE_RATE, parent.traceSampleRate);
+    traceRateLimit = getPropertyDoubleValue(properties, TRACE_RATE_LIMIT, parent.traceRateLimit);
 
     log.debug("New instance: {}", this);
   }
