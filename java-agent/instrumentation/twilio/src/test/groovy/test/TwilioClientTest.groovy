@@ -10,10 +10,13 @@ import com.twilio.http.TwilioRestClient
 import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.Tracer
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
@@ -24,10 +27,11 @@ import org.apache.http.impl.client.HttpClientBuilder
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
+import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER
 
 class TwilioClientTest extends AgentTestRunner {
+
+  //public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   final static String ACCOUNT_SID = "abc"
   final static String AUTH_TOKEN = "efg"
@@ -113,15 +117,16 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes()), 200)
 
-    def scope = activateSpan(startSpan("test"), true)
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     Message message = Message.creator(
       new PhoneNumber("+1 555 720 5913"),  // To number
       new PhoneNumber("+1 555 555 5215"),  // From number
       "Hello world!"                    // SMS body
     ).create(twilioRestClient)
+    span.end()
 
-    scope.close()
+    println "****************" + span.dump()
 
     expect:
 
@@ -161,7 +166,7 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes()), 200)
 
-    def scope = activateSpan(startSpan("test"), true)
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     Call call = Call.creator(
       new PhoneNumber("+15558881234"),  // To number
@@ -171,7 +176,7 @@ class TwilioClientTest extends AgentTestRunner {
       new URI("http://twimlets.com/holdmusic?Bucket=com.twilio.music.ambient")
     ).create(twilioRestClient)
 
-    scope.close()
+    span.end()
 
     expect:
 
@@ -235,7 +240,8 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    def scope = activateSpan(startSpan("test"), true)
+
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     Message message = Message.creator(
       new PhoneNumber("+1 555 720 5913"),  // To number
@@ -243,7 +249,7 @@ class TwilioClientTest extends AgentTestRunner {
       "Hello world!"                    // SMS body
     ).create(realTwilioRestClient)
 
-    scope.close()
+    span.end()
 
     expect:
 
@@ -336,15 +342,14 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    def scope = activateSpan(startSpan("test"), true)
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     Message message = Message.creator(
       new PhoneNumber("+1 555 720 5913"),  // To number
       new PhoneNumber("+1 555 555 5215"),  // From number
       "Hello world!"                    // SMS body
     ).create(realTwilioRestClient)
-
-    scope.close()
+    span.end()
 
     expect:
 
@@ -450,7 +455,7 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    def scope = activateSpan(startSpan("test"), true)
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     ListenableFuture<Message> future = Message.creator(
       new PhoneNumber("+1 555 720 5913"),  // To number
@@ -464,7 +469,7 @@ class TwilioClientTest extends AgentTestRunner {
     } finally {
       // Give the future callback a chance to run
       Thread.sleep(1000)
-      scope.close()
+      span.end()
     }
 
     expect:
@@ -552,7 +557,7 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
-    def scope = activateSpan(startSpan("test"), true)
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     when:
     Message.creator(
@@ -564,7 +569,7 @@ class TwilioClientTest extends AgentTestRunner {
     then:
     thrown(ApiException)
 
-    scope.close()
+    span.end()
 
     expect:
 
@@ -639,7 +644,7 @@ class TwilioClientTest extends AgentTestRunner {
 
     when:
 
-    def scope = activateSpan(startSpan("test"), true)
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     ListenableFuture<Message> future = Message.creator(
       new PhoneNumber("+1 555 720 5913"),  // To number
@@ -653,7 +658,7 @@ class TwilioClientTest extends AgentTestRunner {
     } finally {
       // Give the future callback a chance to run
       Thread.sleep(1000)
-      scope.close()
+      span.end()
     }
 
     then:
@@ -720,7 +725,7 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
-    def scope = activateSpan(startSpan("test"), true)
+    def span = TEST_TRACER.spanBuilder("test").startSpan()
 
     ListenableFuture<Message> future = Message.creator(
       new PhoneNumber("+1 555 720 5913"),  // To number
@@ -736,7 +741,7 @@ class TwilioClientTest extends AgentTestRunner {
 
     } finally {
       Thread.sleep(1000)
-      scope.close()
+      span.end()
     }
 
     then:

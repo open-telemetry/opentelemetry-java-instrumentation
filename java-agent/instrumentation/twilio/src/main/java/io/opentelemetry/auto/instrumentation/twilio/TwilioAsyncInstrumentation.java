@@ -1,8 +1,7 @@
 package io.opentelemetry.auto.instrumentation.twilio;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -18,10 +17,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
+
+import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -86,7 +86,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope methodEnter(
+    public static SpanScopePair methodEnter(
         @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
@@ -99,32 +99,33 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
       }
 
       // Don't automatically close the span with the scope if we're executing an async method
-      final AgentSpan span = startSpan("twilio.sdk");
+      final Span span = TRACER.spanBuilder("twilio.sdk").startSpan();
+
       DECORATE.afterStart(span);
       DECORATE.onServiceExecution(span, that, methodName);
 
-      return activateSpan(span, false);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final ListenableFuture response) {
-      if (scope == null) {
+      if (spanScopePair == null) {
         return;
       }
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       try {
-        final AgentSpan span = scope.span();
+        final Span span = spanScopePair.getSpan();
 
         if (throwable != null) {
           // There was an synchronous error,
           // which means we shouldn't wait for a callback to close the span.
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
-          span.finish();
+          span.end();
         } else {
           // We're calling an async operation, we still need to finish the span when it's
           // complete and report the results; set an appropriate callback
@@ -132,7 +133,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
               response, new SpanFinishingCallback(span), Twilio.getExecutorService());
         }
       } finally {
-        scope.close(); // won't finish the span.
+        spanScopePair.getScope().close(); // won't finish the span.
         CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }
@@ -145,9 +146,9 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
   public static class SpanFinishingCallback implements FutureCallback {
 
     /** Span that we should finish and annotate when the future is complete. */
-    private final AgentSpan span;
+    private final Span span;
 
-    public SpanFinishingCallback(final AgentSpan span) {
+    public SpanFinishingCallback(final Span span) {
       this.span = span;
     }
 
@@ -155,14 +156,14 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
     public void onSuccess(final Object result) {
       DECORATE.beforeFinish(span);
       DECORATE.onResult(span, result);
-      span.finish();
+      span.end();
     }
 
     @Override
     public void onFailure(final Throwable t) {
       DECORATE.onError(span, t);
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     }
   }
 }

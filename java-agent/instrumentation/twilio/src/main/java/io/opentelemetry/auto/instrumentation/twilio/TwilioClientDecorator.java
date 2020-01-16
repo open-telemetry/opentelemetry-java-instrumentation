@@ -3,12 +3,15 @@ package io.opentelemetry.auto.instrumentation.twilio;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
+
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 
 /** Decorate Twilio span's with relevant contextual information. */
@@ -16,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 public class TwilioClientDecorator extends ClientDecorator {
 
   public static final TwilioClientDecorator DECORATE = new TwilioClientDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.twilio");
 
   static final String COMPONENT_NAME = "twilio-sdk";
 
@@ -40,8 +45,8 @@ public class TwilioClientDecorator extends ClientDecorator {
   }
 
   /** Decorate trace based on service execution metadata. */
-  public AgentSpan onServiceExecution(
-      final AgentSpan span, final Object serviceExecutor, final String methodName) {
+  public Span onServiceExecution(
+      final Span span, final Object serviceExecutor, final String methodName) {
 
     // Drop common package prefix (com.twilio.rest)
     final String simpleClassName =
@@ -53,7 +58,7 @@ public class TwilioClientDecorator extends ClientDecorator {
   }
 
   /** Annotate the span with the results of the operation. */
-  public AgentSpan onResult(final AgentSpan span, Object result) {
+  public Span onResult(final Span span, Object result) {
 
     // Unwrap ListenableFuture (if present)
     if (result instanceof ListenableFuture) {
@@ -84,7 +89,9 @@ public class TwilioClientDecorator extends ClientDecorator {
       final Call call = (Call) result;
       span.setAttribute("twilio.account", call.getAccountSid());
       span.setAttribute("twilio.sid", call.getSid());
-      span.setAttribute("twilio.parentSid", call.getParentCallSid());
+      if (call.getParentCallSid() != null) {
+        span.setAttribute("twilio.parentSid", call.getParentCallSid());
+      }
       if (call.getStatus() != null) {
         span.setAttribute("twilio.status", call.getStatus().toString());
       }
@@ -105,7 +112,7 @@ public class TwilioClientDecorator extends ClientDecorator {
    * required.
    */
   private void setTagIfPresent(
-      final AgentSpan span, final Object result, final String tag, final String getter) {
+      final Span span, final Object result, final String tag, final String getter) {
     try {
       final Method method = result.getClass().getMethod(getter);
       final Object value = method.invoke(result);
