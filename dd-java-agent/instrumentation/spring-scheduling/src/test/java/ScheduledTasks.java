@@ -15,7 +15,8 @@
  */
 
 import datadog.trace.api.DDTags;
-import datadog.trace.api.Trace;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,7 +24,10 @@ import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.trace_annotation.TraceDecorator.DECORATE;
 
 @Component
 public class ScheduledTasks {
@@ -35,11 +39,34 @@ public class ScheduledTasks {
   public static boolean reportCurrentTimeExecuted = false;
 
   @Scheduled(fixedRate = 5000)
-  @Trace
+  //  @Trace
   public void reportCurrentTime() {
     //    log.info("The time is now {}", dateFormat.format(new Date()));
     // test that the body of method has been executed
-    activeSpan().setTag(DDTags.SERVICE_NAME, "test");
+    // create span
+
+    //    activeSpan().setTag(DDTags.SERVICE_NAME, "test");
     reportCurrentTimeExecuted = true;
+  }
+
+  public void runSpan() {
+    // create span
+    final AgentSpan span = startSpan("currentTime");
+    DECORATE.afterStart(span);
+
+    try (final AgentScope scope = activateSpan(span, false)) {
+      activeSpan().setTag(DDTags.SERVICE_NAME, "test");
+      DECORATE.afterStart(span);
+      scope.setAsyncPropagation(true);
+
+      try {
+        reportCurrentTime();
+      } catch (final Throwable throwable) {
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+        span.finish();
+        throw throwable;
+      }
+    }
   }
 }
