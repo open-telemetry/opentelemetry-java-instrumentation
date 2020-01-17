@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
 import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -14,7 +13,7 @@ public class HttpServletRequestExtractAdapter
 
   @Override
   public List<String> keys(final HttpServletRequest carrier) {
-    final ArrayList<String> keys = Collections.list(carrier.getHeaderNames());
+    final List<String> keys = Collections.list(carrier.getHeaderNames());
     keys.addAll(Collections.list(carrier.getAttributeNames()));
     return keys;
   }
