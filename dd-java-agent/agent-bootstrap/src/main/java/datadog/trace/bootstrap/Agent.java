@@ -166,18 +166,21 @@ public class Agent {
   private static synchronized void createParentClassloader(final URL bootstrapURL) {
     if (PARENT_CLASSLOADER == null) {
       try {
-        if (isJavaBefore9()) {
-          PARENT_CLASSLOADER = null; // bootstrap
-        } else {
-          // platform classloader is parent of system in java 9+
-          PARENT_CLASSLOADER = getPlatformClassLoader();
-        }
-
-        final Class<?> loaderClass =
+        final Class<?> bootstrapProxyClass =
             ClassLoader.getSystemClassLoader()
                 .loadClass("datadog.trace.bootstrap.DatadogClassLoader$BootstrapClassLoaderProxy");
-        final Constructor constructor = loaderClass.getDeclaredConstructor(URL.class);
+        final Constructor constructor = bootstrapProxyClass.getDeclaredConstructor(URL.class);
         BOOTSTRAP_PROXY = (ClassLoader) constructor.newInstance(bootstrapURL);
+
+        final ClassLoader grandParent;
+        if (isJavaBefore9()) {
+          grandParent = null; // bootstrap
+        } else {
+          // platform classloader is parent of system in java 9+
+          grandParent = getPlatformClassLoader();
+        }
+
+        PARENT_CLASSLOADER = createDatadogClassLoader("shared.isolated", bootstrapURL, grandParent);
       } catch (final Throwable ex) {
         log.error("Throwable thrown creating parent classloader", ex);
       }
@@ -189,7 +192,9 @@ public class Agent {
     if (AGENT_CLASSLOADER == null) {
       try {
         final ClassLoader agentClassLoader =
-            createDatadogClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
+            createDatadogClassLoader(
+                "agent-tooling-and-instrumentation.isolated", bootstrapURL, PARENT_CLASSLOADER);
+
         final Class<?> agentInstallerClass =
             agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
         final Method agentInstallerMethod =
@@ -226,7 +231,7 @@ public class Agent {
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         final ClassLoader jmxFetchClassLoader =
-            createDatadogClassLoader("agent-jmxfetch.isolated", bootstrapURL);
+            createDatadogClassLoader("agent-jmxfetch.isolated", bootstrapURL, PARENT_CLASSLOADER);
         Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
         final Class<?> jmxFetchAgentClass =
             jmxFetchClassLoader.loadClass("datadog.trace.agent.jmxfetch.JMXFetch");
@@ -267,7 +272,8 @@ public class Agent {
    * @return Datadog Classloader
    */
   private static ClassLoader createDatadogClassLoader(
-      final String innerJarFilename, final URL bootstrapURL) throws Exception {
+      final String innerJarFilename, final URL bootstrapURL, final ClassLoader parent)
+      throws Exception {
 
     final Class<?> loaderClass =
         ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
@@ -275,8 +281,7 @@ public class Agent {
         loaderClass.getDeclaredConstructor(
             URL.class, String.class, ClassLoader.class, ClassLoader.class);
     return (ClassLoader)
-        constructor.newInstance(
-            bootstrapURL, innerJarFilename, BOOTSTRAP_PROXY, PARENT_CLASSLOADER);
+        constructor.newInstance(bootstrapURL, innerJarFilename, BOOTSTRAP_PROXY, parent);
   }
 
   private static ClassLoader getPlatformClassLoader()
