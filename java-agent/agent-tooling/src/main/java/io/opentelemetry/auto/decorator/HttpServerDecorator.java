@@ -7,10 +7,11 @@ import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
+import lombok.extern.slf4j.Slf4j;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
@@ -75,8 +76,12 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
           span.setAttribute(Tags.HTTP_URL, urlNoParams.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
-            span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
-            span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
+            if (url.getQuery() != null) {
+              span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
+            }
+            if (url.getFragment() != null) {
+              span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
+            }
           }
         }
       } catch (final Exception e) {

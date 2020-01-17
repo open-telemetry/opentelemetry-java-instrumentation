@@ -95,6 +95,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
+      println "****************************** " + trace.dump()
       operationName expectedOperationName()
       errored endpoint.errored
       if (parentID != null) {

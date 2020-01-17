@@ -1,14 +1,17 @@
 package io.opentelemetry.auto.instrumentation.springweb;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
@@ -19,6 +22,8 @@ import org.springframework.web.servlet.mvc.Controller;
 @Slf4j
 public class SpringWebHttpServerDecorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
   public static final SpringWebHttpServerDecorator DECORATE = new SpringWebHttpServerDecorator();
   public static final SpringWebHttpServerDecorator DECORATE_RENDER =
       new SpringWebHttpServerDecorator() {
@@ -76,11 +81,12 @@ public class SpringWebHttpServerDecorator
   }
 
   @Override
-  public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
+  public Span onRequest(final Span span, final HttpServletRequest request) {
     if (request != null) {
       final String method = request.getMethod();
       final Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+      System.out.println("----------------------------------" + HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE + " -> " + bestMatchingPattern);
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
         span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
@@ -89,7 +95,7 @@ public class SpringWebHttpServerDecorator
     return span;
   }
 
-  public void onHandle(final AgentSpan span, final Object handler) {
+  public void onHandle(final Span span, final Object handler) {
     final Class<?> clazz;
     final String methodName;
 
@@ -120,7 +126,7 @@ public class SpringWebHttpServerDecorator
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
   }
 
-  public AgentSpan onRender(final AgentSpan span, final ModelAndView mv) {
+  public Span onRender(final Span span, final ModelAndView mv) {
     final String viewName = mv.getViewName();
     if (viewName != null) {
       span.setAttribute("view.name", viewName);

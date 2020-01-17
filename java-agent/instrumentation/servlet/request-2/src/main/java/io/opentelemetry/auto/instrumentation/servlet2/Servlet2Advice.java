@@ -1,35 +1,35 @@
 package io.opentelemetry.auto.instrumentation.servlet2;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
-import static io.opentelemetry.auto.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.DECORATE;
-
 import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
-import java.security.Principal;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.Status;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import java.security.Principal;
+
+import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
+import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.TRACER;
 
 public class Servlet2Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope onEnter(
+  public static SpanScopePair onEnter(
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
           ServletResponse response) {
-    final boolean hasActiveTrace = activeSpan() != null;
-    final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof AgentSpan;
+    final boolean hasActiveTrace = TRACER.getCurrentSpan() != null;
+    final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
     if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
@@ -41,12 +41,18 @@ public class Servlet2Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+    final Span.Builder builder = TRACER.spanBuilder("servlet.request");
+    try {
+      final SpanContext extractedContext =
+          TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);
+      builder.setParent(extractedContext);
+    } catch (final IllegalArgumentException e) {
+      // Couldn't extract a context. We should treat this as a root span. '
+      builder.setNoParent();
+    }
 
-    final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
-
-    final AgentSpan span =
-        startSpan("servlet.request", extractedContext)
-            .setAttribute("span.origin.type", servlet.getClass().getName());
+    final Span span = builder.startSpan();
+    span.setAttribute("span.origin.type", servlet.getClass().getName());
 
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, httpServletRequest);
@@ -54,28 +60,28 @@ public class Servlet2Advice {
 
     httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
 
-    return activateSpan(span, true);
+    return new SpanScopePair(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final AgentScope scope,
+      @Advice.Enter final SpanScopePair spanAndScope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
     final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-    if (spanAttr instanceof AgentSpan && request instanceof HttpServletRequest) {
+    if (spanAttr instanceof Span && request instanceof HttpServletRequest) {
       final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
       if (principal != null) {
-        ((AgentSpan) spanAttr).setAttribute(MoreTags.USER_NAME, principal.getName());
+        ((Span) spanAttr).setAttribute(MoreTags.USER_NAME, principal.getName());
       }
     }
 
-    if (scope == null) {
+    if (spanAndScope == null) {
       return;
     }
-    final AgentSpan span = scope.span();
+    final Span span = spanAndScope.getSpan();
     DECORATE.onResponse(span, response);
     if (throwable != null) {
       if (response instanceof StatusSavingHttpServletResponseWrapper
@@ -83,12 +89,12 @@ public class Servlet2Advice {
               == HttpServletResponse.SC_OK) {
         // exception was thrown but status code wasn't set
         span.setAttribute(Tags.HTTP_STATUS, 500);
-        span.setError(true);
+        span.setStatus(Status.UNKNOWN);
       }
       DECORATE.onError(span, throwable);
     }
     DECORATE.beforeFinish(span);
-
-    scope.close();
+    span.end();
+    spanAndScope.getScope().close();
   }
 }

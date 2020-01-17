@@ -1,15 +1,19 @@
 package io.opentelemetry.auto.instrumentation.servlet2;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import java.net.URI;
-import java.net.URISyntaxException;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
+
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class Servlet2Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, ServletResponse> {
   public static final Servlet2Decorator DECORATE = new Servlet2Decorator();
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String[] instrumentationNames() {
@@ -65,7 +69,7 @@ public class Servlet2Decorator
   }
 
   @Override
-  public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
+  public Span onRequest(final Span span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
       span.setAttribute("servlet.context", request.getContextPath());
