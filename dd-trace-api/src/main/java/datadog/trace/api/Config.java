@@ -591,7 +591,8 @@ public class Config {
   }
 
   public boolean isDecoratorEnabled(final String name) {
-    return getBooleanSettingFromEnvironment("trace." + name.toLowerCase() + ".enabled", true);
+    return getBooleanSettingFromEnvironment("trace." + name + ".enabled", true)
+        && getBooleanSettingFromEnvironment("trace." + name.toLowerCase() + ".enabled", true);
   }
 
   /**

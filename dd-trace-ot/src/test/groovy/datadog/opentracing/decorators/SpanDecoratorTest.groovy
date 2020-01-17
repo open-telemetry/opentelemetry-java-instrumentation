@@ -457,7 +457,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "disable decorator via config"() {
     setup:
     ConfigUtils.updateConfig {
-      System.setProperty("dd.trace." + PeerServiceDecorator.getSimpleName().toLowerCase() + ".enabled", "false")
+      System.setProperty("dd.trace.${decorator}.enabled", "false")
     }
 
     tracer = DDTracer.builder()
@@ -475,8 +475,13 @@ class SpanDecoratorTest extends DDSpecification {
 
     cleanup:
     ConfigUtils.updateConfig {
-      System.clearProperty("dd.trace." + PeerServiceDecorator.getSimpleName().toLowerCase() + ".enabled")
+      System.clearProperty("dd.trace.${decorator}.enabled")
     }
+
+    where:
+    decorator                                          | _
+    PeerServiceDecorator.getSimpleName().toLowerCase() | _
+    PeerServiceDecorator.getSimpleName()               | _
   }
 
   def "disabling service decorator does not disable split by tags"() {
