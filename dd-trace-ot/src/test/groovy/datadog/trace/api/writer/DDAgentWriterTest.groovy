@@ -44,7 +44,7 @@ class DDAgentWriterTest extends DDSpecification {
 
   def "test happy path"() {
     setup:
-    def writer = new DDAgentWriter(api, 2, -1)
+    def writer = DDAgentWriter.builder().agentApi(api).traceBufferSize(2).flushFrequencySeconds(-1).build()
     writer.start()
 
     when:
@@ -72,7 +72,7 @@ class DDAgentWriterTest extends DDSpecification {
 
   def "test flood of traces"() {
     setup:
-    def writer = new DDAgentWriter(api, disruptorSize, -1)
+    def writer = DDAgentWriter.builder().agentApi(api).traceBufferSize(disruptorSize).flushFrequencySeconds(-1).build()
     writer.start()
 
     when:
@@ -97,7 +97,7 @@ class DDAgentWriterTest extends DDSpecification {
 
   def "test flush by size"() {
     setup:
-    def writer = new DDAgentWriter(api, DISRUPTOR_BUFFER_SIZE, -1)
+    def writer = DDAgentWriter.builder().agentApi(api).traceBufferSize(DISRUPTOR_BUFFER_SIZE).flushFrequencySeconds(-1).build()
     writer.start()
 
     when:
@@ -137,7 +137,7 @@ class DDAgentWriterTest extends DDSpecification {
 
   def "test flush by time"() {
     setup:
-    def writer = new DDAgentWriter(api, monitor)
+    def writer = DDAgentWriter.builder().agentApi(api).monitor(monitor).build()
     writer.start()
 
     when:
@@ -167,7 +167,7 @@ class DDAgentWriterTest extends DDSpecification {
 
   def "test default buffer size"() {
     setup:
-    def writer = new DDAgentWriter(api, DISRUPTOR_BUFFER_SIZE, -1)
+    def writer = DDAgentWriter.builder().agentApi(api).traceBufferSize(DISRUPTOR_BUFFER_SIZE).flushFrequencySeconds(-1).build()
     writer.start()
 
     when:
@@ -212,7 +212,7 @@ class DDAgentWriterTest extends DDSpecification {
 
   def "check that are no interactions after close"() {
     setup:
-    def writer = new DDAgentWriter(api, monitor)
+    def writer = DDAgentWriter.builder().agentApi(api).monitor(monitor).build()
     writer.start()
 
     when:
@@ -230,7 +230,7 @@ class DDAgentWriterTest extends DDSpecification {
 
   def "check shutdown if batchWritingDisruptor stopped first"() {
     setup:
-    def writer = new DDAgentWriter(api, monitor)
+    def writer = DDAgentWriter.builder().agentApi(api).monitor(monitor).build()
     writer.start()
     writer.batchWritingDisruptor.close()
 
@@ -283,7 +283,7 @@ class DDAgentWriterTest extends DDSpecification {
         }
       }
     }
-    def writer = new DDAgentWriter(DDAgentWriter.Spec.builder().traceAgentPort(agent.address.port).monitor(monitor).build())
+    def writer = DDAgentWriter.builder().traceAgentPort(agent.address.port).monitor(monitor).build()
 
     when:
     writer.start()
@@ -330,7 +330,7 @@ class DDAgentWriterTest extends DDSpecification {
         }
       }
     }
-    def writer = new DDAgentWriter(DDAgentWriter.Spec.builder().traceAgentPort(agent.address.port).monitor(monitor).build())
+    def writer = DDAgentWriter.builder().traceAgentPort(agent.address.port).monitor(monitor).build()
 
     when:
     writer.start()
@@ -371,7 +371,7 @@ class DDAgentWriterTest extends DDSpecification {
         return DDAgentApi.Response.failed(new IOException("comm error"))
       }
     }
-    def writer = new DDAgentWriter(api, monitor)
+    def writer = DDAgentWriter.builder().agentApi(api).monitor(monitor).build()
 
     when:
     writer.start()
@@ -446,7 +446,7 @@ class DDAgentWriterTest extends DDSpecification {
       }
     }
 
-    def writer = new DDAgentWriter(DDAgentWriter.Spec.builder().traceAgentPort(agent.address.port).monitor(monitor).traceBufferSize(bufferSize).build())
+    def writer = DDAgentWriter.builder().traceAgentPort(agent.address.port).monitor(monitor).traceBufferSize(bufferSize).build()
     writer.start()
 
     // gate responses
@@ -544,7 +544,7 @@ class DDAgentWriterTest extends DDSpecification {
       }
     }
 
-    def writer = new DDAgentWriter(DDAgentWriter.Spec.builder().traceAgentPort(agent.address.port).monitor(monitor).build())
+    def writer = DDAgentWriter.builder().traceAgentPort(agent.address.port).monitor(monitor).build()
     writer.start()
 
     when:
@@ -604,7 +604,7 @@ class DDAgentWriterTest extends DDSpecification {
     }
 
     def monitor = new Monitor.StatsD(statsd)
-    def writer = new DDAgentWriter(DDAgentWriter.Spec.builder().traceAgentPort(agent.address.port).monitor(monitor).build())
+    def writer = DDAgentWriter.builder().traceAgentPort(agent.address.port).monitor(monitor).build()
     writer.start()
 
     when:
@@ -652,7 +652,7 @@ class DDAgentWriterTest extends DDSpecification {
     }
 
     def monitor = new Monitor.StatsD(statsd)
-    def writer = new DDAgentWriter(api, monitor)
+    def writer = DDAgentWriter.builder().agentApi(api).monitor(monitor).build()
     writer.start()
 
     when:

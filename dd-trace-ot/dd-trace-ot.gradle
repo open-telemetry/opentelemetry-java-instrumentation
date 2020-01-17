@@ -12,8 +12,7 @@ minimumInstructionCoverage = 0.6
 excludedClassesCoverage += [
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.writer.LoggingWriter',
-  'datadog.trace.common.writer.DDAgentWriter.Spec',
-  'datadog.trace.common.writer.DDAgentWriter.Spec.SpecBuilder',
+  'datadog.trace.common.writer.DDAgentWriter.DDAgentWriterBuilder',
   'datadog.trace.common.sampling.PrioritySampling',
   // This code is copied from okHttp samples and we have integration tests to verify that it works.
   'datadog.trace.common.writer.unixdomainsockets.TunnelingUnixSocket',
