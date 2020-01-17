@@ -28,7 +28,8 @@ public class Servlet2Advice {
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
           ServletResponse response) {
-    final boolean hasActiveTrace = TRACER.getCurrentSpan() != null;
+    final Span current = TRACER.getCurrentSpan();
+    final boolean hasActiveTrace = current != null && current.getContext().isValid();
     final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
     if (invalidRequest || (hasActiveTrace && hasServletTrace)) {

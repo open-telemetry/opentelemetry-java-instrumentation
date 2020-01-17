@@ -11,6 +11,7 @@ import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.trace.SpanId;
 import io.opentelemetry.trace.TraceId;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,11 +42,32 @@ public class ListWriter implements SpanProcessor {
   @Override
   public void onStart(final ReadableSpan readableSpan) {
     spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
+
+    System.out.println(
+        "--------------------- START: "
+            + readableSpan.getName()
+            + ", "
+            + readableSpan.toSpanData().getSpanId()
+            + ", "
+            + readableSpan.toSpanData().getParentSpanId()
+            + ", "
+            + readableSpan.toSpanData().getTraceId());
   }
 
   @Override
   public void onEnd(final ReadableSpan readableSpan) {
     final SpanData span = readableSpan.toSpanData();
+
+    System.out.println(
+        "--------------------- END: "
+            + span.getName()
+            + ", "
+            + span.getSpanId()
+            + ", "
+            + span.getParentSpanId()
+            + ", "
+            + span.getTraceId());
+
     synchronized (structuralChangeLock) {
       boolean found = false;
       for (final List<SpanData> trace : traces) {

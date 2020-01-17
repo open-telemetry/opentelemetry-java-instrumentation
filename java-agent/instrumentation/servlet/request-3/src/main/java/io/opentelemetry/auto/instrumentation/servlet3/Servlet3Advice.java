@@ -1,45 +1,64 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
-import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
-
 import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
-import java.security.Principal;
-import java.util.concurrent.atomic.AtomicBoolean;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.Status;
+import net.bytebuddy.asm.Advice;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.asm.Advice;
+import java.security.Principal;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
 
 public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope onEnter(
+  public static SpanScopePair onEnter(
       @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest request) {
-    final boolean hasActiveTrace = activeSpan() != null;
-    final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof AgentSpan;
+    final Span current = TRACER.getCurrentSpan();
+    System.out.println("Current: " + current + " isValid: " + current.getContext().isValid());
+    final boolean hasActiveTrace = current != null && current.getContext().isValid();
+    System.out.println(request.getAttribute(SPAN_ATTRIBUTE));
+    final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
+    System.out.println(
+        "hasActiveTrace: "
+            + hasActiveTrace
+            + " hasServletTrace: "
+            + hasServletTrace
+            + " invalidRequest: "
+            + invalidRequest);
     if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
       return null;
     }
 
+    new Exception().printStackTrace();
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+    final Span.Builder builder = TRACER.spanBuilder("servlet.request");
+    try {
+      final SpanContext extractedContext =
+          TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);
+      System.out.println("!!!!!!!!!!! Found extracted context");
+      builder.setParent(extractedContext);
+    } catch (final IllegalArgumentException e) {
+      // Couldn't extract a context. We should treat this as a root span. '
+      System.out.println("??????????? Didn't find extracted context");
+      builder.setNoParent();
+    }
 
-    final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
-
-    final AgentSpan span =
-        startSpan("servlet.request", extractedContext)
-            .setAttribute("span.origin.type", servlet.getClass().getName());
+    final Span span = builder.startSpan();
+    span.setAttribute("span.origin.type", servlet.getClass().getName());
 
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, httpServletRequest);
@@ -47,21 +66,21 @@ public class Servlet3Advice {
 
     httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
 
-    return activateSpan(span, false);
+    return new SpanScopePair(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final AgentScope scope,
+      @Advice.Enter final SpanScopePair scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
     final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-    if (spanAttr instanceof AgentSpan && request instanceof HttpServletRequest) {
+    if (spanAttr instanceof Span && request instanceof HttpServletRequest) {
       final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
       if (principal != null) {
-        ((AgentSpan) spanAttr).setAttribute(MoreTags.USER_NAME, principal.getName());
+        ((Span) spanAttr).setAttribute(MoreTags.USER_NAME, principal.getName());
       }
     }
 
@@ -73,18 +92,19 @@ public class Servlet3Advice {
       final HttpServletRequest req = (HttpServletRequest) request;
       final HttpServletResponse resp = (HttpServletResponse) response;
 
-      final AgentSpan span = scope.span();
+      final Span span = scope.getSpan();
 
       if (throwable != null) {
         DECORATE.onResponse(span, resp);
         if (resp.getStatus() == HttpServletResponse.SC_OK) {
           // exception is thrown in filter chain, but status code is incorrect
+          // exception was thrown but status code wasn't set
           span.setAttribute(Tags.HTTP_STATUS, 500);
-          span.setError(true);
+          span.setStatus(Status.UNKNOWN);
         }
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish(); // Finish the span manually since finishSpanOnClose was false
+        span.end(); // Finish the span manually since finishSpanOnClose was false
       } else {
         final AtomicBoolean activated = new AtomicBoolean(false);
         if (req.isAsyncStarted()) {
@@ -99,10 +119,10 @@ public class Servlet3Advice {
         if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
           DECORATE.onResponse(span, resp);
           DECORATE.beforeFinish(span);
-          span.finish(); // Finish the span manually since finishSpanOnClose was false
+          span.end(); // Finish the span manually since finishSpanOnClose was false
         }
       }
-      scope.close();
+      scope.getScope().close();
     }
   }
 }

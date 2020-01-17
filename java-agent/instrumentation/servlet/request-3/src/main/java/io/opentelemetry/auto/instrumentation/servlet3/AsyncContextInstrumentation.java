@@ -1,7 +1,20 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
+import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
 import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -10,19 +23,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-
-import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.tooling.Instrumenter;
-import java.util.Map;
-import javax.servlet.AsyncContext;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class AsyncContextInstrumentation extends Instrumenter.Default {
@@ -65,13 +65,18 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
       final ServletRequest request = context.getRequest();
       final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      if (spanAttr instanceof AgentSpan) {
+      System.out.println("---------------------- Span attr: " + spanAttr);
+      if (spanAttr instanceof Span) {
         request.removeAttribute(SPAN_ATTRIBUTE);
-        final AgentSpan span = (AgentSpan) spanAttr;
+        final Span span = (Span) spanAttr;
         // Override propagation headers by injecting attributes from the current span
         // into the new request
+        System.out.println("------------------- Request: " + request);
         if (request instanceof HttpServletRequest) {
-          propagate().inject(span, (HttpServletRequest) request, SETTER);
+          Servlet3Decorator.TRACER
+              .getHttpTextFormat()
+              .inject(span.getContext(), (HttpServletRequest) request, SETTER);
+          System.out.println("------------ Injecting attributes");
         }
         final String path;
         if (args.length == 1 && args[0] instanceof String) {
