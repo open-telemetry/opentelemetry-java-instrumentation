@@ -1,6 +1,5 @@
 package datadog.opentracing
 
-
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.Config
@@ -9,6 +8,7 @@ import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
+import org.spockframework.util.ReflectionUtil
 
 import java.util.concurrent.TimeUnit
 
@@ -172,17 +172,23 @@ class DDSpanTest extends DDSpecification {
 
   def "stacktrace captured when duration exceeds configured threshold"() {
     setup:
-    def stackString = new StringWriter()
-    new Exception().printStackTrace(new PrintWriter(stackString))
     // Get the part of the stack before this test is called.
-    def stack = stackString.toString().split(getClass().getName())[1].split('\n', 2)[1]
+    def acceptRemaining = false
+    def originalStack = Thread.currentThread().stackTrace
+    def stackTraceElements = originalStack.dropWhile {
+      if (it.className == ReflectionUtil.name) {
+        acceptRemaining = true
+      }
+      return !acceptRemaining
+    }
+    def stack = "\tat " + stackTraceElements.join("\n\tat ") + "\n"
 
     def span = tracer.buildSpan("test").start()
     span.finish(span.startTimeMicro + TimeUnit.NANOSECONDS.toMicros(Config.get().spanDurationStacktraceNanos) + 1)
-    def actual = span.tags["slow.stack"]
+    def actual = span.tags["slow.stack"].toString()
 
     expect:
-    !actual.toString().isEmpty()
+    !stack.isEmpty()
     actual.endsWith(stack)
   }
 

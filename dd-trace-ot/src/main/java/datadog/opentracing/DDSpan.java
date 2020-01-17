@@ -7,10 +7,8 @@ import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import io.opentracing.tag.Tag;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -107,101 +105,28 @@ public class DDSpan implements Span, MutableSpan {
 
   private void addStacktraceIfThresholdExceeded() {
     final long spanDurationStacktraceNanos = Config.get().getSpanDurationStacktraceNanos();
-    if (!isError()
-        && spanDurationStacktraceNanos > 0
-        && durationNano.get() > spanDurationStacktraceNanos
+    if (isError()
+        || spanDurationStacktraceNanos <= 0
+        || durationNano.get() <= spanDurationStacktraceNanos
         // If this span was finished async, then the stacktrace will be less meaningful.
-        && context.threadId == Thread.currentThread().getId()) {
-      final Exception stacktrace = new Exception();
-      final Writer stackString = new FilteredStringWriter();
-      stacktrace.printStackTrace(new PrintWriter(stackString));
-      setTag("slow.stack", stackString.toString());
+        || context.threadId != Thread.currentThread().getId()) {
+      return;
     }
-  }
-
-  // Writer that skips the first line and lines until FILTER doesn't match.
-  private static final class FilteredStringWriter extends Writer {
-    private static final char[] FILTER = "\tat datadog.opentracing.".toCharArray();
-
-    private final StringWriter writer = new StringWriter();
-
-    private State state = State.SKIP_LINE; // Skip the exception type and message
-    private StringBuilder buffer = new StringBuilder();
-    private int lineIndex = 0;
-
-    @Override
-    public void write(final char[] cbuf, final int off, final int len) throws IOException {
-      if ((off < 0)
-          || (off > cbuf.length)
-          || (len < 0)
-          || ((off + len) > cbuf.length)
-          || ((off + len) < 0)) {
-        throw new IndexOutOfBoundsException();
-      } else if (len == 0) {
-        return;
+    final StringBuilder stack = new StringBuilder();
+    // TODO: use StackWalker api for java 9+ jvm's?
+    boolean skipNext = true;
+    for (final StackTraceElement element : Thread.currentThread().getStackTrace()) {
+      final boolean tracingClass = element.getClassName().startsWith("datadog.opentracing.");
+      if (skipNext || tracingClass) {
+        skipNext = tracingClass;
+        continue;
       }
-
-      for (int i = off; i < len; i++) {
-        switch (state) {
-          case SKIP_LINE:
-            // Should work fine for windows "\r\n" case too.
-            if (cbuf[i] == '\n') {
-              state = State.READ_LINE;
-              lineIndex = 0;
-            }
-            break;
-
-          case READ_LINE:
-            if (lineIndex == FILTER.length) {
-              state = State.SKIP_LINE;
-              buffer = new StringBuilder();
-            } else if (cbuf[i] == FILTER[lineIndex]) {
-              buffer.append(cbuf[i]);
-              lineIndex++;
-            } else {
-              // writer.write(buffer.toString());
-              // writer.write(cbuf[i]);
-              // buffer = new StringBuilder();
-              // state = State.CONTINUE;
-              state = State.SKIP_NEXT_LINE_THEN_CONTINUE;
-            }
-            continue;
-
-          case SKIP_NEXT_LINE_THEN_CONTINUE:
-            // Should work fine for windows "\r\n" case too.
-            if (cbuf[i] == '\n') {
-              state = State.CONTINUE;
-            }
-            break;
-
-          case CONTINUE:
-            writer.write(cbuf, i, len - (i - off));
-            return;
-        }
-      }
+      stack.append("\tat ");
+      stack.append(element);
+      stack.append("\n");
     }
-
-    @Override
-    public void flush() {
-      writer.flush();
-    }
-
-    @Override
-    public void close() throws IOException {
-      writer.close();
-    }
-
-    @Override
-    public String toString() {
-      return buffer.toString() + writer.toString();
-    }
-
-    private enum State {
-      READ_LINE,
-      SKIP_LINE,
-      SKIP_NEXT_LINE_THEN_CONTINUE,
-      CONTINUE
-    }
+    // Prob not worth dealing with the trailing newline.
+    setTag("slow.stack", stack.toString());
   }
 
   @Override
