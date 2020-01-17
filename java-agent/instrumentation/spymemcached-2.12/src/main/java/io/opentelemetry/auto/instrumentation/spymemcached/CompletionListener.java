@@ -1,11 +1,10 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,12 +25,12 @@ public abstract class CompletionListener<T> {
   static final String MISS = "miss";
 
   private final MemcachedConnection connection;
-  private final AgentSpan span;
+  private final Span span;
 
   public CompletionListener(final MemcachedConnection connection, final String methodName) {
     this.connection = connection;
-    span = startSpan(OPERATION_NAME);
-    try (final AgentScope scope = activateSpan(span, false)) {
+    span = TRACER.spanBuilder(OPERATION_NAME).startSpan();
+    try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onOperation(span, methodName);
@@ -39,7 +38,7 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeAsyncSpan(final T future) {
-    try (final AgentScope scope = activateSpan(span, false)) {
+    try (final Scope scope = TRACER.withSpan(span)) {
       try {
         processResult(span, future);
       } catch (final CancellationException e) {
@@ -61,23 +60,23 @@ public abstract class CompletionListener<T> {
         DECORATE.onError(span, e);
       } finally {
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }
 
   protected void closeSyncSpan(final Throwable thrown) {
-    try (final AgentScope scope = activateSpan(span, false)) {
+    try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.onError(span, thrown);
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     }
   }
 
-  protected abstract void processResult(AgentSpan span, T future)
+  protected abstract void processResult(Span span, T future)
       throws ExecutionException, InterruptedException;
 
-  protected void setResultTag(final AgentSpan span, final boolean hit) {
+  protected void setResultTag(final Span span, final boolean hit) {
     span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
   }
 }
