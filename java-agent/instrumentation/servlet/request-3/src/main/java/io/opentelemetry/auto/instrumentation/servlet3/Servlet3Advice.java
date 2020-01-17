@@ -9,6 +9,7 @@ import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestE
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
@@ -24,7 +25,10 @@ public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static AgentScope onEnter(
-      @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest request) {
+      @Advice.This final Object servlet,
+      @Advice.Argument(0) final ServletRequest request,
+      @Advice.Argument(1) final ServletResponse response) {
+
     final boolean hasActiveTrace = activeSpan() != null;
     final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof AgentSpan;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
@@ -34,6 +38,10 @@ public class Servlet3Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    // For use by HttpServletResponseInstrumentation:
+    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+        .put((HttpServletResponse) response, httpServletRequest);
 
     final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
 

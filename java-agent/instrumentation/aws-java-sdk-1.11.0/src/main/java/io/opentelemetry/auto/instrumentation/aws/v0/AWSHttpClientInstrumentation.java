@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.instrumentation.aws.v0;
 
-import static io.opentelemetry.auto.instrumentation.aws.v0.AwsSdkClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.aws.v0.OnErrorDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.aws.v0.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -41,10 +42,8 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
-      packageName + ".AwsSdkClientDecorator",
-      packageName + ".TracingRequestHandler",
+      packageName + ".OnErrorDecorator",
+      packageName + ".RequestMeta",
     };
   }
 
@@ -61,10 +60,9 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final SpanScopePair spanScopePair =
-            request.getHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY);
+        final SpanScopePair spanScopePair = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
         if (spanScopePair != null) {
-          request.addHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
+          request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
           final Span span = spanScopePair.getSpan();
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
@@ -101,9 +99,9 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
           final SpanScopePair spanScopePair =
-              request.getHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY);
+              request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
           if (spanScopePair != null) {
-            request.addHandlerContext(TracingRequestHandler.SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
+            request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
             final Span span = spanScopePair.getSpan();
             DECORATE.onError(span, throwable);
             DECORATE.beforeFinish(span);

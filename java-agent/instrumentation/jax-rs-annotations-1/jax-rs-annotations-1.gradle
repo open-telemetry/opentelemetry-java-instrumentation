@@ -4,7 +4,11 @@ muzzle {
     module = "jsr311-api"
     versions = "[0.5,)"
   }
-  // Muzzle doesn't detect the classLoaderMatcher, so we can't assert fail for v2 api.
+  fail {
+    group = "javax.ws.rs"
+    module = "javax.ws.rs-api"
+    versions = "[,]"
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
