@@ -11,6 +11,8 @@ import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.trace.SpanId;
 import io.opentelemetry.trace.TraceId;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class ListWriter implements SpanProcessor {
 
   private volatile List<List<SpanData>> traces = new CopyOnWriteArrayList<>();
@@ -40,11 +43,31 @@ public class ListWriter implements SpanProcessor {
 
   @Override
   public void onStart(final ReadableSpan readableSpan) {
+    final SpanData sd = readableSpan.toSpanData();
+    log.debug(
+        "SPAN START: "
+            + sd.getName()
+            + " id="
+            + sd.getSpanId()
+            + " traceid="
+            + sd.getTraceId()
+            + " parent="
+            + sd.getParentSpanId());
     spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
   }
 
   @Override
   public void onEnd(final ReadableSpan readableSpan) {
+    final SpanData sd = readableSpan.toSpanData();
+    log.debug(
+        "SPAN END: "
+            + sd.getName()
+            + " id="
+            + sd.getSpanId()
+            + " traceid="
+            + sd.getTraceId()
+            + " parent="
+            + sd.getParentSpanId());
     final SpanData span = readableSpan.toSpanData();
     synchronized (structuralChangeLock) {
       boolean found = false;
