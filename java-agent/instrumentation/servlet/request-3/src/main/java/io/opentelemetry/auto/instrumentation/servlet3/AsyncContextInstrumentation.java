@@ -1,19 +1,5 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
-
-import javax.servlet.AsyncContext;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
-
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
@@ -24,6 +10,19 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import java.util.Map;
+import javax.servlet.AsyncContext;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
 @AutoService(Instrumenter.class)
 public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
@@ -33,7 +32,13 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".HttpServletRequestInjectAdapter"};
+    return new String[] {
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ServerDecorator",
+      "io.opentelemetry.auto.decorator.HttpServerDecorator",
+      packageName + ".Servlet3Decorator",
+      packageName + ".HttpServletRequestInjectAdapter"
+    };
   }
 
   @Override

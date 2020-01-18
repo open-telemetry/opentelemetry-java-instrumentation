@@ -1,16 +1,15 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
+
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
-
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 
 public class TagSettingAsyncListener implements AsyncListener {
   private final AtomicBoolean activated;
