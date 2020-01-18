@@ -1,5 +1,9 @@
 package io.opentelemetry.auto.instrumentation.grpc.server;
 
+import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
+import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
+
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
@@ -10,10 +14,6 @@ import io.grpc.Status;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
 
 public class TracingServerInterceptor implements ServerInterceptor {
 
