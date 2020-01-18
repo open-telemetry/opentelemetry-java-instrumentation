@@ -24,7 +24,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ListWriter implements SpanProcessor {
 
   private volatile List<List<SpanData>> traces = new CopyOnWriteArrayList<>();
@@ -40,11 +42,25 @@ public class ListWriter implements SpanProcessor {
 
   @Override
   public void onStart(final ReadableSpan readableSpan) {
+    final SpanData sd = readableSpan.toSpanData();
+    log.debug(
+        ">>> SPAN START: {} id={} traceid={} parent={}",
+        sd.getName(),
+        sd.getSpanId().toLowerBase16(),
+        sd.getTraceId().toLowerBase16(),
+        sd.getParentSpanId().toLowerBase16());
     spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
   }
 
   @Override
   public void onEnd(final ReadableSpan readableSpan) {
+    final SpanData sd = readableSpan.toSpanData();
+    log.debug(
+        "<<< SPAN END: {} id={} traceid={} parent={}",
+        sd.getName(),
+        sd.getSpanId().toLowerBase16(),
+        sd.getTraceId().toLowerBase16(),
+        sd.getParentSpanId().toLowerBase16());
     final SpanData span = readableSpan.toSpanData();
     synchronized (structuralChangeLock) {
       boolean found = false;
