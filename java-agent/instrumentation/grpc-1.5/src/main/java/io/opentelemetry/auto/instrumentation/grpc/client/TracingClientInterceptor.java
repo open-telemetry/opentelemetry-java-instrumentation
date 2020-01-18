@@ -14,6 +14,7 @@ import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
 public class TracingClientInterceptor implements ClientInterceptor {
@@ -28,19 +29,21 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     final Span span = TRACER.spanBuilder("grpc.client").startSpan();
     span.setAttribute(MoreTags.RESOURCE_NAME, method.getFullMethodName());
-    DECORATE.afterStart(span);
+    try (final Scope scope = TRACER.withSpan(span)) {
+      DECORATE.afterStart(span);
 
-    final ClientCall<ReqT, RespT> result;
-    try {
-      // call other interceptors
-      result = next.newCall(method, callOptions);
-    } catch (final Throwable e) {
-      DECORATE.onError(span, e);
-      DECORATE.beforeFinish(span);
-      span.end();
-      throw e;
+      final ClientCall<ReqT, RespT> result;
+      try {
+        // call other interceptors
+        result = next.newCall(method, callOptions);
+      } catch (final Throwable e) {
+        DECORATE.onError(span, e);
+        DECORATE.beforeFinish(span);
+        span.end();
+        throw e;
+      }
+      return new TracingClientCall<>(span, result);
     }
-    return new TracingClientCall<>(span, result);
   }
 
   static final class TracingClientCall<ReqT, RespT>
@@ -55,7 +58,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     @Override
     public void start(final Listener<RespT> responseListener, final Metadata headers) {
       TRACER.getHttpTextFormat().inject(span.getContext(), headers, SETTER);
-      try {
+      try (final Scope scope = TRACER.withSpan(span)) {
         super.start(new TracingClientCallListener<>(span, responseListener), headers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -67,7 +70,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(final ReqT message) {
-      try {
+      try (final Scope scope = TRACER.withSpan(span)) {
         super.sendMessage(message);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -89,11 +92,10 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onMessage(final RespT message) {
-      System.out.println("onMessage");
       final Span messageSpan = TRACER.spanBuilder("grpc.message").setParent(span).startSpan();
       messageSpan.setAttribute("message.type", message.getClass().getName());
       DECORATE.afterStart(messageSpan);
-      try {
+      try (final Scope scope = TRACER.withSpan(messageSpan)) {
         delegate().onMessage(message);
       } catch (final Throwable e) {
         DECORATE.onError(messageSpan, e);
@@ -108,7 +110,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onClose(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
       // Finishes span.
-      try {
+      try (final Scope scope = TRACER.withSpan(span)) {
         delegate().onClose(status, trailers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -121,7 +123,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onReady() {
-      try {
+      try (final Scope scope = TRACER.withSpan(span)) {
         delegate().onReady();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);

@@ -268,22 +268,4 @@ class GrpcTest extends AgentTestRunner {
     "Status - description"        | Status.PERMISSION_DENIED.withDescription("some description")
     "StatusRuntime - description" | Status.UNIMPLEMENTED.withDescription("some description")
   }
-
-  /*
-  The new attribute propagation doesn't have a 'keys' method. This test no longer works.
-  TODO: Revisit this!
-
-  def "skip binary headers"() {
-    setup:
-    def meta = new Metadata()
-    meta.put(Metadata.Key.<String> of("test", Metadata.ASCII_STRING_MARSHALLER), "val")
-    meta.put(Metadata.Key.<byte[]> of("test-bin", Metadata.BINARY_BYTE_MARSHALLER), "bin-val".bytes)
-
-    when:
-    def keys = meta.keys()
-
-    then:
-    keys == ["test"]
-  }
-   */
 }

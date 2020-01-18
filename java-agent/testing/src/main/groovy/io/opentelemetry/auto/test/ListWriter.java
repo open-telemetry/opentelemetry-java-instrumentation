@@ -44,14 +44,11 @@ public class ListWriter implements SpanProcessor {
   public void onStart(final ReadableSpan readableSpan) {
     final SpanData sd = readableSpan.toSpanData();
     log.debug(
-        "SPAN START: "
-            + sd.getName()
-            + " id="
-            + sd.getSpanId()
-            + " traceid="
-            + sd.getTraceId()
-            + " parent="
-            + sd.getParentSpanId());
+        ">>> SPAN START: {} id={} traceid={} parent={}",
+        sd.getName(),
+        sd.getSpanId().toLowerBase16(),
+        sd.getTraceId().toLowerBase16(),
+        sd.getParentSpanId().toLowerBase16());
     spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
   }
 
@@ -59,14 +56,11 @@ public class ListWriter implements SpanProcessor {
   public void onEnd(final ReadableSpan readableSpan) {
     final SpanData sd = readableSpan.toSpanData();
     log.debug(
-        "SPAN END: "
-            + sd.getName()
-            + " id="
-            + sd.getSpanId()
-            + " traceid="
-            + sd.getTraceId()
-            + " parent="
-            + sd.getParentSpanId());
+        "<<< SPAN END: {} id={} traceid={} parent={}",
+        sd.getName(),
+        sd.getSpanId().toLowerBase16(),
+        sd.getTraceId().toLowerBase16(),
+        sd.getParentSpanId().toLowerBase16());
     final SpanData span = readableSpan.toSpanData();
     synchronized (structuralChangeLock) {
       boolean found = false;
