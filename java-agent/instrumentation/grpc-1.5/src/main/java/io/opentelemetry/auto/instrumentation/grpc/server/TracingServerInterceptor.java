@@ -1,9 +1,5 @@
 package io.opentelemetry.auto.instrumentation.grpc.server;
 
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
-
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
@@ -12,9 +8,12 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+
+import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
+import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
 
 public class TracingServerInterceptor implements ServerInterceptor {
 
@@ -34,8 +33,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     DECORATE.afterStart(span);
 
-    final SpanScopePair spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
-
     final ServerCall.Listener<ReqT> result;
     try {
       // Wrap the server call so that we can decorate the span
@@ -49,8 +46,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
       DECORATE.beforeFinish(span);
       span.end();
       throw e;
-    } finally {
-      spanAndScope.getScope().close();
     }
 
     // This ensures the server implementation can see the span in scope
@@ -69,14 +64,11 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void close(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
-      final SpanScopePair spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
       try {
         delegate().close(status, trailers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;
-      } finally {
-        spanAndScope.getScope().close();
       }
     }
   }
@@ -96,7 +88,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
           TRACER.spanBuilder("grpc.message").setParent(this.span.getContext()).startSpan();
       span.setAttribute("message.type", message.getClass().getName());
       DECORATE.afterStart(span);
-      final SpanScopePair spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
       try {
         delegate().onMessage(message);
       } catch (final Throwable e) {
@@ -107,13 +98,11 @@ public class TracingServerInterceptor implements ServerInterceptor {
       } finally {
         DECORATE.beforeFinish(span);
         span.end();
-        spanAndScope.getScope().close();
       }
     }
 
     @Override
     public void onHalfClose() {
-      final SpanScopePair spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
       try {
         delegate().onHalfClose();
       } catch (final Throwable e) {
@@ -121,15 +110,12 @@ public class TracingServerInterceptor implements ServerInterceptor {
         DECORATE.beforeFinish(span);
         span.end();
         throw e;
-      } finally {
-        spanAndScope.getScope().close();
       }
     }
 
     @Override
     public void onCancel() {
       // Finishes span.
-      final SpanScopePair spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
       try {
         delegate().onCancel();
         span.setAttribute("canceled", true);
@@ -139,14 +125,12 @@ public class TracingServerInterceptor implements ServerInterceptor {
       } finally {
         DECORATE.beforeFinish(span);
         span.end();
-        spanAndScope.getScope().close();
       }
     }
 
     @Override
     public void onComplete() {
       // Finishes span.
-      final SpanScopePair spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
       try {
         delegate().onComplete();
       } catch (final Throwable e) {
@@ -155,23 +139,18 @@ public class TracingServerInterceptor implements ServerInterceptor {
       } finally {
         DECORATE.beforeFinish(span);
         span.end();
-        spanAndScope.getScope().close();
       }
     }
 
     @Override
     public void onReady() {
-      final SpanScopePair spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
       try {
         delegate().onReady();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
         span.end();
-        spanAndScope.getScope().close();
         throw e;
-      } finally {
-        spanAndScope.getScope().close();
       }
     }
   }

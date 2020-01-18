@@ -272,7 +272,7 @@ class GrpcTest extends AgentTestRunner {
   /*
   The new attribute propagation doesn't have a 'keys' method. This test no longer works.
   TODO: Revisit this!
-   
+
   def "skip binary headers"() {
     setup:
     def meta = new Metadata()
