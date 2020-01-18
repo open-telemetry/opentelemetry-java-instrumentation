@@ -9,8 +9,15 @@ dependencies {
 }
 
 // OpenTelemetry SDK with shaded dependencies so that they do not conflict with other libraries (in particular guava)
-// when running various instrumentation tests
+// when running various instrumentation tests (e.g. datastax-cassandra)
+// TODO build agent-tooling-and-instrumentation.isolated and use that in tests, then wouldn't need to shade guava, etc
+// (still need to shade OpenTelemetry API and grpc-context usage since those are shaded in bootstrap CL)
 shadowJar {
+
+  dependencies {
+    exclude(dependency('io.opentelemetry:opentelemetry-api'))
+  }
+
   mergeServiceFiles()
 
   relocate "com.google", "io.opentelemetry.auto.shaded.com.google"

@@ -18,7 +18,13 @@ dependencies {
     exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
   compile deps.opentelemetryApi
-  compile(project(path: ':opentelemetry-sdk', configuration: 'shadow'))
+
+  // Gradle is happy with just single compile dependency on :java-agent:opentelemetry-sdk, configuration: shadow
+  // but Intellij doesn't understand this (see https://github.com/johnrengelman/shadow/issues/264)
+  // these two lines are a workaround to make Intellij happy also
+  compileOnly deps.opentelemetrySdk
+  runtime(project(path: ':opentelemetry-sdk', configuration: 'shadow'))
+
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy
   compile deps.bytebuddyagent
