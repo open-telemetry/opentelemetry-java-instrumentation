@@ -1,11 +1,11 @@
 package io.opentelemetry.auto.test;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import groovy.lang.Closure;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.sdk.trace.SpanProcessor;
@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,16 +28,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ListWriter implements SpanProcessor {
 
-  private volatile List<List<SpanData>> traces = new CopyOnWriteArrayList<>();
+  private final List<List<SpanData>> traces = new ArrayList<>(); // guarded by tracesLock
+
+  private boolean needsTraceSorting; // guarded by tracesLock
+  private final Set<TraceId> needsSpanSorting = new HashSet<>(); // guarded by tracesLock
+
+  private final Object tracesLock = new Object();
 
   // not using span startEpochNanos since that is not strictly increasing so can lead to ties
   private final Map<SpanId, Integer> spanOrders = new ConcurrentHashMap<>();
   private final AtomicInteger nextSpanOrder = new AtomicInteger();
-
-  private final Object structuralChangeLock = new Object();
-
-  private boolean needsTraceSorting; // guarded by structuralChangeLock
-  private final Set<TraceId> needsSpanSorting = new HashSet<>(); // guarded by structuralChangeLock
 
   @Override
   public void onStart(final ReadableSpan readableSpan) {
@@ -46,7 +47,7 @@ public class ListWriter implements SpanProcessor {
   @Override
   public void onEnd(final ReadableSpan readableSpan) {
     final SpanData span = readableSpan.toSpanData();
-    synchronized (structuralChangeLock) {
+    synchronized (tracesLock) {
       boolean found = false;
       for (final List<SpanData> trace : traces) {
         if (trace.get(0).getTraceId().equals(span.getTraceId())) {
@@ -62,22 +63,26 @@ public class ListWriter implements SpanProcessor {
         needsTraceSorting = true;
       }
       needsSpanSorting.add(span.getTraceId());
-      structuralChangeLock.notifyAll();
+      tracesLock.notifyAll();
     }
   }
 
-  public void doUnderStructuralChangeLock(final Closure<Void> callback) {
-    synchronized (structuralChangeLock) {
-      callback.call();
+  public void filterTraces(final Predicate<List<SpanData>> filter) {
+    synchronized (tracesLock) {
+      for (final Iterator<List<SpanData>> i = traces.iterator(); i.hasNext(); ) {
+        if (filter.apply(i.next())) {
+          i.remove();
+        }
+      }
     }
   }
 
   public List<List<SpanData>> getTraces() {
-    synchronized (structuralChangeLock) {
+    synchronized (tracesLock) {
       // important not to sort trace or span lists in place so that any tests that are currently
       // iterating over them are not affected
       if (needsTraceSorting) {
-        traces = sortTraces(traces);
+        sortTraces();
         needsTraceSorting = false;
       }
       if (!needsSpanSorting.isEmpty()) {
@@ -89,16 +94,22 @@ public class ListWriter implements SpanProcessor {
         }
         needsSpanSorting.clear();
       }
-      return traces;
+      // always return a copy so that future structural changes cannot cause race conditions during
+      // test verification
+      final List<List<SpanData>> copy = new ArrayList<>();
+      for (final List<SpanData> trace : traces) {
+        copy.add(new ArrayList<>(trace));
+      }
+      return copy;
     }
   }
 
   public void waitForTraces(final int number) throws InterruptedException, TimeoutException {
-    synchronized (structuralChangeLock) {
+    synchronized (tracesLock) {
       long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
       while (completedTraceCount() < number && remainingWaitMillis > 0) {
         final Stopwatch stopwatch = Stopwatch.createStarted();
-        structuralChangeLock.wait(remainingWaitMillis);
+        tracesLock.wait(remainingWaitMillis);
         remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
       }
       final int completedTraceCount = completedTraceCount();
@@ -116,7 +127,7 @@ public class ListWriter implements SpanProcessor {
   }
 
   public void clear() {
-    synchronized (structuralChangeLock) {
+    synchronized (tracesLock) {
       traces.clear();
     }
     spanOrders.clear();
@@ -125,6 +136,7 @@ public class ListWriter implements SpanProcessor {
   @Override
   public void shutdown() {}
 
+  // must be called under tracesLock
   private int completedTraceCount() {
     int count = 0;
     for (final List<SpanData> trace : traces) {
@@ -149,17 +161,16 @@ public class ListWriter implements SpanProcessor {
     return false;
   }
 
-  private List<List<SpanData>> sortTraces(final List<List<SpanData>> traces) {
-    final List<List<SpanData>> copy = new ArrayList<>(traces);
+  // must be called under tracesLock
+  private void sortTraces() {
     Collections.sort(
-        copy,
+        traces,
         new Comparator<List<SpanData>>() {
           @Override
           public int compare(final List<SpanData> trace1, final List<SpanData> trace2) {
             return Longs.compare(getMinSpanOrder(trace1), getMinSpanOrder(trace2));
           }
         });
-    return copy;
   }
 
   private long getMinSpanOrder(final List<SpanData> spans) {
@@ -178,8 +189,9 @@ public class ListWriter implements SpanProcessor {
     }
 
     for (final Node node : lookup.values()) {
-      if (node.span.getParentSpanId().isValid()) {
-        final Node parentNode = lookup.get(node.span.getParentSpanId());
+      final SpanId parentSpanId = node.span.getParentSpanId();
+      if (parentSpanId.isValid()) {
+        final Node parentNode = lookup.get(parentSpanId);
         if (parentNode != null) {
           parentNode.childNodes.add(node);
           node.root = false;

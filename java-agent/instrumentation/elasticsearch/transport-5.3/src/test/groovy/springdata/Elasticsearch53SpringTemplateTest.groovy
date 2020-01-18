@@ -374,12 +374,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   }
 
   void filterIgnoredActions() {
-    TEST_WRITER.doUnderStructuralChangeLock {
-      for (int i = 0; i < TEST_WRITER.traces.size(); i++) {
-        if (IGNORED_ACTIONS.contains(TEST_WRITER.traces[i][0].attributes[MoreTags.RESOURCE_NAME].stringValue)) {
-          TEST_WRITER.traces.remove(i)
-        }
-      }
-    }
+    TEST_WRITER.filterTraces({
+      trace -> IGNORED_ACTIONS.contains(trace[0].attributes[MoreTags.RESOURCE_NAME].stringValue)
+    })
   }
 }
