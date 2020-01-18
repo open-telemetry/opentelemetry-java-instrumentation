@@ -1,12 +1,13 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import java.util.function.BiConsumer;
-import java.util.regex.Pattern;
+import io.opentelemetry.trace.Span;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
+
+import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 
 public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Throwable> {
 
@@ -27,13 +28,12 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     if (handler != null) {
       final String predicateString = parsePredicateString();
       if (predicateString != null) {
-        final AgentSpan span =
-            (AgentSpan) serverRequest.attributes().get(AdviceUtils.SPAN_ATTRIBUTE);
+        final Span span = (Span) serverRequest.attributes().get(AdviceUtils.SPAN_ATTRIBUTE);
         if (span != null) {
           span.setAttribute("request.predicate", predicateString);
         }
-        final AgentSpan parentSpan =
-            (AgentSpan) serverRequest.attributes().get(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
+        final Span parentSpan =
+            (Span) serverRequest.attributes().get(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
         if (parentSpan != null) {
           parentSpan.setAttribute(MoreTags.RESOURCE_NAME, parseResourceName(predicateString));
         }

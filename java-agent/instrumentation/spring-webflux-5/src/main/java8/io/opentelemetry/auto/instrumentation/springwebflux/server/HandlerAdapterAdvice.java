@@ -1,26 +1,26 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
-
 import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
 
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
+
 public class HandlerAdapterAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope methodEnter(
+  public static SpanScopePair methodEnter(
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Argument(1) final Object handler) {
 
-    AgentScope scope = null;
-    final AgentSpan span = exchange.getAttribute(AdviceUtils.SPAN_ATTRIBUTE);
+    SpanScopePair spanAndScope = null;
+    final Span span = exchange.getAttribute(AdviceUtils.SPAN_ATTRIBUTE);
     if (handler != null && span != null) {
       final String handlerType;
       final String operationName;
@@ -35,13 +35,13 @@ public class HandlerAdapterAdvice {
         handlerType = handler.getClass().getName();
       }
 
-      span.setSpanName(operationName);
+      span.updateName(operationName);
       span.setAttribute("handler.type", handlerType);
 
-      scope = activateSpan(span, false);
+      spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
     }
 
-    final AgentSpan parentSpan = exchange.getAttribute(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
+    final Span parentSpan = exchange.getAttribute(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
     final PathPattern bestPattern =
         exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     if (parentSpan != null && bestPattern != null) {
@@ -50,19 +50,19 @@ public class HandlerAdapterAdvice {
           exchange.getRequest().getMethodValue() + " " + bestPattern.getPatternString());
     }
 
-    return scope;
+    return spanAndScope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
       @Advice.Argument(0) final ServerWebExchange exchange,
-      @Advice.Enter final AgentScope scope,
+      @Advice.Enter final SpanScopePair spanAndScope,
       @Advice.Thrown final Throwable throwable) {
     if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
-    if (scope != null) {
-      scope.close();
+    if (spanAndScope != null) {
+      spanAndScope.getScope().close();
     }
   }
 }
