@@ -12,10 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -98,7 +97,8 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
         DECORATE.onError(span, exception);
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        // span.setError(false); // TODO: Is this needed? Doesn't seem to be a similar method in OpenTelemetry!
+        // span.setError(false); // TODO: Is this needed? Doesn't seem to be a similar method in
+        // OpenTelemetry!
       }
     }
   }

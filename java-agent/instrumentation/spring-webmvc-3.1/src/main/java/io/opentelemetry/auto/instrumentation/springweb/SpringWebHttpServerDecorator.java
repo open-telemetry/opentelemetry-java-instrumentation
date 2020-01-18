@@ -3,15 +3,14 @@ package io.opentelemetry.auto.instrumentation.springweb;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
@@ -86,7 +85,11 @@ public class SpringWebHttpServerDecorator
       final String method = request.getMethod();
       final Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-      System.out.println("----------------------------------" + HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE + " -> " + bestMatchingPattern);
+      System.out.println(
+          "----------------------------------"
+              + HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE
+              + " -> "
+              + bestMatchingPattern);
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
         span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);

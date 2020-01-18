@@ -72,7 +72,10 @@ public class Servlet2Decorator
   public Span onRequest(final Span span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
-      span.setAttribute("servlet.context", request.getContextPath());
+      final String sc = request.getContextPath();
+      if (sc != null && sc != "") {
+        span.setAttribute("servlet.context", sc);
+      }
       span.setAttribute("servlet.path", request.getServletPath());
     }
     return super.onRequest(span, request);
