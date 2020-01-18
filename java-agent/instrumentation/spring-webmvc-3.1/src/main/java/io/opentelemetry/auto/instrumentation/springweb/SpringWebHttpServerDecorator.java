@@ -85,11 +85,6 @@ public class SpringWebHttpServerDecorator
       final String method = request.getMethod();
       final Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-      System.out.println(
-          "----------------------------------"
-              + HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE
-              + " -> "
-              + bestMatchingPattern);
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
         span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
