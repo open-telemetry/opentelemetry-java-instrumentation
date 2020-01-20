@@ -1,3 +1,4 @@
+import com.google.common.base.Stopwatch
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
@@ -69,8 +70,13 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
-    TextMessage receivedMessage = template.sendAndReceive(destination) {
-      session -> template.getMessageConverter().toMessage(messageText, session)
+    def receivedMessage
+    def stopwatch = Stopwatch.createStarted()
+    while (receivedMessage == null && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
+      // sendAndReceive() returns null if template.receive() has not been called yet
+      receivedMessage = template.sendAndReceive(destination) {
+        session -> template.getMessageConverter().toMessage(messageText, session)
+      }
     }
 
     expect:
