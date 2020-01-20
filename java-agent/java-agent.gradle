@@ -5,6 +5,7 @@ plugins {
 description = 'java-agent'
 
 apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/version.gradle"
 
 configurations {
   shadowInclude
