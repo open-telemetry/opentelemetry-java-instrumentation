@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
+
 import javax.servlet.http.HttpServletRequest;
 
 public class HttpServletRequestExtractAdapter implements HttpTextFormat.Getter<HttpServletRequest> {

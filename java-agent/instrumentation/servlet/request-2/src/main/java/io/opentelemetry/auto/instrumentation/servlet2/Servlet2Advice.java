@@ -1,23 +1,25 @@
 package io.opentelemetry.auto.instrumentation.servlet2;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.TRACER;
-
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
-import java.security.Principal;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import java.security.Principal;
+
+import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
+import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.TRACER;
 
 public class Servlet2Advice {
 
@@ -36,11 +38,16 @@ public class Servlet2Advice {
       return null;
     }
 
+    final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
     if (response instanceof HttpServletResponse) {
+      // For use by HttpServletResponseInstrumentation:
+      InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+          .put((HttpServletResponse) response, httpServletRequest);
+
       response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
     }
 
-    final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
     final Span.Builder builder = TRACER.spanBuilder("servlet.request");
     try {
       final SpanContext extractedContext =

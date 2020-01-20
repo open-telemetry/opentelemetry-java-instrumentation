@@ -1,3 +1,5 @@
+package test
+
 import java.sql.Array
 import java.sql.Blob
 import java.sql.CallableStatement
@@ -17,16 +19,19 @@ import java.util.concurrent.Executor
 
 
 /**
- * A JDBC connection class that throws an exception in the constructor, used to test
+ * A JDBC connection class that optionally throws an exception in the constructor, used to test
  */
-class DummyThrowingConnection implements Connection {
-  DummyThrowingConnection() {
-    throw new RuntimeException("Dummy exception")
+class TestConnection implements Connection {
+  TestConnection(boolean throwException) {
+    if (throwException) {
+      throw new RuntimeException("connection exception")
+    }
   }
+
 
   @Override
   Statement createStatement() throws SQLException {
-    return null
+    return new TestStatement(this)
   }
 
   @Override
@@ -76,7 +81,7 @@ class DummyThrowingConnection implements Connection {
 
   @Override
   DatabaseMetaData getMetaData() throws SQLException {
-    return null
+    return new TestDatabaseMetaData()
   }
 
   @Override
@@ -241,12 +246,12 @@ class DummyThrowingConnection implements Connection {
 
   @Override
   String getClientInfo(String name) throws SQLException {
-    return null
+    throw new UnsupportedOperationException("Test 123")
   }
 
   @Override
   Properties getClientInfo() throws SQLException {
-    return null
+    throw new UnsupportedOperationException("Test 123")
   }
 
   @Override

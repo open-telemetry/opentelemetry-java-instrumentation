@@ -1,23 +1,24 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
-
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
-import java.security.Principal;
-import java.util.concurrent.atomic.AtomicBoolean;
+import net.bytebuddy.asm.Advice;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.asm.Advice;
+import java.security.Principal;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
 
 public class Servlet3Advice {
 
@@ -29,6 +30,7 @@ public class Servlet3Advice {
     final boolean hasActiveTrace = current != null && current.getContext().isValid();
     System.out.println(request.getAttribute(SPAN_ATTRIBUTE));
     final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
+
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
     System.out.println(
         "hasActiveTrace: "

@@ -5,8 +5,12 @@ muzzle {
     versions = "[2.3, 3.0)"
     assertInverse = true
   }
-  // can't add a fail block for servlet 3, because servlet 3 is backward compatible with servlet 2.3+,
-  // meaning that for every class that exists in servlet 2, it also exists in servlet 3
+  
+  fail {
+    group = "javax.servlet"
+    module = 'javax.servlet-api'
+    versions = "[3.0,)"
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"

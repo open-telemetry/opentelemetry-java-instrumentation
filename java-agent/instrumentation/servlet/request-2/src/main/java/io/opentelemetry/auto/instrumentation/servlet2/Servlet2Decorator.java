@@ -4,10 +4,11 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import java.net.URI;
-import java.net.URISyntaxException;
+
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class Servlet2Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, ServletResponse> {
@@ -75,7 +76,10 @@ public class Servlet2Decorator
       if (sc != null && sc != "") {
         span.setAttribute("servlet.context", sc);
       }
-      span.setAttribute("servlet.path", request.getServletPath());
+      final String sp = request.getServletPath();
+      if (sp != null) {
+        span.setAttribute("servlet.path", request.getServletPath());
+      }
     }
     return super.onRequest(span, request);
   }
