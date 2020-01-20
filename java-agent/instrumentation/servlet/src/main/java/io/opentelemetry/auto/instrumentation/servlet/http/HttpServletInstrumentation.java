@@ -1,18 +1,5 @@
 package io.opentelemetry.auto.instrumentation.servlet.http;
 
-import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
-import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
-
-import java.lang.reflect.Method;
-import java.util.Map;
-
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
@@ -24,6 +11,18 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import java.lang.reflect.Method;
+import java.util.Map;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class HttpServletInstrumentation extends Instrumenter.Default {

@@ -1,24 +1,23 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
+import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
+
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
-import net.bytebuddy.asm.Advice;
-
+import java.security.Principal;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
+import net.bytebuddy.asm.Advice;
 
 public class Servlet3Advice {
 

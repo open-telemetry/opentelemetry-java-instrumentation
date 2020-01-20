@@ -68,10 +68,13 @@ public class Servlet3Decorator
     assert span != null;
     if (request != null) {
       final String sc = request.getContextPath();
-      if (sc != null && sc != "") {
+      if (sc != null && !sc.isEmpty()) {
         span.setAttribute("servlet.context", sc);
       }
-      span.setAttribute("servlet.path", request.getServletPath());
+      final String sp = request.getServletPath();
+      if (sp != null && !sp.isEmpty()) {
+        span.setAttribute("servlet.path", sp);
+      }
     }
     return super.onRequest(span, request);
   }

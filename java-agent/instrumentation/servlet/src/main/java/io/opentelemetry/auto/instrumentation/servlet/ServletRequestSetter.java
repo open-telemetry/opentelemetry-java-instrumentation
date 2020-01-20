@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.instrumentation.servlet;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
-
 import javax.servlet.ServletRequest;
 
 /** Inject into request attributes since the request headers can't be modified. */

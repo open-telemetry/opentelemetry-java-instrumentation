@@ -11,7 +11,6 @@ import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.trace.SpanId;
 import io.opentelemetry.trace.TraceId;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
