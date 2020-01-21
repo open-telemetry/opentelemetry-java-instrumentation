@@ -50,16 +50,6 @@ public class ListWriter implements SpanProcessor {
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16());
     spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
-
-    System.out.println(
-        "--------------------- START: "
-            + readableSpan.getName()
-            + ", "
-            + readableSpan.toSpanData().getSpanId()
-            + ", "
-            + readableSpan.toSpanData().getParentSpanId()
-            + ", "
-            + readableSpan.toSpanData().getTraceId());
   }
 
   @Override
@@ -72,17 +62,6 @@ public class ListWriter implements SpanProcessor {
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16());
     final SpanData span = readableSpan.toSpanData();
-
-    System.out.println(
-        "--------------------- END: "
-            + span.getName()
-            + ", "
-            + span.getSpanId()
-            + ", "
-            + span.getParentSpanId()
-            + ", "
-            + span.getTraceId());
-
     synchronized (structuralChangeLock) {
       boolean found = false;
       for (final List<SpanData> trace : traces) {

@@ -25,19 +25,10 @@ public class Servlet3Advice {
   public static SpanScopePair onEnter(
       @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest request) {
     final Span current = TRACER.getCurrentSpan();
-    System.out.println("Current: " + current + " isValid: " + current.getContext().isValid());
     final boolean hasActiveTrace = current != null && current.getContext().isValid();
-    System.out.println(request.getAttribute(SPAN_ATTRIBUTE));
     final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
 
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
-    System.out.println(
-        "hasActiveTrace: "
-            + hasActiveTrace
-            + " hasServletTrace: "
-            + hasServletTrace
-            + " invalidRequest: "
-            + invalidRequest);
     if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
       return null;
@@ -49,11 +40,9 @@ public class Servlet3Advice {
     try {
       final SpanContext extractedContext =
           TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);
-      System.out.println("!!!!!!!!!!! Found extracted context");
       builder.setParent(extractedContext);
     } catch (final IllegalArgumentException e) {
       // Couldn't extract a context. We should treat this as a root span. '
-      System.out.println("??????????? Didn't find extracted context");
       builder.setNoParent();
     }
 
