@@ -70,6 +70,30 @@ subprojects { Project subProj ->
   }
 }
 
+subprojects {
+  if (!project.name.endsWith('-testing')) {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    publishing {
+      publications {
+        mavenJava(MavenPublication) {
+          from components.java
+          afterEvaluate {
+            def parts = project.path.split(':')
+            if (parts.size() == 3) {
+              groupId = 'io.opentelemetry.auto.instrumentation'
+              artifactId = "instrumentation-$project.name"
+            } else if (parts.size() == 4) {
+              groupId = 'io.opentelemetry.auto.instrumentation'
+              artifactId = "instrumentation-${parts[2]}-$project.name"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 dependencies {
   compile(project(':agent-tooling')) {
     exclude module: ':agent-bootstrap'
