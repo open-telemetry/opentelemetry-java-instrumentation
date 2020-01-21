@@ -84,6 +84,20 @@ configurations {
 }
 
 shadowJar {
+
+  mergeServiceFiles()
+
+  exclude '**/module-info.class'
+
+  dependencies {
+    exclude(dependency("org.projectlombok:lombok:$versions.lombok"))
+  }
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
+
   dependencies {
     exclude(project(':agent-bootstrap'))
     exclude(project(':trace-api'))
