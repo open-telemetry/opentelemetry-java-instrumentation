@@ -67,5 +67,5 @@ tasks.register("jmhAgent", JavaExec) {
   dependsOn project.tasks.jmhCompileGeneratedClasses
 }
 
-tasks.jmhAgent.dependsOn project(':java-agent').shadowJar
+tasks.jmhAgent.dependsOn(':java-agent:shadowJar')
 
