@@ -1,5 +1,13 @@
 package io.opentelemetry.auto.instrumentation.reactor.core;
 
+import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.tooling.Instrumenter;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+import java.util.Map;
+
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -9,13 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
-
-import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.tooling.Instrumenter;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
@@ -29,6 +30,8 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".ReactorCoreAdviceUtils",
       packageName + ".ReactorCoreAdviceUtils$TracingSubscriber",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      packageName + ".ReactorCoreDecorator",
     };
   }
 
