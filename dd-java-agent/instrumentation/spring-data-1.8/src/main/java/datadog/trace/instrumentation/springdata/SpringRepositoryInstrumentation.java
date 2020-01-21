@@ -2,21 +2,10 @@
 
 package datadog.trace.instrumentation.springdata;
 
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.bootstrap.instrumentation.api.AgentScope;
-import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.Map;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -28,6 +17,18 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
+
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Map;
+
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 @AutoService(Instrumenter.class)
 public final class SpringRepositoryInstrumentation extends Instrumenter.Default {
