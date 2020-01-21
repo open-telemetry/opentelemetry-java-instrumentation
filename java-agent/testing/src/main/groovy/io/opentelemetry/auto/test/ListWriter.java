@@ -137,7 +137,8 @@ public class ListWriter implements SpanProcessor {
                 + completedTraceCount
                 + " completed trace(s) and "
                 + traces.size()
-                + " total trace(s)");
+                + " total trace(s): "
+                + traces);
       }
     }
   }
