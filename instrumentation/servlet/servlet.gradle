@@ -20,10 +20,10 @@ dependencies {
   testCompile group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 
   // servlet request instrumentation required for linking request to response.
-  testCompile project(':java-agent:instrumentation:servlet:request-2')
+  testCompile project(':instrumentation:servlet:request-2')
 
   // Don't want to conflict with jetty from the test server.
-  testCompile(project(':java-agent:testing')) {
+  testCompile(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
 }

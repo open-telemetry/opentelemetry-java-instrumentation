@@ -33,7 +33,7 @@ subprojects { Project subProj ->
       transformation {
         tasks = ['compileJava', 'compileScala', 'compileKotlin']
         plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin'
-        classPath = project(':java-agent:agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
+        classPath = project(':agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
       }
     }
 
@@ -46,17 +46,17 @@ subprojects { Project subProj ->
     dependencies {
       // Apply common dependencies for instrumentation.
       compile project(':trace-api')
-      compile project(':java-agent:agent-tooling')
+      compile project(':agent-tooling')
       compile deps.bytebuddy
       if (jdkCompile) {
         "$jdkCompile" project(':trace-api')
-        "$jdkCompile" project(':java-agent:agent-tooling')
+        "$jdkCompile" project(':agent-tooling')
         "$jdkCompile" deps.bytebuddy
       }
       annotationProcessor deps.autoservice
       implementation deps.autoservice
 
-      testCompile project(':java-agent:testing')
+      testCompile project(':testing')
       testAnnotationProcessor deps.autoservice
       testImplementation deps.autoservice
     }
@@ -71,8 +71,8 @@ subprojects { Project subProj ->
 }
 
 dependencies {
-  compile(project(':java-agent:agent-tooling')) {
-    exclude module: ':java-agent:agent-bootstrap'
+  compile(project(':agent-tooling')) {
+    exclude module: ':agent-bootstrap'
   }
 }
 
@@ -85,9 +85,9 @@ configurations {
 
 shadowJar {
   dependencies {
-    exclude(project(':java-agent:agent-bootstrap'))
+    exclude(project(':agent-bootstrap'))
     exclude(project(':trace-api'))
-    exclude(project(':java-agent:opentelemetry-sdk'))
+    exclude(project(':opentelemetry-sdk'))
   }
 
   // relocate OpenTelemetry API usage

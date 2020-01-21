@@ -29,10 +29,10 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
 
-  compile project(':java-agent:instrumentation:elasticsearch')
+  compile project(':instrumentation:elasticsearch')
 
-  testCompile project(':java-agent:instrumentation:apache-httpclient-4')
-  testCompile project(':java-agent:instrumentation:apache-httpasyncclient-4')
+  testCompile project(':instrumentation:apache-httpclient-4')
+  testCompile project(':instrumentation:apache-httpasyncclient-4')
 
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'

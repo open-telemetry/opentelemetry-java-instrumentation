@@ -32,12 +32,12 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '6.0.0'
 
-  compile project(':java-agent:instrumentation:elasticsearch')
+  compile project(':instrumentation:elasticsearch')
 
   // Ensure no cross interference
-  testCompile project(':java-agent:instrumentation:elasticsearch:rest-5')
-  testCompile project(':java-agent:instrumentation:apache-httpasyncclient-4')
-  testCompile project(':java-agent:instrumentation:netty-4.1')
+  testCompile project(':instrumentation:elasticsearch:rest-5')
+  testCompile project(':instrumentation:apache-httpasyncclient-4')
+  testCompile project(':instrumentation:netty-4.1')
 
   testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.0.0'
   testCompile group: 'org.elasticsearch.client', name: 'transport', version: '6.0.0'

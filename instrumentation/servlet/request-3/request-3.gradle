@@ -25,11 +25,11 @@ testSets {
 dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
 
-  testCompile(project(':java-agent:testing')) {
+  testCompile(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
-  testCompile project(':java-agent:instrumentation:java-concurrent')
-  testCompile project(':java-agent:instrumentation:jetty-8') // See if there's any conflicts.
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile project(':instrumentation:jetty-8') // See if there's any conflicts.
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.2.0.v20160908'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.2.0.v20160908'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'

@@ -26,7 +26,7 @@ testSets {
 dependencies {
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 
-  testCompile(project(':java-agent:testing')) {
+  testCompile(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'

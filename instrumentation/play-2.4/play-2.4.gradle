@@ -36,10 +36,10 @@ testSets {
 dependencies {
   main_java8Compile group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
-  testCompile project(':java-agent:instrumentation:java-concurrent')
-  testCompile project(':java-agent:instrumentation:netty-4.0')
-  testCompile project(':java-agent:instrumentation:netty-4.1')
-  testCompile project(':java-agent:instrumentation:akka-http-10.0')
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile project(':instrumentation:netty-4.0')
+  testCompile project(':instrumentation:netty-4.1')
+  testCompile project(':instrumentation:akka-http-10.0')
 
   // Before 2.5, play used netty 3.x which isn't supported, so for better test consistency, we test with just 2.5
   testCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.0'

@@ -20,12 +20,12 @@ testSets {
 dependencies {
   compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
 
-  compile project(':java-agent:instrumentation:hibernate')
+  compile project(':instrumentation:hibernate')
 
-  testCompile project(':java-agent:instrumentation:jdbc')
+  testCompile project(':instrumentation:jdbc')
   // Added to ensure cross compatibility:
-  testCompile project(':java-agent:instrumentation:hibernate:core-3.3')
-  testCompile project(':java-agent:instrumentation:hibernate:core-4.3')
+  testCompile project(':instrumentation:hibernate:core-3.3')
+  testCompile project(':instrumentation:hibernate:core-4.3')
 
   testCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
@@ -37,5 +37,5 @@ dependencies {
   latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.2.+'
   latestDepTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
   // Test that the incremental instrumentation for hibernate 4.3 doesn't cause issues.
-  latestDepTestCompile project(':java-agent:instrumentation:hibernate:core-4.3')
+  latestDepTestCompile project(':instrumentation:hibernate:core-4.3')
 }

@@ -21,8 +21,8 @@ dependencies {
   play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
   play project(':trace-api')
-  play project(':java-agent:agent-bootstrap')
-  play project(':java-agent:benchmark-integration')
+  play project(':agent-bootstrap')
+  play project(':benchmark-integration')
 }
 
 repositories {

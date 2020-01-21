@@ -20,7 +20,7 @@ dependencies {
   compileOnly group: 'org.apache.kafka', name: 'kafka-streams', version: '0.11.0.0'
 
   // Include kafka-clients instrumentation for tests.
-  testCompile project(':java-agent:instrumentation:kafka-clients-0.11')
+  testCompile project(':instrumentation:kafka-clients-0.11')
 
   testCompile group: 'org.apache.kafka', name: 'kafka-clients', version: '0.11.0.0'
   testCompile group: 'org.apache.kafka', name: 'kafka-streams', version: '0.11.0.0'

@@ -45,7 +45,7 @@ def includeShadowJar(subproject, jarname) {
   }
 }
 
-includeShadowJar(project(':java-agent:instrumentation'), 'agent-tooling-and-instrumentation.isolated')
+includeShadowJar(project(':instrumentation'), 'agent-tooling-and-instrumentation.isolated')
 
 jar {
   archiveClassifier = 'unbundled'
@@ -95,14 +95,14 @@ shadowJar {
 }
 
 dependencies {
-  testCompile project(':java-agent:agent-bootstrap')
+  testCompile project(':agent-bootstrap')
   testCompile project(':trace-api')
   testCompile project(':utils:gc-utils')
 
   testCompile deps.testLogging
   testCompile deps.guava
 
-  shadowInclude project(path: ':java-agent:agent-bootstrap')
+  shadowInclude project(path: ':agent-bootstrap')
 }
 
 tasks.withType(Test).configureEach {

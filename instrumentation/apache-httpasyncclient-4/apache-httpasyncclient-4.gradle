@@ -23,7 +23,7 @@ testSets {
 dependencies {
   compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
 
-  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':instrumentation:java-concurrent')
 
   testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
 

@@ -7,6 +7,6 @@ dependencies {
   testCompile deps.kotlin
   testCompile deps.coroutines
 
-  testCompile project(':java-agent:instrumentation:java-concurrent')
-  testCompile project(':java-agent:instrumentation:trace-annotation')
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile project(':instrumentation:trace-annotation')
 }

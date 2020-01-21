@@ -9,7 +9,7 @@ testSets {
 }
 
 dependencies {
-  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':instrumentation:java-concurrent')
 
   testCompile group: 'org.jboss.weld', name: 'weld-core', version: '2.3.0.Final'
   testCompile group: 'org.jboss.weld.se', name: 'weld-se', version: '2.3.0.Final'

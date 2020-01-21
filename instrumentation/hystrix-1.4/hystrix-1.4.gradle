@@ -17,13 +17,13 @@ testSets {
 }
 
 dependencies {
-  compile project(':java-agent:instrumentation:rxjava-1')
+  compile project(':instrumentation:rxjava-1')
 
   compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
   compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
 
-  testCompile project(':java-agent:instrumentation:java-concurrent')
-  testCompile project(':java-agent:instrumentation:trace-annotation')
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile project(':instrumentation:trace-annotation')
 
   testCompile group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
   testCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'

@@ -24,12 +24,12 @@ apply from: "${rootDir}/gradle/java.gradle"
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
 
-  compile project(':java-agent:instrumentation:elasticsearch')
+  compile project(':instrumentation:elasticsearch')
 
   // Ensure no cross interference
-  testCompile project(':java-agent:instrumentation:elasticsearch:rest-5')
-  testCompile project(':java-agent:instrumentation:apache-httpasyncclient-4')
-  testCompile project(':java-agent:instrumentation:netty-4.1')
+  testCompile project(':instrumentation:elasticsearch:rest-5')
+  testCompile project(':instrumentation:apache-httpasyncclient-4')
+  testCompile project(':instrumentation:netty-4.1')
 
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'

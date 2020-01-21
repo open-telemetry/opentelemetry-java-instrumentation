@@ -48,7 +48,7 @@ artifacts {
 }
 
 dependencies {
-  compile project(':java-agent:instrumentation:rxjava-1')
+  compile project(':instrumentation:rxjava-1')
 
   compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
 

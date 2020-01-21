@@ -28,11 +28,11 @@ testSets {
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
 
-  testCompile project(':java-agent:instrumentation:java-concurrent')
-  testCompile project(':java-agent:instrumentation:servlet:request-3')
-  testCompile project(':java-agent:instrumentation:jax-rs-annotations-2:filter-jersey')
-  testCompile project(':java-agent:instrumentation:jax-rs-annotations-2:filter-resteasy-3.0')
-  testCompile project(':java-agent:instrumentation:jax-rs-annotations-2:filter-resteasy-3.1')
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile project(':instrumentation:servlet:request-3')
+  testCompile project(':instrumentation:jax-rs-annotations-2:filter-jersey')
+  testCompile project(':instrumentation:jax-rs-annotations-2:filter-resteasy-3.0')
+  testCompile project(':instrumentation:jax-rs-annotations-2:filter-resteasy-3.1')
 
   // Jersey
   // First version with DropwizardTestSupport:

@@ -38,7 +38,7 @@ dependencies {
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
-  testCompile project(':java-agent:instrumentation:apache-httpclient-4')
+  testCompile project(':instrumentation:apache-httpclient-4')
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'

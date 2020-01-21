@@ -2,7 +2,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compile project(':trace-api')
-  compile project(':java-agent:agent-bootstrap')
+  compile project(':agent-bootstrap')
 
   compile 'info.picocli:picocli:4.0.4'
   compile deps.guava

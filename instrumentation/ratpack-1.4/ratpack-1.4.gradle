@@ -31,8 +31,8 @@ testSets {
 dependencies {
   main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
 
-  testCompile project(':java-agent:instrumentation:java-concurrent')
-  testCompile project(':java-agent:instrumentation:netty-4.1')
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile project(':instrumentation:netty-4.1')
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
   latestDepTestCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
 }

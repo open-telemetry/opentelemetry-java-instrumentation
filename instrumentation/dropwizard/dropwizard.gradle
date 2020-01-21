@@ -9,9 +9,9 @@ apply from: "${rootDir}/gradle/java.gradle"
 //}
 
 dependencies {
-  testCompile project(':java-agent:instrumentation:java-concurrent')
-  testCompile project(':java-agent:instrumentation:jax-rs-annotations-2')
-  testCompile project(':java-agent:instrumentation:servlet:request-3')
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile project(':instrumentation:jax-rs-annotations-2')
+  testCompile project(':instrumentation:servlet:request-3')
 
   // First version with DropwizardTestSupport:
   testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'

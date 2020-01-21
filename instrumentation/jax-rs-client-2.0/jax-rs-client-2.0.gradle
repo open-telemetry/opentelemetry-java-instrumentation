@@ -27,10 +27,10 @@ dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
   compileOnly group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
 
-  testCompile project(':java-agent:instrumentation:java-concurrent')
+  testCompile project(':instrumentation:java-concurrent')
 
-  testCompile project(':java-agent:instrumentation:jax-rs-client-2.0:connection-error-handling-jersey')
-  testCompile project(':java-agent:instrumentation:jax-rs-client-2.0:connection-error-handling-resteasy')
+  testCompile project(':instrumentation:jax-rs-client-2.0:connection-error-handling-jersey')
+  testCompile project(':instrumentation:jax-rs-client-2.0:connection-error-handling-resteasy')
 
   testCompile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
 
