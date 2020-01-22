@@ -17,7 +17,7 @@ public class CloseableSpanScopePair extends SpanScopePair implements Closeable {
   public void close() {
     if (endSpan) {
       getSpan().end();
-    }
+    }  q
     getScope().close();
   }
 }
