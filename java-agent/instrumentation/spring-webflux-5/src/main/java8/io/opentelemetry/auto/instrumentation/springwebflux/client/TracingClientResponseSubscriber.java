@@ -34,7 +34,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
     this.parentSpan =
         parentSpan == null
             ? DefaultSpan.getInvalid()
-            : parentSpan; // TODO: Should we use DefaultSpan here?
+            : parentSpan;
   }
 
   @Override
