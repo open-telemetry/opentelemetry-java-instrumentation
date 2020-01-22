@@ -10,6 +10,8 @@ plugins {
   // files in 'workspace' build directory in CI
   id 'com.github.sherter.google-java-format' version '0.8' apply false
   id 'com.dorongold.task-tree' version '1.4'
+
+  id "com.github.johnrengelman.shadow" version "5.2.0"
 }
 
 def isCI = System.getenv("CI") != null

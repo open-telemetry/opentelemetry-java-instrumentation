@@ -1,0 +1,115 @@
+// this project will run in isolation under the agent's classloader
+buildscript {
+
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath "net.bytebuddy:byte-buddy-gradle-plugin:${versions.bytebuddy}"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+  }
+}
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+apply from: "${rootDir}/gradle/java.gradle"
+
+Project instr_project = project
+subprojects { Project subProj ->
+  apply plugin: "net.bytebuddy.byte-buddy"
+  apply plugin: 'muzzle'
+
+  subProj.byteBuddy {
+    transformation {
+      // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
+      tasks = ['compileJava', 'compileScala', 'compileKotlin']
+      plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin$NoOp'
+    }
+  }
+
+  subProj.afterEvaluate {
+    subProj.byteBuddy {
+      transformation {
+        tasks = ['compileJava', 'compileScala', 'compileKotlin']
+        plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin'
+        classPath = project(':agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
+      }
+    }
+
+    String jdkCompile = null
+    if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests') != JavaVersion.VERSION_1_7) {
+      def version = JavaVersion.toVersion(project.getProperty('minJavaVersionForTests'))
+      def name = "java$version.majorVersion"
+      jdkCompile = "main_${name}Compile"
+    }
+    dependencies {
+      // Apply common dependencies for instrumentation.
+      compile project(':trace-api')
+      compile project(':agent-tooling')
+      compile deps.bytebuddy
+      if (jdkCompile) {
+        "$jdkCompile" project(':trace-api')
+        "$jdkCompile" project(':agent-tooling')
+        "$jdkCompile" deps.bytebuddy
+      }
+      annotationProcessor deps.autoservice
+      implementation deps.autoservice
+
+      testCompile project(':testing')
+      testAnnotationProcessor deps.autoservice
+      testImplementation deps.autoservice
+    }
+
+    // Make it so all instrumentation subproject tests can be run with a single command.
+    instr_project.tasks.test.dependsOn(subProj.tasks.test)
+  }
+
+  instr_project.dependencies {
+    compile(project(subProj.getPath()))
+  }
+}
+
+dependencies {
+  compile(project(':agent-tooling')) {
+    exclude module: ':agent-bootstrap'
+  }
+}
+
+configurations {
+  // exclude bootstrap dependencies from shadowJar
+  runtime.exclude module: deps.slf4j
+  runtime.exclude group: 'org.slf4j'
+  runtime.exclude group: 'io.opentelemetry'
+}
+
+shadowJar {
+
+  mergeServiceFiles()
+
+  exclude '**/module-info.class'
+
+  dependencies {
+    exclude(dependency("org.projectlombok:lombok:$versions.lombok"))
+  }
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
+
+  dependencies {
+    exclude(project(':agent-bootstrap'))
+    exclude(project(':trace-api'))
+    exclude(project(':opentelemetry-sdk'))
+  }
+
+  // relocate OpenTelemetry API usage
+  relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"
+  relocate "io.opentelemetry.context", "io.opentelemetry.auto.shaded.io.opentelemetry.context"
+  relocate "io.opentelemetry.distributedcontext", "io.opentelemetry.auto.shaded.io.opentelemetry.distributedcontext"
+  relocate "io.opentelemetry.internal", "io.opentelemetry.auto.shaded.io.opentelemetry.internal"
+  relocate "io.opentelemetry.metrics", "io.opentelemetry.auto.shaded.io.opentelemetry.metrics"
+  relocate "io.opentelemetry.trace", "io.opentelemetry.auto.shaded.io.opentelemetry.trace"
+}
+
