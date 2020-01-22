@@ -1,0 +1,42 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/test-with-scala.gradle"
+
+// apply plugin: 'org.unbroken-dome.test-sets'
+//testSets {
+//
+//  latestDepTest {
+//    dirName = 'test'
+//  }
+//}
+
+muzzle {
+
+}
+
+dependencies {
+  compileOnly group: 'com.twitter', name: 'finagle-http_2.11', version: '19.1.0'
+  compileOnly group: 'com.twitter', name: 'finatra-http_2.11', version: '19.1.0'
+
+  testCompile project(':dd-java-agent:instrumentation:netty-4.1')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
+
+  testCompile group: 'com.twitter', name: 'finagle-http_2.11', version: '19.1.0'
+
+  testCompile(group: 'com.fasterxml.jackson.module', name: 'jackson-module-scala_2.11', version: '2.10.2') {
+    force = true
+  }
+
+//  latestDepTestCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  // latestDepTestCompile project(':dd-java-agent:instrumentation:trace-annotation')
+}
+
+//compileLatestDepTestGroovy {
+//  classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
+//  dependsOn compileLatestDepTestScala
+//}

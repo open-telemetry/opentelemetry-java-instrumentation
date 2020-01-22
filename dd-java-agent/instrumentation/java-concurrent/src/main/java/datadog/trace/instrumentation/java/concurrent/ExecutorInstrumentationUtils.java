@@ -44,12 +44,22 @@ public class ExecutorInstrumentationUtils {
    */
   public static <T> State setupState(
       final ContextStore<T, State> contextStore, final T task, final TraceScope scope) {
+
     final State state = contextStore.putIfAbsent(task, State.FACTORY);
-    final TraceScope.Continuation continuation = scope.capture();
-    if (state.setContinuation(continuation)) {
-      log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
-    } else {
-      continuation.close(false);
+
+    // Don't instrument the executor's own runnables.  These runnables may never return until
+    // netty shuts down.  Any created continuations will be open until that time preventing traces
+    // from being reported
+    if (!task.getClass()
+        .getName()
+        .startsWith("io.netty.util.concurrent.SingleThreadEventExecutor$")) {
+
+      final TraceScope.Continuation continuation = scope.capture();
+      if (state.setContinuation(continuation)) {
+        log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
+      } else {
+        continuation.close(false);
+      }
     }
     return state;
   }
