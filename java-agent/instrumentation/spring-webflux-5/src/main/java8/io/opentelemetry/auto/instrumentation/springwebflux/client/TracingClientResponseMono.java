@@ -34,7 +34,6 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
     if (parentSpan != null) {
       builder.setParent(parentSpan);
     } else {
-      builder.setNoParent();
     }
     final Span span = builder.startSpan();
     span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
