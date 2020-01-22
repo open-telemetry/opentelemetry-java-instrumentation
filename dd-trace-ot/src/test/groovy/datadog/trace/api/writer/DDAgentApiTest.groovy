@@ -1,11 +1,12 @@
 package datadog.trace.api.writer
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.opentracing.SpanFactory
 import datadog.trace.common.writer.ddagent.DDAgentApi
 import datadog.trace.common.writer.ddagent.DDAgentResponseListener
 import datadog.trace.util.test.DDSpecification
+import org.msgpack.jackson.dataformat.MessagePackFactory
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
@@ -13,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class DDAgentApiTest extends DDSpecification {
-  static mapper = DDAgentApi.OBJECT_MAPPER
+  static mapper = new ObjectMapper(new MessagePackFactory())
 
   def "sending an empty list of traces returns no errors"() {
     setup:
@@ -124,15 +125,15 @@ class DDAgentApiTest extends DDSpecification {
 
   def "Api ResponseListeners see 200 responses"() {
     setup:
-    def agentResponse = new AtomicReference<String>(null)
-    DDAgentResponseListener responseListener = { String endpoint, JsonNode responseJson ->
-      agentResponse.set(responseJson.toString())
+    def agentResponse = new AtomicReference<Map>(null)
+    DDAgentResponseListener responseListener = { String endpoint, Map responseJson ->
+      agentResponse.set(responseJson)
     }
     def agent = httpServer {
       handlers {
         put("v0.4/traces") {
           def status = request.contentLength > 0 ? 200 : 500
-          response.status(status).send('{"hello":"test"}')
+          response.status(status).send('{"hello":{}}')
         }
       }
     }
@@ -142,7 +143,7 @@ class DDAgentApiTest extends DDSpecification {
     when:
     client.sendTraces([[], [], []])
     then:
-    agentResponse.get() == '{"hello":"test"}'
+    agentResponse.get() == ["hello": [:]]
     agent.lastRequest.headers.get("Datadog-Meta-Lang") == "java"
     agent.lastRequest.headers.get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
     agent.lastRequest.headers.get("Datadog-Meta-Tracer-Version") == "Stubbed-Test-Version"

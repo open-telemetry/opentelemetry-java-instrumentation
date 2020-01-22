@@ -1,6 +1,5 @@
 package datadog.trace.common.writer.ddagent;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lmax.disruptor.EventHandler;
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.util.DaemonThreadFactory;
@@ -74,9 +73,6 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
             batchWritingDisruptor.publish(serializedTrace, event.representativeCount);
             monitor.onSerialize(writer, event.data, serializedTrace);
             event.representativeCount = 0; // reset in case flush is invoked below.
-          } catch (final JsonProcessingException e) {
-            log.debug("Error serializing trace", e);
-            monitor.onFailedSerialize(writer, event.data, e);
           } catch (final Throwable e) {
             log.debug("Error while serializing trace", e);
             monitor.onFailedSerialize(writer, event.data, e);

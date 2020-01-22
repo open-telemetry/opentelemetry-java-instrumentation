@@ -1,9 +1,10 @@
 package datadog.trace.common.writer.ddagent;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static datadog.trace.common.serialization.MsgpackFormatWriter.MSGPACK_WRITER;
+
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Types;
 import datadog.opentracing.ContainerInfo;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
@@ -12,8 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
@@ -24,7 +25,7 @@ import okhttp3.RequestBody;
 import okio.BufferedSink;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
-import org.msgpack.jackson.dataformat.MessagePackFactory;
+import org.msgpack.core.buffer.ArrayBufferOutput;
 
 /** The API pointing to a DD agent */
 @Slf4j
@@ -47,7 +48,14 @@ public class DDAgentApi {
 
   private volatile long nextAllowedLogTime = 0;
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new MessagePackFactory());
+  private static final JsonAdapter<Map<String, Map<String, Number>>> RESPONSE_ADAPTER =
+      new Moshi.Builder()
+          .build()
+          .adapter(
+              Types.newParameterizedType(
+                  Map.class,
+                  String.class,
+                  Types.newParameterizedType(Map.class, String.class, Double.class)));
   private static final MediaType MSGPACK = MediaType.get("application/msgpack");
 
   private final OkHttpClient httpClient;
@@ -57,7 +65,7 @@ public class DDAgentApi {
     this(
         host,
         port,
-        traceEndpointAvailable(getUrl(host, port, TRACES_ENDPOINT_V4), unixDomainSocketPath),
+        endpointAvailable(getUrl(host, port, TRACES_ENDPOINT_V4), unixDomainSocketPath, true),
         unixDomainSocketPath);
   }
 
@@ -97,7 +105,7 @@ public class DDAgentApi {
         final byte[] serializedTrace = serializeTrace(trace);
         sizeInBytes += serializedTrace.length;
         serializedTraces.add(serializedTrace);
-      } catch (final JsonProcessingException e) {
+      } catch (final IOException e) {
         log.warn("Error serializing trace", e);
 
         // TODO: DQH - Incorporate the failed serialization into the Response object???
@@ -107,8 +115,13 @@ public class DDAgentApi {
     return sendSerializedTraces(serializedTraces.size(), sizeInBytes, serializedTraces);
   }
 
-  byte[] serializeTrace(final List<DDSpan> trace) throws JsonProcessingException {
-    return OBJECT_MAPPER.writeValueAsBytes(trace);
+  byte[] serializeTrace(final List<DDSpan> trace) throws IOException {
+    // TODO: reuse byte array buffer
+    final ArrayBufferOutput output = new ArrayBufferOutput();
+    final MessagePacker packer = MessagePack.newDefaultPacker(output);
+    MSGPACK_WRITER.writeTrace(trace, packer);
+    packer.flush();
+    return output.toByteArray();
   }
 
   Response sendSerializedTraces(
@@ -183,17 +196,16 @@ public class DDAgentApi {
         final String responseString = response.body().string().trim();
         try {
           if (!"".equals(responseString) && !"OK".equalsIgnoreCase(responseString)) {
-            final JsonNode parsedResponse = OBJECT_MAPPER.readTree(responseString);
+            final Map<String, Map<String, Number>> parsedResponse =
+                RESPONSE_ADAPTER.fromJson(responseString);
             final String endpoint = tracesUrl.toString();
 
             for (final DDAgentResponseListener listener : responseListeners) {
               listener.onResponse(endpoint, parsedResponse);
             }
-            return Response.success(response.code(), parsedResponse);
           }
-
           return Response.success(response.code());
-        } catch (final JsonParseException e) {
+        } catch (final IOException e) {
           log.debug("Failed to parse DD agent response: " + responseString, e);
 
           return Response.success(response.code(), e);
@@ -222,19 +234,13 @@ public class DDAgentApi {
     }
   }
 
-  private static boolean traceEndpointAvailable(
-      final HttpUrl url, final String unixDomainSocketPath) {
-    return endpointAvailable(url, unixDomainSocketPath, Collections.emptyList(), true);
-  }
+  private static final byte[] EMPTY_LIST = new byte[] {MessagePack.Code.FIXARRAY_PREFIX};
 
   private static boolean endpointAvailable(
-      final HttpUrl url,
-      final String unixDomainSocketPath,
-      final Object data,
-      final boolean retry) {
+      final HttpUrl url, final String unixDomainSocketPath, final boolean retry) {
     try {
       final OkHttpClient client = buildHttpClient(unixDomainSocketPath);
-      final RequestBody body = RequestBody.create(MSGPACK, OBJECT_MAPPER.writeValueAsBytes(data));
+      final RequestBody body = RequestBody.create(MSGPACK, EMPTY_LIST);
       final Request request = prepareRequest(url).put(body).build();
 
       try (final okhttp3.Response response = client.newCall(request).execute()) {
@@ -242,7 +248,7 @@ public class DDAgentApi {
       }
     } catch (final IOException e) {
       if (retry) {
-        return endpointAvailable(url, unixDomainSocketPath, data, false);
+        return endpointAvailable(url, unixDomainSocketPath, false);
       }
     }
     return false;
@@ -307,42 +313,31 @@ public class DDAgentApi {
   public static final class Response {
     /** Factory method for a successful request with a trivial response body */
     public static final Response success(final int status) {
-      return new Response(true, status, null, null);
-    }
-
-    /** Factory method for a successful request with a well-formed JSON response body */
-    public static final Response success(final int status, final JsonNode json) {
-      return new Response(true, status, json, null);
+      return new Response(true, status, null);
     }
 
     /** Factory method for a successful request will a malformed response body */
     public static final Response success(final int status, final Throwable exception) {
-      return new Response(true, status, null, exception);
+      return new Response(true, status, exception);
     }
 
     /** Factory method for a request that receive an error status in response */
     public static final Response failed(final int status) {
-      return new Response(false, status, null, null);
+      return new Response(false, status, null);
     }
 
     /** Factory method for a failed communication attempt */
     public static final Response failed(final Throwable exception) {
-      return new Response(false, null, null, exception);
+      return new Response(false, null, exception);
     }
 
     private final boolean success;
     private final Integer status;
-    private final JsonNode json;
     private final Throwable exception;
 
-    private Response(
-        final boolean success,
-        final Integer status,
-        final JsonNode json,
-        final Throwable exception) {
+    private Response(final boolean success, final Integer status, final Throwable exception) {
       this.success = success;
       this.status = status;
-      this.json = json;
       this.exception = exception;
     }
 
@@ -353,10 +348,6 @@ public class DDAgentApi {
     // TODO: DQH - In Java 8, switch to OptionalInteger
     public final Integer status() {
       return status;
-    }
-
-    public final JsonNode json() {
-      return json;
     }
 
     // TODO: DQH - In Java 8, switch to Optional<Throwable>?

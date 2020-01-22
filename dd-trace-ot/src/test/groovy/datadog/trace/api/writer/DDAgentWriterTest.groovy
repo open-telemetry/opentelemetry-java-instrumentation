@@ -11,6 +11,8 @@ import datadog.trace.common.writer.ddagent.BatchWritingDisruptor
 import datadog.trace.common.writer.ddagent.DDAgentApi
 import datadog.trace.common.writer.ddagent.Monitor
 import datadog.trace.util.test.DDSpecification
+import org.msgpack.core.MessagePack
+import org.msgpack.core.buffer.ArrayBufferOutput
 import spock.lang.Retry
 import spock.lang.Timeout
 
@@ -21,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import static datadog.opentracing.SpanFactory.newSpanOf
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.common.serialization.MsgpackFormatWriter.MSGPACK_WRITER
 import static datadog.trace.common.writer.DDAgentWriter.DISRUPTOR_BUFFER_SIZE
 
 @Timeout(20)
@@ -206,7 +209,7 @@ class DDAgentWriterTest extends DDSpecification {
       Mock(DDTracer))
     minimalSpan = new DDSpan(0, minimalContext)
     minimalTrace = [minimalSpan]
-    traceSize = DDAgentApi.OBJECT_MAPPER.writeValueAsBytes(minimalTrace).length
+    traceSize = calculateSize(minimalTrace)
     maxedPayloadTraceCount = ((int) (BatchWritingDisruptor.FLUSH_PAYLOAD_BYTES / traceSize)) + 1
   }
 
@@ -666,5 +669,13 @@ class DDAgentWriterTest extends DDSpecification {
 
     cleanup:
     writer.close()
+  }
+
+  static int calculateSize(List<DDSpan> trace) {
+    def buffer = new ArrayBufferOutput()
+    def packer = MessagePack.newDefaultPacker(buffer)
+    MSGPACK_WRITER.writeTrace(trace, packer)
+    packer.flush()
+    return buffer.size
   }
 }

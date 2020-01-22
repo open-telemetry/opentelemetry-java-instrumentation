@@ -1,4 +1,3 @@
-import com.fasterxml.jackson.databind.JsonNode
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
@@ -63,11 +62,11 @@ class DDApiIntegrationTest {
     def unixDomainSocketApi
 
     def endpoint = new AtomicReference<String>(null)
-    def agentResponse = new AtomicReference<String>(null)
+    def agentResponse = new AtomicReference<Map<String, Map<String, Number>>>(null)
 
-    DDAgentResponseListener responseListener = { String receivedEndpoint, JsonNode responseJson ->
+    DDAgentResponseListener responseListener = { String receivedEndpoint, Map<String, Map<String, Number>> responseJson ->
       endpoint.set(receivedEndpoint)
-      agentResponse.set(responseJson.toString())
+      agentResponse.set(responseJson)
     }
 
     def setupSpec() {
@@ -126,7 +125,7 @@ class DDApiIntegrationTest {
       api.sendTraces(traces)
       if (v4()) {
         assert endpoint.get() == "http://${agentContainerHost}:${agentContainerPort}/v0.4/traces"
-        assert agentResponse.get() == '{"rate_by_service":{"service:,env:":1}}'
+        assert agentResponse.get() == [rate_by_service: ["service:,env:": 1]]
       }
 
       where:
@@ -147,7 +146,7 @@ class DDApiIntegrationTest {
       unixDomainSocketApi.sendTraces(traces)
       if (v4()) {
         assert endpoint.get() == "http://${SOMEHOST}:${SOMEPORT}/v0.4/traces"
-        assert agentResponse.get() == '{"rate_by_service":{"service:,env:":1}}'
+        assert agentResponse.get() == [rate_by_service: ["service:,env:": 1]]
       }
 
       where:

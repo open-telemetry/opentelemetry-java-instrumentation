@@ -8,9 +8,6 @@ ext {
     slf4j      : "1.7.29",
     guava      : "20.0", // Last version to support Java 7
 
-    // When upgrading for security fixes, ensure corresponding change is reflected in jmxfetch.
-    jackson    : "2.10.0", // https://nvd.nist.gov/vuln/detail/CVE-2019-16942 et al
-
     spock      : "1.3-groovy-$spockGroovyVer",
     groovy     : groovyVer,
     logback    : "1.2.3",
@@ -34,10 +31,6 @@ ext {
     // General
     slf4j          : "org.slf4j:slf4j-api:${versions.slf4j}",
     guava          : "com.google.guava:guava:$versions.guava",
-    jackson        : [
-      dependencies.create(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: versions.jackson),
-      dependencies.create(group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.18'),
-    ],
     bytebuddy      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${versions.bytebuddy}"),
     bytebuddyagent : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${versions.bytebuddy}"),
     autoservice    : [
