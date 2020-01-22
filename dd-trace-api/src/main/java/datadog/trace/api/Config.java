@@ -76,6 +76,7 @@ public class Config {
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
   public static final String SPLIT_BY_TAGS = "trace.split-by-tags";
+  public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
@@ -128,6 +129,7 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final String DEFAULT_SPLIT_BY_TAGS = "";
+  private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
   private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
   private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
@@ -188,6 +190,7 @@ public class Config {
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final boolean dbClientSplitByInstance;
   @Getter private final Set<String> splitByTags;
+  @Getter private final Integer scopeDepthLimit;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final Set<PropagationStyle> propagationStylesToExtract;
@@ -289,6 +292,9 @@ public class Config {
         Collections.unmodifiableSet(
             new LinkedHashSet<>(
                 getListSettingFromEnvironment(SPLIT_BY_TAGS, DEFAULT_SPLIT_BY_TAGS)));
+
+    scopeDepthLimit =
+        getIntegerSettingFromEnvironment(SCOPE_DEPTH_LIMIT, DEFAULT_SCOPE_DEPTH_LIMIT);
 
     partialFlushMinSpans =
         getIntegerSettingFromEnvironment(PARTIAL_FLUSH_MIN_SPANS, DEFAULT_PARTIAL_FLUSH_MIN_SPANS);
@@ -415,6 +421,9 @@ public class Config {
             new LinkedHashSet<>(
                 getPropertyListValue(
                     properties, SPLIT_BY_TAGS, new ArrayList<>(parent.splitByTags))));
+
+    scopeDepthLimit =
+        getPropertyIntegerValue(properties, SCOPE_DEPTH_LIMIT, parent.scopeDepthLimit);
 
     partialFlushMinSpans =
         getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);

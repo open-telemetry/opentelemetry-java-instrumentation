@@ -7,4 +7,6 @@ import io.opentracing.Span;
 interface DDScope extends Scope {
   @Override
   Span span();
+
+  int depth();
 }
