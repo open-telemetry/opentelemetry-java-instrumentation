@@ -46,11 +46,19 @@ subprojects { Project subProj ->
     dependencies {
       // Apply common dependencies for instrumentation.
       compile project(':trace-api')
-      compile project(':agent-tooling')
+      compile(project(':agent-tooling')) {
+        // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
+        // is brought in for tests by project(:testing) below
+        exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+      }
       compile deps.bytebuddy
       if (jdkCompile) {
         "$jdkCompile" project(':trace-api')
-        "$jdkCompile" project(':agent-tooling')
+        "$jdkCompile"(project(':agent-tooling')) {
+          // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
+          // is brought in for tests by project(:testing) below
+          exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+        }
         "$jdkCompile" deps.bytebuddy
       }
       annotationProcessor deps.autoservice
