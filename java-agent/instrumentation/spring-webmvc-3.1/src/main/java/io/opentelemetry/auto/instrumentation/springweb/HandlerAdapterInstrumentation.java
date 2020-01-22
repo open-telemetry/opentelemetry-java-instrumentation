@@ -71,7 +71,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         DECORATE.onRequest((Span) parentSpan, request);
       }
 
-      if (TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
 
