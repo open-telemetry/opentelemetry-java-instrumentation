@@ -6,9 +6,11 @@ import jvmbootstraptest.AgentLoadedChecker
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import java.lang.reflect.Method
 
+@Timeout(30)
 class JMXFetchTest extends Specification {
 
   @Rule
