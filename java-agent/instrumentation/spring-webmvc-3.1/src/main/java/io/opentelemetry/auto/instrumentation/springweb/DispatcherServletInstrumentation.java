@@ -94,7 +94,6 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     public static void nameResource(@Advice.Argument(3) final Exception exception) {
       final Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid() && exception != null) {
-        DECORATE.onError(span, exception);
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
         DECORATE.addThrowable(span, exception);
