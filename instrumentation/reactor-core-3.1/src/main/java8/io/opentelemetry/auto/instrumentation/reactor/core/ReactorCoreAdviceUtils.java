@@ -1,8 +1,10 @@
 package io.opentelemetry.auto.instrumentation.reactor.core;
 
+import static io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreDecorator.DECORATE;
 import static reactor.core.publisher.Operators.lift;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
@@ -18,12 +20,12 @@ public class ReactorCoreAdviceUtils {
   public static final String PUBLISHER_CONTEXT_KEY =
       "io.opentelemetry.auto.instrumentation.reactor.core.Span";
 
-  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final AgentSpan span) {
+  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final Span span) {
     return mono.<T>transform(finishSpanNextOrError())
         .subscriberContext(Context.of(PUBLISHER_CONTEXT_KEY, span));
   }
 
-  public static <T> Flux<T> setPublisherSpan(final Flux<T> flux, final AgentSpan span) {
+  public static <T> Flux<T> setPublisherSpan(final Flux<T> flux, final Span span) {
     return flux.<T>transform(finishSpanNextOrError())
         .subscriberContext(Context.of(PUBLISHER_CONTEXT_KEY, span));
   }
@@ -39,16 +41,16 @@ public class ReactorCoreAdviceUtils {
   }
 
   public static void finishSpanIfPresent(final Context context, final Throwable throwable) {
-    finishSpanIfPresent(context.getOrDefault(PUBLISHER_CONTEXT_KEY, (AgentSpan) null), throwable);
+    finishSpanIfPresent(context.getOrDefault(PUBLISHER_CONTEXT_KEY, (Span) null), throwable);
   }
 
-  public static void finishSpanIfPresent(final AgentSpan span, final Throwable throwable) {
+  public static void finishSpanIfPresent(final Span span, final Throwable throwable) {
     if (span != null) {
       if (throwable != null) {
-        span.setError(true);
-        span.addThrowable(throwable);
+        span.setStatus(Status.UNKNOWN);
+        DECORATE.addThrowable(span, throwable);
       }
-      span.finish();
+      span.end();
     }
   }
 

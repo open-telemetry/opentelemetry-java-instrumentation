@@ -1,7 +1,9 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.ServletException;
@@ -10,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public class Servlet3Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   public static final Servlet3Decorator DECORATE = new Servlet3Decorator();
 
   @Override
@@ -60,17 +64,23 @@ public class Servlet3Decorator
   }
 
   @Override
-  public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
+  public Span onRequest(final Span span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
-      span.setAttribute("servlet.context", request.getContextPath());
-      span.setAttribute("servlet.path", request.getServletPath());
+      final String sc = request.getContextPath();
+      if (sc != null && !sc.isEmpty()) {
+        span.setAttribute("servlet.context", sc);
+      }
+      final String sp = request.getServletPath();
+      if (sp != null && !sp.isEmpty()) {
+        span.setAttribute("servlet.path", sp);
+      }
     }
     return super.onRequest(span, request);
   }
 
   @Override
-  public AgentSpan onError(final AgentSpan span, final Throwable throwable) {
+  public Span onError(final Span span, final Throwable throwable) {
     if (throwable instanceof ServletException && throwable.getCause() != null) {
       super.onError(span, throwable.getCause());
     } else {

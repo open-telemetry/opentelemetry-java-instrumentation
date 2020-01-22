@@ -1,10 +1,8 @@
 package io.opentelemetry.auto.instrumentation.springweb;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE_RENDER;
+import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -12,9 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -68,19 +66,21 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   public static class DispatcherAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
-      final AgentSpan span = startSpan("response.render");
+    public static SpanScopePair onEnter(@Advice.Argument(0) final ModelAndView mv) {
+      final Span span = TRACER.spanBuilder("response.render").startSpan();
       DECORATE_RENDER.afterStart(span);
       DECORATE_RENDER.onRender(span, mv);
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      DECORATE_RENDER.onError(scope, throwable);
-      DECORATE_RENDER.beforeFinish(scope);
-      scope.close();
+        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
+      final Span span = spanAndScope.getSpan();
+      DECORATE_RENDER.onError(span, throwable);
+      DECORATE_RENDER.beforeFinish(span);
+      span.end();
+      spanAndScope.getScope().close();
     }
 
     // Make this advice match consistently with HandlerAdapterInstrumentation
@@ -92,12 +92,11 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   public static class ErrorHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) final Exception exception) {
-      final AgentSpan span = activeSpan();
-      if (span != null && exception != null) {
-        DECORATE.onError(span, exception);
+      final Span span = TRACER.getCurrentSpan();
+      if (span.getContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        span.setError(false);
+        DECORATE.addThrowable(span, exception);
       }
     }
   }

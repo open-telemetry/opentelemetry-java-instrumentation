@@ -29,6 +29,8 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".ReactorCoreAdviceUtils",
       packageName + ".ReactorCoreAdviceUtils$TracingSubscriber",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      packageName + ".ReactorCoreDecorator"
     };
   }
 

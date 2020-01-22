@@ -1,9 +1,9 @@
 package io.opentelemetry.auto.instrumentation.reactor.core;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
+import static io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import reactor.core.CoreSubscriber;
 
@@ -18,26 +18,26 @@ import reactor.core.CoreSubscriber;
 public class FluxAndMonoSubscribeAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope methodEnter(
+  public static SpanScopePair methodEnter(
       @Advice.Argument(0) final CoreSubscriber subscriber, @Advice.This final Object thiz) {
-    final AgentSpan span =
+    final Span span =
         subscriber
             .currentContext()
             .getOrDefault(ReactorCoreAdviceUtils.PUBLISHER_CONTEXT_KEY, null);
     if (span != null) {
-      return activateSpan(span, false);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
     return null;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+      @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
     if (throwable != null) {
-      ReactorCoreAdviceUtils.finishSpanIfPresent(scope.span(), throwable);
+      ReactorCoreAdviceUtils.finishSpanIfPresent(spanAndScope.getSpan(), throwable);
     }
-    if (scope != null) {
-      scope.close();
+    if (spanAndScope != null) {
+      spanAndScope.getScope().close();
     }
   }
 }

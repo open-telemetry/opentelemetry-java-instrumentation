@@ -1,8 +1,6 @@
 package io.opentelemetry.auto.instrumentation.servlet.filter;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
+import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -13,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.Filter;
 import net.bytebuddy.asm.Advice;
@@ -59,30 +57,32 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   public static class FilterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope start(@Advice.This final Filter filter) {
-      if (activeSpan() == null) {
+    public static SpanScopePair start(@Advice.This final Filter filter) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return null;
       }
 
-      final AgentSpan span = startSpan("servlet.filter");
+      final Span span = TRACER.spanBuilder("servlet.filter").startSpan();
       FilterDecorator.DECORATE.afterStart(span);
 
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
       span.setAttribute(MoreTags.RESOURCE_NAME, filter.getClass().getSimpleName() + ".doFilter");
 
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanScopePair scope, @Advice.Thrown final Throwable throwable) {
       if (scope == null) {
         return;
       }
-      FilterDecorator.DECORATE.onError(scope, throwable);
-      FilterDecorator.DECORATE.beforeFinish(scope);
-      scope.close();
+      final Span span = scope.getSpan();
+      FilterDecorator.DECORATE.onError(span, throwable);
+      FilterDecorator.DECORATE.beforeFinish(span);
+      span.end();
+      scope.getScope().close();
     }
   }
 }
