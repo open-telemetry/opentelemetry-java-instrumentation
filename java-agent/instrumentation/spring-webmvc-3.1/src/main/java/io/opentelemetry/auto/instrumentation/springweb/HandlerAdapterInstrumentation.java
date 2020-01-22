@@ -1,10 +1,8 @@
 package io.opentelemetry.auto.instrumentation.springweb;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -17,9 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -63,39 +61,40 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   }
 
   public static class ControllerAdvice {
-
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope nameResourceAndStartSpan(
+    public static SpanScopePair nameResourceAndStartSpan(
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
       final Object parentSpan = request.getAttribute(SPAN_ATTRIBUTE);
-      if (parentSpan instanceof AgentSpan) {
-        DECORATE.onRequest((AgentSpan) parentSpan, request);
+      if (parentSpan instanceof Span) {
+        DECORATE.onRequest((Span) parentSpan, request);
       }
 
-      if (activeSpan() == null) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
 
       // Now create a span for handler/controller execution.
 
-      final AgentSpan span = startSpan("spring.handler");
+      final Span span = TRACER.spanBuilder("spring.handler").startSpan();
       DECORATE.afterStart(span);
       DECORATE.onHandle(span, handler);
 
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
+      if (spanAndScope == null) {
         return;
       }
-      DECORATE.onError(scope, throwable);
-      DECORATE.beforeFinish(scope);
-      scope.close();
+      final Span span = spanAndScope.getSpan();
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
+      span.end();
+      spanAndScope.getScope().close();
     }
   }
 }

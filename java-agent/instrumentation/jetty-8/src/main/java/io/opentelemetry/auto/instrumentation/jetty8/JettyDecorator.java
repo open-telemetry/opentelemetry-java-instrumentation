@@ -62,8 +62,14 @@ public class JettyDecorator
   public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
-      span.setAttribute("servlet.context", request.getContextPath());
-      span.setAttribute("servlet.path", request.getServletPath());
+      final String sc = request.getContextPath();
+      if (sc != null && !sc.isEmpty()) {
+        span.setAttribute("servlet.context", sc);
+      }
+      final String sp = request.getServletPath();
+      if (sp != null && !sp.isEmpty()) {
+        span.setAttribute("servlet.path", sp);
+      }
     }
     return super.onRequest(span, request);
   }

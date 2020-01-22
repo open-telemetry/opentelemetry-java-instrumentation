@@ -1,13 +1,11 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils;
+import io.opentelemetry.trace.Span;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
 import org.reactivestreams.Publisher;
@@ -21,37 +19,37 @@ import reactor.core.publisher.Mono;
 public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope methodEnter(@Advice.Argument(0) final ServerWebExchange exchange) {
+  public static SpanScopePair methodEnter(@Advice.Argument(0) final ServerWebExchange exchange) {
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
     // right things so we have to store span in request itself. We also store parent (netty's) span
     // so we could update resource name.
-    final AgentSpan parentSpan = activeSpan();
-    if (parentSpan != null) {
+    final Span parentSpan = TRACER.getCurrentSpan();
+    if (parentSpan.getContext().isValid()) {
       exchange.getAttributes().put(AdviceUtils.PARENT_SPAN_ATTRIBUTE, parentSpan);
     }
 
-    final AgentSpan span = startSpan("DispatcherHandler.handle");
+    final Span span = TRACER.spanBuilder("DispatcherHandler.handle").startSpan();
     DECORATE.afterStart(span);
     exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, span);
 
-    return activateSpan(span, false);
+    return new SpanScopePair(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Enter final AgentScope scope,
+      @Advice.Enter final SpanScopePair spanAndScope,
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Object> mono) {
     if (throwable == null && mono != null) {
       final Function<? super Mono<Object>, ? extends Publisher<Object>> function =
           ReactorCoreAdviceUtils.finishSpanNextOrError();
-      mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, scope.span());
+      mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, spanAndScope.getSpan());
     } else if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
-    if (scope != null) {
-      scope.close();
+    if (spanAndScope != null) {
+      spanAndScope.getScope().close();
     }
   }
 }

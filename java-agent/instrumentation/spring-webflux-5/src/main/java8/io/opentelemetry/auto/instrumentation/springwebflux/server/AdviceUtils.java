@@ -1,13 +1,13 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
-
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils;
+import io.opentelemetry.trace.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
+
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 
 @Slf4j
 public class AdviceUtils {
@@ -33,18 +33,18 @@ public class AdviceUtils {
   public static void finishSpanIfPresent(
       final ServerWebExchange exchange, final Throwable throwable) {
     ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (AgentSpan) exchange.getAttributes().remove(SPAN_ATTRIBUTE), throwable);
+        (Span) exchange.getAttributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 
   public static void finishSpanIfPresent(
       final ServerRequest serverRequest, final Throwable throwable) {
     ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (AgentSpan) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
+        (Span) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 
   public static void finishSpanIfPresent(
       final ClientRequest clientRequest, final Throwable throwable) {
     ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (AgentSpan) clientRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
+        (Span) clientRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 }

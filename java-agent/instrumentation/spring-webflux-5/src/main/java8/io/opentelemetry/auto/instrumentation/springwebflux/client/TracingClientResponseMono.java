@@ -1,15 +1,12 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentTracer;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
@@ -31,23 +28,24 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
   @Override
   public void subscribe(final CoreSubscriber<? super ClientResponse> subscriber) {
     final Context context = subscriber.currentContext();
-    final AgentSpan parentSpan =
-        context.<AgentSpan>getOrEmpty(AgentSpan.class).orElseGet(AgentTracer::activeSpan);
+    final Span parentSpan = context.<Span>getOrEmpty(Span.class).orElseGet(TRACER::getCurrentSpan);
 
-    final AgentSpan span;
+    final Span.Builder builder = TRACER.spanBuilder("http.request");
     if (parentSpan != null) {
-      span = startSpan("http.request", parentSpan.context());
+      builder.setParent(parentSpan);
     } else {
-      span = startSpan("http.request");
     }
+    final Span span = builder.startSpan();
     span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
     DECORATE.afterStart(span);
 
-    try (final AgentScope scope = activateSpan(span, false)) {
+    try (final Scope scope = TRACER.withSpan(span)) {
 
       final ClientRequest mutatedRequest =
           ClientRequest.from(clientRequest)
-              .headers(httpHeaders -> propagate().inject(span, httpHeaders, SETTER))
+              .headers(
+                  httpHeaders ->
+                      TRACER.getHttpTextFormat().inject(span.getContext(), httpHeaders, SETTER))
               .build();
       exchangeFunction
           .exchange(mutatedRequest)

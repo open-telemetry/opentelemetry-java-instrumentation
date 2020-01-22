@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
 import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -13,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
@@ -33,7 +32,13 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".HttpServletRequestInjectAdapter"};
+    return new String[] {
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ServerDecorator",
+      "io.opentelemetry.auto.decorator.HttpServerDecorator",
+      packageName + ".Servlet3Decorator",
+      packageName + ".HttpServletRequestInjectAdapter"
+    };
   }
 
   @Override
@@ -65,13 +70,15 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
       final ServletRequest request = context.getRequest();
       final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      if (spanAttr instanceof AgentSpan) {
+      if (spanAttr instanceof Span) {
         request.removeAttribute(SPAN_ATTRIBUTE);
-        final AgentSpan span = (AgentSpan) spanAttr;
+        final Span span = (Span) spanAttr;
         // Override propagation headers by injecting attributes from the current span
         // into the new request
         if (request instanceof HttpServletRequest) {
-          propagate().inject(span, (HttpServletRequest) request, SETTER);
+          Servlet3Decorator.TRACER
+              .getHttpTextFormat()
+              .inject(span.getContext(), (HttpServletRequest) request, SETTER);
         }
         final String path;
         if (args.length == 1 && args[0] instanceof String) {

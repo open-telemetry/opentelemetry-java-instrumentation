@@ -1,9 +1,8 @@
 package io.opentelemetry.auto.instrumentation.servlet.http;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
 import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
+import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -13,10 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.servlet.ServletRequestSetter;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -60,7 +59,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope start(
+    public static SpanScopePair start(
         @Advice.Origin("#m") final String method, @Advice.This final HttpServletResponse resp) {
       if (activeSpan() == null) {
         // Don't want to generate a new top-level span
@@ -74,26 +73,28 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         return null;
       }
 
-      final AgentSpan span = startSpan("servlet.response");
-      HttpServletResponseDecorator.DECORATE.afterStart(span);
+      final Span span = TRACER.spanBuilder("servlet.response").startSpan();
+      DECORATE.afterStart(span);
 
       span.setAttribute(MoreTags.RESOURCE_NAME, "HttpServletResponse." + method);
 
       // In case we lose context, inject trace into to the request.
-      propagate().inject(span, req, ServletRequestSetter.SETTER);
+      TRACER.getHttpTextFormat().inject(span.getContext(), req, ServletRequestSetter.SETTER);
 
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
+      if (spanAndScope == null) {
         return;
       }
-      HttpServletResponseDecorator.DECORATE.onError(scope, throwable);
-      HttpServletResponseDecorator.DECORATE.beforeFinish(scope);
-      scope.close();
+      final Span span = spanAndScope.getSpan();
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
+      span.end();
+      spanAndScope.getScope().close();
     }
   }
 }

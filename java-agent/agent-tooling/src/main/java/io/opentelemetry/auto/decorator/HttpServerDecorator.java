@@ -75,8 +75,12 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
           span.setAttribute(Tags.HTTP_URL, urlNoParams.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
-            span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
-            span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
+            if (url.getQuery() != null) {
+              span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
+            }
+            if (url.getFragment() != null) {
+              span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
+            }
           }
         }
       } catch (final Exception e) {

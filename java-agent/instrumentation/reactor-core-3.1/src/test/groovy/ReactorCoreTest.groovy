@@ -1,9 +1,9 @@
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.Trace
-import io.opentelemetry.auto.instrumentation.api.AgentSpan
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.Span
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
@@ -11,8 +11,6 @@ import reactor.core.publisher.Mono
 import spock.lang.Shared
 
 import java.time.Duration
-
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 
 class ReactorCoreTest extends AgentTestRunner {
 
@@ -193,7 +191,7 @@ class ReactorCoreTest extends AgentTestRunner {
     // We have a 'trace-parent' that covers whole span and then we have publisher-parent that overs only
     // operation to create publisher (and set its context).
     // The expectation is that then publisher is executed under 'publisher-parent', not under 'trace-parent'
-    final AgentSpan span = startSpan("publisher-parent")
+    final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
     publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
     // do not finish span here, it will be finished by ReactorCoreAdviceUtils
 
@@ -209,9 +207,9 @@ class ReactorCoreTest extends AgentTestRunner {
 
   @Trace(operationName = "trace-parent", resourceName = "trace-parent")
   def cancelUnderTrace(def publisher) {
-    final AgentSpan span = startSpan("publisher-parent")
+    final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
     publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
-    span.finish()
+    span.end()
 
     publisher.subscribe(new Subscriber<Integer>() {
       void onSubscribe(Subscription subscription) {
