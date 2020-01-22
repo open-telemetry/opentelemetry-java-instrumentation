@@ -36,7 +36,7 @@ public class FluxAndMonoSubscribeAdvice {
     if (throwable != null) {
       ReactorCoreAdviceUtils.finishSpanIfPresent(spanAndScope.getSpan(), throwable);
     }
-    if (spanAndScope.getScope() != null) {
+    if (spanAndScope != null) {
       spanAndScope.getScope().close();
     }
   }
