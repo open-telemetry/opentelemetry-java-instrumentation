@@ -1,17 +1,16 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
+
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils;
 import io.opentelemetry.trace.Span;
+import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
 import org.reactivestreams.Publisher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.function.Function;
-
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 
 /**
  * This is 'top level' advice for Webflux instrumentation. This handles creating and finishing
@@ -25,7 +24,7 @@ public class DispatcherHandlerAdvice {
     // right things so we have to store span in request itself. We also store parent (netty's) span
     // so we could update resource name.
     final Span parentSpan = TRACER.getCurrentSpan();
-    if (parentSpan != null && parentSpan.getContext().isValid()) {
+    if (parentSpan.getContext().isValid()) {
       exchange.getAttributes().put(AdviceUtils.PARENT_SPAN_ATTRIBUTE, parentSpan);
     }
 

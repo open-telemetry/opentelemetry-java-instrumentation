@@ -1,5 +1,9 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
+import static io.opentelemetry.auto.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
+
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -9,10 +13,6 @@ import org.springframework.web.reactive.function.client.ExchangeFunction;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
-
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
 
 public class TracingClientResponseMono extends Mono<ClientResponse> {
 
@@ -25,21 +25,14 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
     this.exchangeFunction = exchangeFunction;
   }
 
-  private static Span getCurrentSpan() {
-    return TRACER.getCurrentSpan();
-  }
-
   @Override
   public void subscribe(final CoreSubscriber<? super ClientResponse> subscriber) {
     final Context context = subscriber.currentContext();
-    final Span parentSpan =
-        context.<Span>getOrEmpty(Span.class).orElseGet(TracingClientResponseMono::getCurrentSpan);
+    final Span parentSpan = context.<Span>getOrEmpty(Span.class).orElseGet(TRACER::getCurrentSpan);
 
     final Span.Builder builder = TRACER.spanBuilder("http.request");
     if (parentSpan != null) {
       builder.setParent(parentSpan);
-    } else {
-      builder.setNoParent(); // TODO: Should we explicitly remove the parent here?
     }
     final Span span = builder.startSpan();
     span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);

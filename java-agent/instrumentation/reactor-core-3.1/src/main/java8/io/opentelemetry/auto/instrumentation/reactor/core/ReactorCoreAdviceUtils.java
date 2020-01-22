@@ -1,7 +1,11 @@
 package io.opentelemetry.auto.instrumentation.reactor.core;
 
+import static io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreDecorator.DECORATE;
+import static reactor.core.publisher.Operators.lift;
+
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
@@ -9,11 +13,6 @@ import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
-
-import java.util.function.Function;
-
-import static io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreDecorator.DECORATE;
-import static reactor.core.publisher.Operators.lift;
 
 @Slf4j
 public class ReactorCoreAdviceUtils {

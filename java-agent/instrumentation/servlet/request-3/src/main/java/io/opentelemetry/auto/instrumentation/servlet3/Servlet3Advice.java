@@ -6,6 +6,7 @@ import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.D
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
 
 import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
@@ -23,9 +24,10 @@ public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanScopePair onEnter(
-      @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest request) {
-    final Span current = TRACER.getCurrentSpan();
-    final boolean hasActiveTrace = current != null && current.getContext().isValid();
+      @Advice.This final Object servlet,
+      @Advice.Argument(0) final ServletRequest request,
+      @Advice.Argument(1) final ServletResponse response) {
+    final boolean hasActiveTrace = TRACER.getCurrentSpan().getContext().isValid();
     final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
 
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
@@ -34,7 +36,6 @@ public class Servlet3Advice {
       return null;
     }
 
-    new Exception().printStackTrace();
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
     final Span.Builder builder = TRACER.spanBuilder("servlet.request");
     try {
@@ -45,8 +46,11 @@ public class Servlet3Advice {
       // Couldn't extract a context. We should treat this as a root span. '
       builder.setNoParent();
     }
-
+    // For use by HttpServletResponseInstrumentation:
+    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+        .put((HttpServletResponse) response, httpServletRequest);
     final Span span = builder.startSpan();
+
     span.setAttribute("span.origin.type", servlet.getClass().getName());
 
     DECORATE.afterStart(span);

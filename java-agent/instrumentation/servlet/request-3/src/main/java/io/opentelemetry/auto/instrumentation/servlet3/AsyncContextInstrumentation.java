@@ -70,18 +70,15 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
       final ServletRequest request = context.getRequest();
       final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      System.out.println("---------------------- Span attr: " + spanAttr);
       if (spanAttr instanceof Span) {
         request.removeAttribute(SPAN_ATTRIBUTE);
         final Span span = (Span) spanAttr;
         // Override propagation headers by injecting attributes from the current span
         // into the new request
-        System.out.println("------------------- Request: " + request);
         if (request instanceof HttpServletRequest) {
           Servlet3Decorator.TRACER
               .getHttpTextFormat()
               .inject(span.getContext(), (HttpServletRequest) request, SETTER);
-          System.out.println("------------ Injecting attributes");
         }
         final String path;
         if (args.length == 1 && args[0] instanceof String) {

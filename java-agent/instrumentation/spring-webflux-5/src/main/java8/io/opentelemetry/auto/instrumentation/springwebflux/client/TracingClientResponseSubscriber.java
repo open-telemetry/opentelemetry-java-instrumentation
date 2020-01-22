@@ -1,18 +1,17 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
+import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
+
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
+import java.util.concurrent.atomic.AtomicReference;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.CoreSubscriber;
 import reactor.util.context.Context;
-
-import java.util.concurrent.atomic.AtomicReference;
-
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
 
 public class TracingClientResponseSubscriber implements CoreSubscriber<ClientResponse> {
 
@@ -79,8 +78,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       span.end();
     }
 
-    try (final Scope scope = TRACER.withSpan(span)) {
-
+    try (final Scope scope = TRACER.withSpan(parentSpan)) {
       subscriber.onNext(clientResponse);
     }
   }
@@ -108,7 +106,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       span.end();
     }
 
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = TRACER.withSpan(parentSpan)) {
 
       subscriber.onComplete();
     }

@@ -4,11 +4,10 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
-
-import java.net.URI;
 
 @Slf4j
 public class SpringWebfluxHttpClientDecorator

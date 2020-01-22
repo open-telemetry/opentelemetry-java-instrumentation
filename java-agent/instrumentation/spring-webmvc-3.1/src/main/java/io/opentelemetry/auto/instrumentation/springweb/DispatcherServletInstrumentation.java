@@ -93,12 +93,11 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) final Exception exception) {
       final Span span = TRACER.getCurrentSpan();
-      if (span != null && exception != null) {
+      if (span.getContext().isValid() && exception != null) {
         DECORATE.onError(span, exception);
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        // span.setError(false); // TODO: Is this needed? Doesn't seem to be a similar method in
-        // OpenTelemetry!
+        DECORATE.addThrowable(span, exception);
       }
     }
   }

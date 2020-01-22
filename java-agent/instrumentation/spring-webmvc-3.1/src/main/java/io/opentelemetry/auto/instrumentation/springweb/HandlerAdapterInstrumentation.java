@@ -18,7 +18,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import java.util.Enumeration;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -68,16 +67,11 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
       final Object parentSpan = request.getAttribute(SPAN_ATTRIBUTE);
-      System.out.println("++++++++++++++++++++++++++++ Attribute names: ");
-      for (final Enumeration<String> e = request.getAttributeNames(); e.hasMoreElements(); ) {
-        final String s = e.nextElement();
-        System.out.println(s + " " + request.getAttribute(s));
-      }
       if (parentSpan instanceof Span) {
         DECORATE.onRequest((Span) parentSpan, request);
       }
 
-      if (TRACER.getCurrentSpan() == null) {
+      if (TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
 

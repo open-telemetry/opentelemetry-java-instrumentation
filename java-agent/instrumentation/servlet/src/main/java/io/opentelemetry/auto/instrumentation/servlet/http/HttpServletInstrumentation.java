@@ -67,7 +67,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanScopePair start(@Advice.Origin final Method method) {
 
-      if (TRACER.getCurrentSpan() == null || !TRACER.getCurrentSpan().getContext().isValid()) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return null;
       }
