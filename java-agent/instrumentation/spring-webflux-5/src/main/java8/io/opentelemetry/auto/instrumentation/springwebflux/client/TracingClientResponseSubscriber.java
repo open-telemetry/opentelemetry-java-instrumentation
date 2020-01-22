@@ -92,7 +92,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       span.end();
     }
 
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = TRACER.withSpan(parentSpan)) {
 
       subscriber.onError(throwable);
     }
