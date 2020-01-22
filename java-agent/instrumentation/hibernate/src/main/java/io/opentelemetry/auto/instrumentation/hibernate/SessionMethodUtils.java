@@ -25,17 +25,6 @@ public class SessionMethodUtils {
       final boolean createSpan) {
 
     final SessionState sessionState = contextStore.get(spanKey);
-
-    System.out.println(
-        "---------- startScopeFrom: "
-            + spanKey
-            + " op: "
-            + operationName
-            + " createSpan: "
-            + createSpan
-            + " found: "
-            + (sessionState != null));
-
     if (sessionState == null) {
       return null; // No state found. We aren't in a Session.
     }
