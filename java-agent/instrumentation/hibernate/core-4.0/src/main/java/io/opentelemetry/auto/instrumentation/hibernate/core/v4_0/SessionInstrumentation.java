@@ -14,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,13 +117,13 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         return;
       }
       if (state.getMethodScope() != null) {
-        state.getMethodScope().close();
+        state.getMethodScope().getScope().close();
       }
 
-      final AgentSpan span = state.getSessionSpan();
+      final Span span = state.getSessionSpan();
       DECORATOR.onError(span, throwable);
       DECORATOR.beforeFinish(span);
-      span.finish();
+      span.end();
     }
   }
 

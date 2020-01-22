@@ -62,7 +62,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
           SessionMethodUtils.startScopeFrom(
               contextStore, query, "hibernate.query." + name, null, true);
       if (state != null) {
-        DECORATOR.onStatement(state.getMethodScope().span(), query.getQueryString());
+        DECORATOR.onStatement(state.getMethodScope().getSpan(), query.getQueryString());
       }
       return state;
     }

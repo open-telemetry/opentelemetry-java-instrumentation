@@ -1,13 +1,11 @@
 package io.opentelemetry.auto.instrumentation.hibernate;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
+import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
 
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +26,16 @@ public class SessionMethodUtils {
 
     final SessionState sessionState = contextStore.get(spanKey);
 
+    System.out.println(
+        "---------- startScopeFrom: "
+            + spanKey
+            + " op: "
+            + operationName
+            + " createSpan: "
+            + createSpan
+            + " found: "
+            + (sessionState != null));
+
     if (sessionState == null) {
       return null; // No state found. We aren't in a Session.
     }
@@ -37,18 +45,20 @@ public class SessionMethodUtils {
       return null; // This method call is being traced already.
     }
 
-    final AgentScope scope;
+    final CloseableSpanScopePair spanAndScope;
     if (createSpan) {
-      final AgentSpan span = startSpan(operationName, sessionState.getSessionSpan().context());
+      final Span span =
+          TRACER.spanBuilder(operationName).setParent(sessionState.getSessionSpan()).startSpan();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, entity);
-      scope = activateSpan(span, true);
+      spanAndScope =
+          new CloseableSpanScopePair(span, TRACER.withSpan(span), true); // Autoclose: true
     } else {
-      scope = activateSpan(sessionState.getSessionSpan(), false);
+      final Span span = sessionState.getSessionSpan();
+      spanAndScope = new CloseableSpanScopePair(span, TRACER.withSpan(span), false);
       sessionState.setHasChildSpan(false);
     }
-
-    sessionState.setMethodScope(scope);
+    sessionState.setMethodScope(spanAndScope);
     return sessionState;
   }
 
@@ -63,18 +73,18 @@ public class SessionMethodUtils {
     }
 
     CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
-    final AgentScope scope = sessionState.getMethodScope();
-    final AgentSpan span = scope.span();
+    final CloseableSpanScopePair spanAndScope = sessionState.getMethodScope();
+    final Span span = spanAndScope.getSpan();
     if (span != null && sessionState.hasChildSpan) {
       DECORATOR.onError(span, throwable);
       if (entity != null) {
         DECORATOR.onOperation(span, entity);
       }
       DECORATOR.beforeFinish(span);
-      span.finish();
+      span.end();
     }
 
-    scope.close();
+    spanAndScope.close(); // Also ends span if flag is set in constructor
     sessionState.setMethodScope(null);
   }
 

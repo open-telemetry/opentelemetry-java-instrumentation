@@ -1,16 +1,14 @@
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
-import io.opentelemetry.auto.instrumentation.api.AgentScope
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.trace.Span
 import org.hibernate.LockMode
 import org.hibernate.MappingException
 import org.hibernate.Query
 import org.hibernate.ReplicationMode
 import org.hibernate.Session
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 
 class SessionTest extends AbstractHibernateTest {
 
@@ -392,7 +390,7 @@ class SessionTest extends AbstractHibernateTest {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT "overlapping Sessions"
           }
         }
         span(1) {
@@ -446,7 +444,8 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate overlapping Sessions"() {
     setup:
 
-    AgentScope scope = activateSpan(startSpan("overlapping Sessions"), true)
+    Span span = TEST_TRACER.spanBuilder("overlapping Sessions").startSpan()
+    SpanScopePair scope = new SpanScopePair(span, TEST_TRACER.withSpan(span))
 
     def session1 = sessionFactory.openSession()
     session1.beginTransaction()
@@ -464,7 +463,8 @@ class SessionTest extends AbstractHibernateTest {
     session1.close()
     session3.close()
 
-    scope.close()
+    span.end()
+    scope.getScope().close()
 
 
     expect:

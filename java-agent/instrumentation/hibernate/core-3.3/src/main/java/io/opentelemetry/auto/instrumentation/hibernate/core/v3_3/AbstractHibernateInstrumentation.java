@@ -14,6 +14,7 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
+      "io.opentelemetry.auto.instrumentation.hibernate.CloseableSpanScopePair",
       "io.opentelemetry.auto.instrumentation.hibernate.SessionState",
       "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.decorator.ClientDecorator",

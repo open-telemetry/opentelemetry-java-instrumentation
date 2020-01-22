@@ -1,13 +1,12 @@
 package io.opentelemetry.auto.instrumentation.hibernate;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import lombok.Data;
 import lombok.NonNull;
 
 @Data
 public class SessionState {
-  @NonNull public AgentSpan sessionSpan;
-  public AgentScope methodScope;
+  @NonNull public Span sessionSpan;
+  public CloseableSpanScopePair methodScope;
   public boolean hasChildSpan = true;
 }
