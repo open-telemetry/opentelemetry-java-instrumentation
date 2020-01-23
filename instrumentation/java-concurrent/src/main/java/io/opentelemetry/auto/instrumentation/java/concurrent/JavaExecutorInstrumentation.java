@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
+import static io.opentelemetry.auto.instrumentation.java.concurrent.AdviceUtils.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -11,8 +11,8 @@ import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +28,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      AdviceUtils.class.getName(), packageName + ".ExecutorInstrumentationUtils",
+    };
+  }
 
   @Override
   public Map<String, String> contextStore() {
@@ -79,7 +86,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final AgentSpan span = activeSpan();
+      final Span span = TRACER.getCurrentSpan();
       final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -107,7 +114,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
-      final AgentSpan span = activeSpan();
+      final Span span = TRACER.getCurrentSpan();
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         final ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
@@ -131,7 +138,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final AgentSpan span = activeSpan();
+      final Span span = TRACER.getCurrentSpan();
       final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -165,7 +172,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
-      final AgentSpan span = activeSpan();
+      final Span span = TRACER.getCurrentSpan();
       final Callable newTask = CallableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
@@ -199,7 +206,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static Collection<?> submitEnter(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
-      final AgentSpan span = activeSpan();
+      final Span span = TRACER.getCurrentSpan();
       if (span != null && tasks != null) {
         final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (final Callable<?> task : tasks) {

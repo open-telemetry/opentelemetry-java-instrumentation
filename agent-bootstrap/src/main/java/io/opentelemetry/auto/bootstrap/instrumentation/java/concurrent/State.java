@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,11 +16,11 @@ public class State {
         }
       };
 
-  private final AtomicReference<AgentSpan> parentSpanRef = new AtomicReference<>(null);
+  private final AtomicReference<Span> parentSpanRef = new AtomicReference<>(null);
 
   private State() {}
 
-  public boolean setParentSpan(final AgentSpan parentSpan) {
+  public boolean setParentSpan(final Span parentSpan) {
     final boolean result = parentSpanRef.compareAndSet(null, parentSpan);
     if (!result) {
       log.debug(
@@ -36,7 +36,7 @@ public class State {
     parentSpanRef.set(null);
   }
 
-  public AgentSpan getAndResetParentSpan() {
+  public Span getAndResetParentSpan() {
     return parentSpanRef.getAndSet(null);
   }
 }

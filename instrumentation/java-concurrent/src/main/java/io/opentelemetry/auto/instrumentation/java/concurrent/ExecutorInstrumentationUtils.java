@@ -1,13 +1,13 @@
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
+import static io.opentelemetry.auto.instrumentation.java.concurrent.AdviceUtils.TRACER;
 
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,8 +26,8 @@ public class ExecutorInstrumentationUtils {
    * @return true iff given task object should be wrapped
    */
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
-    final AgentSpan span = activeSpan();
-    return (span != null
+    final Span span = TRACER.getCurrentSpan();
+    return (span.getContext().isValid()
         && task != null
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
   }
@@ -42,7 +42,7 @@ public class ExecutorInstrumentationUtils {
    * @return new state
    */
   public static <T> State setupState(
-      final ContextStore<T, State> contextStore, final T task, final AgentSpan span) {
+      final ContextStore<T, State> contextStore, final T task, final Span span) {
     final State state = contextStore.putIfAbsent(task, State.FACTORY);
     state.setParentSpan(span);
     return state;

@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jaxrs2;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -13,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -56,7 +54,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
   }
 
   public static class RequestFilterHelper {
-    public static AgentScope createOrUpdateAbortSpan(
+    public static SpanScopePair createOrUpdateAbortSpan(
         final ContainerRequestContext context, final Class resourceClass, final Method method) {
 
       if (method != null && resourceClass != null) {
@@ -64,14 +62,14 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
         // The ordering of the specific and general abort instrumentation is unspecified
         // The general instrumentation (ContainerRequestFilterInstrumentation) saves spans
         // properties if it ran first
-        AgentSpan parent = (AgentSpan) context.getProperty(JaxRsAnnotationsDecorator.ABORT_PARENT);
-        AgentSpan span = (AgentSpan) context.getProperty(JaxRsAnnotationsDecorator.ABORT_SPAN);
+        Span parent = (Span) context.getProperty(JaxRsAnnotationsDecorator.ABORT_PARENT);
+        Span span = (Span) context.getProperty(JaxRsAnnotationsDecorator.ABORT_SPAN);
 
         if (span == null) {
-          parent = activeSpan();
-          span = startSpan("jax-rs.request.abort");
+          parent = TRACER.getCurrentSpan();
+          span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
 
-          final AgentScope scope = activateSpan(span, false);
+          final SpanScopePair scope = new SpanScopePair(span, TRACER.withSpan(span));
 
           DECORATE.afterStart(span);
           DECORATE.onJaxRsSpan(span, parent, resourceClass, method);
@@ -86,19 +84,20 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
       }
     }
 
-    public static void closeSpanAndScope(final AgentScope scope, final Throwable throwable) {
-      if (scope == null) {
+    public static void closeSpanAndScope(
+        final SpanScopePair spanAndScope, final Throwable throwable) {
+      if (spanAndScope == null) {
         return;
       }
 
-      final AgentSpan span = scope.span();
+      final Span span = spanAndScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }
 
       DECORATE.beforeFinish(span);
-      span.finish();
-      scope.close();
+      span.end();
+      spanAndScope.getScope().close();
     }
   }
 }

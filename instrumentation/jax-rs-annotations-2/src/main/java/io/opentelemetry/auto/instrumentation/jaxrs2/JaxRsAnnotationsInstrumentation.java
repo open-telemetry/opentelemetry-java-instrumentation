@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jaxrs2;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.hasSuperMethod;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -14,9 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.ws.rs.container.AsyncResponse;
@@ -36,7 +34,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("javax.ws.rs.container.AsyncResponse", AgentSpan.class.getName());
+    return singletonMap("javax.ws.rs.container.AsyncResponse", Span.class.getName());
   }
 
   @Override
@@ -76,29 +74,29 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope nameSpan(
+    public static SpanScopePair nameSpan(
         @Advice.This final Object target, @Advice.Origin final Method method) {
       // Rename the parent span according to the path represented by these annotations.
-      final AgentSpan parent = activeSpan();
+      final Span parent = TRACER.getCurrentSpan();
 
-      final AgentSpan span = startSpan(JAX_ENDPOINT_OPERATION_NAME);
+      final Span span = TRACER.spanBuilder(JAX_ENDPOINT_OPERATION_NAME).startSpan();
       DECORATE.onJaxRsSpan(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
-      return activateSpan(span, false);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanAndScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.AllArguments final Object[] args) {
-      final AgentSpan span = scope.span();
+      final Span span = spanAndScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
-        scope.close();
+        span.end();
+        spanAndScope.getScope().close();
         return;
       }
 
@@ -110,12 +108,12 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         }
       }
       if (asyncResponse != null && asyncResponse.isSuspended()) {
-        InstrumentationContext.get(AsyncResponse.class, AgentSpan.class).put(asyncResponse, span);
+        InstrumentationContext.get(AsyncResponse.class, Span.class).put(asyncResponse, span);
       } else {
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
-      scope.close();
+      spanAndScope.getScope().close();
     }
   }
 }

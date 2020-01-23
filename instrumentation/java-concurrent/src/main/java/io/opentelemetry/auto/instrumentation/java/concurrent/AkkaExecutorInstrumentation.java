@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
+import static io.opentelemetry.auto.instrumentation.java.concurrent.AdviceUtils.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -10,8 +10,8 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +27,13 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
 
   public AkkaExecutorInstrumentation() {
     super(EXEC_NAME + ".akka_fork_join");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      AdviceUtils.class.getName(), packageName + ".ExecutorInstrumentationUtils",
+    };
   }
 
   @Override
@@ -59,7 +66,7 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
-      final AgentSpan span = activeSpan();
+      final Span span = TRACER.getCurrentSpan();
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         final ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);

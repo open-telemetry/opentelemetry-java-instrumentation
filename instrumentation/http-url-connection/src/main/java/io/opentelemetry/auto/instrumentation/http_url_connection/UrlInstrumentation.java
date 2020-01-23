@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.http_url_connection;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
+import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,10 +13,10 @@ import io.opentelemetry.auto.api.Config;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.util.Map;
@@ -46,6 +46,16 @@ public class UrlInstrumentation extends Instrumenter.Default {
         UrlInstrumentation.class.getName() + "$ConnectionErrorAdvice");
   }
 
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.HttpClientDecorator",
+      packageName + ".HttpUrlConnectionDecorator",
+    };
+  }
+
   public static class ConnectionErrorAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -64,23 +74,24 @@ public class UrlInstrumentation extends Instrumenter.Default {
         String protocol = url.getProtocol();
         protocol = protocol != null ? protocol : "url";
 
-        final AgentSpan span =
-            startSpan(protocol + ".request")
-                .setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT)
-                .setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT)
-                .setAttribute(Tags.COMPONENT, COMPONENT);
+        final Span span = TRACER.spanBuilder(protocol + ".request").startSpan();
+        span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
+        span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT);
+        span.setAttribute(Tags.COMPONENT, COMPONENT);
 
-        try (final AgentScope scope = activateSpan(span, false)) {
+        try (final Scope scope = TRACER.withSpan(span)) {
           span.setAttribute(Tags.HTTP_URL, url.toString());
           span.setAttribute(Tags.PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
-          span.setAttribute(Tags.PEER_HOSTNAME, url.getHost());
-          if (Config.get().isHttpClientSplitByDomain()) {
-            span.setAttribute(MoreTags.SERVICE_NAME, url.getHost());
+          final String host = url.getHost();
+          if (host != null && !host.isEmpty()) {
+            span.setAttribute(Tags.PEER_HOSTNAME, host);
+            if (Config.get().isHttpClientSplitByDomain()) {
+              span.setAttribute(MoreTags.SERVICE_NAME, host);
+            }
           }
 
-          span.setError(true);
-          span.addThrowable(throwable);
-          span.finish();
+          DECORATE.onError(span, throwable);
+          span.end();
         }
       }
     }
