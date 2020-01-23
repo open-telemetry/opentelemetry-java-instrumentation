@@ -8,7 +8,6 @@ import spock.lang.Ignore
 import spock.lang.Requires
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -26,9 +25,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
-      def parentSpan = activeSpan()
+      def parentSpan = TEST_TRACER.getCurrentSpan()
       def stream = connection.inputStream
-      assert activeSpan() == parentSpan
+      assert TEST_TRACER.getCurrentSpan() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()

@@ -1,10 +1,8 @@
 package io.opentelemetry.auto.instrumentation.http_url_connection;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -16,9 +14,9 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.net.HttpURLConnection;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -85,9 +83,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         }
 
         if (!state.hasSpan() && !state.isFinished()) {
-          final AgentSpan span = state.start(thiz);
+          final Span span = state.start(thiz);
           if (!connected) {
-            propagate().inject(span, thiz, SETTER);
+            TRACER.getHttpTextFormat().inject(span.getContext(), thiz, SETTER);
           }
         }
         return state;
@@ -131,12 +129,12 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
           }
         };
 
-    private volatile AgentSpan span = null;
+    private volatile Span span = null;
     private volatile boolean finished = false;
 
-    public AgentSpan start(final HttpURLConnection connection) {
-      span = startSpan(OPERATION_NAME);
-      try (final AgentScope scope = activateSpan(span, false)) {
+    public Span start(final HttpURLConnection connection) {
+      span = TRACER.spanBuilder(OPERATION_NAME).startSpan();
+      try (final Scope scope = TRACER.withSpan(span)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, connection);
         return span;
@@ -156,10 +154,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(final Throwable throwable) {
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
         span = null;
         finished = true;
       }
@@ -172,10 +170,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        * (e.g. breaks getOutputStream).
        */
       if (responseCode > 0) {
-        try (final AgentScope scope = activateSpan(span, false)) {
+        try (final Scope scope = TRACER.withSpan(span)) {
           DECORATE.onResponse(span, responseCode);
           DECORATE.beforeFinish(span);
-          span.finish();
+          span.end();
           span = null;
           finished = true;
         }

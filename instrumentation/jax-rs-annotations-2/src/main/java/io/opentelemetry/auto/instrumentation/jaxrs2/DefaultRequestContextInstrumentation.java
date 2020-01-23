@@ -1,14 +1,12 @@
 package io.opentelemetry.auto.instrumentation.jaxrs2;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.TRACER;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
@@ -26,11 +24,12 @@ import net.bytebuddy.asm.Advice;
 public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope createGenericSpan(@Advice.This final ContainerRequestContext context) {
+    public static SpanScopePair createGenericSpan(
+        @Advice.This final ContainerRequestContext context) {
 
       if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null) {
-        final AgentSpan parent = activeSpan();
-        final AgentSpan span = startSpan("jax-rs.request.abort");
+        final Span parent = TRACER.getCurrentSpan();
+        final Span span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
 
         // Save spans so a more specific instrumentation can run later
         context.setProperty(JaxRsAnnotationsDecorator.ABORT_PARENT, parent);
@@ -46,7 +45,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        final AgentScope scope = activateSpan(span, false);
+        final SpanScopePair scope = new SpanScopePair(span, TRACER.withSpan(span));
 
         DECORATE.afterStart(span);
         DECORATE.onJaxRsSpan(span, parent, filterClass, method);
@@ -59,19 +58,19 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
+      if (spanAndScope == null) {
         return;
       }
 
-      final AgentSpan span = scope.span();
+      final Span span = spanAndScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }
 
       DECORATE.beforeFinish(span);
-      span.finish();
-      scope.close();
+      span.end();
+      spanAndScope.getScope().close();
     }
   }
 }

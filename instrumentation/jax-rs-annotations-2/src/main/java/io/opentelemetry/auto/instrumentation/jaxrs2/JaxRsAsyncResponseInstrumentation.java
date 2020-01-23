@@ -9,8 +9,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +29,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "javax.ws.rs.container.AsyncResponse", AgentSpan.class.getName());
+    return Collections.singletonMap("javax.ws.rs.container.AsyncResponse", Span.class.getName());
   }
 
   @Override
@@ -68,14 +67,14 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
 
-      final ContextStore<AsyncResponse, AgentSpan> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, AgentSpan.class);
+      final ContextStore<AsyncResponse, Span> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, Span.class);
 
-      final AgentSpan span = contextStore.get(asyncResponse);
+      final Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }
@@ -87,15 +86,15 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
         @Advice.This final AsyncResponse asyncResponse,
         @Advice.Argument(0) final Throwable throwable) {
 
-      final ContextStore<AsyncResponse, AgentSpan> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, AgentSpan.class);
+      final ContextStore<AsyncResponse, Span> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, Span.class);
 
-      final AgentSpan span = contextStore.get(asyncResponse);
+      final Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }
@@ -105,15 +104,15 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
 
-      final ContextStore<AsyncResponse, AgentSpan> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, AgentSpan.class);
+      final ContextStore<AsyncResponse, Span> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, Span.class);
 
-      final AgentSpan span = contextStore.get(asyncResponse);
+      final Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         span.setAttribute("canceled", true);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }
