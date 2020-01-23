@@ -29,17 +29,17 @@ import net.bytebuddy.pool.TypePool;
  *       that combines loader ID & name
  * </ul>
  *
- * <p>This design was chosen to create a single limited size cache that can be adjusted
- * for the entire application -- without having to create a large number of WeakReference objects.
+ * <p>This design was chosen to create a single limited size cache that can be adjusted for the
+ * entire application -- without having to create a large number of WeakReference objects.
  *
  * <p>The ID assignment mostly assigns a single ID to each ClassLoader, but the maximumSize
  * restriction means that an evicted ClassLoader could be assigned another ID later on.
  *
- * <p>For the validity of the cache, the important part is that ID assignment guarantees that
- * no two ClassLoaders share the same ID.
+ * <p>For the validity of the cache, the important part is that ID assignment guarantees that no two
+ * ClassLoaders share the same ID.
  *
- * <p>NOTE: As an additional safe-guard, a new CacheInstance can be created if the original loader ID
- * sequence is exhausted.
+ * <p>NOTE: As an additional safe-guard, a new CacheInstance can be created if the original loader
+ * ID sequence is exhausted.
  */
 @Slf4j
 public class DDCachingPoolStrategy implements PoolStrategy {
@@ -192,9 +192,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     private final TypePool createCachingTypePool(
         final long loaderId, final ClassFileLocator classFileLocator) {
       return new TypePool.Default.WithLazyResolution(
-          createCacheProvider(loaderId),
-          classFileLocator,
-          TypePool.Default.ReaderMode.FAST);
+          createCacheProvider(loaderId), classFileLocator, TypePool.Default.ReaderMode.FAST);
     }
 
     private final TypePool createCachingTypePool(
@@ -255,10 +253,11 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public TypePool.Resolution find(final String name) {
-      TypePool.Resolution existingResolution = sharedResolutionCache.getIfPresent(new TypeCacheKey(cacheId, name));
-      if ( existingResolution != null ) return existingResolution;
+      TypePool.Resolution existingResolution =
+          sharedResolutionCache.getIfPresent(new TypeCacheKey(cacheId, name));
+      if (existingResolution != null) return existingResolution;
 
-      if ( OBJECT_NAME.equals(name) ) {
+      if (OBJECT_NAME.equals(name)) {
         return OBJECT_RESOLUTION;
       }
 
@@ -267,7 +266,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public TypePool.Resolution register(final String name, final TypePool.Resolution resolution) {
-      if ( OBJECT_NAME.equals(name) ) {
+      if (OBJECT_NAME.equals(name)) {
         return resolution;
       }
 

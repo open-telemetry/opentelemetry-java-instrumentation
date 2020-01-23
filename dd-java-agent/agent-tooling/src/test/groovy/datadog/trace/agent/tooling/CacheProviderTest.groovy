@@ -1,18 +1,12 @@
 package datadog.trace.agent.tooling
 
-import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.pool.TypePool
 import spock.lang.Timeout
 
-import java.lang.ref.WeakReference
 import java.security.SecureClassLoader
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-
-import static datadog.trace.agent.tooling.AgentTooling.CLEANER
 
 @Timeout(5)
 class CacheProviderTest extends DDSpecification {
@@ -52,9 +46,9 @@ class CacheProviderTest extends DDSpecification {
 
   def "test basic caching"() {
     setup:
-    def cacheInstance = new DDCachingPoolStrategy.CacheInstance();
+    def cacheInstance = new DDCachingPoolStrategy.CacheInstance()
 
-    def cacheProvider = cacheInstance.createCacheProvider(1);
+    def cacheProvider = cacheInstance.createCacheProvider(1)
 
     when:
     cacheProvider.register("foo", new TypePool.Resolution.Simple(TypeDescription.VOID))
@@ -67,10 +61,10 @@ class CacheProviderTest extends DDSpecification {
 
   def "test ID equivalence"() {
     setup:
-    def cacheInstance = new DDCachingPoolStrategy.CacheInstance();
+    def cacheInstance = new DDCachingPoolStrategy.CacheInstance()
 
-    def cacheProvider1A = cacheInstance.createCacheProvider(1);
-    def cacheProvider1B = cacheInstance.createCacheProvider(1);
+    def cacheProvider1A = cacheInstance.createCacheProvider(1)
+    def cacheProvider1B = cacheInstance.createCacheProvider(1)
 
     when:
     cacheProvider1A.register("foo", newVoid())
@@ -86,10 +80,10 @@ class CacheProviderTest extends DDSpecification {
 
   def "test ID separation"() {
     setup:
-    def cacheInstance = new DDCachingPoolStrategy.CacheInstance();
+    def cacheInstance = new DDCachingPoolStrategy.CacheInstance()
 
-    def cacheProvider1 = cacheInstance.createCacheProvider(1);
-    def cacheProvider2 = cacheInstance.createCacheProvider(2);
+    def cacheProvider1 = cacheInstance.createCacheProvider(1)
+    def cacheProvider2 = cacheInstance.createCacheProvider(2)
 
     when:
     cacheProvider1.register("foo", newVoid())
@@ -173,8 +167,8 @@ class CacheProviderTest extends DDSpecification {
     def cacheInstance = new DDCachingPoolStrategy.CacheInstance()
     def capacity = DDCachingPoolStrategy.CacheInstance.TYPE_CAPACITY
 
-    def cacheProvider1 = cacheInstance.createCacheProvider(1);
-    def cacheProvider2 = cacheInstance.createCacheProvider(2);
+    def cacheProvider1 = cacheInstance.createCacheProvider(1)
+    def cacheProvider2 = cacheInstance.createCacheProvider(2)
 
     def id = 0
 
@@ -201,15 +195,15 @@ class CacheProviderTest extends DDSpecification {
     cacheInstance.approximateSize() > capacity - 4
   }
 
-  static def newVoid() {
+  static newVoid() {
     return new TypePool.Resolution.Simple(TypeDescription.VOID)
   }
 
-  static def newClassLoader() {
-    return new SecureClassLoader(null) {};
+  static newClassLoader() {
+    return new SecureClassLoader(null) {}
   }
 
-  static def newLocator() {
+  static newLocator() {
     return new ClassFileLocator() {
       @Override
       ClassFileLocator.Resolution locate(String name) throws IOException {
