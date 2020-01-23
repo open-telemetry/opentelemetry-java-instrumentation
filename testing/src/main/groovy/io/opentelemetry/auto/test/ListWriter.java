@@ -50,7 +50,9 @@ public class ListWriter implements SpanProcessor {
         sd.getSpanId().toLowerBase16(),
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16());
-    spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
+    synchronized (tracesLock) {
+      spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
+    }
   }
 
   @Override
@@ -64,6 +66,12 @@ public class ListWriter implements SpanProcessor {
         sd.getParentSpanId().toLowerBase16());
     final SpanData span = readableSpan.toSpanData();
     synchronized (tracesLock) {
+      if (!spanOrders.containsKey(span.getSpanId())) {
+        // this happens on some tests where there are sporadic background traces,
+        // e.g. Elasticsearch "RefreshAction"
+        log.debug("span ended that was started prior to ListWriter clear(): {}", span);
+        return;
+      }
       boolean found = false;
       for (final List<SpanData> trace : traces) {
         if (trace.get(0).getTraceId().equals(span.getTraceId())) {
@@ -155,8 +163,8 @@ public class ListWriter implements SpanProcessor {
   public void clear() {
     synchronized (tracesLock) {
       traces.clear();
+      spanOrders.clear();
     }
-    spanOrders.clear();
   }
 
   @Override
