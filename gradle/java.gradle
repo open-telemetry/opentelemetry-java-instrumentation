@@ -7,7 +7,7 @@ apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
 
 def applyCodeCoverage = !(project.plugins.hasPlugin('com.github.johnrengelman.shadow')
-  || project.path.startsWith(":java-agent:instrumentation:"))
+  || project.path.startsWith(":instrumentation:"))
 
 if (applyCodeCoverage) {
   apply from: "$rootDir/gradle/jacoco.gradle"
