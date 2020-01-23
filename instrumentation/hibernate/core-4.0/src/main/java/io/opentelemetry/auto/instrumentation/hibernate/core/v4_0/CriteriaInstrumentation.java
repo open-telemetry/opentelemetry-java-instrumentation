@@ -12,8 +12,8 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -27,7 +27,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Criteria", SessionState.class.getName());
+    return singletonMap("org.hibernate.Criteria", Span.class.getName());
   }
 
   @Override
@@ -48,8 +48,8 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
     public static SpanScopePair startMethod(
         @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<Criteria, SessionState> contextStore =
-          InstrumentationContext.get(Criteria.class, SessionState.class);
+      final ContextStore<Criteria, Span> contextStore =
+          InstrumentationContext.get(Criteria.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(
           contextStore, criteria, "hibernate.criteria." + name, null, true);

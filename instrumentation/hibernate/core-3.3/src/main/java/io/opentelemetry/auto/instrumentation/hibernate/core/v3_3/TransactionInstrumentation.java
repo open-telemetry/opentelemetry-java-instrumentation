@@ -13,8 +13,8 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -27,7 +27,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Transaction", SessionState.class.getName());
+    return singletonMap("org.hibernate.Transaction", Span.class.getName());
   }
 
   @Override
@@ -47,8 +47,8 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanScopePair startCommit(@Advice.This final Transaction transaction) {
 
-      final ContextStore<Transaction, SessionState> contextStore =
-          InstrumentationContext.get(Transaction.class, SessionState.class);
+      final ContextStore<Transaction, Span> contextStore =
+          InstrumentationContext.get(Transaction.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(
           contextStore, transaction, "hibernate.transaction.commit", null, true);

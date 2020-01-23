@@ -19,14 +19,14 @@ public class SessionMethodUtils {
   // Starts a scope as a child from a Span, where the Span is attached to the given spanKey using
   // the given contextStore.
   public static <TARGET, ENTITY> SpanScopePair startScopeFrom(
-      final ContextStore<TARGET, SessionState> contextStore,
+      final ContextStore<TARGET, Span> contextStore,
       final TARGET spanKey,
       final String operationName,
       final ENTITY entity,
       final boolean createSpan) {
 
-    final SessionState sessionState = contextStore.get(spanKey);
-    if (sessionState == null) {
+    final Span sessionSpan = contextStore.get(spanKey);
+    if (sessionSpan == null) {
       return null; // No state found. We aren't in a Session.
     }
 
@@ -36,14 +36,12 @@ public class SessionMethodUtils {
     }
 
     if (createSpan) {
-      final Span span =
-          TRACER.spanBuilder(operationName).setParent(sessionState.getSessionSpan()).startSpan();
+      final Span span = TRACER.spanBuilder(operationName).setParent(sessionSpan).startSpan();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, entity);
       return new SpanScopePair(span, TRACER.withSpan(span));
     } else {
-      final Span span = sessionState.getSessionSpan();
-      return new SpanScopePair(null, TRACER.withSpan(span));
+      return new SpanScopePair(null, TRACER.withSpan(sessionSpan));
     }
   }
 
@@ -73,16 +71,16 @@ public class SessionMethodUtils {
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to
   // propagate a Span from a Session to transient Session objects such as Transaction and Query.
   public static <S, T> void attachSpanFromStore(
-      final ContextStore<S, SessionState> sourceContextStore,
+      final ContextStore<S, Span> sourceContextStore,
       final S source,
-      final ContextStore<T, SessionState> targetContextStore,
+      final ContextStore<T, Span> targetContextStore,
       final T target) {
 
-    final SessionState state = sourceContextStore.get(source);
-    if (state == null) {
+    final Span sessionSpan = sourceContextStore.get(source);
+    if (sessionSpan == null) {
       return;
     }
 
-    targetContextStore.putIfAbsent(target, state);
+    targetContextStore.putIfAbsent(target, sessionSpan);
   }
 }
