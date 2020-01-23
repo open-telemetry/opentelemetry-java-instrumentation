@@ -1,6 +1,5 @@
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
-import io.opentelemetry.auto.instrumentation.api.AgentScope
 import io.opentelemetry.auto.instrumentation.api.Tags
 import org.hibernate.LockMode
 import org.hibernate.MappingException
@@ -8,9 +7,6 @@ import org.hibernate.Query
 import org.hibernate.ReplicationMode
 import org.hibernate.Session
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 
 class SessionTest extends AbstractHibernateTest {
 
@@ -518,7 +514,8 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate overlapping Sessions"() {
     setup:
 
-    AgentScope scope = activateSpan(startSpan("overlapping Sessions"), true)
+    def rootSpan = TEST_TRACER.spanBuilder("overlapping Sessions").startSpan()
+    def scope = TEST_TRACER.withSpan(rootSpan)
 
     def session1 = sessionFactory.openSession()
     session1.beginTransaction()
@@ -536,6 +533,7 @@ class SessionTest extends AbstractHibernateTest {
     session1.close()
     session3.close()
 
+    rootSpan.end()
     scope.close()
 
 
