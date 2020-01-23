@@ -1,6 +1,5 @@
 package springdata
 
-import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import com.google.common.collect.ImmutableSet
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
@@ -29,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
