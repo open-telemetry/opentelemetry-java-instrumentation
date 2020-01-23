@@ -1,17 +1,15 @@
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.noopSpan;
+import static io.opentelemetry.auto.instrumentation.java.concurrent.AdviceUtils.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -87,18 +85,18 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
   public static class DisableAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope enter() {
-      final AgentSpan span = activeSpan();
-      if (span != null) {
-        return activateSpan(noopSpan(), false);
+    public static SpanScopePair enter() {
+      final Span span = TRACER.getCurrentSpan();
+      if (span.getContext().isValid()) {
+        return new SpanScopePair(span, TRACER.withSpan(span));
       }
       return null;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit(@Advice.Enter final AgentScope scope) {
+    public static void exit(@Advice.Enter final SpanScopePair scope) {
       if (scope != null) {
-        scope.close();
+        scope.getScope().close();
       }
     }
   }

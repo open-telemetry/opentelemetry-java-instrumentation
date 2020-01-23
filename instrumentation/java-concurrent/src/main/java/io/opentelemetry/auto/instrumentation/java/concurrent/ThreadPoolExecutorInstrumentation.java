@@ -41,6 +41,7 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
       ThreadPoolExecutorInstrumentation.class.getPackage().getName()
           + ".ExecutorInstrumentationUtils",
       ThreadPoolExecutorInstrumentation.class.getName() + "$GenericRunnable",
+      packageName + ".AdviceUtils",
     };
   }
 
