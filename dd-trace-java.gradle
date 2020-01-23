@@ -9,7 +9,7 @@ plugins {
   // Not applying google java format by default because it gets confused by stray java build
   // files in 'workspace' build directory in CI
   id 'com.github.sherter.google-java-format' version '0.8' apply false
-  id 'com.dorongold.task-tree' version '1.4'
+  id 'com.dorongold.task-tree' version '1.5'
 }
 
 def isCI = System.getenv("CI") != null
