@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jaxrs2;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -23,7 +23,8 @@ import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestConte
 public class Resteasy31RequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope decorateAbortSpan(@Advice.This final ContainerRequestContext context) {
+    public static SpanScopePair decorateAbortSpan(
+        @Advice.This final ContainerRequestContext context) {
       if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null
           && context instanceof PostMatchContainerRequestContext) {
 
@@ -40,7 +41,7 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanScopePair scope, @Advice.Thrown final Throwable throwable) {
       RequestFilterHelper.closeSpanAndScope(scope, throwable);
     }
   }
