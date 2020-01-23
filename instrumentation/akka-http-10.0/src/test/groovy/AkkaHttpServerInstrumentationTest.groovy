@@ -4,6 +4,7 @@ import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
+import spock.lang.Retry
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -78,6 +79,7 @@ class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentatio
   }
 }
 
+@Retry(mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
 class AkkaHttpServerInstrumentationTestAsync extends AkkaHttpServerInstrumentationTest {
   @Override
   def startServer(int port) {

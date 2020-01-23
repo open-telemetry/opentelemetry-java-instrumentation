@@ -1,4 +1,3 @@
-import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import groovy.json.JsonSlurper
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
@@ -21,7 +20,6 @@ import spock.lang.Shared
 
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch5RestClientTest extends AgentTestRunner {
   @Shared
   int httpPort

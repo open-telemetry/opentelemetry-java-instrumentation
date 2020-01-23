@@ -1,4 +1,3 @@
-import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -16,7 +15,6 @@ import spock.lang.Shared
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch6NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
