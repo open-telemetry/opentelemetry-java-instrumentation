@@ -88,7 +88,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
     public static SpanScopePair enter() {
       final Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
-        return new SpanScopePair(span, TRACER.withSpan(span));
+        return TRACER.withSpan(DefaultSpan.getInvalid());
       }
       return null;
     }
