@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.test;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
@@ -112,7 +113,7 @@ public class ListWriter implements SpanProcessor {
       }
       // always return a copy so that future structural changes cannot cause race conditions during
       // test verification
-      final List<List<SpanData>> copy = new ArrayList<>();
+      final List<List<SpanData>> copy = new ArrayList<>(traces.size());
       for (final List<SpanData> trace : traces) {
         copy.add(new ArrayList<>(trace));
       }
@@ -121,26 +122,45 @@ public class ListWriter implements SpanProcessor {
   }
 
   public void waitForTraces(final int number) throws InterruptedException, TimeoutException {
+    waitForTraces(number, Predicates.<List<SpanData>>alwaysFalse());
+  }
+
+  public List<List<SpanData>> waitForTraces(
+      final int number, final Predicate<List<SpanData>> excludes)
+      throws InterruptedException, TimeoutException {
     synchronized (tracesLock) {
       long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
-      while (completedTraceCount() < number && remainingWaitMillis > 0) {
+      List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
+      while (traces.size() < number && remainingWaitMillis > 0) {
         final Stopwatch stopwatch = Stopwatch.createStarted();
         tracesLock.wait(remainingWaitMillis);
         remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        traces = getCompletedAndFilteredTraces(excludes);
       }
-      final int completedTraceCount = completedTraceCount();
-      if (completedTraceCount < number) {
+      if (traces.size() < number) {
         throw new TimeoutException(
             "Timeout waiting for "
                 + number
-                + " completed trace(s), found "
-                + completedTraceCount
-                + " completed trace(s) and "
+                + " completed/filtered trace(s), found "
+                + traces.size()
+                + " completed/filtered trace(s) and "
                 + traces.size()
                 + " total trace(s): "
                 + traces);
       }
+      return traces;
     }
+  }
+
+  private List<List<SpanData>> getCompletedAndFilteredTraces(
+      final Predicate<List<SpanData>> excludes) {
+    final List<List<SpanData>> traces = new ArrayList<>();
+    for (final List<SpanData> trace : getTraces()) {
+      if (isCompleted(trace) && !excludes.apply(trace)) {
+        traces.add(trace);
+      }
+    }
+    return traces;
   }
 
   public void clear() {
@@ -152,31 +172,6 @@ public class ListWriter implements SpanProcessor {
 
   @Override
   public void shutdown() {}
-
-  // must be called under tracesLock
-  private int completedTraceCount() {
-    int count = 0;
-    for (final List<SpanData> trace : traces) {
-      if (isCompleted(trace)) {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  // trace is completed if root span is present
-  private boolean isCompleted(final List<SpanData> trace) {
-    for (final SpanData span : trace) {
-      if (!span.getParentSpanId().isValid()) {
-        return true;
-      }
-      if (span.getParentSpanId().toLowerBase16().equals("0000000000000456")) {
-        // this is a special parent id that some tests use
-        return true;
-      }
-    }
-    return false;
-  }
 
   // must be called under tracesLock
   private void sortTraces() {
@@ -262,6 +257,20 @@ public class ListWriter implements SpanProcessor {
       throw new IllegalStateException("order not found for span: " + span);
     }
     return order;
+  }
+
+  // trace is completed if root span is present
+  private static boolean isCompleted(final List<SpanData> trace) {
+    for (final SpanData span : trace) {
+      if (!span.getParentSpanId().isValid()) {
+        return true;
+      }
+      if (span.getParentSpanId().toLowerBase16().equals("0000000000000456")) {
+        // this is a special parent id that some tests use
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class Node {

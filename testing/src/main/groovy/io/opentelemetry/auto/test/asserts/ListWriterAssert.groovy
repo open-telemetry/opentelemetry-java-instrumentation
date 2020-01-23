@@ -1,5 +1,6 @@
 package io.opentelemetry.auto.test.asserts
 
+import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.auto.test.ListWriter
@@ -23,11 +24,11 @@ class ListWriterAssert {
   }
 
   static void assertTraces(ListWriter writer, int expectedSize,
+                           final Predicate<List<SpanData>> excludes,
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
-      writer.waitForTraces(expectedSize)
-      def traces = new ArrayList<>(writer.traces)
+      def traces = writer.waitForTraces(expectedSize, excludes)
       assert traces.size() == expectedSize
       def asserter = new ListWriterAssert(traces, writer)
       def clone = (Closure) spec.clone()

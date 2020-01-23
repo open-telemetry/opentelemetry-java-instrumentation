@@ -69,32 +69,13 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    assertTraces(3) {
-      sortTraces {
-        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (traces[0][0].attributes[MoreTags.RESOURCE_NAME].stringValue == "IndexAction") {
-          def tmp = traces[0]
-          traces[0] = traces[1]
-          traces[1] = tmp
-        }
-      }
+    def excludes = {
+      // sometimes PutMappingAction is present and sometimes it is not
+      // (only seems to happen with Elasticsearch 2.x, later versions seem to always have PutMappingAction)
+      it[0].attributes[MoreTags.RESOURCE_NAME].stringValue == "PutMappingAction"
+    }
+    assertTracesWithFilter(2, excludes) {
       trace(0, 1) {
-        span(0) {
-          operationName "elasticsearch.query"
-          tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.DB_TYPE" "elasticsearch"
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
-            "elasticsearch.request.indices" indexName
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           operationName "elasticsearch.query"
           tags {
@@ -114,7 +95,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
           }
         }
       }
-      trace(2, 1) {
+      trace(1, 1) {
         span(0) {
           operationName "elasticsearch.query"
           tags {
