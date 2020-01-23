@@ -7,8 +7,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +86,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
   public static class DisableAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair enter() {
+    public static Scope enter() {
       final Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
         return TRACER.withSpan(DefaultSpan.getInvalid());
@@ -94,9 +95,9 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit(@Advice.Enter final SpanScopePair scope) {
+    public static void exit(@Advice.Enter final Scope scope) {
       if (scope != null) {
-        scope.getScope().close();
+        scope.close();
       }
     }
   }
