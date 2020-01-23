@@ -150,11 +150,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     template.queryForList(query, Doc) == [new Doc()]
 
     and:
-    // FIXME: it looks like proper approach is to provide TEST_WRITER with an API to filter traces as they are written
-    TEST_WRITER.waitForTraces(7)
-    filterIgnoredActions()
-
-    assertTraces(7) {
+    def excludes = {
+      trace -> IGNORED_ACTIONS.contains(trace[0].attributes[MoreTags.RESOURCE_NAME].stringValue)
+    }
+    assertTracesWithFilter(7, excludes) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
         if (traces[3][0].attributes[MoreTags.RESOURCE_NAME].stringValue == "IndexAction") {
@@ -371,11 +370,5 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
 
     where:
     indexName = "test-index-extract"
-  }
-
-  void filterIgnoredActions() {
-    TEST_WRITER.filterTraces({
-      trace -> IGNORED_ACTIONS.contains(trace[0].attributes[MoreTags.RESOURCE_NAME].stringValue)
-    })
   }
 }

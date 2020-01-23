@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,16 +80,6 @@ public class ListWriter implements SpanProcessor {
       }
       needsSpanSorting.add(span.getTraceId());
       tracesLock.notifyAll();
-    }
-  }
-
-  public void filterTraces(final Predicate<List<SpanData>> filter) {
-    synchronized (tracesLock) {
-      for (final Iterator<List<SpanData>> i = traces.iterator(); i.hasNext(); ) {
-        if (filter.apply(i.next())) {
-          i.remove();
-        }
-      }
     }
   }
 
