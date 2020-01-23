@@ -7,11 +7,10 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ClientDecorator;
-import java.lang.reflect.Method;
-import java.util.concurrent.TimeUnit;
-
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /** Decorate Twilio span's with relevant contextual information. */
@@ -20,7 +19,8 @@ public class TwilioClientDecorator extends ClientDecorator {
 
   public static final TwilioClientDecorator DECORATE = new TwilioClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.twilio");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.twilio");
 
   static final String COMPONENT_NAME = "twilio-sdk";
 
