@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -44,7 +45,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
   public static class TransactionCommitAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startCommit(@Advice.This final Transaction transaction) {
+    public static SpanScopePair startCommit(@Advice.This final Transaction transaction) {
 
       final ContextStore<Transaction, SessionState> contextStore =
           InstrumentationContext.get(Transaction.class, SessionState.class);
@@ -55,11 +56,9 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
-        @Advice.This final Transaction transaction,
-        @Advice.Enter final SessionState state,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
 
-      SessionMethodUtils.closeScope(state, throwable, null);
+      SessionMethodUtils.closeScope(spanScopePair, throwable, null);
     }
   }
 }

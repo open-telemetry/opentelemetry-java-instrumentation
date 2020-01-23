@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -60,22 +61,20 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   public static class ProcedureCallMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startMethod(
+    public static SpanScopePair startMethod(
         @Advice.This final ProcedureCall call, @Advice.Origin("#m") final String name) {
 
       final ContextStore<ProcedureCall, SessionState> contextStore =
           InstrumentationContext.get(ProcedureCall.class, SessionState.class);
 
-      final SessionState state =
-          SessionMethodUtils.startScopeFrom(
-              contextStore, call, "hibernate.procedure." + name, call.getProcedureName(), true);
-      return state;
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, call, "hibernate.procedure." + name, call.getProcedureName(), true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SessionState state, @Advice.Thrown final Throwable throwable) {
-      SessionMethodUtils.closeScope(state, throwable, null);
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+      SessionMethodUtils.closeScope(spanScopePair, throwable, null);
     }
   }
 }

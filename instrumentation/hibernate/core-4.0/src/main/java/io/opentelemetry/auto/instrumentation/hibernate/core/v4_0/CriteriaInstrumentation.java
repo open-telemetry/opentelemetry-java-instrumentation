@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -44,7 +45,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
   public static class CriteriaMethodAdvice extends V4Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startMethod(
+    public static SpanScopePair startMethod(
         @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
 
       final ContextStore<Criteria, SessionState> contextStore =
@@ -56,11 +57,11 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SessionState state,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity) {
 
-      SessionMethodUtils.closeScope(state, throwable, entity);
+      SessionMethodUtils.closeScope(spanScopePair, throwable, entity);
     }
   }
 }
