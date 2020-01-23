@@ -5,6 +5,7 @@ import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator
 
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.trace.Span;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,20 +35,21 @@ public class SessionMethodUtils {
       return null; // This method call is being traced already.
     }
 
-    final CloseableSpanScopePair spanAndScope;
+    final SpanScopePair spanAndScope;
+    boolean endSpan = false;
     if (createSpan) {
       final Span span =
           TRACER.spanBuilder(operationName).setParent(sessionState.getSessionSpan()).startSpan();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, entity);
-      spanAndScope =
-          new CloseableSpanScopePair(span, TRACER.withSpan(span), true); // Autoclose: true
+      spanAndScope = new SpanScopePair(span, TRACER.withSpan(span)); // Autoclose: true
+      endSpan = true;
     } else {
       final Span span = sessionState.getSessionSpan();
-      spanAndScope = new CloseableSpanScopePair(span, TRACER.withSpan(span), false);
+      spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
       sessionState.setHasChildSpan(false);
     }
-    sessionState.setMethodScope(spanAndScope);
+    sessionState.setMethodScope(spanAndScope, endSpan);
     return sessionState;
   }
 
@@ -62,7 +64,7 @@ public class SessionMethodUtils {
     }
 
     CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
-    final CloseableSpanScopePair spanAndScope = sessionState.getMethodScope();
+    final SpanScopePair spanAndScope = sessionState.getMethodScope();
     final Span span = spanAndScope.getSpan();
     if (span != null && sessionState.hasChildSpan) {
       DECORATOR.onError(span, throwable);
@@ -72,9 +74,8 @@ public class SessionMethodUtils {
       DECORATOR.beforeFinish(span);
       span.end();
     }
-
-    spanAndScope.close(); // Also ends span if flag is set in constructor
-    sessionState.setMethodScope(null);
+    sessionState.endScope();
+    sessionState.setMethodScope(null, false);
   }
 
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to

@@ -130,7 +130,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         return;
       }
       if (state.getMethodScope() != null) {
-        state.getMethodScope().close();
+        state.endScope();
       }
 
       final Span span = state.getSessionSpan();
