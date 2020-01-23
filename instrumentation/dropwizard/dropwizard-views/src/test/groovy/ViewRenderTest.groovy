@@ -7,7 +7,6 @@ import io.opentelemetry.auto.test.AgentTestRunner
 
 import java.nio.charset.StandardCharsets
 
-import static io.opentelemetry.auto.test.asserts.ListWriterAssert.assertTraces
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
@@ -24,7 +23,7 @@ class ViewRenderTest extends AgentTestRunner {
 
     then:
     outputStream.toString().contains("This is an example of a view")
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {

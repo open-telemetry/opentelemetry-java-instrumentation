@@ -1,6 +1,5 @@
 package springdata
 
-import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import com.google.common.collect.ImmutableSet
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
@@ -29,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -150,11 +148,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     template.queryForList(query, Doc) == [new Doc()]
 
     and:
-    // FIXME: it looks like proper approach is to provide TEST_WRITER with an API to filter traces as they are written
-    TEST_WRITER.waitForTraces(7)
-    filterIgnoredActions()
-
-    assertTraces(7) {
+    def excludes = {
+      trace -> IGNORED_ACTIONS.contains(trace[0].attributes[MoreTags.RESOURCE_NAME].stringValue)
+    }
+    assertTracesWithFilter(7, excludes) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
         if (traces[3][0].attributes[MoreTags.RESOURCE_NAME].stringValue == "IndexAction") {
@@ -371,11 +368,5 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
 
     where:
     indexName = "test-index-extract"
-  }
-
-  void filterIgnoredActions() {
-    TEST_WRITER.filterTraces({
-      trace -> IGNORED_ACTIONS.contains(trace[0].attributes[MoreTags.RESOURCE_NAME].stringValue)
-    })
   }
 }

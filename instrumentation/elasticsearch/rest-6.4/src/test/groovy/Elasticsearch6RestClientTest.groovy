@@ -1,4 +1,3 @@
-import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import groovy.json.JsonSlurper
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.api.SpanTypes
@@ -18,7 +17,6 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
-@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch6RestClientTest extends AgentTestRunner {
   @Shared
   int httpPort

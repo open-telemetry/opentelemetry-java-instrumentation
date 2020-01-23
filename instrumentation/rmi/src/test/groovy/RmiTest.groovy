@@ -10,7 +10,6 @@ import rmi.app.ServerLegacy
 import java.rmi.registry.LocateRegistry
 import java.rmi.server.UnicastRemoteObject
 
-import static io.opentelemetry.auto.test.asserts.ListWriterAssert.assertTraces
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
@@ -36,7 +35,7 @@ class RmiTest extends AgentTestRunner {
 
     then:
     response.contains("Hello you")
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
@@ -90,7 +89,7 @@ class RmiTest extends AgentTestRunner {
     server.getClass()
 
     then:
-    assertTraces(TEST_WRITER, 0) {}
+    assertTraces(0) {}
 
     cleanup:
     serverRegistry.unbind("Server")
@@ -109,7 +108,7 @@ class RmiTest extends AgentTestRunner {
 
     then:
     def thrownException = thrown(RuntimeException)
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, null, thrownException)
         span(1) {
@@ -157,7 +156,7 @@ class RmiTest extends AgentTestRunner {
 
     then:
     response.contains("Hello you")
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {

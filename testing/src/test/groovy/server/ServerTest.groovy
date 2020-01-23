@@ -1,8 +1,6 @@
 package server
 
-
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.asserts.ListWriterAssert
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -312,7 +310,7 @@ class ServerTest extends AgentTestRunner {
     response.code() == 200
     response.body().string().trim() == "done"
 
-    ListWriterAssert.assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       server.distributedRequestTrace(it, 0)
     }
 

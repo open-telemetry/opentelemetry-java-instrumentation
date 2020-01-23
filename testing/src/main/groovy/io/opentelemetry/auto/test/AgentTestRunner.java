@@ -2,6 +2,8 @@ package io.opentelemetry.auto.test;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -15,6 +17,7 @@ import io.opentelemetry.auto.tooling.AgentTracerImpl;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.auto.util.test.AgentSpecification;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -184,7 +187,19 @@ public abstract class AgentTestRunner extends AgentSpecification {
               options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
           @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
           final Closure spec) {
-    ListWriterAssert.assertTraces(TEST_WRITER, size, spec);
+    ListWriterAssert.assertTraces(
+        TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
+  }
+
+  public static void assertTracesWithFilter(
+      final int size,
+      final Predicate<List<SpanData>> excludes,
+      @ClosureParams(
+              value = SimpleType.class,
+              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          final Closure spec) {
+    ListWriterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
 
   public static class TestRunnerListener implements AgentBuilder.Listener {

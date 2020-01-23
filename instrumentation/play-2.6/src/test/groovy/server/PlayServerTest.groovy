@@ -13,6 +13,7 @@ import play.Mode
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
+import spock.lang.Retry
 
 import java.util.function.Supplier
 
@@ -22,6 +23,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUER
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+@Retry(mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
 class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   @Override
   Server startServer(int port) {

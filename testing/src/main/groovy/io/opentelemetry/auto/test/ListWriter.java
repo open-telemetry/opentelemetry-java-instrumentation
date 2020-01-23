@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.test;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
@@ -16,7 +17,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,7 +50,9 @@ public class ListWriter implements SpanProcessor {
         sd.getSpanId().toLowerBase16(),
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16());
-    spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
+    synchronized (tracesLock) {
+      spanOrders.put(readableSpan.getSpanContext().getSpanId(), nextSpanOrder.getAndIncrement());
+    }
   }
 
   @Override
@@ -64,6 +66,12 @@ public class ListWriter implements SpanProcessor {
         sd.getParentSpanId().toLowerBase16());
     final SpanData span = readableSpan.toSpanData();
     synchronized (tracesLock) {
+      if (!spanOrders.containsKey(span.getSpanId())) {
+        // this happens on some tests where there are sporadic background traces,
+        // e.g. Elasticsearch "RefreshAction"
+        log.debug("span ended that was started prior to ListWriter clear(): {}", span);
+        return;
+      }
       boolean found = false;
       for (final List<SpanData> trace : traces) {
         if (trace.get(0).getTraceId().equals(span.getTraceId())) {
@@ -80,16 +88,6 @@ public class ListWriter implements SpanProcessor {
       }
       needsSpanSorting.add(span.getTraceId());
       tracesLock.notifyAll();
-    }
-  }
-
-  public void filterTraces(final Predicate<List<SpanData>> filter) {
-    synchronized (tracesLock) {
-      for (final Iterator<List<SpanData>> i = traces.iterator(); i.hasNext(); ) {
-        if (filter.apply(i.next())) {
-          i.remove();
-        }
-      }
     }
   }
 
@@ -112,7 +110,7 @@ public class ListWriter implements SpanProcessor {
       }
       // always return a copy so that future structural changes cannot cause race conditions during
       // test verification
-      final List<List<SpanData>> copy = new ArrayList<>();
+      final List<List<SpanData>> copy = new ArrayList<>(traces.size());
       for (final List<SpanData> trace : traces) {
         copy.add(new ArrayList<>(trace));
       }
@@ -121,62 +119,56 @@ public class ListWriter implements SpanProcessor {
   }
 
   public void waitForTraces(final int number) throws InterruptedException, TimeoutException {
+    waitForTraces(number, Predicates.<List<SpanData>>alwaysFalse());
+  }
+
+  public List<List<SpanData>> waitForTraces(
+      final int number, final Predicate<List<SpanData>> excludes)
+      throws InterruptedException, TimeoutException {
     synchronized (tracesLock) {
       long remainingWaitMillis = TimeUnit.SECONDS.toMillis(20);
-      while (completedTraceCount() < number && remainingWaitMillis > 0) {
+      List<List<SpanData>> traces = getCompletedAndFilteredTraces(excludes);
+      while (traces.size() < number && remainingWaitMillis > 0) {
         final Stopwatch stopwatch = Stopwatch.createStarted();
         tracesLock.wait(remainingWaitMillis);
         remainingWaitMillis -= stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        traces = getCompletedAndFilteredTraces(excludes);
       }
-      final int completedTraceCount = completedTraceCount();
-      if (completedTraceCount < number) {
+      if (traces.size() < number) {
         throw new TimeoutException(
             "Timeout waiting for "
                 + number
-                + " completed trace(s), found "
-                + completedTraceCount
-                + " completed trace(s) and "
+                + " completed/filtered trace(s), found "
+                + traces.size()
+                + " completed/filtered trace(s) and "
                 + traces.size()
                 + " total trace(s): "
                 + traces);
       }
+      return traces;
     }
+  }
+
+  private List<List<SpanData>> getCompletedAndFilteredTraces(
+      final Predicate<List<SpanData>> excludes) {
+    final List<List<SpanData>> traces = new ArrayList<>();
+    for (final List<SpanData> trace : getTraces()) {
+      if (isCompleted(trace) && !excludes.apply(trace)) {
+        traces.add(trace);
+      }
+    }
+    return traces;
   }
 
   public void clear() {
     synchronized (tracesLock) {
       traces.clear();
+      spanOrders.clear();
     }
-    spanOrders.clear();
   }
 
   @Override
   public void shutdown() {}
-
-  // must be called under tracesLock
-  private int completedTraceCount() {
-    int count = 0;
-    for (final List<SpanData> trace : traces) {
-      if (isCompleted(trace)) {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  // trace is completed if root span is present
-  private boolean isCompleted(final List<SpanData> trace) {
-    for (final SpanData span : trace) {
-      if (!span.getParentSpanId().isValid()) {
-        return true;
-      }
-      if (span.getParentSpanId().toLowerBase16().equals("0000000000000456")) {
-        // this is a special parent id that some tests use
-        return true;
-      }
-    }
-    return false;
-  }
 
   // must be called under tracesLock
   private void sortTraces() {
@@ -262,6 +254,20 @@ public class ListWriter implements SpanProcessor {
       throw new IllegalStateException("order not found for span: " + span);
     }
     return order;
+  }
+
+  // trace is completed if root span is present
+  private static boolean isCompleted(final List<SpanData> trace) {
+    for (final SpanData span : trace) {
+      if (!span.getParentSpanId().isValid()) {
+        return true;
+      }
+      if (span.getParentSpanId().toLowerBase16().equals("0000000000000456")) {
+        // this is a special parent id that some tests use
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class Node {
