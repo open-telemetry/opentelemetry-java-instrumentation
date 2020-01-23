@@ -7,8 +7,6 @@ import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import rx.Observable
 import rx.schedulers.Schedulers
-import spock.lang.Retry
-import spock.lang.Timeout
 
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -16,8 +14,6 @@ import java.util.concurrent.LinkedBlockingQueue
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
-@Retry
-@Timeout(5)
 class HystrixObservableTest extends AgentTestRunner {
   static {
     // Disable so failure testing below doesn't inadvertently change the behavior.
