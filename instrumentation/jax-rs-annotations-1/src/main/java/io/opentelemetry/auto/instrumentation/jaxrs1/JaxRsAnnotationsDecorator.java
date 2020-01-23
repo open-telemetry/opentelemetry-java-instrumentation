@@ -2,13 +2,15 @@ package io.opentelemetry.auto.instrumentation.jaxrs1;
 
 import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -20,6 +22,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   public static JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String[] instrumentationNames() {
@@ -37,14 +41,14 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   }
 
   public void onControllerStart(
-      final AgentSpan span, final AgentSpan parent, final Class target, final Method method) {
+      final Span span, final Span parent, final Class target, final Method method) {
     final String resourceName = getPathResourceName(target, method);
     updateParent(parent, resourceName);
 
     span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_SERVER);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
-    final boolean isRootScope = parent == null;
+    final boolean isRootScope = !parent.getContext().isValid();
     if (isRootScope && !resourceName.isEmpty()) {
       span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     } else {
@@ -53,7 +57,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     }
   }
 
-  private void updateParent(final AgentSpan span, final String resourceName) {
+  private void updateParent(final Span span, final String resourceName) {
     if (span == null) {
       return;
     }
