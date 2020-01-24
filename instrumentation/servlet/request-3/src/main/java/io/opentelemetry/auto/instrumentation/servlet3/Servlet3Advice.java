@@ -37,7 +37,8 @@ public class Servlet3Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-    final Span.Builder builder = TRACER.spanBuilder("servlet.request");
+    final Span.Builder builder =
+        TRACER.spanBuilder("servlet.request").setSpanKind(Span.Kind.SERVER);
     try {
       final SpanContext extractedContext =
           TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);
