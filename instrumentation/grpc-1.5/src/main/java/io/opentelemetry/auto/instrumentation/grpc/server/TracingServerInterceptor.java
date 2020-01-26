@@ -28,8 +28,15 @@ public class TracingServerInterceptor implements ServerInterceptor {
       final Metadata headers,
       final ServerCallHandler<ReqT, RespT> next) {
 
-    final SpanContext spanContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
-    final Span span = TRACER.spanBuilder("grpc.server").setParent(spanContext).startSpan();
+    final Span.Builder spanBuilder = TRACER.spanBuilder("grpc.server");
+    try {
+      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+      spanBuilder.setParent(extractedContext);
+    } catch (final IllegalArgumentException e) {
+      // Couldn't extract a context. We should treat this as a root span.
+      spanBuilder.setNoParent();
+    }
+    final Span span = spanBuilder.startSpan();
     span.setAttribute(MoreTags.RESOURCE_NAME, call.getMethodDescriptor().getFullMethodName());
 
     DECORATE.afterStart(span);
