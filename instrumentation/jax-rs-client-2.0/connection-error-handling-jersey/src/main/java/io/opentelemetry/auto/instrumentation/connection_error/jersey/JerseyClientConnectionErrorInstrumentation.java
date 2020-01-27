@@ -1,14 +1,16 @@
 package io.opentelemetry.auto.instrumentation.connection_error.jersey;
 
+import static io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.jaxrs.ClientTracingFilter;
+import io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -41,6 +43,10 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
   public String[] helperClassNames() {
     return new String[] {
       getClass().getName() + "$WrappedFuture",
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.HttpClientDecorator",
+      JaxRsClientDecorator.class.getName(),
     };
   }
 
@@ -67,11 +73,10 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
         final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof AgentSpan) {
-          final AgentSpan span = (AgentSpan) prop;
-          span.setError(true);
-          span.addThrowable(throwable);
-          span.finish();
+        if (prop instanceof Span) {
+          final Span span = (Span) prop;
+          DECORATE.onError(span, throwable);
+          span.end();
         }
       }
     }
@@ -120,11 +125,10 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
         return wrapped.get();
       } catch (final ExecutionException e) {
         final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof AgentSpan) {
-          final AgentSpan span = (AgentSpan) prop;
-          span.setError(true);
-          span.addThrowable(e.getCause());
-          span.finish();
+        if (prop instanceof Span) {
+          final Span span = (Span) prop;
+          DECORATE.onError(span, e.getCause());
+          span.end();
         }
         throw e;
       }
@@ -137,11 +141,10 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
         return wrapped.get(timeout, unit);
       } catch (final ExecutionException e) {
         final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof AgentSpan) {
-          final AgentSpan span = (AgentSpan) prop;
-          span.setError(true);
-          span.addThrowable(e.getCause());
-          span.finish();
+        if (prop instanceof Span) {
+          final Span span = (Span) prop;
+          DECORATE.onError(span, e.getCause());
+          span.end();
         }
         throw e;
       }
