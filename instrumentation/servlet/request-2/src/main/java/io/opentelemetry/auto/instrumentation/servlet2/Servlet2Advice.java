@@ -47,7 +47,8 @@ public class Servlet2Advice {
       response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
     }
 
-    final Span.Builder builder = TRACER.spanBuilder("servlet.request");
+    final Span.Builder builder =
+        TRACER.spanBuilder("servlet.request").setSpanKind(Span.Kind.SERVER);
     try {
       final SpanContext extractedContext =
           TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);
