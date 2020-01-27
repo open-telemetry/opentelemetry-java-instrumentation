@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jms;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -14,10 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -61,29 +59,37 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   public static class MessageListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(
+    public static SpanScopePair onEnter(
         @Advice.Argument(0) final Message message, @Advice.This final MessageListener listener) {
 
-      final Context extractedContext = propagate().extract(message, GETTER);
+      final Span.Builder spanBuilder = TRACER.spanBuilder("jms.onMessage");
+      try {
+        final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+        spanBuilder.setParent(extractedContext);
+      } catch (final IllegalArgumentException e) {
+        // Couldn't extract a context. We should treat this as a root span.
+        spanBuilder.setNoParent();
+      }
 
-      final AgentSpan span =
-          startSpan("jms.onMessage", extractedContext)
-              .setAttribute("span.origin.type", listener.getClass().getName());
+      final Span span = spanBuilder.startSpan();
+      span.setAttribute("span.origin.type", listener.getClass().getName());
       CONSUMER_DECORATE.afterStart(span);
       CONSUMER_DECORATE.onReceive(span, message);
 
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+      if (spanScopePair == null) {
         return;
       }
-      CONSUMER_DECORATE.onError(scope, throwable);
-      CONSUMER_DECORATE.beforeFinish(scope);
-      scope.close();
+      final Span span = spanScopePair.getSpan();
+      CONSUMER_DECORATE.onError(span, throwable);
+      CONSUMER_DECORATE.beforeFinish(span);
+      span.end();
+      spanScopePair.getScope().close();
     }
   }
 }
