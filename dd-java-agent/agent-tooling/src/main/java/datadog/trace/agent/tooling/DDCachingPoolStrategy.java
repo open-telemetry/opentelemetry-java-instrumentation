@@ -4,9 +4,9 @@ import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
+
+import java.lang.ref.WeakReference;
+
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -43,167 +43,94 @@ import net.bytebuddy.pool.TypePool;
  */
 @Slf4j
 public class DDCachingPoolStrategy implements PoolStrategy {
+  // Many things are package visible for testing purposes --
+  // others to avoid creation of synthetic accessors
+
+  static final int CONCURRENCY_LEVEL = 8;
+  static final int LOADER_CAPACITY = 64;
+  static final int TYPE_CAPACITY = 64;
+
+  static final int BOOTSTRAP_HASH = 0;
+
   /**
-   * Most of the logic exists in CacheInstance This volatile + exhaustion checking is defense
-   * against loader ID exhaustion
+   * Cache of recent ClassLoader WeakReferences; used to...
+   * <ul>
+   *   <li>Reduced number of WeakReferences created</li>
+   *   <li>Allow for quick fast path equivalence check of composite keys</li>
+   * </ul>
    */
-  volatile CacheInstance cacheInstance = new CacheInstance();
+  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
+      CacheBuilder.newBuilder()
+          .weakKeys()
+          .concurrencyLevel(CONCURRENCY_LEVEL)
+          .initialCapacity(LOADER_CAPACITY / 2)
+          .maximumSize(LOADER_CAPACITY)
+          .build();
 
-  @Override
-  public TypePool typePool(final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
-    CacheInstance cacheInstance = this.cacheInstance;
-
-    TypePool typePool = cacheInstance.typePool(classFileLocator, classLoader);
-    if (cacheInstance.exhaustedLoaderIdSeq()) {
-      // If the loader ID sequence is exhausted, drop the prior cache & start over
-      // The ID space is so large that this shouldn't occur
-      log.error("cacheInstance exhausted - rebuilding cache");
-
-      this.cacheInstance = new CacheInstance();
-    }
-    return typePool;
-  }
-
-  /*
-   * CacheInstance embodies the core of the cache.  In general, we only
-   * expect a single CacheInstance object to ever be created.
-   *
-   * However, CacheInstance does provide an extra layer of protection
-   * against loaderIdSeq exhaustion.  If ever the loaderIdSeq of
-   * CacheInstance is exhausted, then DDCachingPoolStrategy.typePool
-   * will detect that and discard the CacheInstance.
-   *
-   * At that time, a new CacheInstance with a fresh sequence will
-   * be created in its place.
+  /**
+   * Single shared Type.Resolution cache -- uses a composite key --
+   * conceptually of loader & name
    */
-  private static final class CacheInstance {
-    static final int CONCURRENCY_LEVEL = 8;
-    static final int LOADER_CAPACITY = 64;
-    static final int TYPE_CAPACITY = 64;
-
-    static final long BOOTSTRAP_ID = Long.MIN_VALUE;
-    static final long START_ID = BOOTSTRAP_ID + 1;
-    static final long LIMIT_ID = Long.MAX_VALUE - 10;
-
-    static final long EXHAUSTED_ID = LIMIT_ID;
-
-    // Many things are package visible for testing purposes --
-    // others to avoid creation of synthetic accessors
-
-    /**
-     * Cache of recent loaderIds: guarantee is that no two loaders are given the same ID; however, a
-     * loader may be given more than one ID if it falls out the cache.
-     */
-    final Cache<ClassLoader, Long> loaderIdCache =
-        CacheBuilder.newBuilder()
-            .weakKeys()
-            .concurrencyLevel(CONCURRENCY_LEVEL)
-            .initialCapacity(LOADER_CAPACITY / 2)
-            .maximumSize(LOADER_CAPACITY)
-            .build();
-
-    /**
-     * Single shared Type.Resolution cache -- uses a composite key of loader ID & class name The
-     * initial capacity is set to the maximum capacity to avoid expansion overhead.
-     */
-    final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
-        CacheBuilder.newBuilder()
-            .softValues()
-            .concurrencyLevel(CONCURRENCY_LEVEL)
-            .initialCapacity(TYPE_CAPACITY)
-            .maximumSize(TYPE_CAPACITY)
-            .build();
-
-    /**
-     * ID sequence for loaders -- BOOTSTRAP_ID is reserved -- starts higher at START_ID Sequence
-     * proceeds up until LIMIT_ID at which the sequence and this cacheInstance are considered to be
-     * exhausted
-     */
-    final AtomicLong loaderIdSeq = new AtomicLong(START_ID);
+  final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
+      CacheBuilder.newBuilder()
+          .softValues()
+          .concurrencyLevel(CONCURRENCY_LEVEL)
+          .initialCapacity(TYPE_CAPACITY)
+          .maximumSize(TYPE_CAPACITY)
+          .build();
 
     /** Fast path for bootstrap */
     final SharedResolutionCacheAdapter bootstrapCacheProvider =
-        new SharedResolutionCacheAdapter(BOOTSTRAP_ID, sharedResolutionCache);
+        new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
 
-    private final Callable<Long> provisionIdCallable =
-        new Callable<Long>() {
-          @Override
-          public final Long call() throws Exception {
-            return provisionId();
-          }
-        };
-
-    final TypePool typePool(
-        final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
-      if (classLoader == null) {
-        return createCachingTypePool(bootstrapCacheProvider, classFileLocator);
-      }
-
-      Long existingId = loaderIdCache.getIfPresent(classLoader);
-      if (existingId != null) {
-        return createCachingTypePool(existingId, classFileLocator);
-      }
-
-      if (exhaustedLoaderIdSeq()) {
-        return createNonCachingTypePool(classFileLocator);
-      }
-
-      long provisionedId = 0;
-      try {
-        provisionedId = loaderIdCache.get(classLoader, this.provisionIdCallable);
-      } catch (ExecutionException e) {
-        log.error("unexpected exception", e);
-
-        return createNonCachingTypePool(classFileLocator);
-      }
-      if (provisionedId == EXHAUSTED_ID) {
-        return createNonCachingTypePool(classFileLocator);
-      } else {
-        return createCachingTypePool(provisionedId, classFileLocator);
-      }
+  @Override
+  public final TypePool typePool(
+      final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
+    if (classLoader == null) {
+      return createCachingTypePool(bootstrapCacheProvider, classFileLocator);
     }
 
-    final boolean exhaustedLoaderIdSeq() {
-      return (loaderIdSeq.get() >= LIMIT_ID);
+    WeakReference<ClassLoader> loaderRef = loaderRefCache.getIfPresent(classLoader);
+
+    if ( loaderRef == null ) {
+      loaderRef = new WeakReference<>(classLoader);
+      loaderRefCache.put(classLoader, loaderRef);
     }
 
-    final long provisionId() {
-      do {
-        long curId = loaderIdSeq.get();
-        if (curId >= LIMIT_ID) return EXHAUSTED_ID;
+    int loaderHash = classLoader.hashCode();
+    return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
+  }
 
-        long newId = curId + 1;
-        boolean acquired = loaderIdSeq.compareAndSet(curId, newId);
-        if (acquired) return newId;
-      } while (!Thread.currentThread().isInterrupted());
+  private final TypePool createNonCachingTypePool(final ClassFileLocator classFileLocator) {
+    return new TypePool.Default.WithLazyResolution(
+        TypePool.CacheProvider.NoOp.INSTANCE, classFileLocator, TypePool.Default.ReaderMode.FAST);
+  }
 
-      return EXHAUSTED_ID;
-    }
+  private final TypePool.CacheProvider createCacheProvider(
+    final int loaderHash,
+    final WeakReference<ClassLoader> loaderRef)
+  {
+    return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
+  }
 
-    private final TypePool createNonCachingTypePool(final ClassFileLocator classFileLocator) {
-      return new TypePool.Default.WithLazyResolution(
-          TypePool.CacheProvider.NoOp.INSTANCE, classFileLocator, TypePool.Default.ReaderMode.FAST);
-    }
+  private final TypePool createCachingTypePool(
+    final int loaderHash,
+    final WeakReference<ClassLoader> loaderRef,
+    final ClassFileLocator classFileLocator) {
+    return new TypePool.Default.WithLazyResolution(
+      createCacheProvider(loaderHash, loaderRef),
+      classFileLocator,
+      TypePool.Default.ReaderMode.FAST);
+  }
 
-    private final TypePool.CacheProvider createCacheProvider(final long loaderId) {
-      return new SharedResolutionCacheAdapter(loaderId, sharedResolutionCache);
-    }
+  private final TypePool createCachingTypePool(
+      final TypePool.CacheProvider cacheProvider, final ClassFileLocator classFileLocator) {
+    return new TypePool.Default.WithLazyResolution(
+        cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
+  }
 
-    private final TypePool createCachingTypePool(
-        final long loaderId, final ClassFileLocator classFileLocator) {
-      return new TypePool.Default.WithLazyResolution(
-          createCacheProvider(loaderId), classFileLocator, TypePool.Default.ReaderMode.FAST);
-    }
-
-    private final TypePool createCachingTypePool(
-        final TypePool.CacheProvider cacheProvider, final ClassFileLocator classFileLocator) {
-      return new TypePool.Default.WithLazyResolution(
-          cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
-    }
-
-    final long approximateSize() {
-      return sharedResolutionCache.size();
-    }
+  final long approximateSize() {
+    return sharedResolutionCache.size();
   }
 
   /**
@@ -211,16 +138,22 @@ public class DDCachingPoolStrategy implements PoolStrategy {
    * name.
    */
   static final class TypeCacheKey {
-    private final long cacheId;
-    private final String name;
+    private final int loaderHash;
+    private final WeakReference<ClassLoader> loaderRef;
+    private final String className;
 
     private final int hashCode;
 
-    TypeCacheKey(final long cacheId, final String name) {
-      this.cacheId = cacheId;
-      this.name = name;
+    TypeCacheKey(
+      final int loaderHash,
+      final WeakReference<ClassLoader> loaderRef,
+      final String className)
+    {
+      this.loaderHash = loaderHash;
+      this.loaderRef = loaderRef;
+      this.className = className;
 
-      hashCode = (int) (31 * cacheId) ^ name.hashCode();
+      hashCode = (int) (31 * this.loaderHash) ^ className.hashCode();
     }
 
     @Override
@@ -230,10 +163,34 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public boolean equals(final Object obj) {
-      if (!(obj instanceof TypeCacheKey)) return false;
+      if ( !(obj instanceof TypeCacheKey) ) return false;
 
-      TypeCacheKey that = (TypeCacheKey) obj;
-      return (cacheId == that.cacheId) && name.equals(that.name);
+      TypeCacheKey that = (TypeCacheKey)obj;
+
+      if ( loaderHash != that.loaderHash ) return false;
+
+      // Fastpath loaderRef equivalence -- works because of WeakReference cache used
+      // Also covers the bootstrap null loaderRef case
+      if ( loaderRef == that.loaderRef ) {
+        // still need to check name
+        return className.equals(that.className);
+      } else if ( className.equals(that.className) ) {
+        // need to perform a deeper loader check -- requires calling Reference.get
+        // which can strengthened the Reference, so deliberately done last
+
+        // If either reference has gone null, they aren't considered equivalent
+        // Technically, this is a bit of violation of equals semantics, since
+        // two equivalent references can be not equivalent.
+        ClassLoader thisLoader = loaderRef.get();
+        if ( thisLoader == null ) return false;
+
+        ClassLoader thatLoader = that.loaderRef.get();
+        if ( thatLoader == null ) return false;
+
+        return (thisLoader == thatLoader);
+      } else {
+        return false;
+      }
     }
   }
 
@@ -242,22 +199,26 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     private static final TypePool.Resolution OBJECT_RESOLUTION =
         new TypePool.Resolution.Simple(TypeDescription.OBJECT);
 
-    private final long cacheId;
+    private final int loaderHash;
+    private final WeakReference<ClassLoader> loaderRef;
     private final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache;
 
     SharedResolutionCacheAdapter(
-        final long cacheId, final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache) {
-      this.cacheId = cacheId;
+        final int loaderHash,
+        final WeakReference<ClassLoader> loaderRef,
+        final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache) {
+      this.loaderHash = loaderHash;
+      this.loaderRef = loaderRef;
       this.sharedResolutionCache = sharedResolutionCache;
     }
 
     @Override
-    public TypePool.Resolution find(final String name) {
+    public TypePool.Resolution find(final String className) {
       TypePool.Resolution existingResolution =
-          sharedResolutionCache.getIfPresent(new TypeCacheKey(cacheId, name));
+          sharedResolutionCache.getIfPresent(new TypeCacheKey(loaderHash, loaderRef, className));
       if (existingResolution != null) return existingResolution;
 
-      if (OBJECT_NAME.equals(name)) {
+      if (OBJECT_NAME.equals(className)) {
         return OBJECT_RESOLUTION;
       }
 
@@ -265,12 +226,12 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     }
 
     @Override
-    public TypePool.Resolution register(final String name, final TypePool.Resolution resolution) {
-      if (OBJECT_NAME.equals(name)) {
+    public TypePool.Resolution register(final String className, final TypePool.Resolution resolution) {
+      if (OBJECT_NAME.equals(className)) {
         return resolution;
       }
 
-      sharedResolutionCache.put(new TypeCacheKey(cacheId, name), resolution);
+      sharedResolutionCache.put(new TypeCacheKey(loaderHash, loaderRef, className), resolution);
       return resolution;
     }
 
