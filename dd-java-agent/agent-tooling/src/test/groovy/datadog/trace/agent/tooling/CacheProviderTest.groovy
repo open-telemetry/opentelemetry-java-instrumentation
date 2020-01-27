@@ -185,7 +185,7 @@ class CacheProviderTest extends DDSpecification {
 
     then:
     // cache will start to proactively free slots & size calc is approximate
-    poolStrat.approximateSize() > capacity - 4
+    poolStrat.approximateSize() > 0.9 * capacity
 
     when:
     10.times {
