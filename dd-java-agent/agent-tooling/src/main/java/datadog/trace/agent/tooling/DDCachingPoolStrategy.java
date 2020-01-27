@@ -4,9 +4,7 @@ import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
 import java.lang.ref.WeakReference;
-
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -54,9 +52,10 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
   /**
    * Cache of recent ClassLoader WeakReferences; used to...
+   *
    * <ul>
-   *   <li>Reduced number of WeakReferences created</li>
-   *   <li>Allow for quick fast path equivalence check of composite keys</li>
+   *   <li>Reduced number of WeakReferences created
+   *   <li>Allow for quick fast path equivalence check of composite keys
    * </ul>
    */
   final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
@@ -68,8 +67,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
           .build();
 
   /**
-   * Single shared Type.Resolution cache -- uses a composite key --
-   * conceptually of loader & name
+   * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
    */
   final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
       CacheBuilder.newBuilder()
@@ -79,9 +77,9 @@ public class DDCachingPoolStrategy implements PoolStrategy {
           .maximumSize(TYPE_CAPACITY)
           .build();
 
-    /** Fast path for bootstrap */
-    final SharedResolutionCacheAdapter bootstrapCacheProvider =
-        new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
+  /** Fast path for bootstrap */
+  final SharedResolutionCacheAdapter bootstrapCacheProvider =
+      new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
 
   @Override
   public final TypePool typePool(
@@ -92,7 +90,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     WeakReference<ClassLoader> loaderRef = loaderRefCache.getIfPresent(classLoader);
 
-    if ( loaderRef == null ) {
+    if (loaderRef == null) {
       loaderRef = new WeakReference<>(classLoader);
       loaderRefCache.put(classLoader, loaderRef);
     }
@@ -107,20 +105,18 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   }
 
   private final TypePool.CacheProvider createCacheProvider(
-    final int loaderHash,
-    final WeakReference<ClassLoader> loaderRef)
-  {
+      final int loaderHash, final WeakReference<ClassLoader> loaderRef) {
     return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
   }
 
   private final TypePool createCachingTypePool(
-    final int loaderHash,
-    final WeakReference<ClassLoader> loaderRef,
-    final ClassFileLocator classFileLocator) {
+      final int loaderHash,
+      final WeakReference<ClassLoader> loaderRef,
+      final ClassFileLocator classFileLocator) {
     return new TypePool.Default.WithLazyResolution(
-      createCacheProvider(loaderHash, loaderRef),
-      classFileLocator,
-      TypePool.Default.ReaderMode.FAST);
+        createCacheProvider(loaderHash, loaderRef),
+        classFileLocator,
+        TypePool.Default.ReaderMode.FAST);
   }
 
   private final TypePool createCachingTypePool(
@@ -145,10 +141,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     private final int hashCode;
 
     TypeCacheKey(
-      final int loaderHash,
-      final WeakReference<ClassLoader> loaderRef,
-      final String className)
-    {
+        final int loaderHash, final WeakReference<ClassLoader> loaderRef, final String className) {
       this.loaderHash = loaderHash;
       this.loaderRef = loaderRef;
       this.className = className;
@@ -163,18 +156,18 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public boolean equals(final Object obj) {
-      if ( !(obj instanceof TypeCacheKey) ) return false;
+      if (!(obj instanceof TypeCacheKey)) return false;
 
-      TypeCacheKey that = (TypeCacheKey)obj;
+      TypeCacheKey that = (TypeCacheKey) obj;
 
-      if ( loaderHash != that.loaderHash ) return false;
+      if (loaderHash != that.loaderHash) return false;
 
       // Fastpath loaderRef equivalence -- works because of WeakReference cache used
       // Also covers the bootstrap null loaderRef case
-      if ( loaderRef == that.loaderRef ) {
+      if (loaderRef == that.loaderRef) {
         // still need to check name
         return className.equals(that.className);
-      } else if ( className.equals(that.className) ) {
+      } else if (className.equals(that.className)) {
         // need to perform a deeper loader check -- requires calling Reference.get
         // which can strengthened the Reference, so deliberately done last
 
@@ -182,10 +175,10 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         // Technically, this is a bit of violation of equals semantics, since
         // two equivalent references can be not equivalent.
         ClassLoader thisLoader = loaderRef.get();
-        if ( thisLoader == null ) return false;
+        if (thisLoader == null) return false;
 
         ClassLoader thatLoader = that.loaderRef.get();
-        if ( thatLoader == null ) return false;
+        if (thatLoader == null) return false;
 
         return (thisLoader == thatLoader);
       } else {
@@ -226,7 +219,8 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     }
 
     @Override
-    public TypePool.Resolution register(final String className, final TypePool.Resolution resolution) {
+    public TypePool.Resolution register(
+        final String className, final TypePool.Resolution resolution) {
       if (OBJECT_NAME.equals(className)) {
         return resolution;
       }

@@ -7,12 +7,11 @@ import net.bytebuddy.pool.TypePool
 import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
-import java.security.SecureClassLoader
 
 @Timeout(5)
 class CacheProviderTest extends DDSpecification {
   def "key bootstrap equivalence"() {
-    def loader = null
+    // def loader = null
     def loaderHash = DDCachingPoolStrategy.BOOTSTRAP_HASH
     def loaderRef = null
 
@@ -197,7 +196,7 @@ class CacheProviderTest extends DDSpecification {
 
     then:
     // cache will start to proactively free slots & size calc is approximate
-    poolStrat.approximateSize() > capacity - 4
+    poolStrat.approximateSize() > 0.9 * capacity
   }
 
   static newVoid() {
@@ -205,7 +204,7 @@ class CacheProviderTest extends DDSpecification {
   }
 
   static newClassLoader() {
-    return new URLClassLoader([] as URL[], (ClassLoader)null);
+    return new URLClassLoader([] as URL[], (ClassLoader)null)
   }
 
   static newLocator() {
