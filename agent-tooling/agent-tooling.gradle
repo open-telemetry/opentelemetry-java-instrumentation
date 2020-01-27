@@ -18,7 +18,8 @@ dependencies {
     exclude group: 'org.slf4j', module: 'slf4j-simple'
   }
   compile deps.opentelemetryApi
-  compile(project(path: ':opentelemetry-sdk', configuration: 'shadow'))
+  compile deps.opentelemetrySdk
+
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy
   compile deps.bytebuddyagent

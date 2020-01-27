@@ -63,9 +63,6 @@ shadowJar {
 
   // relocate OpenTelemetry API dependency
   relocate "io.grpc", "io.opentelemetry.auto.shaded.io.grpc"
-
-  // relocate OpenTelemetry SDK
-  relocate "io.opentelemetry.sdk", "io.opentelemetry.auto.shaded.io.opentelemetry.sdk"
 }
 
 dependencies {
