@@ -200,7 +200,7 @@ class CacheProviderTest extends DDSpecification {
   }
 
   static newClassLoader() {
-    return new SecureClassLoader(null) {}
+    return new URLClassLoader([] as URL[], (ClassLoader)null);
   }
 
   static newLocator() {
