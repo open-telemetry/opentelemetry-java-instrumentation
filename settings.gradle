@@ -23,7 +23,7 @@ include ':trace-api'
 
 // agent projects
 include ':java-agent'
-include ':opentelemetry-sdk'
+include ':opentelemetry-sdk-shaded-for-testing'
 include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'

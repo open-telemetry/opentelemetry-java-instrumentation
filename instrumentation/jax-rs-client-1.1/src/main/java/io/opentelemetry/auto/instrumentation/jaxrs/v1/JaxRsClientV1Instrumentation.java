@@ -1,11 +1,9 @@
 package io.opentelemetry.auto.instrumentation.jaxrs.v1;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,9 +14,9 @@ import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -62,37 +60,38 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter
-    public static AgentScope onEnter(
+    public static SpanScopePair onEnter(
         @Advice.Argument(value = 0) final ClientRequest request,
         @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       final boolean isRootClientHandler = null == request.getProperties().get(SPAN_ATTRIBUTE);
       if (isRootClientHandler) {
-        final AgentSpan span = startSpan("jax-rs.client.call");
+        final Span span = TRACER.spanBuilder("jax-rs.client.call").startSpan();
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
         request.getProperties().put(SPAN_ATTRIBUTE, span);
 
-        propagate().inject(span, request.getHeaders(), SETTER);
-        return activateSpan(span, true);
+        TRACER.getHttpTextFormat().inject(span.getContext(), request.getHeaders(), SETTER);
+        return new SpanScopePair(span, TRACER.withSpan(span));
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanAndScope,
         @Advice.Return final ClientResponse response,
         @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+      if (spanAndScope == null) {
         return;
       }
-      final AgentSpan span = scope.span();
+      final Span span = spanAndScope.getSpan();
       DECORATE.onResponse(span, response);
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
-      scope.close();
+      span.end();
+      spanAndScope.getScope().close();
     }
   }
 }
