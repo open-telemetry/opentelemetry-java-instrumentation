@@ -48,7 +48,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
 
   private boolean validateConfigString(String configString) {
     for (String clazz : configString.split(";")) {
-      if (!clazz.matches(CONFIG_FORMAT)) {
+      if (!clazz.trim().matches(CONFIG_FORMAT)) {
         return false;
       }
     }
@@ -56,11 +56,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
   }
 
   public TraceConfigInstrumentation() {
-    this(Config.get().getTraceMethods());
-  }
-
-  public TraceConfigInstrumentation(final String configString) {
-
+    String configString = Config.get().getTraceMethods();
     if (configString == null || configString.trim().isEmpty()) {
       classMethodsToTrace = Collections.emptyMap();
 
