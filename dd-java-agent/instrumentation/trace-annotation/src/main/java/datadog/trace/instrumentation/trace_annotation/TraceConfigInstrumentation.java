@@ -56,7 +56,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
   }
 
   public TraceConfigInstrumentation() {
-    String configString = Config.get().getTraceMethods();
+    final String configString = Config.get().getTraceMethods();
     if (configString == null || configString.trim().isEmpty()) {
       classMethodsToTrace = Collections.emptyMap();
 
