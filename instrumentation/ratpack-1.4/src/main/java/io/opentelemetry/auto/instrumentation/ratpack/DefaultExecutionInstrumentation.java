@@ -1,13 +1,11 @@
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -32,9 +30,7 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".ActionWrapper",
-    };
+    return new String[] {packageName + ".ActionWrapper", packageName + ".TracerHolder"};
   }
 
   @Override
@@ -52,13 +48,8 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
     public static void wrap(
         @Advice.Argument(value = 0, readOnly = false) Action<? super Throwable> onError,
         @Advice.Argument(value = 1, readOnly = false) Action<? super Continuation> segment) {
-      /**
-       * Here we pass along the span instead of a continuation because we aren't sure the callback
-       * will actually be called.
-       */
-      final AgentSpan span = activeSpan();
-      onError = ActionWrapper.wrapIfNeeded(onError, span);
-      segment = ActionWrapper.wrapIfNeeded(segment, span);
+      onError = ActionWrapper.wrapIfNeeded(onError);
+      segment = ActionWrapper.wrapIfNeeded(segment);
     }
 
     public void muzzleCheck(final PathBinding binding) {

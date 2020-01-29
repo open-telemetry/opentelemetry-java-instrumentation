@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -30,9 +29,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".BlockWrapper",
-    };
+    return new String[] {packageName + ".BlockWrapper", packageName + ".TracerHolder"};
   }
 
   @Override
@@ -46,7 +43,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrap(@Advice.Argument(value = 0, readOnly = false) Block block) {
-      block = BlockWrapper.wrapIfNeeded(block, activeSpan());
+      block = BlockWrapper.wrapIfNeeded(block);
     }
 
     public void muzzleCheck(final PathBinding binding) {
