@@ -1,9 +1,8 @@
 package io.opentelemetry.auto.instrumentation.playws1;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.playws1.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.playws1.PlayWSClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.playws1.PlayWSClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -62,15 +61,15 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
 
   public static class ClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentSpan methodEnter(
+    public static Span methodEnter(
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
 
-      final AgentSpan span = startSpan("play-ws.request");
+      final Span span = TRACER.spanBuilder("play-ws.request").startSpan();
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
-      propagate().inject(span, request, SETTER);
+      TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
 
       asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
 
@@ -79,12 +78,12 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentSpan clientSpan, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final Span clientSpan, @Advice.Thrown final Throwable throwable) {
 
       if (throwable != null) {
         DECORATE.onError(clientSpan, throwable);
         DECORATE.beforeFinish(clientSpan);
-        clientSpan.finish();
+        clientSpan.end();
       }
     }
   }
