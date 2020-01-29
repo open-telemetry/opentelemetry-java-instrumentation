@@ -1,11 +1,10 @@
 package io.opentelemetry.auto.instrumentation.playws21;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.instrumentation.playws21.PlayWSClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.playws21.PlayWSClientDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.util.List;
 import javax.net.ssl.SSLSession;
@@ -19,15 +18,15 @@ import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
-  private final AgentSpan span;
-  private final AgentSpan parentSpan;
+  private final Span span;
+  private final Span parentSpan;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(final AsyncHandler delegate, final AgentSpan span) {
+  public AsyncHandlerWrapper(final AsyncHandler delegate, final Span span) {
     this.delegate = delegate;
     this.span = span;
-    parentSpan = activeSpan();
+    parentSpan = TRACER.getCurrentSpan();
   }
 
   @Override
@@ -56,10 +55,10 @@ public class AsyncHandlerWrapper implements AsyncHandler {
       DECORATE.onResponse(span, response);
     }
     DECORATE.beforeFinish(span);
-    span.finish();
+    span.end();
 
-    if (parentSpan != null) {
-      try (final AgentScope scope = activateSpan(parentSpan, false)) {
+    if (parentSpan.getContext().isValid()) {
+      try (final Scope scope = TRACER.withSpan(parentSpan)) {
         return delegate.onCompleted();
       }
     } else {
@@ -71,10 +70,10 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   public void onThrowable(final Throwable throwable) {
     DECORATE.onError(span, throwable);
     DECORATE.beforeFinish(span);
-    span.finish();
+    span.end();
 
-    if (parentSpan != null) {
-      try (final AgentScope scope = activateSpan(parentSpan, false)) {
+    if (parentSpan.getContext().isValid()) {
+      try (final Scope scope = TRACER.withSpan(parentSpan)) {
         delegate.onThrowable(throwable);
       }
     } else {
