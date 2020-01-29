@@ -17,7 +17,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_PRODUCER;
         }
       };
@@ -30,15 +30,10 @@ public abstract class KafkaDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_CONSUMER;
         }
       };
-
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"kafka"};
-  }
 
   @Override
   protected String service() {
@@ -46,7 +41,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-kafka";
   }
 

@@ -10,17 +10,12 @@ public class ReactorCoreDecorator extends BaseDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"reactor-core"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.HTTP_CLIENT; // TODO: Is this the correct type?
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "reactor-core";
   }
 }

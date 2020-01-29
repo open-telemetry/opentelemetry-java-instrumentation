@@ -8,22 +8,17 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Comma
   public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jedis", "redis"};
-  }
-
-  @Override
   protected String service() {
     return "redis";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "redis-command";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.REDIS;
   }
 

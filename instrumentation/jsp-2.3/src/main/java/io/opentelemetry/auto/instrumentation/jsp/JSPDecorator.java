@@ -16,17 +16,12 @@ public class JSPDecorator extends BaseDecorator {
   public static JSPDecorator DECORATE = new JSPDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jsp"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jsp-http-servlet";
   }
 

@@ -21,7 +21,7 @@ public class KafkaStreamsDecorator extends ClientDecorator {
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-kafka";
   }
 

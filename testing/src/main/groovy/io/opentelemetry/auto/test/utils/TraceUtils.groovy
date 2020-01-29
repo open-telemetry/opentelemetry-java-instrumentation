@@ -16,15 +16,12 @@ import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 class TraceUtils {
 
   private static final BaseDecorator DECORATOR = new BaseDecorator() {
-    protected String[] instrumentationNames() {
-      return new String[0]
-    }
 
-    protected String spanType() {
+    protected String getSpanType() {
       return null
     }
 
-    protected String component() {
+    protected String getComponentName() {
       return null
     }
   }

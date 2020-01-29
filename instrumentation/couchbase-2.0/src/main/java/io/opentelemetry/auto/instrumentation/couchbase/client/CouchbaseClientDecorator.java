@@ -7,22 +7,17 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"couchbase"};
-  }
-
-  @Override
   protected String service() {
     return "couchbase";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "couchbase-client";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.COUCHBASE;
   }
 

@@ -35,17 +35,12 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[0];
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jax-rs-controller";
   }
 

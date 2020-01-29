@@ -16,11 +16,13 @@ public class RabbitDecorator extends ClientDecorator {
 
   public static final RabbitDecorator PRODUCER_DECORATE =
       new RabbitDecorator() {
+        @java.lang.Override
         @Override
         protected String spanKind() {
           return Tags.SPAN_KIND_PRODUCER;
         }
 
+        @java.lang.Override
         @Override
         protected String spanType() {
           return SpanTypes.MESSAGE_PRODUCER;
@@ -29,11 +31,13 @@ public class RabbitDecorator extends ClientDecorator {
 
   public static final RabbitDecorator CONSUMER_DECORATE =
       new RabbitDecorator() {
+        @java.lang.Override
         @Override
         protected String spanKind() {
           return Tags.SPAN_KIND_CONSUMER;
         }
 
+        @java.lang.Override
         @Override
         protected String spanType() {
           return SpanTypes.MESSAGE_CONSUMER;
@@ -53,7 +57,7 @@ public class RabbitDecorator extends ClientDecorator {
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "rabbitmq-amqp";
   }
 

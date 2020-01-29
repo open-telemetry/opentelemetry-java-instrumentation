@@ -12,12 +12,7 @@ public class JettyDecorator
   public static final JettyDecorator DECORATE = new JettyDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jetty", "jetty-8"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jetty-handler";
   }
 

@@ -11,17 +11,12 @@ public class RmiClientDecorator extends ClientDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"rmi", "rmi-client"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.RPC;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "rmi-client";
   }
 

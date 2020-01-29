@@ -15,22 +15,17 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"elasticsearch"};
-  }
-
-  @Override
   protected String service() {
     return "elasticsearch";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "elasticsearch-java";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.ELASTICSEARCH;
   }
 
