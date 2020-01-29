@@ -1,18 +1,16 @@
 package io.opentelemetry.auto.instrumentation.netty41.server;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty41.server.NettyRequestExtractAdapter.GETTER;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
 import io.opentelemetry.auto.instrumentation.netty41.AttributeKeys;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
@@ -20,11 +18,11 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
   public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
 
     if (!(msg instanceof HttpRequest)) {
-      final AgentSpan span = ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).get();
+      final Span span = ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).get();
       if (span == null) {
         ctx.fireChannelRead(msg); // superclass does not throw
       } else {
-        try (final AgentScope scope = activateSpan(span, false)) {
+        try (final Scope scope = TRACER.withSpan(span)) {
           ctx.fireChannelRead(msg); // superclass does not throw
         }
       }
@@ -33,10 +31,17 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     final HttpRequest request = (HttpRequest) msg;
 
-    final Context extractedContext = propagate().extract(request.headers(), GETTER);
-
-    final AgentSpan span = startSpan("netty.request", extractedContext);
-    try (final AgentScope scope = activateSpan(span, false)) {
+    final Span.Builder spanBuilder = TRACER.spanBuilder("netty.request");
+    try {
+      final SpanContext extractedContext =
+          TRACER.getHttpTextFormat().extract(request.headers(), GETTER);
+      spanBuilder.setParent(extractedContext);
+    } catch (final IllegalArgumentException e) {
+      // Couldn't extract a context. We should treat this as a root span.
+      spanBuilder.setNoParent();
+    }
+    final Span span = spanBuilder.startSpan();
+    try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, ctx.channel());
       DECORATE.onRequest(span, request);
@@ -48,7 +53,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       } catch (final Throwable throwable) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish(); // Finish the span manually since finishSpanOnClose was false
+        span.end(); // Finish the span manually since finishSpanOnClose was false
         throw throwable;
       }
     }

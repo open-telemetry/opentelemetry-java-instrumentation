@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.instrumentation.netty41;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -21,14 +20,15 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.netty41.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty41.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty41.client.HttpClientTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty41.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty41.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty41.server.HttpServerTracingHandler;
+import io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -157,9 +157,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
-      final AgentSpan span = activeSpan();
-      if (span != null) {
-        final Attribute<AgentSpan> attribute =
+      final Span span = NettyHttpServerDecorator.TRACER.getCurrentSpan();
+      if (span.getContext().isValid()) {
+        final Attribute<Span> attribute =
             pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);
         attribute.compareAndSet(null, span);
       }
