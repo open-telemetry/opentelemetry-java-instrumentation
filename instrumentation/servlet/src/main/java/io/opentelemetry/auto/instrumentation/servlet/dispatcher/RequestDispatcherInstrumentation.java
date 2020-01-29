@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.instrumentation.servlet.dispatcher;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.instrumentation.servlet.ServletRequestSetter.SETTER;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
@@ -70,7 +69,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.Origin("#m") final String method,
         @Advice.This final RequestDispatcher dispatcher,
         @Advice.Argument(0) final ServletRequest request) {
-      if (activeSpan() == null) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return null;
       }
