@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -11,8 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import com.rabbitmq.client.Command;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -55,9 +55,9 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
   public static class CommandConstructorAdvice {
     @Advice.OnMethodExit
     public static void setResourceNameAddHeaders(@Advice.This final Command command) {
-      final AgentSpan span = activeSpan();
+      final Span span = TRACER.getCurrentSpan();
 
-      if (span != null && command.getMethod() != null) {
+      if (span.getContext().isValid() && command.getMethod() != null) {
         if (span.getSpanName().equals("amqp.command")) {
           DECORATE.onCommand(span, command);
         }
