@@ -1,54 +1,57 @@
 package io.opentelemetry.test.annotation;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.Trace;
+import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.Callable;
 
 public class SayTracedHello {
 
+  private static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   @Trace
   public static String sayHello() {
-    activeSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
     return "hello!";
   }
 
   @Trace(resourceName = "WORLD")
   public static String sayHelloOnlyResourceSet() {
-    activeSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
     return "hello!";
   }
 
   @Trace(operationName = "SAY_HA")
   public static String sayHA() {
-    activeSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
-    activeSpan().setAttribute(MoreTags.SPAN_TYPE, "DB");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SPAN_TYPE, "DB");
     return "HA!!";
   }
 
   @Trace(operationName = "SAY_HA", resourceName = "EARTH")
   public static String sayHAWithResource() {
-    activeSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
-    activeSpan().setAttribute(MoreTags.SPAN_TYPE, "DB");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SPAN_TYPE, "DB");
     return "HA EARTH!!";
   }
 
   @Trace(operationName = "NEW_TRACE")
   public static String sayHELLOsayHA() {
-    activeSpan().setAttribute(MoreTags.SERVICE_NAME, "test2");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test2");
     return sayHello() + sayHA();
   }
 
   @Trace(operationName = "NEW_TRACE", resourceName = "WORLD")
   public static String sayHELLOsayHAWithResource() {
-    activeSpan().setAttribute(MoreTags.SERVICE_NAME, "test2");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test2");
     return sayHello() + sayHA();
   }
 
   @Trace(operationName = "NEW_TRACE", resourceName = "WORLD")
   public static String sayHELLOsayHAMixedResourceChildren() {
-    activeSpan().setAttribute(MoreTags.SERVICE_NAME, "test2");
+    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test2");
     return sayHello() + sayHAWithResource();
   }
 

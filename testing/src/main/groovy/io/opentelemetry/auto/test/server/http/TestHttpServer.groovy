@@ -1,10 +1,13 @@
 package io.opentelemetry.auto.test.server.http
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.ListWriterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.SpanContext
+import io.opentelemetry.trace.Tracer
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
@@ -17,11 +20,11 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.atomic.AtomicReference
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 import static io.opentelemetry.auto.test.server.http.HttpServletRequestExtractAdapter.GETTER
 
 class TestHttpServer implements AutoCloseable {
+
+  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
 
   static TestHttpServer httpServer(boolean start = true,
                                    @DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
@@ -236,14 +239,16 @@ class TestHttpServer implements AutoCloseable {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
       }
       if (isTestServer) {
-        final AgentSpan.Context extractedContext = propagate().extract(req, GETTER)
-        if (extractedContext != null) {
-          startSpan("test-http-server", extractedContext)
-            .setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
-        } else {
-          startSpan("test-http-server")
-            .setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
+        final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server")
+        try {
+          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER)
+          spanBuilder.setParent(extractedContext)
+        } catch (final IllegalArgumentException e) {
+          // couldn't extract a context
         }
+        final Span span = spanBuilder.startSpan()
+        span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER)
+        span.end()
       }
     }
 
