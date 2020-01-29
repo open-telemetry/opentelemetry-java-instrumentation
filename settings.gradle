@@ -92,8 +92,7 @@ include ':instrumentation:jetty-8'
 include ':instrumentation:jms'
 include ':instrumentation:jsp-2.3'
 include ':instrumentation:kafka-clients-0.11'
-// FIXME this instrumentation relied on activeScope
-// include ':instrumentation:kafka-streams-0.11'
+include ':instrumentation:kafka-streams-0.11'
 include ':instrumentation:lettuce-5'
 // FIXME this instrumentation relied on scope listener
 // include ':instrumentation:log4j1'
