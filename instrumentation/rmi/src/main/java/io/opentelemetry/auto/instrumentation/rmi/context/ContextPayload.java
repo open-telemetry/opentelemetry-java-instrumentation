@@ -1,9 +1,9 @@
 package io.opentelemetry.auto.instrumentation.rmi.context;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 /** ContextPayload wraps context information shared between client and server */
 @Slf4j
 public class ContextPayload {
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   @Getter private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();
   public static final InjectAdapter SETTER = new InjectAdapter();
@@ -27,9 +29,9 @@ public class ContextPayload {
     this.context = context;
   }
 
-  public static ContextPayload from(final AgentSpan span) {
+  public static ContextPayload from(final Span span) {
     final ContextPayload payload = new ContextPayload();
-    propagate().inject(span, payload, SETTER);
+    TRACER.getHttpTextFormat().inject(span.getContext(), payload, SETTER);
     return payload;
   }
 
@@ -50,21 +52,16 @@ public class ContextPayload {
     out.writeObject(context);
   }
 
-  public static class ExtractAdapter implements AgentPropagation.Getter<ContextPayload> {
-    @Override
-    public Iterable<String> keys(final ContextPayload carrier) {
-      return carrier.getContext().keySet();
-    }
-
+  public static class ExtractAdapter implements HttpTextFormat.Getter<ContextPayload> {
     @Override
     public String get(final ContextPayload carrier, final String key) {
       return carrier.getContext().get(key);
     }
   }
 
-  public static class InjectAdapter implements AgentPropagation.Setter<ContextPayload> {
+  public static class InjectAdapter implements HttpTextFormat.Setter<ContextPayload> {
     @Override
-    public void set(final ContextPayload carrier, final String key, final String value) {
+    public void put(final ContextPayload carrier, final String key, final String value) {
       carrier.getContext().put(key, value);
     }
   }

@@ -5,7 +5,9 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
@@ -16,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 public class NettyHttpServerDecorator
     extends HttpServerDecorator<HttpRequest, Channel, HttpResponse> {
   public static final NettyHttpServerDecorator DECORATE = new NettyHttpServerDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String[] instrumentationNames() {

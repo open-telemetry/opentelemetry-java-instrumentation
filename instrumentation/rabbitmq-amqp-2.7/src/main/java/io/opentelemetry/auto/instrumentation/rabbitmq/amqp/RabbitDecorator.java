@@ -2,11 +2,13 @@ package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
 import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 
 public class RabbitDecorator extends ClientDecorator {
 
@@ -38,6 +40,8 @@ public class RabbitDecorator extends ClientDecorator {
         }
       };
 
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   @Override
   protected String[] instrumentationNames() {
     return new String[] {"amqp", "rabbitmq"};
@@ -63,7 +67,7 @@ public class RabbitDecorator extends ClientDecorator {
     return SpanTypes.MESSAGE_CLIENT;
   }
 
-  public void onPublish(final AgentSpan span, final String exchange, final String routingKey) {
+  public void onPublish(final Span span, final String exchange, final String routingKey) {
     final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
     final String routing =
         routingKey == null || routingKey.isEmpty()
@@ -73,11 +77,15 @@ public class RabbitDecorator extends ClientDecorator {
     span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
     span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
     span.setAttribute("amqp.command", "basic.publish");
-    span.setAttribute("amqp.exchange", exchange);
-    span.setAttribute("amqp.routing_key", routingKey);
+    if (exchange != null && !exchange.isEmpty()) {
+      span.setAttribute("amqp.exchange", exchange);
+    }
+    if (routingKey != null && !routingKey.isEmpty()) {
+      span.setAttribute("amqp.routing_key", routingKey);
+    }
   }
 
-  public void onGet(final AgentSpan span, final String queue) {
+  public void onGet(final Span span, final String queue) {
     final String queueName = queue.startsWith("amq.gen-") ? "<generated>" : queue;
     span.setAttribute(MoreTags.RESOURCE_NAME, "basic.get " + queueName);
 
@@ -85,7 +93,7 @@ public class RabbitDecorator extends ClientDecorator {
     span.setAttribute("amqp.queue", queue);
   }
 
-  public void onDeliver(final AgentSpan span, final String queue, final Envelope envelope) {
+  public void onDeliver(final Span span, final String queue, final Envelope envelope) {
     String queueName = queue;
     if (queue == null || queue.isEmpty()) {
       queueName = "<default>";
@@ -96,12 +104,18 @@ public class RabbitDecorator extends ClientDecorator {
     span.setAttribute("amqp.command", "basic.deliver");
 
     if (envelope != null) {
-      span.setAttribute("amqp.exchange", envelope.getExchange());
-      span.setAttribute("amqp.routing_key", envelope.getRoutingKey());
+      final String exchange = envelope.getExchange();
+      if (exchange != null && !exchange.isEmpty()) {
+        span.setAttribute("amqp.exchange", exchange);
+      }
+      final String routingKey = envelope.getRoutingKey();
+      if (routingKey != null && !routingKey.isEmpty()) {
+        span.setAttribute("amqp.routing_key", routingKey);
+      }
     }
   }
 
-  public void onCommand(final AgentSpan span, final Command command) {
+  public void onCommand(final Span span, final Command command) {
     final String name = command.getMethod().protocolMethodName();
 
     if (!name.equals("basic.publish")) {

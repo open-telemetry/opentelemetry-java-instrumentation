@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jms;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -13,10 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,17 +77,25 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         @Advice.Origin final Method method,
         @Advice.Return final Message message,
         @Advice.Thrown final Throwable throwable) {
-      final AgentSpan span;
+      final Span.Builder spanBuilder =
+          TRACER
+              .spanBuilder("jms.consume")
+              .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
-        final Context extractedContext = propagate().extract(message, GETTER);
-        span =
-            startSpan("jms.consume", extractedContext, TimeUnit.MILLISECONDS.toMicros(startTime));
+        try {
+          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+          spanBuilder.setParent(extractedContext);
+        } catch (final IllegalArgumentException e) {
+          // Couldn't extract a context. We should treat this as a root span.
+          spanBuilder.setNoParent();
+        }
       } else {
-        span = startSpan("jms.consume", TimeUnit.MILLISECONDS.toMicros(startTime));
+        spanBuilder.setNoParent();
       }
+      final Span span = spanBuilder.startSpan();
       span.setAttribute("span.origin.type", consumer.getClass().getName());
 
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         CONSUMER_DECORATE.afterStart(span);
         if (message == null) {
           CONSUMER_DECORATE.onReceive(span, method);
@@ -98,7 +104,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         }
         CONSUMER_DECORATE.onError(span, throwable);
         CONSUMER_DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }
