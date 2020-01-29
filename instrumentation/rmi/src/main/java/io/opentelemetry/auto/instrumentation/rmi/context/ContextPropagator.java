@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.rmi.context;
 
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
@@ -42,7 +42,7 @@ public class ContextPropagator {
   public void attemptToPropagateContext(
       final ContextStore<Connection, Boolean> knownConnections,
       final Connection c,
-      final AgentSpan span) {
+      final Span span) {
     if (checkIfContextCanBePassed(knownConnections, c)) {
       if (!syntheticCall(c, ContextPayload.from(span), CONTEXT_PAYLOAD_OPERATION_ID)) {
         log.debug("Couldn't send context payload");

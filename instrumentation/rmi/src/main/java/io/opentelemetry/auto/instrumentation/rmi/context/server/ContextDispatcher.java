@@ -1,13 +1,13 @@
 package io.opentelemetry.auto.instrumentation.rmi.context.server;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.GETTER;
+import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.TRACER;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload;
+import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.rmi.Remote;
@@ -43,7 +43,12 @@ public class ContextDispatcher implements Dispatcher {
     if (PROPAGATOR.isOperationWithPayload(operationId)) {
       final ContextPayload payload = ContextPayload.read(in);
       if (payload != null) {
-        final AgentSpan.Context context = propagate().extract(payload, GETTER);
+        SpanContext context = null;
+        try {
+          context = TRACER.getHttpTextFormat().extract(payload, GETTER);
+        } catch (final IllegalArgumentException e) {
+          // couldn't extract a context
+        }
         THREAD_LOCAL_CONTEXT.set(context);
       }
     }

@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.rmi.context.client;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
+import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.TRACER;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -13,8 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.rmi.server.ObjID;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -92,8 +92,8 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
       if (PROPAGATOR.isRMIInternalObject(id)) {
         return;
       }
-      final AgentSpan activeSpan = activeSpan();
-      if (activeSpan == null) {
+      final Span activeSpan = TRACER.getCurrentSpan();
+      if (!activeSpan.getContext().isValid()) {
         return;
       }
 

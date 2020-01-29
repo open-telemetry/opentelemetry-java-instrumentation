@@ -1,21 +1,21 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.rmi;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.SpanContext;
 
 public class ThreadLocalContext {
   public static final ThreadLocalContext THREAD_LOCAL_CONTEXT = new ThreadLocalContext();
-  private final ThreadLocal<AgentSpan.Context> local;
+  private final ThreadLocal<SpanContext> local;
 
   public ThreadLocalContext() {
     local = new ThreadLocal<>();
   }
 
-  public void set(final AgentSpan.Context context) {
+  public void set(final SpanContext context) {
     local.set(context);
   }
 
-  public AgentSpan.Context getAndResetContext() {
-    final AgentSpan.Context context = local.get();
+  public SpanContext getAndResetContext() {
+    final SpanContext context = local.get();
     if (context != null) {
       local.remove();
     }
