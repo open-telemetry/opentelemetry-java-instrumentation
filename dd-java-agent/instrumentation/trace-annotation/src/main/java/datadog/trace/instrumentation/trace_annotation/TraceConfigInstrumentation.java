@@ -47,8 +47,8 @@ public class TraceConfigInstrumentation implements Instrumenter {
   private final Map<String, Set<String>> classMethodsToTrace;
 
   private boolean validateConfigString(String configString) {
-    for (String clazz : configString.split(";")) {
-      if (!clazz.trim().matches(CONFIG_FORMAT)) {
+    for (String segment : configString.split(";")) {
+      if (!segment.trim().matches(CONFIG_FORMAT)) {
         return false;
       }
     }
