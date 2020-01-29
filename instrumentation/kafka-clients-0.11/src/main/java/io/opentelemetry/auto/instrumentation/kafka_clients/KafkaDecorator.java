@@ -1,10 +1,12 @@
 package io.opentelemetry.auto.instrumentation.kafka_clients;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -35,6 +37,8 @@ public abstract class KafkaDecorator extends ClientDecorator {
         }
       };
 
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   @Override
   protected String[] instrumentationNames() {
     return new String[] {"kafka"};
@@ -53,7 +57,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
   @Override
   protected abstract String spanKind();
 
-  public void onConsume(final AgentSpan span, final ConsumerRecord record) {
+  public void onConsume(final Span span, final ConsumerRecord record) {
     if (record != null) {
       final String topic = record.topic() == null ? "kafka" : record.topic();
       span.setAttribute(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
@@ -62,7 +66,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
     }
   }
 
-  public void onProduce(final AgentSpan span, final ProducerRecord record) {
+  public void onProduce(final Span span, final ProducerRecord record) {
     if (record != null) {
 
       final String topic = record.topic() == null ? "kafka" : record.topic();
