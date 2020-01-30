@@ -19,6 +19,7 @@ import com.twitter.finagle.http.Response;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
@@ -76,8 +77,6 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
       final AgentSpan span = startSpan("finatra.request");
       DECORATE.afterStart(span);
-      DECORATE.onConnection(span, request);
-      DECORATE.onRequest(span, request);
 
       if (parent != null && "netty.request".equals(parent.getSpanName())) {
         parent.setTag(DDTags.RESOURCE_NAME, request.method().name() + " " + path);
@@ -86,6 +85,9 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
         span.setSpanName("finatra.controller");
         span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForClass(clazz));
+      } else {
+        DECORATE.onConnection(span, request);
+        DECORATE.onRequest(span, request);
       }
 
       final AgentScope scope = activateSpan(span, false);
@@ -125,7 +127,12 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onSuccess(final Response response) {
-      DECORATE.onResponse(scope.span(), response);
+      if ("finatra.request".equals(scope.span().getSpanName())) {
+        DECORATE.onResponse(scope.span(), response);
+      } else if (Config.get().getHttpServerErrorStatuses().contains(DECORATE.status(response))) {
+        scope.span().setError(true);
+      }
+
       DECORATE.beforeFinish(scope.span());
       scope.span().finish();
       scope.close();
