@@ -72,7 +72,7 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
 
       @Override
       protected String getComponentName() {
-        return "test-getComponentName"
+        return "test-component"
       }
     }
   }
