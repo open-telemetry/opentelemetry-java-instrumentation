@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.lettuce;
 
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 
@@ -18,9 +18,9 @@ import java.util.function.BiFunction;
 public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R extends Object>
     implements BiFunction<T, Throwable, R> {
 
-  private final AgentSpan span;
+  private final Span span;
 
-  public LettuceAsyncBiFunction(final AgentSpan span) {
+  public LettuceAsyncBiFunction(final Span span) {
     this.span = span;
   }
 
@@ -32,7 +32,7 @@ public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R ext
       DECORATE.onError(span, throwable);
     }
     DECORATE.beforeFinish(span);
-    span.finish();
+    span.end();
     return null;
   }
 }

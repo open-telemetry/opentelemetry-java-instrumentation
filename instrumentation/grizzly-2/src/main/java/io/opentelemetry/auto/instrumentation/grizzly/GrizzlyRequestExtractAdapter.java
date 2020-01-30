@@ -1,16 +1,11 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.glassfish.grizzly.http.server.Request;
 
-public class GrizzlyRequestExtractAdapter implements AgentPropagation.Getter<Request> {
+public class GrizzlyRequestExtractAdapter implements HttpTextFormat.Getter<Request> {
 
   public static final GrizzlyRequestExtractAdapter GETTER = new GrizzlyRequestExtractAdapter();
-
-  @Override
-  public Iterable<String> keys(final Request carrier) {
-    return carrier.getHeaderNames();
-  }
 
   @Override
   public String get(final Request carrier, final String key) {
