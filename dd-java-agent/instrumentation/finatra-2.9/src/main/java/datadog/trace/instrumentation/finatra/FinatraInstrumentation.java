@@ -73,22 +73,15 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("clazz") final Class clazz,
         @Advice.Origin final Method method) {
 
+      // Update the parent "netty.request"
       final AgentSpan parent = activeSpan();
+      parent.setTag(DDTags.RESOURCE_NAME, request.method().name() + " " + path);
+      parent.setTag(Tags.COMPONENT, "finatra");
+      parent.setSpanName("finatra.request");
 
-      final AgentSpan span = startSpan("finatra.request");
+      final AgentSpan span = startSpan("finatra.controller");
       DECORATE.afterStart(span);
-
-      if (parent != null && "netty.request".equals(parent.getSpanName())) {
-        parent.setTag(DDTags.RESOURCE_NAME, request.method().name() + " " + path);
-        parent.setTag(Tags.COMPONENT, "finatra");
-        parent.setSpanName("finatra.request");
-
-        span.setSpanName("finatra.controller");
-        span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForClass(clazz));
-      } else {
-        DECORATE.onConnection(span, request);
-        DECORATE.onRequest(span, request);
-      }
+      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForClass(clazz));
 
       final AgentScope scope = activateSpan(span, false);
       scope.setAsyncPropagation(true);
@@ -127,9 +120,8 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onSuccess(final Response response) {
-      if ("finatra.request".equals(scope.span().getSpanName())) {
-        DECORATE.onResponse(scope.span(), response);
-      } else if (Config.get().getHttpServerErrorStatuses().contains(DECORATE.status(response))) {
+      // Don't use DECORATE.onResponse because this is the controller span
+      if (Config.get().getHttpServerErrorStatuses().contains(DECORATE.status(response))) {
         scope.span().setError(true);
       }
 
