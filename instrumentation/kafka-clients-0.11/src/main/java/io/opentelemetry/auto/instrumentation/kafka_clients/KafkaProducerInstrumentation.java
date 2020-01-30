@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.kafka_clients;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.kafka_clients.KafkaDecorator.PRODUCER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.kafka_clients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafka_clients.TextMapInjectAdapter.SETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,9 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -65,11 +64,11 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(
+    public static SpanScopePair onEnter(
         @Advice.FieldValue("apiVersions") final ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
-      final AgentSpan span = startSpan("kafka.produce");
+      final Span span = TRACER.spanBuilder("kafka.produce").startSpan();
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, record);
 
@@ -80,7 +79,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       // https://github.com/apache/kafka/blob/05fcfde8f69b0349216553f711fdfc3f0259c601/clients/src/main/java/org/apache/kafka/common/record/MemoryRecordsBuilder.java#L411-L412
       if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2) {
         try {
-          propagate().inject(span, record.headers(), SETTER);
+          TRACER.getHttpTextFormat().inject(span.getContext(), record.headers(), SETTER);
         } catch (final IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
@@ -92,34 +91,36 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          propagate().inject(span, record.headers(), SETTER);
+          TRACER.getHttpTextFormat().inject(span.getContext(), record.headers(), SETTER);
         }
       }
 
-      return activateSpan(span, false);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      PRODUCER_DECORATE.onError(scope, throwable);
-      PRODUCER_DECORATE.beforeFinish(scope);
-      scope.close();
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+      final Span span = spanScopePair.getSpan();
+      PRODUCER_DECORATE.onError(span, throwable);
+      PRODUCER_DECORATE.beforeFinish(span);
+      span.end();
+      spanScopePair.getScope().close();
     }
   }
 
   public static class ProducerCallback implements Callback {
     private final Callback callback;
-    private final AgentSpan span;
+    private final Span span;
 
-    public ProducerCallback(final Callback callback, final AgentSpan span) {
+    public ProducerCallback(final Callback callback, final Span span) {
       this.callback = callback;
       this.span = span;
     }
 
     @Override
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
-      try (final AgentScope scope = activateSpan(span, false)) {
+      try (final Scope scope = TRACER.withSpan(span)) {
         PRODUCER_DECORATE.onError(span, exception);
         try {
           if (callback != null) {
@@ -127,7 +128,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
           }
         } finally {
           PRODUCER_DECORATE.beforeFinish(span);
-          span.finish();
+          span.end();
         }
       }
     }

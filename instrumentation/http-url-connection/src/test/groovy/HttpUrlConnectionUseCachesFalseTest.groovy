@@ -1,8 +1,6 @@
 import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
-
 class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 
   @Override
@@ -13,9 +11,9 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnecti
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = false
-      def parentSpan = activeSpan()
+      def parentSpan = TEST_TRACER.getCurrentSpan()
       def stream = connection.inputStream
-      assert activeSpan() == parentSpan
+      assert TEST_TRACER.getCurrentSpan() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()

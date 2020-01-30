@@ -1,17 +1,16 @@
 package io.opentelemetry.auto.instrumentation.jsp;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -49,23 +48,25 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   public static class JasperJspCompilationContext {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter() {
-      final AgentSpan span = startSpan("jsp.compile");
+    public static SpanScopePair onEnter() {
+      final Span span = TRACER.spanBuilder("jsp.compile").startSpan();
       DECORATE.afterStart(span);
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This final JspCompilationContext jspCompilationContext,
-        @Advice.Enter final AgentScope scope,
+        @Advice.Enter final SpanScopePair spanScopePair,
         @Advice.Thrown final Throwable throwable) {
-      DECORATE.onCompile(scope, jspCompilationContext);
+      final Span span = spanScopePair.getSpan();
+      DECORATE.onCompile(span, jspCompilationContext);
       // ^ Decorate on return because additional properties are available
 
-      DECORATE.onError(scope, throwable);
-      DECORATE.beforeFinish(scope);
-      scope.close();
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
+      span.end();
+      spanScopePair.getScope().close();
     }
   }
 }

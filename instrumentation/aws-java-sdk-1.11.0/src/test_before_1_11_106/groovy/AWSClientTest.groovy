@@ -26,7 +26,6 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 
@@ -228,7 +227,7 @@ class AWSClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    activeSpan() == null
+    !TEST_TRACER.getCurrentSpan().getContext().isValid()
     thrown RuntimeException
 
     assertTraces(1) {
@@ -274,7 +273,7 @@ class AWSClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    activeSpan() == null
+    !TEST_TRACER.getCurrentSpan().getContext().isValid()
     thrown AmazonClientException
 
     assertTraces(1) {

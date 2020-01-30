@@ -1,48 +1,49 @@
 package io.opentelemetry.auto.instrumentation.lettuce;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentationUtil.doFinishSpanEarly;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope onEnter(@Advice.Argument(0) final RedisCommand command) {
+  public static SpanScopePair onEnter(@Advice.Argument(0) final RedisCommand command) {
 
-    final AgentSpan span = startSpan("redis.query");
+    final Span span = TRACER.spanBuilder("redis.query").startSpan();
     DECORATE.afterStart(span);
     DECORATE.onCommand(span, command);
 
-    return activateSpan(span, doFinishSpanEarly(command));
+    return new SpanScopePair(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final RedisCommand command,
-      @Advice.Enter final AgentScope scope,
+      @Advice.Enter final SpanScopePair spanScopePair,
       @Advice.Thrown final Throwable throwable,
       @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand) {
 
-    final AgentSpan span = scope.span();
+    final Span span = spanScopePair.getSpan();
     if (throwable != null) {
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
-      span.finish();
-      scope.close();
+      span.end();
+      spanScopePair.getScope().close();
       return;
     }
 
     // close spans on error or normal completion
-    if (!doFinishSpanEarly(command)) {
+    if (doFinishSpanEarly(command)) {
+      span.end();
+    } else {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
     }
-    scope.close();
+    spanScopePair.getScope().close();
   }
 }

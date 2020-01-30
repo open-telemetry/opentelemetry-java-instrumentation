@@ -1,10 +1,10 @@
 package io.opentelemetry.auto.instrumentation.lettuce.rx;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.TRACER;
 
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     implements Consumer<R>, BiConsumer<T, Throwable> {
 
-  private AgentSpan span = null;
+  private Span span = null;
   private final RedisCommand command;
   private final boolean finishSpanOnClose;
 
@@ -24,11 +24,11 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
 
   @Override
   public void accept(final R r) {
-    span = startSpan("redis.query");
+    span = TRACER.spanBuilder("redis.query").startSpan();
     DECORATE.afterStart(span);
     DECORATE.onCommand(span, command);
     if (finishSpanOnClose) {
-      span.finish();
+      span.end();
     }
   }
 
@@ -37,7 +37,7 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     if (span != null) {
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     } else {
       LoggerFactory.getLogger(Mono.class)
           .error(

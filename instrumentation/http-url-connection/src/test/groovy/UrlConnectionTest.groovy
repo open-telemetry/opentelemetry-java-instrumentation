@@ -6,7 +6,6 @@ import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
@@ -21,7 +20,7 @@ class UrlConnectionTest extends AgentTestRunner {
         URLConnection connection = url.openConnection()
         connection.setConnectTimeout(10000)
         connection.setReadTimeout(10000)
-        assert activeSpan() != null
+        assert TEST_TRACER.getCurrentSpan() != null
         connection.inputStream
       }
     }

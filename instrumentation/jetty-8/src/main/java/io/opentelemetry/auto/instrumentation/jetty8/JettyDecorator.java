@@ -1,7 +1,9 @@
 package io.opentelemetry.auto.instrumentation.jetty8;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 public class JettyDecorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final JettyDecorator DECORATE = new JettyDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String getComponentName() {
@@ -54,7 +58,7 @@ public class JettyDecorator
   }
 
   @Override
-  public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
+  public Span onRequest(final Span span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
       final String sc = request.getContextPath();
