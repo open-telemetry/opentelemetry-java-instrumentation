@@ -146,7 +146,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
       @Override
       protected String getComponentName() {
-        return "test-getComponentName"
+        return "test-component"
       }
 
       @Override
