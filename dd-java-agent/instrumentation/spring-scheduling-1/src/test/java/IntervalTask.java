@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-// import datadog.trace.api.DDTags;
-// import datadog.trace.instrumentation.api.AgentScope;
-// import datadog.trace.instrumentation.api.AgentSpan;
-
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

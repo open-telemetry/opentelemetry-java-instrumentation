@@ -1,5 +1,3 @@
-// This file includes software developed at SignalFx
-
 package datadog.trace.instrumentation.springscheduling;
 
 import datadog.trace.agent.decorator.BaseDecorator;
@@ -36,7 +34,7 @@ public class SpringSchedulingDecorator extends BaseDecorator {
         final ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
         resourceName = spanNameForMethod(scheduledMethodRunnable.getMethod());
       } else {
-        final String className = runnable.getClass().getName();
+        final String className = spanNameForClass(runnable.getClass());
         final String methodName = "run";
         resourceName = className + "." + methodName;
       }

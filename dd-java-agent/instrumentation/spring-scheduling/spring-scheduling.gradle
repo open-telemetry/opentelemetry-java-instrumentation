@@ -1,5 +1,0 @@
-apply from: "${rootDir}/gradle/java.gradle"
-dependencies {
-  testCompile group: 'org.springframework', name: 'spring-context', version: '5.2.3.RELEASE'
-  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
-}
