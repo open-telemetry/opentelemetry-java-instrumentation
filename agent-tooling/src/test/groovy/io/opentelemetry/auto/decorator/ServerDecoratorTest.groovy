@@ -15,7 +15,7 @@ class ServerDecoratorTest extends BaseDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(Tags.COMPONENT, "test-getComponentName")
+    1 * span.setAttribute(Tags.COMPONENT, "test-component")
     1 * span.setAttribute(Tags.SPAN_KIND, "server")
     1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.getSpanType())
     0 * _
@@ -40,7 +40,7 @@ class ServerDecoratorTest extends BaseDecoratorTest {
 
       @Override
       protected String getComponentName() {
-        return "test-getComponentName"
+        return "test-component"
       }
     }
   }
