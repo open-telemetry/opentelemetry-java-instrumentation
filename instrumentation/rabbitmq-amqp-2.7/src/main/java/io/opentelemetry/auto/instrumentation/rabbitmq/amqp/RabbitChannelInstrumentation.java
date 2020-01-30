@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.noopSpan;
+import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.PRODUCER_DECORATE;
@@ -30,11 +29,11 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
@@ -70,6 +69,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       packageName + ".TextMapInjectAdapter",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",
+      RabbitCommandInstrumentation.class.getName() + "$SpanHolder",
     };
   }
 
@@ -125,6 +125,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       span.setAttribute(Tags.PEER_PORT, connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
+      CURRENT_RABBIT_SPAN.set(span);
       return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
@@ -134,6 +135,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (spanScopePair == null) {
         return;
       }
+      CURRENT_RABBIT_SPAN.remove();
       final Span span = spanScopePair.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
@@ -195,12 +197,12 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelGetAdvice {
     @Advice.OnMethodEnter
     public static long takeTimestamp(
-        @Advice.Local("placeholderScope") AgentScope placeholderScope,
+        @Advice.Local("placeholderScope") Scope placeholderScope,
         @Advice.Local("callDepth") int callDepth) {
 
       callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       // Don't want RabbitCommandInstrumentation to mess up our actual parent span.
-      placeholderScope = activateSpan(noopSpan(), false);
+      placeholderScope = TRACER.withSpan(DefaultSpan.getInvalid());
       return System.currentTimeMillis();
     }
 
@@ -209,7 +211,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.This final Channel channel,
         @Advice.Argument(0) final String queue,
         @Advice.Enter final long startTime,
-        @Advice.Local("placeholderScope") final AgentScope placeholderScope,
+        @Advice.Local("placeholderScope") final Scope placeholderScope,
         @Advice.Local("callDepth") final int callDepth,
         @Advice.Return final GetResponse response,
         @Advice.Thrown final Throwable throwable) {
