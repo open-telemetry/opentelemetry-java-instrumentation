@@ -19,15 +19,15 @@ class BaseDecoratorTest extends AgentSpecification {
 
   def "test getCurrentSpan"() {
     when:
-    decorator.beginSpan("some-span")
+    decorator.createSpanScopePair(decorator.beginSpan("some-span"))
     def aSpan = decorator.getCurrentSpan()
     def attr = aSpan.getAttributes()
 
     then:
     aSpan != null
     aSpan.getContext().getSpanId() != null
-    attr[MoreTags.SPAN_TYPE] == decorator.getSpanType()
-    attr[Tags.COMPONENT] == "test-component"
+    attr[MoreTags.SPAN_TYPE].getStringValue() == decorator.getSpanType()
+    attr[Tags.COMPONENT].getStringValue() == "test-component"
   }
 
   def "test endSpan"() {
