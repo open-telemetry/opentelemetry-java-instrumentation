@@ -25,17 +25,12 @@ public class TwilioClientDecorator extends ClientDecorator {
   static final String COMPONENT_NAME = "twilio-sdk";
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.HTTP_CLIENT;
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {COMPONENT_NAME};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return COMPONENT_NAME;
   }
 

@@ -24,7 +24,7 @@ public abstract class JMSDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_PRODUCER;
         }
       };
@@ -37,7 +37,7 @@ public abstract class JMSDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_CONSUMER;
         }
       };
@@ -45,17 +45,12 @@ public abstract class JMSDecorator extends ClientDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jms", "jms-1", "jms-2"};
-  }
-
-  @Override
   protected String service() {
     return "jms";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jms";
   }
 

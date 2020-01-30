@@ -17,12 +17,7 @@ public class Servlet3Decorator
   public static final Servlet3Decorator DECORATE = new Servlet3Decorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"servlet", "servlet-3"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-web-servlet";
   }
 

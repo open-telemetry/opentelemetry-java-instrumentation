@@ -19,9 +19,9 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     if (serviceName != null) {
       1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     }
-    1 * span.setAttribute(Tags.COMPONENT, "test-component")
+    1 * span.setAttribute(Tags.COMPONENT, "test-getComponentName")
     1 * span.setAttribute(Tags.SPAN_KIND, "client")
-    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.spanType())
+    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.getSpanType())
     _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _
 
@@ -44,10 +44,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   def newDecorator(String serviceName) {
     return new ClientDecorator() {
-      @Override
-      protected String[] instrumentationNames() {
-        return ["test1", "test2"]
-      }
 
       @Override
       protected String service() {
@@ -55,13 +51,13 @@ class ClientDecoratorTest extends BaseDecoratorTest {
       }
 
       @Override
-      protected String spanType() {
+      protected String getSpanType() {
         return "test-type"
       }
 
       @Override
-      protected String component() {
-        return "test-component"
+      protected String getComponentName() {
+        return "test-getComponentName"
       }
     }
   }

@@ -64,19 +64,15 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
         return "test-service"
       }
 
-      @Override
-      protected String[] instrumentationNames() {
-        return ["test1"]
-      }
 
       @Override
-      protected String spanType() {
+      protected String getSpanType() {
         return "test-type"
       }
 
       @Override
-      protected String component() {
-        return "test-component"
+      protected String getComponentName() {
+        return "test-getComponentName"
       }
     }
   }

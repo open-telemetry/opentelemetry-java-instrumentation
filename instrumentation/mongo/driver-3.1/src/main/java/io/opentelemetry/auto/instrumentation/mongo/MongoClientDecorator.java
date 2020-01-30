@@ -21,22 +21,17 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
   public static final MongoClientDecorator DECORATE = new MongoClientDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"mongo"};
-  }
-
-  @Override
   protected String service() {
     return "mongo";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-mongo";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.MONGO;
   }
 

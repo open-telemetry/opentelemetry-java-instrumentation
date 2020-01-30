@@ -13,17 +13,12 @@ public class SpringWebfluxHttpServerDecorator extends ServerDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"spring-webflux"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.HTTP_SERVER;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "spring-webflux-controller";
   }
 }
