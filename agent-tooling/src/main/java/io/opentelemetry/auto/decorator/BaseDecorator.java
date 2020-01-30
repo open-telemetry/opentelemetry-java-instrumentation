@@ -253,6 +253,47 @@ public abstract class BaseDecorator {
    */
   public Span beginSpan(final String name) {
     final Span span = getSpanBuilder(name).startSpan();
+    setStandardSpanFields(span);
+    return span;
+  }
+
+  /**
+   * Begins a new span compatible with this {@link BaseDecorator} and assigns a parent
+   *
+   * @param name
+   * @return
+   */
+  public Span beginSpan(final String name, final SpanContext parent) {
+    final Span.Builder builder = getSpanBuilder(name);
+    if (parent != null) {
+      builder.setParent(parent);
+    } else {
+      builder.setNoParent();
+    }
+    final Span span = builder.startSpan();
+    setStandardSpanFields(span);
+    return span;
+  }
+
+  /**
+   * Begins a new span compatible with this {@link BaseDecorator} and assigns a parent
+   *
+   * @param name
+   * @return
+   */
+  public Span beginSpan(final String name, final Span parent) {
+    final Span.Builder builder = getSpanBuilder(name);
+    if (parent != null) {
+      builder.setParent(parent);
+    } else {
+      builder.setNoParent();
+    }
+    final Span span = builder.startSpan();
+    setStandardSpanFields(span);
+    return span;
+  }
+
+  private void setStandardSpanFields(final Span span) {
     final String spanType = getSpanType();
     if (spanType != null) {
       span.setAttribute(MoreTags.SPAN_TYPE, spanType);
@@ -261,7 +302,26 @@ public abstract class BaseDecorator {
     if (component != null) {
       span.setAttribute(Tags.COMPONENT, component);
     }
-    return span;
+  }
+
+  /**
+   * Ends a span and performs any end-of-span cleanup.
+   *
+   * @param span
+   */
+  public void endSpan(final Span span) {
+    assert span != null;
+    span.end();
+  }
+
+  /**
+   * Closes a scope and ends its associated span
+   *
+   * @param spanAndScope
+   */
+  public void endSpanAndScope(final SpanScopePair spanAndScope) {
+    spanAndScope.getSpan().end();
+    spanAndScope.getScope().close();
   }
 
   /**

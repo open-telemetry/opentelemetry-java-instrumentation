@@ -2,8 +2,11 @@ package io.opentelemetry.auto.decorator
 
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.MapGetter
+import io.opentelemetry.auto.test.MapSetter
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.SpanContext
 import io.opentelemetry.trace.Status
 import spock.lang.Shared
 
@@ -13,6 +16,38 @@ class BaseDecoratorTest extends AgentSpecification {
   def decorator = newDecorator()
 
   def span = Mock(Span)
+
+  def "test getCurrentSpan"() {
+    when:
+    decorator.beginSpan("some-span")
+    def aSpan = decorator.getCurrentSpan()
+    def attr = aSpan.getAttributes()
+
+    then:
+    aSpan != null
+    aSpan.getContext().getSpanId() != null
+    attr[MoreTags.SPAN_TYPE] == decorator.getSpanType()
+    attr[Tags.COMPONENT] == "test-component"
+  }
+
+  def "test endSpan"() {
+    when:
+    decorator.endSpan(span)
+
+    then:
+    1 * span.end()
+  }
+
+  def "test endSpanAndScope"() {
+    when:
+    def spanAndScope = decorator.createSpanScopePair(span)
+    decorator.endSpanAndScope(spanAndScope)
+
+    then:
+    spanAndScope != null
+    spanAndScope.getScope() != null
+    1 * span.end()
+  }
 
   def "test afterStart"() {
     when:
@@ -115,6 +150,31 @@ class BaseDecoratorTest extends AgentSpecification {
     SampleJavaClass.anonymousClass | "SampleJavaClass\$1"
 
     method = target.getDeclaredMethod("run")
+  }
+
+  def "test inject"() {
+    setup:
+    def child = decorator.beginSpan("mock", span)
+    def map = new HashMap<String, String>()
+
+    when:
+    decorator.inject(child.getContext(), map, new MapSetter())
+
+    then:
+    map["traceparent"] =~ /[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}/
+  }
+
+  def "test extract"() {
+    setup:
+    def child = decorator.beginSpan("mock", span)
+    def map = new HashMap<String, String>()
+    decorator.inject(child.getContext(), map, new MapSetter())
+
+    when:
+    SpanContext context = decorator.extract(map, new MapGetter())
+
+    then:
+    context.traceId.toLowerBase16() =~ /[0-9a-f]{32}/
   }
 
   def newDecorator() {
