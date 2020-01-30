@@ -23,14 +23,15 @@ import net.bytebuddy.pool.TypePool;
  * <ul>
  *   There two core parts to the cache...
  *   <li>a cache of ClassLoader to WeakReference&lt;ClassLoader&gt;
- *   <li>a single cache of TypeResolutions for all ClassLoaders - keyed by a custom composite key of ClassLoader & class name
+ *   <li>a single cache of TypeResolutions for all ClassLoaders - keyed by a custom composite key of
+ *       ClassLoader & class name
  * </ul>
  *
  * <p>This design was chosen to create a single limited size cache that can be adjusted for the
  * entire application -- without having to create a large number of WeakReference objects.
  *
- * <p>Eviction is handled almost entirely through a size restriction; however,
- * softValues are still used as a further safeguard.
+ * <p>Eviction is handled almost entirely through a size restriction; however, softValues are still
+ * used as a further safeguard.
  */
 @Slf4j
 public class DDCachingPoolStrategy implements PoolStrategy {
@@ -118,13 +119,13 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   }
 
   /**
-   * TypeCacheKey is key for the sharedResolutionCache.
-   * Conceptually, it is a mix of ClassLoader & class name.
+   * TypeCacheKey is key for the sharedResolutionCache. Conceptually, it is a mix of ClassLoader &
+   * class name.
    *
-   * For efficiency & GC purposes, it is actually composed of
-   * loaderHash & WeakReference&lt;ClassLoader&gt;
+   * <p>For efficiency & GC purposes, it is actually composed of loaderHash &
+   * WeakReference&lt;ClassLoader&gt;
    *
-   * The loaderHash exists to avoid calling get & strengthening the Reference.
+   * <p>The loaderHash exists to avoid calling get & strengthening the Reference.
    */
   static final class TypeCacheKey {
     private final int loaderHash;
