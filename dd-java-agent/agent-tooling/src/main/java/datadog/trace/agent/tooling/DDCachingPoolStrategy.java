@@ -22,22 +22,15 @@ import net.bytebuddy.pool.TypePool;
  *
  * <ul>
  *   There two core parts to the cache...
- *   <li>a cache of ID assignments for ClassLoaders
- *   <li>a single cache of TypeResolutions for all ClassLoaders - keyed by a custom composite key
- *       that combines loader ID & name
+ *   <li>a cache of ClassLoader to WeakReference&lt;ClassLoader&gt;
+ *   <li>a single cache of TypeResolutions for all ClassLoaders - keyed by a custom composite key of ClassLoader & class name
  * </ul>
  *
  * <p>This design was chosen to create a single limited size cache that can be adjusted for the
  * entire application -- without having to create a large number of WeakReference objects.
  *
- * <p>The ID assignment mostly assigns a single ID to each ClassLoader, but the maximumSize
- * restriction means that an evicted ClassLoader could be assigned another ID later on.
- *
- * <p>For the validity of the cache, the important part is that ID assignment guarantees that no two
- * ClassLoaders share the same ID.
- *
- * <p>NOTE: As an additional safe-guard, a new CacheInstance can be created if the original loader
- * ID sequence is exhausted.
+ * <p>Eviction is handled almost entirely through a size restriction; however,
+ * softValues are still used as a further safeguard.
  */
 @Slf4j
 public class DDCachingPoolStrategy implements PoolStrategy {
@@ -99,11 +92,6 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
   }
 
-  private final TypePool createNonCachingTypePool(final ClassFileLocator classFileLocator) {
-    return new TypePool.Default.WithLazyResolution(
-        TypePool.CacheProvider.NoOp.INSTANCE, classFileLocator, TypePool.Default.ReaderMode.FAST);
-  }
-
   private final TypePool.CacheProvider createCacheProvider(
       final int loaderHash, final WeakReference<ClassLoader> loaderRef) {
     return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
@@ -130,8 +118,13 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   }
 
   /**
-   * TypeCacheKey is key for the sharedResolutionCache. It is a mix of a cacheId/loaderId & a type
-   * name.
+   * TypeCacheKey is key for the sharedResolutionCache.
+   * Conceptually, it is a mix of ClassLoader & class name.
+   *
+   * For efficiency & GC purposes, it is actually composed of
+   * loaderHash & WeakReference&lt;ClassLoader&gt;
+   *
+   * The loaderHash exists to avoid calling get & strengthening the Reference.
    */
   static final class TypeCacheKey {
     private final int loaderHash;
@@ -169,11 +162,15 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         return className.equals(that.className);
       } else if (className.equals(that.className)) {
         // need to perform a deeper loader check -- requires calling Reference.get
-        // which can strengthened the Reference, so deliberately done last
+        // which can strengthen the Reference, so deliberately done last
 
         // If either reference has gone null, they aren't considered equivalent
         // Technically, this is a bit of violation of equals semantics, since
-        // two equivalent references can be not equivalent.
+        // two equivalent references can become not equivalent.
+
+        // In this case, it is fine because that means the ClassLoader is no
+        // longer live, so the entries will never match anyway and will fall
+        // out of the cache.
         ClassLoader thisLoader = loaderRef.get();
         if (thisLoader == null) return false;
 
