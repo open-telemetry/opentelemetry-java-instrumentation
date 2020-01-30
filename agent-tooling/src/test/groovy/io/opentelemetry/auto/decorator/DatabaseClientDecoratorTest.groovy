@@ -22,7 +22,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     if (serviceName != null) {
       1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     }
-    1 * span.setAttribute(Tags.COMPONENT, "test-getComponentName")
+    1 * span.setAttribute(Tags.COMPONENT, "test-component")
     1 * span.setAttribute(Tags.SPAN_KIND, "client")
     1 * span.setAttribute(Tags.DB_TYPE, "test-db")
     1 * span.setAttribute(MoreTags.SPAN_TYPE, "test-type")
@@ -115,7 +115,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
       @Override
       protected String getComponentName() {
-        return "test-getComponentName"
+        return "test-component"
       }
 
       @Override
