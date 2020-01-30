@@ -18,7 +18,6 @@ import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -158,7 +157,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
-    assert activeSpan() != null: "Controller should have a parent span."
+    assert TEST_TRACER.getCurrentSpan().getContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
       return closure()
     }

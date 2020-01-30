@@ -1,17 +1,16 @@
 package io.opentelemetry.auto.test.utils
 
+import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.decorator.BaseDecorator
-import io.opentelemetry.auto.instrumentation.api.AgentScope
-import io.opentelemetry.auto.instrumentation.api.AgentSpan
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.context.Scope
 import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.Tracer
 import lombok.SneakyThrows
 
 import java.util.concurrent.Callable
-
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan
 
 class TraceUtils {
 
@@ -29,12 +28,14 @@ class TraceUtils {
     }
   }
 
+  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
+
   @SneakyThrows
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
-    final AgentSpan span = startSpan(rootOperationName)
+    final Span span = TRACER.spanBuilder(rootOperationName).startSpan()
     DECORATOR.afterStart(span)
 
-    AgentScope scope = activateSpan(span, true)
+    Scope scope = TRACER.withSpan(span)
 
     try {
       return r.call()
@@ -43,6 +44,7 @@ class TraceUtils {
       throw e
     } finally {
       DECORATOR.beforeFinish(span)
+      span.end()
       scope.close()
     }
   }

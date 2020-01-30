@@ -1,11 +1,10 @@
 package io.opentelemetry.loadgenerator;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
-
 import com.google.common.util.concurrent.RateLimiter;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -17,6 +16,10 @@ import picocli.CommandLine.Option;
     mixinStandardHelpOptions = true,
     description = "Generates traces and spans at a specified rate")
 public class LoadGenerator implements Callable<Integer> {
+
+  private static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   @Option(names = "--rate", required = true, description = "rate, per second, to generate traces")
   private int rate;
 
@@ -94,27 +97,27 @@ public class LoadGenerator implements Callable<Integer> {
 
       while (true) {
         rateLimiter.acquire();
-        final AgentSpan parent = startSpan("parentSpan");
+        final Span parent = TRACER.spanBuilder("parentSpan").startSpan();
 
-        try (final AgentScope scope = activateSpan(parent, true)) {
+        try (final Scope scope = TRACER.withSpan(parent)) {
           for (int i = 0; i < width; i++) {
-            final AgentSpan widthSpan = startSpan("span-" + i);
-            try (final AgentScope widthScope = activateSpan(widthSpan, true)) {
+            final Span widthSpan = TRACER.spanBuilder("span-" + i).startSpan();
+            try (final Scope widthScope = TRACER.withSpan(widthSpan)) {
               for (int j = 0; j < depth - 2; j++) {
-                final AgentSpan depthSpan = startSpan("span-" + i + "-" + j);
-                try (final AgentScope depthScope = activateSpan(depthSpan, true)) {
+                final Span depthSpan = TRACER.spanBuilder("span-" + i + "-" + j).startSpan();
+                try (final Scope depthScope = TRACER.withSpan(depthSpan)) {
                   // do nothing.  Maybe sleep? but that will mean we need more threads to keep the
                   // effective rate
                 } finally {
-                  depthSpan.finish();
+                  depthSpan.end();
                 }
               }
             } finally {
-              widthSpan.finish();
+              widthSpan.end();
             }
           }
         } finally {
-          parent.finish();
+          parent.end();
         }
 
         tracesSent.getAndIncrement();
