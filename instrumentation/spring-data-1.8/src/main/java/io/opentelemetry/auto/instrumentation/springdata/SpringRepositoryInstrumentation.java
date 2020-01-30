@@ -2,18 +2,17 @@
 
 package io.opentelemetry.auto.instrumentation.springdata;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.DECORATOR;
+import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
@@ -111,20 +110,21 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
         return methodInvocation.proceed();
       }
 
-      final AgentSpan span = startSpan("repository.operation");
+      final Span span = TRACER.spanBuilder("repository.operation").startSpan();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, invokedMethod);
 
-      final AgentScope scope = activateSpan(span, true);
+      final Scope scope = TRACER.withSpan(span);
 
       Object result = null;
       try {
         result = methodInvocation.proceed();
       } catch (final Throwable t) {
-        DECORATOR.onError(scope, t);
+        DECORATOR.onError(span, t);
         throw t;
       } finally {
-        DECORATOR.beforeFinish(scope);
+        DECORATOR.beforeFinish(span);
+        span.end();
         scope.close();
       }
       return result;

@@ -1,9 +1,10 @@
 package io.opentelemetry.auto.instrumentation.jsp;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 public class JSPDecorator extends BaseDecorator {
   public static JSPDecorator DECORATE = new JSPDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String[] instrumentationNames() {
@@ -30,9 +33,8 @@ public class JSPDecorator extends BaseDecorator {
     return "jsp-http-servlet";
   }
 
-  public void onCompile(final AgentScope scope, final JspCompilationContext jspCompilationContext) {
+  public void onCompile(final Span span, final JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
-      final AgentSpan span = scope.span();
       span.setAttribute(MoreTags.RESOURCE_NAME, jspCompilationContext.getJspFile());
 
       if (jspCompilationContext.getServletContext() != null) {
@@ -47,7 +49,7 @@ public class JSPDecorator extends BaseDecorator {
     }
   }
 
-  public void onRender(final AgentSpan span, final HttpServletRequest req) {
+  public void onRender(final Span span, final HttpServletRequest req) {
     // get the JSP file name being rendered in an include action
     final Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
     String resourceName = req.getServletPath();
