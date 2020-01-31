@@ -1,6 +1,6 @@
 // This file includes software developed at SignalFx
 
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext

@@ -1,19 +1,19 @@
-package io.opentelemetry.auto.api
+package io.opentelemetry.auto.config
 
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
-import static io.opentelemetry.auto.api.Config.CONFIGURATION_FILE
-import static io.opentelemetry.auto.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
-import static io.opentelemetry.auto.api.Config.HTTP_CLIENT_ERROR_STATUSES
-import static io.opentelemetry.auto.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
-import static io.opentelemetry.auto.api.Config.HTTP_SERVER_ERROR_STATUSES
-import static io.opentelemetry.auto.api.Config.PREFIX
-import static io.opentelemetry.auto.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
-import static io.opentelemetry.auto.api.Config.TRACE_ENABLED
-import static io.opentelemetry.auto.api.Config.TRACE_METHODS
+import static io.opentelemetry.auto.config.Config.CONFIGURATION_FILE
+import static io.opentelemetry.auto.config.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
+import static io.opentelemetry.auto.config.Config.HTTP_CLIENT_ERROR_STATUSES
+import static io.opentelemetry.auto.config.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
+import static io.opentelemetry.auto.config.Config.HTTP_SERVER_ERROR_STATUSES
+import static io.opentelemetry.auto.config.Config.PREFIX
+import static io.opentelemetry.auto.config.Config.RUNTIME_CONTEXT_FIELD_INJECTION
+import static io.opentelemetry.auto.config.Config.TRACE_ENABLED
+import static io.opentelemetry.auto.config.Config.TRACE_METHODS
 
 class ConfigTest extends Specification {
   @Rule

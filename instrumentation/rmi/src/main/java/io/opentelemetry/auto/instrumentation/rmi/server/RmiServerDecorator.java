@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.rmi.server;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ServerDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 
 public class RmiServerDecorator extends ServerDecorator {

@@ -1,4 +1,4 @@
-package io.opentelemetry.auto.api;
+package io.opentelemetry.auto.instrumentation.api;
 
 // standard log field names from OpenTracing (see io.opentracing.log.Fields)
 public class LogFields {

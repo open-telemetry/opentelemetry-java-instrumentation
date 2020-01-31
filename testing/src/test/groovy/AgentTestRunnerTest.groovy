@@ -8,7 +8,7 @@ import io.opentelemetry.auto.tooling.Constants
 import java.lang.reflect.Field
 import java.util.concurrent.TimeoutException
 
-import static io.opentelemetry.auto.api.Config.TRACE_CLASSES_EXCLUDE
+import static io.opentelemetry.auto.config.Config.TRACE_CLASSES_EXCLUDE
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class AgentTestRunnerTest extends AgentTestRunner {

@@ -1,7 +1,7 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Tracer;
 import io.opentracing.contrib.dropwizard.Trace;
 import java.util.concurrent.Callable;

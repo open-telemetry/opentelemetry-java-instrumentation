@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
 import io.opentelemetry.auto.bootstrap.WeakMap
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.AgentTestRunner

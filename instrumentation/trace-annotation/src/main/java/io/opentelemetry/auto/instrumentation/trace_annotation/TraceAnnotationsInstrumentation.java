@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.Sets;
-import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;

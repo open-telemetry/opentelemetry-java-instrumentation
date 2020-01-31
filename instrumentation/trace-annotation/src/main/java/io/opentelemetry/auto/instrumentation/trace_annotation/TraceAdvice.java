@@ -3,7 +3,7 @@ package io.opentelemetry.auto.instrumentation.trace_annotation;
 import static io.opentelemetry.auto.instrumentation.trace_annotation.TraceDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.trace_annotation.TraceDecorator.TRACER;
 
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
