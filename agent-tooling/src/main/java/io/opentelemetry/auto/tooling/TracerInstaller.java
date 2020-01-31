@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TracerInstaller {
-  private static final String EXPORTER = "exporter";
 
   /** Register agent tracer if no agent tracer is already registered. */
   public static synchronized void installAgentTracer() {
