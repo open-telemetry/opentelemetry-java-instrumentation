@@ -12,22 +12,17 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public static final CassandraClientDecorator DECORATE = new CassandraClientDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"cassandra"};
-  }
-
-  @Override
   protected String service() {
     return "cassandra";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-cassandra";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.CASSANDRA;
   }
 

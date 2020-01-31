@@ -15,15 +15,12 @@ import java.util.concurrent.Callable
 class TraceUtils {
 
   private static final BaseDecorator DECORATOR = new BaseDecorator() {
-    protected String[] instrumentationNames() {
-      return new String[0]
-    }
 
-    protected String spanType() {
+    protected String getSpanType() {
       return null
     }
 
-    protected String component() {
+    protected String getComponentName() {
       return null
     }
   }

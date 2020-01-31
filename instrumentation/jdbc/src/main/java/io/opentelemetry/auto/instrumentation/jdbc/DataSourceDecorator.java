@@ -10,17 +10,12 @@ public class DataSourceDecorator extends BaseDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jdbc-datasource"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-jdbc-connection";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 }

@@ -53,7 +53,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
         tags {
           "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
           "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
-          "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.component()
+          "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.getComponentName()
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           "$Tags.PEER_HOSTNAME" "localhost"
           "$Tags.PEER_PORT" uri.port

@@ -22,17 +22,12 @@ public final class SpringDataDecorator extends ClientDecorator {
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"spring-data"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "spring-data";
   }
 

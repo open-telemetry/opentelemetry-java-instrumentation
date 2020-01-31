@@ -107,10 +107,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
   @Override
   def newDecorator(String serviceName = "test-service") {
     return new DatabaseClientDecorator<Map>() {
-      @Override
-      protected String[] instrumentationNames() {
-        return ["test1", "test2"]
-      }
 
       @Override
       protected String service() {
@@ -118,12 +114,12 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       }
 
       @Override
-      protected String component() {
+      protected String getComponentName() {
         return "test-component"
       }
 
       @Override
-      protected String spanType() {
+      protected String getSpanType() {
         return "test-type"
       }
 

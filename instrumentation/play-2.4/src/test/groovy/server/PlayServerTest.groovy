@@ -87,7 +87,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
       childOf((SpanData) parent)
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
+        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String

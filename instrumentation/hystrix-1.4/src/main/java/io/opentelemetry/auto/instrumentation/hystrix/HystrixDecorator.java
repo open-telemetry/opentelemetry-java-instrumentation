@@ -9,17 +9,12 @@ public class HystrixDecorator extends BaseDecorator {
   public static HystrixDecorator DECORATE = new HystrixDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[0];
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "hystrix";
   }
 

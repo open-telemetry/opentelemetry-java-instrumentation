@@ -13,22 +13,17 @@ public class JedisClientDecorator extends DatabaseClientDecorator<ProtocolComman
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jedis-1.4");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jedis", "redis"};
-  }
-
-  @Override
   protected String service() {
     return "redis";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "redis-command";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.REDIS;
   }
 
