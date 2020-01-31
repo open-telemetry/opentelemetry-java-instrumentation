@@ -3,14 +3,13 @@ package io.opentelemetry.auto.instrumentation.trace_annotation;
 import static io.opentelemetry.auto.instrumentation.trace_annotation.TraceConfigInstrumentation.PACKAGE_CLASS_NAME_REGEX;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.Sets;
 import io.opentelemetry.auto.api.Config;
-import io.opentelemetry.auto.api.Trace;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
@@ -69,12 +68,19 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
       additionalTraceAnnotations = Collections.unmodifiableSet(annotations);
     }
 
-    ElementMatcher.Junction<NamedElement> methodTraceMatcher =
-        is(new TypeDescription.ForLoadedType(Trace.class));
-    for (final String annotationName : additionalTraceAnnotations) {
-      methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
+    if (additionalTraceAnnotations.isEmpty()) {
+      methodTraceMatcher = none();
+    } else {
+      ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
+      for (final String annotationName : additionalTraceAnnotations) {
+        if (methodTraceMatcher == null) {
+          methodTraceMatcher = named(annotationName);
+        } else {
+          methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
+        }
+      }
+      this.methodTraceMatcher = methodTraceMatcher;
     }
-    this.methodTraceMatcher = methodTraceMatcher;
   }
 
   @Override
