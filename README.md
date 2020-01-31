@@ -13,7 +13,7 @@ As mentioned above, this project is in a very early phase of development and not
 However, you can try it on your Java program by following these instructions.
 
 ### Prerequisites
-* Java 8 to Java 11 
+* Java 8 for building (Java 7 to Java 13 are supported at runtime)
 * Gradle 6.0
 * Jaeger 1.16
 * Git (reasonably current version)
