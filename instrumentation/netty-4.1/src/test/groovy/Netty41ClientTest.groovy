@@ -5,8 +5,6 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty41.client.HttpClientTracingHandler
 import io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator
@@ -183,11 +181,11 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
   def "request with trace annotated method"() {
     given:
-    def annotatedClass = new AnnotatedClass()
+    def annotatedClass = new TracedClass()
 
     when:
     def status = runUnderTrace("parent") {
-      annotatedClass.makeRequestUnderTrace(method)
+      annotatedClass.tracedMethod(method)
     }
 
     then:
@@ -197,11 +195,9 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
         basicSpan(it, 0, "parent")
         span(1) {
           childOf(span(0))
-          operationName "trace.annotation"
+          operationName "tracedMethod"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "AnnotatedClass.makeRequestUnderTrace"
-            "$Tags.COMPONENT" "trace"
           }
         }
         clientSpan(it, 2, span(1), method)
@@ -213,10 +209,16 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     method << BODY_METHODS
   }
 
-  class AnnotatedClass {
-    @Trace
-    int makeRequestUnderTrace(String method) {
-      return doRequest(method, server.address.resolve("/success"))
+  class TracedClass {
+    int tracedMethod(String method) {
+      def span = TEST_TRACER.spanBuilder("tracedMethod").startSpan()
+      def scope = TEST_TRACER.withSpan(span)
+      try {
+        return doRequest(method, server.address.resolve("/success"))
+      } finally {
+        span.end()
+        scope.close()
+      }
     }
   }
 
