@@ -1,9 +1,12 @@
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
@@ -164,7 +167,15 @@ public class RequestDispatcherUtils {
   class TestDispatcher implements RequestDispatcher {
     @Override
     public void forward(final ServletRequest servletRequest, final ServletResponse servletResponse)
-        throws ServletException, IOException {
+        throws ServletException {
+      runUnderTrace(
+          "forward-child",
+          new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+              return null;
+            }
+          });
       if (toThrow != null) {
         throw toThrow;
       }
@@ -172,7 +183,15 @@ public class RequestDispatcherUtils {
 
     @Override
     public void include(final ServletRequest servletRequest, final ServletResponse servletResponse)
-        throws ServletException, IOException {
+        throws ServletException {
+      runUnderTrace(
+          "include-child",
+          new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+              return null;
+            }
+          });
       if (toThrow != null) {
         throw toThrow;
       }
