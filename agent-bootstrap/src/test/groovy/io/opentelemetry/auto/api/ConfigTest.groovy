@@ -1,9 +1,9 @@
 package io.opentelemetry.auto.api
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
+import spock.lang.Specification
 
 import static io.opentelemetry.auto.api.Config.CONFIGURATION_FILE
 import static io.opentelemetry.auto.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
@@ -15,7 +15,7 @@ import static io.opentelemetry.auto.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static io.opentelemetry.auto.api.Config.TRACE_ENABLED
 import static io.opentelemetry.auto.api.Config.TRACE_METHODS
 
-class ConfigTest extends AgentSpecification {
+class ConfigTest extends Specification {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
   @Rule
