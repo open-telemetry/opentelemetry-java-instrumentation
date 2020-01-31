@@ -1,6 +1,5 @@
 import com.netflix.hystrix.HystrixCommand
 import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import spock.lang.Timeout
@@ -29,8 +28,8 @@ class HystrixTest extends AgentTestRunner {
         return tracedMethod()
       }
 
-      @Trace
       private String tracedMethod() {
+        TEST_TRACER.spanBuilder("tracedMethod").startSpan().end()
         return "Hello!"
       }
     }
@@ -66,13 +65,11 @@ class HystrixTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "trace.annotation"
+          operationName "tracedMethod"
           childOf span(1)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "HystrixTest\$1.tracedMethod"
             "$MoreTags.SPAN_TYPE" null
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
