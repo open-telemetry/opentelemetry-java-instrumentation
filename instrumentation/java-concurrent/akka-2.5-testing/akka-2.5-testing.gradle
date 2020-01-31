@@ -9,7 +9,6 @@ apply from: "${rootDir}/gradle/test-with-scala.gradle"
 dependencies {
   compileOnly deps.scala
 
-  testCompile project(':trace-api')
   testCompile deps.scala
   testCompile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 
