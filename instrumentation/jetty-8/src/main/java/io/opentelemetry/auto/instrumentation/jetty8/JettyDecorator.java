@@ -16,12 +16,7 @@ public class JettyDecorator
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jetty", "jetty-8"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jetty-handler";
   }
 

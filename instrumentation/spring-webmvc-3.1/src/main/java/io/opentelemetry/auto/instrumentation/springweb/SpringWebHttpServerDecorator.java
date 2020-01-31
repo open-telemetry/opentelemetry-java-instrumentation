@@ -27,18 +27,13 @@ public class SpringWebHttpServerDecorator
   public static final SpringWebHttpServerDecorator DECORATE_RENDER =
       new SpringWebHttpServerDecorator() {
         @Override
-        protected String component() {
+        protected String getComponentName() {
           return "spring-webmvc";
         }
       };
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"spring-web"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "spring-web-controller";
   }
 

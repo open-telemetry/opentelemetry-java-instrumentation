@@ -9,17 +9,12 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   public static final OkHttpClientDecorator DECORATE = new OkHttpClientDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"okhttp", "okhttp-3"};
-  }
-
-  @Override
   protected String service() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "okhttp";
   }
 

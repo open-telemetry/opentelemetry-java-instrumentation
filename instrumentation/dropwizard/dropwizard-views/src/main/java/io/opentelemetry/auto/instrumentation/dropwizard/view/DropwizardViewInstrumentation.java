@@ -62,7 +62,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanScopePair onEnter(
         @Advice.This final Object obj, @Advice.Argument(0) final View view) {
-      if (TRACER.getCurrentSpan() == null) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
       final Span span = TRACER.spanBuilder("view.render").startSpan();

@@ -19,7 +19,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_PRODUCER;
         }
       };
@@ -32,7 +32,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_CONSUMER;
         }
       };
@@ -40,17 +40,12 @@ public abstract class KafkaDecorator extends ClientDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"kafka"};
-  }
-
-  @Override
   protected String service() {
     return "kafka";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-kafka";
   }
 

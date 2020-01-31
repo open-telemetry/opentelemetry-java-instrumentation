@@ -19,17 +19,12 @@ public class HibernateDecorator extends OrmClientDecorator {
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"hibernate-core"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.HIBERNATE;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-hibernate";
   }
 

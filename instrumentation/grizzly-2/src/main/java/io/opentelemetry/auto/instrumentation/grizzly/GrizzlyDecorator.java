@@ -51,12 +51,7 @@ public class GrizzlyDecorator extends HttpServerDecorator<Request, Request, Resp
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"grizzly"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "grizzly";
   }
 }

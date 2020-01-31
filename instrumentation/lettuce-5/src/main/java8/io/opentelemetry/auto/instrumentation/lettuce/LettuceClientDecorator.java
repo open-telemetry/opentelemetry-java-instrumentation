@@ -16,22 +16,17 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"lettuce"};
-  }
-
-  @Override
   protected String service() {
     return "redis";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "redis-client";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.REDIS;
   }
 

@@ -15,12 +15,7 @@ public class Servlet2Decorator
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"servlet", "servlet-2"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-web-servlet";
   }
 

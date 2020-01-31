@@ -13,12 +13,7 @@ public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, C
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jax-rs", "jaxrs", "jax-rs-client"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jax-rs.client";
   }
 

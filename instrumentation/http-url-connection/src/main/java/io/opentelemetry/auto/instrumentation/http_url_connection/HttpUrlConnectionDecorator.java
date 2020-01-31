@@ -13,12 +13,7 @@ public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConne
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"httpurlconnection"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "http-url-connection";
   }
 

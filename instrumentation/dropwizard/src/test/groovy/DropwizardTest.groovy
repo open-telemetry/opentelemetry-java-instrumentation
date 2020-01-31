@@ -56,7 +56,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   Servlet3Decorator decorator() {
     return new Servlet3Decorator() {
       @Override
-      protected String component() {
+      protected String getComponentName() {
         return "jax-rs"
       }
     }
@@ -90,7 +90,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       tags {
         "$MoreTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.component()
+        "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.getComponentName()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
@@ -112,7 +112,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       tags {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

@@ -83,7 +83,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       tags {
         "$MoreTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.component()
+        "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -106,7 +106,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       tags {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

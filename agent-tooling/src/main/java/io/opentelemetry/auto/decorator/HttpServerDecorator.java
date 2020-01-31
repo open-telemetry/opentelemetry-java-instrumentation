@@ -34,7 +34,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   protected abstract Integer status(RESPONSE response);
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.HTTP_SERVER;
   }
 

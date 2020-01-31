@@ -158,13 +158,9 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
   @Override
   def newDecorator() {
     return new HttpServerDecorator<Map, Map, Map>() {
-      @Override
-      protected String[] instrumentationNames() {
-        return ["test1", "test2"]
-      }
 
       @Override
-      protected String component() {
+      protected String getComponentName() {
         return "test-component"
       }
 
