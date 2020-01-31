@@ -164,7 +164,7 @@ public class Config {
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
     exporter = properties.getProperty(EXPORTER, parent.exporter);
-    serviceName = properties.getProperty(SERVICE, "(unknown)");
+    serviceName = properties.getProperty(SERVICE, parent.serviceName);
 
     traceEnabled = getPropertyBooleanValue(properties, TRACE_ENABLED, parent.traceEnabled);
     integrationsEnabled =
