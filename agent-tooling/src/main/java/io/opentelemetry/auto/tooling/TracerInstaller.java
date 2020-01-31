@@ -28,6 +28,7 @@ public class TracerInstaller {
           final SpanExporterFactory f = ExporterRegistry.getInstance().getFactory(exporter);
           OpenTelemetrySdk.getTracerFactory()
               .addSpanProcessor(SimpleSpansProcessor.newBuilder(f.newExporter()).build());
+          log.info("Loaded span exporter: " + exporter);
         } catch (final ExporterConfigException e) {
           log.warn("Error loading exporter. Spans will be dropped", e);
         }

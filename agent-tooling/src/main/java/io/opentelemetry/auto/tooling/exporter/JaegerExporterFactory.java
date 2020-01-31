@@ -13,6 +13,8 @@ public class JaegerExporterFactory implements SpanExporterFactory {
 
   private static final String PORT_CONFIG = "ota.jaeger.port";
 
+  private static final String SERVICE = "ota.jaeger.service";
+
   @Override
   public SpanExporter newExporter() throws ExporterConfigException {
     final ConfigProvider config = AgentConfig.getDefault();
@@ -24,12 +26,16 @@ public class JaegerExporterFactory implements SpanExporterFactory {
     if (host == null) {
       throw new ExporterConfigException(PORT_CONFIG + " must be specified");
     }
+    String service = config.get(SERVICE);
+    if (service == null) {
+      service = "(unknown)";
+    }
     try {
       final int port = Integer.parseInt(ipStr);
       final ManagedChannel jaegerChannel =
           ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
       return JaegerGrpcSpanExporter.newBuilder()
-          .setServiceName("example")
+          .setServiceName(service)
           .setChannel(jaegerChannel)
           .setDeadline(30000)
           .build();

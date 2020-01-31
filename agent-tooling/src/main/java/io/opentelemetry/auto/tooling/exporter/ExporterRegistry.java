@@ -12,6 +12,10 @@ public class ExporterRegistry {
     return instance;
   }
 
+  public ExporterRegistry() {
+    registerDefaultFactories();
+  }
+
   public void registerFactory(final String name, final SpanExporterFactory factory) {
     factories.put(name, factory);
   }
@@ -22,5 +26,9 @@ public class ExporterRegistry {
       throw new ExporterConfigException("Exporter type " + name + " is not registered");
     }
     return f;
+  }
+
+  private void registerDefaultFactories() {
+    registerFactory("jaeger", new JaegerExporterFactory());
   }
 }
