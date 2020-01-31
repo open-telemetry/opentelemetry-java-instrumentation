@@ -2,6 +2,7 @@ import akka.NotUsed;
 import akka.stream.javadsl.Source;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,7 +24,11 @@ public class EchoServiceImpl implements EchoService {
   }
 
   public List<String> tracedMethod() {
-    TRACER.spanBuilder("tracedMethod").startSpan().end();
-    return java.util.Arrays.asList("msg1", "msg2", "msg3");
+    Span span = TRACER.spanBuilder("tracedMethod").startSpan();
+    try {
+      return java.util.Arrays.asList("msg1", "msg2", "msg3");
+    } finally {
+      span.end();
+    }
   }
 }
