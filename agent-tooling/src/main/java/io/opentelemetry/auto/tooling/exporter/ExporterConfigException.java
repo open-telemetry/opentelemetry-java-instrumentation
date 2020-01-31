@@ -16,7 +16,10 @@ public class ExporterConfigException extends Exception {
   }
 
   public ExporterConfigException(
-    final String message, final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace) {
+      final String message,
+      final Throwable cause,
+      final boolean enableSuppression,
+      final boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
   }
 }

@@ -2,8 +2,6 @@ package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.api.Config;
-import io.opentelemetry.auto.config.AgentConfig;
-import io.opentelemetry.auto.config.ConfigProvider;
 import io.opentelemetry.auto.instrumentation.api.AgentTracer;
 import io.opentelemetry.auto.tooling.exporter.ExporterConfigException;
 import io.opentelemetry.auto.tooling.exporter.ExporterRegistry;
@@ -15,14 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TracerInstaller {
-  private static final String EXPORTER = "ota.exporter";
+  private static final String EXPORTER = "exporter";
 
   /** Register agent tracer if no agent tracer is already registered. */
   public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
+
       // Try to create an exporter
-      final ConfigProvider config = AgentConfig.getDefault();
-      final String exporter = config.get(EXPORTER);
+      final String exporter = Config.get().getExporter();
       if (exporter != null) {
         try {
           final SpanExporterFactory f = ExporterRegistry.getInstance().getFactory(exporter);

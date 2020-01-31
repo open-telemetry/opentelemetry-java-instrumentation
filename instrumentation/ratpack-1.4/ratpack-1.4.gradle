@@ -31,14 +31,6 @@ testSets {
 dependencies {
   main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
 
-  main_java8CompileOnly(group: 'com.google.guava', name: 'guava') {
-    version {
-      // force to use ratpack's guava version, otherwise it uses later version brought in by :agent-tooling
-      strictly '20.0'
-    }
-  }
-
-
   testCompile project(':instrumentation:java-concurrent')
   testCompile project(':instrumentation:netty-4.1')
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
