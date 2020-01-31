@@ -18,12 +18,10 @@ class SlickTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "run query"
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "SlickUtils.runQuery"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {
