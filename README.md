@@ -6,10 +6,10 @@ but we strongly discourage any production use!
 
 ## Introduction
 This project uses a technique known as bytecode instrumentation to add tracing to a Java program.
-Simply put, we provide an agent that can be attached to any Java program that dynamically adds code to enable tracing. 
+Simply put, we provide an agent that can be attached to any Java program and dynamically adds code to enable tracing. 
 
 ## Using the agent
-As mentioned above, this project is in a very early phase of development and not yest stable. 
+As mentioned above, this project is in a very early phase of development and not yet stable. 
 However, you can try it on your Java program by following these instructions.
 
 ### Prerequisites
@@ -36,4 +36,6 @@ System property | Environment variable | Purpose
 ota.exporter | OTA_EXPORTER | The name of the exporter. Currently only supports 'jaeger' for Jager over gRPC
 ota.jaeger.host | OTA_JAEGER_HOST | The Jaeger host to connect to. Currently only gRPC is supported.
 ota.jaeger.port | OTA_JAEGER_PORT | The port to connect to on the Jaeger host. Currently only gRPC is supported
-ota.jaeger.service | OTA_JAEGER_SERVICE | The service name of this executable. This is used as a label in Jaeger to distinguish between JVM instances in a multi-service environment.
+ota.jaeger.service | OTA_JAEGER_SERVICE | The service name of this JVM instance. This is used as a label in Jaeger to distinguish between JVM instances in a multi-service environment.
+
+These parameter names are very likely to change over time, so please check back here when trying out a new version!
