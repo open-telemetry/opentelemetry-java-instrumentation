@@ -2,13 +2,20 @@ package datadog.trace.common.writer.ddagent;
 
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventTranslator;
-import com.lmax.disruptor.EventTranslatorOneArg;
-import datadog.opentracing.DDSpan;
-import java.util.List;
+import com.lmax.disruptor.EventTranslatorTwoArg;
+import java.util.concurrent.CountDownLatch;
 
 class DisruptorEvent<T> {
-  public volatile boolean shouldFlush = false;
-  public volatile T data = null;
+  // Memory ordering enforced by disruptor's memory fences, so volatile not required.
+  T data = null;
+  int representativeCount = 0;
+  CountDownLatch flushLatch = null;
+
+  void reset() {
+    data = null;
+    representativeCount = 0;
+    flushLatch = null;
+  }
 
   static class Factory<T> implements EventFactory<DisruptorEvent<T>> {
     @Override
@@ -17,25 +24,38 @@ class DisruptorEvent<T> {
     }
   }
 
-  static class TraceTranslator
-      implements EventTranslatorOneArg<DisruptorEvent<List<DDSpan>>, List<DDSpan>> {
-    static final DisruptorEvent.TraceTranslator TRACE_TRANSLATOR =
-        new DisruptorEvent.TraceTranslator();
+  static class DataTranslator<T> implements EventTranslatorTwoArg<DisruptorEvent<T>, T, Integer> {
 
     @Override
     public void translateTo(
-        final DisruptorEvent<List<DDSpan>> event, final long sequence, final List<DDSpan> trace) {
-      event.data = trace;
+        final DisruptorEvent<T> event,
+        final long sequence,
+        final T data,
+        final Integer representativeCount) {
+      event.data = data;
+      event.representativeCount = representativeCount;
     }
   }
 
-  static class FlushTranslator implements EventTranslator<DisruptorEvent<List<DDSpan>>> {
-    static final DisruptorEvent.FlushTranslator FLUSH_TRANSLATOR =
-        new DisruptorEvent.FlushTranslator();
+  static class HeartbeatTranslator<T> implements EventTranslator<DisruptorEvent<T>> {
 
     @Override
-    public void translateTo(final DisruptorEvent<List<DDSpan>> event, final long sequence) {
-      event.shouldFlush = true;
+    public void translateTo(final DisruptorEvent<T> event, final long sequence) {
+      return;
+    }
+  }
+
+  static class FlushTranslator<T>
+      implements EventTranslatorTwoArg<DisruptorEvent<T>, Integer, CountDownLatch> {
+
+    @Override
+    public void translateTo(
+        final DisruptorEvent<T> event,
+        final long sequence,
+        final Integer representativeCount,
+        final CountDownLatch latch) {
+      event.representativeCount = representativeCount;
+      event.flushLatch = latch;
     }
   }
 }

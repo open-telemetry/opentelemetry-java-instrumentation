@@ -44,6 +44,7 @@ import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,18 +97,18 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final HttpCodec.Injector injector;
   private final HttpCodec.Extractor extractor;
 
-  public static class Builder {
+  public static class DDTracerBuilder {
 
-    public Builder() {
+    public DDTracerBuilder() {
       // Apply the default values from config.
       config(Config.get());
     }
 
-    public Builder withProperties(final Properties properties) {
+    public DDTracerBuilder withProperties(final Properties properties) {
       return config(Config.get(properties));
     }
 
-    public Builder config(final Config config) {
+    public DDTracerBuilder config(final Config config) {
       this.config = config;
       serviceName(config.getServiceName());
       // Explicitly skip setting writer to avoid allocating resources prematurely.
@@ -267,7 +268,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         partialFlushMinSpans);
   }
 
-  @lombok.Builder(builderClassName = "Builder")
+  @Builder
   // These field names must be stable to ensure the builder api is stable.
   private DDTracer(
       final Config config,
