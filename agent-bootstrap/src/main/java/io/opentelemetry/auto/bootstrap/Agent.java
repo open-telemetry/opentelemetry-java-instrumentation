@@ -236,12 +236,12 @@ public class Agent {
   }
 
   /**
-   * Determine if we should log in debug level according to opentelemetry.auto.trace.debug
+   * Determine if we should log in debug level according to ota.trace.debug
    *
    * @return true if we should
    */
   private static boolean isDebugMode() {
-    final String tracerDebugLevelSysprop = "opentelemetry.auto.trace.debug";
+    final String tracerDebugLevelSysprop = "ota.trace.debug";
     final String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
 
     if (tracerDebugLevelProp != null) {
