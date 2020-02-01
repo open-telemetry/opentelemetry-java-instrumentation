@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.couchbase.client;
 
 import static io.opentelemetry.auto.instrumentation.couchbase.client.CouchbaseClientDecorator.DECORATE;
 
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;

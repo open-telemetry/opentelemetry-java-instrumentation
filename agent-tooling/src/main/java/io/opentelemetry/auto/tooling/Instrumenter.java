@@ -3,7 +3,7 @@ package io.opentelemetry.auto.tooling;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
 import io.opentelemetry.auto.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.auto.tooling.muzzle.Reference;

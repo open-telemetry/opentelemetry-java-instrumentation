@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -161,18 +161,10 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(2) {
-          if (annotatedMethod == null) {
-            // Functional API
-            operationName "trace.annotation"
-          } else {
-            // Annotation API
-            operationName "trace.annotation"
-          }
+          operationName "tracedMethod"
           childOf(span(1))
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" annotatedMethod == null ? "SpringWebFluxTestApplication.tracedMethod" : "TestController.tracedMethod"
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
@@ -281,8 +273,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           operationName "echo"
           childOf(span(1))
           tags {
-            "$MoreTags.RESOURCE_NAME" "echo"
-            "$Tags.COMPONENT" "trace"
           }
         }
       }

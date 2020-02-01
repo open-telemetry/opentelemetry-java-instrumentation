@@ -1,7 +1,7 @@
 package io.opentelemetry.perftest.jetty;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.Trace;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.perftest.Worker;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -61,16 +61,18 @@ public class JettyPerftest {
       response.getWriter().print("Did " + workTimeMS + "ms of work.");
     }
 
-    @Trace
     private void scheduleWork(final long workTimeMS) {
-      final Span span = TRACER.getCurrentSpan();
-      if (span != null) {
-        span.setAttribute("work-time", workTimeMS);
-        span.setAttribute("info", "interesting stuff");
-        span.setAttribute("additionalInfo", "interesting stuff");
-      }
-      if (workTimeMS > 0) {
-        Worker.doWork(workTimeMS);
+      final Span span = TRACER.spanBuilder("work").startSpan();
+      try (final Scope scope = TRACER.withSpan(span)) {
+        if (span != null) {
+          span.setAttribute("work-time", workTimeMS);
+          span.setAttribute("info", "interesting stuff");
+          span.setAttribute("additionalInfo", "interesting stuff");
+        }
+        if (workTimeMS > 0) {
+          Worker.doWork(workTimeMS);
+        }
+        span.end();
       }
     }
   }

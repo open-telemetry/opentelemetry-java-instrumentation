@@ -45,7 +45,6 @@ subprojects { Project subProj ->
     }
     dependencies {
       // Apply common dependencies for instrumentation.
-      compile project(':trace-api')
       compile(project(':agent-tooling')) {
         // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
         // is brought in for tests by project(:testing) below
@@ -53,7 +52,6 @@ subprojects { Project subProj ->
       }
       compile deps.bytebuddy
       if (jdkCompile) {
-        "$jdkCompile" project(':trace-api')
         "$jdkCompile"(project(':agent-tooling')) {
           // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
           // is brought in for tests by project(:testing) below
@@ -113,7 +111,6 @@ shadowJar {
 
   dependencies {
     exclude(project(':agent-bootstrap'))
-    exclude(project(':trace-api'))
   }
 
   // relocate OpenTelemetry API usage

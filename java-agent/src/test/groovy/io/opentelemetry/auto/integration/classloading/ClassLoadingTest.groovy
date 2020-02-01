@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.integration.classloading
 
-import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.test.ClassToInstrument
 import io.opentelemetry.test.ClassToInstrumentChild
@@ -14,7 +13,7 @@ import static io.opentelemetry.auto.test.IntegrationTestUtils.createJarWithClass
 @Timeout(10)
 class ClassLoadingTest extends Specification {
 
-  final URL[] classpath = [createJarWithClasses(ClassToInstrument, ClassToInstrumentChild, Trace)]
+  final URL[] classpath = [createJarWithClasses(ClassToInstrument, ClassToInstrumentChild)]
 
   /** Assert that we can instrument classloaders which cannot resolve agent advice classes. */
   def "instrument classloader without agent classes"() {
@@ -107,8 +106,8 @@ class ClassLoadingTest extends Specification {
 
 
     where:
-    name                              | onTestClasspath
-    "io.opentelemetry.auto.api.Trace" | true
+    name                                             | onTestClasspath
+    "io.opentelemetry.auto.instrumentation.api.Tags" | true
     // This test case fails on ibm j9.  Perhaps this rule only applies to OpenJdk based jvms?
 //    "io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State" | false
     resource = name.replace(".", "/") + ".class"

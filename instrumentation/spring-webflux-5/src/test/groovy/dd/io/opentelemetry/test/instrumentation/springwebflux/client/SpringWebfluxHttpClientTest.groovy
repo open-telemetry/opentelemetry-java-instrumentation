@@ -1,7 +1,7 @@
 package io.opentelemetry.test.instrumentation.springwebflux.client
 
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator

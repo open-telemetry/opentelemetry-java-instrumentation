@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.couchbase.client;
 
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 
 class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();

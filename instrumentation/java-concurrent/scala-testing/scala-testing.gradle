@@ -4,7 +4,6 @@ apply from: "${rootDir}/gradle/test-with-scala.gradle"
 dependencies {
   compileOnly deps.scala
 
-  testCompile project(':trace-api')
   testCompile deps.scala
 
   testCompile project(':instrumentation:java-concurrent')

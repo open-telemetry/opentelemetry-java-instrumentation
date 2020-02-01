@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.decorator
 
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.trace.Span
 
 class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {

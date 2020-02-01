@@ -2,7 +2,7 @@ package io.opentelemetry.auto.tooling.exporter;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 

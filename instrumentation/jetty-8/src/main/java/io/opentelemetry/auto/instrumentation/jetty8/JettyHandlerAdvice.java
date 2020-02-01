@@ -5,7 +5,7 @@ import static io.opentelemetry.auto.instrumentation.jetty8.HttpServletRequestExt
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.TRACER;
 
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;

@@ -1,4 +1,4 @@
-package io.opentelemetry.auto.api;
+package io.opentelemetry.auto.config;
 
 import java.io.File;
 import java.io.FileNotFoundException;

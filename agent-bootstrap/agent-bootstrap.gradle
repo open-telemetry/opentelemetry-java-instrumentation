@@ -6,7 +6,6 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile project(':trace-api')
   compile deps.opentelemetryApi
   compile deps.slf4j
   compile group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j

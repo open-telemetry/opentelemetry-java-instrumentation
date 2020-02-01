@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.AgentTracer;
 import io.opentelemetry.auto.tooling.exporter.ExporterConfigException;
 import io.opentelemetry.auto.tooling.exporter.ExporterRegistry;
