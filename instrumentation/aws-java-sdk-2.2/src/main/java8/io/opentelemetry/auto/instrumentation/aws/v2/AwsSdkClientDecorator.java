@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -73,12 +73,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"aws-sdk"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return COMPONENT_NAME;
   }
 
