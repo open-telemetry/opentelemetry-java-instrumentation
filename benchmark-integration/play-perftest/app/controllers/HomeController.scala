@@ -1,8 +1,7 @@
 package controllers
 
-import io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
-
-import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.trace.Tracer
 import javax.inject.Inject
 
 import play.api.mvc._
@@ -12,6 +11,7 @@ import play.api.mvc._
   * application's work page which does busy wait to simulate some work
   */
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+  val TRACER: Tracer = OpenTelemetry.getTracerFactory.get("io.opentelemetry.auto")
 
   /**
     * Create an Action to perform busy wait
@@ -28,16 +28,21 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   }
 
-  @Trace
   private def scheduleWork(workTimeMS: Long) {
-    val span = activeSpan
-    if (span != null) {
-      span.setAttribute("work-time", workTimeMS)
-      span.setAttribute("info", "interesting stuff")
-      span.setAttribute("additionalInfo", "interesting stuff")
-    }
-    if (workTimeMS > 0) {
-      Worker.doWork(workTimeMS)
+    val span = TRACER.spanBuilder("work").startSpan()
+    val scope = TRACER.withSpan(span)
+    try {
+      if (span != null) {
+        span.setAttribute("work-time", workTimeMS)
+        span.setAttribute("info", "interesting stuff")
+        span.setAttribute("additionalInfo", "interesting stuff")
+      }
+      if (workTimeMS > 0) {
+        Worker.doWork(workTimeMS)
+      }
+    } finally {
+      span.end()
+      scope.close()
     }
   }
 }

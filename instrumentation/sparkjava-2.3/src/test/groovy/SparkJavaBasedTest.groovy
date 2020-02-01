@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -12,8 +12,8 @@ import spock.lang.Shared
 class SparkJavaBasedTest extends AgentTestRunner {
 
   static {
-    System.setProperty("opentelemetry.auto.integration.jetty.enabled", "true")
-    System.setProperty("opentelemetry.auto.integration.sparkjava.enabled", "true")
+    System.setProperty("ota.integration.jetty.enabled", "true")
+    System.setProperty("ota.integration.sparkjava.enabled", "true")
   }
 
   @Shared

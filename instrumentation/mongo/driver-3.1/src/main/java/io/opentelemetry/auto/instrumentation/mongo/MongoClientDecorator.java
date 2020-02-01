@@ -5,10 +5,12 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +22,7 @@ import org.bson.BsonValue;
 public class MongoClientDecorator extends DatabaseClientDecorator<CommandStartedEvent> {
   public static final MongoClientDecorator DECORATE = new MongoClientDecorator();
 
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"mongo"};
-  }
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String service() {
@@ -31,12 +30,12 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-mongo";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.MONGO;
   }
 
@@ -73,7 +72,7 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
     return event.getDatabaseName();
   }
 
-  public AgentSpan onStatement(final AgentSpan span, final BsonDocument statement) {
+  public Span onStatement(final Span span, final BsonDocument statement) {
 
     // scrub the Mongo command so that parameters are removed from the string
     final BsonDocument scrubbed = scrub(statement);

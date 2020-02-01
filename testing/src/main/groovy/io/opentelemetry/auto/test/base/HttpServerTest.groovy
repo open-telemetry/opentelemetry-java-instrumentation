@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.test.base
 
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.decorator.HttpServerDecorator
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -18,7 +18,6 @@ import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -158,7 +157,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
-    assert activeSpan() != null: "Controller should have a parent span."
+    assert TEST_TRACER.getCurrentSpan().getContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
       return closure()
     }
@@ -383,7 +382,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_PORT" Long

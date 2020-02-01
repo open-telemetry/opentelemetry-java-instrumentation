@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.instrumentation.sparkjava;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -8,9 +7,11 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -37,6 +38,13 @@ public class RoutesInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      RoutesInstrumentation.class.getName() + "$TracerHolder",
+    };
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("find")
@@ -46,13 +54,18 @@ public class RoutesInstrumentation extends Instrumenter.Default {
         RoutesInstrumentation.class.getName() + "$RoutesAdvice");
   }
 
+  public static class TracerHolder {
+    public static final Tracer TRACER =
+        OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  }
+
   public static class RoutesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void routeMatchEnricher(
         @Advice.Argument(0) final HttpMethod method, @Advice.Return final RouteMatch routeMatch) {
 
-      final AgentSpan span = activeSpan();
+      final Span span = TracerHolder.TRACER.getCurrentSpan();
       if (span != null && routeMatch != null) {
         final String resourceName = method.name().toUpperCase() + " " + routeMatch.getMatchUri();
         span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);

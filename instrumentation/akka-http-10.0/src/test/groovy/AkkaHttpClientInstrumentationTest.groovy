@@ -4,9 +4,9 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared

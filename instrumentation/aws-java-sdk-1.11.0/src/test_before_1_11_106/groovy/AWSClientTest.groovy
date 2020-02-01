@@ -15,8 +15,8 @@ import com.amazonaws.services.rds.AmazonRDSClient
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.http.conn.HttpHostConnectException
@@ -26,7 +26,6 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 
@@ -228,7 +227,7 @@ class AWSClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    activeSpan() == null
+    !TEST_TRACER.getCurrentSpan().getContext().isValid()
     thrown RuntimeException
 
     assertTraces(1) {
@@ -274,7 +273,7 @@ class AWSClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    activeSpan() == null
+    !TEST_TRACER.getCurrentSpan().getContext().isValid()
     thrown AmazonClientException
 
     assertTraces(1) {

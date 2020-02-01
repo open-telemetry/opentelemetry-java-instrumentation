@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.decorator;
 
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -19,11 +19,9 @@ public abstract class BaseDecorator {
 
   protected BaseDecorator() {}
 
-  protected abstract String[] instrumentationNames();
+  protected abstract String getSpanType();
 
-  protected abstract String spanType();
-
-  protected abstract String component();
+  protected abstract String getComponentName();
 
   @Deprecated
   public AgentSpan afterStart(final AgentSpan span) {
@@ -33,11 +31,11 @@ public abstract class BaseDecorator {
 
   public Span afterStart(final Span span) {
     assert span != null;
-    final String spanType = spanType();
+    final String spanType = getSpanType();
     if (spanType != null) {
       span.setAttribute(MoreTags.SPAN_TYPE, spanType);
     }
-    final String component = component();
+    final String component = getComponentName();
     if (component != null) {
       span.setAttribute(Tags.COMPONENT, component);
     }

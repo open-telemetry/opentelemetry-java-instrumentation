@@ -4,9 +4,9 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -102,12 +102,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"aws-sdk"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return COMPONENT_NAME;
   }
 

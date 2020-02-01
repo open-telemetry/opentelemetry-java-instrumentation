@@ -1,16 +1,15 @@
 package io.opentelemetry.auto.instrumentation.jetty8;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jetty8.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.TRACER;
 
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 public class JettyHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope onEnter(
+  public static SpanScopePair onEnter(
       @Advice.This final Object source, @Advice.Argument(2) final HttpServletRequest req) {
 
     if (req.getAttribute(SPAN_ATTRIBUTE) != null) {
@@ -27,32 +26,37 @@ public class JettyHandlerAdvice {
       return null;
     }
 
-    final AgentSpan.Context extractedContext = propagate().extract(req, GETTER);
+    final Span.Builder spanBuilder = TRACER.spanBuilder("jetty.request");
+    try {
+      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER);
+      spanBuilder.setParent(extractedContext);
+    } catch (final IllegalArgumentException e) {
+      // Couldn't extract a context. We should treat this as a root span.
+      spanBuilder.setNoParent();
+    }
+    final Span span = spanBuilder.startSpan();
 
-    final AgentSpan span =
-        startSpan("jetty.request", extractedContext)
-            .setAttribute("span.origin.type", source.getClass().getName());
+    span.setAttribute("span.origin.type", source.getClass().getName());
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
     DECORATE.onRequest(span, req);
     final String resourceName = req.getMethod() + " " + source.getClass().getName();
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
-    final AgentScope scope = activateSpan(span, false);
     req.setAttribute(SPAN_ATTRIBUTE, span);
-    return scope;
+    return new SpanScopePair(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(2) final HttpServletRequest req,
       @Advice.Argument(3) final HttpServletResponse resp,
-      @Advice.Enter final AgentScope scope,
+      @Advice.Enter final SpanScopePair spanScopePair,
       @Advice.Thrown final Throwable throwable) {
-    if (scope == null) {
+    if (spanScopePair == null) {
       return;
     }
-    final AgentSpan span = scope.span();
+    final Span span = spanScopePair.getSpan();
     if (req.getUserPrincipal() != null) {
       span.setAttribute(MoreTags.USER_NAME, req.getUserPrincipal().getName());
     }
@@ -61,11 +65,10 @@ public class JettyHandlerAdvice {
       if (resp.getStatus() == HttpServletResponse.SC_OK) {
         // exception is thrown in filter chain, but status code is incorrect
         span.setAttribute(Tags.HTTP_STATUS, 500);
-        span.setError(true);
       }
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
-      span.finish(); // Finish the span manually since finishSpanOnClose was false
+      span.end(); // Finish the span manually since finishSpanOnClose was false
     } else {
       final AtomicBoolean activated = new AtomicBoolean(false);
       if (req.isAsyncStarted()) {
@@ -80,9 +83,9 @@ public class JettyHandlerAdvice {
       if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
         DECORATE.onResponse(span, resp);
         DECORATE.beforeFinish(span);
-        span.finish(); // Finish the span manually since finishSpanOnClose was false
+        span.end(); // Finish the span manually since finishSpanOnClose was false
       }
     }
-    scope.close();
+    spanScopePair.getScope().close();
   }
 }

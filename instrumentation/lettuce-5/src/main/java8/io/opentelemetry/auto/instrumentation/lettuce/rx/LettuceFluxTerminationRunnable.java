@@ -1,10 +1,10 @@
 package io.opentelemetry.auto.instrumentation.lettuce.rx;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.TRACER;
 
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import reactor.core.publisher.SignalType;
 
 public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnable {
 
-  private AgentSpan span = null;
+  private Span span = null;
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer = null;
 
@@ -35,7 +35,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
       }
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
@@ -83,13 +83,13 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
 
     @Override
     public void accept(final Subscription subscription) {
-      final AgentSpan span = startSpan("redis.query");
+      final Span span = TRACER.spanBuilder("redis.query").startSpan();
       owner.span = span;
       DECORATE.afterStart(span);
       DECORATE.onCommand(span, command);
       if (finishSpanOnClose) {
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }

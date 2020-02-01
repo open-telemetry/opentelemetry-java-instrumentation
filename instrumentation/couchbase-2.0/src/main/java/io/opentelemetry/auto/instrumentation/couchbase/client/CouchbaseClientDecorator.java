@@ -1,15 +1,10 @@
 package io.opentelemetry.auto.instrumentation.couchbase.client;
 
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 
 class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
-
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"couchbase"};
-  }
 
   @Override
   protected String service() {
@@ -17,12 +12,12 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "couchbase-client";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.COUCHBASE;
   }
 

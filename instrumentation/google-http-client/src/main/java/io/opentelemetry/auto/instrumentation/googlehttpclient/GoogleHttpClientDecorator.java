@@ -43,12 +43,7 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"google-http-client"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "google-http-client";
   }
 }

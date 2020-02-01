@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
@@ -10,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -53,7 +52,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanScopePair start(@Advice.This final DataSource ds) {
-      if (activeSpan() == null) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return null;
       }

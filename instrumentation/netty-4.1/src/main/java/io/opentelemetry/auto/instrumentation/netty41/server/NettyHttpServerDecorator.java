@@ -22,12 +22,7 @@ public class NettyHttpServerDecorator
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"netty", "netty-4.0"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "netty";
   }
 

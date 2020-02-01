@@ -1,5 +1,5 @@
 import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -11,7 +11,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class HttpServletTest extends AgentTestRunner {
   static {
-    System.setProperty("opentelemetry.auto.integration.servlet-service.enabled", "true")
+    System.setProperty("ota.integration.servlet-service.enabled", "true")
   }
 
   def req = Mock(HttpServletRequest) {

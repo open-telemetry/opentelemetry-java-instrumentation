@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.springweb;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -27,18 +27,13 @@ public class SpringWebHttpServerDecorator
   public static final SpringWebHttpServerDecorator DECORATE_RENDER =
       new SpringWebHttpServerDecorator() {
         @Override
-        protected String component() {
+        protected String getComponentName() {
           return "spring-webmvc";
         }
       };
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"spring-web"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "spring-web-controller";
   }
 

@@ -39,12 +39,7 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"play-ws"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "play-ws";
   }
 }

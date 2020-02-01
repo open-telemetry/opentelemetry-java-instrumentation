@@ -1,6 +1,8 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.http.server.Request;
@@ -8,6 +10,8 @@ import org.glassfish.grizzly.http.server.Response;
 
 public class GrizzlyDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final GrizzlyDecorator DECORATE = new GrizzlyDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String method(final Request request) {
@@ -47,12 +51,7 @@ public class GrizzlyDecorator extends HttpServerDecorator<Request, Request, Resp
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"grizzly"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "grizzly";
   }
 }

@@ -3,10 +3,10 @@ package io.opentelemetry.auto.instrumentation.jaxrs2;
 import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
 import io.opentelemetry.trace.Span;
@@ -35,17 +35,12 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[0];
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jax-rs-controller";
   }
 

@@ -45,7 +45,6 @@ subprojects { Project subProj ->
     }
     dependencies {
       // Apply common dependencies for instrumentation.
-      compile project(':trace-api')
       compile(project(':agent-tooling')) {
         // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
         // is brought in for tests by project(:testing) below
@@ -53,7 +52,6 @@ subprojects { Project subProj ->
       }
       compile deps.bytebuddy
       if (jdkCompile) {
-        "$jdkCompile" project(':trace-api')
         "$jdkCompile"(project(':agent-tooling')) {
           // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
           // is brought in for tests by project(:testing) below
@@ -82,6 +80,11 @@ dependencies {
   compile(project(':agent-tooling')) {
     exclude module: ':agent-bootstrap'
   }
+
+  // TODO: including the jaeger exporter doubles the agent jar file size, would be better for it to be optional component
+  // (but this can wait until after 0.1.0)
+  compile group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry
+  compile group: 'io.grpc', name: 'grpc-netty', version: '1.24.0'
 }
 
 configurations {
@@ -108,7 +111,6 @@ shadowJar {
 
   dependencies {
     exclude(project(':agent-bootstrap'))
-    exclude(project(':trace-api'))
   }
 
   // relocate OpenTelemetry API usage

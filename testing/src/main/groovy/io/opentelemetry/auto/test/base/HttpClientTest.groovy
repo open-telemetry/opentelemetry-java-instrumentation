@@ -1,9 +1,9 @@
 package io.opentelemetry.auto.test.base
 
-import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.decorator.HttpClientDecorator
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -321,7 +321,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
-        "$Tags.COMPONENT" clientDecorator.component()
+        "$Tags.COMPONENT" clientDecorator.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

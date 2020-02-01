@@ -1,8 +1,8 @@
 package server
 
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.play26.PlayHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -91,7 +91,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
       childOf((SpanData) parent)
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
+        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String
@@ -119,7 +119,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.HTTP_STATUS" endpoint.status
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"

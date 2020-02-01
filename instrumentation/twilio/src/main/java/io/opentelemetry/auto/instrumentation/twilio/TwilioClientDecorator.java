@@ -4,9 +4,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -25,17 +25,12 @@ public class TwilioClientDecorator extends ClientDecorator {
   static final String COMPONENT_NAME = "twilio-sdk";
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.HTTP_CLIENT;
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {COMPONENT_NAME};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return COMPONENT_NAME;
   }
 

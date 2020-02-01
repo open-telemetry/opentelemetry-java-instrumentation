@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named
 import static net.bytebuddy.matcher.ElementMatchers.none
 
 abstract class AgentSpecification extends Specification {
-  private static final String CONFIG = "io.opentelemetry.auto.api.Config"
+  private static final String CONFIG = "io.opentelemetry.auto.config.Config"
 
   static {
     makeConfigInstanceModifiable()

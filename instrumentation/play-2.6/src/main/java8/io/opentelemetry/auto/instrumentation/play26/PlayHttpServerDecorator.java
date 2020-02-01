@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.play26;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -25,12 +25,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"play"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "play-action";
   }
 

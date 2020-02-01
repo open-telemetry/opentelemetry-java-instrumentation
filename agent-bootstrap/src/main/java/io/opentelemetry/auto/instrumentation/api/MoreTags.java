@@ -1,4 +1,4 @@
-package io.opentelemetry.auto.api;
+package io.opentelemetry.auto.instrumentation.api;
 
 public class MoreTags {
   public static final String SPAN_TYPE = "span.type";

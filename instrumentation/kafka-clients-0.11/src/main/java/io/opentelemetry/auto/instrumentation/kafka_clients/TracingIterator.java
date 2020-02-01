@@ -1,13 +1,11 @@
 package io.opentelemetry.auto.instrumentation.kafka_clients;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
+import static io.opentelemetry.auto.instrumentation.kafka_clients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafka_clients.TextMapExtractAdapter.GETTER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.util.Iterator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -22,7 +20,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
    * Note: this may potentially create problems if this iterator is used from different threads. But
    * at the moment we cannot do much about this.
    */
-  private AgentScope currentScope;
+  private SpanScopePair currentSpanScopePair;
 
   public TracingIterator(
       final Iterator<ConsumerRecord> delegateIterator,
@@ -35,30 +33,40 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
 
   @Override
   public boolean hasNext() {
-    if (currentScope != null) {
-      currentScope.close();
-      currentScope = null;
+    if (currentSpanScopePair != null) {
+      currentSpanScopePair.getSpan().end();
+      currentSpanScopePair.getScope().close();
+      currentSpanScopePair = null;
     }
     return delegateIterator.hasNext();
   }
 
   @Override
   public ConsumerRecord next() {
-    if (currentScope != null) {
+    if (currentSpanScopePair != null) {
       // in case they didn't call hasNext()...
-      currentScope.close();
-      currentScope = null;
+      currentSpanScopePair.getSpan().end();
+      currentSpanScopePair.getScope().close();
+      currentSpanScopePair = null;
     }
 
     final ConsumerRecord next = delegateIterator.next();
 
     try {
       if (next != null) {
-        final Context spanContext = propagate().extract(next.headers(), GETTER);
-        final AgentSpan span = startSpan(operationName, spanContext);
+        final Span.Builder spanBuilder = TRACER.spanBuilder(operationName);
+        try {
+          final SpanContext extractedContext =
+              TRACER.getHttpTextFormat().extract(next.headers(), GETTER);
+          spanBuilder.setParent(extractedContext);
+        } catch (final IllegalArgumentException e) {
+          // Couldn't extract a context. We should treat this as a root span.
+          spanBuilder.setNoParent();
+        }
+        final Span span = spanBuilder.startSpan();
         decorator.afterStart(span);
         decorator.onConsume(span, next);
-        currentScope = activateSpan(span, true);
+        currentSpanScopePair = new SpanScopePair(span, TRACER.withSpan(span));
       }
     } catch (final Exception e) {
       log.debug("Error during decoration", e);
