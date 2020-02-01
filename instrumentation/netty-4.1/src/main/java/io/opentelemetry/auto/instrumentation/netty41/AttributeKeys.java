@@ -13,13 +13,14 @@ public class AttributeKeys {
   private static final WeakMap<ClassLoader, Map<String, AttributeKey<?>>> map =
       WeakMap.Implementation.DEFAULT.get();
 
-  private static final WeakMap.ValueSupplier<Map<String, AttributeKey<?>>> mapSupplier =
-      new WeakMap.ValueSupplier<Map<String, AttributeKey<?>>>() {
-        @Override
-        public Map<String, AttributeKey<?>> get() {
-          return new ConcurrentHashMap<>();
-        }
-      };
+  private static final WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>
+      mapSupplier =
+          new WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>() {
+            @Override
+            public Map<String, AttributeKey<?>> get(final ClassLoader ignored) {
+              return new ConcurrentHashMap<>();
+            }
+          };
 
   public static final AttributeKey<Span> PARENT_CONNECT_SPAN_ATTRIBUTE_KEY =
       attributeKey("io.opentelemetry.auto.instrumentation.netty41.parent.connect.span");
@@ -47,7 +48,7 @@ public class AttributeKeys {
    */
   private static <T> AttributeKey<T> attributeKey(final String key) {
     final Map<String, AttributeKey<?>> classLoaderMap =
-        map.getOrCreate(AttributeKey.class.getClassLoader(), mapSupplier);
+        map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
       return (AttributeKey<T>) classLoaderMap.get(key);
     }

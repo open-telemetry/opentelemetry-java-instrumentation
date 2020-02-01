@@ -3,7 +3,9 @@ package io.opentelemetry.auto
 import io.opentelemetry.auto.test.IntegrationTestUtils
 import jvmbootstraptest.LogLevelChecker
 import spock.lang.Specification
+import spock.lang.Timeout
 
+@Timeout(30)
 class LogLevelTest extends Specification {
 
 

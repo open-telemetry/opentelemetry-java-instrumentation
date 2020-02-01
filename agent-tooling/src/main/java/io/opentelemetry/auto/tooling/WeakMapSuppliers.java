@@ -41,7 +41,7 @@ class WeakMapSuppliers {
     public <K, V> WeakMap<K, V> get() {
       final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false);
       cleaner.scheduleCleaning(map, MapCleaner.CLEANER, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
-      return new Adapter(map);
+      return new Adapter<>(map);
     }
 
     private static class MapCleaner implements Cleaner.Adapter<WeakConcurrentMap> {
@@ -86,16 +86,21 @@ class WeakMapSuppliers {
       }
 
       @Override
-      public V getOrCreate(final K key, final ValueSupplier<V> supplier) {
-        if (!map.containsKey(key)) {
-          synchronized (this) {
-            if (!map.containsKey(key)) {
-              map.put(key, supplier.get());
-            }
-          }
+      public V computeIfAbsent(final K key, final ValueSupplier<? super K, ? extends V> supplier) {
+        if (map.containsKey(key)) {
+          return map.get(key);
         }
 
-        return map.get(key);
+        synchronized (this) {
+          if (map.containsKey(key)) {
+            return map.get(key);
+          } else {
+            final V value = supplier.get(key);
+
+            map.put(key, value);
+            return value;
+          }
+        }
       }
     }
 
@@ -103,7 +108,7 @@ class WeakMapSuppliers {
 
       @Override
       public <K, V> WeakMap<K, V> get() {
-        return new Adapter(new WeakConcurrentMap.WithInlinedExpunction<K, V>());
+        return new Adapter<>(new WeakConcurrentMap.WithInlinedExpunction<K, V>());
       }
     }
   }
