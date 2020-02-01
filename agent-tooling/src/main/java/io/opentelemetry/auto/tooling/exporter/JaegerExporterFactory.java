@@ -22,10 +22,7 @@ public class JaegerExporterFactory implements SpanExporterFactory {
     if (ipStr == null) {
       throw new ExporterConfigException(PORT_CONFIG + " must be specified");
     }
-    String service = Config.get().getServiceName();
-    if (service == null) {
-      service = "(unknown)";
-    }
+    final String service = Config.get().getServiceName();
     final int port;
     try {
       port = Integer.parseInt(ipStr);
