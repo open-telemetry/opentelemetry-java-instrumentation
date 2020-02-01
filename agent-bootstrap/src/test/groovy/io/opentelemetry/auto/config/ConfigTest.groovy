@@ -1,28 +1,28 @@
-package io.opentelemetry.auto.api
+package io.opentelemetry.auto.config
 
-import io.opentelemetry.auto.util.test.AgentSpecification
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
+import spock.lang.Specification
 
-import static io.opentelemetry.auto.api.Config.CONFIGURATION_FILE
-import static io.opentelemetry.auto.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
-import static io.opentelemetry.auto.api.Config.HTTP_CLIENT_ERROR_STATUSES
-import static io.opentelemetry.auto.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
-import static io.opentelemetry.auto.api.Config.HTTP_SERVER_ERROR_STATUSES
-import static io.opentelemetry.auto.api.Config.PREFIX
-import static io.opentelemetry.auto.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
-import static io.opentelemetry.auto.api.Config.TRACE_ENABLED
-import static io.opentelemetry.auto.api.Config.TRACE_METHODS
+import static io.opentelemetry.auto.config.Config.CONFIGURATION_FILE
+import static io.opentelemetry.auto.config.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
+import static io.opentelemetry.auto.config.Config.HTTP_CLIENT_ERROR_STATUSES
+import static io.opentelemetry.auto.config.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
+import static io.opentelemetry.auto.config.Config.HTTP_SERVER_ERROR_STATUSES
+import static io.opentelemetry.auto.config.Config.PREFIX
+import static io.opentelemetry.auto.config.Config.RUNTIME_CONTEXT_FIELD_INJECTION
+import static io.opentelemetry.auto.config.Config.TRACE_ENABLED
+import static io.opentelemetry.auto.config.Config.TRACE_METHODS
 
-class ConfigTest extends AgentSpecification {
+class ConfigTest extends Specification {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  private static final TRACE_ENABLED_ENV = "OPENTELEMETRY_AUTO_TRACE_ENABLED"
-  private static final TRACE_METHODS_ENV = "OPENTELEMETRY_AUTO_TRACE_METHODS"
+  private static final TRACE_ENABLED_ENV = "OTA_TRACE_ENABLED"
+  private static final TRACE_METHODS_ENV = "OTA_TRACE_METHODS"
 
   def "verify defaults"() {
     when:
@@ -194,13 +194,13 @@ class ConfigTest extends AgentSpecification {
 
   def "verify integration config"() {
     setup:
-    environmentVariables.set("OPENTELEMETRY_AUTO_INTEGRATION_ORDER_ENABLED", "false")
-    environmentVariables.set("OPENTELEMETRY_AUTO_INTEGRATION_TEST_ENV_ENABLED", "true")
-    environmentVariables.set("OPENTELEMETRY_AUTO_INTEGRATION_DISABLED_ENV_ENABLED", "false")
+    environmentVariables.set("OTA_INTEGRATION_ORDER_ENABLED", "false")
+    environmentVariables.set("OTA_INTEGRATION_TEST_ENV_ENABLED", "true")
+    environmentVariables.set("OTA_INTEGRATION_DISABLED_ENV_ENABLED", "false")
 
-    System.setProperty("opentelemetry.auto.integration.order.enabled", "true")
-    System.setProperty("opentelemetry.auto.integration.test-prop.enabled", "true")
-    System.setProperty("opentelemetry.auto.integration.disabled-prop.enabled", "false")
+    System.setProperty("ota.integration.order.enabled", "true")
+    System.setProperty("ota.integration.test-prop.enabled", "true")
+    System.setProperty("ota.integration.disabled-prop.enabled", "false")
 
     expect:
     Config.get().isIntegrationEnabled(integrationNames, defaultEnabled) == expected
@@ -228,15 +228,15 @@ class ConfigTest extends AgentSpecification {
 
   def "test getFloatSettingFromEnvironment(#name)"() {
     setup:
-    environmentVariables.set("OPENTELEMETRY_AUTO_ENV_ZERO_TEST", "0.0")
-    environmentVariables.set("OPENTELEMETRY_AUTO_ENV_FLOAT_TEST", "1.0")
-    environmentVariables.set("OPENTELEMETRY_AUTO_FLOAT_TEST", "0.2")
+    environmentVariables.set("OTA_ENV_ZERO_TEST", "0.0")
+    environmentVariables.set("OTA_ENV_FLOAT_TEST", "1.0")
+    environmentVariables.set("OTA_FLOAT_TEST", "0.2")
 
-    System.setProperty("opentelemetry.auto.prop.zero.test", "0")
-    System.setProperty("opentelemetry.auto.prop.float.test", "0.3")
-    System.setProperty("opentelemetry.auto.float.test", "0.4")
-    System.setProperty("opentelemetry.auto.garbage.test", "garbage")
-    System.setProperty("opentelemetry.auto.negative.test", "-1")
+    System.setProperty("ota.prop.zero.test", "0")
+    System.setProperty("ota.prop.float.test", "0.3")
+    System.setProperty("ota.float.test", "0.4")
+    System.setProperty("ota.garbage.test", "garbage")
+    System.setProperty("ota.negative.test", "-1")
 
     expect:
     Config.getFloatSettingFromEnvironment(name, defaultValue) == (float) expected
@@ -327,7 +327,7 @@ class ConfigTest extends AgentSpecification {
   def "verify fallback to properties file has lower priority than env var"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/java-tracer.properties")
-    environmentVariables.set("OPENTELEMETRY_AUTO_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
+    environmentVariables.set("OTA_TRACE_METHODS", "mypackage2.MyClass2[myMethod2]")
 
     when:
     def config = new Config()
@@ -338,7 +338,7 @@ class ConfigTest extends AgentSpecification {
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
     System.clearProperty(PREFIX + TRACE_METHODS)
-    environmentVariables.clear("OPENTELEMETRY_AUTO_TRACE_METHODS")
+    environmentVariables.clear("OTA_TRACE_METHODS")
   }
 
   def "verify fallback to properties file that does not exist does not crash app"() {

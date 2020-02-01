@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.decorator
 
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
 
@@ -21,7 +21,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     }
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     1 * span.setAttribute(Tags.SPAN_KIND, "client")
-    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.spanType())
+    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.getSpanType())
     _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _
 
@@ -44,10 +44,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   def newDecorator(String serviceName) {
     return new ClientDecorator() {
-      @Override
-      protected String[] instrumentationNames() {
-        return ["test1", "test2"]
-      }
 
       @Override
       protected String service() {
@@ -55,12 +51,12 @@ class ClientDecoratorTest extends BaseDecoratorTest {
       }
 
       @Override
-      protected String spanType() {
+      protected String getSpanType() {
         return "test-type"
       }
 
       @Override
-      protected String component() {
+      protected String getComponentName() {
         return "test-component"
       }
     }

@@ -1,6 +1,8 @@
 package io.opentelemetry.auto.instrumentation.playws2;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import play.shaded.ahc.org.asynchttpclient.Request;
@@ -8,6 +10,8 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 
 public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response> {
   public static final PlayWSClientDecorator DECORATE = new PlayWSClientDecorator();
+
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String method(final Request request) {
@@ -35,12 +39,7 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"play-ws"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "play-ws";
   }
 }

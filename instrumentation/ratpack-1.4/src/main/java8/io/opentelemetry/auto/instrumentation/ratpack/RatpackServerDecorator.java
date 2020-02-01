@@ -1,9 +1,11 @@
 package io.opentelemetry.auto.instrumentation.ratpack;
 
 import com.google.common.net.HostAndPort;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.handling.Context;
@@ -17,13 +19,10 @@ import ratpack.server.PublicAddress;
 public class RatpackServerDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final RatpackServerDecorator DECORATE = new RatpackServerDecorator();
 
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"ratpack"};
-  }
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "ratpack";
   }
 
@@ -68,7 +67,7 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
     }
   }
 
-  public AgentSpan onContext(final AgentSpan span, final Context ctx) {
+  public Span onContext(final Span span, final Context ctx) {
 
     String description = ctx.getPathBinding().getDescription();
     if (description == null || description.isEmpty()) {
@@ -84,7 +83,7 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
   }
 
   @Override
-  public AgentSpan onError(final AgentSpan span, final Throwable throwable) {
+  public Span onError(final Span span, final Throwable throwable) {
     // Attempt to unwrap ratpack.handling.internal.HandlerException without direct reference.
     if (throwable instanceof Error && throwable.getCause() != null) {
       return super.onError(span, throwable.getCause());

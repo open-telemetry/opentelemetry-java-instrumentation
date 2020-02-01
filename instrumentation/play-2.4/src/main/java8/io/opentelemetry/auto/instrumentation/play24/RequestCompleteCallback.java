@@ -2,16 +2,16 @@ package io.opentelemetry.auto.instrumentation.play24;
 
 import static io.opentelemetry.auto.instrumentation.play24.PlayHttpServerDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
 import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Result;
 import scala.util.Try;
 
 @Slf4j
 public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try<Result>, Object> {
-  private final AgentSpan span;
+  private final Span span;
 
-  public RequestCompleteCallback(final AgentSpan span) {
+  public RequestCompleteCallback(final Span span) {
     this.span = span;
   }
 
@@ -27,7 +27,7 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
     } catch (final Throwable t) {
       log.debug("error in play instrumentation", t);
     } finally {
-      span.finish();
+      span.end();
     }
     return null;
   }

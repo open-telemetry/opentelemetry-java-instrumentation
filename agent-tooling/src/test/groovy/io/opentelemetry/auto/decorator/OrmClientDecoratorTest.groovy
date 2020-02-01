@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.decorator
 
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.trace.Span
 
 class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
@@ -64,18 +64,14 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
         return "test-service"
       }
 
-      @Override
-      protected String[] instrumentationNames() {
-        return ["test1"]
-      }
 
       @Override
-      protected String spanType() {
+      protected String getSpanType() {
         return "test-type"
       }
 
       @Override
-      protected String component() {
+      protected String getComponentName() {
         return "test-component"
       }
     }

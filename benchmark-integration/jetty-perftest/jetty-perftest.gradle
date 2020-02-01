@@ -1,5 +1,4 @@
 dependencies {
-  compile project(':trace-api')
   compile project(':agent-bootstrap')
   compile project(':benchmark-integration')
 

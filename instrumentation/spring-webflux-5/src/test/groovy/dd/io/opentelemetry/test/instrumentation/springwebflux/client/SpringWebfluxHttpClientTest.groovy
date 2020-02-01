@@ -1,7 +1,7 @@
 package io.opentelemetry.test.instrumentation.springwebflux.client
 
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
@@ -53,7 +53,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
         tags {
           "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
           "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
-          "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.component()
+          "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.getComponentName()
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           "$Tags.PEER_HOSTNAME" "localhost"
           "$Tags.PEER_PORT" uri.port

@@ -1,4 +1,3 @@
-import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -29,7 +28,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("opentelemetry.auto.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+      System.setProperty("ota.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
     }
   }
 
@@ -66,16 +65,22 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
 
     new Runnable() {
       @Override
-      @Trace(operationName = "parent")
       void run() {
-        // this child will have a span
-        def child1 = new JavaAsyncChild()
-        // this child won't
-        def child2 = new JavaAsyncChild(false, false)
-        m(pool, child1)
-        m(pool, child2)
-        child1.waitForCompletion()
-        child2.waitForCompletion()
+        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
+        def parentScope = TEST_TRACER.withSpan(parentSpan)
+        try {
+          // this child will have a span
+          def child1 = new JavaAsyncChild()
+          // this child won't
+          def child2 = new JavaAsyncChild(false, false)
+          m(pool, child1)
+          m(pool, child2)
+          child1.waitForCompletion()
+          child2.waitForCompletion()
+        } finally {
+          parentSpan.end()
+          parentScope.close()
+        }
       }
     }.run()
 
@@ -150,9 +155,15 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     JavaAsyncChild child = new JavaAsyncChild(true, true)
     new Runnable() {
       @Override
-      @Trace(operationName = "parent")
       void run() {
-        m(pool, w(child))
+        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
+        def parentScope = TEST_TRACER.withSpan(parentSpan)
+        try {
+          m(pool, w(child))
+        } finally {
+          parentSpan.end()
+          parentScope.close()
+        }
       }
     }.run()
     // We block in child to make sure spans close in predictable order
@@ -192,33 +203,39 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
 
     new Runnable() {
       @Override
-      @Trace(operationName = "parent")
       void run() {
+        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
+        def parentScope = TEST_TRACER.withSpan(parentSpan)
         try {
-          for (int i = 0; i < 20; ++i) {
-            // Our current instrumentation instrumentation does not behave very well
-            // if we try to reuse Callable/Runnable. Namely we would be getting 'orphaned'
-            // child traces sometimes since state can contain only one parent span - and
-            // we do not really have a good way for attributing work to correct parent span
-            // if we reuse Callable/Runnable.
-            // Solution for now is to never reuse a Callable/Runnable.
-            final JavaAsyncChild child = new JavaAsyncChild(false, true)
-            children.add(child)
-            try {
-              Future f = m(pool, child)
-              jobFutures.add(f)
-            } catch (InvocationTargetException e) {
-              throw e.getCause()
+          try {
+            for (int i = 0; i < 20; ++i) {
+              // Our current instrumentation instrumentation does not behave very well
+              // if we try to reuse Callable/Runnable. Namely we would be getting 'orphaned'
+              // child traces sometimes since state can contain only one parent span - and
+              // we do not really have a good way for attributing work to correct parent span
+              // if we reuse Callable/Runnable.
+              // Solution for now is to never reuse a Callable/Runnable.
+              final JavaAsyncChild child = new JavaAsyncChild(false, true)
+              children.add(child)
+              try {
+                Future f = m(pool, child)
+                jobFutures.add(f)
+              } catch (InvocationTargetException e) {
+                throw e.getCause()
+              }
             }
+          } catch (RejectedExecutionException e) {
           }
-        } catch (RejectedExecutionException e) {
-        }
 
-        for (Future f : jobFutures) {
-          f.cancel(false)
-        }
-        for (JavaAsyncChild child : children) {
-          child.unblock()
+          for (Future f : jobFutures) {
+            f.cancel(false)
+          }
+          for (JavaAsyncChild child : children) {
+            child.unblock()
+          }
+        } finally {
+          parentSpan.end()
+          parentScope.close()
         }
       }
     }.run()

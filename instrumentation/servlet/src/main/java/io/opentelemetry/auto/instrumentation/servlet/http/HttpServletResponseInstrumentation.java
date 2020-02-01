@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.instrumentation.servlet.http;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
@@ -10,8 +9,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.servlet.ServletRequestSetter;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -61,7 +60,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanScopePair start(
         @Advice.Origin("#m") final String method, @Advice.This final HttpServletResponse resp) {
-      if (activeSpan() == null) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return null;
       }

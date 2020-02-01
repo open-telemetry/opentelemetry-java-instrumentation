@@ -1,18 +1,16 @@
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -63,19 +61,32 @@ public class TracedDelegatingConsumer implements Consumer {
       final AMQP.BasicProperties properties,
       final byte[] body)
       throws IOException {
-    AgentScope scope = null;
+    Span span = null;
+    Scope scope = null;
     try {
       final Map<String, Object> headers = properties.getHeaders();
-      final Context context = headers == null ? null : propagate().extract(headers, GETTER);
+      final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command");
+      SpanContext extractedContext = null;
+      if (headers != null) {
+        try {
+          extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+        } catch (final IllegalArgumentException e) {
+          // couldn't extract a context
+        }
+      }
+      if (extractedContext != null) {
+        spanBuilder.setParent(extractedContext);
+      } else {
+        spanBuilder.setNoParent();
+      }
 
-      final AgentSpan span =
-          startSpan("amqp.command", context)
-              .setAttribute("message.size", body == null ? 0 : body.length)
-              .setAttribute("span.origin.type", delegate.getClass().getName());
+      span = spanBuilder.startSpan();
+      span.setAttribute("message.size", body == null ? 0 : body.length);
+      span.setAttribute("span.origin.type", delegate.getClass().getName());
       CONSUMER_DECORATE.afterStart(span);
       CONSUMER_DECORATE.onDeliver(span, queue, envelope);
 
-      scope = activateSpan(span, true);
+      scope = TRACER.withSpan(span);
 
     } catch (final Exception e) {
       log.debug("Instrumentation error in tracing consumer", e);
@@ -86,13 +97,14 @@ public class TracedDelegatingConsumer implements Consumer {
         delegate.handleDelivery(consumerTag, envelope, properties, body);
 
       } catch (final Throwable throwable) {
-        if (scope != null) {
-          CONSUMER_DECORATE.onError(scope, throwable);
+        if (span != null) {
+          CONSUMER_DECORATE.onError(span, throwable);
         }
         throw throwable;
       } finally {
         if (scope != null) {
-          CONSUMER_DECORATE.beforeFinish(scope);
+          CONSUMER_DECORATE.beforeFinish(span);
+          span.end();
           scope.close();
         }
       }

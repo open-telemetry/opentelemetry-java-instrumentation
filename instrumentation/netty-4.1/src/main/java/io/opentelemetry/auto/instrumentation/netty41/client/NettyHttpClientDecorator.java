@@ -4,7 +4,9 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
@@ -13,13 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
   public static final NettyHttpClientDecorator DECORATE = new NettyHttpClientDecorator();
 
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"netty", "netty-4.0"};
-  }
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "netty-client";
   }
 

@@ -1,25 +1,20 @@
 package io.opentelemetry.auto.instrumentation.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 
 public class HystrixDecorator extends BaseDecorator {
   public static HystrixDecorator DECORATE = new HystrixDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[0];
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "hystrix";
   }
 

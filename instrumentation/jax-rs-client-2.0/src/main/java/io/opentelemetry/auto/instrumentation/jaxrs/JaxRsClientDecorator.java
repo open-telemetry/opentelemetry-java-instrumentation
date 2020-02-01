@@ -1,6 +1,8 @@
 package io.opentelemetry.auto.instrumentation.jaxrs;
 
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
@@ -9,13 +11,10 @@ public class JaxRsClientDecorator
     extends HttpClientDecorator<ClientRequestContext, ClientResponseContext> {
   public static final JaxRsClientDecorator DECORATE = new JaxRsClientDecorator();
 
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jax-rs", "jaxrs", "jax-rs-client"};
-  }
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jax-rs.client";
   }
 

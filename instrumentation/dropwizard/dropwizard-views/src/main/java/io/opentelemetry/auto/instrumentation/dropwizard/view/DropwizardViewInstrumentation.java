@@ -12,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.dropwizard.views.View;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -62,7 +62,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanScopePair onEnter(
         @Advice.This final Object obj, @Advice.Argument(0) final View view) {
-      if (TRACER.getCurrentSpan() == null) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
       final Span span = TRACER.spanBuilder("view.render").startSpan();

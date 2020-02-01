@@ -5,8 +5,8 @@ import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestE
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
 
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
@@ -37,7 +37,8 @@ public class Servlet3Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-    final Span.Builder builder = TRACER.spanBuilder("servlet.request");
+    final Span.Builder builder =
+        TRACER.spanBuilder("servlet.request").setSpanKind(Span.Kind.SERVER);
     try {
       final SpanContext extractedContext =
           TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);

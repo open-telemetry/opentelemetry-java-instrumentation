@@ -15,12 +15,7 @@ public class AkkaHttpServerDecorator
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"akka-http", "akka-http-server"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return "akka-http-server";
   }
 

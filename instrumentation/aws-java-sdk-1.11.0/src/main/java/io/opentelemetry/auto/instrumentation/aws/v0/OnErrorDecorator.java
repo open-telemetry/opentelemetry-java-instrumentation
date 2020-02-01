@@ -6,17 +6,12 @@ public class OnErrorDecorator extends BaseDecorator {
   public static final OnErrorDecorator DECORATE = new OnErrorDecorator();
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"aws-sdk"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return null;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-aws-sdk";
   }
 }

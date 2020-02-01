@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.test.utils
 
-import io.opentelemetry.auto.api.Config
+import io.opentelemetry.auto.config.Config
 import lombok.SneakyThrows
 
 import java.lang.reflect.Modifier

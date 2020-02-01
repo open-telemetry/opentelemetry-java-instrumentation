@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jms;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.PRODUCER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -14,9 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.Destination;
@@ -71,7 +69,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(
+    public static SpanScopePair onEnter(
         @Advice.Argument(0) final Message message, @Advice.This final MessageProducer producer) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
@@ -85,25 +83,28 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         defaultDestination = null;
       }
 
-      final AgentSpan span =
-          startSpan("jms.produce").setAttribute("span.origin.type", producer.getClass().getName());
+      final Span span = TRACER.spanBuilder("jms.produce").startSpan();
+      span.setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, message, defaultDestination);
 
-      propagate().inject(span, message, SETTER);
+      TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+      if (spanScopePair == null) {
         return;
       }
-      PRODUCER_DECORATE.onError(scope, throwable);
-      PRODUCER_DECORATE.beforeFinish(scope);
-      scope.close();
+      final Span span = spanScopePair.getSpan();
+      PRODUCER_DECORATE.onError(span, throwable);
+      PRODUCER_DECORATE.beforeFinish(span);
+
+      span.end();
+      spanScopePair.getScope().close();
       CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }
@@ -111,7 +112,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
   public static class ProducerWithDestinationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(
+    public static SpanScopePair onEnter(
         @Advice.Argument(0) final Destination destination,
         @Advice.Argument(1) final Message message,
         @Advice.This final MessageProducer producer) {
@@ -120,25 +121,27 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         return null;
       }
 
-      final AgentSpan span =
-          startSpan("jms.produce").setAttribute("span.origin.type", producer.getClass().getName());
+      final Span span = TRACER.spanBuilder("jms.produce").startSpan();
+      span.setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, message, destination);
 
-      propagate().inject(span, message, SETTER);
+      TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+      if (spanScopePair == null) {
         return;
       }
-      PRODUCER_DECORATE.onError(scope, throwable);
-      PRODUCER_DECORATE.beforeFinish(scope);
-      scope.close();
+      final Span span = spanScopePair.getSpan();
+      PRODUCER_DECORATE.onError(span, throwable);
+      PRODUCER_DECORATE.beforeFinish(span);
+      span.end();
+      spanScopePair.getScope().close();
       CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }

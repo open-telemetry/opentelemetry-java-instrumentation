@@ -1,14 +1,14 @@
 package io.opentelemetry.auto.instrumentation.jaxrs;
 
-import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 import javax.ws.rs.core.MultivaluedMap;
 
-public final class InjectAdapter implements AgentPropagation.Setter<MultivaluedMap> {
+public final class InjectAdapter implements HttpTextFormat.Setter<MultivaluedMap> {
 
   public static final InjectAdapter SETTER = new InjectAdapter();
 
   @Override
-  public void set(final MultivaluedMap headers, final String key, final String value) {
+  public void put(final MultivaluedMap headers, final String key, final String value) {
     // Don't allow duplicates.
     headers.putSingle(key, value);
   }

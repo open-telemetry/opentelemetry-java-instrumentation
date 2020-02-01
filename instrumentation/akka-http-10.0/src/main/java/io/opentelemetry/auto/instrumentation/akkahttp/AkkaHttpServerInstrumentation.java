@@ -94,7 +94,6 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     }
   }
 
-  @Slf4j
   public static class WrapperHelper {
     public static SpanScopePair createSpan(final HttpRequest request) {
       final Span.Builder spanBuilder = TRACER.spanBuilder("akka-http.request");
@@ -102,8 +101,8 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
         spanBuilder.setParent(extractedContext);
       } catch (final IllegalArgumentException e) {
-        // context extraction was not successful
-        log.debug(e.getMessage(), e);
+        // Couldn't extract a context. We should treat this as a root span.
+        spanBuilder.setNoParent();
       }
       final Span span = spanBuilder.startSpan();
 

@@ -49,8 +49,6 @@ dependencies {
   play "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
   play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
-  play project(':trace-api')
-
   testCompile project(':smoke-tests')
 }
 

@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -24,7 +24,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
 
   static {
-    System.setProperty("opentelemetry.auto.integration.jetty.enabled", "true")
+    System.setProperty("ota.integration.jetty.enabled", "true")
   }
 
   static errorHandler = new ErrorHandler() {
@@ -129,7 +129,7 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
       tags {
         "$MoreTags.RESOURCE_NAME" "$method $handlerName"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

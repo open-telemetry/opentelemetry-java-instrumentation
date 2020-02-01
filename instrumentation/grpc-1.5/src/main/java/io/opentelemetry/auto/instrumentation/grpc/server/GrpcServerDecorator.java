@@ -2,8 +2,8 @@ package io.opentelemetry.auto.instrumentation.grpc.server;
 
 import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ServerDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -12,17 +12,12 @@ public class GrpcServerDecorator extends ServerDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"grpc", "grpc-server"};
-  }
-
-  @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.RPC;
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "grpc-server";
   }
 

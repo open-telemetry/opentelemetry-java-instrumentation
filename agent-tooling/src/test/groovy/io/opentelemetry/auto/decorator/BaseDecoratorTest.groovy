@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.decorator
 
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.trace.Span
@@ -19,7 +19,7 @@ class BaseDecoratorTest extends AgentSpecification {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.spanType())
+    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.getSpanType())
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _
@@ -119,18 +119,14 @@ class BaseDecoratorTest extends AgentSpecification {
 
   def newDecorator() {
     return new BaseDecorator() {
-      @Override
-      protected String[] instrumentationNames() {
-        return []
-      }
 
       @Override
-      protected String spanType() {
+      protected String getSpanType() {
         return "test-type"
       }
 
       @Override
-      protected String component() {
+      protected String getComponentName() {
         return "test-component"
       }
     }

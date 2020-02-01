@@ -1,16 +1,16 @@
 package io.opentelemetry.auto.instrumentation.jedis;
 
-import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
+import io.opentelemetry.trace.Tracer;
 import redis.clients.jedis.Protocol;
 
 public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Command> {
   public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
 
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jedis", "redis"};
-  }
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jedis-1.4");
 
   @Override
   protected String service() {
@@ -18,12 +18,12 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Comma
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "redis-command";
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.REDIS;
   }
 

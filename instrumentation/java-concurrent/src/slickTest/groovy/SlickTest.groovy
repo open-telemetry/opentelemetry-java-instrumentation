@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -18,12 +18,10 @@ class SlickTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "run query"
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "SlickUtils.runQuery"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {

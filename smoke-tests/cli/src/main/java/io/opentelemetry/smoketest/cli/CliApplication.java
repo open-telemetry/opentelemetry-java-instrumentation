@@ -1,9 +1,15 @@
 package io.opentelemetry.smoketest.cli;
 
-import io.opentelemetry.auto.api.Trace;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 
 /** Simple application that sleeps then quits. */
 public class CliApplication {
+
+  private static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   public static void main(final String[] args) throws InterruptedException {
     final CliApplication app = new CliApplication();
@@ -18,8 +24,11 @@ public class CliApplication {
     System.out.println("Finished calling example trace");
   }
 
-  @Trace(operationName = "example")
   public void exampleTrace() throws InterruptedException {
-    Thread.sleep(500);
+    final Span span = TRACER.spanBuilder("example").startSpan();
+    try (final Scope scope = TRACER.withSpan(span)) {
+      Thread.sleep(500);
+      span.end();
+    }
   }
 }

@@ -63,18 +63,16 @@ shadowJar {
 
   // relocate OpenTelemetry API dependency
   relocate "io.grpc", "io.opentelemetry.auto.shaded.io.grpc"
-
-  // relocate OpenTelemetry SDK
-  relocate "io.opentelemetry.sdk", "io.opentelemetry.auto.shaded.io.opentelemetry.sdk"
 }
 
 dependencies {
   testCompile project(':agent-bootstrap')
-  testCompile project(':trace-api')
   testCompile project(':utils:gc-utils')
 
   testCompile deps.testLogging
   testCompile deps.guava
+
+  testCompile 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
 
   shadowInclude project(path: ':agent-bootstrap')
 }

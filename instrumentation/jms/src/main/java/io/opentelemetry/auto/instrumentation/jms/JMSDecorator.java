@@ -1,10 +1,12 @@
 package io.opentelemetry.auto.instrumentation.jms;
 
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import javax.jms.Destination;
 import javax.jms.Message;
@@ -22,7 +24,7 @@ public abstract class JMSDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_PRODUCER;
         }
       };
@@ -35,15 +37,12 @@ public abstract class JMSDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_CONSUMER;
         }
       };
 
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jms", "jms-1", "jms-2"};
-  }
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
   protected String service() {
@@ -51,27 +50,26 @@ public abstract class JMSDecorator extends ClientDecorator {
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "jms";
   }
 
   @Override
   protected abstract String spanKind();
 
-  public void onConsume(final AgentSpan span, final Message message) {
+  public void onConsume(final Span span, final Message message) {
     span.setAttribute(MoreTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
   }
 
-  public void onReceive(final AgentSpan span, final Method method) {
+  public void onReceive(final Span span, final Method method) {
     span.setAttribute(MoreTags.RESOURCE_NAME, "JMS " + method.getName());
   }
 
-  public void onReceive(final AgentSpan span, final Message message) {
+  public void onReceive(final Span span, final Message message) {
     span.setAttribute(MoreTags.RESOURCE_NAME, "Received from " + toResourceName(message, null));
   }
 
-  public void onProduce(
-      final AgentSpan span, final Message message, final Destination destination) {
+  public void onProduce(final Span span, final Message message, final Destination destination) {
     span.setAttribute(
         MoreTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination));
   }

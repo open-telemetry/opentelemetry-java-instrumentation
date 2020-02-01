@@ -1,10 +1,8 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,10 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -66,39 +64,44 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope methodEnter(@Advice.Argument(0) final Request request) {
+    public static SpanScopePair methodEnter(@Advice.Argument(0) final Request request) {
       if (request.getAttribute(SPAN_ATTRIBUTE) != null) {
         return null;
       }
 
-      final Context parentContext = propagate().extract(request, GETTER);
-      final AgentSpan span = startSpan("grizzly.request", parentContext);
+      final Span.Builder spanBuilder = TRACER.spanBuilder("grizzly.request");
+      try {
+        final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
+        spanBuilder.setParent(extractedContext);
+      } catch (final IllegalArgumentException e) {
+        // Couldn't extract a context. We should treat this as a root span.
+        spanBuilder.setNoParent();
+      }
+      final Span span = spanBuilder.startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, request);
       DECORATE.onRequest(span, request);
 
-      final AgentScope scope = activateSpan(span, false);
-
       request.setAttribute(SPAN_ATTRIBUTE, span);
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
-      return scope;
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+      if (spanScopePair == null) {
         return;
       }
 
       if (throwable != null) {
-        final AgentSpan span = scope.span();
+        final Span span = spanScopePair.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
-      scope.close();
+      spanScopePair.getScope().close();
     }
   }
 
@@ -108,12 +111,12 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
     @Override
     public void onAfterService(final Request request) {
       final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      if (spanAttr instanceof AgentSpan) {
+      if (spanAttr instanceof Span) {
         request.removeAttribute(SPAN_ATTRIBUTE);
-        final AgentSpan span = (AgentSpan) spanAttr;
+        final Span span = (Span) spanAttr;
         DECORATE.onResponse(span, request.getResponse());
         DECORATE.beforeFinish(span);
-        span.finish();
+        span.end();
       }
     }
   }

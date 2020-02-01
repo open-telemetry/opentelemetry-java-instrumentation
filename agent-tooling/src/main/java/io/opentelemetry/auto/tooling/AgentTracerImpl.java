@@ -2,12 +2,12 @@ package io.opentelemetry.auto.tooling;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.AgentPropagation;
 import io.opentelemetry.auto.instrumentation.api.AgentPropagation.Getter;
 import io.opentelemetry.auto.instrumentation.api.AgentScope;
 import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.AgentTracer.TracerAPI;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.sdk.trace.ReadableSpan;

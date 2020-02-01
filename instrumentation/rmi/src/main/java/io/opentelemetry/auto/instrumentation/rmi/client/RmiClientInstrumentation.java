@@ -1,9 +1,7 @@
 package io.opentelemetry.auto.instrumentation.rmi.client;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.rmi.client.RmiClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.rmi.client.RmiClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -13,10 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -57,27 +55,28 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
   public static class RmiClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope onEnter(@Advice.Argument(value = 1) final Method method) {
-      if (activeSpan() == null) {
+    public static SpanScopePair onEnter(@Advice.Argument(value = 1) final Method method) {
+      if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
-      final AgentSpan span =
-          startSpan("rmi.invoke")
-              .setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method))
-              .setAttribute("span.origin.type", method.getDeclaringClass().getCanonicalName());
+      final Span span = TRACER.spanBuilder("rmi.invoke").startSpan();
+      span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
+      span.setAttribute("span.origin.type", method.getDeclaringClass().getCanonicalName());
 
       DECORATE.afterStart(span);
-      return activateSpan(span, true);
+      return new SpanScopePair(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+      if (spanScopePair == null) {
         return;
       }
-      DECORATE.onError(scope, throwable);
-      scope.close();
+      final Span span = spanScopePair.getSpan();
+      DECORATE.onError(span, throwable);
+      span.end();
+      spanScopePair.getScope().close();
     }
   }
 }

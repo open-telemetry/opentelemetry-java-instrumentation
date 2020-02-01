@@ -1,18 +1,20 @@
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.func.Action;
 
 @Slf4j
 public class ActionWrapper<T> implements Action<T> {
-  private final Action<T> delegate;
-  private final AgentSpan span;
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
-  private ActionWrapper(final Action<T> delegate, final AgentSpan span) {
+  private final Action<T> delegate;
+  private final Span span;
+
+  private ActionWrapper(final Action<T> delegate, final Span span) {
     assert span != null;
     this.delegate = delegate;
     this.span = span;
@@ -20,13 +22,14 @@ public class ActionWrapper<T> implements Action<T> {
 
   @Override
   public void execute(final T t) throws Exception {
-    try (final AgentScope scope = activateSpan(span, false)) {
+    try (final Scope scope = TRACER.withSpan(span)) {
       delegate.execute(t);
     }
   }
 
-  public static <T> Action<T> wrapIfNeeded(final Action<T> delegate, final AgentSpan span) {
-    if (delegate instanceof ActionWrapper || span == null) {
+  public static <T> Action<T> wrapIfNeeded(final Action<T> delegate) {
+    final Span span = TRACER.getCurrentSpan();
+    if (delegate instanceof ActionWrapper || !span.getContext().isValid()) {
       return delegate;
     }
     log.debug("Wrapping action task {}", delegate);

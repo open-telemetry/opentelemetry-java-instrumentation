@@ -1,13 +1,11 @@
 package io.opentelemetry.auto.instrumentation.jaxrs;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.jaxrs.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.ClientRequestContext;
@@ -23,12 +21,12 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(final ClientRequestContext requestContext) {
-    final AgentSpan span = startSpan("jax-rs.client.call");
-    try (final AgentScope scope = activateSpan(span, false)) {
+    final Span span = TRACER.spanBuilder("jax-rs.client.call").startSpan();
+    try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, requestContext);
 
-      propagate().inject(span, requestContext.getHeaders(), SETTER);
+      TRACER.getHttpTextFormat().inject(span.getContext(), requestContext.getHeaders(), SETTER);
 
       requestContext.setProperty(SPAN_PROPERTY_NAME, span);
     }
@@ -38,11 +36,11 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   public void filter(
       final ClientRequestContext requestContext, final ClientResponseContext responseContext) {
     final Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
-    if (spanObj instanceof AgentSpan) {
-      final AgentSpan span = (AgentSpan) spanObj;
+    if (spanObj instanceof Span) {
+      final Span span = (Span) spanObj;
       DECORATE.onResponse(span, responseContext);
       DECORATE.beforeFinish(span);
-      span.finish();
+      span.end();
     }
   }
 }

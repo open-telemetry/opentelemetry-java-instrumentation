@@ -1,6 +1,6 @@
 package config.exclude.packagename;
 
-import io.opentelemetry.auto.api.Trace;
+import io.opentracing.contrib.dropwizard.Trace;
 
 public class SomeClass implements Runnable {
 

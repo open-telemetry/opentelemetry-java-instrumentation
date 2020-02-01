@@ -1,6 +1,6 @@
 package context
 
-import io.opentelemetry.auto.api.Config
+import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.util.gc.GCUtils

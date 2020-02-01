@@ -1,6 +1,7 @@
 package io.opentelemetry.test.instrumentation.springwebflux.server
 
-import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.trace.Tracer
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
@@ -20,6 +21,8 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @SpringBootApplication
 class SpringWebFluxTestApplication {
+
+  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
 
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {
@@ -114,8 +117,8 @@ class SpringWebFluxTestApplication {
     }
   }
 
-  @Trace()
   private static FooModel tracedMethod(long id) {
+    TRACER.spanBuilder("tracedMethod").startSpan().end()
     return new FooModel(id, "tracedMethod")
   }
 }

@@ -15,7 +15,7 @@ excludedClassesCoverage += [
 
 dependencies {
   compile deps.opentelemetryApi
-  compile(project(path: ':opentelemetry-sdk', configuration: 'shadow'))
+  compile(project(path: ':opentelemetry-sdk-shaded-for-testing', configuration: 'shadow'))
   compile deps.bytebuddy
   compile deps.bytebuddyagent
   compile deps.slf4j
@@ -27,7 +27,10 @@ dependencies {
 
   compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
 
-  compile project(':agent-tooling')
+  compile(project(':agent-tooling')) {
+    // including :opentelemetry-sdk-shaded-for-testing above instead
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+  }
   compile project(':utils:test-utils')
 
   annotationProcessor deps.autoservice
@@ -38,6 +41,11 @@ dependencies {
   testCompile project(':utils:gc-utils')
   testCompile project(':utils:test-utils')
   testCompile project(':instrumentation:trace-annotation')
+
+  testCompile('io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2') {
+    // bringing this in has side effects and causes some tests to fail
+    exclude group: 'io.dropwizard', module: 'dropwizard-core'
+  }
 
   testCompile group: 'cglib', name: 'cglib', version: '3.2.5'
   // test instrumenting java 1.1 bytecode

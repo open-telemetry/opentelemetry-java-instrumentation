@@ -1,10 +1,12 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -13,12 +15,10 @@ import java.sql.SQLException;
 public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   public static final JDBCDecorator DECORATE = new JDBCDecorator();
 
-  private static final String DB_QUERY = "DB Query";
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jdbc");
 
-  @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"jdbc"};
-  }
+  private static final String DB_QUERY = "DB Query";
 
   @Override
   protected String service() {
@@ -26,12 +26,12 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "java-jdbc"; // Overridden by onStatement and onPreparedStatement
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.SQL;
   }
 
@@ -54,7 +54,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
   }
 
-  public AgentSpan onConnection(final AgentSpan span, final Connection connection) {
+  public Span onConnection(final Span span, final Connection connection) {
     DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
     /**
      * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
@@ -93,14 +93,14 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   }
 
   @Override
-  public AgentSpan onStatement(final AgentSpan span, final String statement) {
+  public Span onStatement(final Span span, final String statement) {
     final String resourceName = statement == null ? DB_QUERY : statement;
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     span.setAttribute(Tags.COMPONENT, "java-jdbc-statement");
     return super.onStatement(span, statement);
   }
 
-  public AgentSpan onPreparedStatement(final AgentSpan span, final PreparedStatement statement) {
+  public Span onPreparedStatement(final Span span, final PreparedStatement statement) {
     final String sql = JDBCMaps.preparedStatements.get(statement);
     final String resourceName = sql == null ? DB_QUERY : sql;
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);

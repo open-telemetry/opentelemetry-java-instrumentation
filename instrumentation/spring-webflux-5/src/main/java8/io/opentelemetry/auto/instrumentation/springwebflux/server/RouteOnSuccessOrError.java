@@ -1,13 +1,12 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
+import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
-
-import java.util.function.BiConsumer;
-import java.util.regex.Pattern;
 
 public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Throwable> {
 
