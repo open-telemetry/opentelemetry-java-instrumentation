@@ -11,7 +11,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class HttpServletTest extends AgentTestRunner {
   static {
-    System.setProperty("opentelemetry.auto.integration.servlet-service.enabled", "true")
+    System.setProperty("ota.integration.servlet-service.enabled", "true")
   }
 
   def req = Mock(HttpServletRequest) {

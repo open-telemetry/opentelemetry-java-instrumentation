@@ -29,7 +29,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class JDBCInstrumentationTest extends AgentTestRunner {
   static {
-    System.setProperty("opentelemetry.auto.integration.jdbc-datasource.enabled", "true")
+    System.setProperty("ota.integration.jdbc-datasource.enabled", "true")
   }
 
   @Shared

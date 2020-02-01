@@ -12,8 +12,8 @@ import spock.lang.Shared
 class SparkJavaBasedTest extends AgentTestRunner {
 
   static {
-    System.setProperty("opentelemetry.auto.integration.jetty.enabled", "true")
-    System.setProperty("opentelemetry.auto.integration.sparkjava.enabled", "true")
+    System.setProperty("ota.integration.jetty.enabled", "true")
+    System.setProperty("ota.integration.sparkjava.enabled", "true")
   }
 
   @Shared

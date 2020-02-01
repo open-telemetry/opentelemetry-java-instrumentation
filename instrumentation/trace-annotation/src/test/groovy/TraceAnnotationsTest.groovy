@@ -11,7 +11,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.clearProperty("opentelemetry.auto.trace.annotations")
+      System.clearProperty("ota.trace.annotations")
     }
   }
 

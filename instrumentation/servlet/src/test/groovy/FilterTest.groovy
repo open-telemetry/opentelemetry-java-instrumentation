@@ -14,7 +14,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class FilterTest extends AgentTestRunner {
   static {
-    System.setProperty("opentelemetry.auto.integration.servlet-filter.enabled", "true")
+    System.setProperty("ota.integration.servlet-filter.enabled", "true")
   }
 
   def "test doFilter no-parent"() {
