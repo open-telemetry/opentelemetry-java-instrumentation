@@ -34,8 +34,10 @@ the agent on a java program:
 System property | Environment variable | Purpose
 --- | --- | ---
 ota.exporter | OTA_EXPORTER | The name of the exporter. Currently only supports 'jaeger' for Jager over gRPC
+ota.service | OTA_SERVICE | The service name of this JVM instance. This is used as a label in Jaeger to distinguish between JVM instances in a multi-service environment.
 ota.jaeger.host | OTA_JAEGER_HOST | The Jaeger host to connect to. Currently only gRPC is supported.
 ota.jaeger.port | OTA_JAEGER_PORT | The port to connect to on the Jaeger host. Currently only gRPC is supported
-ota.jaeger.service | OTA_JAEGER_SERVICE | The service name of this JVM instance. This is used as a label in Jaeger to distinguish between JVM instances in a multi-service environment.
 
 These parameter names are very likely to change over time, so please check back here when trying out a new version!
+
+Please report any bugs or unexpected behavior you may find.
