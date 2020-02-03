@@ -68,6 +68,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
     public static SpanScopePair start(
         @Advice.Origin("#m") final String method,
         @Advice.This final RequestDispatcher dispatcher,
+        @Advice.Local("_requestSpan") Object requestSpan,
         @Advice.Argument(0) final ServletRequest request) {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
@@ -84,8 +85,9 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       // In case we lose context, inject trace into to the request.
       TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
 
-      // temporarily remove from request to avoid spring resource name bubbling up:
-      request.removeAttribute(SPAN_ATTRIBUTE);
+      // temporarily replace from request to avoid spring resource name bubbling up:
+      requestSpan = request.getAttribute(SPAN_ATTRIBUTE);
+      request.setAttribute(SPAN_ATTRIBUTE, span);
 
       return new SpanScopePair(span, TRACER.withSpan(span));
     }
@@ -93,16 +95,19 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
         @Advice.Enter final SpanScopePair scope,
+        @Advice.Local("_requestSpan") final Object requestSpan,
         @Advice.Argument(0) final ServletRequest request,
         @Advice.Thrown final Throwable throwable) {
       if (scope == null) {
         return;
       }
 
-      // now add it back...
-      final Span span = scope.getSpan();
-      request.setAttribute(SPAN_ATTRIBUTE, span);
+      if (requestSpan != null) {
+        // now add it back...
+        request.setAttribute(SPAN_ATTRIBUTE, requestSpan);
+      }
 
+      final Span span = scope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
 

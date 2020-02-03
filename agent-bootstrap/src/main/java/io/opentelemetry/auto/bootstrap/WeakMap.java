@@ -18,7 +18,7 @@ public interface WeakMap<K, V> {
 
   void putIfAbsent(K key, V value);
 
-  V getOrCreate(K key, ValueSupplier<V> supplier);
+  V computeIfAbsent(K key, ValueSupplier<? super K, ? extends V> supplier);
 
   @Slf4j
   class Provider {
@@ -62,8 +62,8 @@ public interface WeakMap<K, V> {
    * Supplies the value to be stored and it is called only when a value does not exists yet in the
    * registry.
    */
-  interface ValueSupplier<V> {
-    V get();
+  interface ValueSupplier<K, V> {
+    V get(K key);
   }
 
   class MapAdapter<K, V> implements WeakMap<K, V> {
@@ -107,16 +107,22 @@ public interface WeakMap<K, V> {
     }
 
     @Override
-    public V getOrCreate(final K key, final ValueSupplier<V> supplier) {
-      if (!map.containsKey(key)) {
-        synchronized (this) {
-          if (!map.containsKey(key)) {
-            map.put(key, supplier.get());
-          }
-        }
+    public V computeIfAbsent(final K key, final ValueSupplier<? super K, ? extends V> supplier) {
+      // We can't use computeIfAbsent since it was added in 1.8.
+      if (map.containsKey(key)) {
+        return map.get(key);
       }
 
-      return map.get(key);
+      synchronized (this) {
+        if (map.containsKey(key)) {
+          return map.get(key);
+        } else {
+          final V value = supplier.get(key);
+
+          map.put(key, value);
+          return value;
+        }
+      }
     }
 
     @Override
