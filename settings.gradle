@@ -21,6 +21,9 @@ rootProject.name = 'trace-java'
 // external apis
 include ':trace-api'
 
+include ':experimental:helpers-core'
+include ':experimental:helpers-http'
+
 // agent projects
 include ':java-agent'
 include ':opentelemetry-sdk-shaded-for-testing'

@@ -1,0 +1,15 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+minimumBranchCoverage = 0.5
+minimumInstructionCoverage = 0.6
+
+dependencies {
+  implementation deps.opentelemetryApi
+
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testImplementation deps.opentelemetrySdk
+  testImplementation project(':testing')
+  testImplementation project(':utils:gc-utils')
+}
