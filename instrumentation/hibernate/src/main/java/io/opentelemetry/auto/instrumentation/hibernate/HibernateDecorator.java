@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.hibernate;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.OrmClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
@@ -45,6 +45,9 @@ public class HibernateDecorator extends OrmClientDecorator {
 
   @Override
   public String entityName(final Object entity) {
+    if (entity == null) {
+      return null;
+    }
     String name = null;
     final Set<String> annotations = new HashSet<>();
     for (final Annotation annotation : entity.getClass().getDeclaredAnnotations()) {

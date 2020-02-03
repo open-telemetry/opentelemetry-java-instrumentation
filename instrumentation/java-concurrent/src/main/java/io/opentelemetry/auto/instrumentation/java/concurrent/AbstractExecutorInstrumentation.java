@@ -5,7 +5,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Arrays;
 import java.util.Collection;

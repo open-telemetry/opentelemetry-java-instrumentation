@@ -1,6 +1,3 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.Trace
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.Span
@@ -34,8 +31,6 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "trace-parent"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {
@@ -46,11 +41,9 @@ class ReactorCoreTest extends AgentTestRunner {
         }
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
-            operationName "addOne"
+            operationName "add one"
             childOf(span(1))
             tags {
-              "$MoreTags.RESOURCE_NAME" "addOne"
-              "$Tags.COMPONENT" "trace"
             }
           }
         }
@@ -84,11 +77,7 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "trace-parent"
-            "$Tags.COMPONENT" "trace"
-            errorTags(RuntimeException, EXCEPTION_MESSAGE)
           }
         }
         span(1) {
@@ -121,11 +110,7 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "trace-parent"
-            "$Tags.COMPONENT" "trace"
-            errorTags(RuntimeException, EXCEPTION_MESSAGE)
           }
         }
         span(1) {
@@ -138,11 +123,9 @@ class ReactorCoreTest extends AgentTestRunner {
         }
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
-            operationName "addOne"
+            operationName "add one"
             childOf(span(1))
             tags {
-              "$MoreTags.RESOURCE_NAME" "addOne"
-              "$Tags.COMPONENT" "trace"
             }
           }
         }
@@ -166,8 +149,6 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "trace-parent"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {
@@ -185,50 +166,62 @@ class ReactorCoreTest extends AgentTestRunner {
     "basic flux" | Flux.fromIterable([5, 6])
   }
 
-  @Trace(operationName = "trace-parent", resourceName = "trace-parent")
   def runUnderTrace(def publisher) {
-    // This is important sequence of events:
-    // We have a 'trace-parent' that covers whole span and then we have publisher-parent that overs only
-    // operation to create publisher (and set its context).
-    // The expectation is that then publisher is executed under 'publisher-parent', not under 'trace-parent'
-    final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
-    publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
-    // do not finish span here, it will be finished by ReactorCoreAdviceUtils
+    def parentSpan = TEST_TRACER.spanBuilder("trace-parent").startSpan()
+    def parentScope = TEST_TRACER.withSpan(parentSpan)
+    try {
+      // This is important sequence of events:
+      // We have a 'trace-parent' that covers whole span and then we have publisher-parent that overs only
+      // operation to create publisher (and set its context).
+      // The expectation is that then publisher is executed under 'publisher-parent', not under 'trace-parent'
+      final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
+      publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
+      // do not finish span here, it will be finished by ReactorCoreAdviceUtils
 
-    // Read all data from publisher
-    if (publisher instanceof Mono) {
-      return publisher.block()
-    } else if (publisher instanceof Flux) {
-      return publisher.toStream().toArray({ size -> new Integer[size] })
+      // Read all data from publisher
+      if (publisher instanceof Mono) {
+        return publisher.block()
+      } else if (publisher instanceof Flux) {
+        return publisher.toStream().toArray({ size -> new Integer[size] })
+      }
+
+      throw new RuntimeException("Unknown publisher: " + publisher)
+    } finally {
+      parentSpan.end()
+      parentScope.close()
     }
-
-    throw new RuntimeException("Unknown publisher: " + publisher)
   }
 
-  @Trace(operationName = "trace-parent", resourceName = "trace-parent")
   def cancelUnderTrace(def publisher) {
-    final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
-    publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
-    span.end()
+    def parentSpan = TEST_TRACER.spanBuilder("trace-parent").startSpan()
+    def parentScope = TEST_TRACER.withSpan(parentSpan)
+    try {
+      final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
+      publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
+      span.end()
 
-    publisher.subscribe(new Subscriber<Integer>() {
-      void onSubscribe(Subscription subscription) {
-        subscription.cancel()
-      }
+      publisher.subscribe(new Subscriber<Integer>() {
+        void onSubscribe(Subscription subscription) {
+          subscription.cancel()
+        }
 
-      void onNext(Integer t) {
-      }
+        void onNext(Integer t) {
+        }
 
-      void onError(Throwable error) {
-      }
+        void onError(Throwable error) {
+        }
 
-      void onComplete() {
-      }
-    })
+        void onComplete() {
+        }
+      })
+    } finally {
+      parentSpan.end()
+      parentScope.close()
+    }
   }
 
-  @Trace(operationName = "addOne", resourceName = "addOne")
-  def static addOneFunc(int i) {
+  static addOneFunc(int i) {
+    TEST_TRACER.spanBuilder("add one").startSpan().end()
     return i + 1
   }
 }

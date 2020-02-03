@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.test.base;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;

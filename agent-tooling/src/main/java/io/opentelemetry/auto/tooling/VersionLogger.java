@@ -9,11 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VersionLogger {
 
-  /** Log version strings for trace-api, and java-agent */
+  /** Log version string for java-agent */
   public static void logAllVersions() {
-    log.info(
-        "trace-api - version: {}",
-        getVersionString(Utils.getAgentClassLoader().getResourceAsStream("trace-api.version")));
     log.info(
         "java-agent - version: {}",
         getVersionString(

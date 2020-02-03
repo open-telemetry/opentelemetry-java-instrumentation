@@ -1,10 +1,14 @@
-import io.opentelemetry.auto.api.Trace;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import scala.concurrent.forkjoin.ForkJoinTask;
 
 public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable {
+  private static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
   private final CountDownLatch latch = new CountDownLatch(1);
@@ -61,6 +65,7 @@ public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable 
     latch.countDown();
   }
 
-  @Trace(operationName = "asyncChild", resourceName = "asyncChild")
-  private void asyncChild() {}
+  private void asyncChild() {
+    TRACER.spanBuilder("asyncChild").startSpan().end();
+  }
 }

@@ -3,86 +3,88 @@ package io.opentelemetry.auto
 import io.opentelemetry.auto.test.IntegrationTestUtils
 import jvmbootstraptest.LogLevelChecker
 import spock.lang.Specification
+import spock.lang.Timeout
 
+@Timeout(30)
 class LogLevelTest extends Specification {
 
 
-  /* Priority: io.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel > opentelemetry.auto.trace.debug > OPENTELEMETRY_AUTO_TRACE_DEBUG
+  /* Priority: io.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel > opentelemetry.auto.trace.debug > OTA_TRACE_DEBUG
   1: INFO LOGS
   0: DEBUG Logs
    */
 
-  def "opentelemetry.auto.trace.debug false"() {
+  def "ota.trace.debug false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dopentelemetry.auto.trace.debug=false", "-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dota.trace.debug=false", "-Dota.trace.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 1
   }
 
-  def "SLF4J DEBUG &&  opentelemetry.auto.trace.debug is false"() {
+  def "SLF4J DEBUG && ota.trace.debug is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dopentelemetry.auto.trace.debug=false", "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug", "-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dota.trace.debug=false", "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug", "-Dota.trace.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 0
   }
 
-  def "opentelemetry.auto.trace.debug is false && OPENTELEMETRY_AUTO_TRACE_DEBUG is true"() {
+  def "ota.trace.debug is false && OTA_TRACE_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dopentelemetry.auto.trace.debug=false", "-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dota.trace.debug=false", "-Dota.trace.enabled=false"] as String[]
       , "" as String[]
-      , ["OPENTELEMETRY_AUTO_TRACE_DEBUG": "true"]
+      , ["OTA_TRACE_DEBUG": "true"]
       , true) == 1
   }
 
-  def "opentelemetry.auto.trace.debug is true"() {
+  def "ota.trace.debug is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dopentelemetry.auto.trace.debug=true", "-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dota.trace.debug=true", "-Dota.trace.enabled=false"] as String[]
       , "" as String[]
       , [:]
       , true) == 0
   }
 
 
-  def "OPENTELEMETRY_AUTO_TRACE_DEBUG is true"() {
+  def "OTA_TRACE_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dota.trace.enabled=false"] as String[]
       , "" as String[]
-      , ["OPENTELEMETRY_AUTO_TRACE_DEBUG": "true"]
+      , ["OTA_TRACE_DEBUG": "true"]
       , true) == 0
   }
 
-  def "opentelemetry.auto.trace.debug is true && OPENTELEMETRY_AUTO_TRACE_DEBUG is false"() {
+  def "ota.trace.debug is true && OTA_TRACE_DEBUG is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dopentelemetry.auto.trace.debug=true", "-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dota.trace.debug=true", "-Dota.trace.enabled=false"] as String[]
       , "" as String[]
-      , ["OPENTELEMETRY_AUTO_TRACE_DEBUG": "false"]
+      , ["OTA_TRACE_DEBUG": "false"]
       , true) == 0
   }
 
 
-  def "SLF4J DEBUG && OPENTELEMETRY_AUTO_TRACE_DEBUG is false"() {
+  def "SLF4J DEBUG && OTA_TRACE_DEBUG is false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug", "-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug", "-Dota.trace.enabled=false"] as String[]
       , "" as String[]
-      , ["OPENTELEMETRY_AUTO_TRACE_DEBUG": "false"]
+      , ["OTA_TRACE_DEBUG": "false"]
       , true) == 0
   }
 
-  def "SLF4J INFO && OPENTELEMETRY_AUTO_TRACE_DEBUG is true"() {
+  def "SLF4J INFO && OTA_TRACE_DEBUG is true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
-      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=info", "-Dopentelemetry.auto.trace.enabled=false"] as String[]
+      , ["-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=info", "-Dota.trace.enabled=false"] as String[]
       , "" as String[]
-      , ["OPENTELEMETRY_AUTO_TRACE_DEBUG": "true"]
+      , ["OTA_TRACE_DEBUG": "true"]
       , true) == 1
   }
 

@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -24,7 +24,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
 
   static {
-    System.setProperty("opentelemetry.auto.integration.jetty.enabled", "true")
+    System.setProperty("ota.integration.jetty.enabled", "true")
   }
 
   static errorHandler = new ErrorHandler() {

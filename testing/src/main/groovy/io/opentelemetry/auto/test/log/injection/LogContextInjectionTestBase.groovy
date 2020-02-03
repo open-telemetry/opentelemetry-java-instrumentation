@@ -29,7 +29,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("opentelemetry.auto.logs.injection", "true")
+      System.setProperty("ota.logs.injection", "true")
     }
   }
 
@@ -75,7 +75,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
   def "Log context is scoped by thread"() {
     setup:
     ConfigUtils.updateConfig {
-      System.setProperty("opentelemetry.auto.logs.injection", "true")
+      System.setProperty("ota.logs.injection", "true")
     }
     AtomicReference<String> thread1TraceId = new AtomicReference<>()
     AtomicReference<String> thread2TraceId = new AtomicReference<>()

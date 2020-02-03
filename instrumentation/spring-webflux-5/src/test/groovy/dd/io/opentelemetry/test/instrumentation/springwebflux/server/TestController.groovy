@@ -1,6 +1,7 @@
 package io.opentelemetry.test.instrumentation.springwebflux.server
 
-import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.trace.Tracer
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
@@ -10,6 +11,8 @@ import java.time.Duration
 
 @RestController
 class TestController {
+
+  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
 
   @GetMapping("/foo")
   Mono<FooModel> getFooModel() {
@@ -56,8 +59,8 @@ class TestController {
     return Mono.just(id).delayElement(Duration.ofMillis(100)).map { i -> tracedMethod(i) }
   }
 
-  @Trace()
   private FooModel tracedMethod(long id) {
+    TRACER.spanBuilder("tracedMethod").startSpan().end()
     return new FooModel(id, "tracedMethod")
   }
 }

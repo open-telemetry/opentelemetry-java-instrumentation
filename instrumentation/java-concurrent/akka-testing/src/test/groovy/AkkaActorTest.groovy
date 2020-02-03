@@ -1,5 +1,3 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
 class AkkaActorTest extends AgentTestRunner {
@@ -13,18 +11,14 @@ class AkkaActorTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "parent"
           tags {
-            "$MoreTags.RESOURCE_NAME" "AkkaActors.$testMethod"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {
           operationName "$expectedGreeting, Akka"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "AkkaActors\$.tracedChild"
-            "$Tags.COMPONENT" "trace"
           }
         }
       }

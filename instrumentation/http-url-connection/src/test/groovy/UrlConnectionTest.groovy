@@ -1,7 +1,7 @@
-import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.bootstrap.AgentClassLoader
+import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner

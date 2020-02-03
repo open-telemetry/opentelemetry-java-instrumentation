@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.Trace
-import io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
+import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.trace.Tracer
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.consumeEach
@@ -9,9 +9,10 @@ import kotlinx.coroutines.selects.select
 import java.util.concurrent.TimeUnit
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
+  val tracer: Tracer = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
 
-  @Trace
   fun tracedAcrossChannels() = runTest {
+
     val producer = produce {
       repeat(3) {
         tracedChild("produce_$it")
@@ -29,7 +30,6 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     actor.close()
   }
 
-  @Trace
   fun tracePreventedByCancellation() {
 
     kotlin.runCatching {
@@ -47,7 +47,6 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     }
   }
 
-  @Trace
   fun tracedAcrossThreadsWithNested() = runTest {
     val goodDeferred = async { 1 }
 
@@ -57,7 +56,6 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     }
   }
 
-  @Trace
   fun traceWithDeferred() = runTest {
 
     val keptPromise = CompletableDeferred<Boolean>()
@@ -88,7 +86,6 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   /**
    * @return Number of expected spans in the trace
    */
-  @Trace
   fun tracedWithDeferredFirstCompletions() = runTest {
 
     val children = listOf(
@@ -115,13 +112,19 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     }
   }
 
-  @Trace
   fun tracedChild(opName: String) {
-    activeSpan().setSpanName(opName)
+    tracer.spanBuilder(opName).startSpan().end()
   }
 
   private fun <T> runTest(block: suspend CoroutineScope.() -> T): T {
-    return runBlocking(dispatcher, block = block)
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope = tracer.withSpan(parentSpan)
+    try {
+      return runBlocking(dispatcher, block = block)
+    } finally {
+      parentSpan.end()
+      parentScope.close()
+    }
   }
 }
 

@@ -1,6 +1,5 @@
 import com.netflix.hystrix.HystrixObservableCommand
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import rx.Observable
@@ -23,8 +22,8 @@ class HystrixObservableChainTest extends AgentTestRunner {
 
     def result = runUnderTrace("parent") {
       def val = new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
-        @Trace
         private String tracedMethod() {
+          TEST_TRACER.spanBuilder("tracedMethod").startSpan().end()
           return "Hello"
         }
 
@@ -41,15 +40,15 @@ class HystrixObservableChainTest extends AgentTestRunner {
           it.toUpperCase()
         }.flatMap { str ->
         new HystrixObservableCommand<String>(asKey("OtherGroup")) {
-          @Trace
-          private String tracedMethod() {
+          private String anotherTracedMethod() {
+            TEST_TRACER.spanBuilder("anotherTracedMethod").startSpan().end()
             return "$str!"
           }
 
           @Override
           protected Observable<String> construct() {
             Observable.defer {
-              Observable.just(tracedMethod())
+              Observable.just(anotherTracedMethod())
             }
               .subscribeOn(Schedulers.computation())
           }
@@ -86,13 +85,11 @@ class HystrixObservableChainTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "trace.annotation"
+          operationName "tracedMethod"
           childOf span(1)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
             "$MoreTags.SPAN_TYPE" null
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(3) {
@@ -109,13 +106,11 @@ class HystrixObservableChainTest extends AgentTestRunner {
           }
         }
         span(4) {
-          operationName "trace.annotation"
+          operationName "anotherTracedMethod"
           childOf span(3)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
             "$MoreTags.SPAN_TYPE" null
-            "$Tags.COMPONENT" "trace"
           }
         }
       }

@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;

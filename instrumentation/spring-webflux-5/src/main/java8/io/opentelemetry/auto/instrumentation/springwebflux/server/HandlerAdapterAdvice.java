@@ -1,6 +1,9 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import io.opentelemetry.auto.api.MoreTags;
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
+
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
@@ -8,9 +11,6 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
-
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 
 public class HandlerAdapterAdvice {
 

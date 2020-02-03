@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -23,7 +23,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
 
 //  static {
-//    System.setProperty("opentelemetry.auto.integration.grizzly.enabled", "true")
+//    System.setProperty("ota.integration.grizzly.enabled", "true")
 //  }
 
   @Override

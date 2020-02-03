@@ -1,7 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile project(':trace-api')
   compile project(':agent-bootstrap')
 
   compile 'info.picocli:picocli:4.0.4'

@@ -72,7 +72,6 @@ muzzle {
 dependencies {
   main_java8CompileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
 
-  compile project(':trace-api')
   compile project(':agent-tooling')
   compile deps.autoservice
   annotationProcessor deps.autoservice

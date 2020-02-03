@@ -6,7 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,16 +42,25 @@ public class TraceConfigInstrumentation implements Instrumenter {
           + PACKAGE_CLASS_NAME_REGEX
           + "\\["
           + METHOD_LIST_REGEX
-          + "\\]\\s*;?\\s*";
+          + "\\]";
 
   private final Map<String, Set<String>> classMethodsToTrace;
+
+  private boolean validateConfigString(String configString) {
+    for (String segment : configString.split(";")) {
+      if (!segment.trim().matches(CONFIG_FORMAT)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   public TraceConfigInstrumentation() {
     final String configString = Config.get().getTraceMethods();
     if (configString == null || configString.trim().isEmpty()) {
       classMethodsToTrace = Collections.emptyMap();
 
-    } else if (!configString.matches(CONFIG_FORMAT)) {
+    } else if (!validateConfigString(configString)) {
       log.warn(
           "Invalid trace method config '{}'. Must match 'package.Class$Name[method1,method2];*'.",
           configString);
