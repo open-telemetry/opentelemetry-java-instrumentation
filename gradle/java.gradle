@@ -235,14 +235,18 @@ JavaVersion getJavaExecutableVersion(String path) {
       errorOutput = stream
     }
     def output = stream.toString()
-    def matcher = output =~ /^(?:java|openjdk) version "([^"]+)"/
-    if (matcher) {
-      def version = JavaVersion.toVersion(matcher.group(1))
-      cache.put(path, version)
-      return version
-    } else {
-      throw new GradleScriptException("Cannot determine java version. Executable: ${path}, output: ${output}", null)
+    for (def line : output.split('\n')) {
+      line = line.trim()
+      def matcher = line =~ /^(?:java|openjdk) version "([^"]+)"/
+      if (matcher) {
+        def version = JavaVersion.toVersion(matcher.group(1))
+        cache.put(path, version)
+        return version
+      }
     }
+
+    // Getting here means we didn't find a line matching the version pattern.
+    throw new GradleScriptException("Cannot determine java version. Executable: ${path}, output: ${output}", null)
   }
 }
 
