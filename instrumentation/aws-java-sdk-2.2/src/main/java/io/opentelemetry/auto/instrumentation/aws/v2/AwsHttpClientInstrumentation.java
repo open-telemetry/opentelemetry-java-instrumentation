@@ -1,5 +1,6 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
+import static io.opentelemetry.auto.instrumentation.aws.v2.TracingExecutionInterceptor.ScopeHolder.CURRENT;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -57,9 +58,9 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static boolean methodEnter(@Advice.This final Object thiz) {
       if (thiz instanceof MakeAsyncHttpRequestStage) {
-        final Scope scope = TracingExecutionInterceptor.ScopeHolder.CURRENT.get();
+        final Scope scope = CURRENT.get();
         if (scope != null) {
-          TracingExecutionInterceptor.ScopeHolder.CURRENT.set(null);
+          CURRENT.set(null);
           scope.close();
           return true;
         }
@@ -70,9 +71,9 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Enter final boolean scopeAlreadyClosed) {
       if (!scopeAlreadyClosed) {
-        final Scope scope = TracingExecutionInterceptor.ScopeHolder.CURRENT.get();
+        final Scope scope = CURRENT.get();
         if (scope != null) {
-          TracingExecutionInterceptor.ScopeHolder.CURRENT.set(null);
+          CURRENT.set(null);
           scope.close();
         }
       }
