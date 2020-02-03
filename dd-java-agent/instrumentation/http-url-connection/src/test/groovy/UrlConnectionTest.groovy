@@ -121,7 +121,7 @@ class UrlConnectionTest extends AgentTestRunner {
 
   def "DatadogClassloader ClassNotFoundException doesn't create span"() {
     given:
-    ClassLoader datadogLoader = new DatadogClassLoader(null, null, null)
+    ClassLoader datadogLoader = new DatadogClassLoader(null, null, new DatadogClassLoader.BootstrapClassLoaderProxy(), null)
     ClassLoader childLoader = new URLClassLoader(new URL[0], datadogLoader)
 
     when:
