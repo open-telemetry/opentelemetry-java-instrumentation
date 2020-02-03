@@ -1,6 +1,5 @@
 package datadog.opentracing;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -289,12 +288,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     return baggageItems.entrySet();
   }
 
-  @JsonIgnore
   public PendingTrace getTrace() {
     return trace;
   }
 
-  @JsonIgnore
   public DDTracer getTracer() {
     return tracer;
   }

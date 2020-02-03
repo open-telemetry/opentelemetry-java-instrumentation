@@ -3,13 +3,10 @@ package datadog.trace.common.sampling;
 import static java.util.Collections.singletonMap;
 import static java.util.Collections.unmodifiableMap;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.NumericNode;
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.writer.ddagent.DDAgentResponseListener;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,23 +67,16 @@ public class RateByServiceSampler implements Sampler, PrioritySampler, DDAgentRe
   }
 
   @Override
-  public void onResponse(final String endpoint, final JsonNode responseJson) {
-    final JsonNode newServiceRates = responseJson.get("rate_by_service");
+  public void onResponse(
+      final String endpoint, final Map<String, Map<String, Number>> responseJson) {
+    final Map<String, Number> newServiceRates = responseJson.get("rate_by_service");
     if (null != newServiceRates) {
       log.debug("Update service sampler rates: {} -> {}", endpoint, responseJson);
       final Map<String, RateSampler> updatedServiceRates = new HashMap<>();
-      final Iterator<String> itr = newServiceRates.fieldNames();
-      while (itr.hasNext()) {
-        final String key = itr.next();
-        final JsonNode value = newServiceRates.get(key);
-        try {
-          if (value instanceof NumericNode) {
-            updatedServiceRates.put(key, createRateSampler(value.doubleValue()));
-          } else {
-            log.debug("Unable to parse new service rate {} -> {}", key, value);
-          }
-        } catch (final NumberFormatException nfe) {
-          log.debug("Unable to parse new service rate {} -> {}", key, value);
+      for (final Map.Entry<String, Number> entry : newServiceRates.entrySet()) {
+        if (entry.getValue() != null) {
+          updatedServiceRates.put(
+              entry.getKey(), createRateSampler(entry.getValue().doubleValue()));
         }
       }
       if (!updatedServiceRates.containsKey(DEFAULT_KEY)) {

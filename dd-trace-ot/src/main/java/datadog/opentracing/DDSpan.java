@@ -3,8 +3,6 @@ package datadog.opentracing;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static io.opentracing.log.Fields.MESSAGE;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -77,7 +75,6 @@ public class DDSpan implements Span, MutableSpan {
     context.getTrace().registerSpan(this);
   }
 
-  @JsonIgnore
   public boolean isFinished() {
     return durationNano.get() != 0;
   }
@@ -120,20 +117,17 @@ public class DDSpan implements Span, MutableSpan {
    *
    * @return true if root, false otherwise
    */
-  @JsonIgnore
   public final boolean isRootSpan() {
     return BigInteger.ZERO.equals(context.getParentId());
   }
 
   @Override
   @Deprecated
-  @JsonIgnore
   public MutableSpan getRootSpan() {
     return getLocalRootSpan();
   }
 
   @Override
-  @JsonIgnore
   public MutableSpan getLocalRootSpan() {
     return context().getTrace().getRootSpan();
   }
@@ -297,14 +291,13 @@ public class DDSpan implements Span, MutableSpan {
     return this;
   }
 
-  // Getters and JSON serialisation instructions
+  // Getters
 
   /**
    * Meta merges baggage and tags (stringified values)
    *
    * @return merged context baggage and tags
    */
-  @JsonGetter
   public Map<String, String> getMeta() {
     final Map<String, String> meta = new HashMap<>();
     for (final Map.Entry<String, String> entry : context().getBaggageItems().entrySet()) {
@@ -321,58 +314,48 @@ public class DDSpan implements Span, MutableSpan {
    *
    * @return metrics for this span
    */
-  @JsonGetter
   public Map<String, Number> getMetrics() {
     return context.getMetrics();
   }
 
   @Override
-  @JsonGetter("start")
   public long getStartTime() {
     return startTimeNano > 0 ? startTimeNano : TimeUnit.MICROSECONDS.toNanos(startTimeMicro);
   }
 
   @Override
-  @JsonGetter("duration")
   public long getDurationNano() {
     return durationNano.get();
   }
 
   @Override
-  @JsonGetter("service")
   public String getServiceName() {
     return context.getServiceName();
   }
 
-  @JsonGetter("trace_id")
   public BigInteger getTraceId() {
     return context.getTraceId();
   }
 
-  @JsonGetter("span_id")
   public BigInteger getSpanId() {
     return context.getSpanId();
   }
 
-  @JsonGetter("parent_id")
   public BigInteger getParentId() {
     return context.getParentId();
   }
 
   @Override
-  @JsonGetter("resource")
   public String getResourceName() {
     return context.getResourceName();
   }
 
   @Override
-  @JsonGetter("name")
   public String getOperationName() {
     return context.getOperationName();
   }
 
   @Override
-  @JsonIgnore
   public Integer getSamplingPriority() {
     final int samplingPriority = context.getSamplingPriority();
     if (samplingPriority == PrioritySampling.UNSET) {
@@ -383,29 +366,24 @@ public class DDSpan implements Span, MutableSpan {
   }
 
   @Override
-  @JsonIgnore
   public String getSpanType() {
     return context.getSpanType();
   }
 
   @Override
-  @JsonIgnore
   public Map<String, Object> getTags() {
     return context().getTags();
   }
 
-  @JsonGetter
   public String getType() {
     return context.getSpanType();
   }
 
   @Override
-  @JsonIgnore
   public Boolean isError() {
     return context.getErrorFlag();
   }
 
-  @JsonGetter
   public int getError() {
     return context.getErrorFlag() ? 1 : 0;
   }
