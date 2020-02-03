@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.kafka_streams;
 
 import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.CURRENT;
+import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsProcessorInstrumentation.SpanScopeThreadLocal.HOLDER;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.TextMapExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -27,13 +27,13 @@ import org.apache.kafka.streams.processor.internals.StampedRecord;
 public class KafkaStreamsProcessorInstrumentation {
   // These two instrumentations work together to apply StreamTask.process.
   // The combination of these is needed because there's no good instrumentation point.
-  // FIXME: this instrumentation takes somewhat strange approach. It looks like Kafka Streams
-  // defines notions of 'processor', 'source' and 'sink'. There is no 'consumer' as such.
-  // Also this instrumentation doesn't define 'producer' making it 'asymmetric' - resulting
-  // in awkward tests and traces. We may want to revisit this in the future.
+
+  public static class SpanScopeThreadLocal {
+    public static final ThreadLocal<SpanScopeHolder> HOLDER = new ThreadLocal<>();
+  }
 
   public static class SpanScopeHolder {
-    public static final ThreadLocal<SpanScopePair> CURRENT = new ThreadLocal<>();
+    public SpanScopePair spanScopePair;
   }
 
   @AutoService(Instrumenter.class)
@@ -77,6 +77,12 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
+        final SpanScopeHolder holder = HOLDER.get();
+        if (holder == null) {
+          // somehow nextRecord() was called outside of process()
+          return;
+        }
+
         final Span.Builder spanBuilder = TRACER.spanBuilder("kafka.consume");
         try {
           final SpanContext extractedContext =
@@ -90,7 +96,7 @@ public class KafkaStreamsProcessorInstrumentation {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        CURRENT.set(new SpanScopePair(span, TRACER.withSpan(span)));
+        holder.spanScopePair = new SpanScopePair(span, TRACER.withSpan(span));
       }
     }
   }
@@ -127,11 +133,19 @@ public class KafkaStreamsProcessorInstrumentation {
 
     public static class StopSpanAdvice {
 
+      @Advice.OnMethodEnter
+      public static SpanScopeHolder onEnter() {
+        final SpanScopeHolder holder = new SpanScopeHolder();
+        HOLDER.set(holder);
+        return holder;
+      }
+
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-      public static void stopSpan(@Advice.Thrown final Throwable throwable) {
-        final SpanScopePair spanScopePair = CURRENT.get();
+      public static void stopSpan(
+          @Advice.Enter final SpanScopeHolder holder, @Advice.Thrown final Throwable throwable) {
+        HOLDER.remove();
+        final SpanScopePair spanScopePair = holder.spanScopePair;
         if (spanScopePair != null) {
-          CURRENT.set(null);
           final Span span = spanScopePair.getSpan();
           CONSUMER_DECORATE.onError(span, throwable);
           CONSUMER_DECORATE.beforeFinish(span);
