@@ -7,7 +7,6 @@
 
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
-apply from: "${rootDir}/gradle/test-with-kotlin.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
@@ -16,8 +15,7 @@ testSets {
 }
 
 compileSlickTestGroovy {
-  classpath = classpath.plus(files(compileSlickTestScala.destinationDir))
-  dependsOn compileSlickTestScala
+  classpath += files(sourceSets.slickTest.scala.classesDirectory)
 }
 
 dependencies {
