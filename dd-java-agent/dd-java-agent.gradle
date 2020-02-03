@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   id "com.github.johnrengelman.shadow" version "5.2.0"
 }
@@ -14,13 +16,13 @@ configurations {
 
 /*
  * 4 shadow jars are created
- * - The main "dd-java-agent" jar
+ * - The main "dd-java-agent" jar that also has the bootstrap project
  * - 2 jars based on projects (jmxfetch, agent tooling)
  * - 1 based on the shared dependencies
  * This general config is shared by all of them
  */
 
-def generalShadowJarConfig = {
+ext.generalShadowJarConfig = {
   mergeServiceFiles()
 
   exclude '**/module-info.class'
@@ -41,51 +43,31 @@ def generalShadowJarConfig = {
   }
 }
 
-/*
- * Include subproject's shadowJar in the dd-java-agent jar.
- * Note jarname must not end with '.jar', or its classes will be on the classpath of
- * the dd-java-agent jar.
- */
-
-def includeShadowJar(subproject, jarname, generalShadowJarConfig) {
-  def agent_project = project
-  subproject.afterEvaluate {
-    agent_project.processResources {
-      from(zipTree(subproject.tasks.shadowJar.archiveFile)) {
-        into jarname
-        rename '(^.*)\\.class$', '$1.classdata'
-        // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-        rename '^LICENSE$', 'LICENSE.renamed'
-      }
-    }
-
-    agent_project.processResources.dependsOn subproject.tasks.shadowJar
-
-    // subproject.shadowJar generalShadowJarConfig
-    subproject.shadowJar generalShadowJarConfig >> {
-      dependencies deps.sharedInverse
+def includeShadowJar(shadowJarTask, jarname) {
+  project.processResources {
+    from(zipTree(shadowJarTask.archiveFile)) {
+      into jarname + '.isolated'
+      rename '(^.*)\\.class$', '$1.classdata'
+      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+      rename '^LICENSE$', 'LICENSE.renamed'
     }
   }
+
+  project.processResources.dependsOn shadowJarTask
+  shadowJarTask.configure generalShadowJarConfig
 }
 
-includeShadowJar(project(':dd-java-agent:instrumentation'), 'agent-tooling-and-instrumentation.isolated', generalShadowJarConfig)
-includeShadowJar(project(':dd-java-agent:agent-jmxfetch'), 'agent-jmxfetch.isolated', generalShadowJarConfig)
+project(':dd-java-agent:instrumentation').afterEvaluate {
+  includeShadowJar(it.tasks.shadowJar, 'agent-tooling-and-instrumentation')
+}
+project(':dd-java-agent:agent-jmxfetch').afterEvaluate {
+  includeShadowJar(it.tasks.shadowJar, 'agent-jmxfetch')
+}
 
-task includedSharedShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {}
-
-includedSharedShadowJar generalShadowJarConfig >> {
+task sharedShadowJar(type: ShadowJar) {
   configurations = [project.configurations.sharedShadowInclude]
 }
-
-project.processResources.dependsOn includedSharedShadowJar
-project.processResources {
-  from(zipTree(includedSharedShadowJar.archiveFile)) {
-    into 'shared.isolated'
-    rename '(^.*)\\.class$', '$1.classdata'
-    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-    rename '^LICENSE$', 'LICENSE.renamed'
-  }
-}
+includeShadowJar(sharedShadowJar, 'shared')
 
 shadowJar generalShadowJarConfig >> {
   configurations = [project.configurations.shadowInclude]
