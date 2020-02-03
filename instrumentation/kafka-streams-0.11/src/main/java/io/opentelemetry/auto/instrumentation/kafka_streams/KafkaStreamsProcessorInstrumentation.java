@@ -129,7 +129,6 @@ public class KafkaStreamsProcessorInstrumentation {
 
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void stopSpan(@Advice.Thrown final Throwable throwable) {
-        // This is dangerous... we assume the span/scope is the one we expect, but it may not be.
         final SpanScopePair spanScopePair = CURRENT.get();
         if (spanScopePair != null) {
           CURRENT.set(null);
