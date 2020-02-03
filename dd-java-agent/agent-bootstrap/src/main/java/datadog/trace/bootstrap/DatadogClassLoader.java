@@ -31,10 +31,10 @@ public class DatadogClassLoader extends URLClassLoader {
    *     9+.
    */
   public DatadogClassLoader(
-    final URL bootstrapJarLocation,
-    final String internalJarFileName,
-    final ClassLoader bootstrapProxy,
-    final ClassLoader parent) {
+      final URL bootstrapJarLocation,
+      final String internalJarFileName,
+      final ClassLoader bootstrapProxy,
+      final ClassLoader parent) {
     super(new URL[] {}, parent);
 
     this.bootstrapProxy = bootstrapProxy;
