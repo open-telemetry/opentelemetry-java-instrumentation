@@ -234,13 +234,14 @@ JavaVersion getJavaExecutableVersion(String path) {
       commandLine = [path, "-version"]
       errorOutput = stream
     }
-    def matcher = stream.toString() =~ /^(?:java|openjdk) version "([^"]+)"/
+    def output = stream.toString()
+    def matcher = output =~ /^(?:java|openjdk) version "([^"]+)"/
     if (matcher) {
       def version = JavaVersion.toVersion(matcher.group(1))
       cache.put(path, version)
       return version
     } else {
-      throw new GradleScriptException("Cannot determine java version: ${stream.toString}")
+      throw new GradleScriptException("Cannot determine java version. Executable: ${path}, output: ${output}", null)
     }
   }
 }
