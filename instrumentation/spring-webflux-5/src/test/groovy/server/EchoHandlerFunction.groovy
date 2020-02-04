@@ -1,4 +1,4 @@
-package io.opentelemetry.test.instrumentation.springwebflux.server
+package server
 
 
 import org.springframework.web.reactive.function.server.HandlerFunction
