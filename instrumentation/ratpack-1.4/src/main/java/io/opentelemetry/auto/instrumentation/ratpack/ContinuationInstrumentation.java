@@ -29,7 +29,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".BlockWrapper", packageName + ".TracerHolder"};
+    return new String[] {packageName + ".BlockWrapper"};
   }
 
   @Override
