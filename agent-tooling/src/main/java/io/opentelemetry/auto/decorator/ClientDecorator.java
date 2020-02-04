@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.decorator;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
@@ -11,13 +10,6 @@ public abstract class ClientDecorator extends BaseDecorator {
 
   protected String spanKind() {
     return Tags.SPAN_KIND_CLIENT;
-  }
-
-  @Deprecated
-  @Override
-  public AgentSpan afterStart(final AgentSpan span) {
-    afterStart(span.getSpan());
-    return span;
   }
 
   @Override
