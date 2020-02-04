@@ -31,8 +31,8 @@ include ':dd-java-agent:load-generator'
 
 // misc
 include ':dd-java-agent:testing'
-include ':utils:gc-utils'
 include ':utils:test-utils'
+include ':utils:thread-utils'
 
 // smoke tests
 include ':dd-smoke-tests:cli'

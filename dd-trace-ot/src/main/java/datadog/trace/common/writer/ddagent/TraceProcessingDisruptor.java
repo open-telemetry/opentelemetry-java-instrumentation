@@ -1,11 +1,12 @@
 package datadog.trace.common.writer.ddagent;
 
+import static datadog.common.exec.DaemonThreadFactory.TRACE_PROCESSOR;
+
 import com.lmax.disruptor.EventHandler;
+import datadog.common.exec.DaemonThreadFactory;
 import datadog.opentracing.DDSpan;
-import datadog.trace.common.util.DaemonThreadFactory;
 import datadog.trace.common.writer.DDAgentWriter;
 import java.util.List;
-import java.util.concurrent.ThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,8 +30,8 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
   }
 
   @Override
-  protected ThreadFactory getThreadFactory() {
-    return new DaemonThreadFactory("dd-trace-processor");
+  protected DaemonThreadFactory getThreadFactory() {
+    return TRACE_PROCESSOR;
   }
 
   @Override

@@ -6,8 +6,12 @@ apply plugin: 'groovy'
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
 
-def applyCodeCoverage = !(project.plugins.hasPlugin('com.github.johnrengelman.shadow')
-  || project.path.startsWith(":dd-java-agent:instrumentation:"))
+def applyCodeCoverage = !(
+  project.path.startsWith(":dd-smoke-tests") ||
+    project.path == ":dd-java-agent" ||
+    project.path == ":dd-java-agent:load-generator" ||
+    project.path.startsWith(":dd-java-agent:benchmark") ||
+    project.path.startsWith(":dd-java-agent:instrumentation"))
 
 if (applyCodeCoverage) {
   apply from: "$rootDir/gradle/jacoco.gradle"

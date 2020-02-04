@@ -8,16 +8,13 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 
+import static datadog.common.exec.SharedExecutors.isTaskSchedulerShutdown
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 class CleanerTest extends DDSpecification {
 
   @Subject
   def cleaner = new Cleaner()
-
-  def cleanup() {
-    cleaner.stop()
-  }
 
   def "test scheduling"() {
     setup:
@@ -31,7 +28,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !cleaner.cleanerService.isShutdown()
+    !isTaskSchedulerShutdown()
 
     when:
     cleaner.scheduleCleaning(target, action, 10, MILLISECONDS)
@@ -52,7 +49,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !cleaner.cleanerService.isShutdown()
+    !isTaskSchedulerShutdown()
 
     when:
     cleaner.scheduleCleaning(target.get(), action, 10, MILLISECONDS)
@@ -76,7 +73,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !cleaner.cleanerService.isShutdown()
+    !isTaskSchedulerShutdown()
 
     when:
     cleaner.scheduleCleaning(null, action, 10, MILLISECONDS)
@@ -84,17 +81,5 @@ class CleanerTest extends DDSpecification {
 
     then:
     callCount.get() == 0
-  }
-
-  def "test shutdown"() {
-    expect:
-    !cleaner.cleanerService.isShutdown()
-
-    when:
-    cleaner.stop()
-
-    then:
-    cleaner.cleanerService.awaitTermination(50, MILLISECONDS)
-    cleaner.cleanerService.isTerminated()
   }
 }

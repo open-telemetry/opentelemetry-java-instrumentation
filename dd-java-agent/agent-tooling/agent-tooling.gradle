@@ -23,7 +23,6 @@ dependencies {
 
   testCompile deps.opentracing
   testCompile project(':dd-java-agent:testing')
-  testCompile project(':utils:gc-utils')
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile
