@@ -3,9 +3,9 @@ package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.ClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -22,7 +22,7 @@ public class RabbitDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_PRODUCER;
         }
       };
@@ -35,7 +35,7 @@ public class RabbitDecorator extends ClientDecorator {
         }
 
         @Override
-        protected String spanType() {
+        protected String getSpanType() {
           return SpanTypes.MESSAGE_CONSUMER;
         }
       };
@@ -43,17 +43,12 @@ public class RabbitDecorator extends ClientDecorator {
   public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"amqp", "rabbitmq"};
-  }
-
-  @Override
   protected String service() {
     return "rabbitmq";
   }
 
   @Override
-  protected String component() {
+  protected String getComponentName() {
     return "rabbitmq-amqp";
   }
 
@@ -63,7 +58,7 @@ public class RabbitDecorator extends ClientDecorator {
   }
 
   @Override
-  protected String spanType() {
+  protected String getSpanType() {
     return SpanTypes.MESSAGE_CLIENT;
   }
 

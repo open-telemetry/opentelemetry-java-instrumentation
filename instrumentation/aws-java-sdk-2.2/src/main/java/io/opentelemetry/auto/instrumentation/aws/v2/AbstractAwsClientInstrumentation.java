@@ -16,7 +16,8 @@ public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Defa
       "io.opentelemetry.auto.decorator.ClientDecorator",
       "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".AwsSdkClientDecorator",
-      packageName + ".TracingExecutionInterceptor"
+      packageName + ".TracingExecutionInterceptor",
+      packageName + ".TracingExecutionInterceptor$ScopeHolder"
     };
   }
 }

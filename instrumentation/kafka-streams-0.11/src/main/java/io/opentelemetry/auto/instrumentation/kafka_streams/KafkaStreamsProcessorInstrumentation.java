@@ -1,11 +1,8 @@
 package io.opentelemetry.auto.instrumentation.kafka_streams;
 
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activateSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeScope;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.propagate;
-import static io.opentelemetry.auto.instrumentation.api.AgentTracer.startSpan;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.TextMapExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -16,10 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan.Context;
+import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -30,10 +27,20 @@ import org.apache.kafka.streams.processor.internals.StampedRecord;
 public class KafkaStreamsProcessorInstrumentation {
   // These two instrumentations work together to apply StreamTask.process.
   // The combination of these is needed because there's no good instrumentation point.
-  // FIXME: this instrumentation takes somewhat strange approach. It looks like Kafka Streams
-  // defines notions of 'processor', 'source' and 'sink'. There is no 'consumer' as such.
-  // Also this instrumentation doesn't define 'producer' making it 'asymmetric' - resulting
-  // in awkward tests and traces. We may want to revisit this in the future.
+
+  public static class SpanScopeHolder {
+    public static final ThreadLocal<SpanScopeHolder> HOLDER = new ThreadLocal<>();
+
+    private SpanScopePair spanScopePair;
+
+    public SpanScopePair getSpanScopePair() {
+      return spanScopePair;
+    }
+
+    public void setSpanScopePair(final SpanScopePair spanScopePair) {
+      this.spanScopePair = spanScopePair;
+    }
+  }
 
   @AutoService(Instrumenter.class)
   public static class StartInstrumentation extends Instrumenter.Default {
@@ -53,7 +60,8 @@ public class KafkaStreamsProcessorInstrumentation {
         "io.opentelemetry.auto.decorator.BaseDecorator",
         "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
-        packageName + ".TextMapExtractAdapter"
+        packageName + ".TextMapExtractAdapter",
+        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
 
@@ -75,13 +83,26 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        final Context extractedContext = propagate().extract(record.value.headers(), GETTER);
+        final SpanScopeHolder holder = HOLDER.get();
+        if (holder == null) {
+          // somehow nextRecord() was called outside of process()
+          return;
+        }
 
-        final AgentSpan span = startSpan("kafka.consume", extractedContext);
+        final Span.Builder spanBuilder = TRACER.spanBuilder("kafka.consume");
+        try {
+          final SpanContext extractedContext =
+              TRACER.getHttpTextFormat().extract(record.value.headers(), GETTER);
+          spanBuilder.setParent(extractedContext);
+        } catch (final IllegalArgumentException e) {
+          // Couldn't extract a context. We should treat this as a root span.
+          spanBuilder.setNoParent();
+        }
+        final Span span = spanBuilder.startSpan();
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        activateSpan(span, true);
+        holder.setSpanScopePair(new SpanScopePair(span, TRACER.withSpan(span)));
       }
     }
   }
@@ -104,7 +125,8 @@ public class KafkaStreamsProcessorInstrumentation {
         "io.opentelemetry.auto.decorator.BaseDecorator",
         "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
-        packageName + ".TextMapExtractAdapter"
+        packageName + ".TextMapExtractAdapter",
+        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
 
@@ -117,17 +139,24 @@ public class KafkaStreamsProcessorInstrumentation {
 
     public static class StopSpanAdvice {
 
+      @Advice.OnMethodEnter
+      public static SpanScopeHolder onEnter() {
+        final SpanScopeHolder holder = new SpanScopeHolder();
+        HOLDER.set(holder);
+        return holder;
+      }
+
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-      public static void stopSpan(@Advice.Thrown final Throwable throwable) {
-        // This is dangerous... we assume the span/scope is the one we expect, but it may not be.
-        final AgentSpan span = activeSpan();
-        if (span != null) {
+      public static void stopSpan(
+          @Advice.Enter final SpanScopeHolder holder, @Advice.Thrown final Throwable throwable) {
+        HOLDER.remove();
+        final SpanScopePair spanScopePair = holder.getSpanScopePair();
+        if (spanScopePair != null) {
+          final Span span = spanScopePair.getSpan();
           CONSUMER_DECORATE.onError(span, throwable);
           CONSUMER_DECORATE.beforeFinish(span);
-        }
-        final AgentScope scope = activeScope();
-        if (scope != null) {
-          scope.close();
+          span.end();
+          spanScopePair.getScope().close();
         }
       }
     }
