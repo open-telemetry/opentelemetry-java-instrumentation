@@ -13,7 +13,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
@@ -142,14 +141,13 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public HttpResponse apply(final HttpRequest request) {
       final SpanWithScope spanWithScope = WrapperHelper.createSpan(request);
       final Span span = spanWithScope.getSpan();
-      final Scope scope = spanWithScope.getScope();
       try {
         final HttpResponse response = userHandler.apply(request);
-        scope.close();
+        spanWithScope.closeScope();
         WrapperHelper.finishSpan(span, response);
         return response;
       } catch (final Throwable t) {
-        scope.close();
+        spanWithScope.closeScope();
         WrapperHelper.finishSpan(span, t);
         throw t;
       }
@@ -172,12 +170,11 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public Future<HttpResponse> apply(final HttpRequest request) {
       final SpanWithScope spanWithScope = WrapperHelper.createSpan(request);
       final Span span = spanWithScope.getSpan();
-      final Scope scope = spanWithScope.getScope();
       Future<HttpResponse> futureResponse = null;
       try {
         futureResponse = userHandler.apply(request);
       } catch (final Throwable t) {
-        scope.close();
+        spanWithScope.closeScope();
         WrapperHelper.finishSpan(span, t);
         throw t;
       }
@@ -198,7 +195,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
                 }
               },
               executionContext);
-      scope.close();
+      spanWithScope.closeScope();
       return wrapped;
     }
   }

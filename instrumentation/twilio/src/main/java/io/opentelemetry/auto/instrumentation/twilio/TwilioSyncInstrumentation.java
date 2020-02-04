@@ -119,7 +119,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
         DECORATE.beforeFinish(span);
         span.end();
       } finally {
-        spanWithScope.getScope().close();
+        spanWithScope.closeScope();
         CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }

@@ -104,7 +104,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       PRODUCER_DECORATE.beforeFinish(span);
 
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
       CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }
@@ -141,7 +141,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       PRODUCER_DECORATE.onError(span, throwable);
       PRODUCER_DECORATE.beforeFinish(span);
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
       CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }

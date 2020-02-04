@@ -93,7 +93,7 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

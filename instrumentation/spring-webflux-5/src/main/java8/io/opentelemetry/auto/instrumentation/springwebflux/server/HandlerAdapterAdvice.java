@@ -62,7 +62,7 @@ public class HandlerAdapterAdvice {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
     if (spanAndScope != null) {
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
   }
 }

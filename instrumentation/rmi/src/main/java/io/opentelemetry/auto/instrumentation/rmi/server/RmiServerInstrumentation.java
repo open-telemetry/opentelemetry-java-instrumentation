@@ -81,7 +81,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       DECORATE.onError(span, throwable);
       span.end();
 
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

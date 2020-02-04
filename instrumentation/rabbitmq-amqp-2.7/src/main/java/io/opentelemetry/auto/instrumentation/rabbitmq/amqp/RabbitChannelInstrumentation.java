@@ -140,7 +140,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
       CallDepthThreadLocalMap.reset(Channel.class);
     }
   }

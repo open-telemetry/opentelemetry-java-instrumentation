@@ -76,7 +76,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

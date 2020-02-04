@@ -65,7 +65,7 @@ public class SessionMethodUtils {
       DECORATOR.beforeFinish(span);
       span.end();
     }
-    spanWithScope.getScope().close();
+    spanWithScope.closeScope();
   }
 
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to

@@ -70,7 +70,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

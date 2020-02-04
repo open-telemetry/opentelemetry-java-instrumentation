@@ -70,7 +70,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
   }
 }

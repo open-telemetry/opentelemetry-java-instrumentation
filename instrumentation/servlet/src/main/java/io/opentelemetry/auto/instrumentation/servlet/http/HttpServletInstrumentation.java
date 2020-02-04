@@ -91,7 +91,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
   }
 }

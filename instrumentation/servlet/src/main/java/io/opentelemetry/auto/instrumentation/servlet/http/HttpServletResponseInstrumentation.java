@@ -93,7 +93,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
   }
 }

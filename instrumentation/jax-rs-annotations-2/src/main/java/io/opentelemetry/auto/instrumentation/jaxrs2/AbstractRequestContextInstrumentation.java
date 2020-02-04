@@ -97,7 +97,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
 
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
   }
 }

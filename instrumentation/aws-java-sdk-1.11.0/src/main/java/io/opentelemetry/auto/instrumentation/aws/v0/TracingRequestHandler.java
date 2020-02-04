@@ -42,7 +42,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     final SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
     if (spanWithScope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
       final Span span = spanWithScope.getSpan();
       decorate.onResponse(span, response);
       decorate.beforeFinish(span);
@@ -55,7 +55,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     final SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
     if (spanWithScope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
       final Span span = spanWithScope.getSpan();
       decorate.onError(span, e);
       decorate.beforeFinish(span);

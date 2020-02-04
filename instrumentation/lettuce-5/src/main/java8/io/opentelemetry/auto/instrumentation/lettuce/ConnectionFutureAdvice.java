@@ -29,10 +29,10 @@ public class ConnectionFutureAdvice {
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
       return;
     }
     connectionFuture.handleAsync(new LettuceAsyncBiFunction<>(span));
-    spanWithScope.getScope().close();
+    spanWithScope.closeScope();
   }
 }

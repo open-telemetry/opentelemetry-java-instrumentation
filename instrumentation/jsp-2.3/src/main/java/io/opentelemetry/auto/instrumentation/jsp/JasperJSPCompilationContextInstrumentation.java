@@ -66,7 +66,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

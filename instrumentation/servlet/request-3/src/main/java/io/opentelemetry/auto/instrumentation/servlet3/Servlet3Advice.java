@@ -116,7 +116,7 @@ public class Servlet3Advice {
           span.end(); // Finish the span manually since finishSpanOnClose was false
         }
       }
-      scope.getScope().close();
+      scope.closeScope();
     }
   }
 }

@@ -35,7 +35,7 @@ public abstract class HttpServerTestAdvice {
     public static void methodExit(@Advice.Enter final SpanWithScope spanWithScope) {
       if (spanWithScope != null) {
         spanWithScope.getSpan().end();
-        spanWithScope.getScope().close();
+        spanWithScope.closeScope();
       }
     }
   }

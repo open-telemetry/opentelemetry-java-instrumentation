@@ -91,7 +91,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
             AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
-            newScope.getScope().close();
+            newScope.closeScope();
           } else {
             scope = newScope;
           }
@@ -104,7 +104,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
             AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
         if (null != newScope) {
           if (null != scope) {
-            newScope.getScope().close();
+            newScope.closeScope();
           } else {
             scope = newScope;
           }

@@ -80,7 +80,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       DECORATE_RENDER.onError(span, throwable);
       DECORATE_RENDER.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
 
     // Make this advice match consistently with HandlerAdapterInstrumentation

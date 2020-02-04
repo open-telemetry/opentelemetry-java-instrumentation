@@ -86,6 +86,6 @@ public class JettyHandlerAdvice {
         span.end(); // Finish the span manually since finishSpanOnClose was false
       }
     }
-    spanWithScope.getScope().close();
+    spanWithScope.closeScope();
   }
 }

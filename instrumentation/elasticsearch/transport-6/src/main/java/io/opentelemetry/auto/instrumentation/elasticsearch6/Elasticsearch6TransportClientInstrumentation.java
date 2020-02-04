@@ -96,7 +96,7 @@ public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.D
         DECORATE.beforeFinish(span);
         span.end();
       }
-      scope.getScope().close();
+      scope.closeScope();
     }
   }
 }

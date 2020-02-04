@@ -132,7 +132,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
               response, new SpanFinishingCallback(span), Twilio.getExecutorService());
         }
       } finally {
-        spanWithScope.getScope().close(); // won't finish the span.
+        spanWithScope.closeScope();
         CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }

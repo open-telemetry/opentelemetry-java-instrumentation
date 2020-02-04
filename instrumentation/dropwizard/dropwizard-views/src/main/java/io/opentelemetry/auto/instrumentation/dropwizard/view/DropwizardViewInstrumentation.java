@@ -84,7 +84,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
         BaseDecorator.addThrowable(span, throwable);
       }
       span.end();
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

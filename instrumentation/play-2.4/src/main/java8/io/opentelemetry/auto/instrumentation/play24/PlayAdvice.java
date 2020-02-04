@@ -58,7 +58,7 @@ public class PlayAdvice {
       DECORATE.beforeFinish(playControllerSpan);
       playControllerSpan.end();
     }
-    playControllerScope.getScope().close();
+    playControllerScope.closeScope();
 
     final Span rootSpan = TRACER.getCurrentSpan();
     // set the resource name on the upstream akka/netty span

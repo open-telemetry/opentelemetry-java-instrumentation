@@ -67,7 +67,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
           span.end();
-          spanWithScope.getScope().close();
+          spanWithScope.closeScope();
         }
       }
     }
@@ -106,7 +106,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
             DECORATE.onError(span, throwable);
             DECORATE.beforeFinish(span);
             span.end();
-            spanWithScope.getScope().close();
+            spanWithScope.closeScope();
           }
         }
       }

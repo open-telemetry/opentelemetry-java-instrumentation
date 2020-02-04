@@ -179,7 +179,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         DECORATE.beforeFinish(span);
         span.end();
       } finally {
-        spanWithScope.getScope().close();
+        spanWithScope.closeScope();
         CallDepthThreadLocalMap.reset(HttpClient.class);
       }
     }

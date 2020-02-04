@@ -49,7 +49,7 @@ public class DispatcherHandlerAdvice {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
     if (spanAndScope != null) {
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
   }
 }

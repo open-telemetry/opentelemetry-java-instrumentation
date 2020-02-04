@@ -35,7 +35,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
   public boolean hasNext() {
     if (currentSpanWithScope != null) {
       currentSpanWithScope.getSpan().end();
-      currentSpanWithScope.getScope().close();
+      currentSpanWithScope.closeScope();
       currentSpanWithScope = null;
     }
     return delegateIterator.hasNext();
@@ -46,7 +46,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
     if (currentSpanWithScope != null) {
       // in case they didn't call hasNext()...
       currentSpanWithScope.getSpan().end();
-      currentSpanWithScope.getScope().close();
+      currentSpanWithScope.closeScope();
       currentSpanWithScope = null;
     }
 

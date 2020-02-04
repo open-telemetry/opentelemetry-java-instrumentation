@@ -99,7 +99,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
       CallDepthThreadLocalMap.reset(PreparedStatement.class);
     }
   }

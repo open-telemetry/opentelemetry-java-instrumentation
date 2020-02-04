@@ -36,7 +36,7 @@ public class AdviceUtils {
 
   public static void endTaskScope(final SpanWithScope scope) {
     if (scope != null) {
-      scope.getScope().close();
+      scope.closeScope();
     }
   }
 }

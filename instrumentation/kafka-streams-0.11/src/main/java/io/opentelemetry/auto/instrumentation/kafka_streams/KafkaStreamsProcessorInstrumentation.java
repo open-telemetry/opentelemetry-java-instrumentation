@@ -156,7 +156,7 @@ public class KafkaStreamsProcessorInstrumentation {
           CONSUMER_DECORATE.onError(span, throwable);
           CONSUMER_DECORATE.beforeFinish(span);
           span.end();
-          spanWithScope.getScope().close();
+          spanWithScope.closeScope();
         }
       }
     }

@@ -81,7 +81,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

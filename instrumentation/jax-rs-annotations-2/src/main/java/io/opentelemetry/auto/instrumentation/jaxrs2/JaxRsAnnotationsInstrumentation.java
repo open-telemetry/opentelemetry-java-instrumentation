@@ -96,7 +96,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
-        spanAndScope.getScope().close();
+        spanAndScope.closeScope();
         return;
       }
 
@@ -113,7 +113,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanAndScope.getScope().close();
+      spanAndScope.closeScope();
     }
   }
 }

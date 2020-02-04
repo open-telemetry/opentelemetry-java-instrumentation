@@ -114,7 +114,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanWithScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 

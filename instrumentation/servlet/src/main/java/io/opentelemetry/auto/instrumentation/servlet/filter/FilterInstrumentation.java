@@ -82,7 +82,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
       FilterDecorator.DECORATE.onError(span, throwable);
       FilterDecorator.DECORATE.beforeFinish(span);
       span.end();
-      scope.getScope().close();
+      scope.closeScope();
     }
   }
 }

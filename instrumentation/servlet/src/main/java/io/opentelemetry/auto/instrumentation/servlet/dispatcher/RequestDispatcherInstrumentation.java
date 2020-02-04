@@ -112,7 +112,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       DECORATE.beforeFinish(span);
 
       span.end();
-      scope.getScope().close();
+      scope.closeScope();
     }
   }
 }
