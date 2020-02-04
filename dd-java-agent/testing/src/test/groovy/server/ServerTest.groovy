@@ -231,7 +231,7 @@ class ServerTest extends AgentTestRunner {
 
   def "server redirect"() {
     setup:
-    client = OkHttpUtils.clientBuilder().followRedirects(followRedirects).build()
+    client = OkHttpUtils.client(followRedirects)
     def server = httpServer {
       handlers {
         get("/redirect") {
