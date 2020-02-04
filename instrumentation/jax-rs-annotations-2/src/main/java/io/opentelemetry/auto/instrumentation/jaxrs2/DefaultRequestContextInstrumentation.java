@@ -58,19 +58,19 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanAndScope, @Advice.Thrown final Throwable throwable) {
-      if (spanAndScope == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
 
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }
 
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }

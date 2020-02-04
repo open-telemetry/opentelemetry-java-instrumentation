@@ -74,7 +74,7 @@ public class Servlet2Advice {
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanWithScope spanAndScope,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
     final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
@@ -85,10 +85,10 @@ public class Servlet2Advice {
       }
     }
 
-    if (spanAndScope == null) {
+    if (spanWithScope == null) {
       return;
     }
-    final Span span = spanAndScope.getSpan();
+    final Span span = spanWithScope.getSpan();
     DECORATE.onResponse(span, response);
     if (throwable != null) {
       if (response instanceof StatusSavingHttpServletResponseWrapper
@@ -102,6 +102,6 @@ public class Servlet2Advice {
     }
     DECORATE.beforeFinish(span);
     span.end();
-    spanAndScope.closeScope();
+    spanWithScope.closeScope();
   }
 }

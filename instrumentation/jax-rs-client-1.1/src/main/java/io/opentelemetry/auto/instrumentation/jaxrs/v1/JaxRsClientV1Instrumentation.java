@@ -80,18 +80,18 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter final SpanWithScope spanAndScope,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final ClientResponse response,
         @Advice.Thrown final Throwable throwable) {
-      if (spanAndScope == null) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onResponse(span, response);
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }

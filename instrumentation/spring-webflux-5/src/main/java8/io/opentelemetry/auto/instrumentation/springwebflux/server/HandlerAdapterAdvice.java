@@ -19,7 +19,7 @@ public class HandlerAdapterAdvice {
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Argument(1) final Object handler) {
 
-    SpanWithScope spanAndScope = null;
+    SpanWithScope spanWithScope = null;
     final Span span = exchange.getAttribute(AdviceUtils.SPAN_ATTRIBUTE);
     if (handler != null && span != null) {
       final String handlerType;
@@ -38,7 +38,7 @@ public class HandlerAdapterAdvice {
       span.updateName(operationName);
       span.setAttribute("handler.type", handlerType);
 
-      spanAndScope = new SpanWithScope(span, TRACER.withSpan(span));
+      spanWithScope = new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     final Span parentSpan = exchange.getAttribute(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
@@ -50,19 +50,19 @@ public class HandlerAdapterAdvice {
           exchange.getRequest().getMethodValue() + " " + bestPattern.getPatternString());
     }
 
-    return spanAndScope;
+    return spanWithScope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
       @Advice.Argument(0) final ServerWebExchange exchange,
-      @Advice.Enter final SpanWithScope spanAndScope,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
     if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
-    if (spanAndScope != null) {
-      spanAndScope.closeScope();
+    if (spanWithScope != null) {
+      spanWithScope.closeScope();
     }
   }
 }

@@ -71,12 +71,12 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanAndScope, @Advice.Thrown final Throwable throwable) {
-      final Span span = spanAndScope.getSpan();
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }

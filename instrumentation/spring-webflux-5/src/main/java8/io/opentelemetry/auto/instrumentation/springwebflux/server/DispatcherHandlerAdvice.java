@@ -37,19 +37,19 @@ public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Enter final SpanWithScope spanAndScope,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Object> mono) {
     if (throwable == null && mono != null) {
       final Function<? super Mono<Object>, ? extends Publisher<Object>> function =
           ReactorCoreAdviceUtils.finishSpanNextOrError();
-      mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, spanAndScope.getSpan());
+      mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, spanWithScope.getSpan());
     } else if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
-    if (spanAndScope != null) {
-      spanAndScope.closeScope();
+    if (spanWithScope != null) {
+      spanWithScope.closeScope();
     }
   }
 }

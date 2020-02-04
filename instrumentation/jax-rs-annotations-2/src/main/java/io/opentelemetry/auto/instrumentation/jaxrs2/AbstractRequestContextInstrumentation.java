@@ -85,19 +85,19 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
     }
 
     public static void closeSpanAndScope(
-        final SpanWithScope spanAndScope, final Throwable throwable) {
-      if (spanAndScope == null) {
+        final SpanWithScope spanWithScope, final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
 
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }
 
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }

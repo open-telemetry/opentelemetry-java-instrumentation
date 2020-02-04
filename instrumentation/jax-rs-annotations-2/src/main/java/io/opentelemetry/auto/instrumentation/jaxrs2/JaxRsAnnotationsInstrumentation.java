@@ -88,15 +88,15 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanAndScope,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.AllArguments final Object[] args) {
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
-        spanAndScope.closeScope();
+        spanWithScope.closeScope();
         return;
       }
 
@@ -113,7 +113,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanAndScope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }
