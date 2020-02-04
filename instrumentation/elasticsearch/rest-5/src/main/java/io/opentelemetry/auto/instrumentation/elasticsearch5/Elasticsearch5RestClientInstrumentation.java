@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
   public static class ElasticsearchRestClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.Argument(0) final String method,
         @Advice.Argument(1) final String endpoint,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
@@ -70,19 +70,19 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
 
       responseListener = new RestResponseListener(responseListener, span);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final Span span = spanScopePair.getSpan();
+        final Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanScopePair.getScope().close();
+      spanWithScope.getScope().close();
     }
   }
 }

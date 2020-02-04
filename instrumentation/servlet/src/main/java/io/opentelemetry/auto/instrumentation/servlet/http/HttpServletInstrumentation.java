@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -65,7 +65,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
   public static class HttpServletAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair start(@Advice.Origin final Method method) {
+    public static SpanWithScope start(@Advice.Origin final Method method) {
 
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
@@ -78,12 +78,12 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       // Here we use the Method instead of "this.class.name" to distinguish calls to "super".
       span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanWithScope spanAndScope, @Advice.Thrown final Throwable throwable) {
       if (spanAndScope == null) {
         return;
       }

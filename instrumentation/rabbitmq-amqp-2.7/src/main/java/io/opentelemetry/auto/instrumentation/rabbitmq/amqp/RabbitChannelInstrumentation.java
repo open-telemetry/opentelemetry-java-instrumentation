@@ -29,7 +29,7 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -111,7 +111,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
   public static class ChannelMethodAdvice {
     @Advice.OnMethodEnter
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.This final Channel channel, @Advice.Origin("Channel.#m") final String method) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       if (callDepth > 0) {
@@ -126,21 +126,21 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       CURRENT_RABBIT_SPAN.set(span);
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      if (spanScopePair == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
       CURRENT_RABBIT_SPAN.remove();
-      final Span span = spanScopePair.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanScopePair.getScope().close();
+      spanWithScope.getScope().close();
       CallDepthThreadLocalMap.reset(Channel.class);
     }
   }

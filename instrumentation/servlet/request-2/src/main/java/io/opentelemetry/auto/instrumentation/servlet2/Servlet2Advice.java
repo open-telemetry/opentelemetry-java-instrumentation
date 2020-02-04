@@ -7,7 +7,7 @@ import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.T
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -23,7 +23,7 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 public class Servlet2Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair onEnter(
+  public static SpanWithScope onEnter(
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
@@ -67,14 +67,14 @@ public class Servlet2Advice {
 
     httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
 
-    return new SpanScopePair(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanScopePair spanAndScope,
+      @Advice.Enter final SpanWithScope spanAndScope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
     final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);

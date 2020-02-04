@@ -4,7 +4,7 @@ import static io.opentelemetry.auto.instrumentation.play24.PlayHeaders.GETTER;
 import static io.opentelemetry.auto.instrumentation.play24.PlayHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.play24.PlayHttpServerDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import net.bytebuddy.asm.Advice;
@@ -15,7 +15,7 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair onEnter(@Advice.Argument(0) final Request req) {
+  public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
     final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
     if (!TRACER.getCurrentSpan().getContext().isValid()) {
       try {
@@ -34,12 +34,12 @@ public class PlayAdvice {
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
 
-    return new SpanScopePair(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopTraceOnResponse(
-      @Advice.Enter final SpanScopePair playControllerScope,
+      @Advice.Enter final SpanWithScope playControllerScope,
       @Advice.This final Object thisAction,
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final Request req,

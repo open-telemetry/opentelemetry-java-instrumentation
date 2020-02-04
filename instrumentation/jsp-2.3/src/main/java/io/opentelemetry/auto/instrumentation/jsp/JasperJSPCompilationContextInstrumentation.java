@@ -8,7 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -48,25 +48,25 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   public static class JasperJspCompilationContext {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter() {
+    public static SpanWithScope onEnter() {
       final Span span = TRACER.spanBuilder("jsp.compile").startSpan();
       DECORATE.afterStart(span);
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This final JspCompilationContext jspCompilationContext,
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable) {
-      final Span span = spanScopePair.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onCompile(span, jspCompilationContext);
       // ^ Decorate on return because additional properties are available
 
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanScopePair.getScope().close();
+      spanWithScope.getScope().close();
     }
   }
 }

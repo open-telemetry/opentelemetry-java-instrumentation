@@ -11,7 +11,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,14 +68,14 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   public static class RunnableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair enter(@Advice.This final Runnable thiz) {
+    public static SpanWithScope enter(@Advice.This final Runnable thiz) {
       final ContextStore<Runnable, State> contextStore =
           InstrumentationContext.get(Runnable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final SpanScopePair scope) {
+    public static void exit(@Advice.Enter final SpanWithScope scope) {
       AdviceUtils.endTaskScope(scope);
     }
   }
@@ -83,14 +83,14 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair enter(@Advice.This final Callable thiz) {
+    public static SpanWithScope enter(@Advice.This final Callable thiz) {
       final ContextStore<Callable, State> contextStore =
           InstrumentationContext.get(Callable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter final SpanScopePair scope) {
+    public static void exit(@Advice.Enter final SpanWithScope scope) {
       AdviceUtils.endTaskScope(scope);
     }
   }

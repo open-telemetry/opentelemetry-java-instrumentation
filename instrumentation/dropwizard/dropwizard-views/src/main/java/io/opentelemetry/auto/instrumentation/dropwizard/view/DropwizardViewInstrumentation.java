@@ -14,7 +14,7 @@ import io.dropwizard.views.View;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -60,7 +60,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
         OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.This final Object obj, @Advice.Argument(0) final View view) {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
@@ -69,22 +69,22 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       span.setAttribute(MoreTags.RESOURCE_NAME, "View " + view.getTemplateName());
       span.setAttribute(Tags.COMPONENT, "dropwizard-view");
       span.setAttribute("span.origin.type", obj.getClass().getSimpleName());
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      if (spanScopePair == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = spanScopePair.getSpan();
+      final Span span = spanWithScope.getSpan();
       if (throwable != null) {
         span.setStatus(Status.UNKNOWN);
         BaseDecorator.addThrowable(span, throwable);
       }
       span.end();
-      spanScopePair.getScope().close();
+      spanWithScope.getScope().close();
     }
   }
 }

@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import com.twilio.Twilio;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -81,7 +81,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
 
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(
+    public static SpanWithScope methodEnter(
         @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
@@ -97,29 +97,29 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onServiceExecution(span, that, methodName);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final Object response) {
-      if (spanScopePair == null) {
+      if (spanWithScope == null) {
         return;
       }
 
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       try {
-        final Span span = spanScopePair.getSpan();
+        final Span span = spanWithScope.getSpan();
 
         DECORATE.onResult(span, response);
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
       } finally {
-        spanScopePair.getScope().close();
+        spanWithScope.getScope().close();
         CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }

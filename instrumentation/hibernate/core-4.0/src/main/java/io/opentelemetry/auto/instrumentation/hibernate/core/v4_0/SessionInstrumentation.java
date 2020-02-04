@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -126,7 +126,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   public static class SessionMethodAdvice extends V4Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair startMethod(
+    public static SpanWithScope startMethod(
         @Advice.This final SharedSessionContract session,
         @Advice.Origin("#m") final String name,
         @Advice.Argument(0) final Object entity) {
@@ -140,11 +140,11 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
 
-      SessionMethodUtils.closeScope(spanScopePair, throwable, returned);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, returned);
     }
   }
 

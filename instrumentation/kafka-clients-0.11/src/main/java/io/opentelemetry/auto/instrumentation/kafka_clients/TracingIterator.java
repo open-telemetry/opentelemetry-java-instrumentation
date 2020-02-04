@@ -3,7 +3,7 @@ package io.opentelemetry.auto.instrumentation.kafka_clients;
 import static io.opentelemetry.auto.instrumentation.kafka_clients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafka_clients.TextMapExtractAdapter.GETTER;
 
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.util.Iterator;
@@ -20,7 +20,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
    * Note: this may potentially create problems if this iterator is used from different threads. But
    * at the moment we cannot do much about this.
    */
-  private SpanScopePair currentSpanScopePair;
+  private SpanWithScope currentSpanWithScope;
 
   public TracingIterator(
       final Iterator<ConsumerRecord> delegateIterator,
@@ -33,21 +33,21 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
 
   @Override
   public boolean hasNext() {
-    if (currentSpanScopePair != null) {
-      currentSpanScopePair.getSpan().end();
-      currentSpanScopePair.getScope().close();
-      currentSpanScopePair = null;
+    if (currentSpanWithScope != null) {
+      currentSpanWithScope.getSpan().end();
+      currentSpanWithScope.getScope().close();
+      currentSpanWithScope = null;
     }
     return delegateIterator.hasNext();
   }
 
   @Override
   public ConsumerRecord next() {
-    if (currentSpanScopePair != null) {
+    if (currentSpanWithScope != null) {
       // in case they didn't call hasNext()...
-      currentSpanScopePair.getSpan().end();
-      currentSpanScopePair.getScope().close();
-      currentSpanScopePair = null;
+      currentSpanWithScope.getSpan().end();
+      currentSpanWithScope.getScope().close();
+      currentSpanWithScope = null;
     }
 
     final ConsumerRecord next = delegateIterator.next();
@@ -66,7 +66,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         final Span span = spanBuilder.startSpan();
         decorator.afterStart(span);
         decorator.onConsume(span, next);
-        currentSpanScopePair = new SpanScopePair(span, TRACER.withSpan(span));
+        currentSpanWithScope = new SpanWithScope(span, TRACER.withSpan(span));
       }
     } catch (final Exception e) {
       log.debug("Error during decoration", e);

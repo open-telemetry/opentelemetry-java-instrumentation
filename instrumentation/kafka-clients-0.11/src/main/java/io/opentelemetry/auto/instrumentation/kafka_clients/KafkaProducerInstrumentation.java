@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -64,7 +64,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.FieldValue("apiVersions") final ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
@@ -95,17 +95,17 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         }
       }
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      final Span span = spanScopePair.getSpan();
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      final Span span = spanWithScope.getSpan();
       PRODUCER_DECORATE.onError(span, throwable);
       PRODUCER_DECORATE.beforeFinish(span);
       span.end();
-      spanScopePair.getScope().close();
+      spanWithScope.getScope().close();
     }
   }
 

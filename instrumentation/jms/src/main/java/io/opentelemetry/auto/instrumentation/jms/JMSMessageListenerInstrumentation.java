@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -59,7 +59,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   public static class MessageListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.Argument(0) final Message message, @Advice.This final MessageListener listener) {
 
       final Span.Builder spanBuilder = TRACER.spanBuilder("jms.onMessage");
@@ -76,20 +76,20 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
       CONSUMER_DECORATE.afterStart(span);
       CONSUMER_DECORATE.onReceive(span, message);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      if (spanScopePair == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = spanScopePair.getSpan();
+      final Span span = spanWithScope.getSpan();
       CONSUMER_DECORATE.onError(span, throwable);
       CONSUMER_DECORATE.beforeFinish(span);
       span.end();
-      spanScopePair.getScope().close();
+      spanWithScope.getScope().close();
     }
   }
 }

@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -65,7 +65,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   public static class RequestDispatcherAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair start(
+    public static SpanWithScope start(
         @Advice.Origin("#m") final String method,
         @Advice.This final RequestDispatcher dispatcher,
         @Advice.Local("_requestSpan") Object requestSpan,
@@ -89,12 +89,12 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       requestSpan = request.getAttribute(SPAN_ATTRIBUTE);
       request.setAttribute(SPAN_ATTRIBUTE, span);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
-        @Advice.Enter final SpanScopePair scope,
+        @Advice.Enter final SpanWithScope scope,
         @Advice.Local("_requestSpan") final Object requestSpan,
         @Advice.Argument(0) final ServletRequest request,
         @Advice.Thrown final Throwable throwable) {

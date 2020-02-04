@@ -4,11 +4,11 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
 // intentionally (for now) not implementing Scope or Closeable
-public class SpanScopePair {
+public class SpanWithScope {
   private final Span span;
   private final Scope scope;
 
-  public SpanScopePair(final Span span, final Scope scope) {
+  public SpanWithScope(final Span span, final Scope scope) {
     this.span = span;
     this.scope = scope;
   }

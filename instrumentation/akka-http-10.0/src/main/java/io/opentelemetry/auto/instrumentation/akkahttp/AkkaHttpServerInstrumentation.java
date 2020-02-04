@@ -10,7 +10,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -95,7 +95,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   }
 
   public static class WrapperHelper {
-    public static SpanScopePair createSpan(final HttpRequest request) {
+    public static SpanWithScope createSpan(final HttpRequest request) {
       final Span.Builder spanBuilder = TRACER.spanBuilder("akka-http.request");
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
@@ -110,7 +110,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       DECORATE.onConnection(span, request);
       DECORATE.onRequest(span, request);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     public static void finishSpan(final Span span, final HttpResponse response) {
@@ -140,9 +140,9 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpResponse apply(final HttpRequest request) {
-      final SpanScopePair spanScopePair = WrapperHelper.createSpan(request);
-      final Span span = spanScopePair.getSpan();
-      final Scope scope = spanScopePair.getScope();
+      final SpanWithScope spanWithScope = WrapperHelper.createSpan(request);
+      final Span span = spanWithScope.getSpan();
+      final Scope scope = spanWithScope.getScope();
       try {
         final HttpResponse response = userHandler.apply(request);
         scope.close();
@@ -170,9 +170,9 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public Future<HttpResponse> apply(final HttpRequest request) {
-      final SpanScopePair spanScopePair = WrapperHelper.createSpan(request);
-      final Span span = spanScopePair.getSpan();
-      final Scope scope = spanScopePair.getScope();
+      final SpanWithScope spanWithScope = WrapperHelper.createSpan(request);
+      final Span span = spanWithScope.getSpan();
+      final Scope scope = spanWithScope.getScope();
       Future<HttpResponse> futureResponse = null;
       try {
         futureResponse = userHandler.apply(request);
