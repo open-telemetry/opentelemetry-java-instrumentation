@@ -20,6 +20,7 @@ class Cleaner {
           final Thread thread = new Thread(r, "agent-cleaner");
           thread.setDaemon(true);
           thread.setPriority(Thread.MIN_PRIORITY);
+          thread.setContextClassLoader(null);
           return thread;
         }
       };

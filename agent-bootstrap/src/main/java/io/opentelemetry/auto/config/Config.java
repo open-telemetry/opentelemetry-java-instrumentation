@@ -52,6 +52,7 @@ public class Config {
   public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
+  public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
@@ -70,6 +71,7 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
+  private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
 
   public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
 
@@ -91,6 +93,7 @@ public class Config {
   @Getter private final boolean httpClientTagQueryString;
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final boolean dbClientSplitByInstance;
+  @Getter private final Integer scopeDepthLimit;
   @Getter private final boolean runtimeContextFieldInjection;
 
   @Getter private final boolean logsInjectionEnabled;
@@ -141,6 +144,9 @@ public class Config {
     dbClientSplitByInstance =
         getBooleanSettingFromEnvironment(
             DB_CLIENT_HOST_SPLIT_BY_INSTANCE, DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE);
+
+    scopeDepthLimit =
+        getIntegerSettingFromEnvironment(SCOPE_DEPTH_LIMIT, DEFAULT_SCOPE_DEPTH_LIMIT);
 
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
@@ -196,6 +202,9 @@ public class Config {
     dbClientSplitByInstance =
         getPropertyBooleanValue(
             properties, DB_CLIENT_HOST_SPLIT_BY_INSTANCE, parent.dbClientSplitByInstance);
+
+    scopeDepthLimit =
+        getPropertyIntegerValue(properties, SCOPE_DEPTH_LIMIT, parent.scopeDepthLimit);
 
     runtimeContextFieldInjection =
         getPropertyBooleanValue(

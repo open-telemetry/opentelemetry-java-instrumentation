@@ -291,7 +291,10 @@ class MuzzlePlugin implements Plugin<Project> {
       doLast {
         final ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject, toolingProject)
         def ccl = Thread.currentThread().contextClassLoader
-        def bogusLoader = new SecureClassLoader()
+        def bogusLoader = new SecureClassLoader() {
+          @Override
+          String toString() { return "bogus" }
+        }
         Thread.currentThread().contextClassLoader = bogusLoader
         final ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
         try {
