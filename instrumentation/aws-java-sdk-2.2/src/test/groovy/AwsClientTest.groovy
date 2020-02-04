@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -177,13 +177,6 @@ class AwsClientTest extends AgentTestRunner {
 
     expect:
     response != null
-
-    // Order is not guaranteed in these traces, so reorder them if needed to put aws trace first
-    if (TEST_WRITER[0][0].attributes[MoreTags.SERVICE_NAME].stringValue != "java-aws-sdk") {
-      def tmp = TEST_WRITER[0]
-      TEST_WRITER[0] = TEST_WRITER[1]
-      TEST_WRITER[1] = tmp
-    }
 
     assertTraces(2) {
       trace(0, 1) {

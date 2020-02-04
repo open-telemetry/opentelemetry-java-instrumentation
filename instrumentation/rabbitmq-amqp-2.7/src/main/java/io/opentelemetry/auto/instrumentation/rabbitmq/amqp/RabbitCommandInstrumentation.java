@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
+import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -42,6 +42,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
       // These are only used by muzzleCheck:
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",
+      RabbitCommandInstrumentation.class.getName() + "$SpanHolder"
     };
   }
 
@@ -52,15 +53,17 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
         RabbitCommandInstrumentation.class.getName() + "$CommandConstructorAdvice");
   }
 
+  public static class SpanHolder {
+    public static final ThreadLocal<Span> CURRENT_RABBIT_SPAN = new ThreadLocal<>();
+  }
+
   public static class CommandConstructorAdvice {
     @Advice.OnMethodExit
     public static void setResourceNameAddHeaders(@Advice.This final Command command) {
-      final Span span = TRACER.getCurrentSpan();
 
-      if (span.getContext().isValid() && command.getMethod() != null) {
-        if (span.getSpanName().equals("amqp.command")) {
-          DECORATE.onCommand(span, command);
-        }
+      final Span span = CURRENT_RABBIT_SPAN.get();
+      if (span != null && command.getMethod() != null) {
+        DECORATE.onCommand(span, command);
       }
     }
 

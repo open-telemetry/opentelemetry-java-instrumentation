@@ -1,8 +1,10 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkRequest;
@@ -15,9 +17,11 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, SdkHttpResponse> {
   public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
+  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+
   static final String COMPONENT_NAME = "java-aws-sdk";
 
-  public AgentSpan onSdkRequest(final AgentSpan span, final SdkRequest request) {
+  public Span onSdkRequest(final Span span, final SdkRequest request) {
     // S3
     request
         .getValueForField("Bucket", String.class)
@@ -40,7 +44,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     return span;
   }
 
-  public AgentSpan onAttributes(final AgentSpan span, final ExecutionAttributes attributes) {
+  public Span onAttributes(final Span span, final ExecutionAttributes attributes) {
 
     final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
@@ -56,7 +60,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   // Not overriding the super.  Should call both with each type of response.
-  public AgentSpan onResponse(final AgentSpan span, final SdkResponse response) {
+  public Span onResponse(final Span span, final SdkResponse response) {
     if (response instanceof AwsResponse) {
       span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
     }
@@ -69,12 +73,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   @Override
-  protected String[] instrumentationNames() {
-    return new String[] {"aws-sdk"};
-  }
-
-  @Override
-  protected String component() {
+  protected String getComponentName() {
     return COMPONENT_NAME;
   }
 
