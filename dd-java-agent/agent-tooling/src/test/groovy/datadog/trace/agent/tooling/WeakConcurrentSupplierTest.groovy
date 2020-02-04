@@ -9,13 +9,13 @@ import spock.lang.Shared
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.agent.tooling.AgentTooling.CLEANER
-
 @Retry
 // These tests fail sometimes in CI.
 class WeakConcurrentSupplierTest extends DDSpecification {
   @Shared
-  def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent(CLEANER)
+  def cleaner = new Cleaner()
+  @Shared
+  def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent(cleaner)
   @Shared
   def weakInlineSupplier = new WeakMapSuppliers.WeakConcurrent.Inline()
   @Shared
@@ -59,7 +59,7 @@ class WeakConcurrentSupplierTest extends DDSpecification {
 
     where:
     name             | supplierSupplier
-    "WeakConcurrent" | { -> new WeakMapSuppliers.WeakConcurrent(CLEANER) }
+    "WeakConcurrent" | { -> new WeakMapSuppliers.WeakConcurrent(cleaner) }
     "WeakInline"     | { -> new WeakMapSuppliers.WeakConcurrent.Inline() }
     "Guava"          | { -> new WeakMapSuppliers.Guava() }
   }

@@ -13,7 +13,7 @@ public final class DaemonThreadFactory implements ThreadFactory {
   private final String threadName;
 
   /**
-   * Constructs a new {@code DaemonThreadFactory}.
+   * Constructs a new {@code DaemonThreadFactory} with a null ContextClassLoader.
    *
    * @param threadName used to prefix all thread names.
    */
@@ -25,6 +25,7 @@ public final class DaemonThreadFactory implements ThreadFactory {
   public Thread newThread(final Runnable r) {
     final Thread thread = new Thread(r, threadName);
     thread.setDaemon(true);
+    thread.setContextClassLoader(null);
     return thread;
   }
 }
