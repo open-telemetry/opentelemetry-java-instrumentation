@@ -26,11 +26,24 @@ public class ExecutorInstrumentationUtils {
    * @return true iff given task object should be wrapped
    */
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
+    if (task == null) {
+      return false;
+    }
+
     final TraceScope scope = activeScope();
-    return (scope != null
+    final Class enclosingClass = task.getClass().getEnclosingClass();
+
+    return scope != null
         && scope.isAsyncPropagating()
-        && task != null
-        && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
+        && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task)
+
+        // Don't instrument the executor's own runnables.  These runnables may never return until
+        // netty shuts down.  Any created continuations will be open until that time preventing
+        // traces from being reported
+        && (enclosingClass == null
+            || !enclosingClass
+                .getName()
+                .equals("io.netty.util.concurrent.SingleThreadEventExecutor"));
   }
 
   /**
@@ -44,13 +57,16 @@ public class ExecutorInstrumentationUtils {
    */
   public static <T> State setupState(
       final ContextStore<T, State> contextStore, final T task, final TraceScope scope) {
+
     final State state = contextStore.putIfAbsent(task, State.FACTORY);
+
     final TraceScope.Continuation continuation = scope.capture();
     if (state.setContinuation(continuation)) {
       log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
     } else {
       continuation.close(false);
     }
+
     return state;
   }
 

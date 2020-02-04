@@ -1,0 +1,55 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/test-with-scala.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+muzzle {
+  // There are some weird library issues below 2.9 so can't assert inverse
+  pass {
+    group = 'com.twitter'
+    module = 'finatra-http_2.11'
+    versions = '[2.9.0,]'
+  }
+
+  pass {
+    group = 'com.twitter'
+    module = 'finatra-http_2.12'
+    versions = '[2.9.0,]'
+  }
+}
+
+dependencies {
+  compileOnly group: 'com.twitter', name: 'finatra-http_2.11', version: '2.9.0'
+
+  testCompile project(':dd-java-agent:instrumentation:netty-4.1')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+
+  testCompile group: 'com.twitter', name: 'finatra-http_2.11', version: '19.12.0'
+  testCompile(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.10') {
+    force = true
+  }
+
+  // Required for older versions of finatra on JDKs >= 11
+  testCompile group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
+
+  latestDepTestCompile project(':dd-java-agent:instrumentation:netty-4.1')
+  latestDepTestCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  latestDepTestCompile group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
+}
+
+compileLatestDepTestGroovy {
+  classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
+  dependsOn compileLatestDepTestScala
+}
