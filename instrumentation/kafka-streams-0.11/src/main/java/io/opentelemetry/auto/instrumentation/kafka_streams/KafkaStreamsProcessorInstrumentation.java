@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.kafka_streams;
 
 import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsProcessorInstrumentation.SpanScopeThreadLocal.HOLDER;
+import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.TextMapExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -28,12 +28,18 @@ public class KafkaStreamsProcessorInstrumentation {
   // These two instrumentations work together to apply StreamTask.process.
   // The combination of these is needed because there's no good instrumentation point.
 
-  public static class SpanScopeThreadLocal {
-    public static final ThreadLocal<SpanScopeHolder> HOLDER = new ThreadLocal<>();
-  }
-
   public static class SpanScopeHolder {
-    public SpanScopePair spanScopePair;
+    public static final ThreadLocal<SpanScopeHolder> HOLDER = new ThreadLocal<>();
+
+    private SpanScopePair spanScopePair;
+
+    public SpanScopePair getSpanScopePair() {
+      return spanScopePair;
+    }
+
+    public void setSpanScopePair(final SpanScopePair spanScopePair) {
+      this.spanScopePair = spanScopePair;
+    }
   }
 
   @AutoService(Instrumenter.class)
@@ -55,7 +61,6 @@ public class KafkaStreamsProcessorInstrumentation {
         "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
         packageName + ".TextMapExtractAdapter",
-        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeThreadLocal",
         KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
@@ -97,7 +102,7 @@ public class KafkaStreamsProcessorInstrumentation {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        holder.spanScopePair = new SpanScopePair(span, TRACER.withSpan(span));
+        holder.setSpanScopePair(new SpanScopePair(span, TRACER.withSpan(span)));
       }
     }
   }
@@ -121,7 +126,6 @@ public class KafkaStreamsProcessorInstrumentation {
         "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
         packageName + ".TextMapExtractAdapter",
-        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeThreadLocal",
         KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
@@ -146,7 +150,7 @@ public class KafkaStreamsProcessorInstrumentation {
       public static void stopSpan(
           @Advice.Enter final SpanScopeHolder holder, @Advice.Thrown final Throwable throwable) {
         HOLDER.remove();
-        final SpanScopePair spanScopePair = holder.spanScopePair;
+        final SpanScopePair spanScopePair = holder.getSpanScopePair();
         if (spanScopePair != null) {
           final Span span = spanScopePair.getSpan();
           CONSUMER_DECORATE.onError(span, throwable);
