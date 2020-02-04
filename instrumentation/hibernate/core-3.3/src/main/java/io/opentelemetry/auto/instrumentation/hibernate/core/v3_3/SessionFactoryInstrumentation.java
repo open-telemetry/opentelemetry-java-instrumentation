@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -32,9 +31,9 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> stores = new HashMap<>();
-    stores.put("org.hibernate.Session", SessionState.class.getName());
-    stores.put("org.hibernate.StatelessSession", SessionState.class.getName());
-    stores.put("org.hibernate.SharedSessionContract", SessionState.class.getName());
+    stores.put("org.hibernate.Session", Span.class.getName());
+    stores.put("org.hibernate.StatelessSession", Span.class.getName());
+    stores.put("org.hibernate.SharedSessionContract", Span.class.getName());
     return stores;
   }
 
@@ -67,13 +66,13 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
       DECORATOR.onConnection(span, session);
 
       if (session instanceof Session) {
-        final ContextStore<Session, SessionState> contextStore =
-            InstrumentationContext.get(Session.class, SessionState.class);
-        contextStore.putIfAbsent((Session) session, new SessionState(span));
+        final ContextStore<Session, Span> contextStore =
+            InstrumentationContext.get(Session.class, Span.class);
+        contextStore.putIfAbsent((Session) session, span);
       } else if (session instanceof StatelessSession) {
-        final ContextStore<StatelessSession, SessionState> contextStore =
-            InstrumentationContext.get(StatelessSession.class, SessionState.class);
-        contextStore.putIfAbsent((StatelessSession) session, new SessionState(span));
+        final ContextStore<StatelessSession, Span> contextStore =
+            InstrumentationContext.get(StatelessSession.class, Span.class);
+        contextStore.putIfAbsent((StatelessSession) session, span);
       }
     }
   }
