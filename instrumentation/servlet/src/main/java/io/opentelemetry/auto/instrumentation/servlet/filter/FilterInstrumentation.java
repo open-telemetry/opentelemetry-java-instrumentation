@@ -74,15 +74,15 @@ public final class FilterInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = scope.getSpan();
+      final Span span = spanWithScope.getSpan();
       FilterDecorator.DECORATE.onError(span, throwable);
       FilterDecorator.DECORATE.beforeFinish(span);
       span.end();
-      scope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }

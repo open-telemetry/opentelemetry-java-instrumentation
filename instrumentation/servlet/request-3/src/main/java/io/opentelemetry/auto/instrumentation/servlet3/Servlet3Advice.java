@@ -67,7 +67,7 @@ public class Servlet3Advice {
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanWithScope scope,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
     final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
@@ -78,7 +78,7 @@ public class Servlet3Advice {
       }
     }
 
-    if (scope == null) {
+    if (spanWithScope == null) {
       return;
     }
 
@@ -86,7 +86,7 @@ public class Servlet3Advice {
       final HttpServletRequest req = (HttpServletRequest) request;
       final HttpServletResponse resp = (HttpServletResponse) response;
 
-      final Span span = scope.getSpan();
+      final Span span = spanWithScope.getSpan();
 
       if (throwable != null) {
         DECORATE.onResponse(span, resp);
@@ -116,7 +116,7 @@ public class Servlet3Advice {
           span.end(); // Finish the span manually since finishSpanOnClose was false
         }
       }
-      scope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }

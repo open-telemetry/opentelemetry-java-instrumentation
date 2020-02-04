@@ -94,11 +94,11 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
-        @Advice.Enter final SpanWithScope scope,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Local("_requestSpan") final Object requestSpan,
         @Advice.Argument(0) final ServletRequest request,
         @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+      if (spanWithScope == null) {
         return;
       }
 
@@ -107,12 +107,12 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         request.setAttribute(SPAN_ATTRIBUTE, requestSpan);
       }
 
-      final Span span = scope.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
 
       span.end();
-      scope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }

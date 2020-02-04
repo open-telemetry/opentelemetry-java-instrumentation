@@ -89,14 +89,14 @@ public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.D
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final Span span = scope.getSpan();
+        final Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
       }
-      scope.closeScope();
+      spanWithScope.closeScope();
     }
   }
 }
