@@ -55,6 +55,7 @@ public class KafkaStreamsProcessorInstrumentation {
         "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
         packageName + ".TextMapExtractAdapter",
+        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeThreadLocal",
         KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
@@ -120,6 +121,7 @@ public class KafkaStreamsProcessorInstrumentation {
         "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
         packageName + ".TextMapExtractAdapter",
+        KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeThreadLocal",
         KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
       };
     }
