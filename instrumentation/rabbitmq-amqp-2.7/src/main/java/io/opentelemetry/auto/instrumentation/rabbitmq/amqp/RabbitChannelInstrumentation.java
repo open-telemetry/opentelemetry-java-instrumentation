@@ -238,6 +238,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
             spanBuilder.setParent(TRACER.getHttpTextFormat().extract(headers, GETTER));
           } catch (final IllegalArgumentException e) {
             // couldn't extract a context
+            spanBuilder.setNoParent();
           }
         }
       }
