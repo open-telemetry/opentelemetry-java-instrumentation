@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -60,7 +60,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   public static class ProcedureCallMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair startMethod(
+    public static SpanWithScope startMethod(
         @Advice.This final ProcedureCall call, @Advice.Origin("#m") final String name) {
 
       final ContextStore<ProcedureCall, Span> contextStore =
@@ -72,8 +72,8 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      SessionMethodUtils.closeScope(spanScopePair, throwable, null);
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      SessionMethodUtils.closeScope(spanWithScope, throwable, null);
     }
   }
 }

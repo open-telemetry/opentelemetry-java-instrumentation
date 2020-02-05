@@ -8,7 +8,7 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -34,16 +34,16 @@ public class TracingRequestHandler extends RequestHandler2 {
     decorate.afterStart(span);
     decorate.onRequest(span, request);
     request.addHandlerContext(
-        SPAN_SCOPE_PAIR_CONTEXT_KEY, new SpanScopePair(span, TRACER.withSpan(span)));
+        SPAN_SCOPE_PAIR_CONTEXT_KEY, new SpanWithScope(span, TRACER.withSpan(span)));
   }
 
   @Override
   public void afterResponse(final Request<?> request, final Response<?> response) {
-    final SpanScopePair spanScopePair = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-    if (spanScopePair != null) {
+    final SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    if (spanWithScope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-      spanScopePair.getScope().close();
-      final Span span = spanScopePair.getSpan();
+      spanWithScope.closeScope();
+      final Span span = spanWithScope.getSpan();
       decorate.onResponse(span, response);
       decorate.beforeFinish(span);
       span.end();
@@ -52,11 +52,11 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
-    final SpanScopePair spanScopePair = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-    if (spanScopePair != null) {
+    final SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    if (spanWithScope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-      spanScopePair.getScope().close();
-      final Span span = spanScopePair.getSpan();
+      spanWithScope.closeScope();
+      final Span span = spanWithScope.getSpan();
       decorate.onError(span, e);
       decorate.beforeFinish(span);
       span.end();

@@ -6,35 +6,35 @@ import static io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentati
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair onEnter(@Advice.Argument(0) final RedisCommand command) {
+  public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand command) {
 
     final Span span = TRACER.spanBuilder("redis.query").startSpan();
     DECORATE.afterStart(span);
     DECORATE.onCommand(span, command);
 
-    return new SpanScopePair(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final RedisCommand command,
-      @Advice.Enter final SpanScopePair spanScopePair,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable,
       @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand) {
 
-    final Span span = spanScopePair.getSpan();
+    final Span span = spanWithScope.getSpan();
     if (throwable != null) {
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanScopePair.getScope().close();
+      spanWithScope.closeScope();
       return;
     }
 
@@ -44,6 +44,6 @@ public class LettuceAsyncCommandsAdvice {
     } else {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
     }
-    spanScopePair.getScope().close();
+    spanWithScope.closeScope();
   }
 }

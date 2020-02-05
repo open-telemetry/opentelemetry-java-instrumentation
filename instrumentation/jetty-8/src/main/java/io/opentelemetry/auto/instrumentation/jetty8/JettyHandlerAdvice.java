@@ -6,7 +6,7 @@ import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.DECORA
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.TRACER;
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 public class JettyHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair onEnter(
+  public static SpanWithScope onEnter(
       @Advice.This final Object source, @Advice.Argument(2) final HttpServletRequest req) {
 
     if (req.getAttribute(SPAN_ATTRIBUTE) != null) {
@@ -44,19 +44,19 @@ public class JettyHandlerAdvice {
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
     req.setAttribute(SPAN_ATTRIBUTE, span);
-    return new SpanScopePair(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(2) final HttpServletRequest req,
       @Advice.Argument(3) final HttpServletResponse resp,
-      @Advice.Enter final SpanScopePair spanScopePair,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
-    if (spanScopePair == null) {
+    if (spanWithScope == null) {
       return;
     }
-    final Span span = spanScopePair.getSpan();
+    final Span span = spanWithScope.getSpan();
     if (req.getUserPrincipal() != null) {
       span.setAttribute(MoreTags.USER_NAME, req.getUserPrincipal().getName());
     }
@@ -86,6 +86,6 @@ public class JettyHandlerAdvice {
         span.end(); // Finish the span manually since finishSpanOnClose was false
       }
     }
-    spanScopePair.getScope().close();
+    spanWithScope.closeScope();
   }
 }

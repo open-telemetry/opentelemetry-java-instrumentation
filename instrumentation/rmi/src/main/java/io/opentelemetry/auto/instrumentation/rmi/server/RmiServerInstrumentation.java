@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -54,7 +54,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = true)
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.This final Object thiz, @Advice.Origin final Method method) {
       final SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
@@ -67,21 +67,21 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       span.setAttribute("span.origin.type", thiz.getClass().getCanonicalName());
 
       DECORATE.afterStart(span);
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      if (spanScopePair == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
 
-      final Span span = spanScopePair.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       span.end();
 
-      spanScopePair.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

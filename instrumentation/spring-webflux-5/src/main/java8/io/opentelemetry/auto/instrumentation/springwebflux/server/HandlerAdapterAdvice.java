@@ -4,7 +4,7 @@ import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringW
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
@@ -15,11 +15,11 @@ import org.springframework.web.util.pattern.PathPattern;
 public class HandlerAdapterAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair methodEnter(
+  public static SpanWithScope methodEnter(
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Argument(1) final Object handler) {
 
-    SpanScopePair spanAndScope = null;
+    SpanWithScope spanWithScope = null;
     final Span span = exchange.getAttribute(AdviceUtils.SPAN_ATTRIBUTE);
     if (handler != null && span != null) {
       final String handlerType;
@@ -38,7 +38,7 @@ public class HandlerAdapterAdvice {
       span.updateName(operationName);
       span.setAttribute("handler.type", handlerType);
 
-      spanAndScope = new SpanScopePair(span, TRACER.withSpan(span));
+      spanWithScope = new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     final Span parentSpan = exchange.getAttribute(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
@@ -50,19 +50,19 @@ public class HandlerAdapterAdvice {
           exchange.getRequest().getMethodValue() + " " + bestPattern.getPatternString());
     }
 
-    return spanAndScope;
+    return spanWithScope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
       @Advice.Argument(0) final ServerWebExchange exchange,
-      @Advice.Enter final SpanScopePair spanAndScope,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
     if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
-    if (spanAndScope != null) {
-      spanAndScope.getScope().close();
+    if (spanWithScope != null) {
+      spanWithScope.closeScope();
     }
   }
 }

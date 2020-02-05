@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -31,14 +31,14 @@ public class KafkaStreamsProcessorInstrumentation {
   public static class SpanScopeHolder {
     public static final ThreadLocal<SpanScopeHolder> HOLDER = new ThreadLocal<>();
 
-    private SpanScopePair spanScopePair;
+    private SpanWithScope spanWithScope;
 
-    public SpanScopePair getSpanScopePair() {
-      return spanScopePair;
+    public SpanWithScope getSpanWithScope() {
+      return spanWithScope;
     }
 
-    public void setSpanScopePair(final SpanScopePair spanScopePair) {
-      this.spanScopePair = spanScopePair;
+    public void setSpanWithScope(final SpanWithScope spanWithScope) {
+      this.spanWithScope = spanWithScope;
     }
   }
 
@@ -102,7 +102,7 @@ public class KafkaStreamsProcessorInstrumentation {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        holder.setSpanScopePair(new SpanScopePair(span, TRACER.withSpan(span)));
+        holder.setSpanWithScope(new SpanWithScope(span, TRACER.withSpan(span)));
       }
     }
   }
@@ -150,13 +150,13 @@ public class KafkaStreamsProcessorInstrumentation {
       public static void stopSpan(
           @Advice.Enter final SpanScopeHolder holder, @Advice.Thrown final Throwable throwable) {
         HOLDER.remove();
-        final SpanScopePair spanScopePair = holder.getSpanScopePair();
-        if (spanScopePair != null) {
-          final Span span = spanScopePair.getSpan();
+        final SpanWithScope spanWithScope = holder.getSpanWithScope();
+        if (spanWithScope != null) {
+          final Span span = spanWithScope.getSpan();
           CONSUMER_DECORATE.onError(span, throwable);
           CONSUMER_DECORATE.beforeFinish(span);
           span.end();
-          spanScopePair.getScope().close();
+          spanWithScope.closeScope();
         }
       }
     }

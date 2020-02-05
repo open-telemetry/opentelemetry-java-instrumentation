@@ -3,7 +3,7 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils;
 import io.opentelemetry.trace.Span;
 import java.util.function.Function;
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair methodEnter(@Advice.Argument(0) final ServerWebExchange exchange) {
+  public static SpanWithScope methodEnter(@Advice.Argument(0) final ServerWebExchange exchange) {
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
     // right things so we have to store span in request itself. We also store parent (netty's) span
     // so we could update resource name.
@@ -32,24 +32,24 @@ public class DispatcherHandlerAdvice {
     DECORATE.afterStart(span);
     exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, span);
 
-    return new SpanScopePair(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Enter final SpanScopePair spanAndScope,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Object> mono) {
     if (throwable == null && mono != null) {
       final Function<? super Mono<Object>, ? extends Publisher<Object>> function =
           ReactorCoreAdviceUtils.finishSpanNextOrError();
-      mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, spanAndScope.getSpan());
+      mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, spanWithScope.getSpan());
     } else if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
-    if (spanAndScope != null) {
-      spanAndScope.getScope().close();
+    if (spanWithScope != null) {
+      spanWithScope.closeScope();
     }
   }
 }

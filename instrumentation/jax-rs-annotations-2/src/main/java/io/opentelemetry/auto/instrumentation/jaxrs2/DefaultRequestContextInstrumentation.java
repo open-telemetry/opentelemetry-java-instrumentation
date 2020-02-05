@@ -4,7 +4,7 @@ import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecor
 import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.TRACER;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice;
 public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair createGenericSpan(
+    public static SpanWithScope createGenericSpan(
         @Advice.This final ContainerRequestContext context) {
 
       if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null) {
@@ -45,7 +45,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        final SpanScopePair scope = new SpanScopePair(span, TRACER.withSpan(span));
+        final SpanWithScope scope = new SpanWithScope(span, TRACER.withSpan(span));
 
         DECORATE.afterStart(span);
         DECORATE.onJaxRsSpan(span, parent, filterClass, method);
@@ -58,19 +58,19 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
-      if (spanAndScope == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
 
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }
 
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

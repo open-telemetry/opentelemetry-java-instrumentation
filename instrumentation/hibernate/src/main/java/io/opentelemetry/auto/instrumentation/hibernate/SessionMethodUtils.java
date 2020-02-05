@@ -5,7 +5,7 @@ import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator
 
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -18,7 +18,7 @@ public class SessionMethodUtils {
 
   // Starts a scope as a child from a Span, where the Span is attached to the given spanKey using
   // the given contextStore.
-  public static <TARGET, ENTITY> SpanScopePair startScopeFrom(
+  public static <TARGET, ENTITY> SpanWithScope startScopeFrom(
       final ContextStore<TARGET, Span> contextStore,
       final TARGET spanKey,
       final String operationName,
@@ -39,24 +39,24 @@ public class SessionMethodUtils {
       final Span span = TRACER.spanBuilder(operationName).setParent(sessionSpan).startSpan();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, entity);
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     } else {
-      return new SpanScopePair(null, TRACER.withSpan(sessionSpan));
+      return new SpanWithScope(null, TRACER.withSpan(sessionSpan));
     }
   }
 
   // Closes a Scope/Span, adding an error tag if the given Throwable is not null.
   public static void closeScope(
-      final SpanScopePair spanScopePair, final Throwable throwable, final Object entity) {
+      final SpanWithScope spanWithScope, final Throwable throwable, final Object entity) {
 
-    if (spanScopePair == null) {
+    if (spanWithScope == null) {
       // This method call was re-entrant. Do nothing, since it is being traced by the parent/first
       // call.
       return;
     }
 
     CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
-    final Span span = spanScopePair.getSpan();
+    final Span span = spanWithScope.getSpan();
     if (span != null) {
       DECORATOR.onError(span, throwable);
       if (entity != null) {
@@ -65,7 +65,7 @@ public class SessionMethodUtils {
       DECORATOR.beforeFinish(span);
       span.end();
     }
-    spanScopePair.getScope().close();
+    spanWithScope.closeScope();
   }
 
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to
