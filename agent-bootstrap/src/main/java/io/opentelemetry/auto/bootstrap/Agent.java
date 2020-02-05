@@ -264,7 +264,7 @@ public class Agent {
    * @return true if we detect a custom log manager being used.
    */
   private static boolean isAppUsingCustomLogManager() {
-    final String tracerCustomLogManSysprop = "opentelemetry.auto.app.customlogmanager";
+    final String tracerCustomLogManSysprop = "ota.app.customlogmanager";
     final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
     final String customLogManagerEnv =
         System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
