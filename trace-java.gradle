@@ -44,8 +44,8 @@ wrapper {
 
 allprojects {
   tasks.withType(JavaForkOptions).configureEach {
-    maxHeapSize = System.properties["io.opentelemetry.auto.forkedMaxHeapSize"]
-    minHeapSize = System.properties["io.opentelemetry.auto.forkedMinHeapSize"]
+    maxHeapSize = System.properties["ota.forkedMaxHeapSize"]
+    minHeapSize = System.properties["ota.forkedMinHeapSize"]
     jvmArgs "-XX:ErrorFile=/tmp/hs_err_pid%p.log"
   }
 }
