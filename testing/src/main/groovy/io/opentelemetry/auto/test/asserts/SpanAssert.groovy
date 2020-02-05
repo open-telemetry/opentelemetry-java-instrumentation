@@ -3,6 +3,7 @@ package io.opentelemetry.auto.test.asserts
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
 
 import static TagsAssert.assertTags
@@ -46,6 +47,11 @@ class SpanAssert {
   def operationNameContains(String... operationNameParts) {
     assertSpanNameContains(span.name, operationNameParts)
     checked.name = true
+  }
+
+  def spanKind(Span.Kind spanKind) {
+    assert span.kind == spanKind
+    checked.kind = true
   }
 
   def parent() {

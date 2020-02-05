@@ -19,6 +19,8 @@ import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.SERVER
 import static org.junit.Assume.assumeTrue
 
 @Unroll
@@ -317,12 +319,12 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
         childOf((SpanData) parentSpan)
       }
       operationName expectedOperationName()
+      spanKind CLIENT
       errored exception != null
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
         "$Tags.COMPONENT" clientDecorator.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" uri.port
@@ -345,6 +347,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   void serverSpan(TraceAssert traces, int index, Object parentSpan = null) {
     traces.span(index) {
       operationName "test-http-server"
+      spanKind SERVER
       errored false
       if (parentSpan == null) {
         parent()
@@ -352,7 +355,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
       }
     }
   }
