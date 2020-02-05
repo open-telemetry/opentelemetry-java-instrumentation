@@ -4,6 +4,7 @@ package io.opentelemetry.auto.instrumentation.springdata;
 
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.DECORATOR;
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -110,7 +111,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
         return methodInvocation.proceed();
       }
 
-      final Span span = TRACER.spanBuilder("repository.operation").startSpan();
+      final Span span = TRACER.spanBuilder("repository.operation").setSpanKind(CLIENT).startSpan();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, invokedMethod);
 

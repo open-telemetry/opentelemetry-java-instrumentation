@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.playws2.HeadersInjectAdapter
 import static io.opentelemetry.auto.instrumentation.playws2.PlayWSClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.playws2.PlayWSClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -65,7 +66,7 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
 
-      final Span span = TRACER.spanBuilder("play-ws.request").startSpan();
+      final Span span = TRACER.spanBuilder("play-ws.request").setSpanKind(CLIENT).startSpan();
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);

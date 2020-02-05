@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.Apache
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -76,7 +77,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       final Span parentSpan = TRACER.getCurrentSpan();
-      final Span clientSpan = TRACER.spanBuilder("http.request").startSpan();
+      final Span clientSpan = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(clientSpan);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);

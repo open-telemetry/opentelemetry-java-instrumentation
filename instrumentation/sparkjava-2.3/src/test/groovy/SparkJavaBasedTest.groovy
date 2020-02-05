@@ -9,6 +9,8 @@ import okhttp3.Request
 import spark.Spark
 import spock.lang.Shared
 
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 class SparkJavaBasedTest extends AgentTestRunner {
 
   static {
@@ -46,13 +48,13 @@ class SparkJavaBasedTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "jetty.request"
+          spanKind SERVER
           errored false
           parent()
           tags {
             "$MoreTags.RESOURCE_NAME" "GET /param/:param"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jetty-handler"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long

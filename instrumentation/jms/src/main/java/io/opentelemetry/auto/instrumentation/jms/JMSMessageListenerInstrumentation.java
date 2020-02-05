@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DE
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -62,7 +63,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
     public static SpanWithScope onEnter(
         @Advice.Argument(0) final Message message, @Advice.This final MessageListener listener) {
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("jms.onMessage");
+      final Span.Builder spanBuilder = TRACER.spanBuilder("jms.onMessage").setSpanKind(CONSUMER);
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
         spanBuilder.setParent(extractedContext);

@@ -16,6 +16,7 @@ import org.springframework.web.servlet.view.RedirectView
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.SERVER
 import static java.util.Collections.singletonMap
 
 class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext, Servlet3Decorator> {
@@ -64,11 +65,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "response.render"
+      spanKind SERVER
       errored false
       tags {
         "$MoreTags.SPAN_TYPE" "web"
         "$Tags.COMPONENT" "spring-webmvc"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "view.type" RedirectView.name
       }
     }
@@ -78,13 +79,13 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "spring.handler"
+      spanKind SERVER
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
         "$MoreTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
@@ -96,6 +97,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
+      spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -107,7 +109,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Long

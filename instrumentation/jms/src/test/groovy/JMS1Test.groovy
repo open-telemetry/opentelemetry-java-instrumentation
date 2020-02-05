@@ -19,6 +19,9 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
+
 class JMS1Test extends AgentTestRunner {
   @Shared
   EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
@@ -125,14 +128,13 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
+          spanKind CONSUMER
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
             "$MoreTags.RESOURCE_NAME" "JMS receiveNoWait"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -162,14 +164,13 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
+          spanKind CONSUMER
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
             "$MoreTags.RESOURCE_NAME" "JMS receive"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -214,14 +215,13 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
+          spanKind CONSUMER
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
             "$MoreTags.RESOURCE_NAME" "Consumed from $jmsResourceName"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -243,15 +243,14 @@ class JMS1Test extends AgentTestRunner {
   static producerSpan(TraceAssert trace, int index, String jmsResourceName) {
     trace.span(index) {
       operationName "jms.produce"
+      spanKind PRODUCER
       errored false
       parent()
-
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
         "$MoreTags.RESOURCE_NAME" "Produced for $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
         "$Tags.COMPONENT" "jms"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
         "span.origin.type" ActiveMQMessageProducer.name
       }
     }
@@ -264,15 +263,14 @@ class JMS1Test extends AgentTestRunner {
       } else {
         operationName "jms.consume"
       }
+      spanKind CONSUMER
       errored false
       childOf((SpanData) parentSpan)
-
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
         "$MoreTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
         "$Tags.COMPONENT" "jms"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
         "span.origin.type" origin.name
       }
     }

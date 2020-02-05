@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.test.server.http
 
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.ListWriterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.SpanData
@@ -21,6 +20,7 @@ import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.HttpServletRequestExtractAdapter.GETTER
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class TestHttpServer implements AutoCloseable {
 
@@ -113,7 +113,6 @@ class TestHttpServer implements AutoCloseable {
         childOf(parentSpan)
       }
       tags {
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
       }
     }
   }
@@ -239,7 +238,7 @@ class TestHttpServer implements AutoCloseable {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
       }
       if (isTestServer) {
-        final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server")
+        final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server").setSpanKind(SERVER)
         try {
           final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER)
           spanBuilder.setParent(extractedContext)
@@ -248,7 +247,6 @@ class TestHttpServer implements AutoCloseable {
           spanBuilder.setNoParent()
         }
         final Span span = spanBuilder.startSpan()
-        span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER)
         span.end()
       }
     }

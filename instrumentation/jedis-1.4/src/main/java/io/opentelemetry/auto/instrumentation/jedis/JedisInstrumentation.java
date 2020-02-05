@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.jedis;
 import static io.opentelemetry.auto.instrumentation.jedis.JedisClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jedis.JedisClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -63,7 +64,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(1) final Command command) {
-      final Span span = TRACER.spanBuilder("redis.query").startSpan();
+      final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onStatement(span, command.name());
       return new SpanWithScope(span, TRACER.withSpan(span));

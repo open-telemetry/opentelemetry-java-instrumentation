@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.elasticsearch2;
 
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -74,7 +75,7 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.D
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      final Span span = TRACER.spanBuilder("elasticsearch.query").startSpan();
+      final Span span = TRACER.spanBuilder("elasticsearch.query").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, action.getClass(), actionRequest.getClass());
 

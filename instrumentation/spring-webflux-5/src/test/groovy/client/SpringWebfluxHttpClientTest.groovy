@@ -13,6 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Ignore
 import spock.lang.Shared
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 // FIXME this instrumentation is not currently reliable and so is currently disabled
 // see DefaultWebClientInstrumentation and DefaultWebClientAdvice
 @Ignore
@@ -49,12 +51,12 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
       trace.span(index + 1) {
         childOf(trace.span(index))
         operationName "netty.client.request"
+        spanKind CLIENT
         errored exception != null
         tags {
           "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
           "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
           "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.getComponentName()
-          "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           "$Tags.PEER_HOSTNAME" "localhost"
           "$Tags.PEER_PORT" uri.port
           "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

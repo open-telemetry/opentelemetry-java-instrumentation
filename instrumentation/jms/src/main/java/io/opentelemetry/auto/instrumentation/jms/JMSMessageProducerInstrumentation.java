@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.PRODUCER_DE
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -83,7 +84,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         defaultDestination = null;
       }
 
-      final Span span = TRACER.spanBuilder("jms.produce").startSpan();
+      final Span span = TRACER.spanBuilder("jms.produce").setSpanKind(PRODUCER).startSpan();
       span.setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, message, defaultDestination);
@@ -121,7 +122,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("jms.produce").startSpan();
+      final Span span = TRACER.spanBuilder("jms.produce").setSpanKind(PRODUCER).startSpan();
       span.setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, message, destination);

@@ -12,6 +12,8 @@ import java.rmi.server.UnicastRemoteObject
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class RmiTest extends AgentTestRunner {
   def registryPort = PortUtils.randomOpenPort()
@@ -40,21 +42,21 @@ class RmiTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "rmi.invoke"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
         }
         span(2) {
           operationName "rmi.request"
+          spanKind SERVER
           tags {
             "$MoreTags.RESOURCE_NAME" "Server.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
           }
@@ -103,12 +105,12 @@ class RmiTest extends AgentTestRunner {
         basicSpan(it, 0, "parent", null, null, thrownException)
         span(1) {
           operationName "rmi.invoke"
+          spanKind CLIENT
           childOf span(0)
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "Greeter.exceptional"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
             errorTags(RuntimeException, String)
@@ -116,11 +118,11 @@ class RmiTest extends AgentTestRunner {
         }
         span(2) {
           operationName "rmi.request"
+          spanKind SERVER
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "Server.exceptional"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
             errorTags(RuntimeException, String)
@@ -151,11 +153,11 @@ class RmiTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "rmi.invoke"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
@@ -163,11 +165,11 @@ class RmiTest extends AgentTestRunner {
         span(2) {
           childOf span(1)
           operationName "rmi.request"
+          spanKind SERVER
           tags {
             "$MoreTags.RESOURCE_NAME" "ServerLegacy.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "span.origin.type" server.class.canonicalName
           }
         }

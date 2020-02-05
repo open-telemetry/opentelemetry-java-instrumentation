@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.instrumentation.couchbase.client;
 
 import static io.opentelemetry.auto.instrumentation.couchbase.client.CouchbaseClientDecorator.DECORATE;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
@@ -14,7 +15,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
 
   public CouchbaseOnSubscribe(
       final Observable originalObservable, final Method method, final String bucket) {
-    super(originalObservable, "couchbase.call", DECORATE);
+    super(originalObservable, "couchbase.call", DECORATE, CLIENT);
 
     final Class<?> declaringClass = method.getDeclaringClass();
     final String className =

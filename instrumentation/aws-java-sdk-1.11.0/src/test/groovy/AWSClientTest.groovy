@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class AWSClientTest extends AgentTestRunner {
 
@@ -135,6 +136,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "aws.http"
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -142,7 +144,6 @@ class AWSClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -157,12 +158,12 @@ class AWSClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "http.request"
+          spanKind CLIENT
           errored false
           childOf(span(0))
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
@@ -226,6 +227,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "aws.http"
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -233,7 +235,6 @@ class AWSClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
             "aws.service" { it.contains(service) }
@@ -248,12 +249,12 @@ class AWSClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "http.request"
+          spanKind CLIENT
           errored true
           childOf(span(0))
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
@@ -289,6 +290,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "aws.http"
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -296,7 +298,6 @@ class AWSClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "S3.HeadBucket"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD" "HEAD"
             "aws.service" "Amazon S3"
@@ -334,6 +335,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "aws.http"
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -341,7 +343,6 @@ class AWSClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "S3.GetObject"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "GET"
             "aws.service" "Amazon S3"
@@ -359,12 +360,12 @@ class AWSClientTest extends AgentTestRunner {
         (1..4).each {
           span(it) {
             operationName "http.request"
+            spanKind CLIENT
             errored true
             childOf(span(0))
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.PEER_HOSTNAME" "localhost"
               "$Tags.PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/someBucket/someKey"

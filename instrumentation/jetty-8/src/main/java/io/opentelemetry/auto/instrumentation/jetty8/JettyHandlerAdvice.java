@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
 import static io.opentelemetry.auto.instrumentation.jetty8.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
@@ -26,7 +27,7 @@ public class JettyHandlerAdvice {
       return null;
     }
 
-    final Span.Builder spanBuilder = TRACER.spanBuilder("jetty.request");
+    final Span.Builder spanBuilder = TRACER.spanBuilder("jetty.request").setSpanKind(SERVER);
     try {
       final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER);
       spanBuilder.setParent(extractedContext);

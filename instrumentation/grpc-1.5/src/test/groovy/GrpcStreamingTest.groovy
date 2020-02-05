@@ -16,6 +16,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 class GrpcStreamingTest extends AgentTestRunner {
 
   def "test conversation #name"() {
@@ -101,13 +104,13 @@ class GrpcStreamingTest extends AgentTestRunner {
         }
         span(0) {
           operationName "grpc.client"
+          spanKind CLIENT
           parent()
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/Conversation"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
           }
         }
@@ -115,37 +118,37 @@ class GrpcStreamingTest extends AgentTestRunner {
           println it
           span(it) {
             operationName "grpc.message"
+            spanKind CLIENT
             childOf span(0)
             errored false
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.RPC
               "$Tags.COMPONENT" "grpc-client"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "message.type" "example.Helloworld\$Response"
             }
           }
         }
         span(clientMessageCount * serverMessageCount + 1) {
           operationName "grpc.server"
+          spanKind SERVER
           childOf span(0)
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/Conversation"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
           }
         }
         clientRange.each {
           span(clientMessageCount * serverMessageCount + 1 + it) {
             operationName "grpc.message"
+            spanKind SERVER
             childOf span(clientMessageCount * serverMessageCount + 1)
             errored false
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.RPC
               "$Tags.COMPONENT" "grpc-server"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
               "message.type" "example.Helloworld\$Response"
             }
           }

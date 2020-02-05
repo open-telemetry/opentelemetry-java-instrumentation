@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.jaxrs;
 import static io.opentelemetry.auto.instrumentation.jaxrs.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrs.JaxRsClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -21,7 +22,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(final ClientRequestContext requestContext) {
-    final Span span = TRACER.spanBuilder("jax-rs.client.call").startSpan();
+    final Span span = TRACER.spanBuilder("jax-rs.client.call").setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, requestContext);

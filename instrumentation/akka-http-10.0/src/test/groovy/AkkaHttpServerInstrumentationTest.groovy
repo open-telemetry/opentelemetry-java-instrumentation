@@ -8,6 +8,7 @@ import spock.lang.Retry
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, AkkaHttpServerDecorator> {
 
@@ -40,6 +41,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
+      spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -50,7 +52,6 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status

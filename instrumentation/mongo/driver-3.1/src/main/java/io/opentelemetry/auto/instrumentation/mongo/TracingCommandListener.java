@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.mongo;
 
 import static io.opentelemetry.auto.instrumentation.mongo.MongoClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.mongo.MongoClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
@@ -20,7 +21,7 @@ public class TracingCommandListener implements CommandListener {
 
   @Override
   public void commandStarted(final CommandStartedEvent event) {
-    final Span span = TRACER.spanBuilder("mongo.query").startSpan();
+    final Span span = TRACER.spanBuilder("mongo.query").setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, event);

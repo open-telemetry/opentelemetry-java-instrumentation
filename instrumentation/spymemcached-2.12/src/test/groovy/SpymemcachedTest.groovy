@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.locks.ReentrantLock
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
@@ -627,6 +628,7 @@ class SpymemcachedTest extends AgentTestRunner {
       }
 
       operationName CompletionListener.OPERATION_NAME
+      spanKind CLIENT
       errored(error != null && error != "canceled")
 
       tags {
@@ -634,7 +636,6 @@ class SpymemcachedTest extends AgentTestRunner {
         "$MoreTags.RESOURCE_NAME" operation
         "$MoreTags.SPAN_TYPE" SpanTypes.MEMCACHED
         "$Tags.COMPONENT" CompletionListener.COMPONENT_NAME
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" CompletionListener.DB_TYPE
 
         if (error == "canceled") {

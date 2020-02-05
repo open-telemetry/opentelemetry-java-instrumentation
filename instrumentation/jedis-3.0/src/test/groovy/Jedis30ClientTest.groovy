@@ -8,6 +8,8 @@ import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 class Jedis30ClientTest extends AgentTestRunner {
 
   @Shared
@@ -52,11 +54,11 @@ class Jedis30ClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
           }
@@ -77,11 +79,11 @@ class Jedis30ClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
           }
@@ -90,11 +92,11 @@ class Jedis30ClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "GET"
           }
@@ -115,11 +117,11 @@ class Jedis30ClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
           }
@@ -128,11 +130,11 @@ class Jedis30ClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "RANDOMKEY"
           }
