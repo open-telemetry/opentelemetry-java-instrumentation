@@ -1,4 +1,4 @@
-package io.opentelemetry.test.instrumentation.springwebflux.server
+package server
 
 class FooModel {
   public long id

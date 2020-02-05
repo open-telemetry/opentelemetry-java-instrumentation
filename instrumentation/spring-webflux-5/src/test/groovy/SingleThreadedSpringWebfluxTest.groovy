@@ -1,10 +1,10 @@
-import io.opentelemetry.test.instrumentation.springwebflux.server.SpringWebFluxTestApplication
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.boot.web.embedded.netty.NettyServerCustomizer
 import org.springframework.context.annotation.Bean
 import reactor.ipc.netty.resources.LoopResources
+import server.SpringWebFluxTestApplication
 
 /**
  * Run all Webflux tests under netty event loop having only 1 thread.

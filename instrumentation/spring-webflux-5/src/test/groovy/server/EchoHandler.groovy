@@ -1,4 +1,4 @@
-package io.opentelemetry.test.instrumentation.springwebflux.server
+package server
 
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.trace.Tracer
@@ -8,10 +8,6 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
 
-/**
- * Note: this class has to stay outside of 'io.opentelemetry.auto.*' package because we need
- * it transformed by {@code @Trace} annotation.
- */
 @Component
 class EchoHandler {
 
