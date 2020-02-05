@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.netty40.server;
 import static io.opentelemetry.auto.instrumentation.netty40.server.NettyHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.netty40.server.NettyHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty40.server.NettyRequestExtractAdapter.GETTER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -31,7 +32,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     final HttpRequest request = (HttpRequest) msg;
 
-    final Span.Builder spanBuilder = TRACER.spanBuilder("netty.request");
+    final Span.Builder spanBuilder = TRACER.spanBuilder("netty.request").setSpanKind(SERVER);
     try {
       final SpanContext extractedContext =
           TRACER.getHttpTextFormat().extract(request.headers(), GETTER);

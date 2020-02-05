@@ -3,8 +3,8 @@ package io.opentelemetry.auto.instrumentation.springwebflux.client;
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -30,13 +30,12 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
     final Context context = subscriber.currentContext();
     final Span parentSpan = context.<Span>getOrEmpty(Span.class).orElseGet(TRACER::getCurrentSpan);
 
-    final Span.Builder builder = TRACER.spanBuilder("http.request");
+    final Span.Builder builder = TRACER.spanBuilder("http.request").setSpanKind(CLIENT);
     if (parentSpan != null) {
       builder.setParent(parentSpan);
     } else {
     }
     final Span span = builder.startSpan();
-    span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
     DECORATE.afterStart(span);
 
     try (final Scope scope = TRACER.withSpan(span)) {

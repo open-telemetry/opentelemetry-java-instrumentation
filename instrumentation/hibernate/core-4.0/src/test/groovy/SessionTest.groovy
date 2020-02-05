@@ -442,7 +442,7 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate overlapping Sessions"() {
     setup:
 
-    def rootSpan = TEST_TRACER.spanBuilder("overlapping Sessions").startSpan()
+    def rootSpan = TEST_TRACER.spanBuilder("overlapping Sessions").setSpanKind(CLIENT).startSpan()
     def scope = TEST_TRACER.withSpan(rootSpan)
 
     def session1 = sessionFactory.openSession()

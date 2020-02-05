@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.akkahttp;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerHeaders.GETTER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -95,7 +96,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
   public static class WrapperHelper {
     public static SpanWithScope createSpan(final HttpRequest request) {
-      final Span.Builder spanBuilder = TRACER.spanBuilder("akka-http.request");
+      final Span.Builder spanBuilder = TRACER.spanBuilder("akka-http.request").setSpanKind(SERVER);
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
         spanBuilder.setParent(extractedContext);

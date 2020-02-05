@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.rmi.client;
 import static io.opentelemetry.auto.instrumentation.rmi.client.RmiClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rmi.client.RmiClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -59,7 +60,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
-      final Span span = TRACER.spanBuilder("rmi.invoke").startSpan();
+      final Span span = TRACER.spanBuilder("rmi.invoke").setSpanKind(CLIENT).startSpan();
       span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
       span.setAttribute("span.origin.type", method.getDeclaringClass().getCanonicalName());
 

@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -77,7 +78,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
       // Now create a span for handler/controller execution.
 
-      final Span span = TRACER.spanBuilder("spring.handler").startSpan();
+      final Span span = TRACER.spanBuilder("spring.handler").setSpanKind(SERVER).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onHandle(span, handler);
 

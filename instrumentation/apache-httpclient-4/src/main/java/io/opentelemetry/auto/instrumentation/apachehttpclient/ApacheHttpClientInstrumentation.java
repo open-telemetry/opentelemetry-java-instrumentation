@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpC
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -149,7 +150,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class HelperMethods {
     public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
-      final Span span = TRACER.spanBuilder("http.request").startSpan();
+      final Span span = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
       final Scope scope = TRACER.withSpan(span);
 
       DECORATE.afterStart(span);

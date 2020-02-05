@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.netty41.client;
 import static io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty41.client.NettyResponseInjectAdapter.SETTER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -40,7 +41,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY).set(null);
     }
 
-    final Span span = TRACER.spanBuilder("netty.client.request").startSpan();
+    final Span span = TRACER.spanBuilder("netty.client.request").setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);

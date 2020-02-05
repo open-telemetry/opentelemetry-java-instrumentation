@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.bootstrap.instrumentation.rmi.ThreadLocalCon
 import static io.opentelemetry.auto.instrumentation.rmi.server.RmiServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rmi.server.RmiServerDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -58,7 +59,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
         @Advice.This final Object thiz, @Advice.Origin final Method method) {
       final SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("rmi.request");
+      final Span.Builder spanBuilder = TRACER.spanBuilder("rmi.request").setSpanKind(SERVER);
       if (context != null) {
         spanBuilder.setParent(context);
       }

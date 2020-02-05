@@ -4,7 +4,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -14,11 +13,6 @@ public abstract class KafkaDecorator extends ClientDecorator {
   public static final KafkaDecorator PRODUCER_DECORATE =
       new KafkaDecorator() {
         @Override
-        protected String spanKind() {
-          return Tags.SPAN_KIND_PRODUCER;
-        }
-
-        @Override
         protected String getSpanType() {
           return SpanTypes.MESSAGE_PRODUCER;
         }
@@ -26,11 +20,6 @@ public abstract class KafkaDecorator extends ClientDecorator {
 
   public static final KafkaDecorator CONSUMER_DECORATE =
       new KafkaDecorator() {
-        @Override
-        protected String spanKind() {
-          return Tags.SPAN_KIND_CONSUMER;
-        }
-
         @Override
         protected String getSpanType() {
           return SpanTypes.MESSAGE_CONSUMER;
@@ -48,9 +37,6 @@ public abstract class KafkaDecorator extends ClientDecorator {
   protected String getComponentName() {
     return "java-kafka";
   }
-
-  @Override
-  protected abstract String spanKind();
 
   public void onConsume(final Span span, final ConsumerRecord record) {
     if (record != null) {

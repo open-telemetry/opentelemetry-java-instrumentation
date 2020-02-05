@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.jdbc;
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -57,7 +58,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("database.connection").startSpan();
+      final Span span = TRACER.spanBuilder("database.connection").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
 
       span.setAttribute(MoreTags.RESOURCE_NAME, ds.getClass().getSimpleName() + ".getConnection");

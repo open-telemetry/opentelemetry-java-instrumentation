@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.http_url_connection;
 
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -74,8 +75,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
         String protocol = url.getProtocol();
         protocol = protocol != null ? protocol : "url";
 
-        final Span span = TRACER.spanBuilder(protocol + ".request").startSpan();
-        span.setAttribute(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
+        final Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
         span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT);
         span.setAttribute(Tags.COMPONENT, COMPONENT);
 

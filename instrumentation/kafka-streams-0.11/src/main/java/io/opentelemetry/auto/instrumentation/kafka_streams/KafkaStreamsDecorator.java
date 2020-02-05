@@ -4,7 +4,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
@@ -22,11 +21,6 @@ public class KafkaStreamsDecorator extends ClientDecorator {
   @Override
   protected String getComponentName() {
     return "java-kafka";
-  }
-
-  @Override
-  protected String spanKind() {
-    return Tags.SPAN_KIND_CONSUMER;
   }
 
   @Override

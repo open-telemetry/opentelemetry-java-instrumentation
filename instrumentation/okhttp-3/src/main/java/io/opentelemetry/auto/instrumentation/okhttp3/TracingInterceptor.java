@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.okhttp3;
 
 import static io.opentelemetry.auto.instrumentation.okhttp3.OkHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.okhttp3.RequestBuilderInjectAdapter.SETTER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
@@ -19,7 +20,7 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(final Chain chain) throws IOException {
-    final Span span = TRACER.spanBuilder("okhttp.request").startSpan();
+    final Span span = TRACER.spanBuilder("okhttp.request").setSpanKind(CLIENT).startSpan();
 
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);

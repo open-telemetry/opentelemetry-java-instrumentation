@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.lettuce;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentationUtil.doFinishSpanEarly;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -15,7 +16,7 @@ public class LettuceAsyncCommandsAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand command) {
 
-    final Span span = TRACER.spanBuilder("redis.query").startSpan();
+    final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
     DECORATE.afterStart(span);
     DECORATE.onCommand(span, command);
 

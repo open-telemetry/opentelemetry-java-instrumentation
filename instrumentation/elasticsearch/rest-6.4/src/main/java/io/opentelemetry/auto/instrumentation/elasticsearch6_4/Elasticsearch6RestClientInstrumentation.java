@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.elasticsearch6_4;
 
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -63,7 +64,8 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener) {
 
-      final Span span = TRACER.spanBuilder("elasticsearch.rest.query").startSpan();
+      final Span span =
+          TRACER.spanBuilder("elasticsearch.rest.query").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request.getMethod(), request.getEndpoint());
 

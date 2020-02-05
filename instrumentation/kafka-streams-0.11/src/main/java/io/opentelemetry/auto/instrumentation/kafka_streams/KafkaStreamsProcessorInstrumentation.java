@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDe
 import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
 import static io.opentelemetry.auto.instrumentation.kafka_streams.TextMapExtractAdapter.GETTER;
+import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -89,7 +90,7 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        final Span.Builder spanBuilder = TRACER.spanBuilder("kafka.consume");
+        final Span.Builder spanBuilder = TRACER.spanBuilder("kafka.consume").setSpanKind(CONSUMER);
         try {
           final SpanContext extractedContext =
               TRACER.getHttpTextFormat().extract(record.value.headers(), GETTER);

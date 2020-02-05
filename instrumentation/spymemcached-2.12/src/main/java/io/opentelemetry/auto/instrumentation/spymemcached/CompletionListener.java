@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.spymemcached;
 
 import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -29,7 +30,7 @@ public abstract class CompletionListener<T> {
 
   public CompletionListener(final MemcachedConnection connection, final String methodName) {
     this.connection = connection;
-    span = TRACER.spanBuilder(OPERATION_NAME).startSpan();
+    span = TRACER.spanBuilder(OPERATION_NAME).setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);

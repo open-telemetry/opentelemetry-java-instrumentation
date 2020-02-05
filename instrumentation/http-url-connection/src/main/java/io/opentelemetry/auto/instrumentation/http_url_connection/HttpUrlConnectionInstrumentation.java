@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.http_url_connection.HeadersI
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -133,7 +134,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     private volatile boolean finished = false;
 
     public Span start(final HttpURLConnection connection) {
-      span = TRACER.spanBuilder(OPERATION_NAME).startSpan();
+      span = TRACER.spanBuilder(OPERATION_NAME).setSpanKind(CLIENT).startSpan();
       try (final Scope scope = TRACER.withSpan(span)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, connection);

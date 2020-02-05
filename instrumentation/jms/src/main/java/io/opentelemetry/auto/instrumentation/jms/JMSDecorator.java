@@ -4,7 +4,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -19,11 +18,6 @@ public abstract class JMSDecorator extends ClientDecorator {
   public static final JMSDecorator PRODUCER_DECORATE =
       new JMSDecorator() {
         @Override
-        protected String spanKind() {
-          return Tags.SPAN_KIND_PRODUCER;
-        }
-
-        @Override
         protected String getSpanType() {
           return SpanTypes.MESSAGE_PRODUCER;
         }
@@ -31,11 +25,6 @@ public abstract class JMSDecorator extends ClientDecorator {
 
   public static final JMSDecorator CONSUMER_DECORATE =
       new JMSDecorator() {
-        @Override
-        protected String spanKind() {
-          return Tags.SPAN_KIND_CONSUMER;
-        }
-
         @Override
         protected String getSpanType() {
           return SpanTypes.MESSAGE_CONSUMER;
@@ -53,9 +42,6 @@ public abstract class JMSDecorator extends ClientDecorator {
   protected String getComponentName() {
     return "jms";
   }
-
-  @Override
-  protected abstract String spanKind();
 
   public void onConsume(final Span span, final Message message) {
     span.setAttribute(MoreTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));

@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.twilio;
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -93,7 +94,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("twilio.sdk").startSpan();
+      final Span span = TRACER.spanBuilder("twilio.sdk").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onServiceExecution(span, that, methodName);
 

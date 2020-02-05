@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.instrumentation.aws.v0;
 
 import static io.opentelemetry.auto.instrumentation.aws.v0.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -31,7 +32,7 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    final Span span = TRACER.spanBuilder("aws.http").startSpan();
+    final Span span = TRACER.spanBuilder("aws.http").setSpanKind(CLIENT).startSpan();
     decorate.afterStart(span);
     decorate.onRequest(span, request);
     request.addHandlerContext(
