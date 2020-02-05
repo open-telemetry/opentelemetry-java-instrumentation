@@ -45,11 +45,13 @@ public final class SharedExecutors {
 
     @Override
     public void run() {
+      executorService.shutdown();
       try {
-        executorService.shutdown();
-        executorService.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
+        if (!executorService.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS)) {
+          executorService.shutdownNow();
+        }
       } catch (final InterruptedException e) {
-        // Don't bother waiting then...
+        executorService.shutdownNow();
       }
     }
   }
