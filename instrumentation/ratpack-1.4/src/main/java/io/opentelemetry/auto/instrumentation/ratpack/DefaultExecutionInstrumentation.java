@@ -30,7 +30,7 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".ActionWrapper", packageName + ".TracerHolder"};
+    return new String[] {packageName + ".ActionWrapper"};
   }
 
   @Override
