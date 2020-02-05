@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -29,7 +28,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.SharedSessionContract", SessionState.class.getName());
+    return singletonMap("org.hibernate.SharedSessionContract", Span.class.getName());
   }
 
   @Override
@@ -58,9 +57,9 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
       DECORATOR.afterStart(span);
       DECORATOR.onConnection(span, session);
 
-      final ContextStore<SharedSessionContract, SessionState> contextStore =
-          InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
-      contextStore.putIfAbsent(session, new SessionState(span));
+      final ContextStore<SharedSessionContract, Span> contextStore =
+          InstrumentationContext.get(SharedSessionContract.class, Span.class);
+      contextStore.putIfAbsent(session, span);
     }
   }
 }
