@@ -68,7 +68,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" null
           }
         }
         span(1) {
@@ -77,7 +76,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableChainTest\$1.execute"
-            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -89,7 +87,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" null
           }
         }
         span(3) {
@@ -98,7 +95,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "OtherGroup.HystrixObservableChainTest\$2.execute"
-            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
@@ -110,7 +106,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(3)
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" null
           }
         }
       }

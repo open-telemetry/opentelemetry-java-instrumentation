@@ -1,10 +1,9 @@
-package io.opentelemetry.auto.instrumentation.spymemcached
-
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import net.spy.memcached.CASResponse
@@ -25,9 +24,6 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.locks.ReentrantLock
 
-import static CompletionListener.COMPONENT_NAME
-import static CompletionListener.OPERATION_NAME
-import static CompletionListener.SERVICE_NAME
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
@@ -630,14 +626,14 @@ class SpymemcachedTest extends AgentTestRunner {
         childOf(trace.span(0))
       }
 
-      operationName OPERATION_NAME
+      operationName CompletionListener.OPERATION_NAME
       errored(error != null && error != "canceled")
 
       tags {
-        "$MoreTags.SERVICE_NAME" SERVICE_NAME
+        "$MoreTags.SERVICE_NAME" CompletionListener.SERVICE_NAME
         "$MoreTags.RESOURCE_NAME" operation
         "$MoreTags.SPAN_TYPE" SpanTypes.MEMCACHED
-        "$Tags.COMPONENT" COMPONENT_NAME
+        "$Tags.COMPONENT" CompletionListener.COMPONENT_NAME
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" CompletionListener.DB_TYPE
 

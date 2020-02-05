@@ -1,4 +1,4 @@
-package io.opentelemetry.test.instrumentation.springwebflux.client
+package client
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
