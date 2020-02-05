@@ -3,10 +3,6 @@ import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
-import io.opentelemetry.test.instrumentation.springwebflux.server.EchoHandlerFunction
-import io.opentelemetry.test.instrumentation.springwebflux.server.FooModel
-import io.opentelemetry.test.instrumentation.springwebflux.server.SpringWebFluxTestApplication
-import io.opentelemetry.test.instrumentation.springwebflux.server.TestController
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -16,6 +12,10 @@ import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.context.annotation.Bean
 import org.springframework.web.server.ResponseStatusException
+import server.EchoHandlerFunction
+import server.FooModel
+import server.SpringWebFluxTestApplication
+import server.TestController
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentTestRunner {

@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.sql.Connection;
@@ -70,7 +70,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
   public static class PreparedStatementAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter(@Advice.This final PreparedStatement statement) {
+    public static SpanWithScope onEnter(@Advice.This final PreparedStatement statement) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(PreparedStatement.class);
       if (callDepth > 0) {
         return null;
@@ -86,20 +86,20 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       DECORATE.onConnection(span, connection);
       DECORATE.onPreparedStatement(span, statement);
       span.setAttribute("span.origin.type", statement.getClass().getName());
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
-      if (spanAndScope == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanWithScope.closeScope();
       CallDepthThreadLocalMap.reset(PreparedStatement.class);
     }
   }

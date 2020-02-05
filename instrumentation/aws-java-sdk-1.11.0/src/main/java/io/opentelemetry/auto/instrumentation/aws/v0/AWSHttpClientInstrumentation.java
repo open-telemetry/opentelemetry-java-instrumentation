@@ -12,7 +12,7 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.Request;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -60,14 +60,14 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final SpanScopePair spanScopePair = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-        if (spanScopePair != null) {
+        final SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+        if (spanWithScope != null) {
           request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-          final Span span = spanScopePair.getSpan();
+          final Span span = spanWithScope.getSpan();
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
           span.end();
-          spanScopePair.getScope().close();
+          spanWithScope.closeScope();
         }
       }
     }
@@ -98,15 +98,15 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           @Advice.FieldValue("request") final Request<?> request,
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
-          final SpanScopePair spanScopePair =
+          final SpanWithScope spanWithScope =
               request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
-          if (spanScopePair != null) {
+          if (spanWithScope != null) {
             request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
-            final Span span = spanScopePair.getSpan();
+            final Span span = spanWithScope.getSpan();
             DECORATE.onError(span, throwable);
             DECORATE.beforeFinish(span);
             span.end();
-            spanScopePair.getScope().close();
+            spanWithScope.closeScope();
           }
         }
       }

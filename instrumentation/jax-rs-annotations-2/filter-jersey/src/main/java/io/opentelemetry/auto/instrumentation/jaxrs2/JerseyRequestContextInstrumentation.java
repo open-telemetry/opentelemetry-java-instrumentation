@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.jaxrs2;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 public class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair decorateAbortSpan(
+    public static SpanWithScope decorateAbortSpan(
         @Advice.This final ContainerRequestContext context) {
       final UriInfo uriInfo = context.getUriInfo();
 
@@ -41,7 +41,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final SpanWithScope scope, @Advice.Thrown final Throwable throwable) {
       RequestFilterHelper.closeSpanAndScope(scope, throwable);
     }
   }

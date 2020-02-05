@@ -17,7 +17,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -85,7 +85,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(
+    public static SpanWithScope methodEnter(
         @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
@@ -103,21 +103,21 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onServiceExecution(span, that, methodName);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final ListenableFuture response) {
-      if (spanScopePair == null) {
+      if (spanWithScope == null) {
         return;
       }
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       try {
-        final Span span = spanScopePair.getSpan();
+        final Span span = spanWithScope.getSpan();
 
         if (throwable != null) {
           // There was an synchronous error,
@@ -132,7 +132,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
               response, new SpanFinishingCallback(span), Twilio.getExecutorService());
         }
       } finally {
-        spanScopePair.getScope().close(); // won't finish the span.
+        spanWithScope.closeScope();
         CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }

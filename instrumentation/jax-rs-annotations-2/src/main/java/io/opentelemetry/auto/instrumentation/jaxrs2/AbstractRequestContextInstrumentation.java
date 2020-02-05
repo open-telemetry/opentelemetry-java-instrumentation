@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -54,7 +54,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
   }
 
   public static class RequestFilterHelper {
-    public static SpanScopePair createOrUpdateAbortSpan(
+    public static SpanWithScope createOrUpdateAbortSpan(
         final ContainerRequestContext context, final Class resourceClass, final Method method) {
 
       if (method != null && resourceClass != null) {
@@ -69,7 +69,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
           parent = TRACER.getCurrentSpan();
           span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
 
-          final SpanScopePair scope = new SpanScopePair(span, TRACER.withSpan(span));
+          final SpanWithScope scope = new SpanWithScope(span, TRACER.withSpan(span));
 
           DECORATE.afterStart(span);
           DECORATE.onJaxRsSpan(span, parent, resourceClass, method);
@@ -85,19 +85,19 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
     }
 
     public static void closeSpanAndScope(
-        final SpanScopePair spanAndScope, final Throwable throwable) {
-      if (spanAndScope == null) {
+        final SpanWithScope spanWithScope, final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
 
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }
 
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

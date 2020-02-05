@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -52,26 +52,26 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
   public static class QueryMethodAdvice extends V4Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair startMethod(
+    public static SpanWithScope startMethod(
         @Advice.This final Query query, @Advice.Origin("#m") final String name) {
 
       final ContextStore<Query, Span> contextStore =
           InstrumentationContext.get(Query.class, Span.class);
 
       // Note: We don't know what the entity is until the method is returning.
-      final SpanScopePair spanScopePair =
+      final SpanWithScope spanWithScope =
           SessionMethodUtils.startScopeFrom(
               contextStore, query, "hibernate.query." + name, null, true);
-      if (spanScopePair != null) {
-        DECORATOR.onStatement(spanScopePair.getSpan(), query.getQueryString());
+      if (spanWithScope != null) {
+        DECORATOR.onStatement(spanWithScope.getSpan(), query.getQueryString());
       }
-      return spanScopePair;
+      return spanWithScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.This final Query query,
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
 
@@ -82,7 +82,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
         entity = query.getQueryString();
       }
 
-      SessionMethodUtils.closeScope(spanScopePair, throwable, entity);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, entity);
     }
   }
 }
