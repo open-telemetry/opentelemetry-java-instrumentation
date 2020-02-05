@@ -10,6 +10,7 @@ import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapInjectA
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -122,7 +123,13 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final Connection connection = channel.getConnection();
 
-      final Span span = TRACER.spanBuilder("amqp.command").setSpanKind(CLIENT).startSpan();
+      final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command");
+      if (method.equals("Channel.basicPublish")) {
+        spanBuilder.setSpanKind(PRODUCER);
+      } else {
+        spanBuilder.setSpanKind(CLIENT);
+      }
+      final Span span = spanBuilder.startSpan();
       span.setAttribute(MoreTags.RESOURCE_NAME, method);
       span.setAttribute(Tags.PEER_PORT, connection.getPort());
       DECORATE.afterStart(span);
