@@ -72,6 +72,7 @@ public class TracedDelegatingConsumer implements Consumer {
           extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
         } catch (final IllegalArgumentException e) {
           // couldn't extract a context
+          spanBuilder.setNoParent();
         }
       }
       if (extractedContext != null) {
