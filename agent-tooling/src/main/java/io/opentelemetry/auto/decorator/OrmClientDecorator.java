@@ -1,18 +1,11 @@
 package io.opentelemetry.auto.decorator;
 
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 
 public abstract class OrmClientDecorator extends DatabaseClientDecorator {
 
   public abstract String entityName(final Object entity);
-
-  @Deprecated
-  public AgentSpan onOperation(final AgentSpan span, final Object entity) {
-    onOperation(span.getSpan(), entity);
-    return span;
-  }
 
   public Span onOperation(final Span span, final Object entity) {
 

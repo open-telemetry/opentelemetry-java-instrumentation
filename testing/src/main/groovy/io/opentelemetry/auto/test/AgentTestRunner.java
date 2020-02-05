@@ -10,10 +10,8 @@ import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.AgentTracer;
 import io.opentelemetry.auto.test.asserts.ListWriterAssert;
 import io.opentelemetry.auto.tooling.AgentInstaller;
-import io.opentelemetry.auto.tooling.AgentTracerImpl;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.auto.util.test.AgentSpecification;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -84,8 +82,6 @@ public abstract class AgentTestRunner extends AgentSpecification {
     TEST_WRITER = new ListWriter();
     OpenTelemetrySdk.getTracerFactory().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
-
-    AgentTracer.registerIfAbsent(new AgentTracerImpl(TEST_TRACER));
   }
 
   protected static Tracer getTestTracer() {

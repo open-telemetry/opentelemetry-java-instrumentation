@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.decorator;
 
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
@@ -13,13 +12,6 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   protected abstract String dbUser(CONNECTION connection);
 
   protected abstract String dbInstance(CONNECTION connection);
-
-  @Deprecated
-  @Override
-  public AgentSpan afterStart(final AgentSpan span) {
-    afterStart(span.getSpan());
-    return span;
-  }
 
   @Override
   public Span afterStart(final Span span) {
@@ -38,12 +30,6 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
    * @param connection
    * @return
    */
-  @Deprecated
-  public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
-    onConnection(span.getSpan(), connection);
-    return span;
-  }
-
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
@@ -60,12 +46,6 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
         span.setAttribute(MoreTags.SERVICE_NAME, instanceName);
       }
     }
-    return span;
-  }
-
-  @Deprecated
-  public AgentSpan onStatement(final AgentSpan span, final String statement) {
-    onStatement(span.getSpan(), statement);
     return span;
   }
 
