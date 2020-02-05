@@ -224,60 +224,60 @@ workflows:
         filters:
           tags:
             only: /.*/
-    - test_8:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
+  # - test_8:
+  #     requires:
+  #     - build
+  #     filters:
+  #       tags:
+  #         only: /.*/
     - test_latest8:
         requires:
         - build
         filters:
           tags:
             only: /.*/
-    - test_ibm8:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_zulu8:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_9:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_10:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
+  # - test_ibm8:
+  #     requires:
+  #     - build
+  #     filters:
+  #       tags:
+  #         only: /.*/
+  # - test_zulu8:
+  #     requires:
+  #     - build
+  #     filters:
+  #       tags:
+  #         only: /.*/
+  # - test_9:
+  #     requires:
+  #     - build
+  #     filters:
+  #       tags:
+  #         only: /.*/
+  # - test_10:
+  #     requires:
+  #     - build
+  #     filters:
+  #       tags:
+  #         only: /.*/
     - test_11:
         requires:
         - build
         filters:
           tags:
             only: /.*/
-    - test_zulu11:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_12:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
+  # - test_zulu11:
+  #     requires:
+  #     - build
+  #     filters:
+  #       tags:
+  #         only: /.*/
+  # - test_12:
+  #     requires:
+  #     - build
+  #     filters:
+  #       tags:
+  #         only: /.*/
     - test_13:
         requires:
         - build
@@ -302,15 +302,15 @@ workflows:
     - publish_master:
         requires:
         - test_7
-        - test_8
+      # - test_8
         - test_latest8
-        - test_ibm8
-        - test_zulu8
-        - test_9
-        - test_10
+      # - test_ibm8
+      # - test_zulu8
+      # - test_9
+      # - test_10
         - test_11
-        - test_zulu11
-        - test_12
+      # - test_zulu11
+      # - test_12
         - test_13
         - check
         filters:
@@ -322,15 +322,15 @@ workflows:
     - publish_tag:
         requires:
         - test_7
-        - test_8
+      # - test_8
         - test_latest8
-        - test_ibm8
-        - test_zulu8
-        - test_9
-        - test_10
+      # - test_ibm8
+      # - test_zulu8
+      # - test_9
+      # - test_10
         - test_11
-        - test_zulu11
-        - test_12
+      # - test_zulu11
+      # - test_12
         - test_13
         - check
         filters:
