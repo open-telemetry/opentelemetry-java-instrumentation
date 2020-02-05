@@ -1,4 +1,4 @@
-package io.opentelemetry.test.instrumentation.springwebflux.server
+package server
 
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.trace.Tracer
