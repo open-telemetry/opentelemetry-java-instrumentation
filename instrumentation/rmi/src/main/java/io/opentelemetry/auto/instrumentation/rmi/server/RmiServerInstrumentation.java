@@ -14,12 +14,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
+import java.rmi.server.RemoteServer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -57,11 +59,17 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = true)
     public static SpanWithScope onEnter(
         @Advice.This final Object thiz, @Advice.Origin final Method method) {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
+      if (callDepth > 0) {
+        return null;
+      }
       final SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
       final Span.Builder spanBuilder = TRACER.spanBuilder("rmi.request").setSpanKind(SERVER);
       if (context != null) {
         spanBuilder.setParent(context);
+      } else {
+        spanBuilder.setNoParent();
       }
       final Span span = spanBuilder.startSpan();
       span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
@@ -77,6 +85,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(RemoteServer.class);
 
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);

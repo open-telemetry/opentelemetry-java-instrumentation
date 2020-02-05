@@ -38,7 +38,7 @@ class RmiTest extends AgentTestRunner {
     then:
     response.contains("Hello you")
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "rmi.invoke"
@@ -56,16 +56,6 @@ class RmiTest extends AgentTestRunner {
           spanKind SERVER
           tags {
             "$MoreTags.RESOURCE_NAME" "Server.hello"
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.COMPONENT" "rmi-server"
-            "span.origin.type" server.class.canonicalName
-          }
-        }
-        span(3) {
-          operationName "rmi.request"
-          spanKind SERVER
-          tags {
-            "$MoreTags.RESOURCE_NAME" "Server.someMethod"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName

@@ -244,6 +244,7 @@ class TestHttpServer implements AutoCloseable {
           spanBuilder.setParent(extractedContext)
         } catch (final IllegalArgumentException e) {
           // couldn't extract a context
+          spanBuilder.setNoParent()
         }
         final Span span = spanBuilder.startSpan()
         span.end()
