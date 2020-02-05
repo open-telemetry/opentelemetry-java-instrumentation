@@ -9,6 +9,8 @@ import io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDe
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpClientDecorator> {
 
   @Shared
@@ -57,11 +59,11 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
+          spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "google-http-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"

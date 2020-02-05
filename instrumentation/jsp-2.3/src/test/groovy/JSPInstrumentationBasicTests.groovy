@@ -17,6 +17,8 @@ import org.eclipse.jetty.http.HttpStatus
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 class JSPInstrumentationBasicTests extends AgentTestRunner {
 
   static {
@@ -90,11 +92,11 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -159,11 +161,11 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -225,11 +227,11 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -288,11 +290,11 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -370,11 +372,11 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -432,11 +434,11 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -542,11 +544,11 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -601,13 +603,13 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           parent()
           // serviceName jspWebappContext
           operationName "servlet.request"
+          spanKind SERVER
           // FIXME: this is not a great resource name for serving static content.
           // resourceName "GET /$jspWebappContext/$staticFile"
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long

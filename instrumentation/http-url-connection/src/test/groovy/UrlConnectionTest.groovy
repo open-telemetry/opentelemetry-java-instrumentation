@@ -10,6 +10,7 @@ import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlC
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class UrlConnectionTest extends AgentTestRunner {
 
@@ -41,13 +42,13 @@ class UrlConnectionTest extends AgentTestRunner {
         }
         span(1) {
           operationName OPERATION_NAME
+          spanKind CLIENT
           childOf span(0)
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "$url/"
@@ -93,12 +94,12 @@ class UrlConnectionTest extends AgentTestRunner {
         }
         span(1) {
           operationName "file.request"
+          spanKind CLIENT
           childOf span(0)
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" UrlInstrumentation.COMPONENT
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_PORT" 80
             // FIXME: These tags really make no sense for non-http connections, why do we set them?
             "$Tags.HTTP_URL" "$url"

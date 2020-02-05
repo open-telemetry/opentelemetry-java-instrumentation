@@ -24,6 +24,8 @@ import org.apache.http.impl.client.HttpClientBuilder
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 class TwilioClientTest extends AgentTestRunner {
   final static String ACCOUNT_SID = "abc"
   final static String AUTH_TOKEN = "efg"
@@ -119,7 +121,7 @@ class TwilioClientTest extends AgentTestRunner {
     ).create(twilioRestClient)
     testSpan.end()
     testScope.close()
-    
+
     expect:
 
     message.body == "Hello, World!"
@@ -135,13 +137,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -187,13 +189,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.CallCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
             "twilio.account" "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.sid" "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -262,13 +264,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -277,11 +279,11 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           operationName "http.request"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -364,13 +366,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -379,11 +381,11 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           operationName "http.request"
+          spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -392,11 +394,11 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(3) {
           operationName "http.request"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -487,13 +489,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.createAsync"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -502,13 +504,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -517,11 +519,11 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(3) {
           operationName "http.request"
+          spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -530,11 +532,11 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(4) {
           operationName "http.request"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -586,13 +588,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(ApiException, "Testing Failure")
           }
         }
@@ -620,6 +622,7 @@ class TwilioClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           parent()
           errored false
           tags {
@@ -627,7 +630,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -681,13 +683,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.createAsync"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -696,13 +698,13 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(2) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -766,25 +768,25 @@ class TwilioClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.createAsync"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(ApiException, "Testing Failure")
           }
         }
         span(2) {
           operationName "twilio.sdk"
+          spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
             "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "twilio-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(ApiException, "Testing Failure")
           }
         }

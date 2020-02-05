@@ -24,6 +24,9 @@ import spock.lang.Shared
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
+
 class KafkaStreamsTest extends AgentTestRunner {
   static final STREAM_PENDING = "test.pending"
   static final STREAM_PROCESSED = "test.processed"
@@ -121,6 +124,7 @@ class KafkaStreamsTest extends AgentTestRunner {
         // PRODUCER span 0
         span(0) {
           operationName "kafka.produce"
+          spanKind PRODUCER
           errored false
           parent()
           tags {
@@ -128,12 +132,12 @@ class KafkaStreamsTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           }
         }
         // CONSUMER span 0
         span(1) {
           operationName "kafka.consume"
+          spanKind CONSUMER
           errored false
           childOf span(0)
           tags {
@@ -141,7 +145,6 @@ class KafkaStreamsTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
           }
@@ -149,15 +152,14 @@ class KafkaStreamsTest extends AgentTestRunner {
         // STREAMING span 1
         span(2) {
           operationName "kafka.consume"
+          spanKind CONSUMER
           errored false
           childOf span(0)
-
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
             "asdf" "testing"
@@ -166,20 +168,20 @@ class KafkaStreamsTest extends AgentTestRunner {
         // STREAMING span 0
         span(3) {
           operationName "kafka.produce"
+          spanKind PRODUCER
           errored false
           childOf span(2)
-
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PROCESSED"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           }
         }
         // CONSUMER span 0
         span(4) {
           operationName "kafka.consume"
+          spanKind CONSUMER
           errored false
           childOf span(3)
           tags {
@@ -187,7 +189,6 @@ class KafkaStreamsTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PROCESSED"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
             "testing" 123

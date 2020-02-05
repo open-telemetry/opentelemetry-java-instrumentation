@@ -11,6 +11,8 @@ import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {
 
   @Shared
@@ -63,11 +65,11 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
         span(0) {
           parent()
           operationName "akka-http.request"
+          spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "akka-http-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(NullPointerException)
           }
         }

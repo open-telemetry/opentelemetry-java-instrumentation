@@ -22,6 +22,8 @@ import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+
 abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
   static final USERNAME = "Administrator"
@@ -108,6 +110,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
       operationName "couchbase.call"
+      spanKind CLIENT
       errored false
       if (parentSpan == null) {
         parent()
@@ -119,7 +122,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         "$MoreTags.RESOURCE_NAME" name
         "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" "couchbase"
         if (bucketName != null) {
           "bucket" bucketName

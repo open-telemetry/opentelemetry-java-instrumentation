@@ -25,6 +25,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCE
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decorator> {
 
@@ -102,6 +103,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
+      spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -113,7 +115,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Long
