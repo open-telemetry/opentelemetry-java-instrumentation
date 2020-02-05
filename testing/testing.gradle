@@ -64,7 +64,7 @@ tasks.withType(Test).configureEach {
 }
 
 tasks.register("testDisabledFieldInjection", Test) {
-  systemProperties "opentelemetry.auto.trace.runtime.context.field.injection": "false"
+  systemProperties "ota.trace.runtime.context.field.injection": "false"
   include "context/FieldBackedProviderFieldInjectionDisabledTest.class"
 }
 test.dependsOn(testDisabledFieldInjection)
