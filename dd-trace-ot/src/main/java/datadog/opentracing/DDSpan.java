@@ -109,7 +109,7 @@ public class DDSpan implements Span, MutableSpan {
 
   @Override
   public DDSpan setError(final boolean error) {
-    context.setErrorFlag(true);
+    context.setErrorFlag(error);
     return this;
   }
 
