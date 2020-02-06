@@ -124,7 +124,7 @@ include ':instrumentation:spymemcached-2.12'
 include ':instrumentation:tomcat-classloading'
 include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio'
-include ':instrumentation:vertx'
+include ':instrumentation:vertx-testing'
 
 // benchmark
 include ':benchmark'
