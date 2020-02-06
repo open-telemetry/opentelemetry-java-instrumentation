@@ -1,146 +1,235 @@
 package datadog.trace.agent.tooling;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.skipClassLoader;
 import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import datadog.trace.bootstrap.WeakMap;
-import java.security.SecureClassLoader;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.lang.ref.WeakReference;
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.pool.TypePool;
 
 /**
- * Custom Pool strategy.
+ * NEW (Jan 2020) Custom Pool strategy.
  *
- * <p>Here we are using WeakMap.Provider as the backing ClassLoader -> CacheProvider lookup.
+ * <ul>
+ *   Uses a Guava Cache directly...
+ *   <li>better control over locking than WeakMap.Provider
+ *   <li>provides direct control over concurrency level
+ *   <li>initial and maximum capacity
+ * </ul>
  *
- * <p>We also use our bootstrap proxy when matching against the bootstrap loader.
+ * <ul>
+ *   There two core parts to the cache...
+ *   <li>a cache of ClassLoader to WeakReference&lt;ClassLoader&gt;
+ *   <li>a single cache of TypeResolutions for all ClassLoaders - keyed by a custom composite key of
+ *       ClassLoader & class name
+ * </ul>
  *
- * <p>The CacheProvider is a custom implementation that uses guava's cache to expire and limit size.
+ * <p>This design was chosen to create a single limited size cache that can be adjusted for the
+ * entire application -- without having to create a large number of WeakReference objects.
  *
- * <p>By evicting from the cache we are able to reduce the memory overhead of the agent for apps
- * that have many classes.
- *
- * <p>See eviction policy below.
+ * <p>Eviction is handled almost entirely through a size restriction; however, softValues are still
+ * used as a further safeguard.
  */
-public class DDCachingPoolStrategy
-    implements PoolStrategy, WeakMap.ValueSupplier<ClassLoader, TypePool.CacheProvider> {
+@Slf4j
+public class DDCachingPoolStrategy implements PoolStrategy {
+  // Many things are package visible for testing purposes --
+  // others to avoid creation of synthetic accessors
 
-  // Need this because we can't put null into the typePoolCache map.
-  private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
-      new SecureClassLoader(null) {};
+  static final int CONCURRENCY_LEVEL = 8;
+  static final int LOADER_CAPACITY = 64;
+  static final int TYPE_CAPACITY = 64;
 
-  private final WeakMap<ClassLoader, TypePool.CacheProvider> typePoolCache =
-      WeakMap.Provider.newWeakMap();
-  private final Cleaner cleaner;
+  static final int BOOTSTRAP_HASH = 0;
 
-  public DDCachingPoolStrategy(final Cleaner cleaner) {
-    this.cleaner = cleaner;
-  }
+  /**
+   * Cache of recent ClassLoader WeakReferences; used to...
+   *
+   * <ul>
+   *   <li>Reduced number of WeakReferences created
+   *   <li>Allow for quick fast path equivalence check of composite keys
+   * </ul>
+   */
+  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
+      CacheBuilder.newBuilder()
+          .weakKeys()
+          .concurrencyLevel(CONCURRENCY_LEVEL)
+          .initialCapacity(LOADER_CAPACITY / 2)
+          .maximumSize(LOADER_CAPACITY)
+          .build();
+
+  /**
+   * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
+   */
+  final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
+      CacheBuilder.newBuilder()
+          .softValues()
+          .concurrencyLevel(CONCURRENCY_LEVEL)
+          .initialCapacity(TYPE_CAPACITY)
+          .maximumSize(TYPE_CAPACITY)
+          .build();
+
+  /** Fast path for bootstrap */
+  final SharedResolutionCacheAdapter bootstrapCacheProvider =
+      new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
 
   @Override
-  public TypePool typePool(final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
-    final ClassLoader key =
-        BOOTSTRAP_CLASSLOADER == classLoader ? BOOTSTRAP_CLASSLOADER_PLACEHOLDER : classLoader;
-    final TypePool.CacheProvider cache = typePoolCache.computeIfAbsent(key, this);
+  public final TypePool typePool(
+      final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
+    if (classLoader == null) {
+      return createCachingTypePool(bootstrapCacheProvider, classFileLocator);
+    }
 
+    WeakReference<ClassLoader> loaderRef = loaderRefCache.getIfPresent(classLoader);
+
+    if (loaderRef == null) {
+      loaderRef = new WeakReference<>(classLoader);
+      loaderRefCache.put(classLoader, loaderRef);
+    }
+
+    int loaderHash = classLoader.hashCode();
+    return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
+  }
+
+  private final TypePool.CacheProvider createCacheProvider(
+      final int loaderHash, final WeakReference<ClassLoader> loaderRef) {
+    return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
+  }
+
+  private final TypePool createCachingTypePool(
+      final int loaderHash,
+      final WeakReference<ClassLoader> loaderRef,
+      final ClassFileLocator classFileLocator) {
     return new TypePool.Default.WithLazyResolution(
-        cache, classFileLocator, TypePool.Default.ReaderMode.FAST);
+        createCacheProvider(loaderHash, loaderRef),
+        classFileLocator,
+        TypePool.Default.ReaderMode.FAST);
   }
 
-  @Override
-  public TypePool.CacheProvider get(final ClassLoader key) {
-    if (BOOTSTRAP_CLASSLOADER_PLACEHOLDER != key && skipClassLoader().matches(key)) {
-      // Don't bother creating a cache for a classloader that won't match.
-      // (avoiding a lot of DelegatingClassLoader instances)
-      // This is primarily an optimization.
-      return TypePool.CacheProvider.NoOp.INSTANCE;
-    } else {
-      return EvictingCacheProvider.withObjectType(cleaner, 1, TimeUnit.MINUTES);
-    }
+  private final TypePool createCachingTypePool(
+      final TypePool.CacheProvider cacheProvider, final ClassFileLocator classFileLocator) {
+    return new TypePool.Default.WithLazyResolution(
+        cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
   }
 
-  private static class EvictingCacheProvider implements TypePool.CacheProvider {
+  final long approximateSize() {
+    return sharedResolutionCache.size();
+  }
 
-    /** A map containing all cached resolutions by their names. */
-    private final Cache<String, TypePool.Resolution> cache;
+  /**
+   * TypeCacheKey is key for the sharedResolutionCache. Conceptually, it is a mix of ClassLoader &
+   * class name.
+   *
+   * <p>For efficiency & GC purposes, it is actually composed of loaderHash &
+   * WeakReference&lt;ClassLoader&gt;
+   *
+   * <p>The loaderHash exists to avoid calling get & strengthening the Reference.
+   */
+  static final class TypeCacheKey {
+    private final int loaderHash;
+    private final WeakReference<ClassLoader> loaderRef;
+    private final String className;
 
-    /** Creates a new simple cache. */
-    private EvictingCacheProvider(
-        final Cleaner cleaner, final long expireDuration, final TimeUnit unit) {
-      cache =
-          CacheBuilder.newBuilder()
-              .initialCapacity(100) // Per classloader, so we want a small default.
-              .maximumSize(5000)
-              .softValues()
-              .expireAfterAccess(expireDuration, unit)
-              .build();
+    private final int hashCode;
 
-      /*
-       * The cache only does cleanup on occasional reads and writes.
-       * We want to ensure this happens more regularly, so we schedule a thread to do run cleanup manually.
-       */
-      cleaner.scheduleCleaning(cache, CacheCleaner.CLEANER, expireDuration, unit);
-    }
+    TypeCacheKey(
+        final int loaderHash, final WeakReference<ClassLoader> loaderRef, final String className) {
+      this.loaderHash = loaderHash;
+      this.loaderRef = loaderRef;
+      this.className = className;
 
-    private static EvictingCacheProvider withObjectType(
-        final Cleaner cleaner, final long expireDuration, final TimeUnit unit) {
-      final EvictingCacheProvider cacheProvider =
-          new EvictingCacheProvider(cleaner, expireDuration, unit);
-      cacheProvider.register(
-          Object.class.getName(), new TypePool.Resolution.Simple(TypeDescription.OBJECT));
-      return cacheProvider;
+      hashCode = (int) (31 * this.loaderHash) ^ className.hashCode();
     }
 
     @Override
-    public TypePool.Resolution find(final String name) {
-      return cache.getIfPresent(name);
+    public final int hashCode() {
+      return hashCode;
     }
 
     @Override
-    public TypePool.Resolution register(final String name, final TypePool.Resolution resolution) {
-      try {
-        return cache.get(name, new ResolutionProvider(resolution));
-      } catch (final ExecutionException e) {
+    public boolean equals(final Object obj) {
+      if (!(obj instanceof TypeCacheKey)) return false;
+
+      TypeCacheKey that = (TypeCacheKey) obj;
+
+      if (loaderHash != that.loaderHash) return false;
+
+      // Fastpath loaderRef equivalence -- works because of WeakReference cache used
+      // Also covers the bootstrap null loaderRef case
+      if (loaderRef == that.loaderRef) {
+        // still need to check name
+        return className.equals(that.className);
+      } else if (className.equals(that.className)) {
+        // need to perform a deeper loader check -- requires calling Reference.get
+        // which can strengthen the Reference, so deliberately done last
+
+        // If either reference has gone null, they aren't considered equivalent
+        // Technically, this is a bit of violation of equals semantics, since
+        // two equivalent references can become not equivalent.
+
+        // In this case, it is fine because that means the ClassLoader is no
+        // longer live, so the entries will never match anyway and will fall
+        // out of the cache.
+        ClassLoader thisLoader = loaderRef.get();
+        if (thisLoader == null) return false;
+
+        ClassLoader thatLoader = that.loaderRef.get();
+        if (thatLoader == null) return false;
+
+        return (thisLoader == thatLoader);
+      } else {
+        return false;
+      }
+    }
+  }
+
+  static final class SharedResolutionCacheAdapter implements TypePool.CacheProvider {
+    private static final String OBJECT_NAME = "java.lang.Object";
+    private static final TypePool.Resolution OBJECT_RESOLUTION =
+        new TypePool.Resolution.Simple(TypeDescription.OBJECT);
+
+    private final int loaderHash;
+    private final WeakReference<ClassLoader> loaderRef;
+    private final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache;
+
+    SharedResolutionCacheAdapter(
+        final int loaderHash,
+        final WeakReference<ClassLoader> loaderRef,
+        final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache) {
+      this.loaderHash = loaderHash;
+      this.loaderRef = loaderRef;
+      this.sharedResolutionCache = sharedResolutionCache;
+    }
+
+    @Override
+    public TypePool.Resolution find(final String className) {
+      TypePool.Resolution existingResolution =
+          sharedResolutionCache.getIfPresent(new TypeCacheKey(loaderHash, loaderRef, className));
+      if (existingResolution != null) return existingResolution;
+
+      if (OBJECT_NAME.equals(className)) {
+        return OBJECT_RESOLUTION;
+      }
+
+      return null;
+    }
+
+    @Override
+    public TypePool.Resolution register(
+        final String className, final TypePool.Resolution resolution) {
+      if (OBJECT_NAME.equals(className)) {
         return resolution;
       }
+
+      sharedResolutionCache.put(new TypeCacheKey(loaderHash, loaderRef, className), resolution);
+      return resolution;
     }
 
     @Override
     public void clear() {
-      cache.invalidateAll();
-    }
-
-    public long size() {
-      return cache.size();
-    }
-
-    private static class CacheCleaner implements Cleaner.Adapter<Cache> {
-      private static final CacheCleaner CLEANER = new CacheCleaner();
-
-      @Override
-      public void clean(final Cache target) {
-        target.cleanUp();
-      }
-    }
-
-    private static class ResolutionProvider implements Callable<TypePool.Resolution> {
-      private final TypePool.Resolution value;
-
-      private ResolutionProvider(final TypePool.Resolution value) {
-        this.value = value;
-      }
-
-      @Override
-      public TypePool.Resolution call() {
-        return value;
-      }
+      // Allowing the high-level eviction policy make the clearing decisions
     }
   }
 }

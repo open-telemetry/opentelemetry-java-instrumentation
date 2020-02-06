@@ -53,7 +53,7 @@ public interface Writer extends Closeable {
       } else {
         log.warn(
             "Writer type not configured correctly: No config provided! Defaulting to DDAgentWriter.");
-        writer = new DDAgentWriter();
+        writer = DDAgentWriter.builder().build();
       }
 
       return writer;
@@ -64,7 +64,10 @@ public interface Writer extends Closeable {
     }
 
     private static Writer createAgentWriter(final Config config) {
-      return new DDAgentWriter(createApi(config), createMonitor(config));
+      return DDAgentWriter.builder()
+          .agentApi(createApi(config))
+          .monitor(createMonitor(config))
+          .build();
     }
 
     private static DDAgentApi createApi(final Config config) {

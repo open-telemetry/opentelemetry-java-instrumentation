@@ -1,24 +1,25 @@
 package datadog.trace.api.sampling
 
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.opentracing.SpanFactory
 import datadog.trace.api.DDTags
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.LoggingWriter
+import datadog.trace.common.writer.ddagent.DDAgentApi
 import datadog.trace.util.test.DDSpecification
 
 import static datadog.trace.common.sampling.RateByServiceSampler.DEFAULT_KEY
 
 class RateByServiceSamplerTest extends DDSpecification {
+  static serializer = DDAgentApi.RESPONSE_ADAPTER
 
   def "invalid rate -> 1"() {
     setup:
     RateByServiceSampler serviceSampler = new RateByServiceSampler()
-    ObjectMapper serializer = new ObjectMapper()
     String response = '{"rate_by_service": {"service:,env:":' + rate + '}}'
-    serviceSampler.onResponse("traces", serializer.readTree(response))
+    serviceSampler.onResponse("traces", serializer.fromJson(response))
     expect:
     serviceSampler.serviceRates[DEFAULT_KEY].sampleRate == expectedRate
 
@@ -35,11 +36,10 @@ class RateByServiceSamplerTest extends DDSpecification {
   def "rate by service name"() {
     setup:
     RateByServiceSampler serviceSampler = new RateByServiceSampler()
-    ObjectMapper serializer = new ObjectMapper()
 
     when:
     String response = '{"rate_by_service": {"service:spock,env:test":0.0}}'
-    serviceSampler.onResponse("traces", serializer.readTree(response))
+    serviceSampler.onResponse("traces", serializer.fromJson(response))
     DDSpan span1 = SpanFactory.newSpanOf("foo", "bar")
     serviceSampler.setSamplingPriority(span1)
     then:
@@ -48,7 +48,7 @@ class RateByServiceSamplerTest extends DDSpecification {
 
     when:
     response = '{"rate_by_service": {"service:spock,env:test":1.0}}'
-    serviceSampler.onResponse("traces", serializer.readTree(response))
+    serviceSampler.onResponse("traces", serializer.fromJson(response))
     DDSpan span2 = SpanFactory.newSpanOf("spock", "test")
     serviceSampler.setSamplingPriority(span2)
     then:
@@ -59,9 +59,8 @@ class RateByServiceSamplerTest extends DDSpecification {
   def "sampling priority set on context"() {
     setup:
     RateByServiceSampler serviceSampler = new RateByServiceSampler()
-    ObjectMapper serializer = new ObjectMapper()
     String response = '{"rate_by_service": {"service:,env:":1.0}}'
-    serviceSampler.onResponse("traces", serializer.readTree(response))
+    serviceSampler.onResponse("traces", serializer.fromJson(response))
 
     DDSpan span = SpanFactory.newSpanOf("foo", "bar")
     serviceSampler.setSamplingPriority(span)
@@ -76,8 +75,8 @@ class RateByServiceSamplerTest extends DDSpecification {
     def sampler = new RateByServiceSampler()
     def tracer = DDTracer.builder().writer(new LoggingWriter()).sampler(sampler).build()
 
-    sampler.onResponse("test", new ObjectMapper()
-      .readTree('{"rate_by_service":{"service:,env:":1.0,"service:spock,env:":0.0}}'))
+    sampler.onResponse("test", serializer
+      .fromJson('{"rate_by_service":{"service:,env:":1.0,"service:spock,env:":0.0}}'))
 
     when:
     def span = tracer.buildSpan("test").start()

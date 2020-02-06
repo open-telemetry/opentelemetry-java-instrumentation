@@ -12,6 +12,7 @@ minimumInstructionCoverage = 0.6
 excludedClassesCoverage += [
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.writer.LoggingWriter',
+  'datadog.trace.common.writer.DDAgentWriter.DDAgentWriterBuilder',
   'datadog.trace.common.sampling.PrioritySampling',
   // This code is copied from okHttp samples and we have integration tests to verify that it works.
   'datadog.trace.common.writer.unixdomainsockets.TunnelingUnixSocket',
@@ -36,9 +37,10 @@ dependencies {
 
   compile group: 'com.datadoghq', name: 'java-dogstatsd-client', version: '2.1.1'
 
-  compile deps.jackson
   compile deps.slf4j
-  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0' // Last version to support Java7
+  compile deps.okhttp
+  compile group: 'org.msgpack', name: 'msgpack-core', version: '0.8.20'
+  compile group: 'com.squareup.moshi', name: 'moshi', version: '1.9.2'
   compile group: 'com.github.jnr', name: 'jnr-unixsocket', version: '0.23'
   compile group: 'com.lmax', name: 'disruptor', version: '3.4.2'
 
@@ -49,6 +51,7 @@ dependencies {
   testCompile project(":dd-java-agent:testing")
   testCompile project(':utils:gc-utils')
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
+  testCompile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.20'
 
   traceAgentTestCompile deps.testcontainers
 

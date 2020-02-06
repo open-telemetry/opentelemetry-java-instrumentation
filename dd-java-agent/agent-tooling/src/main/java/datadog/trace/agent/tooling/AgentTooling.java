@@ -16,7 +16,7 @@ public class AgentTooling {
   }
 
   private static final DDLocationStrategy LOCATION_STRATEGY = new DDLocationStrategy();
-  private static final DDCachingPoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy(CLEANER);
+  private static final DDCachingPoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy();
 
   public static void init() {
     // Only need to trigger static initializers for now.

@@ -1,8 +1,8 @@
 package datadog.trace.common.writer.ddagent;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 
 public interface DDAgentResponseListener {
   /** Invoked after the api receives a response from the core agent. */
-  void onResponse(String endpoint, JsonNode responseJson);
+  void onResponse(String endpoint, Map<String, Map<String, Number>> responseJson);
 }
