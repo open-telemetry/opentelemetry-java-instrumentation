@@ -2,7 +2,7 @@ muzzle {
   pass {
     group = 'com.twilio.sdk'
     module = 'twilio'
-    versions = "(,)"
+    versions = "[6.6.9,)" // this is first version in maven central (there's a 0.0.1 but that is really 7.14.4)
   }
 }
 
@@ -15,9 +15,9 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'com.twilio.sdk', name: 'twilio', version: '0.0.1'
+  compileOnly group: 'com.twilio.sdk', name: 'twilio', version: '6.6.9'
 
-  testCompile group: 'com.twilio.sdk', name: 'twilio', version: '0.0.1'
+  testCompile group: 'com.twilio.sdk', name: 'twilio', version: '6.6.9'
   testCompile project(':instrumentation:apache-httpclient-4')
   testCompile project(':instrumentation:java-concurrent')
   testCompile group: 'nl.jqno.equalsverifier', name: 'equalsverifier', version: '2.5.2' // Last version to support Java7

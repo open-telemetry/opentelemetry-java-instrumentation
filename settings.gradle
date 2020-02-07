@@ -123,7 +123,7 @@ include ':instrumentation:spring-webflux-5'
 include ':instrumentation:spymemcached-2.12'
 include ':instrumentation:tomcat-classloading'
 include ':instrumentation:trace-annotation'
-include ':instrumentation:twilio'
+include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
 
 // benchmark
