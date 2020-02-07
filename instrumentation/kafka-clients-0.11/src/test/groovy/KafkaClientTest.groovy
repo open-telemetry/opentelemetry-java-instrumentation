@@ -1,4 +1,4 @@
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -19,6 +19,9 @@ import org.springframework.kafka.test.utils.KafkaTestUtils
 
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class KafkaClientTest extends AgentTestRunner {
   static final SHARED_TOPIC = "shared.topic"
@@ -82,6 +85,7 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "kafka.produce"
+          spanKind PRODUCER
           errored false
           parent()
           tags {
@@ -89,11 +93,11 @@ class KafkaClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           }
         }
         span(1) {
           operationName "kafka.consume"
+          spanKind CONSUMER
           errored false
           childOf span(0)
           tags {
@@ -101,7 +105,6 @@ class KafkaClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
           }
@@ -153,6 +156,7 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "kafka.produce"
+          spanKind PRODUCER
           errored false
           parent()
           tags {
@@ -160,12 +164,12 @@ class KafkaClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "kafka.partition" { it >= 0 }
           }
         }
         span(1) {
           operationName "kafka.consume"
+          spanKind CONSUMER
           errored false
           childOf span(0)
           tags {
@@ -173,7 +177,6 @@ class KafkaClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
           }

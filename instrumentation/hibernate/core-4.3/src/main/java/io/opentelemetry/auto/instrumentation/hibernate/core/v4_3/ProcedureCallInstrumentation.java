@@ -10,9 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -29,14 +30,13 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.procedure.ProcedureCall", SessionState.class.getName());
+    return singletonMap("org.hibernate.procedure.ProcedureCall", Span.class.getName());
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
-      "io.opentelemetry.auto.instrumentation.hibernate.SessionState",
       "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.decorator.ClientDecorator",
       "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
@@ -60,22 +60,20 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   public static class ProcedureCallMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startMethod(
+    public static SpanWithScope startMethod(
         @Advice.This final ProcedureCall call, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<ProcedureCall, SessionState> contextStore =
-          InstrumentationContext.get(ProcedureCall.class, SessionState.class);
+      final ContextStore<ProcedureCall, Span> contextStore =
+          InstrumentationContext.get(ProcedureCall.class, Span.class);
 
-      final SessionState state =
-          SessionMethodUtils.startScopeFrom(
-              contextStore, call, "hibernate.procedure." + name, call.getProcedureName(), true);
-      return state;
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, call, "hibernate.procedure." + name, call.getProcedureName(), true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SessionState state, @Advice.Thrown final Throwable throwable) {
-      SessionMethodUtils.closeScope(state, throwable, null);
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      SessionMethodUtils.closeScope(spanWithScope, throwable, null);
     }
   }
 }

@@ -8,7 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;

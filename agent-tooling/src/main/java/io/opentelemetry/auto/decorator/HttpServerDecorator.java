@@ -1,9 +1,8 @@
 package io.opentelemetry.auto.decorator;
 
-import io.opentelemetry.auto.api.Config;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -36,12 +35,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   @Override
   protected String getSpanType() {
     return SpanTypes.HTTP_SERVER;
-  }
-
-  @Deprecated
-  public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
-    onRequest(span.getSpan(), request);
-    return span;
   }
 
   public Span onRequest(final Span span, final REQUEST request) {
@@ -91,12 +84,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     return span;
   }
 
-  @Deprecated
-  public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
-    onConnection(span.getSpan(), connection);
-    return span;
-  }
-
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
@@ -118,12 +105,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
         span.setAttribute(Tags.PEER_PORT, port);
       }
     }
-    return span;
-  }
-
-  @Deprecated
-  public AgentSpan onResponse(final AgentSpan span, final RESPONSE response) {
-    onResponse(span.getSpan(), response);
     return span;
   }
 

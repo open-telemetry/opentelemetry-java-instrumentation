@@ -236,12 +236,12 @@ public class Agent {
   }
 
   /**
-   * Determine if we should log in debug level according to opentelemetry.auto.trace.debug
+   * Determine if we should log in debug level according to ota.trace.debug
    *
    * @return true if we should
    */
   private static boolean isDebugMode() {
-    final String tracerDebugLevelSysprop = "opentelemetry.auto.trace.debug";
+    final String tracerDebugLevelSysprop = "ota.trace.debug";
     final String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
 
     if (tracerDebugLevelProp != null) {
@@ -264,7 +264,7 @@ public class Agent {
    * @return true if we detect a custom log manager being used.
    */
   private static boolean isAppUsingCustomLogManager() {
-    final String tracerCustomLogManSysprop = "opentelemetry.auto.app.customlogmanager";
+    final String tracerCustomLogManSysprop = "ota.app.customlogmanager";
     final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
     final String customLogManagerEnv =
         System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());

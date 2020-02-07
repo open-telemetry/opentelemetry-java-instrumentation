@@ -1,9 +1,9 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import net.spy.memcached.MemcachedConnection;

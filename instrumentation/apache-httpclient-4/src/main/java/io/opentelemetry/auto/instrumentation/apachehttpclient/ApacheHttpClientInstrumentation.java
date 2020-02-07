@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpC
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -14,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -148,8 +149,8 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class HelperMethods {
-    public static SpanScopePair doMethodEnter(final HttpUriRequest request) {
-      final Span span = TRACER.spanBuilder("http.request").startSpan();
+    public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
+      final Span span = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
       final Scope scope = TRACER.withSpan(span);
 
       DECORATE.afterStart(span);
@@ -160,16 +161,16 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       if (!awsClientCall) {
         TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
       }
-      return new SpanScopePair(span, scope);
+      return new SpanWithScope(span, scope);
     }
 
     public static void doMethodExit(
-        final SpanScopePair spanScopePair, final Object result, final Throwable throwable) {
-      if (spanScopePair == null) {
+        final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
       try {
-        final Span span = spanScopePair.getSpan();
+        final Span span = spanWithScope.getSpan();
 
         if (result instanceof HttpResponse) {
           DECORATE.onResponse(span, (HttpResponse) result);
@@ -179,7 +180,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         DECORATE.beforeFinish(span);
         span.end();
       } finally {
-        spanScopePair.getScope().close();
+        spanWithScope.closeScope();
         CallDepthThreadLocalMap.reset(HttpClient.class);
       }
     }
@@ -187,7 +188,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class UriRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
+    public static SpanWithScope methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
@@ -198,18 +199,18 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(spanScopePair, result, throwable);
+      HelperMethods.doMethodExit(spanWithScope, result, throwable);
     }
   }
 
   public static class UriRequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(
+    public static SpanWithScope methodEnter(
         @Advice.Argument(0) final HttpUriRequest request,
         @Advice.Argument(
                 value = 1,
@@ -222,30 +223,30 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final SpanScopePair spanScopePair = HelperMethods.doMethodEnter(request);
+      final SpanWithScope spanWithScope = HelperMethods.doMethodEnter(request);
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
         handler =
             new WrappingStatusSettingResponseHandler(
-                spanScopePair.getSpan(), (ResponseHandler) handler);
+                spanWithScope.getSpan(), (ResponseHandler) handler);
       }
-      return spanScopePair;
+      return spanWithScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(spanScopePair, result, throwable);
+      HelperMethods.doMethodExit(spanWithScope, result, throwable);
     }
   }
 
   public static class RequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(
+    public static SpanWithScope methodEnter(
         @Advice.Argument(0) final HttpHost host, @Advice.Argument(1) final HttpRequest request) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
@@ -261,18 +262,18 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(spanScopePair, result, throwable);
+      HelperMethods.doMethodExit(spanWithScope, result, throwable);
     }
   }
 
   public static class RequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(
+    public static SpanWithScope methodEnter(
         @Advice.Argument(0) final HttpHost host,
         @Advice.Argument(1) final HttpRequest request,
         @Advice.Argument(
@@ -286,12 +287,12 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final SpanScopePair spanScopePair;
+      final SpanWithScope spanWithScope;
 
       if (request instanceof HttpUriRequest) {
-        spanScopePair = HelperMethods.doMethodEnter((HttpUriRequest) request);
+        spanWithScope = HelperMethods.doMethodEnter((HttpUriRequest) request);
       } else {
-        spanScopePair =
+        spanWithScope =
             HelperMethods.doMethodEnter(new HostAndRequestAsHttpUriRequest(host, request));
       }
 
@@ -299,18 +300,18 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       if (handler instanceof ResponseHandler) {
         handler =
             new WrappingStatusSettingResponseHandler(
-                spanScopePair.getSpan(), (ResponseHandler) handler);
+                spanWithScope.getSpan(), (ResponseHandler) handler);
       }
-      return spanScopePair;
+      return spanWithScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
-      HelperMethods.doMethodExit(spanScopePair, result, throwable);
+      HelperMethods.doMethodExit(spanWithScope, result, throwable);
     }
   }
 

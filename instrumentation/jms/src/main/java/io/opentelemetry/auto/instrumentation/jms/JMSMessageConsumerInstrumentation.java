@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DE
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -80,6 +81,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       final Span.Builder spanBuilder =
           TRACER
               .spanBuilder("jms.consume")
+              .setSpanKind(CONSUMER)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
         try {

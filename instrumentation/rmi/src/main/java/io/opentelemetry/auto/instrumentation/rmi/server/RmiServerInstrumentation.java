@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.bootstrap.instrumentation.rmi.ThreadLocalCon
 import static io.opentelemetry.auto.instrumentation.rmi.server.RmiServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rmi.server.RmiServerDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,12 +14,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
+import java.rmi.server.RemoteServer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -54,34 +57,41 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = true)
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.This final Object thiz, @Advice.Origin final Method method) {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
+      if (callDepth > 0) {
+        return null;
+      }
       final SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("rmi.request");
+      final Span.Builder spanBuilder = TRACER.spanBuilder("rmi.request").setSpanKind(SERVER);
       if (context != null) {
         spanBuilder.setParent(context);
+      } else {
+        spanBuilder.setNoParent();
       }
       final Span span = spanBuilder.startSpan();
       span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
       span.setAttribute("span.origin.type", thiz.getClass().getCanonicalName());
 
       DECORATE.afterStart(span);
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      if (spanScopePair == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(RemoteServer.class);
 
-      final Span span = spanScopePair.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       span.end();
 
-      spanScopePair.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

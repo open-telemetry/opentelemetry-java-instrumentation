@@ -6,11 +6,11 @@ import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.auto.api.Config;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.FieldBackedContextStoreAppliedMarker;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.WeakMap;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.HelperInjector;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.auto.tooling.Utils;

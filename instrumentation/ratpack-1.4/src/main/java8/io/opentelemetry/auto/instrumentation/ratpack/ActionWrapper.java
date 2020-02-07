@@ -9,7 +9,8 @@ import ratpack.func.Action;
 
 @Slf4j
 public class ActionWrapper<T> implements Action<T> {
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  private static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
 
   private final Action<T> delegate;
   private final Span span;

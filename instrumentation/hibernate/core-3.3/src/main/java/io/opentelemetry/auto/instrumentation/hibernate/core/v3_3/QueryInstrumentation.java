@@ -11,9 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.trace.Span;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -28,7 +29,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Query", SessionState.class.getName());
+    return singletonMap("org.hibernate.Query", Span.class.getName());
   }
 
   @Override
@@ -51,26 +52,26 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
   public static class QueryMethodAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startMethod(
+    public static SpanWithScope startMethod(
         @Advice.This final Query query, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<Query, SessionState> contextStore =
-          InstrumentationContext.get(Query.class, SessionState.class);
+      final ContextStore<Query, Span> contextStore =
+          InstrumentationContext.get(Query.class, Span.class);
 
       // Note: We don't know what the entity is until the method is returning.
-      final SessionState state =
+      final SpanWithScope spanWithScope =
           SessionMethodUtils.startScopeFrom(
               contextStore, query, "hibernate.query." + name, null, true);
-      if (state != null) {
-        DECORATOR.onStatement(state.getMethodScope().getSpan(), query.getQueryString());
+      if (spanWithScope != null) {
+        DECORATOR.onStatement(spanWithScope.getSpan(), query.getQueryString());
       }
-      return state;
+      return spanWithScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.This final Query query,
-        @Advice.Enter final SessionState state,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
 
@@ -81,7 +82,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
         entity = query.getQueryString();
       }
 
-      SessionMethodUtils.closeScope(state, throwable, entity);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, entity);
     }
   }
 }

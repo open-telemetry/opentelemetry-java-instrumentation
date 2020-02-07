@@ -1,7 +1,9 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class SlickTest extends AgentTestRunner {
 
@@ -18,16 +20,15 @@ class SlickTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "run query"
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "SlickUtils.runQuery"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -35,7 +36,6 @@ class SlickTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" SlickUtils.TestQuery()
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" SlickUtils.Driver()
             "$Tags.DB_INSTANCE" SlickUtils.Db()
             "$Tags.DB_USER" SlickUtils.Username()

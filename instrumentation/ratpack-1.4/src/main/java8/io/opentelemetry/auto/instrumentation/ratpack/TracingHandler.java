@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.ratpack;
 
 import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -31,7 +32,7 @@ public final class TracingHandler implements Handler {
     final Span nettySpan = spanAttribute.get();
 
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
-    final Span ratpackSpan = TRACER.spanBuilder("ratpack.handler").startSpan();
+    final Span ratpackSpan = TRACER.spanBuilder("ratpack.handler").setSpanKind(SERVER).startSpan();
     DECORATE.afterStart(ratpackSpan);
     DECORATE.onConnection(ratpackSpan, request);
     DECORATE.onRequest(ratpackSpan, request);

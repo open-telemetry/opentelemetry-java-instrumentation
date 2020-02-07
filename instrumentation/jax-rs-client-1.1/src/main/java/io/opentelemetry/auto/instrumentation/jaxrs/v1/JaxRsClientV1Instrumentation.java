@@ -5,6 +5,7 @@ import static io.opentelemetry.auto.instrumentation.jaxrs.v1.InjectAdapter.SETTE
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -14,7 +15,7 @@ import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -60,38 +61,38 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.Argument(value = 0) final ClientRequest request,
         @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       final boolean isRootClientHandler = null == request.getProperties().get(SPAN_ATTRIBUTE);
       if (isRootClientHandler) {
-        final Span span = TRACER.spanBuilder("jax-rs.client.call").startSpan();
+        final Span span = TRACER.spanBuilder("jax-rs.client.call").setSpanKind(CLIENT).startSpan();
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
         request.getProperties().put(SPAN_ATTRIBUTE, span);
 
         TRACER.getHttpTextFormat().inject(span.getContext(), request.getHeaders(), SETTER);
-        return new SpanScopePair(span, TRACER.withSpan(span));
+        return new SpanWithScope(span, TRACER.withSpan(span));
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter final SpanScopePair spanAndScope,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final ClientResponse response,
         @Advice.Thrown final Throwable throwable) {
-      if (spanAndScope == null) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onResponse(span, response);
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

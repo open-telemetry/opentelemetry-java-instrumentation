@@ -1,13 +1,15 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import io.opentelemetry.auto.api.Trace
-import io.opentelemetry.auto.instrumentation.api.AgentTracer.activeSpan
+import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.trace.Tracer
 
 import scala.concurrent.duration._
 
 // ! == send-message
 object AkkaActors {
+  val TRACER: Tracer = OpenTelemetry.getTracerFactory.get("io.opentelemetry.auto")
+
   val system: ActorSystem = ActorSystem("helloAkka")
 
   val printer: ActorRef = system.actorOf(Receiver.props, "receiverActor")
@@ -18,9 +20,8 @@ object AkkaActors {
   val forwarder: ActorRef = system.actorOf(Forwarder.props(printer), "forwarderActor")
   val helloGreeter: ActorRef = system.actorOf(Greeter.props("Hello", forwarder), "helloGreeter")
 
-  @Trace
   def tracedChild(opName: String): Unit = {
-    activeSpan().setSpanName(opName)
+    TRACER.spanBuilder(opName).startSpan().end()
   }
 }
 
@@ -31,22 +32,40 @@ class AkkaActors {
 
   implicit val timeout: Timeout = 5.minutes
 
-  @Trace
   def basicTell(): Unit = {
-    howdyGreeter ! WhoToGreet("Akka")
-    howdyGreeter ! Greet
+    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentScope = TRACER.withSpan(parentSpan)
+    try {
+      howdyGreeter ! WhoToGreet("Akka")
+      howdyGreeter ! Greet
+    } finally {
+      parentSpan.end()
+      parentScope.close()
+    }
   }
 
-  @Trace
   def basicAsk(): Unit = {
-    howdyGreeter ! WhoToGreet("Akka")
-    howdyGreeter ? Greet
+    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentScope = TRACER.withSpan(parentSpan)
+    try {
+      howdyGreeter ! WhoToGreet("Akka")
+      howdyGreeter ? Greet
+    } finally {
+      parentSpan.end()
+      parentScope.close()
+    }
   }
 
-  @Trace
   def basicForward(): Unit = {
-    helloGreeter ! WhoToGreet("Akka")
-    helloGreeter ? Greet
+    val parentSpan = TRACER.spanBuilder("parent").startSpan()
+    val parentScope = TRACER.withSpan(parentSpan)
+    try {
+      helloGreeter ! WhoToGreet("Akka")
+      helloGreeter ? Greet
+    } finally {
+      parentSpan.end()
+      parentScope.close()
+    }
   }
 }
 

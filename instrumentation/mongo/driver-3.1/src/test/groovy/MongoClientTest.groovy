@@ -4,9 +4,9 @@ import com.mongodb.MongoTimeoutException
 import com.mongodb.ServerAddress
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
-import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.SpanData
@@ -18,6 +18,7 @@ import spock.lang.Shared
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class MongoClientTest extends MongoBaseTest {
 
@@ -237,6 +238,7 @@ class MongoClientTest extends MongoBaseTest {
   def mongoSpan(TraceAssert trace, int index, String statement, boolean renameService = false, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName "mongo.query"
+      spanKind CLIENT
       if (parentSpan == null) {
         parent()
       } else {
@@ -247,7 +249,6 @@ class MongoClientTest extends MongoBaseTest {
         "$MoreTags.RESOURCE_NAME" { it.replace(" ", "") == statement }
         "$MoreTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" "127.0.0.1"
         "$Tags.PEER_PORT" port

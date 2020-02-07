@@ -1,9 +1,9 @@
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.derby.jdbc.EmbeddedDataSource
@@ -26,10 +26,11 @@ import java.sql.Statement
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class JDBCInstrumentationTest extends AgentTestRunner {
   static {
-    System.setProperty("opentelemetry.auto.integration.jdbc-datasource.enabled", "true")
+    System.setProperty("ota.integration.jdbc-datasource.enabled", "true")
   }
 
   @Shared
@@ -178,6 +179,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -185,7 +187,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -238,6 +239,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -245,7 +247,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -290,6 +291,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -297,7 +299,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -342,6 +343,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -349,7 +351,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -394,6 +395,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -401,7 +403,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -449,6 +450,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -456,7 +458,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -516,6 +517,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -527,7 +529,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             } else {
               "$Tags.COMPONENT" "java-jdbc-statement"
             }
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -631,6 +632,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
         span(1) {
           operationName "database.query"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -638,7 +640,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" database
             "$Tags.DB_STATEMENT" query
             "span.origin.type" TestStatement.name
@@ -696,13 +697,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "database.query"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" dbType
             "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" dbType
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             "$Tags.DB_USER" "SA"
@@ -715,13 +716,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         trace(i, 1) {
           span(0) {
             operationName "database.query"
+            spanKind CLIENT
             errored false
             tags {
               "$MoreTags.SERVICE_NAME" dbType
               "$MoreTags.RESOURCE_NAME" query
               "$MoreTags.SPAN_TYPE" SpanTypes.SQL
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" dbType
               "$Tags.DB_INSTANCE" dbName.toLowerCase()
               "$Tags.DB_USER" "SA"

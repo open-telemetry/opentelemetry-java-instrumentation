@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -35,6 +35,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class AwsClientTest extends AgentTestRunner {
 
@@ -76,6 +77,7 @@ class AwsClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "aws.http"
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -83,7 +85,6 @@ class AwsClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
@@ -108,12 +109,12 @@ class AwsClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "http.request"
+          spanKind CLIENT
           errored false
           childOf(span(0))
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
@@ -178,17 +179,11 @@ class AwsClientTest extends AgentTestRunner {
     expect:
     response != null
 
-    // Order is not guaranteed in these traces, so reorder them if needed to put aws trace first
-    if (TEST_WRITER[0][0].attributes[MoreTags.SERVICE_NAME].stringValue != "java-aws-sdk") {
-      def tmp = TEST_WRITER[0]
-      TEST_WRITER[0] = TEST_WRITER[1]
-      TEST_WRITER[1] = tmp
-    }
-
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
           operationName "aws.http"
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -196,7 +191,6 @@ class AwsClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
@@ -224,12 +218,12 @@ class AwsClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "netty.client.request"
+          spanKind CLIENT
           errored false
           parent()
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "netty-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" server.address.port
@@ -306,6 +300,7 @@ class AwsClientTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "aws.http"
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -313,7 +308,6 @@ class AwsClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "S3.GetObject"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
@@ -328,12 +322,12 @@ class AwsClientTest extends AgentTestRunner {
         (1..4).each {
           span(it) {
             operationName "http.request"
+            spanKind CLIENT
             errored true
             childOf(span(0))
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.PEER_HOSTNAME" "localhost"
               "$Tags.PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/somebucket/somekey"

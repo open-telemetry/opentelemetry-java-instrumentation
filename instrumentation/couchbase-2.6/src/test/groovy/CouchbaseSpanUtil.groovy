@@ -1,8 +1,10 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.SpanData
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
@@ -10,6 +12,7 @@ class CouchbaseSpanUtil {
   static void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
       operationName "couchbase.call"
+      spanKind CLIENT
       errored false
       if (parentSpan == null) {
         parent()
@@ -21,7 +24,6 @@ class CouchbaseSpanUtil {
         "$MoreTags.RESOURCE_NAME" name
         "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
 
         // Because of caching, not all requests hit the server so these tags may be absent
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" || it == null }

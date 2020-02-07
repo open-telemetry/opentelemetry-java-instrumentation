@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -11,7 +12,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
@@ -67,7 +68,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class SingleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(
+    public static SpanWithScope methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
@@ -80,7 +81,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("akka-http.request").startSpan();
+      final Span span = TRACER.spanBuilder("akka-http.request").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
@@ -90,7 +91,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         // Request is immutable, so we have to assign new value once we update headers
         request = headers.getRequest();
       }
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -98,14 +99,14 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0) final HttpRequest request,
         @Advice.This final HttpExt thiz,
         @Advice.Return final Future<HttpResponse> responseFuture,
-        @Advice.Enter final SpanScopePair spanScopePair,
+        @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable) {
-      if (spanScopePair == null) {
+      if (spanWithScope == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(HttpExt.class);
 
-      final Span span = spanScopePair.getSpan();
+      final Span span = spanWithScope.getSpan();
 
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
@@ -114,7 +115,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanScopePair.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 

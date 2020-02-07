@@ -9,7 +9,7 @@ plugins {
   // Not applying google java format by default because it gets confused by stray java build
   // files in 'workspace' build directory in CI
   id 'com.github.sherter.google-java-format' version '0.8' apply false
-  id 'com.dorongold.task-tree' version '1.4'
+  id 'com.dorongold.task-tree' version '1.5'
 
   id "com.github.johnrengelman.shadow" version "5.2.0"
 }
@@ -18,7 +18,7 @@ def isCI = System.getenv("CI") != null
 
 allprojects {
   group = 'io.opentelemetry.auto'
-  version = '0.1.0-SNAPSHOT'
+  version = '0.1.0'
 
   if (isCI) {
     buildDir = "${rootDir}/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
@@ -44,8 +44,8 @@ wrapper {
 
 allprojects {
   tasks.withType(JavaForkOptions).configureEach {
-    maxHeapSize = System.properties["io.opentelemetry.auto.forkedMaxHeapSize"]
-    minHeapSize = System.properties["io.opentelemetry.auto.forkedMinHeapSize"]
+    maxHeapSize = System.properties["ota.forkedMaxHeapSize"]
+    minHeapSize = System.properties["ota.forkedMinHeapSize"]
     jvmArgs "-XX:ErrorFile=/tmp/hs_err_pid%p.log"
   }
 }

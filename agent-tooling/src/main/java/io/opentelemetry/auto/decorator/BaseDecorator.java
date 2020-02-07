@@ -1,8 +1,6 @@
 package io.opentelemetry.auto.decorator;
 
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.AgentScope;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -23,12 +21,6 @@ public abstract class BaseDecorator {
 
   protected abstract String getComponentName();
 
-  @Deprecated
-  public AgentSpan afterStart(final AgentSpan span) {
-    afterStart(span.getSpan());
-    return span;
-  }
-
   public Span afterStart(final Span span) {
     assert span != null;
     final String spanType = getSpanType();
@@ -42,34 +34,8 @@ public abstract class BaseDecorator {
     return span;
   }
 
-  @Deprecated
-  public AgentScope beforeFinish(final AgentScope scope) {
-    assert scope != null;
-    beforeFinish(scope.span());
-    return scope;
-  }
-
-  @Deprecated
-  public AgentSpan beforeFinish(final AgentSpan span) {
-    beforeFinish(span.getSpan());
-    return span;
-  }
-
   public Span beforeFinish(final Span span) {
     assert span != null;
-    return span;
-  }
-
-  @Deprecated
-  public AgentScope onError(final AgentScope scope, final Throwable throwable) {
-    assert scope != null;
-    onError(scope.span(), throwable);
-    return scope;
-  }
-
-  @Deprecated
-  public AgentSpan onError(final AgentSpan span, final Throwable throwable) {
-    onError(span.getSpan(), throwable);
     return span;
   }
 
@@ -83,13 +49,6 @@ public abstract class BaseDecorator {
     return span;
   }
 
-  @Deprecated
-  public AgentSpan onPeerConnection(
-      final AgentSpan span, final InetSocketAddress remoteConnection) {
-    onPeerConnection(span.getSpan(), remoteConnection);
-    return span;
-  }
-
   public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
@@ -98,12 +57,6 @@ public abstract class BaseDecorator {
       span.setAttribute(Tags.PEER_HOSTNAME, remoteConnection.getHostName());
       span.setAttribute(Tags.PEER_PORT, remoteConnection.getPort());
     }
-    return span;
-  }
-
-  @Deprecated
-  public AgentSpan onPeerConnection(final AgentSpan span, final InetAddress remoteAddress) {
-    onPeerConnection(span.getSpan(), remoteAddress);
     return span;
   }
 

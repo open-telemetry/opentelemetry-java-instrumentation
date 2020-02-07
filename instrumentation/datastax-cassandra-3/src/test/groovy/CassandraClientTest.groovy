@@ -1,8 +1,8 @@
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
-import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -13,6 +13,7 @@ import spock.lang.Shared
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class CassandraClientTest extends AgentTestRunner {
 
@@ -110,6 +111,7 @@ class CassandraClientTest extends AgentTestRunner {
   def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, boolean renameService, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName "cassandra.query"
+      spanKind CLIENT
       if (parentSpan == null) {
         parent()
       } else {
@@ -119,7 +121,6 @@ class CassandraClientTest extends AgentTestRunner {
         "$MoreTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
         "$MoreTags.SPAN_TYPE" SpanTypes.CASSANDRA
         "$Tags.COMPONENT" "java-cassandra"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" "127.0.0.1"
         "$Tags.PEER_PORT" EmbeddedCassandraServerHelper.getNativeTransportPort()

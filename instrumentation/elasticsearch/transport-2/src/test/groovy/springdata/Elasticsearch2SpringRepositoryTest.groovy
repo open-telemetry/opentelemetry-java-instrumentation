@@ -1,7 +1,7 @@
 package springdata
 
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.ApplicationContext
@@ -9,6 +9,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
   @Shared
@@ -38,13 +39,13 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
@@ -76,12 +77,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
@@ -96,12 +97,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
@@ -123,12 +124,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
@@ -157,12 +158,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
@@ -177,12 +178,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
@@ -196,12 +197,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(2, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
@@ -229,12 +230,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "DeleteAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
@@ -249,12 +250,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
@@ -268,12 +269,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       trace(2, 1) {
         span(0) {
           operationName "elasticsearch.query"
+          spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"

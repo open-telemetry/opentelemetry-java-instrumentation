@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.reactor.core;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.api.SpanTypes;
 import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 
 public class ReactorCoreDecorator extends BaseDecorator {

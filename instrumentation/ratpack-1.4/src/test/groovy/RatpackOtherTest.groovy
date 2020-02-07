@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -8,6 +8,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.path.PathBinding
+
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class RatpackOtherTest extends AgentTestRunner {
 
@@ -65,13 +67,13 @@ class RatpackOtherTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "netty.request"
+          spanKind SERVER
           parent()
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -82,13 +84,13 @@ class RatpackOtherTest extends AgentTestRunner {
         }
         span(1) {
           operationName "ratpack.handler"
+          spanKind SERVER
           childOf(span(0))
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "ratpack"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "${app.address.resolve(path)}"

@@ -1,4 +1,3 @@
-import io.opentelemetry.auto.api.Trace
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.SpanData
 
@@ -21,8 +20,8 @@ class CompletableFutureTest extends AgentTestRunner {
     def differentPool = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
     def supplier = new Supplier<String>() {
       @Override
-      @Trace(operationName = "supplier")
       String get() {
+        TEST_TRACER.spanBuilder("supplier").startSpan().end()
         sleep(1000)
         return "a"
       }
@@ -30,20 +29,26 @@ class CompletableFutureTest extends AgentTestRunner {
 
     def function = new Function<String, String>() {
       @Override
-      @Trace(operationName = "function")
       String apply(String s) {
+        TEST_TRACER.spanBuilder("function").startSpan().end()
         return s + "c"
       }
     }
 
     def result = new Supplier<String>() {
       @Override
-      @Trace(operationName = "parent")
       String get() {
-        return CompletableFuture.supplyAsync(supplier, pool)
-          .thenCompose({ s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), differentPool) })
-          .thenApply(function)
-          .get()
+        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
+        def parentScope = TEST_TRACER.withSpan(parentSpan)
+        try {
+          return CompletableFuture.supplyAsync(supplier, pool)
+            .thenCompose({ s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), differentPool) })
+            .thenApply(function)
+            .get()
+        } finally {
+          parentSpan.end()
+          parentScope.close()
+        }
       }
     }.get()
 
@@ -76,8 +81,8 @@ class CompletableFutureTest extends AgentTestRunner {
     }
 
     @Override
-    @Trace(operationName = "appendingSupplier")
     String get() {
+      TEST_TRACER.spanBuilder("appendingSupplier").startSpan().end()
       return letter + "b"
     }
   }

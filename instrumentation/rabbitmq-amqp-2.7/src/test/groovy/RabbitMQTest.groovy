@@ -8,8 +8,8 @@ import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -27,6 +27,9 @@ import spock.lang.Shared
 import java.time.Duration
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
 // It is fine to run on CI because CI provides rabbitmq externally, not through testcontainers
@@ -316,6 +319,20 @@ class RabbitMQTest extends AgentTestRunner {
     trace.span(index) {
       operationName "amqp.command"
 
+      switch (trace.span(index).attributes.get("amqp.command")?.stringValue) {
+        case "basic.publish":
+          spanKind PRODUCER
+          break
+        case "basic.get":
+          spanKind CONSUMER
+          break
+        case "basic.deliver":
+          spanKind CONSUMER
+          break
+        default:
+          spanKind CLIENT
+      }
+
       if (parentSpan) {
         childOf((SpanData) parentSpan)
       } else {
@@ -335,7 +352,6 @@ class RabbitMQTest extends AgentTestRunner {
         switch (tag("amqp.command")?.stringValue) {
           case "basic.publish":
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
             "amqp.routing_key" {
@@ -346,14 +362,12 @@ class RabbitMQTest extends AgentTestRunner {
             break
           case "basic.get":
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.get"
             "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "message.size" { it == null || it instanceof Long }
             break
           case "basic.deliver":
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.deliver"
             "span.origin.type" { it == "RabbitMQTest\$1" || it == "RabbitMQTest\$2" }
             "amqp.exchange" { it == "some-exchange" || it == "some-error-exchange" }
@@ -361,7 +375,6 @@ class RabbitMQTest extends AgentTestRunner {
             break
           default:
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CLIENT
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "amqp.command" { it == null || it == resource }
         }
         if (exception) {

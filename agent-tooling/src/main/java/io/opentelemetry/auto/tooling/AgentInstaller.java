@@ -10,7 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.auto.api.Config;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.config.Config;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +53,13 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       final Instrumentation inst, final AgentBuilder.Listener... listeners) {
+
+    // need to trigger loading of OpenTelemetry SDK before instrumentation can possibly cause
+    // io.opentelemetry.OpenTelemetry to be loaded, since as soon as io.opentelemetry.OpenTelemetry,
+    // it looks up implementation via SPI, and if it doesn't find one, it loads the No-op
+    // implementation and it cannot be replaced later
+    OpenTelemetry.getTracerFactory();
+
     INSTRUMENTATION = inst;
 
     AgentBuilder agentBuilder =

@@ -8,13 +8,16 @@ import io.grpc.StatusRuntimeException
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class GrpcTest extends AgentTestRunner {
 
@@ -59,47 +62,47 @@ class GrpcTest extends AgentTestRunner {
         }
         span(0) {
           operationName "grpc.client"
+          spanKind CLIENT
           parent()
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
           }
         }
         span(1) {
           operationName "grpc.message"
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "message.type" "example.Helloworld\$Response"
           }
         }
         span(2) {
           operationName "grpc.server"
+          spanKind SERVER
           childOf span(0)
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
           }
         }
         span(3) {
           operationName "grpc.message"
+          spanKind SERVER
           childOf span(2)
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
           }
         }
@@ -139,26 +142,26 @@ class GrpcTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "grpc.client"
+          spanKind CLIENT
           parent()
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "${status.code.name()}"
             "status.description" description
           }
         }
         span(1) {
           operationName "grpc.server"
+          spanKind SERVER
           childOf span(0)
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "${status.code.name()}"
             "status.description" description
             if (status.cause != null) {
@@ -168,12 +171,12 @@ class GrpcTest extends AgentTestRunner {
         }
         span(2) {
           operationName "grpc.message"
+          spanKind SERVER
           childOf span(1)
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
           }
         }
@@ -219,36 +222,36 @@ class GrpcTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "grpc.client"
+          spanKind CLIENT
           parent()
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "UNKNOWN"
           }
         }
         span(1) {
           operationName "grpc.server"
+          spanKind SERVER
           childOf span(0)
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             errorTags error.class, error.message
           }
         }
         span(2) {
           operationName "grpc.message"
+          spanKind SERVER
           childOf span(1)
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
           }
         }

@@ -8,8 +8,8 @@ import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.protocol.AsyncCommand
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -27,6 +27,7 @@ import java.util.function.Consumer
 import java.util.function.Function
 
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class LettuceAsyncClientTest extends AgentTestRunner {
   public static final String HOST = "127.0.0.1"
@@ -117,14 +118,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "CONNECT:" + dbAddr
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
             "$Tags.PEER_PORT" port
             "$Tags.DB_TYPE" "redis"
@@ -155,14 +155,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored true
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "CONNECT:" + dbAddrNonExistent
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
             "$Tags.PEER_PORT" incorrectPort
             "$Tags.DB_TYPE" "redis"
@@ -185,14 +184,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "SET"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -222,14 +220,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "GET"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -273,14 +270,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "GET"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -310,14 +306,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "RANDOMKEY"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -365,14 +360,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "HMSET"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -380,14 +374,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "HGETALL"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -425,14 +418,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored true
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "DEL"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             errorTags(IllegalStateException, "TestException")
           }
@@ -465,14 +457,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "SADD"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
             "db.command.cancelled" true
           }
@@ -490,14 +481,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -515,14 +505,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
+          spanKind CLIENT
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
             "$MoreTags.RESOURCE_NAME" "SHUTDOWN"
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
           }
         }

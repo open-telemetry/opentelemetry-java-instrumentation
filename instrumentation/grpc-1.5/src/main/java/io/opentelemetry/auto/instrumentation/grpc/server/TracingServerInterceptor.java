@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.grpc.server;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
@@ -11,7 +12,7 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -28,7 +29,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       final Metadata headers,
       final ServerCallHandler<ReqT, RespT> next) {
 
-    final Span.Builder spanBuilder = TRACER.spanBuilder("grpc.server");
+    final Span.Builder spanBuilder = TRACER.spanBuilder("grpc.server").setSpanKind(SERVER);
     try {
       final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
       spanBuilder.setParent(extractedContext);
@@ -97,7 +98,11 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onMessage(final ReqT message) {
       final Span span =
-          TRACER.spanBuilder("grpc.message").setParent(this.span.getContext()).startSpan();
+          TRACER
+              .spanBuilder("grpc.message")
+              .setSpanKind(SERVER)
+              .setParent(this.span.getContext())
+              .startSpan();
       span.setAttribute("message.type", message.getClass().getName());
       DECORATE.afterStart(span);
       final Scope scope = TRACER.withSpan(span);

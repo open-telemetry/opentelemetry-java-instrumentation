@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -9,11 +9,13 @@ import okhttp3.Request
 import spark.Spark
 import spock.lang.Shared
 
+import static io.opentelemetry.trace.Span.Kind.SERVER
+
 class SparkJavaBasedTest extends AgentTestRunner {
 
   static {
-    System.setProperty("opentelemetry.auto.integration.jetty.enabled", "true")
-    System.setProperty("opentelemetry.auto.integration.sparkjava.enabled", "true")
+    System.setProperty("ota.integration.jetty.enabled", "true")
+    System.setProperty("ota.integration.sparkjava.enabled", "true")
   }
 
   @Shared
@@ -46,13 +48,13 @@ class SparkJavaBasedTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "jetty.request"
+          spanKind SERVER
           errored false
           parent()
           tags {
             "$MoreTags.RESOURCE_NAME" "GET /param/:param"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jetty-handler"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long

@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.googlehttpclient;
 import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -87,7 +88,8 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       RequestState state = contextStore.get(request);
 
       if (state == null) {
-        state = new RequestState(TRACER.spanBuilder("http.request").startSpan());
+        state =
+            new RequestState(TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan());
         contextStore.put(request, state);
       }
 
@@ -135,7 +137,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final HttpRequest request) {
-      final Span span = TRACER.spanBuilder("http.request").startSpan();
+      final Span span = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
 
       final ContextStore<HttpRequest, RequestState> contextStore =
           InstrumentationContext.get(HttpRequest.class, RequestState.class);

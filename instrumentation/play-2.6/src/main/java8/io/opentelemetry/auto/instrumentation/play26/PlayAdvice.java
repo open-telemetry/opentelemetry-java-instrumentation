@@ -3,8 +3,9 @@ package io.opentelemetry.auto.instrumentation.play26;
 import static io.opentelemetry.auto.instrumentation.play26.PlayHeaders.GETTER;
 import static io.opentelemetry.auto.instrumentation.play26.PlayHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.play26.PlayHttpServerDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import net.bytebuddy.asm.Advice;
@@ -15,8 +16,8 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair onEnter(@Advice.Argument(0) final Request req) {
-    final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
+  public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
+    final Span.Builder spanBuilder = TRACER.spanBuilder("play.request").setSpanKind(SERVER);
     if (!TRACER.getCurrentSpan().getContext().isValid()) {
       try {
         final SpanContext extractedContext =
@@ -33,12 +34,12 @@ public class PlayAdvice {
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
 
-    return new SpanScopePair(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopTraceOnResponse(
-      @Advice.Enter final SpanScopePair playControllerScope,
+      @Advice.Enter final SpanWithScope playControllerScope,
       @Advice.This final Object thisAction,
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final Request req,
@@ -57,7 +58,7 @@ public class PlayAdvice {
       DECORATE.beforeFinish(playControllerSpan);
       playControllerSpan.end();
     }
-    playControllerScope.getScope().close();
+    playControllerScope.closeScope();
 
     final Span rootSpan = TRACER.getCurrentSpan();
     // set the resource name on the upstream akka/netty span

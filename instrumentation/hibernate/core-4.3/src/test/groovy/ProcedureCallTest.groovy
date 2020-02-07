@@ -1,5 +1,5 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.hibernate.Session
@@ -13,6 +13,8 @@ import javax.persistence.ParameterMode
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class ProcedureCallTest extends AgentTestRunner {
 
@@ -67,33 +69,33 @@ class ProcedureCallTest extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
+          spanKind CLIENT
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) {
           operationName "hibernate.procedure.getOutputs"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.RESOURCE_NAME" "TEST_PROC"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(2) {
+          spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" "{call TEST_PROC()}"
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -102,13 +104,13 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(3) {
+          spanKind CLIENT
           operationName "hibernate.transaction.commit"
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
       }
@@ -138,16 +140,17 @@ class ProcedureCallTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "hibernate.session"
+          spanKind CLIENT
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) {
           operationName "hibernate.procedure.getOutputs"
+          spanKind CLIENT
           childOf span(0)
           errored(true)
           tags {
@@ -155,18 +158,17 @@ class ProcedureCallTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "TEST_PROC"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(SQLGrammarException, "could not prepare statement")
           }
         }
         span(2) {
           operationName "hibernate.transaction.commit"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
       }

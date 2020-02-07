@@ -1,9 +1,8 @@
 package io.opentelemetry.auto.decorator;
 
-import io.opentelemetry.auto.api.Config;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.api.SpanTypes;
-import io.opentelemetry.auto.instrumentation.api.AgentSpan;
+import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -32,12 +31,6 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   @Override
   protected String service() {
     return null;
-  }
-
-  @Deprecated
-  public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
-    onRequest(span.getSpan(), request);
-    return span;
   }
 
   public Span onRequest(final Span span, final REQUEST request) {
@@ -102,12 +95,6 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
         span.setAttribute(Tags.PEER_PORT, port);
       }
     }
-    return span;
-  }
-
-  @Deprecated
-  public AgentSpan onResponse(final AgentSpan span, final RESPONSE response) {
-    onResponse(span.getSpan(), response);
     return span;
   }
 

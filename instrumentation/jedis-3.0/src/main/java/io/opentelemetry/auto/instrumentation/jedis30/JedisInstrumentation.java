@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.jedis30;
 
 import static io.opentelemetry.auto.instrumentation.jedis30.JedisClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jedis30.JedisClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -9,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -56,8 +57,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   public static class JedisAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter(@Advice.Argument(1) final ProtocolCommand command) {
-      final Span span = TRACER.spanBuilder("redis.query").startSpan();
+    public static SpanWithScope onEnter(@Advice.Argument(1) final ProtocolCommand command) {
+      final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       if (command instanceof Protocol.Command) {
         DECORATE.onStatement(span, ((Protocol.Command) command).name());
@@ -66,17 +67,17 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         // us if that changes
         DECORATE.onStatement(span, new String(command.getRaw()));
       }
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
-      final Span span = spanAndScope.getSpan();
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

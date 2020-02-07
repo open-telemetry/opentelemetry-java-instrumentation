@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.instrumentation.jdbc.JDBCDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -14,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.sql.Connection;
@@ -70,7 +71,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
   public static class StatementAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair onEnter(
+    public static SpanWithScope onEnter(
         @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
       if (callDepth > 0) {
@@ -82,25 +83,25 @@ public final class StatementInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("database.query").startSpan();
+      final Span span = TRACER.spanBuilder("database.query").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onStatement(span, sql);
       span.setAttribute("span.origin.type", statement.getClass().getName());
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
-      if (spanAndScope == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanWithScope.closeScope();
       CallDepthThreadLocalMap.reset(Statement.class);
     }
   }

@@ -4,13 +4,14 @@ import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -64,12 +65,12 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair methodEnter(@Advice.Argument(0) final Request request) {
+    public static SpanWithScope methodEnter(@Advice.Argument(0) final Request request) {
       if (request.getAttribute(SPAN_ATTRIBUTE) != null) {
         return null;
       }
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("grizzly.request");
+      final Span.Builder spanBuilder = TRACER.spanBuilder("grizzly.request").setSpanKind(SERVER);
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
         spanBuilder.setParent(extractedContext);
@@ -85,23 +86,23 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       request.setAttribute(SPAN_ATTRIBUTE, span);
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanScopePair spanScopePair, @Advice.Thrown final Throwable throwable) {
-      if (spanScopePair == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
 
       if (throwable != null) {
-        final Span span = spanScopePair.getSpan();
+        final Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
       }
-      spanScopePair.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 

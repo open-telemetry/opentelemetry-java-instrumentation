@@ -1,8 +1,7 @@
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.Trace
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import rx.Observable
@@ -29,8 +28,8 @@ class HystrixObservableTest extends AgentTestRunner {
     def subscribeOnFn = subscribeOn
     def result = runUnderTrace("parent") {
       def val = operation new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
-        @Trace
         private String tracedMethod() {
+          TEST_TRACER.spanBuilder("tracedMethod").startSpan().end()
           return "Hello!"
         }
 
@@ -62,7 +61,6 @@ class HystrixObservableTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" null
           }
         }
         span(1) {
@@ -71,7 +69,6 @@ class HystrixObservableTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$1.execute"
-            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -79,13 +76,10 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "trace.annotation"
+          operationName "tracedMethod"
           childOf span(1)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "HystrixObservableTest\$1.tracedMethod"
-            "$MoreTags.SPAN_TYPE" null
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
@@ -164,7 +158,6 @@ class HystrixObservableTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" null
           }
         }
         span(1) {
@@ -173,7 +166,6 @@ class HystrixObservableTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.execute"
-            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -187,7 +179,6 @@ class HystrixObservableTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.fallback"
-            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -269,7 +260,6 @@ class HystrixObservableTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" null
             errorTags(HystrixRuntimeException, "HystrixObservableTest\$3 failed and no fallback available.")
           }
         }
@@ -279,7 +269,6 @@ class HystrixObservableTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.execute"
-            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
@@ -293,7 +282,6 @@ class HystrixObservableTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.fallback"
-            "$MoreTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"

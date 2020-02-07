@@ -2,9 +2,10 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-description = 'java-agent'
+description = 'opentelemetry-auto'
 
 apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/version.gradle"
 
 configurations {
   shadowInclude
@@ -67,11 +68,12 @@ shadowJar {
 
 dependencies {
   testCompile project(':agent-bootstrap')
-  testCompile project(':trace-api')
   testCompile project(':utils:gc-utils')
 
   testCompile deps.testLogging
   testCompile deps.guava
+
+  testCompile 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
 
   shadowInclude project(path: ':agent-bootstrap')
 }

@@ -1,6 +1,6 @@
-import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
@@ -11,6 +11,7 @@ import sun.net.www.protocol.https.HttpsURLConnectionImpl
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 
@@ -89,6 +90,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -96,7 +98,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -106,6 +107,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(2) {
           operationName OPERATION_NAME
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -113,7 +115,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -171,6 +172,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -178,7 +180,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -188,6 +189,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(2) {
           operationName OPERATION_NAME
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -195,7 +197,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -238,6 +239,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -245,7 +247,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -304,6 +305,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
+          spanKind CLIENT
           childOf span(0)
           errored false
           tags {
@@ -311,7 +313,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "POST $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"

@@ -2,8 +2,8 @@ import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import play.inject.guice.GuiceApplicationBuilder
@@ -14,6 +14,7 @@ import java.util.function.Function
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.TestServer
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class LagomTest extends AgentTestRunner {
 
@@ -61,11 +62,11 @@ class LagomTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "akka-http.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 101
@@ -73,10 +74,8 @@ class LagomTest extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName 'trace.annotation'
+          operationName 'tracedMethod'
           tags {
-            "$MoreTags.RESOURCE_NAME" 'EchoServiceImpl.tracedMethod'
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
@@ -100,11 +99,11 @@ class LagomTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "akka-http.request"
+          spanKind SERVER
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500

@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.datastax.cassandra;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static io.opentelemetry.auto.instrumentation.datastax.cassandra.CassandraClientDecorator.DECORATE;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
@@ -244,7 +245,7 @@ public class TracingSession implements Session {
   }
 
   private Span startSpan(final String query) {
-    final Span span = TRACER.spanBuilder("cassandra.query").startSpan();
+    final Span span = TRACER.spanBuilder("cassandra.query").setSpanKind(CLIENT).startSpan();
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, session);
     DECORATE.onStatement(span, query);

@@ -1,6 +1,6 @@
 import com.google.common.io.Files
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -14,6 +14,8 @@ import org.apache.jasper.JasperException
 import org.eclipse.jetty.http.HttpStatus
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class JSPInstrumentationForwardTests extends AgentTestRunner {
 
@@ -89,11 +91,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -181,11 +183,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -243,11 +245,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -380,11 +382,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -492,11 +494,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
@@ -569,11 +571,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         span(0) {
           parent()
           operationName "servlet.request"
+          spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long

@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.grpc.client;
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcInjectAdapter.SETTER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -13,7 +14,7 @@ import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.opentelemetry.auto.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
@@ -27,7 +28,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
       final CallOptions callOptions,
       final Channel next) {
 
-    final Span span = TRACER.spanBuilder("grpc.client").startSpan();
+    final Span span = TRACER.spanBuilder("grpc.client").setSpanKind(CLIENT).startSpan();
     span.setAttribute(MoreTags.RESOURCE_NAME, method.getFullMethodName());
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
@@ -92,7 +93,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onMessage(final RespT message) {
-      final Span messageSpan = TRACER.spanBuilder("grpc.message").setParent(span).startSpan();
+      final Span messageSpan =
+          TRACER.spanBuilder("grpc.message").setSpanKind(CLIENT).setParent(span).startSpan();
       messageSpan.setAttribute("message.type", message.getClass().getName());
       DECORATE.afterStart(messageSpan);
       try (final Scope scope = TRACER.withSpan(messageSpan)) {

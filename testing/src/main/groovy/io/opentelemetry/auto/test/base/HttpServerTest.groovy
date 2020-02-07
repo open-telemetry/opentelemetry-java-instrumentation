@@ -1,14 +1,15 @@
 package io.opentelemetry.auto.test.base
 
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
 import io.opentelemetry.auto.decorator.HttpServerDecorator
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.trace.Span
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -373,6 +374,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
+      spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -383,7 +385,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_PORT" Long
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

@@ -1,4 +1,4 @@
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.trace_annotation.TraceConfigInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -10,13 +10,13 @@ class TraceConfigTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.setProperty("opentelemetry.auto.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
+      System.setProperty("ota.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
-      System.clearProperty("opentelemetry.auto.trace.methods")
+      System.clearProperty("ota.trace.methods")
     }
   }
 
@@ -49,9 +49,9 @@ class TraceConfigTest extends AgentTestRunner {
     setup:
     ConfigUtils.updateConfig {
       if (value) {
-        System.properties.setProperty("opentelemetry.auto.trace.methods", value)
+        System.properties.setProperty("ota.trace.methods", value)
       } else {
-        System.clearProperty("opentelemetry.auto.trace.methods")
+        System.clearProperty("ota.trace.methods")
       }
     }
 
@@ -59,7 +59,7 @@ class TraceConfigTest extends AgentTestRunner {
     new TraceConfigInstrumentation().classMethodsToTrace == expected
 
     cleanup:
-    System.clearProperty("opentelemetry.auto.trace.methods")
+    System.clearProperty("ota.trace.methods")
 
     where:
     value                                                           | expected

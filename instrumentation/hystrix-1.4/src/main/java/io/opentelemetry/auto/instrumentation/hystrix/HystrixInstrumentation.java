@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.hystrix;
 
 import static io.opentelemetry.auto.instrumentation.hystrix.HystrixDecorator.DECORATE;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.INTERNAL;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -91,7 +92,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
         final Observable originalObservable,
         final HystrixInvokableInfo<?> command,
         final String methodName) {
-      super(originalObservable, OPERATION_NAME, DECORATE);
+      super(originalObservable, OPERATION_NAME, DECORATE, INTERNAL);
 
       this.command = command;
       this.methodName = methodName;

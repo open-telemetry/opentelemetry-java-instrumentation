@@ -8,8 +8,8 @@ import com.mongodb.async.client.MongoDatabase
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.SpanData
@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 @Timeout(10)
 class MongoAsyncClientTest extends MongoBaseTest {
@@ -275,6 +276,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
   def mongoSpan(TraceAssert trace, int index, Closure<Boolean> statementEval, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName "mongo.query"
+      spanKind CLIENT
       if (parentSpan == null) {
         parent()
       } else {
@@ -285,7 +287,6 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "$MoreTags.RESOURCE_NAME" statementEval
         "$MoreTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" "127.0.0.1"
         "$Tags.PEER_PORT" port

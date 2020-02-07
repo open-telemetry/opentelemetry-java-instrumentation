@@ -10,8 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -57,7 +57,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   public static class FilterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair start(@Advice.This final Filter filter) {
+    public static SpanWithScope start(@Advice.This final Filter filter) {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
         return null;
@@ -69,20 +69,20 @@ public final class FilterInstrumentation extends Instrumenter.Default {
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
       span.setAttribute(MoreTags.RESOURCE_NAME, filter.getClass().getSimpleName() + ".doFilter");
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair scope, @Advice.Thrown final Throwable throwable) {
-      if (scope == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = scope.getSpan();
+      final Span span = spanWithScope.getSpan();
       FilterDecorator.DECORATE.onError(span, throwable);
       FilterDecorator.DECORATE.beforeFinish(span);
       span.end();
-      scope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

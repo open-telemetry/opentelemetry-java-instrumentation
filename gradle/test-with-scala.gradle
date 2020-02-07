@@ -13,6 +13,5 @@ configurations {
 }
 
 compileTestGroovy {
-  classpath = classpath.plus(files(compileTestScala.destinationDir))
-  dependsOn compileTestScala
+  classpath += files(sourceSets.test.scala.classesDirectory)
 }

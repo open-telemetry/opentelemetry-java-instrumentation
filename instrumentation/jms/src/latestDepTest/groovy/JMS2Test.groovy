@@ -1,6 +1,6 @@
 import com.google.common.io.Files
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -28,6 +28,9 @@ import javax.jms.Session
 import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
+
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class JMS2Test extends AgentTestRunner {
   @Shared
@@ -162,14 +165,13 @@ class JMS2Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
+          spanKind CONSUMER
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
             "$MoreTags.RESOURCE_NAME" "JMS receiveNoWait"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
             "$Tags.COMPONENT" "jms"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
           }
         }
@@ -199,14 +201,13 @@ class JMS2Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
+          spanKind CONSUMER
           errored false
-
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
             "$MoreTags.RESOURCE_NAME" "JMS receive"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
             "$Tags.COMPONENT" "jms"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
           }
         }
@@ -226,14 +227,13 @@ class JMS2Test extends AgentTestRunner {
     trace.span(index) {
       parent()
       operationName "jms.produce"
+      spanKind PRODUCER
       errored false
-
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
         "$MoreTags.RESOURCE_NAME" "Produced for $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
         "$Tags.COMPONENT" "jms"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
         "span.origin.type" HornetQMessageProducer.name
       }
     }
@@ -247,14 +247,14 @@ class JMS2Test extends AgentTestRunner {
       } else {
         operationName "jms.consume"
       }
+      spanKind CONSUMER
       errored false
 
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
         "$MoreTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
-        "${Tags.COMPONENT}" "jms"
-        "${Tags.SPAN_KIND}" "consumer"
+        "$Tags.COMPONENT" "jms"
         "span.origin.type" origin.name
       }
     }

@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
+import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
@@ -65,13 +66,14 @@ public class TracedDelegatingConsumer implements Consumer {
     Scope scope = null;
     try {
       final Map<String, Object> headers = properties.getHeaders();
-      final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command");
+      final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command").setSpanKind(CONSUMER);
       SpanContext extractedContext = null;
       if (headers != null) {
         try {
           extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
         } catch (final IllegalArgumentException e) {
           // couldn't extract a context
+          spanBuilder.setNoParent();
         }
       }
       if (extractedContext != null) {

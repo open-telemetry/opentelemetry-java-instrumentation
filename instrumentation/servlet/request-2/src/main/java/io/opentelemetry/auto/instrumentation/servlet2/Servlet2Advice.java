@@ -4,10 +4,11 @@ import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
 import static io.opentelemetry.auto.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 
-import io.opentelemetry.auto.api.MoreTags;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -23,7 +24,7 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 public class Servlet2Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanScopePair onEnter(
+  public static SpanWithScope onEnter(
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
@@ -47,8 +48,7 @@ public class Servlet2Advice {
       response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
     }
 
-    final Span.Builder builder =
-        TRACER.spanBuilder("servlet.request").setSpanKind(Span.Kind.SERVER);
+    final Span.Builder builder = TRACER.spanBuilder("servlet.request").setSpanKind(SERVER);
     try {
       final SpanContext extractedContext =
           TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);
@@ -67,14 +67,14 @@ public class Servlet2Advice {
 
     httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
 
-    return new SpanScopePair(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, TRACER.withSpan(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanScopePair spanAndScope,
+      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
     final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
@@ -85,10 +85,10 @@ public class Servlet2Advice {
       }
     }
 
-    if (spanAndScope == null) {
+    if (spanWithScope == null) {
       return;
     }
-    final Span span = spanAndScope.getSpan();
+    final Span span = spanWithScope.getSpan();
     DECORATE.onResponse(span, response);
     if (throwable != null) {
       if (response instanceof StatusSavingHttpServletResponseWrapper
@@ -102,6 +102,6 @@ public class Servlet2Advice {
     }
     DECORATE.beforeFinish(span);
     span.end();
-    spanAndScope.getScope().close();
+    spanWithScope.closeScope();
   }
 }

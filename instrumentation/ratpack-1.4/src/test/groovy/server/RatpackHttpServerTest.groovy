@@ -1,7 +1,7 @@
 package server
 
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator
@@ -18,6 +18,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCE
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerDecorator> {
 
@@ -105,13 +106,13 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "ratpack.handler"
+      spanKind SERVER
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
         "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Long
@@ -131,6 +132,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
+      spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -142,7 +144,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_PORT" Long
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

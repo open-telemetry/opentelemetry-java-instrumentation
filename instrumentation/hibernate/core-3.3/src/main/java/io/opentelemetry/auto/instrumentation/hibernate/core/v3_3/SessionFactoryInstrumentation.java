@@ -3,6 +3,7 @@ package io.opentelemetry.auto.instrumentation.hibernate.core.v3_3;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -14,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.hibernate.SessionState;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -32,9 +32,9 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> stores = new HashMap<>();
-    stores.put("org.hibernate.Session", SessionState.class.getName());
-    stores.put("org.hibernate.StatelessSession", SessionState.class.getName());
-    stores.put("org.hibernate.SharedSessionContract", SessionState.class.getName());
+    stores.put("org.hibernate.Session", Span.class.getName());
+    stores.put("org.hibernate.StatelessSession", Span.class.getName());
+    stores.put("org.hibernate.SharedSessionContract", Span.class.getName());
     return stores;
   }
 
@@ -62,18 +62,18 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final Object session) {
 
-      final Span span = TRACER.spanBuilder("hibernate.session").startSpan();
+      final Span span = TRACER.spanBuilder("hibernate.session").setSpanKind(CLIENT).startSpan();
       DECORATOR.afterStart(span);
       DECORATOR.onConnection(span, session);
 
       if (session instanceof Session) {
-        final ContextStore<Session, SessionState> contextStore =
-            InstrumentationContext.get(Session.class, SessionState.class);
-        contextStore.putIfAbsent((Session) session, new SessionState(span));
+        final ContextStore<Session, Span> contextStore =
+            InstrumentationContext.get(Session.class, Span.class);
+        contextStore.putIfAbsent((Session) session, span);
       } else if (session instanceof StatelessSession) {
-        final ContextStore<StatelessSession, SessionState> contextStore =
-            InstrumentationContext.get(StatelessSession.class, SessionState.class);
-        contextStore.putIfAbsent((StatelessSession) session, new SessionState(span));
+        final ContextStore<StatelessSession, Span> contextStore =
+            InstrumentationContext.get(StatelessSession.class, Span.class);
+        contextStore.putIfAbsent((StatelessSession) session, span);
       }
     }
   }

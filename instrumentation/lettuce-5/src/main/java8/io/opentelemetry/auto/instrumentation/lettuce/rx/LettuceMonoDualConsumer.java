@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.lettuce.rx;
 
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.TRACER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.trace.Span;
@@ -24,7 +25,7 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
 
   @Override
   public void accept(final R r) {
-    span = TRACER.spanBuilder("redis.query").startSpan();
+    span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
     DECORATE.afterStart(span);
     DECORATE.onCommand(span, command);
     if (finishSpanOnClose) {

@@ -18,9 +18,6 @@ gradleEnterprise {
 
 rootProject.name = 'trace-java'
 
-// external apis
-include ':trace-api'
-
 include ':experimental:helpers-core'
 include ':experimental:helpers-http'
 
@@ -48,8 +45,7 @@ include ':instrumentation:akka-http-10.0'
 include ':instrumentation:apache-httpasyncclient-4'
 include ':instrumentation:apache-httpclient-4'
 include ':instrumentation:aws-java-sdk-1.11.0'
-// FIXME this instrumentation relied on activeScope
-// include ':instrumentation:aws-java-sdk-2.2'
+include ':instrumentation:aws-java-sdk-2.2'
 include ':instrumentation:cdi-1.2'
 include ':instrumentation:couchbase-2.0'
 include ':instrumentation:couchbase-2.6'
@@ -95,8 +91,7 @@ include ':instrumentation:jetty-8'
 include ':instrumentation:jms'
 include ':instrumentation:jsp-2.3'
 include ':instrumentation:kafka-clients-0.11'
-// FIXME this instrumentation relied on activeScope
-// include ':instrumentation:kafka-streams-0.11'
+include ':instrumentation:kafka-streams-0.11'
 include ':instrumentation:lettuce-5'
 // FIXME this instrumentation relied on scope listener
 // include ':instrumentation:log4j1'
@@ -114,8 +109,7 @@ include ':instrumentation:play-2.6'
 include ':instrumentation:play-ws-1'
 include ':instrumentation:play-ws-2'
 include ':instrumentation:play-ws-2.1'
-// FIXME this instrumentation relied on getting current span name
-// include ':instrumentation:rabbitmq-amqp-2.7'
+include ':instrumentation:rabbitmq-amqp-2.7'
 include ':instrumentation:ratpack-1.4'
 include ':instrumentation:reactor-core-3.1'
 include ':instrumentation:rmi'
@@ -149,3 +143,5 @@ def setBuildFile(project) {
 }
 
 setBuildFile(rootProject)
+
+project(':java-agent').name = 'opentelemetry-auto'

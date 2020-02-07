@@ -1,6 +1,6 @@
 import groovy.json.JsonSlurper
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -19,6 +19,8 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.plugins.Plugin
 import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class Elasticsearch6RestClientTest extends AgentTestRunner {
   @Shared
@@ -84,12 +86,12 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "elasticsearch.rest.query"
+          spanKind CLIENT
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" httpPort
             "$Tags.HTTP_URL" "_cluster/health"
@@ -99,11 +101,11 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "http.request"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpasyncclient"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200

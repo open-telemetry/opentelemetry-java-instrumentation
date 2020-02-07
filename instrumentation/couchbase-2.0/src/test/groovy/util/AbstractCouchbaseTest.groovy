@@ -10,9 +10,9 @@ import com.couchbase.mock.Bucket
 import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
-import io.opentelemetry.auto.api.Config
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -21,6 +21,8 @@ import io.opentelemetry.sdk.trace.SpanData
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
@@ -108,6 +110,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
       operationName "couchbase.call"
+      spanKind CLIENT
       errored false
       if (parentSpan == null) {
         parent()
@@ -119,7 +122,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         "$MoreTags.RESOURCE_NAME" name
         "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" "couchbase"
         if (bucketName != null) {
           "bucket" bucketName

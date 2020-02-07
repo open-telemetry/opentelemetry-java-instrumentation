@@ -4,6 +4,7 @@ import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -15,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanScopePair;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -62,7 +63,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
   public static class ControllerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanScopePair nameResourceAndStartSpan(
+    public static SpanWithScope nameResourceAndStartSpan(
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
@@ -77,24 +78,24 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
       // Now create a span for handler/controller execution.
 
-      final Span span = TRACER.spanBuilder("spring.handler").startSpan();
+      final Span span = TRACER.spanBuilder("spring.handler").setSpanKind(SERVER).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onHandle(span, handler);
 
-      return new SpanScopePair(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanScopePair spanAndScope, @Advice.Thrown final Throwable throwable) {
-      if (spanAndScope == null) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
         return;
       }
-      final Span span = spanAndScope.getSpan();
+      final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
-      spanAndScope.getScope().close();
+      spanWithScope.closeScope();
     }
   }
 }

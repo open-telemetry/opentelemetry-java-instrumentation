@@ -1,9 +1,9 @@
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.shaded.io.opentelemetry.context.propagation.HttpTextFormat
-import io.opentelemetry.auto.shaded.io.opentelemetry.trace.SpanContext
-import io.opentelemetry.auto.shaded.io.opentelemetry.trace.propagation.HttpTraceContext
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.context.propagation.HttpTextFormat
+import io.opentelemetry.trace.SpanContext
+import io.opentelemetry.trace.propagation.HttpTraceContext
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -23,6 +23,9 @@ import spock.lang.Shared
 
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+
+import static io.opentelemetry.trace.Span.Kind.CONSUMER
+import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class KafkaStreamsTest extends AgentTestRunner {
   static final STREAM_PENDING = "test.pending"
@@ -60,10 +63,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     consumerContainer.setupMessageListener(new MessageListener<String, String>() {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
-        // ensure consistent ordering of traces
-        // this is the last processing step so we should see 2 traces here
-        TEST_WRITER.waitForTraces(3)
-        getTestTracer().activeSpan().setAttribute("testing", 123)
+        getTestTracer().getCurrentSpan().setAttribute("testing", 123)
         records.add(record)
       }
     })
@@ -87,8 +87,7 @@ class KafkaStreamsTest extends AgentTestRunner {
       .mapValues(new ValueMapper<String, String>() {
         @Override
         String apply(String textLine) {
-          TEST_WRITER.waitForTraces(2) // ensure consistent ordering of traces
-          getTestTracer().activeSpan().setAttribute("asdf", "testing")
+          getTestTracer().getCurrentSpan().setAttribute("asdf", "testing")
           return textLine.toLowerCase()
         }
       })
@@ -120,18 +119,12 @@ class KafkaStreamsTest extends AgentTestRunner {
     received.value() == greeting.toLowerCase()
     received.key() == null
 
-    if (TEST_WRITER[1][0].name == "kafka.produce") {
-      // Make sure that order of first two traces is predetermined.
-      // Unfortunately it looks like we cannot really control it in a better way through the code
-      def tmp = TEST_WRITER[1][0]
-      TEST_WRITER[1][0] = TEST_WRITER[0][0]
-      TEST_WRITER[0][0] = tmp
-    }
-    assertTraces(4) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 5) {
         // PRODUCER span 0
         span(0) {
           operationName "kafka.produce"
+          spanKind PRODUCER
           errored false
           parent()
           tags {
@@ -139,74 +132,63 @@ class KafkaStreamsTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           }
         }
-      }
-      trace(1, 1) {
         // CONSUMER span 0
-        span(0) {
+        span(1) {
           operationName "kafka.consume"
+          spanKind CONSUMER
           errored false
-          childOf TEST_WRITER[0][0]
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
           }
         }
-      }
-      trace(2, 2) {
-
-        // STREAMING span 0
-        span(0) {
-          operationName "kafka.produce"
-          errored false
-          childOf span(1)
-
-          tags {
-            "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PROCESSED"
-            "$MoreTags.SPAN_TYPE" "queue"
-            "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
-          }
-        }
-
         // STREAMING span 1
-        span(1) {
+        span(2) {
           operationName "kafka.consume"
+          spanKind CONSUMER
           errored false
-          childOf TEST_WRITER[0][0]
-
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
             "asdf" "testing"
           }
         }
-      }
-      trace(3, 1) {
-        // CONSUMER span 0
-        span(0) {
-          operationName "kafka.consume"
+        // STREAMING span 0
+        span(3) {
+          operationName "kafka.produce"
+          spanKind PRODUCER
           errored false
-          childOf TEST_WRITER[2][0]
+          childOf span(2)
+          tags {
+            "$MoreTags.SERVICE_NAME" "kafka"
+            "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PROCESSED"
+            "$MoreTags.SPAN_TYPE" "queue"
+            "$Tags.COMPONENT" "java-kafka"
+          }
+        }
+        // CONSUMER span 0
+        span(4) {
+          operationName "kafka.consume"
+          spanKind CONSUMER
+          errored false
+          childOf span(3)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PROCESSED"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
             "testing" 123
@@ -218,14 +200,17 @@ class KafkaStreamsTest extends AgentTestRunner {
     def headers = received.headers()
     headers.iterator().hasNext()
     def traceparent = new String(headers.headers("traceparent").iterator().next().value())
-    SpanContext spanContext = new HttpTraceContext().extract(traceparent, new HttpTextFormat.Getter<String>() {
+    SpanContext spanContext = new HttpTraceContext().extract("", new HttpTextFormat.Getter<String>() {
       @Override
       String get(String carrier, String key) {
-        return carrier
+        if (key == "traceparent") {
+          return traceparent
+        }
+        return null
       }
     })
-    spanContext.traceId == TEST_WRITER[2][0].traceId
-    spanContext.spanId == TEST_WRITER[2][0].spanId
+    spanContext.traceId == TEST_WRITER.traces[0][3].traceId
+    spanContext.spanId == TEST_WRITER.traces[0][3].spanId
 
 
     cleanup:

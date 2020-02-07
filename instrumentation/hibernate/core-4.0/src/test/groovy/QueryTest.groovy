@@ -1,8 +1,10 @@
-import io.opentelemetry.auto.api.MoreTags
-import io.opentelemetry.auto.api.SpanTypes
+import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import org.hibernate.Query
 import org.hibernate.Session
+
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class QueryTest extends AbstractHibernateTest {
 
@@ -29,34 +31,34 @@ class QueryTest extends AbstractHibernateTest {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
+          spanKind CLIENT
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) {
           operationName "hibernate.$queryMethodName"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.RESOURCE_NAME" resource
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
           }
         }
         span(2) {
+          spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "h2"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -66,12 +68,12 @@ class QueryTest extends AbstractHibernateTest {
         }
         span(3) {
           operationName "hibernate.transaction.commit"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
       }
@@ -80,34 +82,34 @@ class QueryTest extends AbstractHibernateTest {
         trace(1, 3) {
           span(0) {
             operationName "hibernate.session"
+            spanKind CLIENT
             parent()
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
               "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             }
           }
           span(1) {
             operationName "hibernate.$queryMethodName"
+            spanKind CLIENT
             childOf span(0)
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
               "$MoreTags.RESOURCE_NAME" resource
               "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
             }
           }
           span(2) {
+            spanKind CLIENT
             childOf span(1)
             tags {
               "$MoreTags.SERVICE_NAME" "h2"
               "$MoreTags.RESOURCE_NAME" ~/^select /
               "$MoreTags.SPAN_TYPE" "sql"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" "h2"
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
@@ -161,33 +163,33 @@ class QueryTest extends AbstractHibernateTest {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
+          spanKind CLIENT
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) {
           operationName "hibernate.iterate"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.RESOURCE_NAME" "from Value"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(2) {
+          spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "h2"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -197,12 +199,12 @@ class QueryTest extends AbstractHibernateTest {
         }
         span(3) {
           operationName "hibernate.transaction.commit"
+          spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
       }

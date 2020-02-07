@@ -1,6 +1,6 @@
 // This file includes software developed at SignalFx
 
-import io.opentelemetry.auto.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -9,6 +9,7 @@ import spring.jpa.JpaCustomerRepository
 import spring.jpa.JpaPersistenceConfig
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class SpringJpaTest extends AgentTestRunner {
   def "test object method"() {
@@ -56,21 +57,21 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "repository.operation"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "JpaRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) { // select
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -92,21 +93,21 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "repository.operation"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.save"
             "$Tags.COMPONENT" "spring-data"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) { // insert
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^insert /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -128,21 +129,21 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "repository.operation"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.save"
             "$Tags.COMPONENT" "spring-data"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) { // select
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -151,13 +152,13 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { // update
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^update /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -177,21 +178,21 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "repository.operation"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "JpaCustomerRepository.findByLastName"
             "$Tags.COMPONENT" "spring-data"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) { // select
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -211,21 +212,21 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "repository.operation"
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.delete"
             "$Tags.COMPONENT" "spring-data"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           }
         }
         span(1) { // select
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -234,13 +235,13 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { // delete
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^delete /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
