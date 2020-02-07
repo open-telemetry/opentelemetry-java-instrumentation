@@ -16,17 +16,20 @@
 
 package io.opentelemetry.helpers.core;
 
-import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.trace.Span;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
-public abstract class ServerSpanListener extends BaseSpanListener {
+public interface SpanDecorator {
 
-  protected ServerSpanListener() {
-    super();
-  }
+  Span afterStart(Span span);
 
-  @Override
-  protected Kind getSpanType() {
-    return Kind.SERVER;
-  }
+  Span beforeFinish(Span span);
+
+  Span onError(Span span, Throwable throwable);
+
+  Span onPeerConnection(Span span, InetSocketAddress remoteConnection);
+
+  Span onPeerConnection(Span span, InetAddress remoteAddress);
 
 }

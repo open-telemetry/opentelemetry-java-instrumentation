@@ -18,9 +18,9 @@ package io.opentelemetry.helpers.core;
 
 import io.opentelemetry.trace.Span.Kind;
 
-public abstract class ClientSpanListener extends BaseSpanListener {
+public abstract class ClientSpanDecorator extends BaseSpanDecorator {
 
-  protected ClientSpanListener() {
+  protected ClientSpanDecorator() {
     super();
   }
 

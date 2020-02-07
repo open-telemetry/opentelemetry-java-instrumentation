@@ -25,9 +25,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
-public abstract class BaseSpanListener implements SpanListener {
+public abstract class BaseSpanDecorator implements SpanDecorator {
 
-  protected BaseSpanListener() {
+  protected BaseSpanDecorator() {
     super();
   }
 
