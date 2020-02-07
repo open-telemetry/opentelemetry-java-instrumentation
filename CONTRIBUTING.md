@@ -20,8 +20,8 @@ Other source files (Groovy, Scala, etc) should ideally be formatted by Intellij 
 Suggested plugins and settings:
 
 * Editor > Code Style > Java/Groovy > Imports
-  * Class count to use import with '*': `50` (some number sufficiently large that is unlikely to matter)
-  * Names count to use static import with '*': `50`
+  * Class count to use import with '*': `9999` (some number sufficiently large that is unlikely to matter)
+  * Names count to use static import with '*': `9999`
   * With java use the following import layout (groovy should still use the default) to ensure consistency with google-java-format:
     ![import layout](https://user-images.githubusercontent.com/734411/43430811-28442636-94ae-11e8-86f1-f270ddcba023.png)
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format)

@@ -143,7 +143,8 @@ public class AgentInstaller {
       agentBuilder = agentBuilder.with(listener);
     }
     int numInstrumenters = 0;
-    for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
+    for (final Instrumenter instrumenter :
+        ServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader())) {
       log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
 
       try {

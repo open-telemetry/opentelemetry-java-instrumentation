@@ -163,11 +163,9 @@ public class Agent {
   private static synchronized void startDatadogAgent(
       final Instrumentation inst, final URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
-      final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         final ClassLoader agentClassLoader =
             createDatadogClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
-        Thread.currentThread().setContextClassLoader(agentClassLoader);
         final Class<?> agentInstallerClass =
             agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
         final Method agentInstallerMethod =
@@ -176,8 +174,6 @@ public class Agent {
         AGENT_CLASSLOADER = agentClassLoader;
       } catch (final Throwable ex) {
         log.error("Throwable thrown while installing the Datadog Agent", ex);
-      } finally {
-        Thread.currentThread().setContextClassLoader(contextLoader);
       }
     }
   }
@@ -186,11 +182,9 @@ public class Agent {
     if (AGENT_CLASSLOADER == null) {
       throw new IllegalStateException("Datadog agent should have been started already");
     }
-    final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
     // TracerInstaller.installGlobalTracer can be called multiple times without any problem
     // so there is no need to have a 'datadogTracerInstalled' flag here.
     try {
-      Thread.currentThread().setContextClassLoader(AGENT_CLASSLOADER);
       // install global tracer
       final Class<?> tracerInstallerClass =
           AGENT_CLASSLOADER.loadClass("datadog.trace.agent.tooling.TracerInstaller");
@@ -200,8 +194,6 @@ public class Agent {
       logVersionInfoMethod.invoke(null);
     } catch (final Throwable ex) {
       log.error("Throwable thrown while installing the Datadog Tracer", ex);
-    } finally {
-      Thread.currentThread().setContextClassLoader(contextLoader);
     }
   }
 
