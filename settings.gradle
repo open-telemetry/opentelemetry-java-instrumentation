@@ -140,3 +140,5 @@ def setBuildFile(project) {
 }
 
 setBuildFile(rootProject)
+
+project(':java-agent').name = 'opentelemetry-auto'

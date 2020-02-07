@@ -31,7 +31,7 @@ jmh {
   iterations = 5 // Number of measurement iterations to do.
   fork = 1 // How many times to forks a single benchmark. Use 0 to disable forking altogether
 //  jvmArgs = ["-Dasdf=123"]
-//  jvmArgs = ["-javaagent:${project(':java-agent').shadowJar.archivePath}"]
+//  jvmArgs = ["-javaagent:${project(':opentelemetry-auto').shadowJar.archivePath}"]
   failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
 //  warmup = '2s' // Time to spend at each warmup iteration.
 //  warmupIterations = 2 // Number of warmup iterations to do.
@@ -67,5 +67,5 @@ tasks.register("jmhAgent", JavaExec) {
   dependsOn project.tasks.jmhCompileGeneratedClasses
 }
 
-tasks.jmhAgent.dependsOn(':java-agent:shadowJar')
+tasks.jmhAgent.dependsOn(':opentelemetry-auto:shadowJar')
 
