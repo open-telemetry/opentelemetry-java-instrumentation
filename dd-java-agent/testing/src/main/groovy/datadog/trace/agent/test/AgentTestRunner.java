@@ -139,20 +139,15 @@ public abstract class AgentTestRunner extends DDSpecification {
   }
 
   @BeforeClass
-  public static synchronized void agentSetup() throws Exception {
+  public static synchronized void agentSetup() {
     if (null != activeTransformer) {
       throw new IllegalStateException("transformer already in place: " + activeTransformer);
     }
-
-    final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-    try {
-      Thread.currentThread().setContextClassLoader(AgentTestRunner.class.getClassLoader());
-      assert ServiceLoader.load(Instrumenter.class).iterator().hasNext()
-          : "No instrumentation found";
-      activeTransformer = AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, TEST_LISTENER);
-    } finally {
-      Thread.currentThread().setContextClassLoader(contextLoader);
-    }
+    assert ServiceLoader.load(Instrumenter.class, AgentTestRunner.class.getClassLoader())
+            .iterator()
+            .hasNext()
+        : "No instrumentation found";
+    activeTransformer = AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, TEST_LISTENER);
 
     INSTRUMENTATION_ERROR_COUNT.set(0);
   }
