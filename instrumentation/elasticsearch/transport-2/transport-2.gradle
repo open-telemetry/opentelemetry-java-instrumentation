@@ -29,7 +29,7 @@ dependencies {
   // Ensure no cross interference
   testCompile project(':instrumentation:elasticsearch:rest-5')
   testCompile project(':instrumentation:elasticsearch:transport-5')
-  testCompile project(':instrumentation:apache-httpasyncclient-4')
+  testCompile project(':instrumentation:apache-httpasyncclient-4.0')
 
   testCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
 
