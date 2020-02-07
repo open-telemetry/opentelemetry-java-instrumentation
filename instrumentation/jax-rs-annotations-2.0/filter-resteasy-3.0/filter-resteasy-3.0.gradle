@@ -21,5 +21,5 @@ dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
   compileOnly group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
 
-  compile project(':instrumentation:jax-rs-annotations-2')
+  compile project(':instrumentation:jax-rs-annotations-2.0')
 }

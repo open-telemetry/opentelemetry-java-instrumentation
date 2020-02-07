@@ -30,9 +30,9 @@ dependencies {
 
   testCompile project(':instrumentation:java-concurrent')
   testCompile project(':instrumentation:servlet:request-3')
-  testCompile project(':instrumentation:jax-rs-annotations-2:filter-jersey')
-  testCompile project(':instrumentation:jax-rs-annotations-2:filter-resteasy-3.0')
-  testCompile project(':instrumentation:jax-rs-annotations-2:filter-resteasy-3.1')
+  testCompile project(':instrumentation:jax-rs-annotations-2.0:filter-jersey')
+  testCompile project(':instrumentation:jax-rs-annotations-2.0:filter-resteasy-3.0')
+  testCompile project(':instrumentation:jax-rs-annotations-2.0:filter-resteasy-3.1')
 
   // Jersey
   // First version with DropwizardTestSupport:
