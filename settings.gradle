@@ -89,7 +89,7 @@ include ':instrumentation:jms-1.1'
 include ':instrumentation:jsp-2.3'
 include ':instrumentation:kafka-clients-0.11'
 include ':instrumentation:kafka-streams-0.11'
-include ':instrumentation:lettuce-5'
+include ':instrumentation:lettuce-5.0'
 // FIXME this instrumentation relied on scope listener
 // include ':instrumentation:log4j1'
 // FIXME this instrumentation relied on scope listener
