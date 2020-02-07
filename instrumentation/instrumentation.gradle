@@ -78,7 +78,7 @@ subprojects { Project subProj ->
 
 dependencies {
   compile(project(':agent-tooling')) {
-    exclude module: ':agent-bootstrap'
+    exclude module: ':auto-bootstrap'
   }
 
   // TODO: including the jaeger exporter doubles the agent jar file size, would be better for it to be optional component
@@ -110,7 +110,7 @@ shadowJar {
   relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
 
   dependencies {
-    exclude(project(':agent-bootstrap'))
+    exclude(project(':auto-bootstrap'))
   }
 
   // relocate OpenTelemetry API usage
