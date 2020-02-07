@@ -33,7 +33,7 @@ subprojects { Project subProj ->
       transformation {
         tasks = ['compileJava', 'compileScala', 'compileKotlin']
         plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin'
-        classPath = project(':agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
+        classPath = project(':auto-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
       }
     }
 
@@ -45,14 +45,14 @@ subprojects { Project subProj ->
     }
     dependencies {
       // Apply common dependencies for instrumentation.
-      compile(project(':agent-tooling')) {
+      compile(project(':auto-tooling')) {
         // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
         // is brought in for tests by project(:testing) below
         exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
       }
       compile deps.bytebuddy
       if (jdkCompile) {
-        "$jdkCompile"(project(':agent-tooling')) {
+        "$jdkCompile"(project(':auto-tooling')) {
           // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
           // is brought in for tests by project(:testing) below
           exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
@@ -77,7 +77,7 @@ subprojects { Project subProj ->
 }
 
 dependencies {
-  compile(project(':agent-tooling')) {
+  compile(project(':auto-tooling')) {
     exclude module: ':auto-bootstrap'
   }
 

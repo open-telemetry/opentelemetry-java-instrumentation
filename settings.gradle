@@ -142,4 +142,5 @@ def setBuildFile(project) {
 setBuildFile(rootProject)
 
 project(':agent-bootstrap').name = 'auto-bootstrap'
+project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
