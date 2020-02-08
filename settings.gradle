@@ -19,7 +19,6 @@ gradleEnterprise {
 rootProject.name = 'trace-java'
 
 include ':experimental:helpers-core'
-include ':experimental:helpers-http'
 
 // agent projects
 include ':java-agent'

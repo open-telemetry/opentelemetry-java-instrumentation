@@ -22,6 +22,7 @@ import io.opentelemetry.distributedcontext.DistributedContextManager;
 import io.opentelemetry.metrics.MeasureDouble;
 import io.opentelemetry.metrics.MeasureLong;
 import io.opentelemetry.metrics.Meter;
+import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
@@ -269,6 +270,33 @@ public abstract class BaseSpanDecorator<C, Q, P> implements SpanDecorator<C, Q, 
    */
   protected Meter getMeter() {
     return meter;
+  }
+
+  /**
+   * Adds an attribute to the supplied span.
+   *
+   * @param span the span to add the attribute to
+   * @param key the attribute name
+   * @param value the attribute value
+   */
+  protected static void putAttributeIfNotEmptyOrNull(Span span, String key, String value) {
+    if (value != null && !value.isEmpty()) {
+      span.setAttribute(key, AttributeValue.stringAttributeValue(value));
+    }
+  }
+
+  /**
+   * Returns the message from the supplied throwable or the class name if message is null.
+   *
+   * @param error the exception
+   * @return the error message
+   */
+  protected static String extractErrorMessage(Throwable error) {
+    String message = error.getMessage();
+    if (message != null && message.length() > 0) {
+      return message;
+    }
+    return error.getClass().getSimpleName();
   }
 
   private Span buildSpan(String spanName, C carrier, long startTimestamp) {
