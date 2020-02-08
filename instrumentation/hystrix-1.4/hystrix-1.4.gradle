@@ -17,7 +17,7 @@ testSets {
 }
 
 dependencies {
-  compile project(':instrumentation:rxjava-1')
+  compile project(':instrumentation:rxjava-1.0')
 
   compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
   compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
