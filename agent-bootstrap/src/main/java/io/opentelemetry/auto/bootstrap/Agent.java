@@ -143,7 +143,7 @@ public class Agent {
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         final ClassLoader agentClassLoader =
-            createAgentClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
+            createAgentClassLoader("auto-tooling-and-instrumentation.isolated", bootstrapURL);
         Thread.currentThread().setContextClassLoader(agentClassLoader);
         final Class<?> agentInstallerClass =
             agentClassLoader.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");

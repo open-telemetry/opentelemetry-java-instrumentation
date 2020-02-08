@@ -20,7 +20,7 @@ dependencies {
   play "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
   play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
-  play project(':agent-bootstrap')
+  play project(':auto-bootstrap')
   play project(':benchmark-integration')
 }
 

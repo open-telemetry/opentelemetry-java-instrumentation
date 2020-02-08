@@ -41,8 +41,8 @@ class MuzzlePlugin implements Plugin<Project> {
 
   @Override
   void apply(Project project) {
-    def bootstrapProject = project.rootProject.getChildProjects().get('agent-bootstrap')
-    def toolingProject = project.rootProject.getChildProjects().get('agent-tooling')
+    def bootstrapProject = project.rootProject.getChildProjects().get('auto-bootstrap')
+    def toolingProject = project.rootProject.getChildProjects().get('auto-tooling')
     project.extensions.create("muzzle", MuzzleExtension, project.objects)
 
     // compileMuzzle compiles all projects required to run muzzle validation.
@@ -128,7 +128,7 @@ class MuzzlePlugin implements Plugin<Project> {
       final ClassLoader toolingLoader = TOOLING_LOADER.get()
       if (toolingLoader == null) {
         Set<URL> ddUrls = new HashSet<>()
-        toolingProject.getLogger().info('creating classpath for agent-tooling')
+        toolingProject.getLogger().info('creating classpath for auto-tooling')
         for (File f : toolingProject.sourceSets.main.runtimeClasspath.getFiles()) {
           toolingProject.getLogger().info('--' + f)
           ddUrls.add(f.toURI().toURL())
