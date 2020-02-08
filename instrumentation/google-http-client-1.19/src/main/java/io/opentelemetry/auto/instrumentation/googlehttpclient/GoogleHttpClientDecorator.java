@@ -11,7 +11,8 @@ import java.net.URISyntaxException;
 public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
   public static final GoogleHttpClientDecorator DECORATE = new GoogleHttpClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.google-http-client-1.19");
 
   @Override
   protected String method(final HttpRequest httpRequest) {
