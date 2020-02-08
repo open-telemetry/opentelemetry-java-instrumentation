@@ -16,6 +16,7 @@
 
 package io.opentelemetry.helpers.core;
 
+/** Defines constants for all semantic convention names. */
 public class SemanticConventions {
 
   /** Transport protocol used. */
@@ -68,7 +69,9 @@ public class SemanticConventions {
   public static final String RPC_SERVICE = "rpc.service";
   /** Message span event attribute with value "SENT" or "RECEIVED". */
   public static final String MESSAGE_TYPE = "message.type";
-  /** Message span event attribute starting from 1 for each of sent messages and received messages. */
+  /**
+   * Message span event attribute starting from 1 for each of sent messages and received messages.
+   */
   public static final String MESSAGE_ID = "message.id";
   /** Message span event attribute for compressed size. */
   public static final String MESSAGE_COMPRESSED_SIZE = "message.compressed_size";

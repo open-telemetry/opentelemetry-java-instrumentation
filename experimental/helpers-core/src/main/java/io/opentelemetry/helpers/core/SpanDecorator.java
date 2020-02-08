@@ -16,20 +16,36 @@
 
 package io.opentelemetry.helpers.core;
 
-import io.opentelemetry.trace.Span;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.util.concurrent.Callable;
 
-public interface SpanDecorator {
+/**
+ * Defines the core API of tracing span decorators.
+ *
+ * @param <C> the context propagation carrier type
+ * @param <Q> the request or input object type
+ * @param <P> the response or output object type
+ */
+public interface SpanDecorator<C, Q, P> {
 
-  Span afterStart(Span span);
+  /**
+   * Initiates a new tracing span and populates with all known span data at the time of initiation.
+   *
+   * @param spanName the span name
+   * @param carrier the propagation info carrier
+   * @param inbound the request or input object
+   * @return the closable wrapper
+   */
+  SpanScope<Q, P> startSpan(String spanName, C carrier, Q inbound);
 
-  Span beforeFinish(Span span);
-
-  Span onError(Span span, Throwable throwable);
-
-  Span onPeerConnection(Span span, InetSocketAddress remoteConnection);
-
-  Span onPeerConnection(Span span, InetAddress remoteAddress);
-
+  /**
+   * Executes the provided callable with full telemetry collected about the call.
+   *
+   * @param spanName the span name
+   * @param carrier the propagation info carrier
+   * @param inbound the request or input object
+   * @param callable
+   * @return the response or output object
+   * @throws Exception if any issues with the call
+   */
+  P callWithTelemetry(String spanName, C carrier, Q inbound, Callable<P> callable) throws Exception;
 }
