@@ -1,8 +1,6 @@
 package datadog.trace.agent.tooling;
 
-import static datadog.common.exec.SharedExecutors.isTaskSchedulerShutdown;
-import static datadog.common.exec.SharedExecutors.scheduleTaskAtFixedRate;
-
+import datadog.common.exec.CommonTaskExecutor;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
@@ -15,13 +13,14 @@ class Cleaner {
   <T> void scheduleCleaning(
       final T target, final Adapter<T> adapter, final long frequency, final TimeUnit unit) {
     final CleanupRunnable<T> command = new CleanupRunnable<>(target, adapter);
-    if (isTaskSchedulerShutdown()) {
+    if (CommonTaskExecutor.INSTANCE.isShutdown()) {
       log.warn(
           "Cleaning scheduled but task scheduler is shutdown. Target won't be cleaned {}", target);
     } else {
       try {
         // Schedule job and save future to allow job to be canceled if target is GC'd.
-        command.setFuture(scheduleTaskAtFixedRate(command, frequency, frequency, unit));
+        command.setFuture(
+            CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(command, frequency, frequency, unit));
       } catch (final RejectedExecutionException e) {
         log.warn("Cleaning task rejected. Target won't be cleaned {}", target);
       }

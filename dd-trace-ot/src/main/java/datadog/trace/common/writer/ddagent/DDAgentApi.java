@@ -1,11 +1,11 @@
 package datadog.trace.common.writer.ddagent;
 
-import static datadog.common.exec.SharedExecutors.taskScheduler;
 import static datadog.trace.common.serialization.MsgpackFormatWriter.MSGPACK_WRITER;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
+import datadog.common.exec.CommonTaskExecutor;
 import datadog.opentracing.ContainerInfo;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
@@ -267,7 +267,7 @@ public class DDAgentApi {
         .readTimeout(HTTP_TIMEOUT, TimeUnit.SECONDS)
 
         // We don't do async so this shouldn't matter, but just to be safe...
-        .dispatcher(new Dispatcher(taskScheduler()))
+        .dispatcher(new Dispatcher(CommonTaskExecutor.INSTANCE))
         .build();
   }
 

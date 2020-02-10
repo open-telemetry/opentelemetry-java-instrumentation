@@ -1,9 +1,7 @@
 package datadog.trace.common.writer.ddagent;
 
-import static datadog.common.exec.DaemonThreadFactory.TRACE_WRITER;
-import static datadog.common.exec.SharedExecutors.scheduleTaskAtFixedRate;
-
 import com.lmax.disruptor.EventHandler;
+import datadog.common.exec.CommonTaskExecutor;
 import datadog.common.exec.DaemonThreadFactory;
 import datadog.trace.common.writer.DDAgentWriter;
 import java.util.ArrayList;
@@ -44,13 +42,13 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
               }
             }
           };
-      scheduleTaskAtFixedRate(heartbeat, 100, 100, TimeUnit.MILLISECONDS);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(heartbeat, 100, 100, TimeUnit.MILLISECONDS);
     }
   }
 
   @Override
   protected DaemonThreadFactory getThreadFactory() {
-    return TRACE_WRITER;
+    return DaemonThreadFactory.TRACE_WRITER;
   }
 
   @Override

@@ -1,7 +1,5 @@
 package datadog.trace.common.writer.ddagent;
 
-import static datadog.common.exec.DaemonThreadFactory.TRACE_PROCESSOR;
-
 import com.lmax.disruptor.EventHandler;
 import datadog.common.exec.DaemonThreadFactory;
 import datadog.opentracing.DDSpan;
@@ -31,7 +29,7 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
 
   @Override
   protected DaemonThreadFactory getThreadFactory() {
-    return TRACE_PROCESSOR;
+    return DaemonThreadFactory.TRACE_PROCESSOR;
   }
 
   @Override

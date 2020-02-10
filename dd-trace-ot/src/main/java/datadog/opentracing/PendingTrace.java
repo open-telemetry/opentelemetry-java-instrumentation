@@ -1,7 +1,6 @@
 package datadog.opentracing;
 
-import static datadog.common.exec.SharedExecutors.scheduleTaskAtFixedRate;
-
+import datadog.common.exec.CommonTaskExecutor;
 import datadog.opentracing.scopemanager.ContinuableScope;
 import datadog.trace.common.util.Clock;
 import java.io.Closeable;
@@ -307,7 +306,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
         Collections.newSetFromMap(new ConcurrentHashMap<PendingTrace, Boolean>());
 
     public SpanCleaner() {
-      scheduleTaskAtFixedRate(this, 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(this, 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
     }
 
     @Override

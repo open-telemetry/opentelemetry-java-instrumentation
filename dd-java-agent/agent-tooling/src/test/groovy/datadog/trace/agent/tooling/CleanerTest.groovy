@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling
 
+import datadog.common.exec.CommonTaskExecutor
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
 import spock.lang.Subject
@@ -8,7 +9,6 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 
-import static datadog.common.exec.SharedExecutors.isTaskSchedulerShutdown
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 class CleanerTest extends DDSpecification {
@@ -28,7 +28,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !isTaskSchedulerShutdown()
+    !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
     cleaner.scheduleCleaning(target, action, 10, MILLISECONDS)
@@ -49,7 +49,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !isTaskSchedulerShutdown()
+    !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
     cleaner.scheduleCleaning(target.get(), action, 10, MILLISECONDS)
@@ -73,7 +73,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !isTaskSchedulerShutdown()
+    !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
     cleaner.scheduleCleaning(null, action, 10, MILLISECONDS)
