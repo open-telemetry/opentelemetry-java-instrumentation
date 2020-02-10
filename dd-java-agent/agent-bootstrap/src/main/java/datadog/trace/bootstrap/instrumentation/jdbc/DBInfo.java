@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.jdbc;
+package datadog.trace.bootstrap.instrumentation.jdbc;
 
 import lombok.Builder;
 import lombok.Data;

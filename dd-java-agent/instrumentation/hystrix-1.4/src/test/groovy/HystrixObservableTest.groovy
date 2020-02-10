@@ -3,7 +3,7 @@ import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import rx.Observable
 import rx.schedulers.Schedulers
 import spock.lang.Retry

@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.ratpack;
 
 import static datadog.trace.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
 
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.util.Optional;
 import net.bytebuddy.asm.Advice;
 import ratpack.handling.Context;

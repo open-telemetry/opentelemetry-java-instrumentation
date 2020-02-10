@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public class HttpHeadersInjectAdapter implements AgentPropagation.Setter<HttpUriRequest> {

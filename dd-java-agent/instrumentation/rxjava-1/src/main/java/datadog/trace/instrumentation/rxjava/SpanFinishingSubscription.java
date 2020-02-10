@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rxjava;
 
 import datadog.trace.agent.decorator.BaseDecorator;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscription;
 

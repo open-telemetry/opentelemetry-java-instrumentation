@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.elasticsearch5;
 
 import static datadog.trace.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
 
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 

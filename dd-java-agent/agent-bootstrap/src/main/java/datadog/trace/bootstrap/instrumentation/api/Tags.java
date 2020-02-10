@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.api;
+package datadog.trace.bootstrap.instrumentation.api;
 
 // standard tag names (and span kind values) from OpenTracing (see io.opentracing.tag.Tags)
 public class Tags {

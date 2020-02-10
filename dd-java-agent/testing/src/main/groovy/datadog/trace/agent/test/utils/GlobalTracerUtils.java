@@ -1,7 +1,7 @@
 package datadog.trace.agent.test.utils;
 
 import datadog.trace.agent.tooling.OpenTracing32;
-import datadog.trace.instrumentation.api.AgentTracer;
+import datadog.trace.bootstrap.instrumentation.api.AgentTracer;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;

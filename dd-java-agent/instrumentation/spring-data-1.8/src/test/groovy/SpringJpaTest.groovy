@@ -1,6 +1,6 @@
 // This file includes software developed at SignalFx
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository

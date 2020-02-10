@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty40.client.NettyHttpClientDecorator
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient

@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.play26;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.util.ArrayList;
 import java.util.List;
 import play.api.mvc.Headers;

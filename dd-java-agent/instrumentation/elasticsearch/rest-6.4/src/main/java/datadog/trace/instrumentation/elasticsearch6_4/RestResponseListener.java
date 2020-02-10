@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.elasticsearch6_4;
 
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.elasticsearch.ElasticsearchRestClientDecorator;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;

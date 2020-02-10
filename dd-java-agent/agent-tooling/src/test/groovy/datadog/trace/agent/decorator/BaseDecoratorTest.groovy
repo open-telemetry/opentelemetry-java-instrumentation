@@ -2,8 +2,8 @@ package datadog.trace.agent.decorator
 
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.api.AgentScope
-import datadog.trace.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.api.AgentScope
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.Tags
 import spock.lang.Shared

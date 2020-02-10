@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import org.springframework.http.HttpHeaders;
 
 public class HttpHeadersInjectAdapter implements AgentPropagation.Setter<HttpHeaders> {

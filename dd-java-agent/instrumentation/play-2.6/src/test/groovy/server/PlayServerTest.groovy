@@ -6,7 +6,7 @@ import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.play26.PlayHttpServerDecorator
 import play.BuiltInComponents
 import play.Mode

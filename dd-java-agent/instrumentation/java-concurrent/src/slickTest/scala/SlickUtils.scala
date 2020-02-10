@@ -1,5 +1,5 @@
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.activeScope
+import datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration

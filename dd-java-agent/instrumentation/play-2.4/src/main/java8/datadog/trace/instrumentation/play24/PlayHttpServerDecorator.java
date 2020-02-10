@@ -2,8 +2,8 @@ package datadog.trace.instrumentation.play24;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.Tags;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.Tags;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URI;

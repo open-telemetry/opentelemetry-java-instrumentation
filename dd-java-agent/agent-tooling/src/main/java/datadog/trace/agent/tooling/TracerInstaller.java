@@ -2,7 +2,7 @@ package datadog.trace.agent.tooling;
 
 import datadog.opentracing.DDTracer;
 import datadog.trace.api.Config;
-import datadog.trace.instrumentation.api.AgentTracer;
+import datadog.trace.bootstrap.instrumentation.api.AgentTracer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

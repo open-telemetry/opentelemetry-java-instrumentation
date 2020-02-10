@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.netty41.client;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import io.netty.handler.codec.http.HttpHeaders;
 
 public class NettyResponseInjectAdapter implements AgentPropagation.Setter<HttpHeaders> {

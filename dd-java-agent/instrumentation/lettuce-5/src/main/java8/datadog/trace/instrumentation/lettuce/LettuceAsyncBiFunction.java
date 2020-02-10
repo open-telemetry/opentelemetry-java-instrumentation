@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.lettuce;
 
 import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 

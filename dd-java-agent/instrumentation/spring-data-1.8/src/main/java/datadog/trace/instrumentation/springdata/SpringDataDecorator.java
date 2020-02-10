@@ -4,7 +4,7 @@ package datadog.trace.instrumentation.springdata;
 
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 
 public final class SpringDataDecorator extends ClientDecorator {

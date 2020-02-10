@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.playws1;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import play.shaded.ahc.org.asynchttpclient.Request;
 
 public class HeadersInjectAdapter implements AgentPropagation.Setter<Request> {

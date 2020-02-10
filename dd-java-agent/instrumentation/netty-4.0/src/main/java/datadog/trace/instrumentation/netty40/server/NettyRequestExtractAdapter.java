@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.netty40.server;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import io.netty.handler.codec.http.HttpHeaders;
 
 public class NettyRequestExtractAdapter implements AgentPropagation.Getter<HttpHeaders> {

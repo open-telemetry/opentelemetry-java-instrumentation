@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import org.springframework.web.reactive.function.server.HandlerFunction;

@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import java.util.function.Supplier
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
 
 /**
  * Note: ideally this should live with the rest of ExecutorInstrumentationTest,

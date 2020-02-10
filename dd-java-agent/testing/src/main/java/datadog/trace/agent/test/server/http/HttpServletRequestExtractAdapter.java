@@ -1,6 +1,6 @@
 package datadog.trace.agent.test.server.http;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 

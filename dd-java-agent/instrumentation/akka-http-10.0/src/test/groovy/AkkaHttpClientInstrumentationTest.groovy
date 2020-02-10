@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {

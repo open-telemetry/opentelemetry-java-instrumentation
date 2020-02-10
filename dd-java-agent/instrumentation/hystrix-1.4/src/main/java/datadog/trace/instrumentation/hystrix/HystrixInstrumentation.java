@@ -8,7 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.rxjava.TracedOnSubscribe;
 import java.util.HashMap;
 import java.util.Map;

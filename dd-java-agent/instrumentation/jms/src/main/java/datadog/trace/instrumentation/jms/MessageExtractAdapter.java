@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jms;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;

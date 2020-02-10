@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.netty40;
 
 import datadog.trace.bootstrap.WeakMap;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.context.TraceScope;
-import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.netty40.client.HttpClientTracingHandler;
 import datadog.trace.instrumentation.netty40.server.HttpServerTracingHandler;
 import io.netty.util.AttributeKey;

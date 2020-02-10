@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator
 
 import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan
 import io.opentracing.tag.Tags
 
 class ClientDecoratorTest extends BaseDecoratorTest {

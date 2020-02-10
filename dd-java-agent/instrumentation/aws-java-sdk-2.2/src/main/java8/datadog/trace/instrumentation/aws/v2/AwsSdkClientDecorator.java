@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.aws.v2;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkRequest;

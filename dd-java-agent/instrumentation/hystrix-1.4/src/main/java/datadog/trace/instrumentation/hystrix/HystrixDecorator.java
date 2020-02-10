@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.hystrix;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 
 public class HystrixDecorator extends BaseDecorator {
   public static HystrixDecorator DECORATE = new HystrixDecorator();

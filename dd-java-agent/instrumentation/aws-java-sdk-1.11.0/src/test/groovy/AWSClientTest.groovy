@@ -30,7 +30,7 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.apache.http.conn.HttpHostConnectException
 import org.apache.http.impl.execchain.RequestAbortedException
 import spock.lang.AutoCleanup
@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan
 
 class AWSClientTest extends AgentTestRunner {
 

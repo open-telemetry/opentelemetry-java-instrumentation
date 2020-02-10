@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rmi.context;
 
 import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;

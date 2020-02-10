@@ -1,7 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler
 import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.netty.channel.AbstractChannel

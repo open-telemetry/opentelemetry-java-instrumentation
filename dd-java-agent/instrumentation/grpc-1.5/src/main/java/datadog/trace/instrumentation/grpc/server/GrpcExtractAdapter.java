@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.grpc.server;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import io.grpc.Metadata;
 import java.util.ArrayList;
 import java.util.List;

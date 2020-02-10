@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.akkahttp;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

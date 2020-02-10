@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jms;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import lombok.extern.slf4j.Slf4j;
