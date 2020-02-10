@@ -1,6 +1,8 @@
 package io.opentelemetry.auto.tooling;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.exportersupport.ExporterFactory;
 import io.opentelemetry.auto.tooling.exporter.ExporterConfigException;
 import io.opentelemetry.auto.tooling.exporter.ExporterRegistry;
 import io.opentelemetry.auto.tooling.exporter.SpanExporterFactory;
@@ -23,7 +25,6 @@ public class TracerInstaller {
 
   /** Register agent tracer if no agent tracer is already registered. */
   public static synchronized void installAgentTracer() {
-    System.out.println("Entering installAgentTracer");
     if (Config.get().isTraceEnabled()) {
 
       // Try to create an exporter
@@ -39,12 +40,10 @@ public class TracerInstaller {
         }
       } else {
         final String exporterJar = Config.get().getExporterJar();
-        System.out.println("Exporter jar is: " + exporterJar);
         if (exporterJar != null) {
           exporter = loadFromJar(exporterJar);
         }
       }
-      System.out.println("Exporter is: " + exporter);
       if (exporter != null) {
         OpenTelemetrySdk.getTracerFactory()
             .addSpanProcessor(SimpleSpansProcessor.newBuilder(exporter).build());
@@ -57,39 +56,36 @@ public class TracerInstaller {
     }
   }
 
-  private static SpanExporter loadFromJar(final String exporterJar) {
+  @VisibleForTesting
+  private static synchronized SpanExporter loadFromJar(final String exporterJar) {
     try {
       final URL url = new File(exporterJar).toURI().toURL();
 
-      System.out.println("Trying to load jar: " + url);
-
       // Locate the name of the bootstrap class and try to load it
       final Manifest mf;
-      exporterLoader = new ExporterClassLoader(new URL[] {url}, null);
-      try (final InputStream in = exporterLoader.getResourceAsStream("META-INF/MANIFEST.MF")) {
-        if (in == null) {
-          log.warn("Could not load MANIFEST.MF from exporter jar");
-          return null;
-        }
+      exporterLoader =
+          new ExporterClassLoader(new URL[] {url}, TracerInstaller.class.getClassLoader());
+      final URL mfUrl = exporterLoader.findResource("META-INF/MANIFEST.MF");
+      if (mfUrl == null) {
+        log.warn("Could not load manifest from jar: " + url);
+        return null;
+      }
+      try (final InputStream in = mfUrl.openStream()) {
         mf = new Manifest(in);
         System.out.println("Manifest:" + mf.getMainAttributes());
       }
 
       final String bootstrap = mf.getMainAttributes().getValue("Ota-Bootstrap-Class");
-      for (final Object key : mf.getMainAttributes().keySet()) {
-        System.out.println(key + "->" + mf.getMainAttributes().get(key));
-      }
       if (bootstrap == null) {
         log.warn("Could not find name of bootstrap class in MANIFEST.MF");
         return null;
       }
-      System.out.println("Bootstrap: " + bootstrap);
       final Class<?> bootstrapClass = exporterLoader.loadClass(bootstrap);
 
-      // Use reflection to call the bootstrap method. It should return a SpanRepoter.
-      final Method m = bootstrapClass.getMethod("createSpanExporter");
-      return (SpanExporter) m.invoke(null);
-
+      // Use reflection to call the bootstrap method. It should return a ReporterFactory.
+      final Method m = bootstrapClass.getMethod("getFactory");
+      final ExporterFactory f = (ExporterFactory) m.invoke(null);
+      return f.fromConfig(new DefaultConfigProvider("exporter"));
     } catch (final MalformedURLException e) {
       log.warn("Could not locate the exporter jar: " + exporterJar, e);
     } catch (final IOException e) {

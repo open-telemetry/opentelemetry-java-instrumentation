@@ -1,0 +1,27 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly deps.opentelemetrySdk
+  compileOnly deps.opentelemetryApi
+  compile project(":exporter-support")
+}
+
+shadowJar {
+  manifest {
+    attributes(
+      'Ota-Bootstrap-Class': 'io.opentelemetry.auto.dummyexporter.Bootstrap',
+    )
+  }
+  relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"
+  relocate "io.opentelemetry.context", "io.opentelemetry.auto.shaded.io.opentelemetry.context"
+  relocate "io.opentelemetry.distributedcontext", "io.opentelemetry.auto.shaded.io.opentelemetry.distributedcontext"
+  relocate "io.opentelemetry.internal", "io.opentelemetry.auto.shaded.io.opentelemetry.internal"
+  relocate "io.opentelemetry.metrics", "io.opentelemetry.auto.shaded.io.opentelemetry.metrics"
+  relocate "io.opentelemetry.trace", "io.opentelemetry.auto.shaded.io.opentelemetry.trace"
+}
+
+

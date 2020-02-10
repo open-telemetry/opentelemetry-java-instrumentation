@@ -25,6 +25,9 @@ include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
 
+// exporter support
+include ':exporter-support'
+
 // misc
 include ':testing'
 include ':utils:gc-utils'
@@ -132,6 +135,9 @@ include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 include ':benchmark-integration:play-perftest'
 
+//Dummy exporter TODO: Move it somewhere better
+include ":dummy-exporter"
+
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"
   project.children.each {
@@ -142,3 +148,5 @@ def setBuildFile(project) {
 setBuildFile(rootProject)
 
 project(':java-agent').name = 'opentelemetry-auto'
+include 'dummy-exporter'
+
