@@ -32,7 +32,11 @@ public class MsgpackFormatWriter extends FormatWriter<MessagePacker> {
   public void writeString(final String key, final String value, final MessagePacker destination)
       throws IOException {
     destination.packString(key);
-    destination.packString(value);
+    if (value == null) {
+      destination.packNil();
+    } else {
+      destination.packString(value);
+    }
   }
 
   @Override
@@ -82,6 +86,10 @@ public class MsgpackFormatWriter extends FormatWriter<MessagePacker> {
       final String key, final BigInteger value, final MessagePacker destination)
       throws IOException {
     destination.packString(key);
-    destination.packBigInteger(value);
+    if (value == null) {
+      destination.packNil();
+    } else {
+      destination.packBigInteger(value);
+    }
   }
 }

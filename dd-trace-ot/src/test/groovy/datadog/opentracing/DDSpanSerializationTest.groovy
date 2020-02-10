@@ -33,7 +33,7 @@ class DDSpanSerializationTest extends DDSpecification {
       parent_id: 0l,
       start    : 100000,
       duration : 33000,
-      type     : "type",
+      type     : spanType,
       error    : 0,
       metrics  : metrics,
       meta     : [
@@ -58,7 +58,7 @@ class DDSpanSerializationTest extends DDSpecification {
         null,
         ["a-baggage": "value"],
         false,
-        "type",
+        spanType,
         ["k1": "v1"],
         new PendingTrace(tracer, 1G, [:]),
         tracer)
@@ -73,9 +73,9 @@ class DDSpanSerializationTest extends DDSpecification {
     actualTree == expectedTree
 
     where:
-    samplingPriority              | _
-    PrioritySampling.SAMPLER_KEEP | _
-    PrioritySampling.UNSET        | _
+    samplingPriority              | spanType
+    PrioritySampling.SAMPLER_KEEP | null
+    PrioritySampling.UNSET        | "some-type"
   }
 
   def "serialize trace/span with id #value as int"() {
@@ -93,7 +93,7 @@ class DDSpanSerializationTest extends DDSpecification {
       null,
       Collections.emptyMap(),
       false,
-      "fakeType",
+      spanType,
       Collections.emptyMap(),
       new PendingTrace(tracer, 1G, [:]),
       tracer)
@@ -122,12 +122,12 @@ class DDSpanSerializationTest extends DDSpecification {
     }
 
     where:
-    value                                           | _
-    0G                                              | _
-    1G                                              | _
-    8223372036854775807G                            | _
-    BigInteger.valueOf(Long.MAX_VALUE).subtract(1G) | _
-    BigInteger.valueOf(Long.MAX_VALUE).add(1G)      | _
-    2G.pow(64).subtract(1G)                         | _
+    value                                           | spanType
+    0G                                              | null
+    1G                                              | "some-type"
+    8223372036854775807G                            | null
+    BigInteger.valueOf(Long.MAX_VALUE).subtract(1G) | "some-type"
+    BigInteger.valueOf(Long.MAX_VALUE).add(1G)      | null
+    2G.pow(64).subtract(1G)                         | "some-type"
   }
 }
