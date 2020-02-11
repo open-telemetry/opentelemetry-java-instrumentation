@@ -19,7 +19,8 @@ public class NettyHttpServerDecorator
     extends HttpServerDecorator<HttpRequest, Channel, HttpResponse> {
   public static final NettyHttpServerDecorator DECORATE = new NettyHttpServerDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.netty-4.1");
 
   @Override
   protected String getComponentName() {

@@ -11,7 +11,8 @@ import org.glassfish.grizzly.http.server.Response;
 public class GrizzlyDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final GrizzlyDecorator DECORATE = new GrizzlyDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.grizzly-2.0");
 
   @Override
   protected String method(final Request request) {

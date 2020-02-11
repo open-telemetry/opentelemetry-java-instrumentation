@@ -22,7 +22,8 @@ import org.bson.BsonValue;
 public class MongoClientDecorator extends DatabaseClientDecorator<CommandStartedEvent> {
   public static final MongoClientDecorator DECORATE = new MongoClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.mongo-driver-3.1");
 
   @Override
   protected String service() {
