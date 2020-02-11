@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.grizzly;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import org.glassfish.grizzly.http.server.Request;
 
 public class GrizzlyRequestExtractAdapter implements AgentPropagation.Getter<Request> {

@@ -1,5 +1,5 @@
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.{activeScope, activeSpan}
+import datadog.trace.bootstrap.instrumentation.api.AgentTracer.{activeScope, activeSpan}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

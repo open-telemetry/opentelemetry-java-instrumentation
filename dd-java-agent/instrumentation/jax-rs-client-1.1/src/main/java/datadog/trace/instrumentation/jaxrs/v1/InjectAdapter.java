@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jaxrs.v1;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import javax.ws.rs.core.MultivaluedMap;
 
 public final class InjectAdapter implements AgentPropagation.Setter<MultivaluedMap> {

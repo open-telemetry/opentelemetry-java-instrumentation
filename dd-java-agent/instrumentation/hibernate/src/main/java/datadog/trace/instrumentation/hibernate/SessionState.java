@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.hibernate;
 
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import lombok.Data;
 import lombok.NonNull;
 

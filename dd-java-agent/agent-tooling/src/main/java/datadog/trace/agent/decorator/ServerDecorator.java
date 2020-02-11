@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator;
 
 import datadog.trace.api.Config;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 
 public abstract class ServerDecorator extends BaseDecorator {

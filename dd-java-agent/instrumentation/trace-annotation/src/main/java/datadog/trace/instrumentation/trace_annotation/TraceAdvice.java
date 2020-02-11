@@ -1,13 +1,13 @@
 package datadog.trace.instrumentation.trace_annotation;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.trace_annotation.TraceDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.api.Trace;
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 

@@ -1,8 +1,8 @@
-import datadog.trace.instrumentation.jdbc.DBInfo
+import datadog.trace.bootstrap.instrumentation.jdbc.DBInfo
 import datadog.trace.util.test.DDSpecification
 import spock.lang.Shared
 
-import static datadog.trace.instrumentation.jdbc.JDBCConnectionUrlParser.parse
+import static datadog.trace.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser.parse
 
 class JDBCConnectionUrlParserTest extends DDSpecification {
 

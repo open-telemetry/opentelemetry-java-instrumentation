@@ -1,6 +1,6 @@
 package dd.test.trace.annotation;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.api.Trace;

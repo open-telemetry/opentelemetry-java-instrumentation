@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.googlehttpclient;
 
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import lombok.Data;
 import lombok.NonNull;
 

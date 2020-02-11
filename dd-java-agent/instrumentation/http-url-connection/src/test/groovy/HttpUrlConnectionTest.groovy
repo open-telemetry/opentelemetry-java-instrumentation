@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import spock.lang.Ignore
 import spock.lang.Requires
@@ -9,7 +9,7 @@ import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {

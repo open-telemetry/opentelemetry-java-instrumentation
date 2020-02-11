@@ -1,11 +1,11 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.noopSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.noopSpan;
 import static datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
 
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientRequest;

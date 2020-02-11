@@ -5,7 +5,7 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator
 import spock.lang.Shared
 

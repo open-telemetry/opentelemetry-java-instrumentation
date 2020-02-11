@@ -1,14 +1,14 @@
 package datadog.trace.instrumentation.netty40.server;
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.propagate;
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator.DECORATE;
 import static datadog.trace.instrumentation.netty40.server.NettyRequestExtractAdapter.GETTER;
 
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.AgentSpan.Context;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan.Context;
 import datadog.trace.instrumentation.netty40.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

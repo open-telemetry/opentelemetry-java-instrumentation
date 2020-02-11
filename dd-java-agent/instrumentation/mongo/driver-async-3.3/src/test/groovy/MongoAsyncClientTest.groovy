@@ -11,7 +11,7 @@ import com.mongodb.connection.ClusterSettings
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document

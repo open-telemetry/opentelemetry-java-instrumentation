@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.api;
+package datadog.trace.bootstrap.instrumentation.api;
 
 import datadog.trace.context.TraceScope;
 

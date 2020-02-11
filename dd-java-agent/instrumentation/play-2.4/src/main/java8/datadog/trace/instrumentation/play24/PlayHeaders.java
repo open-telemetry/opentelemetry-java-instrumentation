@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.play24;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import play.api.mvc.Headers;
 import scala.Option;
 import scala.collection.JavaConversions;

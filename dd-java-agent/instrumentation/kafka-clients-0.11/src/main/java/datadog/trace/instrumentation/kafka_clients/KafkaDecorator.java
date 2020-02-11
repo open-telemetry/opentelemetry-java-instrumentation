@@ -3,8 +3,8 @@ package datadog.trace.instrumentation.kafka_clients;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.Tags;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.Tags;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 

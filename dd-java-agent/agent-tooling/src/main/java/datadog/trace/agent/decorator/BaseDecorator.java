@@ -2,8 +2,8 @@ package datadog.trace.agent.decorator;
 
 import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.lang.reflect.Method;
 import java.net.Inet4Address;

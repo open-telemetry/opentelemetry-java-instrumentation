@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.jaxrs2;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;

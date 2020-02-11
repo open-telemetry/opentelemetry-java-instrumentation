@@ -2,7 +2,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentTracer.{activeScope, activeSpan}
+import datadog.trace.bootstrap.instrumentation.api.AgentTracer.{activeScope, activeSpan}
 
 import scala.concurrent.duration._
 

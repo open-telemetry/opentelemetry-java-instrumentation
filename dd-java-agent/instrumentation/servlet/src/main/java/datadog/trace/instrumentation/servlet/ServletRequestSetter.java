@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import javax.servlet.ServletRequest;
 
 /** Inject into request attributes since the request headers can't be modified. */

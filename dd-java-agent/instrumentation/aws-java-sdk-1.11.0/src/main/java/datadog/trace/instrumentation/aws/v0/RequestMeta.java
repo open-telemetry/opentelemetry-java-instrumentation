@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.aws.v0;
 
 import com.amazonaws.handlers.HandlerContextKey;
-import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import lombok.Data;
 
 @Data

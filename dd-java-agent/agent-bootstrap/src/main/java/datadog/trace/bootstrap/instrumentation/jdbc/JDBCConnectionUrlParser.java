@@ -1,6 +1,6 @@
-package datadog.trace.instrumentation.jdbc;
+package datadog.trace.bootstrap.instrumentation.jdbc;
 
-import static datadog.trace.instrumentation.jdbc.DBInfo.DEFAULT;
+import static datadog.trace.bootstrap.instrumentation.jdbc.DBInfo.DEFAULT;
 
 import datadog.trace.bootstrap.ExceptionLogger;
 import java.io.UnsupportedEncodingException;
@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
 
 /**
  * Structured as an enum instead of a class hierarchy to allow iterating through the parsers
- * automatically without having to maintain a separate list of parsers.
+ * automatically without having to maintain a separate list of parsers. This is put in the bootstrap
+ * project to keep the Muzzle generated dependency references smaller.
  */
 public enum JDBCConnectionUrlParser {
   GENERIC_URL_LIKE() {

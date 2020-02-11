@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.util.Map;
 
 public class TextMapExtractAdapter implements AgentPropagation.Getter<Map<String, Object>> {

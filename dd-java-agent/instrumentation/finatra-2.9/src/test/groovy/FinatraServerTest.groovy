@@ -6,7 +6,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.finatra.FinatraDecorator
 
 import java.util.concurrent.TimeoutException

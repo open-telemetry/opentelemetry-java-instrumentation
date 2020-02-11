@@ -12,7 +12,7 @@ import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
@@ -23,10 +23,10 @@ import org.apache.http.impl.client.HttpClientBuilder
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
-import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan
 
 class TwilioClientTest extends AgentTestRunner {
 

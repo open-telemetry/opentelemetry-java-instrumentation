@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.rmi.context;
 
-import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;

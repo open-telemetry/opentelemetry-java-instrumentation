@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.http_url_connection;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.net.HttpURLConnection;
 
 public class HeadersInjectAdapter implements AgentPropagation.Setter<HttpURLConnection> {

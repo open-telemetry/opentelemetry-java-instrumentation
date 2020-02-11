@@ -6,12 +6,12 @@ import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT;
 import static java.util.Collections.singletonMap;
 
 import datadog.trace.api.interceptor.MutableSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation.Getter;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentTracer.TracerAPI;
 import datadog.trace.context.TraceScope;
-import datadog.trace.instrumentation.api.AgentPropagation;
-import datadog.trace.instrumentation.api.AgentPropagation.Getter;
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;

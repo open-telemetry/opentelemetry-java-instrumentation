@@ -3,13 +3,13 @@ package datadog.trace.agent.test.log.injection
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.CorrelationIdentifier
-import datadog.trace.instrumentation.api.AgentScope
-import datadog.trace.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.api.AgentScope
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan
 
 import java.util.concurrent.atomic.AtomicReference
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan
 
 /**
  * This class represents the standard test cases that new logging library integrations MUST

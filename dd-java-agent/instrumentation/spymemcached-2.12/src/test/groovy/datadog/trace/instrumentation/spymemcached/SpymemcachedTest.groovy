@@ -5,7 +5,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder

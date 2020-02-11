@@ -1,7 +1,7 @@
 import com.netflix.hystrix.HystrixCommand
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import spock.lang.Timeout
 
 import java.util.concurrent.BlockingQueue

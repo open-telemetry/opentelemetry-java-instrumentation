@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;

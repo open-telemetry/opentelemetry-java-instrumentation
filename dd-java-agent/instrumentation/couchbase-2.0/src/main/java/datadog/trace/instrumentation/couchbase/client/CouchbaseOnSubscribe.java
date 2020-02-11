@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.couchbase.client;
 import static datadog.trace.instrumentation.couchbase.client.CouchbaseClientDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.rxjava.TracedOnSubscribe;
 import java.lang.reflect.Method;
 import rx.Observable;

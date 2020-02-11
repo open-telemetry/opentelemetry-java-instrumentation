@@ -3,7 +3,7 @@ package datadog.trace.agent.decorator;
 import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.net.URI;
 import java.net.URISyntaxException;

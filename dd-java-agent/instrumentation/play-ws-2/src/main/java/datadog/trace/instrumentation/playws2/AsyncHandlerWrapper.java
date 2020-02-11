@@ -1,10 +1,10 @@
 package datadog.trace.instrumentation.playws2;
 
-import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.playws2.PlayWSClientDecorator.DECORATE;
 
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.context.TraceScope;
-import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.InetSocketAddress;
 import java.util.List;
 import play.shaded.ahc.io.netty.channel.Channel;

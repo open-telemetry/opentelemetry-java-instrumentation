@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.lettuce.rx;
 
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import io.lettuce.core.protocol.RedisCommand;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

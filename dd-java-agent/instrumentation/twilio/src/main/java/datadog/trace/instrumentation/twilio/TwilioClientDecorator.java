@@ -6,7 +6,7 @@ import com.twilio.rest.api.v2010.account.Message;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;

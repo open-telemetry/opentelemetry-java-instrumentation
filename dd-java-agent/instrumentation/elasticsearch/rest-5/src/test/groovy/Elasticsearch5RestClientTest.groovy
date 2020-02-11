@@ -2,7 +2,7 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import groovy.json.JsonSlurper
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig

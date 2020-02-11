@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.grpc.client;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import io.grpc.Metadata;
 
 public final class GrpcInjectAdapter implements AgentPropagation.Setter<Metadata> {

@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.api;
+package datadog.trace.bootstrap.instrumentation.api;
 
 public interface AgentSpan {
   AgentSpan setTag(String key, boolean value);

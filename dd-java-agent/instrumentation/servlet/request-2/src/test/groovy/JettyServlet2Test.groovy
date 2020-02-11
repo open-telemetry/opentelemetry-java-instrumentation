@@ -2,7 +2,7 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet2.Servlet2Decorator
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server

@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.jdbc;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jdbc.JDBCDecorator.DECORATE;
 import static datadog.trace.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 import static java.util.Collections.singletonMap;
@@ -16,12 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -42,23 +40,14 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
   @Override
   public String[] helperClassNames() {
-    final List<String> helpers = new ArrayList<>(JDBCConnectionUrlParser.values().length + 9);
-
-    helpers.add(packageName + ".DBInfo");
-    helpers.add(packageName + ".DBInfo$Builder");
-    helpers.add(packageName + ".JDBCUtils");
-    helpers.add(packageName + ".JDBCMaps");
-    helpers.add(packageName + ".JDBCConnectionUrlParser");
-
-    helpers.add("datadog.trace.agent.decorator.BaseDecorator");
-    helpers.add("datadog.trace.agent.decorator.ClientDecorator");
-    helpers.add("datadog.trace.agent.decorator.DatabaseClientDecorator");
-    helpers.add(packageName + ".JDBCDecorator");
-
-    for (final JDBCConnectionUrlParser parser : JDBCConnectionUrlParser.values()) {
-      helpers.add(parser.getClass().getName());
-    }
-    return helpers.toArray(new String[0]);
+    return new String[] {
+      packageName + ".JDBCMaps",
+      packageName + ".JDBCUtils",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.DatabaseClientDecorator",
+      packageName + ".JDBCDecorator",
+    };
   }
 
   @Override

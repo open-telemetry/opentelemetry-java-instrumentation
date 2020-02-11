@@ -2,8 +2,8 @@ package datadog.trace.instrumentation.jetty8;
 
 import static datadog.trace.instrumentation.jetty8.JettyDecorator.DECORATE;
 
-import datadog.trace.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.api.Tags;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.Tags;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;

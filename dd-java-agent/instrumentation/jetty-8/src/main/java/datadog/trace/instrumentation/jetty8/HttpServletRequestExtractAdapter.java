@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jetty8;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.util.Collections;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;

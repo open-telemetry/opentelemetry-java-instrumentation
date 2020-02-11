@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 
-import static datadog.trace.instrumentation.api.AgentTracer.activeScope
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
 
 class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnectionDecorator> {
 

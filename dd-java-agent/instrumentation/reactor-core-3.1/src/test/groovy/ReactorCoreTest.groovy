@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import datadog.trace.instrumentation.api.AgentSpan
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -11,7 +11,7 @@ import spock.lang.Shared
 
 import java.time.Duration
 
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan
 
 class ReactorCoreTest extends AgentTestRunner {
 

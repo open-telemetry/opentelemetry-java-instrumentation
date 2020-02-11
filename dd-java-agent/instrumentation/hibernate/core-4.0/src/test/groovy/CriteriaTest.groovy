@@ -1,5 +1,5 @@
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.hibernate.Criteria
 import org.hibernate.Session
 import org.hibernate.criterion.Order

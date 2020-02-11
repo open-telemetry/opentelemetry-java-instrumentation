@@ -7,7 +7,7 @@ import com.amazonaws.Response;
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;

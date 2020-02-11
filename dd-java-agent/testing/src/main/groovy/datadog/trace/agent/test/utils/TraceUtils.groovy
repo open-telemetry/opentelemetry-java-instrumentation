@@ -3,14 +3,14 @@ package datadog.trace.agent.test.utils
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.decorator.BaseDecorator
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.instrumentation.api.AgentScope
-import datadog.trace.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.api.AgentScope
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan
 import lombok.SneakyThrows
 
 import java.util.concurrent.Callable
 
-import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
-import static datadog.trace.instrumentation.api.AgentTracer.startSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan
 
 class TraceUtils {
 

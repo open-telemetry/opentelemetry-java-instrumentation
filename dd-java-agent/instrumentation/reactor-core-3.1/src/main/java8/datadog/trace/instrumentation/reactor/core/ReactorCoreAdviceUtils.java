@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.reactor.core;
 
 import static reactor.core.publisher.Operators.lift;
 
-import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;

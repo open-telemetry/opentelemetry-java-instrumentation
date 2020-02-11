@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.okhttp3;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import okhttp3.Request;
 
 /**

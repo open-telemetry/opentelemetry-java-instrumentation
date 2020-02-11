@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.kafka_clients;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;

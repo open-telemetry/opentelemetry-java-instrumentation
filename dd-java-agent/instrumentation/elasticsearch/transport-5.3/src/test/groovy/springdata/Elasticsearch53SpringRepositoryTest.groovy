@@ -4,7 +4,7 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
