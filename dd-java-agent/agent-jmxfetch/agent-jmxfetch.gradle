@@ -13,18 +13,12 @@ dependencies {
   compile project(':dd-trace-api')
 }
 
-configurations {
-  // exclude bootstrap dependencies from shadowJar
-  runtime.exclude module: deps.opentracing
-  runtime.exclude module: deps.slf4j
-  runtime.exclude group: 'org.slf4j'
-  runtime.exclude group: 'io.opentracing'
-}
-
 shadowJar {
+  dependencies deps.sharedInverse
   dependencies {
     exclude(project(':dd-java-agent:agent-bootstrap'))
     exclude(project(':dd-trace-api'))
+    exclude(dependency('org.slf4j::'))
   }
 }
 

@@ -62,5 +62,31 @@ ext {
     scala          : dependencies.create(group: 'org.scala-lang', name: 'scala-library', version: "${versions.scala}"),
     kotlin         : dependencies.create(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${versions.kotlin}"),
     coroutines     : dependencies.create(group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: "${versions.coroutines}"),
+
+    // Shared between agent tooling and instrumentation and JMXFetch
+    shared         : [
+      dependencies.create(group: 'com.datadoghq', name: 'java-dogstatsd-client', version: '2.8'),
+      // "Explicit override jnr version because .22 caused issues" - mar-kolya
+      dependencies.create(group: 'com.github.jnr', name: 'jnr-unixsocket', version: '0.23'),
+      dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}")
+    ],
+
+    // Inverse of "shared".  These exclude directives are part of shadowJar's DSL
+    // which is similar but not exactly the same as the regular gradle dependency{} block
+    // Also, transitive dependencies have to be explicitly listed
+    sharedInverse  : (Closure) {
+      // dogstatsd and its transitives
+      exclude(dependency('com.datadoghq:java-dogstatsd-client'))
+      exclude(dependency('com.github.jnr::'))
+      exclude(dependency('org.ow2.asm::'))
+
+      // Guava and its transitives
+      exclude(dependency('com.google.guava::'))
+      exclude(dependency('com.google.code.findbugs::'))
+      exclude(dependency('com.google.errorprone::'))
+      exclude(dependency('com.google.j2objc::'))
+      exclude(dependency('org.codehaus.mojo::'))
+      exclude(dependency('org.checkerframework::'))
+    }
   ]
 }

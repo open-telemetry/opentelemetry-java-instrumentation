@@ -76,16 +76,12 @@ dependencies {
   }
 }
 
-configurations {
-  // exclude bootstrap dependencies from shadowJar
-  runtime.exclude module: deps.slf4j
-  runtime.exclude group: 'org.slf4j'
-}
-
 shadowJar {
+  dependencies deps.sharedInverse
   dependencies {
     exclude(project(':dd-java-agent:agent-bootstrap'))
     exclude(project(':dd-trace-api'))
+    exclude(dependency('org.slf4j::'))
   }
 }
 

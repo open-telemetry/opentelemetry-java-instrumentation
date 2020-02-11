@@ -21,7 +21,7 @@ public class DatadogClassLoader extends URLClassLoader {
   // adds a jar to the bootstrap class lookup, but not to the resource lookup.
   // As a workaround, we keep a reference to the bootstrap jar
   // to use only for resource lookups.
-  private final BootstrapClassLoaderProxy bootstrapProxy;
+  private final ClassLoader bootstrapProxy;
   /**
    * Construct a new DatadogClassLoader
    *
@@ -31,14 +31,13 @@ public class DatadogClassLoader extends URLClassLoader {
    *     9+.
    */
   public DatadogClassLoader(
-      final URL bootstrapJarLocation, final String internalJarFileName, final ClassLoader parent) {
+      final URL bootstrapJarLocation,
+      final String internalJarFileName,
+      final ClassLoader bootstrapProxy,
+      final ClassLoader parent) {
     super(new URL[] {}, parent);
 
-    // some tests pass null
-    bootstrapProxy =
-        bootstrapJarLocation == null
-            ? new BootstrapClassLoaderProxy(new URL[0])
-            : new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation});
+    this.bootstrapProxy = bootstrapProxy;
 
     try {
       // The fields of the URL are mostly dummy.  InternalJarURLHandler is the only important
@@ -78,7 +77,7 @@ public class DatadogClassLoader extends URLClassLoader {
     return findLoadedClass(className) != null;
   }
 
-  public BootstrapClassLoaderProxy getBootstrapProxy() {
+  public ClassLoader getBootstrapProxy() {
     return bootstrapProxy;
   }
 
@@ -93,8 +92,12 @@ public class DatadogClassLoader extends URLClassLoader {
       ClassLoader.registerAsParallelCapable();
     }
 
-    public BootstrapClassLoaderProxy(final URL[] urls) {
-      super(urls, null);
+    public BootstrapClassLoaderProxy(final URL url) {
+      super(new URL[] {url}, null);
+    }
+
+    public BootstrapClassLoaderProxy() {
+      super(new URL[0], null);
     }
 
     @Override
