@@ -13,15 +13,15 @@ jacocoTestReport {
   }
 }
 
-if (!project.hasProperty("excludedClassesCoverage")) {
+if (!project.ext.hasProperty("excludedClassesCoverage")) {
   project.ext.excludedClassesCoverage = []
 }
 
-if (!project.hasProperty("excludedClassesBranchCoverage")) {
+if (!project.ext.hasProperty("excludedClassesBranchCoverage")) {
   project.ext.excludedClassesBranchCoverage = []
 }
 
-if (!project.hasProperty("excludedClassesInstructionCoverage")) {
+if (!project.ext.hasProperty("excludedClassesInstructionCoverage")) {
   project.ext.excludedClassesInstructionCoverage = []
 }
 
