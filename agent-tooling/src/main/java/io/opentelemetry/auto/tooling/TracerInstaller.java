@@ -10,12 +10,10 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import java.util.jar.Manifest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,47 +56,30 @@ public class TracerInstaller {
 
   @VisibleForTesting
   private static synchronized SpanExporter loadFromJar(final String exporterJar) {
+    final URL url;
     try {
-      final URL url = new File(exporterJar).toURI().toURL();
-
-      // Locate the name of the bootstrap class and try to load it
-      final Manifest mf;
-      exporterLoader =
-          new ExporterClassLoader(new URL[] {url}, TracerInstaller.class.getClassLoader());
-      final URL mfUrl = exporterLoader.findResource("META-INF/MANIFEST.MF");
-      if (mfUrl == null) {
-        log.warn("Could not load manifest from jar: " + url);
-        return null;
-      }
-      try (final InputStream in = mfUrl.openStream()) {
-        mf = new Manifest(in);
-        System.out.println("Manifest:" + mf.getMainAttributes());
-      }
-
-      final String bootstrap = mf.getMainAttributes().getValue("Ota-Bootstrap-Class");
-      if (bootstrap == null) {
-        log.warn("Could not find name of bootstrap class in MANIFEST.MF");
-        return null;
-      }
-      final Class<?> bootstrapClass = exporterLoader.loadClass(bootstrap);
-
-      // Use reflection to call the bootstrap method. It should return a ReporterFactory.
-      final Method m = bootstrapClass.getMethod("getFactory");
-      final ExporterFactory f = (ExporterFactory) m.invoke(null);
-      return f.fromConfig(new DefaultConfigProvider("exporter"));
+      url = new File(exporterJar).toURI().toURL();
     } catch (final MalformedURLException e) {
-      log.warn("Could not locate the exporter jar: " + exporterJar, e);
-    } catch (final IOException e) {
-      log.warn("Could not load the exporter jar: " + exporterJar, e);
-    } catch (final ClassNotFoundException e) {
-      log.warn("Could not load the bootstrap class for : " + exporterJar, e);
-    } catch (final NoSuchMethodException e) {
-      log.warn("Could locate the boostrap method for : " + exporterJar, e);
-    } catch (final InvocationTargetException e) {
-      log.warn("Could execute the boostrap method for : " + exporterJar, e);
-    } catch (final IllegalAccessException e) {
-      log.warn("Bootstrap method not public for : " + exporterJar, e);
+      log.warn("Filename could not be parsed: " + exporterJar + ". Exporter is not installed");
+      return null;
     }
+
+    // Locate the name of the bootstrap class and try to load it
+    final Manifest mf;
+    exporterLoader =
+        new ExporterClassLoader(new URL[] {url}, TracerInstaller.class.getClassLoader());
+    final ServiceLoader<ExporterFactory> sl =
+        ServiceLoader.load(ExporterFactory.class, exporterLoader);
+    final Iterator<ExporterFactory> itor = sl.iterator();
+    if (itor.hasNext()) {
+      final ExporterFactory f = itor.next();
+      if (itor.hasNext()) {
+        log.warn(
+            "Exporter JAR defines more than one factory. Only the first one found will be used");
+      }
+      return f.fromConfig(new DefaultConfigProvider("exporter"));
+    }
+    log.warn("No matching providers in jar " + exporterJar);
     return null;
   }
 
