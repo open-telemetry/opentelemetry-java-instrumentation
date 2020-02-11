@@ -19,7 +19,8 @@ import ratpack.server.PublicAddress;
 public class RatpackServerDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final RatpackServerDecorator DECORATE = new RatpackServerDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.ratpack-1.4");
 
   @Override
   protected String getComponentName() {

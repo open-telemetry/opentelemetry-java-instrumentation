@@ -26,7 +26,8 @@ public abstract class KafkaDecorator extends ClientDecorator {
         }
       };
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.kafka-clients-0.11");
 
   @Override
   protected String service() {
