@@ -5,6 +5,7 @@ import static datadog.trace.common.serialization.MsgpackFormatWriter.MSGPACK_WRI
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
+import datadog.common.exec.CommonTaskExecutor;
 import datadog.opentracing.ContainerInfo;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Dispatcher;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -263,6 +265,9 @@ public class DDAgentApi {
         .connectTimeout(HTTP_TIMEOUT, TimeUnit.SECONDS)
         .writeTimeout(HTTP_TIMEOUT, TimeUnit.SECONDS)
         .readTimeout(HTTP_TIMEOUT, TimeUnit.SECONDS)
+
+        // We don't do async so this shouldn't matter, but just to be safe...
+        .dispatcher(new Dispatcher(CommonTaskExecutor.INSTANCE))
         .build();
   }
 

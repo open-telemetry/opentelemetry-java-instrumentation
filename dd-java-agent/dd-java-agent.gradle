@@ -103,7 +103,7 @@ dependencies {
   testCompile project(':dd-java-agent:agent-bootstrap')
   testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
-  testCompile project(':utils:gc-utils')
+  testCompile project(':utils:test-utils')
 
   testCompile deps.opentracingMock
   testCompile deps.testLogging

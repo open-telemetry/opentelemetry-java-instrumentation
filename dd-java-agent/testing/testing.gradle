@@ -31,7 +31,6 @@ dependencies {
 
   compile deps.groovy
 
-  testCompile project(':utils:gc-utils')
   testCompile project(':utils:test-utils')
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
 

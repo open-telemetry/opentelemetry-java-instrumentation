@@ -1,14 +1,12 @@
 package datadog.trace.common.writer.ddagent;
 
 import com.lmax.disruptor.EventHandler;
-import datadog.trace.common.util.DaemonThreadFactory;
+import datadog.common.exec.CommonTaskExecutor;
+import datadog.common.exec.DaemonThreadFactory;
 import datadog.trace.common.writer.DDAgentWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,10 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
   private static final int FLUSH_PAYLOAD_BYTES = 5_000_000; // 5 MB
-
-  // TODO: move executor to tracer for sharing with other tasks.
-  private final ScheduledExecutorService heartbeatExecutor =
-      Executors.newScheduledThreadPool(1, new DaemonThreadFactory("dd-trace-heartbeat"));
 
   private final DisruptorEvent.HeartbeatTranslator<byte[]> heartbeatTranslator =
       new DisruptorEvent.HeartbeatTranslator();
@@ -48,13 +42,13 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
               }
             }
           };
-      heartbeatExecutor.scheduleAtFixedRate(heartbeat, 100, 100, TimeUnit.MILLISECONDS);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(heartbeat, 100, 100, TimeUnit.MILLISECONDS);
     }
   }
 
   @Override
-  protected ThreadFactory getThreadFactory() {
-    return new DaemonThreadFactory("dd-trace-writer");
+  protected DaemonThreadFactory getThreadFactory() {
+    return DaemonThreadFactory.TRACE_WRITER;
   }
 
   @Override

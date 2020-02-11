@@ -1,6 +1,5 @@
 package datadog.trace.agent.tooling.muzzle;
 
-import datadog.trace.agent.tooling.AgentTooling;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.io.IOException;
@@ -20,9 +19,6 @@ import net.bytebuddy.dynamic.ClassFileLocator;
  * <p>Additionally, after a successful muzzle validation run each instrumenter's helper injector.
  */
 public class MuzzleVersionScanPlugin {
-  static {
-    AgentTooling.init();
-  }
 
   public static void assertInstrumentationMuzzled(
       final ClassLoader instrumentationLoader,

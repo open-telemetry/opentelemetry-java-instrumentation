@@ -839,6 +839,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private final WeakReference<DDTracer> reference;
 
     private ShutdownHook(final DDTracer tracer) {
+      super("dd-tracer-shutdown-hook");
       reference = new WeakReference<>(tracer);
     }
 

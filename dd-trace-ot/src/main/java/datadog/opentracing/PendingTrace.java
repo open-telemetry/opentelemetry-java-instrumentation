@@ -1,5 +1,6 @@
 package datadog.opentracing;
 
+import datadog.common.exec.CommonTaskExecutor;
 import datadog.opentracing.scopemanager.ContinuableScope;
 import datadog.trace.common.util.Clock;
 import java.io.Closeable;
@@ -15,9 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -253,6 +251,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       expireReference();
     }
     if (count > 0) {
+      // TODO attempt to flatten and report if top level spans are finished. (for accurate metrics)
       log.debug(
           "trace {} : {} unfinished spans garbage collected. Trace will not report.",
           traceId,
@@ -302,24 +301,12 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
   private static class SpanCleaner implements Runnable, Closeable {
     private static final long CLEAN_FREQUENCY = 1;
-    private static final ThreadFactory FACTORY =
-        new ThreadFactory() {
-          @Override
-          public Thread newThread(final Runnable r) {
-            final Thread thread = new Thread(r, "dd-span-cleaner");
-            thread.setDaemon(true);
-            return thread;
-          }
-        };
-
-    private final ScheduledExecutorService executorService =
-        Executors.newScheduledThreadPool(1, FACTORY);
 
     private final Set<PendingTrace> pendingTraces =
         Collections.newSetFromMap(new ConcurrentHashMap<PendingTrace, Boolean>());
 
     public SpanCleaner() {
-      executorService.scheduleAtFixedRate(this, 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(this, 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
     }
 
     @Override
@@ -331,13 +318,6 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
     @Override
     public void close() {
-      executorService.shutdownNow();
-      try {
-        executorService.awaitTermination(500, TimeUnit.MILLISECONDS);
-      } catch (final InterruptedException e) {
-        log.info("Writer properly closed and async writer interrupted.");
-      }
-
       // Make sure that whatever was left over gets cleaned up
       run();
     }

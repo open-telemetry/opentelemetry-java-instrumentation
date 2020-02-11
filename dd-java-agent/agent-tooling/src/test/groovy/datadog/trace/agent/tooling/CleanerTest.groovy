@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling
 
+import datadog.common.exec.CommonTaskExecutor
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
 import spock.lang.Subject
@@ -15,10 +16,6 @@ class CleanerTest extends DDSpecification {
   @Subject
   def cleaner = new Cleaner()
 
-  def cleanup() {
-    cleaner.stop()
-  }
-
   def "test scheduling"() {
     setup:
     def latch = new CountDownLatch(2)
@@ -31,7 +28,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !cleaner.cleanerService.isShutdown()
+    !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
     cleaner.scheduleCleaning(target, action, 10, MILLISECONDS)
@@ -52,7 +49,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !cleaner.cleanerService.isShutdown()
+    !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
     cleaner.scheduleCleaning(target.get(), action, 10, MILLISECONDS)
@@ -76,7 +73,7 @@ class CleanerTest extends DDSpecification {
     }
 
     expect:
-    !cleaner.cleanerService.isShutdown()
+    !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
     cleaner.scheduleCleaning(null, action, 10, MILLISECONDS)
@@ -84,17 +81,5 @@ class CleanerTest extends DDSpecification {
 
     then:
     callCount.get() == 0
-  }
-
-  def "test shutdown"() {
-    expect:
-    !cleaner.cleanerService.isShutdown()
-
-    when:
-    cleaner.stop()
-
-    then:
-    cleaner.cleanerService.awaitTermination(50, MILLISECONDS)
-    cleaner.cleanerService.isTerminated()
   }
 }

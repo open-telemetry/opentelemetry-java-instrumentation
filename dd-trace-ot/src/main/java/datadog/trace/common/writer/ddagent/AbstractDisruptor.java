@@ -4,9 +4,9 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import datadog.common.exec.DaemonThreadFactory;
 import java.io.Closeable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +33,7 @@ abstract class AbstractDisruptor<T> implements Closeable {
     disruptor.handleEventsWith(handler);
   }
 
-  protected abstract ThreadFactory getThreadFactory();
+  protected abstract DaemonThreadFactory getThreadFactory();
 
   public void start() {
     disruptor.start();
