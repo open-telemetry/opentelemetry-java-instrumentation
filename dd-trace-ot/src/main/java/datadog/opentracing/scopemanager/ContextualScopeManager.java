@@ -1,6 +1,7 @@
 package datadog.opentracing.scopemanager;
 
 import datadog.opentracing.DDSpan;
+import datadog.opentracing.jfr.DDScopeEventFactory;
 import datadog.trace.context.ScopeListener;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
@@ -19,9 +20,11 @@ public class ContextualScopeManager implements ScopeManager {
   final List<ScopeListener> scopeListeners = new CopyOnWriteArrayList<>();
 
   private final int depthLimit;
+  private final DDScopeEventFactory scopeEventFactory;
 
-  public ContextualScopeManager(final int depthLimit) {
+  public ContextualScopeManager(final int depthLimit, final DDScopeEventFactory scopeEventFactory) {
     this.depthLimit = depthLimit;
+    this.scopeEventFactory = scopeEventFactory;
   }
 
   @Override
@@ -40,7 +43,7 @@ public class ContextualScopeManager implements ScopeManager {
       }
     }
     if (span instanceof DDSpan) {
-      return new ContinuableScope(this, (DDSpan) span, finishOnClose);
+      return new ContinuableScope(this, (DDSpan) span, finishOnClose, scopeEventFactory);
     } else {
       return new SimpleScope(this, span, finishOnClose);
     }

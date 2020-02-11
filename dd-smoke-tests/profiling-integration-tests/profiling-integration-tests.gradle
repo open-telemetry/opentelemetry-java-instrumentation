@@ -1,0 +1,39 @@
+plugins {
+  id "com.github.johnrengelman.shadow" version "4.0.4"
+}
+
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_11
+  // Zulu has backported profiling support
+  forceJdk = ['ZULU8', 'ZULU11', '12']
+  jmcVersion = '8.0.0-SNAPSHOT'
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+description = 'Profiling Integration Tests.'
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'datadog.smoketest.profiling.ProfilingTestApplication'
+    )
+  }
+}
+
+dependencies {
+  compile project(':dd-trace-api')
+
+  testCompile project(':dd-smoke-tests')
+  testCompile project(':dd-java-agent:agent-profiling:profiling-testing')
+  testCompile "org.openjdk.jmc:common:$jmcVersion"
+  testCompile "org.openjdk.jmc:flightrecorder:$jmcVersion"
+  testCompile "org.openjdk.jmc:flightrecorder.rules:$jmcVersion"
+  testCompile "org.openjdk.jmc:flightrecorder.rules.jdk:$jmcVersion"
+}
+
+tasks.withType(Test).configureEach {
+  dependsOn shadowJar
+
+  jvmArgs "-Ddatadog.smoketest.profiling.shadowJar.path=${tasks.shadowJar.archivePath}"
+}

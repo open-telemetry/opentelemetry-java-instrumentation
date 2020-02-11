@@ -1,0 +1,46 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+// Set properties before any plugins get loaded
+ext {
+  enableJunitPlatform = true
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+// We do not publish separate jar, but having version file is useful
+apply from: "${rootDir}/gradle/version.gradle"
+
+dependencies {
+  compile deps.slf4j
+  compile project(':dd-trace-api')
+
+  compile project(':dd-java-agent:agent-profiling:profiling-uploader')
+  compile project(':dd-java-agent:agent-profiling:profiling-controller')
+  compile project(':dd-java-agent:agent-profiling:profiling-controller-openjdk')
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+configurations {
+  // exclude bootstrap dependencies from shadowJar
+  runtime.exclude module: deps.opentracing
+  runtime.exclude module: deps.slf4j
+  runtime.exclude group: 'org.slf4j'
+  runtime.exclude group: 'io.opentracing'
+}
+
+shadowJar {
+  dependencies deps.sharedInverse
+  dependencies {
+    exclude(project(':dd-java-agent:agent-bootstrap'))
+    exclude(project(':dd-trace-api'))
+    exclude(dependency('org.slf4j::'))
+  }
+}
+
+jar {
+  classifier = 'unbundled'
+}

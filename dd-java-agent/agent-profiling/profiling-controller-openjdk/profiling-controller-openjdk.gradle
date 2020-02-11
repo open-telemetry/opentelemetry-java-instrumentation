@@ -1,0 +1,51 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_11
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'idea'
+
+dependencies {
+  compile deps.slf4j
+  compile project(':dd-trace-api')
+  compile project(':dd-java-agent:agent-profiling:profiling-controller')
+
+  testCompile deps.junit5
+  testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
+  testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
+  // Mockito dependency above pulls older version of Bytebuddy that fails to work on java13,
+  // so force correct version here. Note: we can remove this once Mockito upgrades.
+  testCompile deps.bytebuddy
+  testCompile deps.bytebuddyagent
+  testCompile group: 'org.hamcrest', name: 'hamcrest', version: '2.1'
+}
+
+/*
+Setup here is as following:
+* We compile with Java11 compiler to get JFR definitions.
+* We specify source/target as Java8 to get code that is loadable on Java8 - JFR defs are Java8 compatible.
+* We force IDEA to treat this as Java11 project with 'idea' plugin below.
+* We run tests only on Java11+.
+ */
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+[JavaCompile, GroovyCompile].each {
+  tasks.withType(it) {
+    doFirst {
+      // Disable '-processing' because some annotations are not claimed.
+      // Disable '-options' because we are compiling for java8 without specifying bootstrap - intentionally.
+      // Disable '-path' because we do not have some of the paths seem to be missing.
+      options.compilerArgs.addAll(['-Xlint:all,-processing,-options,-path', '-Werror'])
+      options.fork = true
+      options.forkOptions.javaHome = file(System.env.JAVA_11_HOME)
+    }
+  }
+}
+
+idea {
+  module {
+    jdkName = '11'
+  }
+}

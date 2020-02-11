@@ -24,6 +24,12 @@ public class LogManagerSetter {
             isJmxfetchStarted(false),
             true,
             "jmxfetch should start in premain when customlogmanager=false.");
+        if (isJFRSupported()) {
+          customAssert(
+              isProfilingStarted(false),
+              true,
+              "profiling should start in premain when customlogmanager=false.");
+        }
       }
     } else if (System.getProperty("java.util.logging.manager") != null) {
       System.out.println("java.util.logging.manager != null");
@@ -37,6 +43,10 @@ public class LogManagerSetter {
             isJmxfetchStarted(false),
             false,
             "jmxfetch startup must be delayed when log manager system property is present.");
+        if (isJFRSupported()) {
+          assertProfilingStartupDelayed(
+              "profiling startup must be delayed when log manager system property is present.");
+        }
         // Change back to a valid LogManager.
         System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
         customAssert(
@@ -49,6 +59,10 @@ public class LogManagerSetter {
             isTracerInstalled(true), true, "tracer should be installed after loading LogManager.");
         customAssert(
             isJmxfetchStarted(true), true, "jmxfetch should start after loading LogManager.");
+        if (isJFRSupported()) {
+          customAssert(
+              isProfilingStarted(true), true, "profiling should start after loading LogManager.");
+        }
       } else {
         customAssert(
             isTracerInstalled(false),
@@ -58,6 +72,12 @@ public class LogManagerSetter {
             isJmxfetchStarted(false),
             true,
             "jmxfetch should start in premain when custom log manager found on classpath.");
+        if (isJFRSupported()) {
+          customAssert(
+              isProfilingStarted(false),
+              true,
+              "profiling should start in premain when custom log manager found on classpath.");
+        }
       }
     } else if (System.getenv("JBOSS_HOME") != null) {
       System.out.println("JBOSS_HOME != null");
@@ -67,6 +87,10 @@ public class LogManagerSetter {
           isJmxfetchStarted(false),
           false,
           "jmxfetch startup must be delayed when JBOSS_HOME property is present.");
+      if (isJFRSupported()) {
+        assertProfilingStartupDelayed(
+            "profiling startup must be delayed when JBOSS_HOME property is present.");
+      }
 
       System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
       customAssert(
@@ -83,6 +107,12 @@ public class LogManagerSetter {
           isJmxfetchStarted(true),
           true,
           "jmxfetch should start after loading with JBOSS_HOME set.");
+      if (isJFRSupported()) {
+        customAssert(
+            isProfilingStarted(true),
+            true,
+            "profiling should start after loading with JBOSS_HOME set.");
+      }
     } else {
       System.out.println("No custom log manager");
 
@@ -94,6 +124,12 @@ public class LogManagerSetter {
           isJmxfetchStarted(false),
           true,
           "jmxfetch should start in premain when no custom log manager is set.");
+      if (isJFRSupported()) {
+        customAssert(
+            isProfilingStarted(false),
+            true,
+            "profiling should start in premain when no custom log manager is set.");
+      }
     }
   }
 
@@ -116,11 +152,22 @@ public class LogManagerSetter {
     }
   }
 
-  private static boolean isJmxfetchStarted(final boolean wait) {
-    // Wait up to 10 seconds for jmxfetch thread to appear
+  private static void assertProfilingStartupDelayed(final String message) {
+    if (isJavaBefore9WithJFR()) {
+      customAssert(isProfilingStarted(false), false, message);
+    } else {
+      customAssert(
+          isProfilingStarted(false),
+          true,
+          "We can safely start profiler on java9+ since it doesn't indirectly trigger logger manager init");
+    }
+  }
+
+  private static boolean isThreadStarted(final String name, final boolean wait) {
+    // Wait up to 10 seconds for thread to appear
     for (int i = 0; i < 20; i++) {
       for (final Thread thread : Thread.getAllStackTraces().keySet()) {
-        if ("dd-jmx-collector".equals(thread.getName())) {
+        if (name.equals(thread.getName())) {
           return true;
         }
       }
@@ -134,6 +181,14 @@ public class LogManagerSetter {
       }
     }
     return false;
+  }
+
+  private static boolean isJmxfetchStarted(final boolean wait) {
+    return isThreadStarted("dd-jmx-collector", wait);
+  }
+
+  private static boolean isProfilingStarted(final boolean wait) {
+    return isThreadStarted("dd-profiler-recording-scheduler", wait);
   }
 
   private static boolean isTracerInstalled(final boolean wait) {
@@ -159,6 +214,10 @@ public class LogManagerSetter {
       return false;
     }
 
+    return isJFRSupported();
+  }
+
+  private static boolean isJFRSupported() {
     final String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
     return Thread.currentThread().getContextClassLoader().getResourceAsStream(jfrClassResourceName)
         != null;

@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,9 +57,11 @@ public class Config {
   public static final String PRIORITY_SAMPLING = "priority.sampling";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String SERVICE_MAPPING = "service.mapping";
+
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
+
   public static final String TRACE_ANALYTICS_ENABLED = "trace.analytics.enabled";
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_EXECUTORS_ALL = "trace.executors.all";
@@ -98,9 +103,28 @@ public class Config {
 
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
-  public static final String SERVICE_TAG = "service";
-  @Deprecated public static final String SERVICE = SERVICE_TAG; // To be removed in 0.34.0
+  public static final String PROFILING_ENABLED = "profiling.enabled";
+  public static final String PROFILING_URL = "profiling.url";
+
+  public static final String PROFILING_API_KEY = "profiling.api-key";
+  public static final String PROFILING_API_KEY_FILE = "profiling.api-key-file";
+  public static final String PROFILING_API_KEY_OLD = "profiling.apikey";
+  public static final String PROFILING_API_KEY_FILE_OLD = "profiling.apikey.file";
+  public static final String PROFILING_TAGS = "profiling.tags";
+  public static final String PROFILING_STARTUP_DELAY = "profiling.start-delay";
+  public static final String PROFILING_UPLOAD_PERIOD = "profiling.upload.period";
+  public static final String PROFILING_TEMPLATE_OVERRIDE_FILE =
+      "profiling.jfr-template-override-file";
+  public static final String PROFILING_UPLOAD_TIMEOUT = "profiling.upload.timeout";
+  public static final String PROFILING_UPLOAD_COMPRESSION = "profiling.upload.compression";
+  public static final String PROFILING_PROXY_HOST = "profiling.proxy.host";
+  public static final String PROFILING_PROXY_PORT = "profiling.proxy.port";
+  public static final String PROFILING_PROXY_USERNAME = "profiling.proxy.username";
+  public static final String PROFILING_PROXY_PASSWORD = "profiling.proxy.password";
+
   public static final String RUNTIME_ID_TAG = "runtime-id";
+  public static final String SERVICE_TAG = "service";
+  public static final String HOST_TAG = "host";
   public static final String LANGUAGE_TAG_KEY = "language";
   public static final String LANGUAGE_TAG_VALUE = "jvm";
 
@@ -138,9 +162,18 @@ public class Config {
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
 
   public static final boolean DEFAULT_METRICS_ENABLED = false;
-  // No default constants for metrics statsd support -- falls back to jmx fetch values
+  // No default constants for metrics statsd support -- falls back to jmxfetch values
 
   public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
+
+  public static final boolean DEFAULT_PROFILING_ENABLED = false;
+  public static final String DEFAULT_PROFILING_URL =
+      "https://beta-intake.profile.datadoghq.com/v1/input";
+  public static final int DEFAULT_PROFILING_STARTUP_DELAY = 10;
+  public static final int DEFAULT_PROFILING_UPLOAD_PERIOD = 60; // 1 min
+  public static final int DEFAULT_PROFILING_UPLOAD_TIMEOUT = 30; // seconds
+  public static final String DEFAULT_PROFILING_UPLOAD_COMPRESSION = "on";
+  public static final int DEFAULT_PROFILING_PROXY_PORT = 8080;
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
@@ -211,7 +244,6 @@ public class Config {
   @Getter private final Integer healthMetricsStatsdPort;
 
   @Getter private final boolean logsInjectionEnabled;
-
   @Getter private final boolean reportHostName;
 
   @Getter private final String traceAnnotations;
@@ -227,6 +259,20 @@ public class Config {
   @Getter private final Map<String, String> traceSamplingOperationRules;
   @Getter private final Double traceSampleRate;
   @Getter private final Double traceRateLimit;
+
+  @Getter private final boolean profilingEnabled;
+  @Getter private final String profilingUrl;
+  @Getter private final String profilingApiKey;
+  private final Map<String, String> profilingTags;
+  @Getter private final int profilingStartupDelay;
+  @Getter private final int profilingUploadPeriod;
+  @Getter private final String profilingTemplateOverrideFile;
+  @Getter private final int profilingUploadTimeout;
+  @Getter private final String profilingUploadCompression;
+  @Getter private final String profilingProxyHost;
+  @Getter private final int profilingProxyPort;
+  @Getter private final String profilingProxyUsername;
+  @Getter private final String profilingProxyPassword;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -336,7 +382,6 @@ public class Config {
 
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
-
     reportHostName =
         getBooleanSettingFromEnvironment(TRACE_REPORT_HOSTNAME, DEFAULT_TRACE_REPORT_HOSTNAME);
 
@@ -357,6 +402,61 @@ public class Config {
         getMapSettingFromEnvironment(TRACE_SAMPLING_OPERATION_RULES, null);
     traceSampleRate = getDoubleSettingFromEnvironment(TRACE_SAMPLE_RATE, null);
     traceRateLimit = getDoubleSettingFromEnvironment(TRACE_RATE_LIMIT, DEFAULT_TRACE_RATE_LIMIT);
+
+    profilingEnabled =
+        getBooleanSettingFromEnvironment(PROFILING_ENABLED, DEFAULT_PROFILING_ENABLED);
+    profilingUrl = getSettingFromEnvironment(PROFILING_URL, DEFAULT_PROFILING_URL);
+    // Note: We do not want APiKey to be loaded from property for security reasons
+    // Note: we do not use defined default here
+    // FIXME: We should use better authentication mechanism
+    final String profilingApiKeyFile = getSettingFromEnvironment(PROFILING_API_KEY_FILE, null);
+    String tmpProfilingApiKey =
+        System.getenv(propertyNameToEnvironmentVariableName(PROFILING_API_KEY));
+    if (profilingApiKeyFile != null) {
+      try {
+        tmpProfilingApiKey =
+            new String(Files.readAllBytes(Paths.get(profilingApiKeyFile)), StandardCharsets.UTF_8)
+                .trim();
+      } catch (final IOException e) {
+        log.error("Cannot read API key from file {}, skipping", profilingApiKeyFile, e);
+      }
+    }
+    if (tmpProfilingApiKey == null) {
+      final String oldProfilingApiKeyFile =
+          getSettingFromEnvironment(PROFILING_API_KEY_FILE_OLD, null);
+      tmpProfilingApiKey =
+          System.getenv(propertyNameToEnvironmentVariableName(PROFILING_API_KEY_OLD));
+      if (oldProfilingApiKeyFile != null) {
+        try {
+          tmpProfilingApiKey =
+              new String(
+                      Files.readAllBytes(Paths.get(oldProfilingApiKeyFile)), StandardCharsets.UTF_8)
+                  .trim();
+        } catch (final IOException e) {
+          log.error("Cannot read API key from file {}, skipping", profilingApiKeyFile, e);
+        }
+      }
+    }
+    profilingApiKey = tmpProfilingApiKey;
+
+    profilingTags = getMapSettingFromEnvironment(PROFILING_TAGS, null);
+    profilingStartupDelay =
+        getIntegerSettingFromEnvironment(PROFILING_STARTUP_DELAY, DEFAULT_PROFILING_STARTUP_DELAY);
+    profilingUploadPeriod =
+        getIntegerSettingFromEnvironment(PROFILING_UPLOAD_PERIOD, DEFAULT_PROFILING_UPLOAD_PERIOD);
+    profilingTemplateOverrideFile =
+        getSettingFromEnvironment(PROFILING_TEMPLATE_OVERRIDE_FILE, null);
+    profilingUploadTimeout =
+        getIntegerSettingFromEnvironment(
+            PROFILING_UPLOAD_TIMEOUT, DEFAULT_PROFILING_UPLOAD_TIMEOUT);
+    profilingUploadCompression =
+        getSettingFromEnvironment(
+            PROFILING_UPLOAD_COMPRESSION, DEFAULT_PROFILING_UPLOAD_COMPRESSION);
+    profilingProxyHost = getSettingFromEnvironment(PROFILING_PROXY_HOST, null);
+    profilingProxyPort =
+        getIntegerSettingFromEnvironment(PROFILING_PROXY_PORT, DEFAULT_PROFILING_PROXY_PORT);
+    profilingProxyUsername = getSettingFromEnvironment(PROFILING_PROXY_USERNAME, null);
+    profilingProxyPassword = getSettingFromEnvironment(PROFILING_PROXY_PASSWORD, null);
 
     log.debug("New instance: {}", this);
   }
@@ -470,7 +570,6 @@ public class Config {
 
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
-
     reportHostName =
         getPropertyBooleanValue(properties, TRACE_REPORT_HOSTNAME, parent.reportHostName);
 
@@ -493,6 +592,31 @@ public class Config {
             properties, TRACE_SAMPLING_OPERATION_RULES, parent.traceSamplingOperationRules);
     traceSampleRate = getPropertyDoubleValue(properties, TRACE_SAMPLE_RATE, parent.traceSampleRate);
     traceRateLimit = getPropertyDoubleValue(properties, TRACE_RATE_LIMIT, parent.traceRateLimit);
+
+    profilingEnabled =
+        getPropertyBooleanValue(properties, PROFILING_ENABLED, parent.profilingEnabled);
+    profilingUrl = properties.getProperty(PROFILING_URL, parent.profilingUrl);
+    profilingApiKey = properties.getProperty(PROFILING_API_KEY, parent.profilingApiKey);
+    profilingTags = getPropertyMapValue(properties, PROFILING_TAGS, parent.profilingTags);
+    profilingStartupDelay =
+        getPropertyIntegerValue(properties, PROFILING_STARTUP_DELAY, parent.profilingStartupDelay);
+    profilingUploadPeriod =
+        getPropertyIntegerValue(properties, PROFILING_UPLOAD_PERIOD, parent.profilingUploadPeriod);
+    profilingTemplateOverrideFile =
+        properties.getProperty(
+            PROFILING_TEMPLATE_OVERRIDE_FILE, parent.profilingTemplateOverrideFile);
+    profilingUploadTimeout =
+        getPropertyIntegerValue(
+            properties, PROFILING_UPLOAD_TIMEOUT, parent.profilingUploadTimeout);
+    profilingUploadCompression =
+        properties.getProperty(PROFILING_UPLOAD_COMPRESSION, parent.profilingUploadCompression);
+    profilingProxyHost = properties.getProperty(PROFILING_PROXY_HOST, parent.profilingProxyHost);
+    profilingProxyPort =
+        getPropertyIntegerValue(properties, PROFILING_PROXY_PORT, parent.profilingProxyPort);
+    profilingProxyUsername =
+        properties.getProperty(PROFILING_PROXY_USERNAME, parent.profilingProxyUsername);
+    profilingProxyPassword =
+        properties.getProperty(PROFILING_PROXY_PASSWORD, parent.profilingProxyPassword);
 
     log.debug("New instance: {}", this);
   }
@@ -533,6 +657,26 @@ public class Config {
     // and may chose to override it.
     // Additionally, infra/JMX metrics require `service` rather than APM's `service.name` tag
     result.put(SERVICE_TAG, serviceName);
+    return Collections.unmodifiableMap(result);
+  }
+
+  public Map<String, String> getMergedProfilingTags() {
+    final Map<String, String> runtimeTags = getRuntimeTags();
+    final String host = getHostName();
+    final Map<String, String> result =
+        newHashMap(
+            globalTags.size()
+                + profilingTags.size()
+                + runtimeTags.size()
+                + 3 /* for serviceName and host and language */);
+    result.put(HOST_TAG, host); // Host goes first to allow to override it
+    result.putAll(globalTags);
+    result.putAll(profilingTags);
+    result.putAll(runtimeTags);
+    // service name set here instead of getRuntimeTags because apm already manages the service tag
+    // and may chose to override it.
+    result.put(SERVICE_TAG, serviceName);
+    result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
     return Collections.unmodifiableMap(result);
   }
 
