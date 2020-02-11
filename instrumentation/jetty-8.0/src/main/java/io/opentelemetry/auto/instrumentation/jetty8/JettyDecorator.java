@@ -13,7 +13,8 @@ public class JettyDecorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final JettyDecorator DECORATE = new JettyDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jetty-8.0");
 
   @Override
   protected String getComponentName() {

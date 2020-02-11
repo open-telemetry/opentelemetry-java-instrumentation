@@ -12,7 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AdviceUtils {
 
-  public static Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.java-concurrent");
 
   /**
    * Start scope for a given task

@@ -31,7 +31,8 @@ public abstract class JMSDecorator extends ClientDecorator {
         }
       };
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jms-1.1");
 
   @Override
   protected String service() {

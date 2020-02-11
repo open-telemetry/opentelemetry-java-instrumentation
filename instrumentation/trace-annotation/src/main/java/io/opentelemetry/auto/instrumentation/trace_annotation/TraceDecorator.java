@@ -7,7 +7,8 @@ import io.opentelemetry.trace.Tracer;
 public class TraceDecorator extends BaseDecorator {
   public static TraceDecorator DECORATE = new TraceDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.trace-annotation");
 
   @Override
   protected String getSpanType() {
