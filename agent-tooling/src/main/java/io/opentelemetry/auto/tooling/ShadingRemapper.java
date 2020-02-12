@@ -9,7 +9,14 @@ public class ShadingRemapper extends Remapper {
     private final String from;
     private final String to;
 
-    public Rule(final String from, final String to) {
+    public Rule(String from, String to) {
+      // Strip prefix added to prevent the build-time relocation from changing the names
+      if (from.startsWith("#")) {
+        from = from.substring(1);
+      }
+      if (to.startsWith("#")) {
+        to = to.substring(1);
+      }
       this.from = from.replace('.', '/');
       this.to = to.replace('.', '/');
     }

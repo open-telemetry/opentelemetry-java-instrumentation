@@ -16,7 +16,8 @@ public class DummyExporter implements SpanExporter {
   @Override
   public ResultCode export(final List<SpanData> list) {
     for (final SpanData span : list) {
-      System.out.print(prefix + " " + span.getName() + " ");
+      System.out.print(
+          prefix + " " + span.getName() + " " + span.getSpanId().toLowerBase16() + " ");
       for (final Map.Entry<String, AttributeValue> attr : span.getAttributes().entrySet()) {
         System.out.print(attr.getKey() + "=");
         final AttributeValue value = attr.getValue();
