@@ -1,5 +1,8 @@
 package com.datadog.profiling.uploader;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 enum CompressionType {
   /** No compression */
   OFF,
@@ -8,13 +11,11 @@ enum CompressionType {
   /** Lower compression ratio with less CPU overhead * */
   LOW,
   /** Better compression ratio for the price of higher CPU usage * */
-  MEDIUM,
-  /** Unknown compression config value */
-  UNKNOWN;
+  MEDIUM;
 
-  static CompressionType of(final String type) {
+  static CompressionType of(String type) {
     if (type == null) {
-      return UNKNOWN;
+      type = "";
     }
 
     switch (type.toLowerCase()) {
@@ -27,7 +28,8 @@ enum CompressionType {
       case "medium":
         return MEDIUM;
       default:
-        return UNKNOWN;
+        log.warn("Unrecognizable compression type: {}. Defaulting to 'on'.", type);
+        return ON;
     }
   }
 }

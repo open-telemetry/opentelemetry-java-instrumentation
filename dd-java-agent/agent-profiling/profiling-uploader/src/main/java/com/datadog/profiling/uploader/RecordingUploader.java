@@ -244,26 +244,22 @@ public final class RecordingUploader {
     // currently only gzip and off are supported
     // this needs to be updated once more compression types are added
     switch (type) {
+      case ON:
+      case MEDIUM:
+      default:
+        {
+          compression = (is, expectedSize) -> StreamUtils.gzipStream(is, expectedSize, consumer);
+          break;
+        }
       case LOW:
         {
           compression = (is, expectedSize) -> StreamUtils.lz4Stream(is, expectedSize, consumer);
-          break;
-        }
-      case ON:
-      case MEDIUM:
-        {
-          compression = (is, expectedSize) -> StreamUtils.gzipStream(is, expectedSize, consumer);
           break;
         }
       case OFF:
         {
           compression = (is, expectedSize) -> StreamUtils.readStream(is, expectedSize, consumer);
           break;
-        }
-      default:
-        {
-          log.warn("Unrecognizable compression type: {}. Defaulting to 'on'.", type);
-          compression = (is, expectedSize) -> StreamUtils.gzipStream(is, expectedSize, consumer);
         }
     }
     return compression;
