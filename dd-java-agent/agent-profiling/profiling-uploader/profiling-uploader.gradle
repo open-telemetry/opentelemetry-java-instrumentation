@@ -1,0 +1,38 @@
+// Set properties before any plugins get loaded
+ext {
+  jmcVersion = '8.0.0-SNAPSHOT'
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+excludedClassesCoverage += [
+  // This is just a static declaration that is hard to test
+  'com.datadog.profiling.uploader.VersionInfo',
+  // Large parts of this class are jvm specific which makes jacoco really confused since we run it only for 'default' jvm
+  'com.datadog.profiling.uploader.util.PidHelper'
+]
+
+dependencies {
+  compile deps.slf4j
+  compile project(':dd-trace-api')
+
+  compile project(':dd-java-agent:agent-profiling:profiling-controller')
+
+  compile "org.openjdk.jmc:common:$jmcVersion"
+
+  compile deps.guava
+  compile deps.okhttp
+  compile group: 'com.github.jnr', name: 'jnr-posix', version: '3.0.52'
+
+  testCompile deps.junit5
+  testCompile project(':dd-java-agent:agent-profiling:profiling-testing')
+  testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
+  testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
+  testCompile deps.bytebuddy
+  testCompile deps.bytebuddyagent
+  testCompile group: 'com.squareup.okhttp3', name: 'mockwebserver', version: versions.okhttp
+}
+
+/* We use Java8 features, but there is no code needing JFR libraries */
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8

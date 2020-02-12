@@ -1,0 +1,30 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+// We have some general logging paths that are hard to test
+minimumInstructionCoverage = 0.8
+
+excludedClassesCoverage += [
+  // ControllerFactory gets better tested in actual controller implementations
+  'com.datadog.profiling.controller.ControllerFactory',
+  // There are some code paths that is impossible/very-very hard to hit
+  'com.datadog.profiling.controller.ProfilingSystem.StartRecording',
+  'com.datadog.profiling.controller.ProfilingSystem.StopRecording'
+]
+
+dependencies {
+  compile deps.slf4j
+  compile project(':dd-trace-api')
+
+  testCompile deps.junit5
+  testCompile deps.guava
+  testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
+  testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
+  // Mockito dependency above pulls older version of Bytebuddy that fails to work on java13,
+  // so force correct version here. Note: we can remove this once Mockito upgrades.
+  testCompile deps.bytebuddy
+  testCompile deps.bytebuddyagent
+  testCompile group: 'org.awaitility', name: 'awaitility', version: '4.0.1'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8

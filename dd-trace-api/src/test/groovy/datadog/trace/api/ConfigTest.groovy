@@ -16,6 +16,7 @@ import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
 import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
 import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
+import static datadog.trace.api.Config.HOST_TAG
 import static datadog.trace.api.Config.HTTP_CLIENT_ERROR_STATUSES
 import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
 import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
@@ -26,9 +27,26 @@ import static datadog.trace.api.Config.JMX_FETCH_REFRESH_BEANS_PERIOD
 import static datadog.trace.api.Config.JMX_FETCH_STATSD_HOST
 import static datadog.trace.api.Config.JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.JMX_TAGS
+import static datadog.trace.api.Config.LANGUAGE_TAG_KEY
+import static datadog.trace.api.Config.LANGUAGE_TAG_VALUE
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.PRIORITY_SAMPLING
+import static datadog.trace.api.Config.PROFILING_API_KEY
+import static datadog.trace.api.Config.PROFILING_API_KEY_FILE
+import static datadog.trace.api.Config.PROFILING_API_KEY_FILE_OLD
+import static datadog.trace.api.Config.PROFILING_ENABLED
+import static datadog.trace.api.Config.PROFILING_PROXY_HOST
+import static datadog.trace.api.Config.PROFILING_PROXY_PASSWORD
+import static datadog.trace.api.Config.PROFILING_PROXY_PORT
+import static datadog.trace.api.Config.PROFILING_PROXY_USERNAME
+import static datadog.trace.api.Config.PROFILING_STARTUP_DELAY
+import static datadog.trace.api.Config.PROFILING_TAGS
+import static datadog.trace.api.Config.PROFILING_TEMPLATE_OVERRIDE_FILE
+import static datadog.trace.api.Config.PROFILING_UPLOAD_COMPRESSION
+import static datadog.trace.api.Config.PROFILING_UPLOAD_PERIOD
+import static datadog.trace.api.Config.PROFILING_UPLOAD_TIMEOUT
+import static datadog.trace.api.Config.PROFILING_URL
 import static datadog.trace.api.Config.PROPAGATION_STYLE_EXTRACT
 import static datadog.trace.api.Config.PROPAGATION_STYLE_INJECT
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
@@ -67,6 +85,9 @@ class ConfigTest extends DDSpecification {
   private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
   private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
 
+  private static final DD_PROFILING_API_KEY = "DD_PROFILING_API_KEY"
+  private static final DD_PROFILING_API_KEY_OLD = "DD_PROFILING_APIKEY"
+
   def "verify defaults"() {
     when:
     Config config = provider()
@@ -100,9 +121,24 @@ class ConfigTest extends DDSpecification {
     config.jmxFetchRefreshBeansPeriod == null
     config.jmxFetchStatsdHost == null
     config.jmxFetchStatsdPort == DEFAULT_JMX_FETCH_STATSD_PORT
+
     config.healthMetricsEnabled == false
     config.healthMetricsStatsdHost == null
     config.healthMetricsStatsdPort == null
+
+    config.profilingEnabled == false
+    config.profilingUrl == Config.DEFAULT_PROFILING_URL
+    config.profilingApiKey == null
+    config.mergedProfilingTags == [(HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.profilingStartupDelay == 10
+    config.profilingUploadPeriod == 60
+    config.profilingTemplateOverrideFile == null
+    config.profilingUploadTimeout == 30
+    config.profilingProxyHost == null
+    config.profilingProxyPort == Config.DEFAULT_PROFILING_PROXY_PORT
+    config.profilingProxyUsername == null
+    config.profilingProxyPassword == null
+
     config.toString().contains("unnamed-java-app")
 
     where:
@@ -154,6 +190,20 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(TRACE_SAMPLE_RATE, ".5")
     prop.setProperty(TRACE_RATE_LIMIT, "200")
 
+    prop.setProperty(PROFILING_ENABLED, "true")
+    prop.setProperty(PROFILING_URL, "new url")
+    prop.setProperty(PROFILING_API_KEY, "new api key")
+    prop.setProperty(PROFILING_TAGS, "f:6,host:test-host")
+    prop.setProperty(PROFILING_STARTUP_DELAY, "1111")
+    prop.setProperty(PROFILING_UPLOAD_PERIOD, "1112")
+    prop.setProperty(PROFILING_TEMPLATE_OVERRIDE_FILE, "/path")
+    prop.setProperty(PROFILING_UPLOAD_TIMEOUT, "1116")
+    prop.setProperty(PROFILING_UPLOAD_COMPRESSION, "off")
+    prop.setProperty(PROFILING_PROXY_HOST, "proxy-host")
+    prop.setProperty(PROFILING_PROXY_PORT, "1118")
+    prop.setProperty(PROFILING_PROXY_USERNAME, "proxy-username")
+    prop.setProperty(PROFILING_PROXY_PASSWORD, "proxy-password")
+
     when:
     Config config = Config.get(prop)
 
@@ -186,6 +236,7 @@ class ConfigTest extends DDSpecification {
     config.jmxFetchRefreshBeansPeriod == 200
     config.jmxFetchStatsdHost == "statsd host"
     config.jmxFetchStatsdPort == 321
+
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -193,6 +244,20 @@ class ConfigTest extends DDSpecification {
     config.traceSamplingOperationRules == [b: "1"]
     config.traceSampleRate == 0.5
     config.traceRateLimit == 200
+
+    config.profilingEnabled == true
+    config.profilingUrl == "new url"
+    config.profilingApiKey == "new api key" // we can still override via internal properties object
+    config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.profilingStartupDelay == 1111
+    config.profilingUploadPeriod == 1112
+    config.profilingUploadCompression == "off"
+    config.profilingTemplateOverrideFile == "/path"
+    config.profilingUploadTimeout == 1116
+    config.profilingProxyHost == "proxy-host"
+    config.profilingProxyPort == 1118
+    config.profilingProxyUsername == "proxy-username"
+    config.profilingProxyPassword == "proxy-password"
   }
 
   def "specify overrides via system properties"() {
@@ -235,6 +300,20 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_SAMPLE_RATE, ".5")
     System.setProperty(PREFIX + TRACE_RATE_LIMIT, "200")
 
+    System.setProperty(PREFIX + PROFILING_ENABLED, "true")
+    System.setProperty(PREFIX + PROFILING_URL, "new url")
+    System.setProperty(PREFIX + PROFILING_API_KEY, "new api key")
+    System.setProperty(PREFIX + PROFILING_TAGS, "f:6,host:test-host")
+    System.setProperty(PREFIX + PROFILING_STARTUP_DELAY, "1111")
+    System.setProperty(PREFIX + PROFILING_UPLOAD_PERIOD, "1112")
+    System.setProperty(PREFIX + PROFILING_TEMPLATE_OVERRIDE_FILE, "/path")
+    System.setProperty(PREFIX + PROFILING_UPLOAD_TIMEOUT, "1116")
+    System.setProperty(PREFIX + PROFILING_UPLOAD_COMPRESSION, "off")
+    System.setProperty(PREFIX + PROFILING_PROXY_HOST, "proxy-host")
+    System.setProperty(PREFIX + PROFILING_PROXY_PORT, "1118")
+    System.setProperty(PREFIX + PROFILING_PROXY_USERNAME, "proxy-username")
+    System.setProperty(PREFIX + PROFILING_PROXY_PASSWORD, "proxy-password")
+
     when:
     Config config = new Config()
 
@@ -267,6 +346,7 @@ class ConfigTest extends DDSpecification {
     config.jmxFetchRefreshBeansPeriod == 200
     config.jmxFetchStatsdHost == "statsd host"
     config.jmxFetchStatsdPort == 321
+
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -274,6 +354,20 @@ class ConfigTest extends DDSpecification {
     config.traceSamplingOperationRules == [b: "1"]
     config.traceSampleRate == 0.5
     config.traceRateLimit == 200
+
+    config.profilingEnabled == true
+    config.profilingUrl == "new url"
+    config.profilingApiKey == null // system properties cannot be used to provide a key
+    config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.profilingStartupDelay == 1111
+    config.profilingUploadPeriod == 1112
+    config.profilingTemplateOverrideFile == "/path"
+    config.profilingUploadTimeout == 1116
+    config.profilingUploadCompression == "off"
+    config.profilingProxyHost == "proxy-host"
+    config.profilingProxyPort == 1118
+    config.profilingProxyUsername == "proxy-username"
+    config.profilingProxyPassword == "proxy-password"
   }
 
   def "specify overrides via env vars"() {
@@ -285,6 +379,7 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
     environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
     environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
+    environmentVariables.set(DD_PROFILING_API_KEY, "test-api-key")
 
     when:
     def config = new Config()
@@ -297,6 +392,7 @@ class ConfigTest extends DDSpecification {
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.jmxFetchMetricsConfigs == ["some/file"]
     config.reportHostName == true
+    config.profilingApiKey == "test-api-key"
   }
 
   def "sys props override env vars"() {
@@ -405,6 +501,7 @@ class ConfigTest extends DDSpecification {
     false        | false              | true               | true                     | 777 // env var gets picked up instead.
   }
 
+  // FIXME: this seems to be a repeated test
   def "sys props override properties"() {
     setup:
     Properties properties = new Properties()
@@ -889,5 +986,51 @@ class ConfigTest extends DDSpecification {
     ["buzz", "baz"]         | 0.3f
     ["foo", "baz"]          | 0.5f
     ["baz", "foo"]          | 0.7f
+  }
+
+  def "verify api key loaded from file: #path"() {
+    setup:
+    environmentVariables.set(DD_PROFILING_API_KEY, "default-api-key")
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE, path)
+
+    when:
+    def config = new Config()
+
+    then:
+    config.profilingApiKey == expectedKey
+
+    where:
+    path                                                        | expectedKey
+    getClass().getClassLoader().getResource("apikey").getFile() | "test-api-key"
+    "/path/that/doesnt/exist"                                   | "default-api-key"
+  }
+
+  def "verify api key loaded from file for old option name: #path"() {
+    setup:
+    environmentVariables.set(DD_PROFILING_API_KEY_OLD, "default-api-key")
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE_OLD, path)
+
+    when:
+    def config = new Config()
+
+    then:
+    config.profilingApiKey == expectedKey
+
+    where:
+    path                                                            | expectedKey
+    getClass().getClassLoader().getResource("apikey.old").getFile() | "test-api-key-old"
+    "/path/that/doesnt/exist"                                       | "default-api-key"
+  }
+
+  def "verify api key loaded from new option when both new and old are set"() {
+    setup:
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE_OLD, getClass().getClassLoader().getResource("apikey.old").getFile())
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE, getClass().getClassLoader().getResource("apikey").getFile())
+
+    when:
+    def config = new Config()
+
+    then:
+    config.profilingApiKey == "test-api-key"
   }
 }

@@ -2,6 +2,8 @@ package datadog.opentracing;
 
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
+import datadog.opentracing.jfr.DDNoopScopeEventFactory;
+import datadog.opentracing.jfr.DDScopeEventFactory;
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
 import datadog.opentracing.propagation.TagContext;
@@ -115,7 +117,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       sampler(Sampler.Builder.forConfig(config));
       injector(HttpCodec.createInjector(config));
       extractor(HttpCodec.createExtractor(config, config.getHeaderTags()));
-      scopeManager(new ContextualScopeManager(config.getScopeDepthLimit()));
+      scopeManager(
+          new ContextualScopeManager(config.getScopeDepthLimit(), createScopeEventFactory()));
       localRootSpanTags(config.getLocalRootSpanTags());
       defaultSpanTags(config.getMergedSpanTags());
       serviceNameMappings(config.getServiceMapping());
@@ -260,7 +263,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         sampler,
         HttpCodec.createInjector(Config.get()),
         HttpCodec.createExtractor(Config.get(), taggedHeaders),
-        new ContextualScopeManager(Config.get().getScopeDepthLimit()),
+        new ContextualScopeManager(Config.get().getScopeDepthLimit(), createScopeEventFactory()),
         localRootSpanTags,
         defaultSpanTags,
         serviceNameMappings,
@@ -549,6 +552,16 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     final Map<String, String> runtimeTags = new HashMap<>(applicationRootSpanTags);
     runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
     return Collections.unmodifiableMap(runtimeTags);
+  }
+
+  private static DDScopeEventFactory createScopeEventFactory() {
+    try {
+      return (DDScopeEventFactory)
+          Class.forName("datadog.opentracing.jfr.openjdk.ScopeEventFactory").newInstance();
+    } catch (final ClassFormatError | ReflectiveOperationException | NoClassDefFoundError e) {
+      log.debug("Cannot create Openjdk JFR scope event factory", e);
+    }
+    return new DDNoopScopeEventFactory();
   }
 
   /** Spans are built using this builder */

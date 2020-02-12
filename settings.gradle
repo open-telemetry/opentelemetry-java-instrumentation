@@ -21,6 +21,7 @@ rootProject.name = 'dd-trace-java'
 // external apis
 include ':dd-trace-api'
 include ':dd-trace-ot'
+include ':dd-trace-ot:jfr-openjdk'
 
 // agent projects
 include ':dd-java-agent'
@@ -28,6 +29,12 @@ include ':dd-java-agent:agent-bootstrap'
 include ':dd-java-agent:agent-tooling'
 include ':dd-java-agent:agent-jmxfetch'
 include ':dd-java-agent:load-generator'
+
+include ':dd-java-agent:agent-profiling'
+include ':dd-java-agent:agent-profiling:profiling-controller'
+include ':dd-java-agent:agent-profiling:profiling-controller-openjdk'
+include ':dd-java-agent:agent-profiling:profiling-uploader'
+include ':dd-java-agent:agent-profiling:profiling-testing'
 
 // misc
 include ':dd-java-agent:testing'
@@ -40,6 +47,7 @@ include ':dd-smoke-tests:java9-modules'
 include ':dd-smoke-tests:play'
 include ':dd-smoke-tests:springboot'
 include ':dd-smoke-tests:wildfly'
+include ':dd-smoke-tests:profiling-integration-tests'
 
 // instrumentation:
 include ':dd-java-agent:instrumentation:akka-http-10.0'

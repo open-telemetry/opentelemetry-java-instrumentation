@@ -42,6 +42,7 @@ public class Agent {
   private static ClassLoader BOOTSTRAP_PROXY = null;
   private static ClassLoader AGENT_CLASSLOADER = null;
   private static ClassLoader JMXFETCH_CLASSLOADER = null;
+  private static ClassLoader PROFILING_CLASSLOADER = null;
 
   public static void start(final Instrumentation inst, final URL bootstrapURL) {
     createParentClassloader(bootstrapURL);
@@ -79,6 +80,18 @@ public class Agent {
       registerLogManagerCallback(new InstallDatadogTracerCallback(bootstrapURL));
     } else {
       installDatadogTracer();
+    }
+
+    /*
+     * Similar thing happens with Profiler on (at least) zulu-8 because it uses OkHttp which indirectly loads JFR
+     * events which in turn loads LogManager. This is not a problem on newer JDKs because there JFR uses different
+     * logging facility.
+     */
+    if (isJavaBefore9() && appUsingCustomLogManager) {
+      log.debug("Custom logger detected. Delaying Profiling Agent startup.");
+      registerLogManagerCallback(new StartProfilingAgentCallback(inst, bootstrapURL));
+    } else {
+      startProfilingAgent(bootstrapURL);
     }
   }
 
@@ -163,6 +176,22 @@ public class Agent {
     }
   }
 
+  protected static class StartProfilingAgentCallback extends ClassLoadCallBack {
+    StartProfilingAgentCallback(final Instrumentation inst, final URL bootstrapURL) {
+      super(bootstrapURL);
+    }
+
+    @Override
+    public String getName() {
+      return "datadog-profiler";
+    }
+
+    @Override
+    public void execute() {
+      startProfilingAgent(bootstrapURL);
+    }
+  }
+
   private static synchronized void createParentClassloader(final URL bootstrapURL) {
     if (PARENT_CLASSLOADER == null) {
       try {
@@ -240,6 +269,32 @@ public class Agent {
         JMXFETCH_CLASSLOADER = jmxFetchClassLoader;
       } catch (final Throwable ex) {
         log.error("Throwable thrown while starting JmxFetch", ex);
+      } finally {
+        Thread.currentThread().setContextClassLoader(contextLoader);
+      }
+    }
+  }
+
+  private static synchronized void startProfilingAgent(final URL bootstrapURL) {
+    if (PROFILING_CLASSLOADER == null) {
+      final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+      try {
+        final ClassLoader profilingClassLoader =
+            createDatadogClassLoader("agent-profiling.isolated", bootstrapURL, PARENT_CLASSLOADER);
+        Thread.currentThread().setContextClassLoader(profilingClassLoader);
+        final Class<?> profilingAgentClass =
+            profilingClassLoader.loadClass("com.datadog.profiling.agent.ProfilingAgent");
+        final Method profilingInstallerMethod = profilingAgentClass.getMethod("run");
+        profilingInstallerMethod.invoke(null);
+        PROFILING_CLASSLOADER = profilingClassLoader;
+      } catch (final ClassFormatError e) {
+        /*
+        Profiling is compiled for Java8. Loading it on Java7 results in ClassFormatError
+        (more specifically UnsupportedClassVersionError). Just ignore and continue when this happens.
+        */
+        log.error("Cannot start profiling agent ", e);
+      } catch (final Throwable ex) {
+        log.error("Throwable thrown while starting profiling agent", ex);
       } finally {
         Thread.currentThread().setContextClassLoader(contextLoader);
       }

@@ -123,6 +123,9 @@ repositories {
   mavenLocal()
   jcenter()
   mavenCentral()
+  maven {
+    url "https://adoptopenjdk.jfrog.io/adoptopenjdk/jmc-libs-snapshots"
+  }
 }
 
 dependencies {
@@ -336,6 +339,10 @@ for (def env : System.getenv().entrySet()) {
 }
 
 tasks.withType(Test).configureEach {
+  if (project.findProperty("enableJunitPlatform") == true) {
+    useJUnitPlatform()
+  }
+
   // All tests must complete within 3 minutes.
   timeout = Duration.ofMinutes(3)
 
