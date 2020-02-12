@@ -8,7 +8,8 @@ import io.opentelemetry.trace.Tracer;
 public class RmiServerDecorator extends ServerDecorator {
   public static final RmiServerDecorator DECORATE = new RmiServerDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.instrumentation.auto.rmi");
 
   @Override
   protected String getSpanType() {

@@ -11,7 +11,8 @@ import java.net.URISyntaxException;
 public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
   public static final AkkaHttpClientDecorator DECORATE = new AkkaHttpClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.akka-http-10.0");
 
   @Override
   protected String getComponentName() {

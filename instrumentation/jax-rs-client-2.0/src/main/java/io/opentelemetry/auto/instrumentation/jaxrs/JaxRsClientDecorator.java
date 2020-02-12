@@ -11,7 +11,9 @@ public class JaxRsClientDecorator
     extends HttpClientDecorator<ClientRequestContext, ClientResponseContext> {
   public static final JaxRsClientDecorator DECORATE = new JaxRsClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory()
+          .get("io.opentelemetry.instrumentation.auto.jax-rs-client-2.0");
 
   @Override
   protected String getComponentName() {

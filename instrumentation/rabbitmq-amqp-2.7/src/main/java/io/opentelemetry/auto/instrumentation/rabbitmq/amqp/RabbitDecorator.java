@@ -29,7 +29,8 @@ public class RabbitDecorator extends ClientDecorator {
         }
       };
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.rabbitmq-amqp-2.7");
 
   @Override
   protected String service() {

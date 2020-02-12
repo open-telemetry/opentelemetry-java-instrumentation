@@ -10,7 +10,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
   public static final ApacheHttpClientDecorator DECORATE = new ApacheHttpClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.apache-httpclient-4.0");
 
   @Override
   protected String getComponentName() {
