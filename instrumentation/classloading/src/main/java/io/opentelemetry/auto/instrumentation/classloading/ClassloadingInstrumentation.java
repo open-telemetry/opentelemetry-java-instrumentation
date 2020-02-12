@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /*
- * Some class loaders to do not delegate to their parent, so classes in those class loaders
+ * Some class loaders do not delegate to their parent, so classes in those class loaders
  * will not be able to see classes in the bootstrap class loader.
  *
  * In particular, instrumentation on classes in those class loaders will not be able to see
