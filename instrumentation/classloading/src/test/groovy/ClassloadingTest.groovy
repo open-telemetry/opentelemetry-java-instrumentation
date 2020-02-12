@@ -25,14 +25,14 @@ class ClassloadingTest extends AgentTestRunner {
 
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
       synchronized (getClassLoadingLock(name)) {
-        Class<?> clazz = findLoadedClass(name);
+        Class<?> clazz = findLoadedClass(name)
         if (clazz == null) {
-          clazz = findClass(name);
+          clazz = findClass(name)
         }
         if (resolve) {
-          resolveClass(clazz);
+          resolveClass(clazz)
         }
-        return clazz;
+        return clazz
       }
     }
   }
