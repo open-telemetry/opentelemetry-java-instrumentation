@@ -11,6 +11,7 @@ import org.openjdk.jmc.flightrecorder.JfrLoaderToolkit
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
+import java.util.zip.GZIPInputStream
 
 class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
 
@@ -96,7 +97,7 @@ class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
 
     firstRequestParameters.get("chunk-data").get(0) != null
 
-    IItemCollection events = JfrLoaderToolkit.loadEvents(new ByteArrayInputStream(secondRequestParameters.get("chunk-data").get(0)))
+    IItemCollection events = JfrLoaderToolkit.loadEvents(new GZIPInputStream(new ByteArrayInputStream(secondRequestParameters.get("chunk-data").get(0))))
     IItemCollection scopeEvents = events.apply(ItemFilters.type("datadog.Scope"))
 
     scopeEvents.size() > 0

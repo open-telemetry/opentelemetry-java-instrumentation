@@ -5,6 +5,10 @@ enum CompressionType {
   OFF,
   /** Default compression */
   ON,
+  /** Lower compression ratio with less CPU overhead * */
+  LOW,
+  /** Better compression ratio for the price of higher CPU usage * */
+  MEDIUM,
   /** Unknown compression config value */
   UNKNOWN;
 
@@ -18,6 +22,10 @@ enum CompressionType {
         return OFF;
       case "on":
         return ON;
+      case "low":
+        return LOW;
+      case "medium":
+        return MEDIUM;
       default:
         return UNKNOWN;
     }

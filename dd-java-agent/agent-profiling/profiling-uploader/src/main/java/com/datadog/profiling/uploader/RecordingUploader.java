@@ -244,7 +244,13 @@ public final class RecordingUploader {
     // currently only gzip and off are supported
     // this needs to be updated once more compression types are added
     switch (type) {
+      case LOW:
+        {
+          compression = (is, expectedSize) -> StreamUtils.lz4Stream(is, expectedSize, consumer);
+          break;
+        }
       case ON:
+      case MEDIUM:
         {
           compression = (is, expectedSize) -> StreamUtils.gzipStream(is, expectedSize, consumer);
           break;

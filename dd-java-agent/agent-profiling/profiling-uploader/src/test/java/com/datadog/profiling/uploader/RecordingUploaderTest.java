@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+import net.jpountz.lz4.LZ4FrameInputStream;
 import okhttp3.Credentials;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
@@ -138,7 +139,7 @@ public class RecordingUploaderTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"on", "off", "invalid"})
+  @ValueSource(strings = {"on", "low", "medium", "off", "invalid"})
   public void testRequestParameters(final String compression)
       throws IOException, InterruptedException {
     when(config.getProfilingUploadCompression()).thenReturn(compression);
@@ -184,8 +185,10 @@ public class RecordingUploaderTest {
 
     byte[] uploadedBytes =
         (byte[]) Iterables.getFirst(parameters.get(RecordingUploader.DATA_PARAM), new byte[] {});
-    if (compression.equals("on") || compression.equals("invalid")) {
+    if (compression.equals("on") || compression.equals("medium") || compression.equals("invalid")) {
       uploadedBytes = unGzip(uploadedBytes);
+    } else if (compression.equals("low")) {
+      uploadedBytes = unLz4(uploadedBytes);
     }
     assertArrayEquals(expectedBytes, uploadedBytes);
   }
@@ -429,6 +432,13 @@ public class RecordingUploaderTest {
 
   private byte[] unGzip(final byte[] compressed) throws IOException {
     final InputStream stream = new GZIPInputStream(new ByteArrayInputStream(compressed));
+    final ByteArrayOutputStream result = new ByteArrayOutputStream();
+    ByteStreams.copy(stream, result);
+    return result.toByteArray();
+  }
+
+  private byte[] unLz4(final byte[] compressed) throws IOException {
+    final InputStream stream = new LZ4FrameInputStream(new ByteArrayInputStream(compressed));
     final ByteArrayOutputStream result = new ByteArrayOutputStream();
     ByteStreams.copy(stream, result);
     return result.toByteArray();
