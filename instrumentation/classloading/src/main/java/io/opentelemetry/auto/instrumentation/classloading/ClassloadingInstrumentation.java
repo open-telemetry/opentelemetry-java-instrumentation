@@ -40,6 +40,7 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     // safe to exclude java.lang.ClassLoader since its loadClass() delegates
     return not(named("java.lang.ClassLoader"))
+        .and(not(named("io.opentelemetry.auto.bootstrap.AgentClassLoader")))
         .and(safeHasSuperType(named("java.lang.ClassLoader")));
   }
 
