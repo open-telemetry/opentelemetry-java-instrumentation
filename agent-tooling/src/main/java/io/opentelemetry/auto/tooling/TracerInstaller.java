@@ -2,10 +2,9 @@ package io.opentelemetry.auto.tooling;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.exportersupport.ExporterFactory;
+import io.opentelemetry.auto.exportersupport.SpanExporterFactory;
 import io.opentelemetry.auto.tooling.exporter.ExporterConfigException;
 import io.opentelemetry.auto.tooling.exporter.ExporterRegistry;
-import io.opentelemetry.auto.tooling.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -30,7 +29,8 @@ public class TracerInstaller {
       final String expName = Config.get().getExporter();
       if (expName != null) {
         try {
-          final SpanExporterFactory f = ExporterRegistry.getInstance().getFactory(expName);
+          final io.opentelemetry.auto.tooling.exporter.SpanExporterFactory f =
+              ExporterRegistry.getInstance().getFactory(expName);
           exporter = f.newExporter();
           log.info("Loaded span exporter: " + expName);
         } catch (final ExporterConfigException e) {
@@ -68,11 +68,11 @@ public class TracerInstaller {
     final Manifest mf;
     exporterLoader =
         new ExporterClassLoader(new URL[] {url}, TracerInstaller.class.getClassLoader());
-    final ServiceLoader<ExporterFactory> sl =
-        ServiceLoader.load(ExporterFactory.class, exporterLoader);
-    final Iterator<ExporterFactory> itor = sl.iterator();
+    final ServiceLoader<SpanExporterFactory> sl =
+        ServiceLoader.load(SpanExporterFactory.class, exporterLoader);
+    final Iterator<SpanExporterFactory> itor = sl.iterator();
     if (itor.hasNext()) {
-      final ExporterFactory f = itor.next();
+      final SpanExporterFactory f = itor.next();
       if (itor.hasNext()) {
         log.warn(
             "Exporter JAR defines more than one factory. Only the first one found will be used");

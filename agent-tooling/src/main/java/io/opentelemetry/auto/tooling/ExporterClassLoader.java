@@ -11,7 +11,9 @@ import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.commons.ClassRemapper;
 
 public class ExporterClassLoader extends URLClassLoader {
-  // We need to prefix the names to prevent the shadowJar relocation rules from touching them.
+  // We need to prefix the names to prevent the gradle shadowJar relocation rules from touching
+  // them. It's possible to do this by excluding this class from shading, but it may cause issue
+  // with transitive dependencies down the line.
   private final ShadingRemapper remapper =
       new ShadingRemapper(
           rule(

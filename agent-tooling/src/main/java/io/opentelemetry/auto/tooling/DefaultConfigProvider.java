@@ -28,7 +28,7 @@ public class DefaultConfigProvider implements ConfigProvider {
 
   // @Override
   @Override
-  public long getLong(final String key, final int defaultValue) {
+  public long getLong(final String key, final long defaultValue) {
     final String s = Config.getSettingFromEnvironment(prefix + "." + key, null);
     if (s == null) {
       return defaultValue;
