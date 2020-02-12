@@ -33,11 +33,12 @@ public class FluxAndMonoSubscribeAdvice {
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
       @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+    if (spanWithScope == null) {
+      return;
+    }
     if (throwable != null) {
       ReactorCoreAdviceUtils.finishSpanIfPresent(spanWithScope.getSpan(), throwable);
     }
-    if (spanWithScope != null) {
-      spanWithScope.closeScope();
-    }
+    spanWithScope.closeScope();
   }
 }
