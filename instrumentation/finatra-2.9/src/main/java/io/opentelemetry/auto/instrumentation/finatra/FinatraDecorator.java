@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.finatra;
+package io.opentelemetry.auto.instrumentation.finatra;
 
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
