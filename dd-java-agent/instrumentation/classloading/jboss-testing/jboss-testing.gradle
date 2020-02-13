@@ -1,0 +1,7 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  testCompile project(':dd-java-agent:instrumentation:classloading')
+
+  testCompile group: 'org.jboss.modules', name: 'jboss-modules', version: '1.3.10.Final'
+}
