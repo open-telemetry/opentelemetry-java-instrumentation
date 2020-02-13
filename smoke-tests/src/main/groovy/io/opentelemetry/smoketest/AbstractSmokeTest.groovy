@@ -20,6 +20,9 @@ abstract class AbstractSmokeTest extends Specification {
   @Shared
   protected Process serverProcess
 
+  @Shared
+  protected File logfile
+
   def setupSpec() {
     if (buildDirectory == null || shadowJarPath == null) {
       throw new AssertionError("Expected system properties not found. Smoke tests have to be run from Gradle. Please make sure that is the case.")
@@ -36,8 +39,8 @@ abstract class AbstractSmokeTest extends Specification {
     processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
 
     processBuilder.redirectErrorStream(true)
-    File log = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")
-    processBuilder.redirectOutput(ProcessBuilder.Redirect.to(log))
+    logfile = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")
+    processBuilder.redirectOutput(ProcessBuilder.Redirect.to(logfile))
 
     serverProcess = processBuilder.start()
 
