@@ -110,7 +110,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
       return CallDepthThreadLocalMap.incrementCallDepth(handler.getClass());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
         @Advice.Enter final int depth,
         @Advice.This final ChannelPipeline pipeline,

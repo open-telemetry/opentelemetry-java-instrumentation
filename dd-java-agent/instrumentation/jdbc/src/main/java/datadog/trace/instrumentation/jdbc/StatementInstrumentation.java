@@ -62,13 +62,13 @@ public final class StatementInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope onEnter(
         @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
-      if (callDepth > 0) {
+      final Connection connection = connectionFromStatement(statement);
+      if (connection == null) {
         return null;
       }
 
-      final Connection connection = connectionFromStatement(statement);
-      if (connection == null) {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
+      if (callDepth > 0) {
         return null;
       }
 
