@@ -77,20 +77,21 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   public static class AsyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean methodEnter() {
-      return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0;
+    public static int trackCallDepth() {
+      return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final boolean shouldInjectListener,
+        @Advice.Enter final int callDepth,
         @Advice.This final MemcachedClient client,
         @Advice.Origin("#m") final String methodName,
         @Advice.Return final OperationFuture future) {
-      if (!shouldInjectListener) {
+      if (callDepth > 0) {
         return;
       }
       CallDepthThreadLocalMap.reset(MemcachedClient.class);
+
       if (future != null) {
         final OperationCompletionListener listener =
             new OperationCompletionListener(client.getConnection(), methodName);
@@ -102,20 +103,21 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   public static class AsyncGetAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean methodEnter() {
-      return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0;
+    public static int trackCallDepth() {
+      return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final boolean shouldInjectListener,
+        @Advice.Enter final int callDepth,
         @Advice.This final MemcachedClient client,
         @Advice.Origin("#m") final String methodName,
         @Advice.Return final GetFuture future) {
-      if (!shouldInjectListener) {
+      if (callDepth > 0) {
         return;
       }
       CallDepthThreadLocalMap.reset(MemcachedClient.class);
+
       if (future != null) {
         final GetCompletionListener listener =
             new GetCompletionListener(client.getConnection(), methodName);
@@ -127,20 +129,21 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   public static class AsyncBulkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean methodEnter() {
-      return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0;
+    public static int trackCallDepth() {
+      return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final boolean shouldInjectListener,
+        @Advice.Enter final int callDepth,
         @Advice.This final MemcachedClient client,
         @Advice.Origin("#m") final String methodName,
         @Advice.Return final BulkFuture future) {
-      if (!shouldInjectListener) {
+      if (callDepth > 0) {
         return;
       }
       CallDepthThreadLocalMap.reset(MemcachedClient.class);
+
       if (future != null) {
         final BulkGetCompletionListener listener =
             new BulkGetCompletionListener(client.getConnection(), methodName);
@@ -154,11 +157,12 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SyncCompletionListener methodEnter(
         @Advice.This final MemcachedClient client, @Advice.Origin("#m") final String methodName) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0) {
-        return new SyncCompletionListener(client.getConnection(), methodName);
-      } else {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class);
+      if (callDepth > 0) {
         return null;
       }
+
+      return new SyncCompletionListener(client.getConnection(), methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -169,6 +173,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         return;
       }
       CallDepthThreadLocalMap.reset(MemcachedClient.class);
+
       listener.done(thrown);
     }
   }

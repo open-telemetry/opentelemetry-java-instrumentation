@@ -56,8 +56,8 @@ public class SessionMethodUtils {
       // call.
       return;
     }
-
     CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
+
     final Span span = spanWithScope.getSpan();
     if (span != null) {
       DECORATOR.onError(span, throwable);

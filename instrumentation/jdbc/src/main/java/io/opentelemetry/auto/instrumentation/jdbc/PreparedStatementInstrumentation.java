@@ -96,12 +96,13 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(PreparedStatement.class);
+
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
-      CallDepthThreadLocalMap.reset(PreparedStatement.class);
     }
   }
 }
