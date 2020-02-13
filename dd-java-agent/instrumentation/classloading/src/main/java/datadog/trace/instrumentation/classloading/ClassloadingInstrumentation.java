@@ -39,8 +39,10 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // safe to exclude java.lang.ClassLoader since its loadClass() delegates
+    // just an optimization to exclude common class loaders that are known to delegate to the
+    // bootstrap loader (or happen to _be_ the bootstrap loader)
     return not(named("java.lang.ClassLoader"))
+        .and(not(named("com.ibm.oti.vm.BootstrapClassLoader")))
         .and(not(named("datadog.trace.bootstrap.AgentClassLoader")))
         .and(safeHasSuperType(named("java.lang.ClassLoader")));
   }
