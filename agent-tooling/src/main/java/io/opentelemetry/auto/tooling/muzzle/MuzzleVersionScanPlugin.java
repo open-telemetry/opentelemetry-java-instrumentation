@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.tooling.muzzle;
 
-import io.opentelemetry.auto.tooling.AgentTooling;
 import io.opentelemetry.auto.tooling.HelperInjector;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.io.IOException;
@@ -20,9 +19,6 @@ import net.bytebuddy.dynamic.ClassFileLocator;
  * <p>Additionally, after a successful muzzle validation run each instrumenter's helper injector.
  */
 public class MuzzleVersionScanPlugin {
-  static {
-    AgentTooling.init();
-  }
 
   public static void assertInstrumentationMuzzled(
       final ClassLoader instrumentationLoader,

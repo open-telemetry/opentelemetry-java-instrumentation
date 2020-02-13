@@ -25,10 +25,9 @@ include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
 
-// misc
 include ':testing'
-include ':utils:gc-utils'
 include ':utils:test-utils'
+include ':utils:thread-utils'
 
 // smoke tests
 include ':smoke-tests:cli'
