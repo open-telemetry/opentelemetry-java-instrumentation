@@ -4,6 +4,7 @@ import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
+import org.elasticsearch.action.admin.cluster.stats.ClusterStatsRequest
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -97,6 +98,41 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test elasticsearch stats"() {
+    setup:
+    def result = client.admin().cluster().clusterStats(new ClusterStatsRequest(new String[0]))
+
+    def status = result.get().status
+    def failures = result.get().failures()
+
+    expect:
+    status.name() == "GREEN"
+    failures == null
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "ClusterStatsAction"
+          operationName "elasticsearch.query"
+          spanType DDSpanTypes.ELASTICSEARCH
+          tags {
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "127.0.0.1"
+            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+            "$Tags.PEER_PORT" tcpPort
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "ClusterStatsAction"
+            "elasticsearch.request" "ClusterStatsRequest"
+            "elasticsearch.node.cluster.name" "test-cluster"
             defaultTags()
           }
         }
