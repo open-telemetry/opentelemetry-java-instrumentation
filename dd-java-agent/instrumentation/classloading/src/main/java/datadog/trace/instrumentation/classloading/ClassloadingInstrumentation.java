@@ -92,13 +92,13 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
     public static void onExit(
         @Advice.Local("_callDepth") final int callDepth,
         @Advice.Return(readOnly = false) Class<?> result,
-        @Advice.Enter final Class<?> clazz) {
+        @Advice.Enter final Class<?> resultFromBootstrapLoader) {
       if (callDepth > 0) {
         return;
       }
       CallDepthThreadLocalMap.reset(ClassLoader.class);
-      if (clazz != null) {
-        result = clazz;
+      if (resultFromBootstrapLoader != null) {
+        result = resultFromBootstrapLoader;
       }
     }
   }
