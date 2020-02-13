@@ -775,7 +775,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
         tags.putAll(localRootSpanTags);
 
-        parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
+        parentTrace = new PendingTrace(DDTracer.this, traceId);
       }
 
       if (serviceName == null) {
@@ -800,7 +800,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               spanType,
               tags,
               parentTrace,
-              DDTracer.this);
+              DDTracer.this,
+              serviceNameMappings);
 
       // Apply Decorators to handle any tags that may have been set via the builder.
       for (final Map.Entry<String, Object> tag : tags.entrySet()) {
