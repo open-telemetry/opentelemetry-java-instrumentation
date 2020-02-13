@@ -8,19 +8,14 @@ import io.opentelemetry.auto.bootstrap.WeakMap;
  * logic out.
  */
 public class AgentTooling {
-  private static final Cleaner CLEANER = new Cleaner();
 
   static {
     // WeakMap is used by other classes below, so we need to register the provider first.
-    registerWeakMapProvider(CLEANER);
+    registerWeakMapProvider();
   }
 
   private static final AgentLocationStrategy LOCATION_STRATEGY = new AgentLocationStrategy();
   private static final AgentCachingPoolStrategy POOL_STRATEGY = new AgentCachingPoolStrategy();
-
-  public static void init() {
-    // Only need to trigger static initializers for now.
-  }
 
   public static AgentLocationStrategy locationStrategy() {
     return LOCATION_STRATEGY;
@@ -30,9 +25,9 @@ public class AgentTooling {
     return POOL_STRATEGY;
   }
 
-  private static void registerWeakMapProvider(final Cleaner cleaner) {
+  private static void registerWeakMapProvider() {
     if (!WeakMap.Provider.isProviderRegistered()) {
-      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent(cleaner));
+      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent(new Cleaner()));
       //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
       //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
     }

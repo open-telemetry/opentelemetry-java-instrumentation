@@ -135,7 +135,6 @@ class MuzzlePlugin implements Plugin<Project> {
         }
         def loader = new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null)
         assert TOOLING_LOADER.compareAndSet(null, loader)
-        loader.loadClass("io.opentelemetry.auto.tooling.AgentTooling").getMethod("init").invoke(null)
         return TOOLING_LOADER.get()
       } else {
         return toolingLoader
@@ -293,7 +292,9 @@ class MuzzlePlugin implements Plugin<Project> {
         def ccl = Thread.currentThread().contextClassLoader
         def bogusLoader = new SecureClassLoader() {
           @Override
-          String toString() { return "bogus" }
+          String toString() {
+            return "bogus"
+          }
         }
         Thread.currentThread().contextClassLoader = bogusLoader
         final ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
