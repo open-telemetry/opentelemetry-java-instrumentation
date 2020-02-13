@@ -14,6 +14,8 @@ abstract class AbstractSmokeTest extends Specification {
   protected String shadowJarPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
   @Shared
   protected String[] defaultJavaProperties
+  @Shared
+  protected String exporterPath = System.getProperty("ota.exporter.jar")
 
   @Shared
   protected Process serverProcess
@@ -38,6 +40,8 @@ abstract class AbstractSmokeTest extends Specification {
     processBuilder.redirectOutput(ProcessBuilder.Redirect.to(log))
 
     serverProcess = processBuilder.start()
+
+
   }
 
   String javaPath() {

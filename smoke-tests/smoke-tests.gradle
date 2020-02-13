@@ -5,6 +5,7 @@ description = 'smoke-tests'
 dependencies {
   compile deps.spock
   compile project(':testing')
+  compile project(':dummy-exporter')
 }
 
 subprojects { subProject ->
@@ -15,6 +16,7 @@ subprojects { subProject ->
       // Tests depend on this to know where to run things and what agent jar to use
       jvmArgs "-Dio.opentelemetry.smoketest.builddir=${buildDir}"
       jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':opentelemetry-auto').tasks.shadowJar.archivePath}"
+      jvmArgs "-Dota.exporter.jar=${project(':dummy-exporter').tasks.shadowJar.archivePath}"
     }
   }
 }

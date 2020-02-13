@@ -37,8 +37,9 @@ include ':utils:thread-utils'
 include ':smoke-tests:cli'
 include ':smoke-tests:java9-modules'
 include ':smoke-tests:play'
-include ':smoke-tests:springboot'
+include ':smoke-tests:exporter'
 include ':smoke-tests:wildfly'
+include ':smoke-tests:exporter'
 
 // instrumentation:
 include ':instrumentation:akka-http-10.0'

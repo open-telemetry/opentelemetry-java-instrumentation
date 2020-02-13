@@ -2,7 +2,7 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 apply from: "${rootDir}/gradle/java.gradle"
-description = 'SpringBoot Smoke Tests.'
+description = 'Exporter Smoke Tests.'
 
 // The standard spring-boot plugin doesn't play nice with our project
 // so we'll build a fat jar instead
