@@ -39,7 +39,7 @@ include ':smoke-tests:java9-modules'
 include ':smoke-tests:play'
 include ':smoke-tests:exporter'
 include ':smoke-tests:wildfly'
-include ':smoke-tests:exporter'
+include ':smoke-tests:springboot'
 
 // instrumentation:
 include ':instrumentation:akka-http-10.0'

@@ -6,7 +6,7 @@ class SpringBootSmokeTest extends AbstractServerSmokeTest {
 
   @Override
   ProcessBuilder createProcessBuilder() {
-    String springBootShadowJar = System.getProperty("io.opentelemetry.smoketest.exporter.shadowJar.path")
+    String springBootShadowJar = System.getProperty("io.opentelemetry.smoketest.springboot.shadowJar.path")
 
     List<String> command = new ArrayList<>()
     command.add(javaPath())
