@@ -30,8 +30,8 @@ include ':exporter-support'
 
 // misc
 include ':testing'
-include ':utils:gc-utils'
 include ':utils:test-utils'
+include ':utils:thread-utils'
 
 // smoke tests
 include ':smoke-tests:cli'

@@ -68,7 +68,7 @@ shadowJar {
 
 dependencies {
   testCompile project(':auto-bootstrap')
-  testCompile project(':utils:gc-utils')
+  testCompile project(':utils:test-utils')
 
   testCompile deps.testLogging
   testCompile deps.guava

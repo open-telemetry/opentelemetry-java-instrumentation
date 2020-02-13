@@ -1,7 +1,7 @@
-package datadog.trace.instrumentation.finatra;
+package io.opentelemetry.auto.instrumentation.finatra;
 
-import static datadog.trace.instrumentation.finatra.FinatraDecorator.DECORATE;
-import static datadog.trace.instrumentation.finatra.FinatraDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
