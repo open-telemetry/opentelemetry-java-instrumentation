@@ -92,7 +92,6 @@ configurations {
   runtime.exclude module: deps.slf4j
   runtime.exclude group: 'org.slf4j'
   runtime.exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
-  // runtime.exclude(files('../../opentelemetry-java/api/build/libs/opentelemetry-api-0.2.0.jar'))
 }
 
 shadowJar {
@@ -100,15 +99,6 @@ shadowJar {
   mergeServiceFiles()
 
   exclude '**/module-info.class'
-
-  // TODO: Remove when opentelemetry-java is updated!
-
-  //exclude '**/ opentelemetry / OpenTelemetry.class'
-  //exclude '**/opentelemetry/context/**'
-  // exclude '**/opentelemetry/distributedcontext/**'
-  //exclude '**/opentelemetry/internal/**'
-  //exclude '**/opentelemetry/metrics/**'
-  //exclude '**/opentelemetry/trace/**'
 
   dependencies {
     exclude(dependency("org.projectlombok:lombok:$versions.lombok"))
