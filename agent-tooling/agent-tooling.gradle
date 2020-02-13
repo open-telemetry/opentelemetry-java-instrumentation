@@ -23,6 +23,9 @@ dependencies {
   compile deps.opentelemetrySdk
   compileOnly deps.opentelemetryJaeger
 
+  // TODO: This might have to live in opentelemetry-java
+  compile project(':exporter-support')
+
   // Needed for Jaeger exporter
   compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
 
@@ -33,6 +36,7 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':testing')
+  testCompile project(':dummy-exporter')
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile
