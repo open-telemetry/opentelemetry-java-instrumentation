@@ -411,7 +411,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   @Override
-  public DDSpanBuilder buildSpan(final String operationName) {
+  public SpanBuilder buildSpan(final String operationName) {
     return new DDSpanBuilder(operationName, scopeManager);
   }
 
@@ -592,13 +592,13 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return this;
     }
 
-    private DDSpan startSpan() {
+    private Span startSpan() {
       return new DDSpan(timestampMicro, buildSpanContext());
     }
 
     @Override
     public Scope startActive(final boolean finishSpanOnClose) {
-      final DDSpan span = startSpan();
+      final Span span = startSpan();
       final Scope scope = scopeManager.activate(span, finishSpanOnClose);
       log.debug("Starting a new active span: {}", span);
       return scope;
@@ -606,13 +606,13 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     @Override
     @Deprecated
-    public DDSpan startManual() {
+    public Span startManual() {
       return start();
     }
 
     @Override
-    public DDSpan start() {
-      final DDSpan span = startSpan();
+    public Span start() {
+      final Span span = startSpan();
       log.debug("Starting a new span: {}", span);
       return span;
     }
