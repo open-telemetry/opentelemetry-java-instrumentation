@@ -35,6 +35,7 @@ dependencies {
 
   testCompile project(':testing')
   testCompile project(':utils:gc-utils')
+  testCompile project(':dummy-exporter')
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile
