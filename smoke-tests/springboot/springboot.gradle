@@ -9,7 +9,7 @@ description = 'SpringBoot Smoke Tests.'
 jar {
   manifest {
     attributes(
-      'Main-Class': 'io.opentelemetry.smoketest.exporter.SpringbootApplication'
+      'Main-Class': 'io.opentelemetry.smoketest.springboot.SpringbootApplication'
     )
   }
 }
