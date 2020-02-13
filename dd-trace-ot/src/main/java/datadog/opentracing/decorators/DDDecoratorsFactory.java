@@ -27,10 +27,7 @@ public class DDDecoratorsFactory {
             new ServiceNameDecorator(),
             new ServiceNameDecorator("service", false),
             new ServletContextDecorator(),
-            new SpanTypeDecorator(),
-            new Status404Decorator(),
-            new Status5XXDecorator(),
-            new URLAsResourceName())) {
+            new SpanTypeDecorator())) {
 
       if (Config.get().isDecoratorEnabled(decorator.getClass().getSimpleName())) {
         decorators.add(decorator);

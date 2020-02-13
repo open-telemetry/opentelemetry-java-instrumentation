@@ -1,38 +1,39 @@
-package datadog.opentracing.decorators;
+package datadog.trace.common.processor.rule;
 
+import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDSpanContext;
-import datadog.trace.api.DDTags;
+import datadog.trace.common.processor.TraceProcessor;
 import io.opentracing.tag.Tags;
+import java.util.Collection;
+import java.util.Map;
 import java.util.regex.Pattern;
 
-public class URLAsResourceName extends AbstractDecorator {
+public class URLAsResourceNameRule implements TraceProcessor.Rule {
 
   // Matches any path segments with numbers in them. (exception for versioning: "/v1/")
   public static final Pattern PATH_MIXED_ALPHANUMERICS =
       Pattern.compile("(?<=/)(?![vV]\\d{1,2}/)(?:[^\\/\\d\\?]*[\\d]+[^\\/\\?]*)");
 
-  public URLAsResourceName() {
-    super();
-    setMatchingTag(Tags.HTTP_URL.getKey());
-    setReplacementTag(DDTags.RESOURCE_NAME);
+  @Override
+  public String[] aliases() {
+    return new String[] {"URLAsResourceName"};
   }
 
   @Override
-  public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
-    final String statusCode = String.valueOf(context.getTags().get(Tags.HTTP_STATUS.getKey()));
-    // do nothing if the status code is already set and equals to 404.
-    // TODO: it assumes that Status404Decorator is active. If it's not, it will lead to unexpected
-    // behaviors
-    if (value == null || statusCode != null && statusCode.equals("404")) {
-      return true;
+  public void processSpan(
+      final DDSpan span, final Map<String, String> meta, final Collection<DDSpan> trace) {
+    final DDSpanContext context = span.context();
+    if (context.isResourceNameSet()
+        || meta.get(Tags.HTTP_URL.getKey()) == null
+        || "404".equals(meta.get(Tags.HTTP_STATUS.getKey()))) {
+      return;
     }
 
-    final String rawPath = rawPathFromUrlString(String.valueOf(value).trim());
+    final String rawPath = rawPathFromUrlString(meta.get(Tags.HTTP_URL.getKey()).trim());
     final String normalizedPath = normalizePath(rawPath);
-    final String resourceName = addMethodIfAvailable(context, normalizedPath);
+    final String resourceName = addMethodIfAvailable(meta, normalizedPath);
 
     context.setResourceName(resourceName);
-    return true;
   }
 
   private String rawPathFromUrlString(final String url) {
@@ -86,11 +87,11 @@ public class URLAsResourceName extends AbstractDecorator {
     return PATH_MIXED_ALPHANUMERICS.matcher(path).replaceAll("?");
   }
 
-  private String addMethodIfAvailable(final DDSpanContext context, String path) {
+  private String addMethodIfAvailable(final Map<String, String> meta, String path) {
     // if the verb (GET, POST ...) is present, add it
-    final String verb = (String) context.getTags().get(Tags.HTTP_METHOD.getKey());
+    final String verb = meta.get(Tags.HTTP_METHOD.getKey());
     if (verb != null && !verb.isEmpty()) {
-      path = verb + " " + path;
+      path = verb.toUpperCase() + " " + path;
     }
     return path;
   }

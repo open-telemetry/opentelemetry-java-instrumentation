@@ -9,6 +9,7 @@ import io.opentracing.tag.Tags;
  * This span decorator leverages DB tags. It allows the dev to define a custom service name and
  * retrieves some DB meta such as the statement
  */
+@Deprecated // This should be covered by instrumentation decorators now.
 public class DBTypeDecorator extends AbstractDecorator {
 
   public DBTypeDecorator() {

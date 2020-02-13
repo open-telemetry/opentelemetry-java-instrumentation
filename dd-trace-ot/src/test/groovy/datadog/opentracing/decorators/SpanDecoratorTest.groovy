@@ -351,32 +351,6 @@ class SpanDecoratorTest extends DDSpecification {
     something = "fake-query"
   }
 
-  def "set 404 as a resource on a 404 issue"() {
-    when:
-    Tags.HTTP_STATUS.set(span, 404)
-
-    then:
-    span.getResourceName() == "404"
-  }
-
-  def "set 5XX status code as an error"() {
-    when:
-    Tags.HTTP_STATUS.set(span, status)
-
-    then:
-    span.isError() == error
-
-    where:
-    status | error
-    400    | false
-    404    | false
-    499    | false
-    500    | true
-    550    | true
-    599    | true
-    600    | false
-  }
-
   def "set error flag when error tag reported"() {
     when:
     Tags.ERROR.set(span, error)
@@ -418,28 +392,10 @@ class SpanDecoratorTest extends DDSpecification {
     span.serviceName == "my-servlet"
 
     when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 404).start()
-
-    then:
-    span.resourceName == "404"
-
-    when:
     span = tracer.buildSpan("decorator.test").withTag("error", "true").start()
 
     then:
     span.error
-
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 500).start()
-
-    then:
-    span.error
-
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_URL.key, "http://example.com/path/number123/?param=true").start()
-
-    then:
-    span.resourceName == "/path/?/"
 
     when:
     span = tracer.buildSpan("decorator.test").withTag(Tags.DB_STATEMENT.key, "some-statement").start()
@@ -451,7 +407,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "disable decorator via config"() {
     setup:
     ConfigUtils.updateConfig {
-      System.setProperty("dd.trace.${decorator}.enabled", "false")
+      System.setProperty("dd.trace.${decorator}.enabled", "$enabled")
     }
 
     tracer = DDTracer.builder()
@@ -461,11 +417,11 @@ class SpanDecoratorTest extends DDSpecification {
       .build()
 
     when:
-    def span = tracer.buildSpan("some span").withTag(Tags.PEER_SERVICE.key, "peer-service").start()
+    def span = tracer.buildSpan("some span").withTag(DDTags.SERVICE_NAME, "other-service").start()
     span.finish()
 
     then:
-    span.getServiceName() == "some-service"
+    span.getServiceName() == enabled ? "other-service" : "some-service"
 
     cleanup:
     ConfigUtils.updateConfig {
@@ -473,9 +429,11 @@ class SpanDecoratorTest extends DDSpecification {
     }
 
     where:
-    decorator                                          | _
-    PeerServiceDecorator.getSimpleName().toLowerCase() | _
-    PeerServiceDecorator.getSimpleName()               | _
+    decorator                                          | enabled
+    ServiceNameDecorator.getSimpleName().toLowerCase() | true
+    ServiceNameDecorator.getSimpleName()               | true
+    ServiceNameDecorator.getSimpleName().toLowerCase() | false
+    ServiceNameDecorator.getSimpleName()               | false
   }
 
   def "disabling service decorator does not disable split by tags"() {

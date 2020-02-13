@@ -4,6 +4,7 @@ import com.lmax.disruptor.EventHandler;
 import datadog.common.exec.DaemonThreadFactory;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDSpanContext;
+import datadog.trace.common.processor.TraceProcessor;
 import datadog.trace.common.writer.DDAgentWriter;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
   // This class is threadsafe if we want to enable more processors.
   public static class TraceSerializingHandler
       implements EventHandler<DisruptorEvent<List<DDSpan>>> {
+    private final TraceProcessor processor = new TraceProcessor();
     private final DDAgentApi api;
     private final BatchWritingDisruptor batchWritingDisruptor;
     private final Monitor monitor;
@@ -69,6 +71,7 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
                 .setMetric(DDSpanContext.SAMPLE_RATE_KEY, 1d / event.representativeCount);
           }
           try {
+            event.data = processor.onTraceComplete(event.data);
             final byte[] serializedTrace = api.serializeTrace(event.data);
             batchWritingDisruptor.publish(serializedTrace, event.representativeCount);
             monitor.onSerialize(writer, event.data, serializedTrace);
