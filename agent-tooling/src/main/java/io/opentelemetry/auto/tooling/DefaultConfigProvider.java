@@ -10,13 +10,11 @@ public class DefaultConfigProvider implements ConfigProvider {
     this.prefix = prefix;
   }
 
-  // @Override
   @Override
   public String getString(final String key, final String defaultValue) {
     return Config.getSettingFromEnvironment(prefix + "." + key, defaultValue);
   }
 
-  // @Override
   @Override
   public int getInt(final String key, final int defaultValue) {
     final String s = Config.getSettingFromEnvironment(prefix + "." + key, null);
@@ -26,7 +24,6 @@ public class DefaultConfigProvider implements ConfigProvider {
     return Integer.parseInt(s); // TODO: Handle format errors gracefully?
   }
 
-  // @Override
   @Override
   public long getLong(final String key, final long defaultValue) {
     final String s = Config.getSettingFromEnvironment(prefix + "." + key, null);
@@ -36,7 +33,6 @@ public class DefaultConfigProvider implements ConfigProvider {
     return Long.parseLong(s); // TODO: Handle format errors gracefully?
   }
 
-  // @Override
   @Override
   public boolean getBoolean(final String key, final boolean defaultValue) {
     final String s = Config.getSettingFromEnvironment(prefix + "." + key, null);
@@ -46,7 +42,6 @@ public class DefaultConfigProvider implements ConfigProvider {
     return Boolean.parseBoolean(s); // TODO: Handle format errors gracefully?
   }
 
-  // @Override
   @Override
   public double getDouble(final String key, final double defaultValue) {
     final String s = Config.getSettingFromEnvironment(prefix + "." + key, null);

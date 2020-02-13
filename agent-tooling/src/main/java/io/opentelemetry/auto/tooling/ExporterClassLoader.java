@@ -40,7 +40,7 @@ public class ExporterClassLoader extends URLClassLoader {
   @Override
   protected Class<?> findClass(final String name) throws ClassNotFoundException {
 
-    // Use resource loading to get the class as a stream of bytes, then use ASM to retransform it.
+    // Use resource loading to get the class as a stream of bytes, then use ASM to transform it.
     try (final InputStream in = getResourceAsStream(name.replace('.', '/') + ".class")) {
       final ClassWriter cw = new ClassWriter(0);
       final ClassReader cr = new ClassReader(in);

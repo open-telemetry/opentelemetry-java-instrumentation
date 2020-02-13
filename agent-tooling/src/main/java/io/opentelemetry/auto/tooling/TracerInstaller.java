@@ -13,13 +13,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.ServiceLoader;
-import java.util.jar.Manifest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TracerInstaller {
-  private static ExporterClassLoader exporterLoader;
-
   /** Register agent tracer if no agent tracer is already registered. */
   public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
@@ -64,9 +61,7 @@ public class TracerInstaller {
       return null;
     }
 
-    // Locate the name of the bootstrap class and try to load it
-    final Manifest mf;
-    exporterLoader =
+    final ExporterClassLoader exporterLoader =
         new ExporterClassLoader(new URL[] {url}, TracerInstaller.class.getClassLoader());
     final ServiceLoader<SpanExporterFactory> sl =
         ServiceLoader.load(SpanExporterFactory.class, exporterLoader);
