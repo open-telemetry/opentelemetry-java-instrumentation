@@ -32,8 +32,8 @@ dependencies {
   testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   testCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.5.1.RELEASE'
 
-  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '5.+'
-  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.+'
+  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '(,6.0.0.Final)'
+  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '(,6.0.0.Final)'
   latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
 }

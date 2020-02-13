@@ -1,5 +1,5 @@
 dependencies {
-  compile project(':agent-bootstrap')
+  compile project(':auto-bootstrap')
   compile project(':benchmark-integration')
 
   compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'

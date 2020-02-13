@@ -1,7 +1,7 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile project(':agent-bootstrap')
+  compile project(':auto-bootstrap')
 
   compile 'info.picocli:picocli:4.0.4'
   compile deps.guava

@@ -26,10 +26,23 @@ public class ExecutorInstrumentationUtils {
    * @return true iff given task object should be wrapped
    */
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
+    if (task == null) {
+      return false;
+    }
+
     final Span span = TRACER.getCurrentSpan();
-    return (span.getContext().isValid()
-        && task != null
-        && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
+    final Class enclosingClass = task.getClass().getEnclosingClass();
+
+    return span.getContext().isValid()
+        && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task)
+
+        // Don't instrument the executor's own runnables.  These runnables may never return until
+        // netty shuts down.  Any created continuations will be open until that time preventing
+        // traces from being reported
+        && (enclosingClass == null
+            || !enclosingClass
+                .getName()
+                .equals("io.netty.util.concurrent.SingleThreadEventExecutor"));
   }
 
   /**
