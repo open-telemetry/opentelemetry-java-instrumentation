@@ -2,3 +2,6 @@
 # https://help.github.com/en/articles/about-code-owners
 
 * @DataDog/apm-java
+
+dd-java-agent/agent-profiling/  @DataDog/profiling
+dd-smoke-tests/profiling-integration-tests/ @DataDog/profiling
