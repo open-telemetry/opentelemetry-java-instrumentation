@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Constants;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -68,7 +69,12 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
 
   public static class LoadClassAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(@Advice.Argument(0) final String name) {
+    public static Class<?> onEnter(
+        @Advice.Argument(0) final String name, @Advice.Local("_callDepth") int callDepth) {
+      callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
+      if (callDepth > 0) {
+        return null;
+      }
       for (final String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
         if (name.startsWith(prefix)) {
           try {
@@ -80,9 +86,15 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
       return null;
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result, @Advice.Enter final Class<?> clazz) {
+        @Advice.Local("_callDepth") final int callDepth,
+        @Advice.Return(readOnly = false) Class<?> result,
+        @Advice.Enter final Class<?> clazz) {
+      if (callDepth > 0) {
+        return;
+      }
+      CallDepthThreadLocalMap.reset(ClassLoader.class);
       if (clazz != null) {
         result = clazz;
       }
