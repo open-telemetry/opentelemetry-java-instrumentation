@@ -6,7 +6,6 @@ import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import javax.servlet.Servlet
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
 import org.apache.catalina.connector.Response
@@ -16,6 +15,8 @@ import org.apache.catalina.startup.Tomcat
 import org.apache.catalina.valves.ErrorReportValve
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
+
+import javax.servlet.Servlet
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -304,7 +305,6 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
           tags {
             "$Tags.COMPONENT" serverDecorator.component()
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
             "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
