@@ -25,10 +25,13 @@ include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
 
+// exporter support
+include ':exporter-support'
+
 // misc
 include ':testing'
-include ':utils:gc-utils'
 include ':utils:test-utils'
+include ':utils:thread-utils'
 
 // smoke tests
 include ':smoke-tests:cli'
@@ -60,6 +63,7 @@ include ':instrumentation:elasticsearch:transport-2.0'
 include ':instrumentation:elasticsearch:transport-5.0'
 include ':instrumentation:elasticsearch:transport-5.3'
 include ':instrumentation:elasticsearch:transport-6.0'
+include ':instrumentation:finatra-2.9'
 include ':instrumentation:glassfish-3.0'
 include ':instrumentation:google-http-client-1.19'
 include ':instrumentation:grizzly-2.0'
@@ -133,6 +137,9 @@ include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 include ':benchmark-integration:play-perftest'
 
+//Dummy exporter TODO: Move it somewhere better
+include ":dummy-exporter"
+
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"
   project.children.each {
@@ -145,3 +152,4 @@ setBuildFile(rootProject)
 project(':agent-bootstrap').name = 'auto-bootstrap'
 project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
+
