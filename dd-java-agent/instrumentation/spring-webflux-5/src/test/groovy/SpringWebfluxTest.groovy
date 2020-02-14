@@ -84,7 +84,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" url
@@ -158,7 +157,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" url
@@ -219,7 +217,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" url
@@ -284,7 +281,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" url
@@ -327,7 +323,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" url
@@ -401,7 +396,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" url
@@ -451,7 +445,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" finalUrl
@@ -514,7 +507,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             tags {
               "$Tags.COMPONENT" "netty"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-              "$Tags.PEER_HOSTNAME" "localhost"
               "$Tags.PEER_HOST_IPV4" "127.0.0.1"
               "$Tags.PEER_PORT" Integer
               "$Tags.HTTP_URL" url

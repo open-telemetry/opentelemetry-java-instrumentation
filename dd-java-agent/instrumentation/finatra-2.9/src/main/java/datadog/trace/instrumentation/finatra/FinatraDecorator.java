@@ -25,11 +25,6 @@ public class FinatraDecorator extends HttpServerDecorator<Request, Request, Resp
   }
 
   @Override
-  protected String peerHostname(final Request request) {
-    return request.remoteHost();
-  }
-
-  @Override
   protected String peerHostIP(final Request request) {
     return request.remoteAddress().getHostAddress();
   }

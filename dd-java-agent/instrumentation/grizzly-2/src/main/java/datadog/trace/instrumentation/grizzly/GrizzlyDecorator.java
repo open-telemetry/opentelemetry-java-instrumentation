@@ -27,11 +27,6 @@ public class GrizzlyDecorator extends HttpServerDecorator<Request, Request, Resp
   }
 
   @Override
-  protected String peerHostname(final Request request) {
-    return request.getRemoteHost();
-  }
-
-  @Override
   protected String peerHostIP(final Request request) {
     return request.getRemoteAddr();
   }

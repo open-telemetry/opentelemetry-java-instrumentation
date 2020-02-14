@@ -117,7 +117,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
       tags {
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-        "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Integer
         "$Tags.HTTP_URL" String
