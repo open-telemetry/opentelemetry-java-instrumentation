@@ -10,7 +10,7 @@ import ratpack.func.Action;
 @Slf4j
 public class ActionWrapper<T> implements Action<T> {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.ratpack-1.4");
 
   private final Action<T> delegate;
   private final Span span;

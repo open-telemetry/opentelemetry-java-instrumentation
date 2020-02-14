@@ -25,10 +25,13 @@ include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
 
+// exporter support
+include ':exporter-support'
+
 // misc
 include ':testing'
-include ':utils:gc-utils'
 include ':utils:test-utils'
+include ':utils:thread-utils'
 
 // smoke tests
 include ':smoke-tests:cli'
@@ -44,6 +47,10 @@ include ':instrumentation:apache-httpclient-4.0'
 include ':instrumentation:aws-java-sdk-1.11'
 include ':instrumentation:aws-java-sdk-2.2'
 include ':instrumentation:cdi-1.2'
+include ':instrumentation:classloading'
+include ':instrumentation:classloading:jboss-testing'
+include ':instrumentation:classloading:osgi-testing'
+include ':instrumentation:classloading:tomcat-testing'
 include ':instrumentation:couchbase-2.0'
 include ':instrumentation:couchbase-2.6'
 include ':instrumentation:datastax-cassandra-3.0'
@@ -56,6 +63,7 @@ include ':instrumentation:elasticsearch:transport-2.0'
 include ':instrumentation:elasticsearch:transport-5.0'
 include ':instrumentation:elasticsearch:transport-5.3'
 include ':instrumentation:elasticsearch:transport-6.0'
+include ':instrumentation:finatra-2.9'
 include ':instrumentation:glassfish-3.0'
 include ':instrumentation:google-http-client-1.19'
 include ':instrumentation:grizzly-2.0'
@@ -80,7 +88,6 @@ include ':instrumentation:java-concurrent:kotlin-testing'
 include ':instrumentation:java-concurrent:scala-testing'
 include ':instrumentation:java-concurrent:akka-testing'
 include ':instrumentation:java-concurrent:akka-2.5-testing'
-include ':instrumentation:jboss-classloading'
 include ':instrumentation:jdbc'
 include ':instrumentation:jedis-1.4'
 include ':instrumentation:jedis-3.0'
@@ -100,7 +107,6 @@ include ':instrumentation:mongo:driver-async-3.3'
 include ':instrumentation:netty-4.0'
 include ':instrumentation:netty-4.1'
 include ':instrumentation:okhttp-3.0'
-include ':instrumentation:osgi-classloading'
 include ':instrumentation:play-2.4'
 include ':instrumentation:play-2.6'
 include ':instrumentation:play-ws-1.0'
@@ -121,7 +127,6 @@ include ':instrumentation:spring-data-1.8'
 include ':instrumentation:spring-webmvc-3.1'
 include ':instrumentation:spring-webflux-5.0'
 include ':instrumentation:spymemcached-2.12'
-include ':instrumentation:tomcat-classloading'
 include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
@@ -131,6 +136,9 @@ include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 include ':benchmark-integration:play-perftest'
+
+//Dummy exporter TODO: Move it somewhere better
+include ":dummy-exporter"
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"
@@ -144,3 +152,4 @@ setBuildFile(rootProject)
 project(':agent-bootstrap').name = 'auto-bootstrap'
 project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
+

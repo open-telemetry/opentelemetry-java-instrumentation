@@ -54,11 +54,22 @@ public class AgentInstaller {
   public static ResettableClassFileTransformer installBytebuddyAgent(
       final Instrumentation inst, final AgentBuilder.Listener... listeners) {
 
-    // need to trigger loading of OpenTelemetry SDK before instrumentation can possibly cause
-    // io.opentelemetry.OpenTelemetry to be loaded, since as soon as io.opentelemetry.OpenTelemetry,
-    // it looks up implementation via SPI, and if it doesn't find one, it loads the No-op
-    // implementation and it cannot be replaced later
-    OpenTelemetry.getTracerFactory();
+    final ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      // calling (shaded) OpenTelemetry.getTracerFactory() with context class loader set to the
+      // agent class loader, so that SPI finds the agent's (isolated) SDK, and (shaded)
+      // OpenTelemetry registers it, and then when instrumentation calls (shaded)
+      // OpenTelemetry.getTracerFactory() later, they get back the agent's (isolated) SDK
+      //
+      // but if we don't trigger this early registration, then if instrumentation is the first to
+      // call (shaded) OpenTelemetry.getTracerFactory(), then SPI can't see the agent class loader,
+      // and so (shaded) OpenTelemetry registers the no-op TracerFactory, and it cannot be replaced
+      // later
+      Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
+      OpenTelemetry.getTracerFactory();
+    } finally {
+      Thread.currentThread().setContextClassLoader(savedContextClassLoader);
+    }
 
     INSTRUMENTATION = inst;
 
@@ -150,7 +161,8 @@ public class AgentInstaller {
       agentBuilder = agentBuilder.with(listener);
     }
     int numInstrumenters = 0;
-    for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
+    for (final Instrumenter instrumenter :
+        ServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader())) {
       log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
 
       try {

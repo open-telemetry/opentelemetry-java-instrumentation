@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 /** ContextPayload wraps context information shared between client and server */
 @Slf4j
 public class ContextPayload {
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.rmi");
 
   @Getter private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();
