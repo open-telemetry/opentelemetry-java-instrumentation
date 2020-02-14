@@ -10,7 +10,8 @@ import java.net.URI;
 public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, ClientResponse> {
   public static final JaxRsClientV1Decorator DECORATE = new JaxRsClientV1Decorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jax-rs-client-1.1");
 
   @Override
   protected String getComponentName() {

@@ -1,8 +1,8 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
@@ -17,7 +17,8 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, SdkHttpResponse> {
   public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.aws-java-sdk-2.2");
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 

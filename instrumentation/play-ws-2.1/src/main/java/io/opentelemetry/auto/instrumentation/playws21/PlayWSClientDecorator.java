@@ -11,7 +11,8 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response> {
   public static final PlayWSClientDecorator DECORATE = new PlayWSClientDecorator();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.play-ws-2.1");
 
   @Override
   protected String method(final Request request) {

@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
 
 public class TracingSession implements Session {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.datastax-cassandra-3.0");
 
   private final ExecutorService executorService = Executors.newCachedThreadPool();
   private final Session session;

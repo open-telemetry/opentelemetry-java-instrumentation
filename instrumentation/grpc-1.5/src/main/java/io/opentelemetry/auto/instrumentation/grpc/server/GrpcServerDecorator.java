@@ -9,7 +9,8 @@ import io.opentelemetry.trace.Tracer;
 
 public class GrpcServerDecorator extends ServerDecorator {
   public static final GrpcServerDecorator DECORATE = new GrpcServerDecorator();
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.grpc-1.5");
 
   @Override
   protected String getSpanType() {

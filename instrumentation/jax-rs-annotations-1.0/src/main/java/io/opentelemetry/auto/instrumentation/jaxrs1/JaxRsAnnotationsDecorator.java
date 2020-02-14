@@ -23,7 +23,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jax-rs-annotations-1.0");
 
   @Override
   protected String getSpanType() {
