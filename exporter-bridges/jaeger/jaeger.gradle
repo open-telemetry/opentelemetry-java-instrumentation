@@ -1,0 +1,21 @@
+plugins {
+  id 'groovy'
+  id 'java'
+}
+
+group 'io.opentelemetry.auto'
+version '0.1.2-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'org.codehaus.groovy:groovy-all:2.3.11'
+
+  compileOnly deps.opentelemetryJaeger
+  compile project(':exporter-support')
+  compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
+}

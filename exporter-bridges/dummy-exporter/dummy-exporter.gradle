@@ -1,0 +1,11 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly deps.opentelemetrySdk
+  compileOnly deps.opentelemetryApi
+  compile project(":exporter-support")
+}

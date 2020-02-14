@@ -1,1 +1,1 @@
-io.opentelemetry.auto.dummyexporter.DummySpanExporterFactory
+io.opentelemetry.auto.DummySpanExporterFactory
