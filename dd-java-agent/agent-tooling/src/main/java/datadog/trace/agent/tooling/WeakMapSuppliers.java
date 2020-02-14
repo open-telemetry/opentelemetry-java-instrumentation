@@ -39,7 +39,7 @@ class WeakMapSuppliers {
 
     @Override
     public <K, V> WeakMap<K, V> get() {
-      final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false);
+      final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false, true);
       cleaner.scheduleCleaning(map, MapCleaner.CLEANER, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
       return new Adapter<>(map);
     }
