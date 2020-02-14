@@ -580,6 +580,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private boolean errorFlag;
     private String spanType;
     private boolean ignoreScope = false;
+    private LogsHandler logsHandler = null;
 
     public DDSpanBuilder(final String operationName, final ScopeManager scopeManager) {
       this.operationName = operationName;
@@ -593,7 +594,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     private Span startSpan() {
-      return new DDSpan(timestampMicro, buildSpanContext());
+      return new DDSpan(timestampMicro, buildSpanContext(), logsHandler);
     }
 
     @Override
@@ -668,6 +669,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         return Collections.emptyList();
       }
       return parent.baggageItems();
+    }
+
+    public DDSpanBuilder withLogsHandler(LogsHandler logsHandler) {
+      this.logsHandler = logsHandler;
+      return this;
     }
 
     @Override
