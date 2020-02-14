@@ -31,11 +31,6 @@ public class AkkaHttpServerDecorator
   }
 
   @Override
-  protected String peerHostname(final HttpRequest httpRequest) {
-    return null;
-  }
-
-  @Override
   protected String peerHostIP(final HttpRequest httpRequest) {
     return null;
   }

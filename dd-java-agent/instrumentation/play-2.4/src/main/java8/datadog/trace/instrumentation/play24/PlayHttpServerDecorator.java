@@ -38,11 +38,6 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
   }
 
   @Override
-  protected String peerHostname(final Request request) {
-    return null;
-  }
-
-  @Override
   protected String peerHostIP(final Request request) {
     return request.remoteAddress();
   }

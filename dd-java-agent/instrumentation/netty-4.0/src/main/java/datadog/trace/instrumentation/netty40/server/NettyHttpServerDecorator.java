@@ -43,15 +43,6 @@ public class NettyHttpServerDecorator
   }
 
   @Override
-  protected String peerHostname(final Channel channel) {
-    final SocketAddress socketAddress = channel.remoteAddress();
-    if (socketAddress instanceof InetSocketAddress) {
-      return ((InetSocketAddress) socketAddress).getHostName();
-    }
-    return null;
-  }
-
-  @Override
   protected String peerHostIP(final Channel channel) {
     final SocketAddress socketAddress = channel.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
