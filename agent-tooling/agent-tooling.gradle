@@ -36,8 +36,15 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':testing')
-  testCompile project(':dummy-exporter')
+  testCompile project(':exporter-adapters:dummy-exporter-adapter')
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile
+}
+
+
+def dummyExporterJar = project(":")
+
+test {
+  systemProperty 'projectVersion', allprojects.version[0]
 }

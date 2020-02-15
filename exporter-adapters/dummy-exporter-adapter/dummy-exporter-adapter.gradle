@@ -9,3 +9,4 @@ dependencies {
   compileOnly deps.opentelemetryApi
   compile project(":exporter-support")
 }
+

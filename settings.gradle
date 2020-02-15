@@ -132,10 +132,10 @@ include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
 
-// exporter bridges
-include ":exporter-bridges"
-include ":exporter-bridges:dummy-exporter"
-include ":exporter-bridges:jaeger"
+// exporter adapters
+include ":exporter-adapters"
+include ":exporter-adapters:dummy-exporter-adapter"
+include ":exporter-adapters:jaeger-adapter"
 
 // benchmark
 include ':benchmark'
