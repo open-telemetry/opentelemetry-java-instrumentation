@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 class SpringSchedulingTest extends AgentTestRunner {
