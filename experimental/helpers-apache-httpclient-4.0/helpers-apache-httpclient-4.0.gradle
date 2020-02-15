@@ -5,6 +5,8 @@ minimumInstructionCoverage = 0.6
 
 dependencies {
   implementation deps.opentelemetryApi
+  implementation project(':experimental:helpers-core')
+  implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
   annotationProcessor deps.autoservice
   implementation deps.autoservice

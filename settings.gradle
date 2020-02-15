@@ -19,6 +19,7 @@ gradleEnterprise {
 rootProject.name = 'trace-java'
 
 include ':experimental:helpers-core'
+include ':experimental:helpers-apache-httpclient-4.0'
 
 // agent projects
 include ':java-agent'

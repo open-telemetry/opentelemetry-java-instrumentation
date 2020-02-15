@@ -82,7 +82,7 @@ public class SemanticConventions {
   /** Database type. For any SQL database, "sql". For others, the lower-case database category. */
   public static final String DB_TYPE = "db.type";
   /** Database instance name. */
-  public static final String DB_ISNTANCE = "db.instance";
+  public static final String DB_INSTANCE = "db.instance";
   /** Database statement for the given database type. */
   public static final String DB_STATEMENT = "db.statement";
   /** Username for accessing database. */

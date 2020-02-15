@@ -36,6 +36,7 @@ public abstract class HttpClientSpanDecorator<C, Q, P> extends ClientSpanDecorat
   }
 
   private HttpStatusTranslator httpStatusTranslator = new HttpStatusTranslator();
+  private final HttpExtractor<Q, P> httpExtractor;
 
   /**
    * Constructs a span decorator object.
@@ -44,13 +45,17 @@ public abstract class HttpClientSpanDecorator<C, Q, P> extends ClientSpanDecorat
    * @param contextManager the context manager to use in handling correlation contexts
    * @param meter the meter to use in recoding measurements
    * @param propagationSetter the decorator-specific context propagation setter
+   * @param httpExtractor the extractor used to extract information from request/response
    */
   protected HttpClientSpanDecorator(
       Tracer tracer,
       DistributedContextManager contextManager,
       Meter meter,
-      Setter<C> propagationSetter) {
+      Setter<C> propagationSetter,
+      HttpExtractor<Q, P> httpExtractor) {
     super(tracer, contextManager, meter, propagationSetter);
+    assert httpExtractor != null;
+    this.httpExtractor = httpExtractor;
   }
 
   @Override
@@ -58,19 +63,28 @@ public abstract class HttpClientSpanDecorator<C, Q, P> extends ClientSpanDecorat
     return httpStatusTranslator;
   }
 
+  protected HttpExtractor<Q, P> extractor() {
+    return httpExtractor;
+  }
+
   @Override
   protected void addSpanAttributes(Span span, C carrier, Q inbound) {
-    putAttributeIfNotEmptyOrNull(span, SemanticConventions.HTTP_METHOD, getMethod(inbound));
-    putAttributeIfNotEmptyOrNull(span, SemanticConventions.HTTP_ROUTE, getRoute(inbound));
-    putAttributeIfNotEmptyOrNull(span, SemanticConventions.HTTP_URL, getUrl(inbound));
-    putAttributeIfNotEmptyOrNull(span, SemanticConventions.HTTP_USER_AGENT, getUserAgent(inbound));
-    putAttributeIfNotEmptyOrNull(span, SemanticConventions.HTTP_FLAVOR, getHttpFlavor(inbound));
-    putAttributeIfNotEmptyOrNull(span, SemanticConventions.HTTP_CLIENT_IP, getClientIp(inbound));
+    putAttributeIfNotEmptyOrNull(
+        span, SemanticConventions.HTTP_METHOD, extractor().getMethod(inbound));
+    putAttributeIfNotEmptyOrNull(
+        span, SemanticConventions.HTTP_ROUTE, extractor().getRoute(inbound));
+    putAttributeIfNotEmptyOrNull(span, SemanticConventions.HTTP_URL, extractor().getUrl(inbound));
+    putAttributeIfNotEmptyOrNull(
+        span, SemanticConventions.HTTP_USER_AGENT, extractor().getUserAgent(inbound));
+    putAttributeIfNotEmptyOrNull(
+        span, SemanticConventions.HTTP_FLAVOR, extractor().getHttpFlavor(inbound));
+    putAttributeIfNotEmptyOrNull(
+        span, SemanticConventions.HTTP_CLIENT_IP, extractor().getClientIp(inbound));
   }
 
   @Override
   protected void addResultSpanAttributes(Span span, Throwable throwable, P outbound) {
-    int httpStatus = getStatusCode(outbound);
+    int httpStatus = extractor().getStatusCode(outbound);
     span.setAttribute(
         SemanticConventions.HTTP_STATUS_CODE, AttributeValue.longAttributeValue(httpStatus));
     if (throwable != null) {
@@ -80,69 +94,11 @@ public abstract class HttpClientSpanDecorator<C, Q, P> extends ClientSpanDecorat
     }
   }
 
-  /**
-   * Returns the request method for use as the value of the <code>http.method</code> span attribute.
-   *
-   * @param request the HTTP request
-   * @return the HTTP method
-   */
-  protected abstract String getMethod(Q request);
-
-  /**
-   * Returns the request URL for use as the value of the <code>http.url</code> span attribute.
-   *
-   * @param request the HTTP request
-   * @return the request URL
-   */
-  protected abstract String getUrl(Q request);
-
-  /**
-   * Returns the request route for use as the span name. This should be in the format <code>
-   * /users/:userID</code> or else the URI path.
-   *
-   * @param request the HTTP request
-   * @return the request route
-   */
-  protected abstract String getRoute(Q request);
-
-  /**
-   * Returns the request user agent.
-   *
-   * @param request the HTTP request
-   * @return the request user agent
-   */
-  protected abstract String getUserAgent(Q request);
-
-  /**
-   * Returns the HTTP protocol version used by the connection.
-   *
-   * @param request the HTTP request
-   * @return the HTTP flavor
-   */
-  protected abstract String getHttpFlavor(Q request);
-
-  /**
-   * Returns the IP address of the calling client (Server-side only).
-   *
-   * @param request the HTTP request
-   * @return the IP address
-   */
-  protected abstract String getClientIp(Q request);
-
-  /**
-   * Returns the response status code for use as the value of the <code>http.status_code</code> span
-   * attribute. If the response is null, this method should return {@code 0}.
-   *
-   * @param response the HTTP response
-   * @return the response status code
-   */
-  protected abstract int getStatusCode(P response);
-
   class HttpStatusTranslator implements StatusTranslator<P> {
 
     @Override
     public Status calculateStatus(Throwable throwable, P response) {
-      int httpStatus = getStatusCode(response);
+      int httpStatus = extractor().getStatusCode(response);
       Status status = null;
       if (httpStatus >= 200 && httpStatus < 400) {
         return Status.OK;

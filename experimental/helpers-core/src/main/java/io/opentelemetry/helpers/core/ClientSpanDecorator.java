@@ -52,8 +52,6 @@ public abstract class ClientSpanDecorator<C, Q, P> extends BaseSpanDecorator<C, 
     this.propagationSetter = propagationSetter;
   }
 
-  protected abstract String service();
-
   @Override
   protected Kind spanKind() {
     return Kind.CLIENT;
