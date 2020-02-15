@@ -25,10 +25,7 @@ class TraceAssert {
                           @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def spans = getTrace(writer, traceId)
     Stopwatch stopwatch = Stopwatch.createStarted()
-    while (stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
-      if (spans.size() == expectedSize) {
-        break
-      }
+    while (spans.size() < expectedSize && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
       Thread.sleep(10)
       spans = getTrace(writer, traceId)
     }

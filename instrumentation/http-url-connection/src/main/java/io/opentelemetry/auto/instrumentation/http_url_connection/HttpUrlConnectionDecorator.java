@@ -10,7 +10,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConnection, Integer> {
   public static final HttpUrlConnectionDecorator DECORATE = new HttpUrlConnectionDecorator();
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.http-url-connection");
 
   @Override
   protected String getComponentName() {

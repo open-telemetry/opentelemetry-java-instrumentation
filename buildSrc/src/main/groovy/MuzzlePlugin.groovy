@@ -41,8 +41,8 @@ class MuzzlePlugin implements Plugin<Project> {
 
   @Override
   void apply(Project project) {
-    def bootstrapProject = project.rootProject.getChildProjects().get('agent-bootstrap')
-    def toolingProject = project.rootProject.getChildProjects().get('agent-tooling')
+    def bootstrapProject = project.rootProject.getChildProjects().get('auto-bootstrap')
+    def toolingProject = project.rootProject.getChildProjects().get('auto-tooling')
     project.extensions.create("muzzle", MuzzleExtension, project.objects)
 
     // compileMuzzle compiles all projects required to run muzzle validation.
@@ -128,14 +128,13 @@ class MuzzlePlugin implements Plugin<Project> {
       final ClassLoader toolingLoader = TOOLING_LOADER.get()
       if (toolingLoader == null) {
         Set<URL> ddUrls = new HashSet<>()
-        toolingProject.getLogger().info('creating classpath for agent-tooling')
+        toolingProject.getLogger().info('creating classpath for auto-tooling')
         for (File f : toolingProject.sourceSets.main.runtimeClasspath.getFiles()) {
           toolingProject.getLogger().info('--' + f)
           ddUrls.add(f.toURI().toURL())
         }
         def loader = new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null)
         assert TOOLING_LOADER.compareAndSet(null, loader)
-        loader.loadClass("io.opentelemetry.auto.tooling.AgentTooling").getMethod("init").invoke(null)
         return TOOLING_LOADER.get()
       } else {
         return toolingLoader
@@ -293,7 +292,9 @@ class MuzzlePlugin implements Plugin<Project> {
         def ccl = Thread.currentThread().contextClassLoader
         def bogusLoader = new SecureClassLoader() {
           @Override
-          String toString() { return "bogus" }
+          String toString() {
+            return "bogus"
+          }
         }
         Thread.currentThread().contextClassLoader = bogusLoader
         final ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)

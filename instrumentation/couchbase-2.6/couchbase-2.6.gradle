@@ -44,7 +44,7 @@ muzzle {
 }
 
 dependencies {
-  compile project(':instrumentation:rxjava-1')
+  compile project(':instrumentation:rxjava-1.0')
 
   compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
 

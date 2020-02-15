@@ -36,7 +36,6 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
@@ -205,13 +204,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
   public static class ChannelGetAdvice {
     @Advice.OnMethodEnter
-    public static long takeTimestamp(
-        @Advice.Local("placeholderScope") Scope placeholderScope,
-        @Advice.Local("callDepth") int callDepth) {
+    public static long takeTimestamp(@Advice.Local("callDepth") int callDepth) {
 
       callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
-      // Don't want RabbitCommandInstrumentation to mess up our actual parent span.
-      placeholderScope = TRACER.withSpan(DefaultSpan.getInvalid());
       return System.currentTimeMillis();
     }
 
@@ -220,12 +215,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.This final Channel channel,
         @Advice.Argument(0) final String queue,
         @Advice.Enter final long startTime,
-        @Advice.Local("placeholderScope") final Scope placeholderScope,
         @Advice.Local("callDepth") final int callDepth,
         @Advice.Return final GetResponse response,
         @Advice.Thrown final Throwable throwable) {
-
-      placeholderScope.close();
 
       if (callDepth > 0) {
         return;

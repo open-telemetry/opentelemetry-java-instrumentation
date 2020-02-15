@@ -140,11 +140,9 @@ public class Agent {
 
   private static synchronized void startAgent(final Instrumentation inst, final URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
-      final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         final ClassLoader agentClassLoader =
-            createAgentClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
-        Thread.currentThread().setContextClassLoader(agentClassLoader);
+            createAgentClassLoader("auto-tooling-and-instrumentation.isolated", bootstrapURL);
         final Class<?> agentInstallerClass =
             agentClassLoader.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");
         final Method agentInstallerMethod =
@@ -153,8 +151,6 @@ public class Agent {
         AGENT_CLASSLOADER = agentClassLoader;
       } catch (final Throwable ex) {
         log.error("Throwable thrown while installing the agent", ex);
-      } finally {
-        Thread.currentThread().setContextClassLoader(contextLoader);
       }
     }
   }
@@ -163,11 +159,9 @@ public class Agent {
     if (AGENT_CLASSLOADER == null) {
       throw new IllegalStateException("Agent should have been started already");
     }
-    final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
     // TracerInstaller.installAgentTracer can be called multiple times without any problem
     // so there is no need to have a 'agentTracerInstalled' flag here.
     try {
-      Thread.currentThread().setContextClassLoader(AGENT_CLASSLOADER);
       // install global tracer
       final Class<?> tracerInstallerClass =
           AGENT_CLASSLOADER.loadClass("io.opentelemetry.auto.tooling.TracerInstaller");
@@ -177,8 +171,6 @@ public class Agent {
       logVersionInfoMethod.invoke(null);
     } catch (final Throwable ex) {
       log.error("Throwable thrown while installing the agent tracer", ex);
-    } finally {
-      Thread.currentThread().setContextClassLoader(contextLoader);
     }
   }
 

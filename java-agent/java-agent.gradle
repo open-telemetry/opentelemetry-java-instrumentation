@@ -13,7 +13,7 @@ configurations {
 
 processResources {
   from(zipTree(project(':instrumentation').tasks.shadowJar.archiveFile)) {
-    into 'agent-tooling-and-instrumentation.isolated'
+    into 'auto-tooling-and-instrumentation.isolated'
     rename '(^.*)\\.class$', '$1.classdata'
     // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
     rename '^LICENSE$', 'LICENSE.renamed'
@@ -67,15 +67,15 @@ shadowJar {
 }
 
 dependencies {
-  testCompile project(':agent-bootstrap')
-  testCompile project(':utils:gc-utils')
+  testCompile project(':auto-bootstrap')
+  testCompile project(':utils:test-utils')
 
   testCompile deps.testLogging
   testCompile deps.guava
 
   testCompile 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
 
-  shadowInclude project(path: ':agent-bootstrap')
+  shadowInclude project(path: ':auto-bootstrap')
 }
 
 tasks.withType(Test).configureEach {
