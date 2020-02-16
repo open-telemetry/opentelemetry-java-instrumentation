@@ -62,12 +62,8 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
   public static class MongoClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void injectTraceListener(@Advice.This final Object dis) {
-      // referencing "this" in the method args causes the class to load under a transformer.
-      // This bypasses the Builder instrumentation. Casting as a workaround.
-      final MongoClientOptions.Builder builder = (MongoClientOptions.Builder) dis;
-      final TracingCommandListener listener = new TracingCommandListener();
-      builder.addCommandListener(listener);
+    public static void injectTraceListener(@Advice.This final MongoClientOptions.Builder builder) {
+      builder.addCommandListener(new TracingCommandListener());
     }
   }
 }
