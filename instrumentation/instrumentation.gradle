@@ -81,7 +81,7 @@ dependencies {
     exclude module: ':auto-bootstrap'
   }
 
-  // TODO: including the jaeger exporter doubles the agent jar file size, would be better for it to be optional component
+  // TODO: including the jaeger springboot doubles the agent jar file size, would be better for it to be optional component
   // (but this can wait until after 0.1.0)
   compile group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry
   compile group: 'io.grpc', name: 'grpc-netty', version: '1.24.0'

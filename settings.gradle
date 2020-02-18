@@ -37,7 +37,7 @@ include ':utils:thread-utils'
 include ':smoke-tests:cli'
 include ':smoke-tests:java9-modules'
 include ':smoke-tests:play'
-include ':smoke-tests:exporter'
+include ':smoke-tests:springboot'
 include ':smoke-tests:wildfly'
 include ':smoke-tests:springboot'
 
@@ -142,9 +142,6 @@ include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 include ':benchmark-integration:play-perftest'
-
-//Dummy exporter TODO: Move it somewhere better
-include ":dummy-exporter"
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

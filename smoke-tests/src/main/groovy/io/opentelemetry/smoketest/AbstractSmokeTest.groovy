@@ -15,13 +15,18 @@ abstract class AbstractSmokeTest extends Specification {
   @Shared
   protected String[] defaultJavaProperties
   @Shared
+  protected Process serverProcess
+  @Shared
   protected String exporterPath = System.getProperty("ota.exporter.jar")
 
   @Shared
-  protected Process serverProcess
-
-  @Shared
   protected File logfile
+
+  def countSpans(prefix) {
+    return logfile.text.tokenize('\n').count {
+      it.startsWith prefix
+    }
+  }
 
   def setupSpec() {
     if (buildDirectory == null || shadowJarPath == null) {

@@ -19,7 +19,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
   private static final Duration TIMEOUT = Duration.fromSeconds(5)
-  private static final long STARTUP_TIMEOUT = 20 * 1000
+  private static final long STARTUP_TIMEOUT = 40 * 1000
 
   static closeAndWait(Closable closable) {
     if (closable != null) {

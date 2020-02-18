@@ -10,7 +10,7 @@ class ExporterAdaptersTest extends Specification {
   def "test exporter load"() {
     setup:
     def file = new File("${exporter}-adapter/build/libs/${exporter}-adapter-${projectVersion}-all.jar")
-    println file.toString() + " " + classname
+    println "Attempting to load ${file.toString()} for ${classname}"
     URL[] urls = [file.toURI().toURL()]
     def cl = new ExporterClassLoader(urls, this.getClass().getClassLoader())
     def sl = new ServiceLoader<SpanExporterFactory>(SpanExporterFactory.class, cl)

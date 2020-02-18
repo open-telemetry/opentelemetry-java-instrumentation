@@ -18,8 +18,13 @@ class WildflySmokeTest extends AbstractServerSmokeTest {
     ProcessBuilder processBuilder =
       new ProcessBuilder("${wildflyDirectory}/bin/standalone.sh")
     processBuilder.directory(wildflyDirectory)
+
+    // We're installing a span exporter to make sure it doesn't blow anything up, but we're not
+    // checking the spans, since JBoss seems to redirect stdout to something we don't have (easy) access to.
     processBuilder.environment().put("JAVA_OPTS",
       defaultJavaProperties.join(" ")
+        + " -Dota.exporter.jar=${exporterPath}"
+        + " -Dota.exporter.prefix=LOGGED_SPAN"
         + " -Djboss.http.port=${httpPort} -Djboss.https.port=${httpsPort}"
         + " -Djboss.management.http.port=${managementPort}")
     return processBuilder

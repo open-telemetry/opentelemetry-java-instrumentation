@@ -1,4 +1,4 @@
-package io.opentelemetry.smoketest.exporter.controller;
+package io.opentelemetry.smoketest.springboot.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

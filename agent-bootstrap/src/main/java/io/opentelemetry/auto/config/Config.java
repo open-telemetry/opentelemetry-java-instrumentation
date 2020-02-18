@@ -31,11 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(includeFieldNames = true)
 public class Config {
-  /** Config keys below */
-  private static final String PREFIX = "ota.";
-
-  private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
-
   public static final String EXPORTER = "exporter";
   public static final String EXPORTER_JAR = "exporter.jar";
   public static final String SERVICE = "service";
@@ -56,14 +51,15 @@ public class Config {
   public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
-
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
-
-  private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
+  public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
+  /** Config keys below */
+  private static final String PREFIX = "ota.";
 
+  private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
+  private static final boolean DEFAULT_TRACE_ENABLED = true;
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
-
   private static final Set<Integer> DEFAULT_HTTP_SERVER_ERROR_STATUSES =
       parseIntegerRangeSet("500-599", "default");
   private static final Set<Integer> DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
@@ -73,16 +69,16 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
-
-  public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
-
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
   private static final String DEFAULT_TRACE_ANNOTATIONS = null;
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
-
+  // This has to be placed after all other static fields to give them a chance to initialize
+  private static final Config INSTANCE = new Config();
+  // Values from an optionally provided properties file
+  private static Properties propertiesFromConfigFile;
   @Getter private final String exporter;
   @Getter private final String exporterJar;
   @Getter private final String serviceName;
@@ -97,18 +93,11 @@ public class Config {
   @Getter private final boolean dbClientSplitByInstance;
   @Getter private final Integer scopeDepthLimit;
   @Getter private final boolean runtimeContextFieldInjection;
-
   @Getter private final boolean logsInjectionEnabled;
-
   @Getter private final String traceAnnotations;
-
   @Getter private final String traceMethods;
-
   @Getter private final boolean traceExecutorsAll;
   @Getter private final List<String> traceExecutors;
-
-  // Values from an optionally provided properties file
-  private static Properties propertiesFromConfigFile;
 
   // Read order: System Properties -> Env Variables, [-> properties file], [-> default value]
   // Visible for testing
@@ -226,11 +215,6 @@ public class Config {
     traceExecutors = getPropertyListValue(properties, TRACE_EXECUTORS, parent.traceExecutors);
 
     log.debug("New instance: {}", this);
-  }
-
-  public boolean isIntegrationEnabled(
-      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
-    return integrationEnabled(integrationNames, defaultEnabled);
   }
 
   /**
@@ -368,17 +352,6 @@ public class Config {
     return result;
   }
 
-  private Set<Integer> getIntegerRangeSettingFromEnvironment(
-      final String name, final Set<Integer> defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    try {
-      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
-  }
-
   /**
    * Converts the property name, e.g. 'trace.enabled' into a public environment variable name, e.g.
    * `OTA_TRACE_ENABLED`.
@@ -440,17 +413,6 @@ public class Config {
     }
     // null means parent value should be used
     return null;
-  }
-
-  private Set<Integer> getPropertyIntegerRangeValue(
-      final Properties properties, final String name, final Set<Integer> defaultValue) {
-    final String value = properties.getProperty(name);
-    try {
-      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
   }
 
   private static Map<String, String> parseMap(final String str, final String settingName) {
@@ -603,9 +565,6 @@ public class Config {
     return properties;
   }
 
-  // This has to be placed after all other static fields to give them a chance to initialize
-  private static final Config INSTANCE = new Config();
-
   public static Config get() {
     return INSTANCE;
   }
@@ -615,6 +574,33 @@ public class Config {
       return INSTANCE;
     } else {
       return new Config(properties, INSTANCE);
+    }
+  }
+
+  public boolean isIntegrationEnabled(
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+    return integrationEnabled(integrationNames, defaultEnabled);
+  }
+
+  private Set<Integer> getIntegerRangeSettingFromEnvironment(
+      final String name, final Set<Integer> defaultValue) {
+    final String value = getSettingFromEnvironment(name, null);
+    try {
+      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
+    }
+  }
+
+  private Set<Integer> getPropertyIntegerRangeValue(
+      final Properties properties, final String name, final Set<Integer> defaultValue) {
+    final String value = properties.getProperty(name);
+    try {
+      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
     }
   }
 }
