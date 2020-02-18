@@ -100,6 +100,8 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       }
 
       // restore the original servlet span
+      // since spanWithScope is non-null here, originalServletSpan must have been set with the prior
+      // servlet span (as opposed to remaining unset)
       request.setAttribute(SPAN_ATTRIBUTE, originalServletSpan);
 
       final Span span = spanWithScope.getSpan();
