@@ -6,10 +6,12 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   testCompile project(':auto-tooling')
-  testRuntime project(':exporter-adapters:jaeger-adapter')
-  testRuntime project(':exporter-adapters:dummy-exporter-adapter')
+  testRuntime project('jaeger-adapter')
+  testRuntime project('dummy-exporter-adapter')
 }
 
 test {
+  dependsOn 'dummy-exporter-adapter:shadowJar'
+  dependsOn 'jaeger-adapter:shadowJar'
   systemProperty 'projectVersion', allprojects.version[0]
 }
