@@ -10,6 +10,7 @@ import spring.jpa.JpaPersistenceConfig
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class SpringJpaTest extends AgentTestRunner {
   def "test object method"() {
@@ -57,7 +58,7 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "JpaRepository.findAll"
@@ -93,7 +94,7 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.save"
@@ -129,7 +130,7 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.save"
@@ -178,7 +179,7 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "JpaCustomerRepository.findByLastName"
@@ -212,7 +213,7 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.delete"

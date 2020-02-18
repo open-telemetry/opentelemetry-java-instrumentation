@@ -3,7 +3,6 @@ package io.opentelemetry.auto.instrumentation.play26;
 import static io.opentelemetry.auto.instrumentation.play26.PlayHeaders.GETTER;
 import static io.opentelemetry.auto.instrumentation.play26.PlayHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.play26.PlayHttpServerDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -17,7 +16,7 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
-    final Span.Builder spanBuilder = TRACER.spanBuilder("play.request").setSpanKind(SERVER);
+    final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
     if (!TRACER.getCurrentSpan().getContext().isValid()) {
       try {
         final SpanContext extractedContext =
