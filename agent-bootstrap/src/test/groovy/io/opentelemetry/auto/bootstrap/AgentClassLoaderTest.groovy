@@ -13,7 +13,7 @@ class AgentClassLoaderTest extends Specification {
     def className1 = 'some/class/Name1'
     def className2 = 'some/class/Name2'
     final URL loc = getClass().getProtectionDomain().getCodeSource().getLocation()
-    final AgentClassLoader ddLoader = new AgentClassLoader(loc, null, null)
+    final AgentClassLoader loader = new AgentClassLoader(loc, null, null)
     final Phaser threadHoldLockPhase = new Phaser(2)
     final Phaser acquireLockFromMainThreadPhase = new Phaser(2)
 
@@ -21,7 +21,7 @@ class AgentClassLoaderTest extends Specification {
     final Thread thread1 = new Thread() {
       @Override
       void run() {
-        synchronized (ddLoader.getClassLoadingLock(className1)) {
+        synchronized (loader.getClassLoadingLock(className1)) {
           threadHoldLockPhase.arrive()
           acquireLockFromMainThreadPhase.arriveAndAwaitAdvance()
         }
@@ -33,7 +33,7 @@ class AgentClassLoaderTest extends Specification {
       @Override
       void run() {
         threadHoldLockPhase.arriveAndAwaitAdvance()
-        synchronized (ddLoader.getClassLoadingLock(className2)) {
+        synchronized (loader.getClassLoadingLock(className2)) {
           acquireLockFromMainThreadPhase.arrive()
         }
       }

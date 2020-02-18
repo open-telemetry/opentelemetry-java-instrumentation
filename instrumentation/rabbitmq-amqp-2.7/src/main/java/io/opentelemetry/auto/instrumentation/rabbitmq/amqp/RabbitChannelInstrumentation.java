@@ -9,7 +9,6 @@ import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtract
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
@@ -37,7 +36,6 @@ import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -143,13 +141,14 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(Channel.class);
+
       CURRENT_RABBIT_SPAN.remove();
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
-      CallDepthThreadLocalMap.reset(Channel.class);
     }
   }
 
@@ -222,14 +221,14 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (callDepth > 0) {
         return;
       }
-      final SpanContext parentContext = null;
+      CallDepthThreadLocalMap.reset(Channel.class);
 
-      // TODO: it would be better if we could actually have span wrapped into the scope started in
-      // OnMethodEnter
+      // can't create span and put into scope in method enter above, because can't add links after
+      // span creation
       final Span.Builder spanBuilder =
           TRACER
               .spanBuilder("amqp.command")
-              .setSpanKind(CONSUMER)
+              .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
 
       if (response != null && response.getProps() != null) {
@@ -237,10 +236,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
         if (headers != null) {
           try {
-            spanBuilder.setParent(TRACER.getHttpTextFormat().extract(headers, GETTER));
+            spanBuilder.addLink(TRACER.getHttpTextFormat().extract(headers, GETTER));
           } catch (final IllegalArgumentException e) {
             // couldn't extract a context
-            spanBuilder.setNoParent();
           }
         }
       }
@@ -260,7 +258,6 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         CONSUMER_DECORATE.beforeFinish(span);
       } finally {
         span.end();
-        CallDepthThreadLocalMap.reset(Channel.class);
       }
     }
   }

@@ -6,7 +6,6 @@ import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.Iterator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -57,12 +56,9 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
       if (next != null) {
         final Span.Builder spanBuilder = TRACER.spanBuilder(operationName).setSpanKind(CONSUMER);
         try {
-          final SpanContext extractedContext =
-              TRACER.getHttpTextFormat().extract(next.headers(), GETTER);
-          spanBuilder.setParent(extractedContext);
+          spanBuilder.addLink(TRACER.getHttpTextFormat().extract(next.headers(), GETTER));
         } catch (final IllegalArgumentException e) {
-          // Couldn't extract a context. We should treat this as a root span.
-          spanBuilder.setNoParent();
+          // Couldn't extract a context
         }
         final Span span = spanBuilder.startSpan();
         decorator.afterStart(span);

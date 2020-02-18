@@ -74,6 +74,17 @@ class SpanAssert {
     traceId(parent.traceId.toLowerBase16())
   }
 
+  def hasLink(SpanData linked) {
+    def found
+    for (def link : span.links) {
+      if (link.context.traceId == linked.traceId && link.context.spanId == linked.spanId) {
+        found = true
+        break
+      }
+    }
+    assert found
+  }
+
   def status(Status status) {
     assert span.status == status
     checked.status = true

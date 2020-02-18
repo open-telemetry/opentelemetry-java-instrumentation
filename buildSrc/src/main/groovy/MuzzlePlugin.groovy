@@ -127,13 +127,13 @@ class MuzzlePlugin implements Plugin<Project> {
     synchronized (TOOLING_LOADER) {
       final ClassLoader toolingLoader = TOOLING_LOADER.get()
       if (toolingLoader == null) {
-        Set<URL> ddUrls = new HashSet<>()
+        Set<URL> urls = new HashSet<>()
         toolingProject.getLogger().info('creating classpath for auto-tooling')
         for (File f : toolingProject.sourceSets.main.runtimeClasspath.getFiles()) {
           toolingProject.getLogger().info('--' + f)
-          ddUrls.add(f.toURI().toURL())
+          urls.add(f.toURI().toURL())
         }
-        def loader = new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null)
+        def loader = new URLClassLoader(urls.toArray(new URL[0]), (ClassLoader) null)
         assert TOOLING_LOADER.compareAndSet(null, loader)
         return TOOLING_LOADER.get()
       } else {
@@ -147,13 +147,13 @@ class MuzzlePlugin implements Plugin<Project> {
    */
   private static ClassLoader createInstrumentationClassloader(Project project, Project toolingProject) {
     project.getLogger().info("Creating instrumentation classpath for: " + project.getName())
-    Set<URL> ddUrls = new HashSet<>()
+    Set<URL> urls = new HashSet<>()
     for (File f : project.sourceSets.main.runtimeClasspath.getFiles()) {
       project.getLogger().info('--' + f)
-      ddUrls.add(f.toURI().toURL())
+      urls.add(f.toURI().toURL())
     }
 
-    return new URLClassLoader(ddUrls.toArray(new URL[0]), getOrCreateToolingLoader(toolingProject))
+    return new URLClassLoader(urls.toArray(new URL[0]), getOrCreateToolingLoader(toolingProject))
   }
 
   /**
