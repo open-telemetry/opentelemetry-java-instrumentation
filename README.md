@@ -50,8 +50,8 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently onl
 
 System property | Environment variable | Purpose
 --- | --- | ---
-ota.exporter.jaeger.host | OTA_JAEGER_HOST | The Jaeger host to connect to. Currently only gRPC is supported.
-ota.exporter.jaeger.port | OTA_JAEGER_PORT | The port to connect to on the Jaeger host. Currently only gRPC is supported
+ota.exporter.jaeger.host | OTA_EXPORTER_JAEGER_HOST | The Jaeger host to connect to. Currently only gRPC is supported.
+ota.exporter.jaeger.port | OTA_EXPORTER_JAEGER_PORT | The port to connect to on the Jaeger host. Currently only gRPC is supported
 
 These parameter names are very likely to change over time, so please check back here when trying out a new version!
 
