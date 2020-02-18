@@ -72,6 +72,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final String threadName = Thread.currentThread().getName();
   private final long threadId = Thread.currentThread().getId();
 
+  private final Map<String, String> serviceNameMappings;
+
   public DDSpanContext(
       final BigInteger traceId,
       final BigInteger spanId,
@@ -86,7 +88,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final String spanType,
       final Map<String, Object> tags,
       final PendingTrace trace,
-      final DDTracer tracer) {
+      final DDTracer tracer,
+      final Map<String, String> serviceNameMappings) {
 
     assert tracer != null;
     assert trace != null;
@@ -110,7 +113,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       this.tags.putAll(tags);
     }
 
-    this.serviceName = serviceName;
+    this.serviceNameMappings = serviceNameMappings;
+    setServiceName(serviceName);
     this.operationName = operationName;
     this.resourceName = resourceName;
     this.errorFlag = errorFlag;
@@ -155,7 +159,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   public void setServiceName(final String serviceName) {
-    this.serviceName = serviceName;
+    if (serviceNameMappings.containsKey(serviceName)) {
+      this.serviceName = serviceNameMappings.get(serviceName);
+    } else {
+      this.serviceName = serviceName;
+    }
   }
 
   public String getResourceName() {
@@ -292,6 +300,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     return trace;
   }
 
+  @Deprecated
   public DDTracer getTracer() {
     return tracer;
   }

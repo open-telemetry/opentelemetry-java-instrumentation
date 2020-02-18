@@ -60,8 +60,9 @@ class DDSpanSerializationTest extends DDSpecification {
         false,
         spanType,
         ["k1": "v1"],
-        new PendingTrace(tracer, 1G, [:]),
-        tracer)
+        new PendingTrace(tracer, 1G),
+        tracer,
+        [:])
 
     DDSpan span = new DDSpan(100L, context)
 
@@ -95,8 +96,9 @@ class DDSpanSerializationTest extends DDSpecification {
       false,
       spanType,
       Collections.emptyMap(),
-      new PendingTrace(tracer, 1G, [:]),
-      tracer)
+      new PendingTrace(tracer, 1G),
+      tracer,
+      [:])
     def span = new DDSpan(0, context)
     def buffer = new ArrayBufferOutput()
     def packer = MessagePack.newDefaultPacker(buffer)

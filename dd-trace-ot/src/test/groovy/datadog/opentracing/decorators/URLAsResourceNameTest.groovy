@@ -115,12 +115,13 @@ class URLAsResourceNameTest extends DDSpecification {
         "fakeResource",
         PrioritySampling.UNSET,
         null,
-        Collections.<String, String> emptyMap(),
+        [:],
         false,
         "fakeType",
         tags,
-        new PendingTrace(tracer, 1G, [:]),
-        tracer)
+        new PendingTrace(tracer, 1G),
+        tracer,
+        [:])
 
     then:
     decorator.shouldSetTag(context, Tags.HTTP_URL.getKey(), value)

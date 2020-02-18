@@ -32,12 +32,13 @@ class DDApiIntegrationTest {
       "fakeResource",
       PrioritySampling.UNSET,
       null,
-      Collections.emptyMap(),
+      [:],
       false,
       "fakeType",
-      Collections.emptyMap(),
-      new PendingTrace(TRACER, 1G, [:]),
-      TRACER)
+      [:],
+      new PendingTrace(TRACER, 1G),
+      TRACER,
+      [:])
 
     // Looks like okHttp needs to resolve this, even for connection over socket
     static final SOMEHOST = "datadoghq.com"
