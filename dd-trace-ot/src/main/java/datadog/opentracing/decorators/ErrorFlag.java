@@ -6,7 +6,7 @@ import io.opentracing.tag.Tags;
 public class ErrorFlag extends AbstractDecorator {
   public ErrorFlag() {
     super();
-    this.setMatchingTag(Tags.ERROR.getKey());
+    setMatchingTag(Tags.ERROR.getKey());
   }
 
   @Override
@@ -17,7 +17,6 @@ public class ErrorFlag extends AbstractDecorator {
     } catch (final Throwable t) {
       // DO NOTHING
     }
-    // TODO: Do we really want an error tag if the error flag is already set?
-    return true;
+    return false;
   }
 }

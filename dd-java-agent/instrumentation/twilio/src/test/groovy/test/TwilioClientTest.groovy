@@ -435,7 +435,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            "$Tags.ERROR" true
             defaultTags()
           }
         }
@@ -589,7 +588,6 @@ class TwilioClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            "$Tags.ERROR" true
             defaultTags()
           }
         }

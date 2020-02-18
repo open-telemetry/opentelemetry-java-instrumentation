@@ -136,7 +136,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         "span.origin.type" ApplicationFilterChain.name
         "servlet.path" endpoint.path
         if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }

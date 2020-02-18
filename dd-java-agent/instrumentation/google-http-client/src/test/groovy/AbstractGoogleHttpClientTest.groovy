@@ -71,7 +71,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Integer
-            "$Tags.ERROR" true
             "$DDTags.ERROR_MSG" "Server Error"
             defaultTags()
           }

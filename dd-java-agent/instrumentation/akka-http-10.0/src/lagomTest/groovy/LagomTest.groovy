@@ -113,7 +113,6 @@ class LagomTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
-            "$Tags.ERROR" true
             defaultTags()
           }
         }

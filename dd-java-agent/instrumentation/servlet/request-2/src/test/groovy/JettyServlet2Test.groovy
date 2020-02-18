@@ -107,7 +107,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
         "servlet.path" endpoint.path
         "span.origin.type" TestServlet2.Sync.name
         if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }

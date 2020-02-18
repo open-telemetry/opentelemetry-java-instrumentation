@@ -421,7 +421,6 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
               it == TestServlet3.DispatchImmediate.name || it == TestServlet3.DispatchAsync.name || it == ApplicationFilterChain.name
             }
             if (endpoint.errored) {
-              "$Tags.ERROR" endpoint.errored
               "error.msg" { it == null || it == EXCEPTION.body }
               "error.type" { it == null || it == Exception.name }
               "error.stack" { it == null || it instanceof String }
