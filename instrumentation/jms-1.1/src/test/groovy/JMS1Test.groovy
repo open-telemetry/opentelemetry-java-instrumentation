@@ -19,6 +19,7 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
@@ -56,10 +57,12 @@ class JMS1Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(1) {
-      trace(0, 2) {
+    assertTraces(2) {
+      trace(0, 1) {
         producerSpan(it, 0, jmsResourceName)
-        consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0))
+      }
+      trace(1, 1) {
+        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 
@@ -128,7 +131,7 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanKind CONSUMER
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
@@ -164,7 +167,7 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanKind CONSUMER
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
@@ -215,7 +218,7 @@ class JMS1Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanKind CONSUMER
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
@@ -256,16 +259,19 @@ class JMS1Test extends AgentTestRunner {
     }
   }
 
-  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentSpan) {
+  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
     trace.span(index) {
       if (messageListener) {
         operationName "jms.onMessage"
+        spanKind CONSUMER
+        childOf((SpanData) parentOrLinkedSpan)
       } else {
         operationName "jms.consume"
+        spanKind CLIENT
+        parent()
+        hasLink((SpanData) parentOrLinkedSpan)
       }
-      spanKind CONSUMER
       errored false
-      childOf((SpanData) parentSpan)
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
         "$MoreTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"

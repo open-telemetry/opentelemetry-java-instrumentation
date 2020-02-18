@@ -15,6 +15,7 @@ import java.sql.DriverManager
 import java.sql.Statement
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class ProcedureCallTest extends AgentTestRunner {
 
@@ -69,7 +70,7 @@ class ProcedureCallTest extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
-          spanKind CLIENT
+          spanKind INTERNAL
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -79,7 +80,7 @@ class ProcedureCallTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hibernate.procedure.getOutputs"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -104,7 +105,7 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(3) {
-          spanKind CLIENT
+          spanKind INTERNAL
           operationName "hibernate.transaction.commit"
           childOf span(0)
           tags {
@@ -140,7 +141,7 @@ class ProcedureCallTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "hibernate.session"
-          spanKind CLIENT
+          spanKind INTERNAL
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -150,7 +151,7 @@ class ProcedureCallTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hibernate.procedure.getOutputs"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           errored(true)
           tags {
@@ -163,7 +164,7 @@ class ProcedureCallTest extends AgentTestRunner {
         }
         span(2) {
           operationName "hibernate.transaction.commit"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"

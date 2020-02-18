@@ -15,6 +15,7 @@ import java.util.concurrent.TimeoutException
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
@@ -73,7 +74,7 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
     def errorEndpoint = endpoint == EXCEPTION || endpoint == ERROR
     trace.span(index) {
       operationName "finatra.controller"
-      spanKind SERVER
+      spanKind INTERNAL
       errored errorEndpoint
       childOf(parent as SpanData)
       tags {

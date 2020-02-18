@@ -5,6 +5,7 @@ import org.hibernate.Query
 import org.hibernate.Session
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class QueryTest extends AbstractHibernateTest {
 
@@ -31,7 +32,7 @@ class QueryTest extends AbstractHibernateTest {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
-          spanKind CLIENT
+          spanKind INTERNAL
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -41,7 +42,7 @@ class QueryTest extends AbstractHibernateTest {
         }
         span(1) {
           operationName "hibernate.$queryMethodName"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -68,7 +69,7 @@ class QueryTest extends AbstractHibernateTest {
         }
         span(3) {
           operationName "hibernate.transaction.commit"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -82,7 +83,7 @@ class QueryTest extends AbstractHibernateTest {
         trace(1, 3) {
           span(0) {
             operationName "hibernate.session"
-            spanKind CLIENT
+            spanKind INTERNAL
             parent()
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
@@ -92,7 +93,7 @@ class QueryTest extends AbstractHibernateTest {
           }
           span(1) {
             operationName "hibernate.$queryMethodName"
-            spanKind CLIENT
+            spanKind INTERNAL
             childOf span(0)
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
@@ -163,7 +164,7 @@ class QueryTest extends AbstractHibernateTest {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
-          spanKind CLIENT
+          spanKind INTERNAL
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -173,7 +174,7 @@ class QueryTest extends AbstractHibernateTest {
         }
         span(1) {
           operationName "hibernate.iterate"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -199,7 +200,7 @@ class QueryTest extends AbstractHibernateTest {
         }
         span(3) {
           operationName "hibernate.transaction.commit"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
