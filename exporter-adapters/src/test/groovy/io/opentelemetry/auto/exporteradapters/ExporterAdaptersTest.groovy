@@ -13,7 +13,7 @@ class ExporterAdaptersTest extends Specification {
     println "Attempting to load ${file.toString()} for ${classname}"
     URL[] urls = [file.toURI().toURL()]
     def cl = new ExporterClassLoader(urls, this.getClass().getClassLoader())
-    def sl = new ServiceLoader<SpanExporterFactory>(SpanExporterFactory.class, cl)
+    def sl = ServiceLoader.load(SpanExporterFactory.class, cl)
 
     when:
     def f = sl.iterator().next()
