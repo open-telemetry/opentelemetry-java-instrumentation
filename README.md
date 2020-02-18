@@ -21,7 +21,7 @@ as Java system properties (-D flags) or as environment variables. This is an exa
 
 ```
 java -javaagent:/path/to/opentelemetry-auto-<version>.jar \
-     -Dota.exporter=jaeger \
+     -Dota.exporter.jar=exporter-adapters/dummy-exporter-adapter/build/libs/dummy-exporter-adapter-0.1.2-SNAPSHOT.jar \
      -Dota.jaeger.host=localhost \
      -Dota.jaeger.port=14250 \
      -Dota.jaeger.service=shopping \
@@ -35,7 +35,7 @@ ota.exporter.jar | OTA_EXPORTER_JAR | The path to an exporter JAR
 ota.service | OTA_SERVICE | The service name of this JVM instance. This is used as a label in Jaeger to distinguish between JVM instances in a multi-service environment.
 
 ### Available exporters
-Currently two exporters are available and bundled with this project. 
+Currently two exporters are available and bundled with this project. They area available under the ```exporter-adapters``` directory. 
 
 #### Dummy Exporter
 The dummy exporter simply prints the name of the span along with its attributes to stdout. It is used manly
@@ -56,6 +56,9 @@ ota.exporter.jaeger.port | OTA_JAEGER_PORT | The port to connect to on the Jaege
 These parameter names are very likely to change over time, so please check back here when trying out a new version!
 
 Please report any bugs or unexpected behavior you may find.
+
+#### Vendor-specific exporters
+Exporters from observability and Application Performance Management vendors are currently under development. We will compile a list of vendor-specific exporters as they become available.
 
 ## Building from source
 
