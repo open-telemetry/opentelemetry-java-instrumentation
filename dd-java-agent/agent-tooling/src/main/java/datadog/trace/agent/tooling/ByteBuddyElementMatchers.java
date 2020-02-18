@@ -22,6 +22,16 @@ import net.bytebuddy.matcher.ElementMatchers;
 @Slf4j
 public class ByteBuddyElementMatchers {
 
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> safeExtendsClass(
+      final ElementMatcher<? super TypeDescription> matcher) {
+    return safeHasSuperType(matcher);
+  }
+
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasInterface(
+      final ElementMatcher<? super TypeDescription> matcher) {
+    return safeHasSuperType(matcher);
+  }
+
   /**
    * Matches any type description that declares a super type that matches the provided matcher.
    * Exceptions during matching process are logged and ignored.

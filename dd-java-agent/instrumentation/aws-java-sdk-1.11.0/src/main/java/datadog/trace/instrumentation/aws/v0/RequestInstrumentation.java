@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.aws.v0;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -26,7 +26,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("com.amazonaws.AmazonWebServiceRequest"));
+    return safeExtendsClass(named("com.amazonaws.AmazonWebServiceRequest"));
   }
 
   @Override

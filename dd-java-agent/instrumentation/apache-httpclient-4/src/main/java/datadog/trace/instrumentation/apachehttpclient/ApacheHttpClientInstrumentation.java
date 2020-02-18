@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
@@ -44,7 +44,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.apache.http.client.HttpClient")));
+    return not(isInterface()).and(safeHasInterface(named("org.apache.http.client.HttpClient")));
   }
 
   @Override

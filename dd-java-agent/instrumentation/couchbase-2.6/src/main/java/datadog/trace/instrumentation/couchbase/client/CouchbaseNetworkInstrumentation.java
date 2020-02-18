@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.couchbase.client;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -31,7 +31,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     // Exact class because private fields are used
-    return safeHasSuperType(named("com.couchbase.client.core.endpoint.AbstractGenericHandler"));
+    return safeExtendsClass(named("com.couchbase.client.core.endpoint.AbstractGenericHandler"));
   }
 
   @Override

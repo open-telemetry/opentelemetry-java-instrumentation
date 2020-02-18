@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.hibernate.core.v4_0;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -31,7 +31,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Transaction")));
+    return not(isInterface()).and(safeHasInterface(named("org.hibernate.Transaction")));
   }
 
   @Override

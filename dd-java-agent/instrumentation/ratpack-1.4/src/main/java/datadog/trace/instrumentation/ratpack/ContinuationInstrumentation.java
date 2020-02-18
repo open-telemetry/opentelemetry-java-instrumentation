@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.ratpack;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,7 +25,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("ratpack.exec.internal.Continuation"));
+    return safeHasInterface(named("ratpack.exec.internal.Continuation"));
   }
 
   @Override

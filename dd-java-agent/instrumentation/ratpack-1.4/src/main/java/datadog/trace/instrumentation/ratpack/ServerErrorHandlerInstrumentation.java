@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.ratpack;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -25,7 +25,7 @@ public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface().or(isAbstract()))
-        .and(safeHasSuperType(named("ratpack.error.ServerErrorHandler")));
+        .and(safeHasInterface(named("ratpack.error.ServerErrorHandler")));
   }
 
   @Override

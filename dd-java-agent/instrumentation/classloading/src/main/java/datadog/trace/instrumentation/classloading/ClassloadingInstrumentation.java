@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.classloading;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -44,7 +44,7 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
     return not(named("java.lang.ClassLoader"))
         .and(not(named("com.ibm.oti.vm.BootstrapClassLoader")))
         .and(not(named("datadog.trace.bootstrap.AgentClassLoader")))
-        .and(safeHasSuperType(named("java.lang.ClassLoader")));
+        .and(safeExtendsClass(named("java.lang.ClassLoader")));
   }
 
   @Override

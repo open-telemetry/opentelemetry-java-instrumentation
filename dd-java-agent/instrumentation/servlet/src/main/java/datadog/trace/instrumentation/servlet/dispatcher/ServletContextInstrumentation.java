@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet.dispatcher;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -27,7 +27,7 @@ public final class ServletContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("javax.servlet.ServletContext")));
+    return not(isInterface()).and(safeHasInterface(named("javax.servlet.ServletContext")));
   }
 
   @Override
