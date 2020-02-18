@@ -15,7 +15,7 @@ class ExporterAdaptersTest extends Specification {
     assert file.exists(): "${file.toString()} does not exist"
     URL[] urls = [file.toURI().toURL()]
     def cl = new ExporterClassLoader(urls, this.getClass().getClassLoader())
-    def sl = ServiceLoader.load(SpanExporterFactory.class, cl)
+    def sl = ServiceLoader.load(SpanExporterFactory, cl)
 
     when:
     def f = sl.iterator().next()
@@ -27,8 +27,8 @@ class ExporterAdaptersTest extends Specification {
     f.getClass().getName() == classname
 
     where:
-    exporter         || classname
-    'jaeger'         || 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
-    'dummy-exporter' || 'io.opentelemetry.auto.exporters.dummyexporter.DummySpanExporterFactory'
+    exporter         | classname
+    'jaeger'         | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
+    'dummy-exporter' | 'io.opentelemetry.auto.exporters.dummyexporter.DummySpanExporterFactory'
   }
 }
