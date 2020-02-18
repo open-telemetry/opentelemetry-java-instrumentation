@@ -136,13 +136,15 @@ class RabbitMQTest extends AgentTestRunner {
     new String(response.getBody()) == "Hello, world!"
 
     and:
-    assertTraces(2) {
+    assertTraces(3) {
       trace(0, 1) {
         rabbitSpan(it, 0, "queue.declare")
       }
-      trace(1, 2) {
+      trace(1, 1) {
         rabbitSpan(it, 0, "basic.publish <default> -> <generated>")
-        rabbitSpan(it, 1, "basic.get <generated>", true, span(0))
+      }
+      trace(2, 1) {
+        rabbitSpan(it, 0, "basic.get <generated>", true, traces[1][0])
       }
     }
   }
@@ -285,13 +287,15 @@ class RabbitMQTest extends AgentTestRunner {
     message == "foo"
 
     and:
-    assertTraces(2) {
+    assertTraces(3) {
       trace(0, 1) {
         rabbitSpan(it, "queue.declare")
       }
-      trace(1, 2) {
+      trace(1, 1) {
         rabbitSpan(it, 0, "basic.publish <default> -> some-routing-queue")
-        rabbitSpan(it, 1, "basic.get $queue.name", true, span(0))
+      }
+      trace(2, 1) {
+        rabbitSpan(it, 0, "basic.get $queue.name", true, traces[1][0])
       }
     }
   }
@@ -312,7 +316,7 @@ class RabbitMQTest extends AgentTestRunner {
     int index,
     String resource,
     Boolean distributedRootSpan = false,
-    Object parentSpan = null,
+    Object parentOrLinkSpan = null,
     Throwable exception = null,
     String errorMsg = null
   ) {
@@ -324,7 +328,7 @@ class RabbitMQTest extends AgentTestRunner {
           spanKind PRODUCER
           break
         case "basic.get":
-          spanKind CONSUMER
+          spanKind CLIENT
           break
         case "basic.deliver":
           spanKind CONSUMER
@@ -333,8 +337,12 @@ class RabbitMQTest extends AgentTestRunner {
           spanKind CLIENT
       }
 
-      if (parentSpan) {
-        childOf((SpanData) parentSpan)
+      if (parentOrLinkSpan) {
+        if (trace.span(index).attributes.get("amqp.command")?.stringValue == "basic.get") {
+          hasLink((SpanData) parentOrLinkSpan)
+        } else {
+          childOf((SpanData) parentOrLinkSpan)
+        }
       } else {
         parent()
       }
