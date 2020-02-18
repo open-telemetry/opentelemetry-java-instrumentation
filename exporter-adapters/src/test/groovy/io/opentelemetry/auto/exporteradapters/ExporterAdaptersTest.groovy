@@ -6,11 +6,13 @@ import spock.lang.Specification
 class ExporterAdaptersTest extends Specification {
   @Shared
   def projectVersion = System.getProperty("projectVersion")
+  def adapterRoot = System.getProperty("adapterRoot")
 
   def "test exporter load"() {
     setup:
-    def file = new File("${exporter}-adapter/build/libs/${exporter}-adapter-${projectVersion}-all.jar")
+    def file = new File("${adapterRoot}/${exporter}-adapter/build/libs/${exporter}-adapter-${projectVersion}-all.jar")
     println "Attempting to load ${file.toString()} for ${classname}"
+    assert file.exists(): "${file.toString()} does not exist"
     URL[] urls = [file.toURI().toURL()]
     def cl = new ExporterClassLoader(urls, this.getClass().getClassLoader())
     def sl = ServiceLoader.load(SpanExporterFactory.class, cl)
@@ -20,7 +22,6 @@ class ExporterAdaptersTest extends Specification {
     println f.class.getName()
 
     then:
-    file.exists()
     f != null
     f instanceof SpanExporterFactory
     f.getClass().getName() == classname
