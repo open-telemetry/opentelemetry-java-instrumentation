@@ -12,16 +12,8 @@ public class StringCachingBigInteger extends BigInteger {
 
   private String cachedString;
 
-  public StringCachingBigInteger(byte[] val, int off, int len) {
-    super(val, off, len);
-  }
-
   public StringCachingBigInteger(byte[] val) {
     super(val);
-  }
-
-  public StringCachingBigInteger(int signum, byte[] magnitude, int off, int len) {
-    super(signum, magnitude, off, len);
   }
 
   public StringCachingBigInteger(int signum, byte[] magnitude) {
