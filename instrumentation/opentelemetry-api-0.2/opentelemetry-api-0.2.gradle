@@ -1,6 +1,17 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
+  // this instrumentation needs to be able to be able to reference both the OpenTelemetry API
+  // that is shaded in the bootstrap class loader (for sending telemetry to the agent),
+  // and the OpenTelemetry API that the user brings (in order to capture that telemetry)
+  //
+  // since instrumentation is already using OpenTelemetry API for sending telemetry to the agent
+  // this instrumentation uses a "temporarily shaded" OpenTelemetry API to represent the
+  // OpenTelemetry API that the user brings
+  //
+  // then later, after the OpenTelemetry API in the bootstrap class loader is shaded,
+  // the "temporarily shaded" OpenTelemetry API is unshaded, so that it will apply to the
+  // OpenTelemetry API that the user brings
   compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
 
   testCompile project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
