@@ -8,20 +8,20 @@ import spock.lang.Specification
 class ShadowPackageRenamingTest extends Specification {
   def "agent dependencies renamed"() {
     setup:
-    final Class<?> ddClass =
+    final Class<?> clazz =
       IntegrationTestUtils.getAgentClassLoader()
         .loadClass("io.opentelemetry.auto.tooling.AgentInstaller")
     final URL userGuava =
       MapMaker.getProtectionDomain().getCodeSource().getLocation()
     final URL agentGuavaDep =
-      ddClass
+      clazz
         .getClassLoader()
         .loadClass("com.google.common.collect.MapMaker")
         .getProtectionDomain()
         .getCodeSource()
         .getLocation()
     final URL agentSource =
-      ddClass.getProtectionDomain().getCodeSource().getLocation()
+      clazz.getProtectionDomain().getCodeSource().getLocation()
 
     expect:
     agentSource.getFile() == "/"

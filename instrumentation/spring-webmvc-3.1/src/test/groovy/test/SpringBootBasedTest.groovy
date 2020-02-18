@@ -16,6 +16,7 @@ import org.springframework.web.servlet.view.RedirectView
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 import static java.util.Collections.singletonMap
 
@@ -65,7 +66,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "response.render"
-      spanKind SERVER
+      spanKind INTERNAL
       errored false
       tags {
         "$MoreTags.SPAN_TYPE" "web"
@@ -79,7 +80,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "spring.handler"
-      spanKind SERVER
+      spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {

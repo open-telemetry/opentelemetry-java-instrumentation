@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.tooling.Constants;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
@@ -38,8 +39,10 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // safe to exclude java.lang.ClassLoader since its loadClass() delegates
+    // just an optimization to exclude common class loaders that are known to delegate to the
+    // bootstrap loader (or happen to _be_ the bootstrap loader)
     return not(named("java.lang.ClassLoader"))
+        .and(not(named("com.ibm.oti.vm.BootstrapClassLoader")))
         .and(not(named("io.opentelemetry.auto.bootstrap.AgentClassLoader")))
         .and(safeHasSuperType(named("java.lang.ClassLoader")));
   }
@@ -68,7 +71,12 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
 
   public static class LoadClassAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(@Advice.Argument(0) final String name) {
+    public static Class<?> onEnter(
+        @Advice.Argument(0) final String name, @Advice.Local("_callDepth") int callDepth) {
+      callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
+      if (callDepth > 0) {
+        return null;
+      }
       for (final String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
         if (name.startsWith(prefix)) {
           try {
@@ -80,11 +88,17 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
       return null;
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result, @Advice.Enter final Class<?> clazz) {
-      if (clazz != null) {
-        result = clazz;
+        @Advice.Local("_callDepth") final int callDepth,
+        @Advice.Return(readOnly = false) Class<?> result,
+        @Advice.Enter final Class<?> resultFromBootstrapLoader) {
+      if (callDepth > 0) {
+        return;
+      }
+      CallDepthThreadLocalMap.reset(ClassLoader.class);
+      if (resultFromBootstrapLoader != null) {
+        result = resultFromBootstrapLoader;
       }
     }
   }

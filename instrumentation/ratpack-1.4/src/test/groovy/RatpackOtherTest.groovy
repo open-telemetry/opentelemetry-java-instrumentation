@@ -9,6 +9,7 @@ import okhttp3.Request
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.path.PathBinding
 
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class RatpackOtherTest extends AgentTestRunner {
@@ -84,7 +85,7 @@ class RatpackOtherTest extends AgentTestRunner {
         }
         span(1) {
           operationName "ratpack.handler"
-          spanKind SERVER
+          spanKind INTERNAL
           childOf(span(0))
           errored false
           tags {
