@@ -22,6 +22,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCE
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 @Retry(mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
@@ -88,7 +89,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "play.request"
-      spanKind SERVER
+      spanKind INTERNAL
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {

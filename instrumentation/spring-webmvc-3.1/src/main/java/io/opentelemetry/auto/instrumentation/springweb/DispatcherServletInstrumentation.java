@@ -3,7 +3,6 @@ package io.opentelemetry.auto.instrumentation.springweb;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE_RENDER;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -68,7 +67,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
-      final Span span = TRACER.spanBuilder("response.render").setSpanKind(SERVER).startSpan();
+      final Span span = TRACER.spanBuilder("response.render").startSpan();
       DECORATE_RENDER.afterStart(span);
       DECORATE_RENDER.onRender(span, mv);
       return new SpanWithScope(span, TRACER.withSpan(span));

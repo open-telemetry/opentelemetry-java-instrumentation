@@ -7,6 +7,7 @@ import org.hibernate.criterion.Order
 import org.hibernate.criterion.Restrictions
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class CriteriaTest extends AbstractHibernateTest {
 
@@ -26,7 +27,7 @@ class CriteriaTest extends AbstractHibernateTest {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
-          spanKind CLIENT
+          spanKind INTERNAL
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -36,7 +37,7 @@ class CriteriaTest extends AbstractHibernateTest {
         }
         span(1) {
           operationName "hibernate.criteria.$methodName"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -61,7 +62,7 @@ class CriteriaTest extends AbstractHibernateTest {
         }
         span(3) {
           operationName "hibernate.transaction.commit"
-          spanKind CLIENT
+          spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
