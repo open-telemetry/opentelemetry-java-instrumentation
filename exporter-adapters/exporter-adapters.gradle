@@ -6,8 +6,8 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   testCompile project(':auto-tooling')
-  testCompile project(':exporter-adapters:jaeger-adapter')
-  testCompile project(':exporter-adapters:dummy-exporter-adapter')
+  testRuntime project(':exporter-adapters:jaeger-adapter')
+  testRuntime project(':exporter-adapters:dummy-exporter-adapter')
 }
 
 test {
