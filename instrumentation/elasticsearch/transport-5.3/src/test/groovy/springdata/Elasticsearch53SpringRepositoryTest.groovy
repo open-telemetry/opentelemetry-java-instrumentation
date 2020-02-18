@@ -14,6 +14,7 @@ import java.lang.reflect.Proxy
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
   // Setting up appContext & repo with @Shared doesn't allow
@@ -71,7 +72,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
@@ -117,7 +118,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           tags {
             "$MoreTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
@@ -192,7 +193,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
@@ -236,7 +237,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           tags {
             "$MoreTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
@@ -288,7 +289,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
@@ -331,7 +332,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.deleteById"
             "$Tags.COMPONENT" "spring-data"
@@ -384,7 +385,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
         span(0) {
           operationName "repository.operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           tags {
             "$MoreTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"

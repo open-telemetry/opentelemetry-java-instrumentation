@@ -3,7 +3,6 @@ package io.opentelemetry.auto.instrumentation.finatra;
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -79,7 +78,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       parent.setAttribute(Tags.COMPONENT, "finatra");
       parent.updateName("finatra.request");
 
-      final Span span = TRACER.spanBuilder("finatra.controller").setSpanKind(SERVER).startSpan();
+      final Span span = TRACER.spanBuilder("finatra.controller").startSpan();
       DECORATE.afterStart(span);
       span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForClass(clazz));
 

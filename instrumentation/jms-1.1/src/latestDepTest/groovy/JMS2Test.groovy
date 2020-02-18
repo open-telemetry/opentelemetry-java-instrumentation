@@ -29,6 +29,7 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
 
@@ -93,10 +94,12 @@ class JMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(1) {
-      trace(0, 2) {
+    assertTraces(2) {
+      trace(0, 1) {
         producerSpan(it, 0, jmsResourceName)
-        consumerSpan(it, 1, jmsResourceName, false, HornetQMessageConsumer, span(0))
+      }
+      trace(1, 1) {
+        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, traces[0][0])
       }
     }
 
@@ -165,7 +168,7 @@ class JMS2Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanKind CONSUMER
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
@@ -201,7 +204,7 @@ class JMS2Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          spanKind CONSUMER
+          spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
@@ -239,15 +242,17 @@ class JMS2Test extends AgentTestRunner {
     }
   }
 
-  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentSpan) {
+  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentOrLinkSpan) {
     trace.span(index) {
-      childOf((SpanData) parentSpan)
       if (messageListener) {
         operationName "jms.onMessage"
+        childOf((SpanData) parentOrLinkSpan)
+        spanKind CONSUMER
       } else {
         operationName "jms.consume"
+        hasLink((SpanData) parentOrLinkSpan)
+        spanKind CLIENT
       }
-      spanKind CONSUMER
       errored false
 
       tags {

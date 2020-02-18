@@ -4,7 +4,7 @@ import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DE
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,7 +15,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,18 +80,14 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       final Span.Builder spanBuilder =
           TRACER
               .spanBuilder("jms.consume")
-              .setSpanKind(CONSUMER)
+              .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
         try {
-          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
-          spanBuilder.setParent(extractedContext);
+          spanBuilder.addLink(TRACER.getHttpTextFormat().extract(message, GETTER));
         } catch (final IllegalArgumentException e) {
-          // Couldn't extract a context. We should treat this as a root span.
-          spanBuilder.setNoParent();
+          // Couldn't extract a context
         }
-      } else {
-        spanBuilder.setNoParent();
       }
       final Span span = spanBuilder.startSpan();
       span.setAttribute("span.origin.type", consumer.getClass().getName());
