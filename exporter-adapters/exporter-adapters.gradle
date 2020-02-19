@@ -10,7 +10,7 @@ dependencies {
   testRuntime project('dummy-exporter-adapter')
 }
 
-test {
+tasks.withType(Test).configureEach {
   dependsOn 'dummy-exporter-adapter:shadowJar'
   dependsOn 'jaeger-adapter:shadowJar'
   systemProperty 'projectVersion', allprojects.version[0]
