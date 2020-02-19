@@ -13,17 +13,18 @@ class ExporterAdaptersTest extends Specification {
   @Shared
   def jaegerDir = new File("${adapterRoot}/jaeger-adapter/build/libs")
 
-  def "test adapter build"() {
-    // This test was added to check for unexpected behavior of the CircleCI build.
-    setup:
-    assert jaegerDir.exists(): "${jaegerDir.toString()} does not exist"
-    assert jaegerDir.list().length > 0: "${jaegerDir.toString()} is empty"
+  def "test dirs exist"() {
+    when:
+    def dir = new File("${adapterRoot}/${exporter}-adapter/build/libs")
 
-    expect:
-    file.startsWith("jaeger-adapter-${projectVersion}")
+    then:
+    dir != null
+    dir.exists()
+    dir.list() != null
+    dir.list().length > 0
 
     where:
-    file << jaegerDir.list()
+    exporter << ['jaeger', 'logging-exporter']
   }
 
   def "test exporter load"() {
