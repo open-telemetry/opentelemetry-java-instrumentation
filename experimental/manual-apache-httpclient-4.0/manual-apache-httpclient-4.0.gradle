@@ -1,0 +1,17 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+minimumBranchCoverage = 0.5
+minimumInstructionCoverage = 0.6
+
+dependencies {
+  implementation deps.opentelemetryApi
+  implementation project(':experimental:helpers-core')
+  implementation project(':experimental:helpers-apache-httpclient-4.0')
+  implementation 'org.apache.httpcomponents:httpclient:4.3.6'
+
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testImplementation deps.opentelemetrySdk
+  testImplementation project(':testing')
+}

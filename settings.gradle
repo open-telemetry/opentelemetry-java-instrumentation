@@ -20,6 +20,7 @@ rootProject.name = 'trace-java'
 
 include ':experimental:helpers-core'
 include ':experimental:helpers-apache-httpclient-4.0'
+include ':experimental:manual-apache-httpclient-4.0'
 
 // agent projects
 include ':java-agent'
@@ -47,6 +48,7 @@ include ':smoke-tests:wildfly'
 include ':instrumentation:akka-http-10.0'
 include ':instrumentation:apache-httpasyncclient-4.0'
 include ':instrumentation:apache-httpclient-4.0'
+include ':instrumentation:auto-apache-httpclient-4.0'
 include ':instrumentation:aws-java-sdk-1.11'
 include ':instrumentation:aws-java-sdk-2.2'
 include ':instrumentation:cdi-1.2'
