@@ -17,9 +17,18 @@ public class ProfilingAgent {
 
   private static volatile ProfilingSystem PROFILER;
 
-  public static synchronized void run() throws IllegalArgumentException {
+  /**
+   * Main entry point into profiling Note: this must be reentrant because we may want to start
+   * profiling early, and then attempt to start it again at normal time
+   */
+  public static synchronized void run(final boolean early) throws IllegalArgumentException {
     if (PROFILER == null) {
       final Config config = Config.get();
+      if (early && !config.isProfilingStartForceEarly()) {
+        log.info("Profiling: not starting early");
+        // early startup is disabled;
+        return;
+      }
       if (!config.isProfilingEnabled()) {
         log.info("Profiling: disabled");
         return;
@@ -34,7 +43,7 @@ public class ProfilingAgent {
 
         final RecordingUploader uploader = new RecordingUploader(config);
 
-        final Duration startupDelay = Duration.ofSeconds(config.getProfilingStartupDelay());
+        final Duration startupDelay = Duration.ofSeconds(config.getProfilingStartDelay());
         final Duration uploadPeriod = Duration.ofSeconds(config.getProfilingUploadPeriod());
 
         // Randomize startup delay for up to one upload period. Consider having separate setting for
@@ -43,7 +52,12 @@ public class ProfilingAgent {
 
         PROFILER =
             new ProfilingSystem(
-                controller, uploader::upload, startupDelay, startupDelayRandomRange, uploadPeriod);
+                controller,
+                uploader::upload,
+                startupDelay,
+                startupDelayRandomRange,
+                uploadPeriod,
+                config.isProfilingStartForceEarly());
         PROFILER.start();
         log.info("Profiling has started!");
 

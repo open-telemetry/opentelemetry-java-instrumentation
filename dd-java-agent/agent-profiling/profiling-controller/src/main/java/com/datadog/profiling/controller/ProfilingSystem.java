@@ -38,6 +38,7 @@ public final class ProfilingSystem {
 
   private final Duration startupDelay;
   private final Duration uploadPeriod;
+  private final boolean forceEarly;
 
   private OngoingRecording recording;
   private boolean started = false;
@@ -57,7 +58,8 @@ public final class ProfilingSystem {
       final RecordingDataListener dataListener,
       final Duration startupDelay,
       final Duration startupDelayRandomRange,
-      final Duration uploadPeriod)
+      final Duration uploadPeriod,
+      final boolean forceEarly)
       throws ConfigurationException {
     this(
         controller,
@@ -65,6 +67,7 @@ public final class ProfilingSystem {
         startupDelay,
         startupDelayRandomRange,
         uploadPeriod,
+        forceEarly,
         Executors.newScheduledThreadPool(
             1, new ProfilingThreadFactory("dd-profiler-recording-scheduler")),
         ThreadLocalRandom.current());
@@ -76,12 +79,14 @@ public final class ProfilingSystem {
       final Duration baseStartupDelay,
       final Duration startupDelayRandomRange,
       final Duration uploadPeriod,
+      final boolean forceEarly,
       final ScheduledExecutorService executorService,
       final ThreadLocalRandom threadLocalRandom)
       throws ConfigurationException {
     this.controller = controller;
     this.dataListener = dataListener;
     this.uploadPeriod = uploadPeriod;
+    this.forceEarly = forceEarly;
     this.executorService = executorService;
 
     if (baseStartupDelay.isNegative()) {
@@ -103,31 +108,37 @@ public final class ProfilingSystem {
 
   public final void start() {
     log.info(
-        "Starting profiling system: startupDelay={}ms, uploadPeriod={}ms",
+        "Starting profiling system: startupDelay={}ms, uploadPeriod={}ms, forceEarly={}",
         startupDelay.toMillis(),
-        uploadPeriod.toMillis());
+        uploadPeriod.toMillis(),
+        forceEarly);
 
-    // Delay JFR initialization. This code is run from 'premain' and there is a known bug in JVM
-    // which makes it crash if JFR is run before 'main' starts.
-    // See https://bugs.openjdk.java.net/browse/JDK-8227011
-    executorService.schedule(
-        () -> {
-          try {
-            final Instant now = Instant.now();
-            recording = controller.createRecording(RECORDING_NAME);
-            executorService.scheduleAtFixedRate(
-                new SnapshotRecording(now),
-                uploadPeriod.toMillis(),
-                uploadPeriod.toMillis(),
-                TimeUnit.MILLISECONDS);
-            started = true;
-          } catch (final Throwable t) {
-            log.error("Fatal exception during profiling startup", t);
-            throw t;
-          }
-        },
-        startupDelay.toMillis(),
-        TimeUnit.MILLISECONDS);
+    if (forceEarly) {
+      startProfilingRecording();
+    } else {
+      // Delay JFR initialization. This code is run from 'premain' and there is a known bug in JVM
+      // which makes it crash if JFR is run before 'main' starts.
+      // See https://bugs.openjdk.java.net/browse/JDK-8227011 and
+      // https://bugs.openjdk.java.net/browse/JDK-8233197.
+      executorService.schedule(
+          this::startProfilingRecording, startupDelay.toMillis(), TimeUnit.MILLISECONDS);
+    }
+  }
+
+  private void startProfilingRecording() {
+    try {
+      final Instant now = Instant.now();
+      recording = controller.createRecording(RECORDING_NAME);
+      executorService.scheduleAtFixedRate(
+          new SnapshotRecording(now),
+          uploadPeriod.toMillis(),
+          uploadPeriod.toMillis(),
+          TimeUnit.MILLISECONDS);
+      started = true;
+    } catch (final Throwable t) {
+      log.error("Fatal exception during profiling startup", t);
+      throw t;
+    }
   }
 
   /** Shuts down the profiling system. */
