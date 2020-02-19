@@ -2,13 +2,7 @@ muzzle {
   pass {
     group = "org.mongodb"
     module = "mongo-java-driver"
-    versions = "[3.7,)" // a couple of test attribute verifications don't pass until 3.8.0
-    assertInverse = true
-  }
-  fail {
-    group = "org.mongodb"
-    module = "mongo-java-driver"
-    versions = "(,3.7)"
+    versions = "[3.7,)"
     assertInverse = true
   }
 }
@@ -24,10 +18,9 @@ testSets {
 }
 
 dependencies {
-  // use mongo listener
-  compile(project(':instrumentation:mongo:driver-3.1')) {
-    transitive = false
-  }
+  compile(project(':instrumentation:mongo'))
+
+  // a couple of test attribute verifications don't pass until 3.8.0
   compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.8.0'
 
   testCompile project(':instrumentation:mongo').sourceSets.test.output
