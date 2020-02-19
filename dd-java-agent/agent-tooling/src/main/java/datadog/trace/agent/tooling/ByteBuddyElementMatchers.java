@@ -29,7 +29,7 @@ public class ByteBuddyElementMatchers {
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasInterface(
       final ElementMatcher<? super TypeDescription> matcher) {
-    return safeHasSuperType(matcher);
+    return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), true);
   }
 
   /**
@@ -44,7 +44,7 @@ public class ByteBuddyElementMatchers {
    */
   public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasSuperType(
       final ElementMatcher<? super TypeDescription> matcher) {
-    return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher));
+    return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), false);
   }
 
   /**
@@ -99,13 +99,17 @@ public class ByteBuddyElementMatchers {
     /** The matcher to apply to any super type of the matched type. */
     private final ElementMatcher<? super TypeDescription.Generic> matcher;
 
+    private final boolean interfacesOnly;
     /**
      * Creates a new matcher for a super type.
      *
      * @param matcher The matcher to apply to any super type of the matched type.
      */
-    public SafeHasSuperTypeMatcher(final ElementMatcher<? super TypeDescription.Generic> matcher) {
+    public SafeHasSuperTypeMatcher(
+        final ElementMatcher<? super TypeDescription.Generic> matcher,
+        final boolean interfacesOnly) {
       this.matcher = matcher;
+      this.interfacesOnly = interfacesOnly;
     }
 
     @Override
@@ -115,7 +119,7 @@ public class ByteBuddyElementMatchers {
       // in {@code getSuperClass} calls
       TypeDefinition typeDefinition = target;
       while (typeDefinition != null) {
-        if (matcher.matches(typeDefinition.asGenericType())
+        if ((!interfacesOnly && matcher.matches(typeDefinition.asGenericType()))
             || hasInterface(typeDefinition, checkedInterfaces)) {
           return true;
         }
