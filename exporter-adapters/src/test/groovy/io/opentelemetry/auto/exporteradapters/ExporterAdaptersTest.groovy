@@ -15,11 +15,11 @@ class ExporterAdaptersTest extends Specification {
 
   def "test adapter build"() {
     // This test was added to check for unexpected behavior of the CircleCI build.
-    when:
+    setup:
     assert jaegerDir.exists(): "${jaegerDir.toString()} does not exist"
     assert jaegerDir.list().length > 0: "${jaegerDir.toString()} is empty"
 
-    then:
+    expect:
     file.startsWith("jaeger-adapter-${projectVersion}")
 
     where:

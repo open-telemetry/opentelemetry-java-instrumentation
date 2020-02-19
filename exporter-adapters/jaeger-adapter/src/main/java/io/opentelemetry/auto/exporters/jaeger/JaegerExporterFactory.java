@@ -31,7 +31,6 @@ public class JaegerExporterFactory implements SpanExporterFactory {
     return JaegerGrpcSpanExporter.newBuilder()
         .setServiceName(service)
         .setChannel(jaegerChannel)
-        .setDeadline(30000)
         .build();
   }
 }
