@@ -57,7 +57,7 @@ public class Config {
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
-  public static final String LOGS_INJECTION_ENABLED = "logs.injection";
+  public static final String LOGS_INJECTION_ENABLED = "logs.injection.enabled";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
