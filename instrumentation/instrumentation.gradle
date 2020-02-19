@@ -106,8 +106,6 @@ shadowJar {
 
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
-  // rewrite dependencies calling Logger.getLogger
-  relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
 
   dependencies {
     exclude(project(':auto-bootstrap'))
