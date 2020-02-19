@@ -58,10 +58,8 @@ public class AgentInstaller {
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-            .with(new RedefinitionLoggingListener())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
-            .with(new TransformLoggingListener())
             .with(new ClassLoadListener())
             .with(AgentTooling.locationStrategy())
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
@@ -138,6 +136,14 @@ public class AgentInstaller {
             .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
             .or(isAnnotatedWith(named("javax.decorator.Decorator")))
             .or(matchesConfiguredExcludes());
+
+    if (log.isDebugEnabled()) {
+      agentBuilder =
+          agentBuilder
+              .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+              .with(new RedefinitionLoggingListener())
+              .with(new TransformLoggingListener());
+    }
 
     for (final AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
