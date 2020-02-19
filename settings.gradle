@@ -134,7 +134,7 @@ include ':instrumentation:vertx-testing'
 
 // exporter adapters
 include ":exporter-adapters"
-include ":exporter-adapters:dummy-exporter-adapter"
+include ":exporter-adapters:logging-exporter-adapter"
 include ":exporter-adapters:jaeger-adapter"
 
 // benchmark

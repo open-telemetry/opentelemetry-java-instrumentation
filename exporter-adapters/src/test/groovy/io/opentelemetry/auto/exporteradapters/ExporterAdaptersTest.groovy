@@ -6,7 +6,25 @@ import spock.lang.Specification
 class ExporterAdaptersTest extends Specification {
   @Shared
   def projectVersion = System.getProperty("projectVersion")
+
+  @Shared
   def adapterRoot = System.getProperty("adapterRoot")
+
+  @Shared
+  def jaegerDir = new File("${adapterRoot}/jaeger-adapter/build/libs")
+
+  def "test adapter build"() {
+    // This test was added to check for unexpected behavior of the CircleCI build.
+    when:
+    assert jaegerDir.exists(): "${jaegerDir.toString()} does not exist"
+    assert jaegerDir.list().length > 0: "${jaegerDir.toString()} is empty"
+
+    then:
+    file.startsWith("jaeger-adapter-${projectVersion}")
+
+    where:
+    file << jaegerDir.list()
+  }
 
   def "test exporter load"() {
     setup:
@@ -14,11 +32,11 @@ class ExporterAdaptersTest extends Specification {
     println "Attempting to load ${file.toString()} for ${classname}"
     assert file.exists(): "${file.toString()} does not exist"
     URL[] urls = [file.toURI().toURL()]
-    def cl = new ExporterClassLoader(urls, this.getClass().getClassLoader())
-    def sl = ServiceLoader.load(SpanExporterFactory, cl)
+    def classLoader = new ExporterClassLoader(urls, this.getClass().getClassLoader())
+    def serviceLoader = ServiceLoader.load(SpanExporterFactory, classLoader)
 
     when:
-    def f = sl.iterator().next()
+    def f = serviceLoader.iterator().next()
     println f.class.getName()
 
     then:
@@ -27,8 +45,8 @@ class ExporterAdaptersTest extends Specification {
     f.getClass().getName() == classname
 
     where:
-    exporter         | classname
-    'jaeger'         | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
-    'dummy-exporter' | 'io.opentelemetry.auto.exporters.dummyexporter.DummySpanExporterFactory'
+    exporter           | classname
+    'jaeger'           | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
+    'logging-exporter' | 'io.opentelemetry.auto.exporters.loggingexporter.LoggingExporterFactory'
   }
 }
