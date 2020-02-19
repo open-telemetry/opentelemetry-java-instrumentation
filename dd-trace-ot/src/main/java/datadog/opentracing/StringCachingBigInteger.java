@@ -4,9 +4,9 @@ import java.math.BigInteger;
 import java.util.Random;
 
 /**
- * Because we are using BigInteger for Trace and Span Id, the toString() operator may result in heavy
- * computation and string allocation overhead. In order to limit this, we are caching the result
- * of toString, thereby taking advantage of the immutability of BigInteger.
+ * Because we are using BigInteger for Trace and Span Id, the toString() operator may result in
+ * heavy computation and string allocation overhead. In order to limit this, we are caching the
+ * result of toString, thereby taking advantage of the immutability of BigInteger.
  */
 public class StringCachingBigInteger extends BigInteger {
 
