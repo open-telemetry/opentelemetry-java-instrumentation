@@ -68,10 +68,11 @@ public class AgentInstaller {
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
-            // Unlikely to ever need to instrument an annotation:
-            .or(ElementMatchers.<TypeDescription>isAnnotation())
-            // Unlikely to ever need to instrument an enum:
-            .or(ElementMatchers.<TypeDescription>isEnum())
+            /**
+             * Be very careful about the types of matchers used in this section as they are called
+             * on every class load, so they must be fast. Generally speaking try to only use name
+             * matchers as they don't have to load additional info.
+             */
             .or(
                 nameStartsWith("datadog.trace.")
                     // FIXME: We should remove this once
@@ -136,7 +137,6 @@ public class AgentInstaller {
             .or(nameContains(".asm."))
             .or(nameContains("$__sisu"))
             .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
-            .or(isAnnotatedWith(named("javax.decorator.Decorator")))
             .or(matchesConfiguredExcludes());
 
     for (final AgentBuilder.Listener listener : listeners) {
