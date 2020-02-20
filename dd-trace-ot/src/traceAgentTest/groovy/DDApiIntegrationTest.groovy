@@ -85,7 +85,7 @@ class DDApiIntegrationTest extends DDSpecification {
         .withExposedPorts(datadog.trace.api.Config.DEFAULT_TRACE_AGENT_PORT)
         .withStartupTimeout(Duration.ofSeconds(120))
       // Apparently we need to sleep for a bit so agent's response `{"service:,env:":1}` in rate_by_service.
-      // This is clearly a race-condition and maybe we should av oid verifying complete response
+      // This is clearly a race-condition and maybe we should avoid verifying complete response
         .withStartupCheckStrategy(new MinimumDurationRunningStartupCheckStrategy(Duration.ofSeconds(10)))
       //        .withLogConsumer { output ->
       //        print output.utf8String
@@ -98,7 +98,8 @@ class DDApiIntegrationTest extends DDSpecification {
     File tmpDir = File.createTempDir()
     tmpDir.deleteOnExit()
     socketPath = new File(tmpDir, "socket")
-    process = Runtime.getRuntime().exec("socat UNIX-LISEN:${socketPath},reuseaddr,fork TCP-CONNECT:${agentContainerHost}:${agentContainerPort}")
+    println "!!!socat UNIX-LISEN:${socketPath},reuseaddr,fork TCP-CONNECT:${agentContainerHost}:${agentContainerPort}"
+    process = Runtime.getRuntime().exec("socat UNIX-LISTEN:${socketPath},reuseaddr,fork TCP-CONNECT:${agentContainerHost}:${agentContainerPort}")
   }
 
   def cleanupSpec() {
