@@ -119,7 +119,8 @@ public class ByteBuddyElementMatchers {
       // in {@code getSuperClass} calls
       TypeDefinition typeDefinition = target;
       while (typeDefinition != null) {
-        if ((!interfacesOnly && matcher.matches(typeDefinition.asGenericType()))
+        if (((!interfacesOnly || typeDefinition.isInterface())
+                && matcher.matches(typeDefinition.asGenericType()))
             || hasInterface(typeDefinition, checkedInterfaces)) {
           return true;
         }
