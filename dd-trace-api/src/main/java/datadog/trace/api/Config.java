@@ -168,7 +168,7 @@ public class Config {
 
   public static final boolean DEFAULT_PROFILING_ENABLED = false;
   public static final String DEFAULT_PROFILING_URL =
-      "https://beta-intake.profile.datadoghq.com/v1/input";
+      "https://intake.profile.datadoghq.com/v1/input";
   public static final int DEFAULT_PROFILING_STARTUP_DELAY = 10;
   public static final int DEFAULT_PROFILING_UPLOAD_PERIOD = 60; // 1 min
   public static final int DEFAULT_PROFILING_UPLOAD_TIMEOUT = 30; // seconds
