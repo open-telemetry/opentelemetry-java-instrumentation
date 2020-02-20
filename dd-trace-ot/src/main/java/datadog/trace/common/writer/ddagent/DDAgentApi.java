@@ -63,15 +63,13 @@ public class DDAgentApi {
   private final String host;
   private final int port;
   private final String unixDomainSocketPath;
-  private final OkHttpClient httpClient;
+  private OkHttpClient httpClient;
   private HttpUrl tracesUrl;
 
   public DDAgentApi(final String host, final int port, final String unixDomainSocketPath) {
     this.host = host;
     this.port = port;
     this.unixDomainSocketPath = unixDomainSocketPath;
-
-    httpClient = buildHttpClient(unixDomainSocketPath);
   }
 
   public void addResponseListener(final DDAgentResponseListener listener) {
@@ -116,8 +114,8 @@ public class DDAgentApi {
 
   Response sendSerializedTraces(
       final int representativeCount, final Integer sizeInBytes, final List<byte[]> traces) {
-    if (tracesUrl == null) {
-      detectEndpoint();
+    if (httpClient == null) {
+      detectEndpointAndBuildClient();
     }
 
     try {
@@ -290,8 +288,8 @@ public class DDAgentApi {
     }
   }
 
-  private synchronized void detectEndpoint() {
-    if (tracesUrl == null) {
+  private synchronized void detectEndpointAndBuildClient() {
+    if (httpClient == null) {
       final HttpUrl v4Url = getUrl(host, port, TRACES_ENDPOINT_V4);
       if (endpointAvailable(v4Url, unixDomainSocketPath, true)) {
         tracesUrl = v4Url;
@@ -299,6 +297,7 @@ public class DDAgentApi {
         log.debug("API v0.4 endpoints not available. Downgrading to v0.3");
         tracesUrl = getUrl(host, port, TRACES_ENDPOINT_V3);
       }
+      httpClient = buildHttpClient(unixDomainSocketPath);
     }
   }
 
