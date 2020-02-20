@@ -34,10 +34,10 @@ class DDAgentApiTest extends DDSpecification {
     def client = new DDAgentApi("localhost", agent.address.port, null)
 
     expect:
-    client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.4/traces"
     def response = client.sendTraces([])
     response.success()
     response.status() == 200
+    agent.getLastRequest().path == "/v0.4/traces"
 
     cleanup:
     agent.close()
@@ -50,16 +50,19 @@ class DDAgentApiTest extends DDSpecification {
         put("v0.4/traces") {
           response.status(404).send()
         }
+
+        put("v0.3/traces") {
+          response.status(404).send()
+        }
       }
     }
     def client = new DDAgentApi("localhost", agent.address.port, null)
 
     expect:
-    client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.3/traces"
-
     def response = client.sendTraces([])
     !response.success()
     response.status() == 404
+    agent.getLastRequest().path == "/v0.3/traces"
 
     cleanup:
     agent.close()
@@ -77,7 +80,6 @@ class DDAgentApiTest extends DDSpecification {
     def client = new DDAgentApi("localhost", agent.address.port, null)
 
     expect:
-    client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.4/traces"
     client.sendTraces(traces).success()
     agent.lastRequest.contentType == "application/msgpack"
     agent.lastRequest.headers.get("Datadog-Meta-Lang") == "java"
@@ -166,8 +168,8 @@ class DDAgentApiTest extends DDSpecification {
     def client = new DDAgentApi("localhost", v3Agent.address.port, null)
 
     expect:
-    client.tracesUrl.toString() == "http://localhost:${v3Agent.address.port}/v0.3/traces"
     client.sendTraces([]).success()
+    v3Agent.getLastRequest().path == "/v0.3/traces"
 
     cleanup:
     v3Agent.close()
@@ -191,9 +193,13 @@ class DDAgentApiTest extends DDSpecification {
     }
     def port = badPort ? 999 : agent.address.port
     def client = new DDAgentApi("localhost", port, null)
+    def result = client.sendTraces([])
 
     expect:
-    client.tracesUrl.toString() == "http://localhost:${port}/$endpointVersion/traces"
+    result.success() == !badPort // Expect success of port is ok
+    if (!badPort) {
+      assert agent.getLastRequest().path == "/$endpointVersion/traces"
+    }
 
     cleanup:
     agent.close()

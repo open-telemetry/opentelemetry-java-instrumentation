@@ -60,30 +60,18 @@ public class DDAgentApi {
                   Types.newParameterizedType(Map.class, String.class, Double.class)));
   private static final MediaType MSGPACK = MediaType.get("application/msgpack");
 
+  private final String host;
+  private final int port;
+  private final String unixDomainSocketPath;
   private final OkHttpClient httpClient;
-  private final HttpUrl tracesUrl;
+  private HttpUrl tracesUrl;
 
   public DDAgentApi(final String host, final int port, final String unixDomainSocketPath) {
-    this(
-        host,
-        port,
-        endpointAvailable(getUrl(host, port, TRACES_ENDPOINT_V4), unixDomainSocketPath, true),
-        unixDomainSocketPath);
-  }
+    this.host = host;
+    this.port = port;
+    this.unixDomainSocketPath = unixDomainSocketPath;
 
-  DDAgentApi(
-      final String host,
-      final int port,
-      final boolean v4EndpointsAvailable,
-      final String unixDomainSocketPath) {
     httpClient = buildHttpClient(unixDomainSocketPath);
-
-    if (v4EndpointsAvailable) {
-      tracesUrl = getUrl(host, port, TRACES_ENDPOINT_V4);
-    } else {
-      log.debug("API v0.4 endpoints not available. Downgrading to v0.3");
-      tracesUrl = getUrl(host, port, TRACES_ENDPOINT_V3);
-    }
   }
 
   public void addResponseListener(final DDAgentResponseListener listener) {
@@ -128,6 +116,10 @@ public class DDAgentApi {
 
   Response sendSerializedTraces(
       final int representativeCount, final Integer sizeInBytes, final List<byte[]> traces) {
+    if (tracesUrl == null) {
+      detectEndpoint();
+    }
+
     try {
       final RequestBody body =
           new RequestBody() {
@@ -295,6 +287,16 @@ public class DDAgentApi {
       return builder;
     } else {
       return builder.addHeader(DATADOG_CONTAINER_ID, containerId);
+    }
+  }
+
+  private synchronized void detectEndpoint() {
+    final HttpUrl v4Url = getUrl(host, port, TRACES_ENDPOINT_V4);
+    if (endpointAvailable(v4Url, unixDomainSocketPath, true)) {
+      tracesUrl = v4Url;
+    } else {
+      log.debug("API v0.4 endpoints not available. Downgrading to v0.3");
+      tracesUrl = getUrl(host, port, TRACES_ENDPOINT_V3);
     }
   }
 
