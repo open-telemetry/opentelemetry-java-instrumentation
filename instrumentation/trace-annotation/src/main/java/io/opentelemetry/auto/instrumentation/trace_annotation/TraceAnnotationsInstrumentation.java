@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.trace_annotation;
 
 import static io.opentelemetry.auto.instrumentation.trace_annotation.TraceConfigInstrumentation.PACKAGE_CLASS_NAME_REGEX;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -97,7 +98,6 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
-        isAnnotatedWith(methodTraceMatcher), packageName + ".TraceAdvice");
+    return singletonMap(isAnnotatedWith(methodTraceMatcher), packageName + ".TraceAdvice");
   }
 }
