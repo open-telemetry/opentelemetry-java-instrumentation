@@ -4,6 +4,7 @@ package io.opentelemetry.auto.instrumentation.springdata;
 
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.DECORATOR;
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.TRACER;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +15,6 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -54,7 +54,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
+    return singletonMap(
         isConstructor(),
         SpringRepositoryInstrumentation.class.getName() + "$RepositoryFactorySupportAdvice");
   }

@@ -14,7 +14,6 @@ import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -35,8 +34,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
+    return singletonMap("com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
   }
 
   @Override

@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
 import static io.opentelemetry.auto.instrumentation.java.concurrent.AdviceUtils.TRACER;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -11,7 +12,6 @@ import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -38,8 +38,7 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME, State.class.getName());
+    return singletonMap(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME, State.class.getName());
   }
 
   @Override
