@@ -5,7 +5,7 @@ dependencies {
   // that is shaded in the bootstrap class loader (for sending telemetry to the agent),
   // and the OpenTelemetry API that the user brings (in order to capture that telemetry)
   //
-  // since instrumentation is already using OpenTelemetry API for sending telemetry to the agent
+  // since (all) instrumentation already uses OpenTelemetry API for sending telemetry to the agent,
   // this instrumentation uses a "temporarily shaded" OpenTelemetry API to represent the
   // OpenTelemetry API that the user brings
   //
@@ -13,11 +13,11 @@ dependencies {
   // the "temporarily shaded" OpenTelemetry API is unshaded, so that it will apply to the
   // OpenTelemetry API that the user brings
   //
-  // so in the code "unshaded.io.opentelemetry.*" refers to the OpenTelemetry API that the user
-  // brings (as those references will be translated during the build to remove the "unshaded."
-  // prefix)
+  // so in the code "unshaded.io.opentelemetry.*" refers to the (unshaded) OpenTelemetry API that
+  // the user brings (as those references will be translated during the build to remove the
+  // "unshaded." prefix)
   //
-  // and in the code "io.opentelemetry.*" refers to the OpenTelemetry API that is in the
+  // and in the code "io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is in the
   // bootstrap class loader (as those references will later be shaded)
   compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
 

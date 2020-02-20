@@ -13,6 +13,19 @@ import unshaded.io.opentelemetry.trace.TraceFlags;
 import unshaded.io.opentelemetry.trace.TraceId;
 import unshaded.io.opentelemetry.trace.Tracestate;
 
+/**
+ * This class translates between the (unshaded) OpenTelemetry API that the user brings and the
+ * (shaded) OpenTelemetry API that is in the bootstrap class loader and used to report telemetry to
+ * the agent.
+ *
+ * <p>"unshaded.io.opentelemetry.*" refers to the (unshaded) OpenTelemetry API that the user brings
+ * (as those references will be translated during the build to remove the "unshaded." prefix).
+ *
+ * <p>"io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is in the bootstrap class
+ * loader (as those references will later be shaded).
+ *
+ * <p>Also see comments in this module's gradle file.
+ */
 @Slf4j
 public class Bridging {
 
