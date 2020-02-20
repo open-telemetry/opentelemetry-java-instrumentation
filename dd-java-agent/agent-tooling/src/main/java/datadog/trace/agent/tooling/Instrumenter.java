@@ -5,6 +5,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
+import datadog.trace.agent.tooling.context.NoopContextProvider;
 import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import datadog.trace.api.Config;
@@ -53,7 +54,11 @@ public interface Instrumenter {
       instrumentationPrimaryName = instrumentationName;
 
       enabled = Config.get().isIntegrationEnabled(instrumentationNames, defaultEnabled());
-      contextProvider = new FieldBackedProvider(this);
+      if (contextStore().size() > 0) {
+        contextProvider = new FieldBackedProvider(this);
+      } else {
+        contextProvider = NoopContextProvider.INSTANCE;
+      }
     }
 
     @Override
