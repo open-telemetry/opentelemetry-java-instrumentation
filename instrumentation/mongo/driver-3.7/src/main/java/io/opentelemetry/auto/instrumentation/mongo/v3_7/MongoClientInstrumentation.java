@@ -1,4 +1,4 @@
-package io.opentelemetry.auto.instrumentation.mongo;
+package io.opentelemetry.auto.instrumentation.mongo.v3_7;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -8,7 +8,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import com.mongodb.async.client.MongoClientSettings;
+import com.mongodb.MongoClientSettings;
+import io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -19,15 +20,15 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class MongoAsyncClientInstrumentation extends Instrumenter.Default {
+public final class MongoClientInstrumentation extends Instrumenter.Default {
 
-  public MongoAsyncClientInstrumentation() {
+  public MongoClientInstrumentation() {
     super("mongo");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.mongodb.async.client.MongoClientSettings$Builder")
+    return named("com.mongodb.MongoClientSettings$Builder")
         .and(
             declaresMethod(
                 named("addCommandListener")
@@ -47,8 +48,8 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
       "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.decorator.ClientDecorator",
       "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
-      packageName + ".MongoClientDecorator",
-      packageName + ".TracingCommandListener"
+      "io.opentelemetry.auto.instrumentation.mongo.MongoClientDecorator",
+      "io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener"
     };
   }
 
@@ -56,14 +57,15 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-        MongoAsyncClientInstrumentation.class.getName() + "$MongoAsyncClientAdvice");
+        MongoClientInstrumentation.class.getName() + "$MongoClientAdvice");
   }
 
-  public static class MongoAsyncClientAdvice {
+  public static class MongoClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void injectTraceListener(@Advice.This final MongoClientSettings.Builder builder) {
-      builder.addCommandListener(new TracingCommandListener());
+      final TracingCommandListener listener = new TracingCommandListener();
+      builder.addCommandListener(listener);
     }
   }
 }
