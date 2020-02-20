@@ -291,12 +291,14 @@ public class DDAgentApi {
   }
 
   private synchronized void detectEndpoint() {
-    final HttpUrl v4Url = getUrl(host, port, TRACES_ENDPOINT_V4);
-    if (endpointAvailable(v4Url, unixDomainSocketPath, true)) {
-      tracesUrl = v4Url;
-    } else {
-      log.debug("API v0.4 endpoints not available. Downgrading to v0.3");
-      tracesUrl = getUrl(host, port, TRACES_ENDPOINT_V3);
+    if (tracesUrl == null) {
+      final HttpUrl v4Url = getUrl(host, port, TRACES_ENDPOINT_V4);
+      if (endpointAvailable(v4Url, unixDomainSocketPath, true)) {
+        tracesUrl = v4Url;
+      } else {
+        log.debug("API v0.4 endpoints not available. Downgrading to v0.3");
+        tracesUrl = getUrl(host, port, TRACES_ENDPOINT_V3);
+      }
     }
   }
 
