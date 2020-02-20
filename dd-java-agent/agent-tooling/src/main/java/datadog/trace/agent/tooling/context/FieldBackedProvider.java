@@ -2,6 +2,7 @@ package datadog.trace.agent.tooling.context;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -354,9 +355,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         builder =
             builder
                 .type(
-                    safeHasSuperType(named(entry.getKey())).and(not(isInterface())),
+                    not(isInterface()).and(safeHasSuperType(named(entry.getKey()))),
                     instrumenter.classLoaderMatcher())
                 .and(safeToInjectFieldsMatcher())
+                // Added here instead of AgentInstaller's ignores because it's relatively
+                // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
+                .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
                 .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
 
         /**

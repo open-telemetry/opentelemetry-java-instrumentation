@@ -2,6 +2,9 @@ package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
@@ -73,6 +76,9 @@ public interface Instrumenter {
                       classLoaderMatcher(),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))
+              // Added here instead of AgentInstaller's ignores because it's relatively
+              // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
+              .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
               .and(new MuzzleMatcher())
               .and(new PostMatchHook())
               .transform(DDTransformers.defaultTransformers());
