@@ -96,7 +96,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(value = 0) final HttpRequest request,
+        @Advice.Argument(0) final HttpRequest request,
         @Advice.This final HttpExt thiz,
         @Advice.Return final Future<HttpResponse> responseFuture,
         @Advice.Enter final SpanWithScope spanWithScope,
