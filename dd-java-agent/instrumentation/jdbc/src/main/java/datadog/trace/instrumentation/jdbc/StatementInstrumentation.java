@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jdbc.JDBCDecorator.DECORATE;
@@ -35,7 +35,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("java.sql.Statement")));
+    return not(isInterface()).and(safeHasInterface(named("java.sql.Statement")));
   }
 
   @Override

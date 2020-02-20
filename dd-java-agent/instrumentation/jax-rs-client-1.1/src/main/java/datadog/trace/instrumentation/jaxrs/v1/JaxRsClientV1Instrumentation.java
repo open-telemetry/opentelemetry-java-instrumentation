@@ -1,7 +1,8 @@
 package datadog.trace.instrumentation.jaxrs.v1;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
@@ -35,7 +36,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("com.sun.jersey.api.client.ClientHandler"));
+    return safeHasInterface(named("com.sun.jersey.api.client.ClientHandler"));
   }
 
   @Override
@@ -55,8 +56,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         named("handle")
             .and(
                 takesArgument(
-                    0, safeHasSuperType(named("com.sun.jersey.api.client.ClientRequest"))))
-            .and(returns(safeHasSuperType(named("com.sun.jersey.api.client.ClientResponse")))),
+                    0, safeExtendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
+            .and(returns(safeExtendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
         JaxRsClientV1Instrumentation.class.getName() + "$HandleAdvice");
   }
 

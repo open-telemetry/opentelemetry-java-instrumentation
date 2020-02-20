@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet.http;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
@@ -44,7 +44,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
-        .and(safeHasSuperType(named("javax.servlet.http.HttpServletResponse")));
+        .and(safeHasInterface(named("javax.servlet.http.HttpServletResponse")));
   }
 
   @Override

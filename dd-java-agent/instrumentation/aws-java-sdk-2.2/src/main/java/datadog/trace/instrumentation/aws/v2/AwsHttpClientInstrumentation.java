@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.aws.v2;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -28,7 +28,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
+    return safeExtendsClass(
             named("software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
                 .or(
                     named(
