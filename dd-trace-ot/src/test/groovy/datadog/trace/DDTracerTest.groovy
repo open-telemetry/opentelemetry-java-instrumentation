@@ -113,9 +113,9 @@ class DDTracerTest extends DDSpecification {
     when:
     System.setProperty(PREFIX + key, value)
     def tracer = DDTracer.builder().config(new Config()).build()
-
     then:
     tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.sendTraces([])
     ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == value
     ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
 
@@ -131,6 +131,7 @@ class DDTracerTest extends DDSpecification {
 
     then:
     tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.sendTraces([])
     ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == "localhost"
     ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == Integer.valueOf(value)
 
