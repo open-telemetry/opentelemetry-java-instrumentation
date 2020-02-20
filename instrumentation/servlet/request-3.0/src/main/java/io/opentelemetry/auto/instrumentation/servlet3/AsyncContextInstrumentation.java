@@ -96,7 +96,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
       return true;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(@Advice.Enter final boolean topLevel) {
       if (topLevel) {
         CallDepthThreadLocalMap.reset(AsyncContext.class);

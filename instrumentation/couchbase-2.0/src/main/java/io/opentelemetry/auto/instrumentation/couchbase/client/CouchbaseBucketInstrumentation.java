@@ -64,7 +64,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
       return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void subscribeResult(
         @Advice.Enter final int callDepth,
         @Advice.Origin final Method method,

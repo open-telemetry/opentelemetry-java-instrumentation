@@ -100,13 +100,14 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(MessageProducer.class);
+
       final Span span = spanWithScope.getSpan();
       PRODUCER_DECORATE.onError(span, throwable);
       PRODUCER_DECORATE.beforeFinish(span);
 
       span.end();
       spanWithScope.closeScope();
-      CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }
 
@@ -138,12 +139,13 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(MessageProducer.class);
+
       final Span span = spanWithScope.getSpan();
       PRODUCER_DECORATE.onError(span, throwable);
       PRODUCER_DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
-      CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }
 }
