@@ -18,6 +18,8 @@ testSets {
 }
 
 dependencies {
+  compile(project(':instrumentation:mongo'))
+
   compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
 
   testCompile project(':instrumentation:mongo').sourceSets.test.output

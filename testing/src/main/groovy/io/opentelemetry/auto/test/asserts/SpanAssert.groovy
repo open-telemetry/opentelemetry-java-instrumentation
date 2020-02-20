@@ -7,10 +7,13 @@ import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
 
 import static TagsAssert.assertTags
+import static io.opentelemetry.auto.test.asserts.EventAssert.assertEvent
 
 class SpanAssert {
   private final SpanData span
   private final checked = [:]
+
+  private final Set<Integer> assertedEventIndexes = new HashSet<>()
 
   private SpanAssert(span) {
     this.span = span
@@ -21,6 +24,7 @@ class SpanAssert {
                          @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new SpanAssert(span)
     asserter.assertSpan spec
+    asserter.assertEventsAllVerified()
   }
 
   void assertSpan(
@@ -31,6 +35,14 @@ class SpanAssert {
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(this)
     assertDefaults()
+  }
+
+  void event(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.EventAssert']) @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+    if (index >= span.timedEvents.size()) {
+      throw new ArrayIndexOutOfBoundsException(index)
+    }
+    assertedEventIndexes.add(index)
+    assertEvent(span.timedEvents.get(index), spec)
   }
 
   def assertSpanNameContains(String spanName, String... shouldContainArr) {
@@ -105,8 +117,12 @@ class SpanAssert {
     }
   }
 
-  void tags(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
+  void tags(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TagsAssert'])
             @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    assertTags(span, spec)
+    assertTags(span.attributes, spec)
+  }
+
+  void assertEventsAllVerified() {
+    assert assertedEventIndexes.size() == span.timedEvents.size()
   }
 }
