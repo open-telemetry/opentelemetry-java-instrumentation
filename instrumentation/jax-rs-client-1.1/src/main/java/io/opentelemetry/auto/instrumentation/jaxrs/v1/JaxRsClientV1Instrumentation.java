@@ -62,8 +62,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter
     public static SpanWithScope onEnter(
-        @Advice.Argument(value = 0) final ClientRequest request,
-        @Advice.This final ClientHandler thisObj) {
+        @Advice.Argument(0) final ClientRequest request, @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       final boolean isRootClientHandler = null == request.getProperties().get(SPAN_ATTRIBUTE);
