@@ -102,33 +102,34 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    final ElementMatcher.Junction<TypeDescription> matcher =
-        not(isInterface()).and(safeHasInterface(named(Executor.class.getName())));
-    if (TRACE_ALL_EXECUTORS) {
-      return matcher;
+    ElementMatcher.Junction<TypeDescription> matcher = not(isInterface());
+    if (!TRACE_ALL_EXECUTORS) {
+      matcher =
+          matcher.and(
+              new ElementMatcher<TypeDescription>() {
+                @Override
+                public boolean matches(final TypeDescription target) {
+                  boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
+
+                  // Check for possible prefixes match only if not whitelisted already
+                  if (!whitelisted) {
+                    for (final String name : WHITELISTED_EXECUTORS_PREFIXES) {
+                      if (target.getName().startsWith(name)) {
+                        whitelisted = true;
+                        break;
+                      }
+                    }
+                  }
+
+                  if (!whitelisted) {
+                    log.debug("Skipping executor instrumentation for {}", target.getName());
+                  }
+                  return whitelisted;
+                }
+              });
     }
     return matcher.and(
-        new ElementMatcher<TypeDescription>() {
-          @Override
-          public boolean matches(final TypeDescription target) {
-            boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
-
-            // Check for possible prefixes match only if not whitelisted already
-            if (!whitelisted) {
-              for (final String name : WHITELISTED_EXECUTORS_PREFIXES) {
-                if (target.getName().startsWith(name)) {
-                  whitelisted = true;
-                  break;
-                }
-              }
-            }
-
-            if (!whitelisted) {
-              log.debug("Skipping executor instrumentation for {}", target.getName());
-            }
-            return whitelisted;
-          }
-        });
+        safeHasInterface(named(Executor.class.getName()))); // Apply expensive matcher last.
   }
 
   @Override
