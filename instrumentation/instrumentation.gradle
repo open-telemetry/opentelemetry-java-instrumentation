@@ -94,6 +94,11 @@ configurations {
   runtime.exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
 }
 
+// need to perform shading in two steps in order to avoid shading java.util.logging.Logger
+// in the java-util-logging-events instrumentation since that instrumentation needs to
+// reference unshaded java.util.logging.Logger
+// (java.util.logging.Logger shading is not needed in any of the instrumentation modules,
+// but it is needed for the dependencies, e.g. guava, which use java.util.logging.Logger)
 task shadowJarStep1(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
 
   archiveClassifier = 'step1'
