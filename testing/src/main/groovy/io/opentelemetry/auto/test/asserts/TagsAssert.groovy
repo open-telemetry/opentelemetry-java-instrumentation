@@ -2,7 +2,6 @@ package io.opentelemetry.auto.test.asserts
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.sdk.trace.SpanData
 import io.opentelemetry.trace.AttributeValue
 
 import java.util.regex.Pattern
@@ -11,14 +10,14 @@ class TagsAssert {
   private final Map<String, AttributeValue> tags
   private final Set<String> assertedTags = new TreeSet<>()
 
-  private TagsAssert(SpanData span) {
-    this.tags = span.attributes
+  private TagsAssert(attributes) {
+    this.tags = attributes
   }
 
-  static void assertTags(SpanData span,
+  static void assertTags(Map<String, AttributeValue> attributes,
                          @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TagsAssert'])
                          @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    def asserter = new TagsAssert(span)
+    def asserter = new TagsAssert(attributes)
     def clone = (Closure) spec.clone()
     clone.delegate = asserter
     clone.resolveStrategy = Closure.DELEGATE_FIRST
