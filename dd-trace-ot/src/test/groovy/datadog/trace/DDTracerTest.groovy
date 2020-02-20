@@ -46,10 +46,6 @@ class DDTracerTest extends DDSpecification {
     tracer.serviceName == "unnamed-java-app"
     tracer.sampler instanceof RateByServiceSampler
     tracer.writer instanceof DDAgentWriter
-    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == "localhost"
-    ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
-    ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.3/traces" ||
-      ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.4/traces"
     tracer.writer.monitor instanceof Monitor.Noop
 
     tracer.spanContextDecorators.size() == 15
