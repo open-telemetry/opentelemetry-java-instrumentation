@@ -2,7 +2,7 @@ package io.opentelemetry.smoketest
 
 class SpanCounter {
 
-  long expiration;
+  long expiration
 
   final Map<String, Integer> targets
 

@@ -5,8 +5,8 @@ import spock.lang.Shared
 
 class PlaySmokeTest extends AbstractServerSmokeTest {
 
-  def static final PLAY_SPAN = 'LOGGED_SPAN play.request'
-  def static final AKKA_SPAN = 'LOGGED_SPAN akka-http.request'
+  static final PLAY_SPAN = 'LOGGED_SPAN play.request'
+  static final AKKA_SPAN = 'LOGGED_SPAN akka-http.request'
 
   @Shared
   File playDirectory = new File("${buildDirectory}/stage/playBinary")

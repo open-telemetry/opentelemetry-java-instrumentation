@@ -4,8 +4,8 @@ import okhttp3.Request
 
 class SpringBootSmokeTest extends AbstractServerSmokeTest {
 
-  def static final HANDLER_SPAN = "LOGGED_SPAN spring.handler"
-  def static final SERVLET_SPAN = "LOGGED_SPAN servlet.request"
+  static final HANDLER_SPAN = "LOGGED_SPAN spring.handler"
+  static final SERVLET_SPAN = "LOGGED_SPAN servlet.request"
 
   @Override
   ProcessBuilder createProcessBuilder() {
