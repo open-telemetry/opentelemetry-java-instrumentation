@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Enumeration;
 import net.bytebuddy.jar.asm.ClassReader;
 import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.commons.ClassRemapper;
@@ -35,6 +36,17 @@ public class ExporterClassLoader extends URLClassLoader {
 
   public ExporterClassLoader(final URL[] urls, final ClassLoader parent) {
     super(urls, parent);
+  }
+
+  @Override
+  public Enumeration<URL> getResources(final String name) throws IOException {
+    // A small hack to prevent other exporters from being loaded by this classloader if they
+    // should happen to appear on the classpath.
+    if (name.equals(
+        "META-INF/services/io.opentelemetry.auto.exportersupport.SpanExporterFactory")) {
+      return findResources(name);
+    }
+    return super.getResources(name);
   }
 
   @Override

@@ -1,4 +1,4 @@
-package io.opentelemetry.auto.dummyexporter;
+package io.opentelemetry.auto.exporters.loggingexporter;
 
 import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -6,10 +6,10 @@ import io.opentelemetry.trace.AttributeValue;
 import java.util.List;
 import java.util.Map;
 
-public class DummyExporter implements SpanExporter {
+public class LoggingExporter implements SpanExporter {
   private final String prefix;
 
-  public DummyExporter(final String prefix) {
+  public LoggingExporter(final String prefix) {
     this.prefix = prefix;
   }
 

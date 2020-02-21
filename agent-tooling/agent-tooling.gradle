@@ -36,8 +36,9 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':testing')
-  testCompile project(':dummy-exporter')
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile
 }
+
+

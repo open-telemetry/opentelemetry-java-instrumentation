@@ -1,12 +1,12 @@
-package io.opentelemetry.auto.dummyexporter;
+package io.opentelemetry.auto.exporters.loggingexporter;
 
 import io.opentelemetry.auto.exportersupport.ConfigProvider;
 import io.opentelemetry.auto.exportersupport.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
-public class DummySpanExporterFactory implements SpanExporterFactory {
+public class LoggingExporterFactory implements SpanExporterFactory {
   @Override
   public SpanExporter fromConfig(final ConfigProvider config) {
-    return new DummyExporter(config.getString("prefix", "no-prefix"));
+    return new LoggingExporter(config.getString("logging.prefix", "no-prefix"));
   }
 }
