@@ -89,7 +89,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       loaderRefCache.put(classLoader, loaderRef);
     }
 
-    int loaderHash = classLoader.hashCode();
+    final int loaderHash = classLoader.hashCode();
     return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
   }
 
@@ -140,7 +140,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       this.loaderRef = loaderRef;
       this.className = className;
 
-      hashCode = (int) (31 * this.loaderHash) ^ className.hashCode();
+      hashCode = 31 * this.loaderHash + className.hashCode();
     }
 
     @Override
