@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.hibernate.core.v4_3;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;

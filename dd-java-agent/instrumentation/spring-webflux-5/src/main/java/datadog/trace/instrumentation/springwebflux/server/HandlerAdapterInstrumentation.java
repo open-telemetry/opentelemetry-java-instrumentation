@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;

@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.classloading;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;

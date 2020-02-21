@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jaxrs;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;

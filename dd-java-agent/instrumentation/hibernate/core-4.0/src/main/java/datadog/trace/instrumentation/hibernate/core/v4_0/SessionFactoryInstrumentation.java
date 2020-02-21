@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.hibernate.core.v4_0;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;

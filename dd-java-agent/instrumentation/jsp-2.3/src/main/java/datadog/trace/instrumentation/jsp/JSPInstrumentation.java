@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jsp;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jsp.JSPDecorator.DECORATE;

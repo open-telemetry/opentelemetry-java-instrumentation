@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.hystrix;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
 import static datadog.trace.instrumentation.hystrix.HystrixDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;

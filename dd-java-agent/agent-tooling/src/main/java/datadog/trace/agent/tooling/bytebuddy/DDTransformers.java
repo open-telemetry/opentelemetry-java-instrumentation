@@ -1,4 +1,4 @@
-package datadog.trace.agent.tooling;
+package datadog.trace.agent.tooling.bytebuddy;
 
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.TypeConstantAdjustment;
@@ -12,10 +12,10 @@ public class DDTransformers {
       new AgentBuilder.Transformer() {
         @Override
         public DynamicType.Builder<?> transform(
-            DynamicType.Builder<?> builder,
-            TypeDescription typeDescription,
-            ClassLoader classLoader,
-            JavaModule javaModule) {
+          final DynamicType.Builder<?> builder,
+          final TypeDescription typeDescription,
+          final ClassLoader classLoader,
+          final JavaModule javaModule) {
           return builder.visit(TypeConstantAdjustment.INSTANCE);
         }
       };

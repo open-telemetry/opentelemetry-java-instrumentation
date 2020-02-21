@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.rmi.context.client;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static java.util.Collections.singletonMap;

@@ -1,11 +1,12 @@
 package datadog.trace.agent.tooling;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import datadog.trace.agent.tooling.bytebuddy.DDTransformers;
 import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
 import datadog.trace.agent.tooling.context.NoopContextProvider;

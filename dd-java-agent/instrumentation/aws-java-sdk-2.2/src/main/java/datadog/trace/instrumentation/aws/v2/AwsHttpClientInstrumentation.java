@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.aws.v2;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
