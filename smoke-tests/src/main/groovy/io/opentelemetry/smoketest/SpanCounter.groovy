@@ -19,7 +19,7 @@ class SpanCounter {
     expiration = System.currentTimeMillis() + timeout
     this.targets = targets
     counters = new HashMap<>(targets.size())
-    targets.keySet().forEach({
+    targets.keySet().each({
       totalTargets += targets[it]
       counters[it] = 0
     })
