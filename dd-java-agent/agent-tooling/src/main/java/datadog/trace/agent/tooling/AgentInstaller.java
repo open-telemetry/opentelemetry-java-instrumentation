@@ -2,7 +2,6 @@ package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.skipClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.any;
-import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -24,7 +23,6 @@ import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
@@ -66,10 +64,11 @@ public class AgentInstaller {
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
-            // Unlikely to ever need to instrument an annotation:
-            .or(ElementMatchers.<TypeDescription>isAnnotation())
-            // Unlikely to ever need to instrument an enum:
-            .or(ElementMatchers.<TypeDescription>isEnum())
+            /**
+             * Be very careful about the types of matchers used in this section as they are called
+             * on every class load, so they must be fast. Generally speaking try to only use name
+             * matchers as they don't have to load additional info.
+             */
             .or(
                 nameStartsWith("datadog.trace.")
                     // FIXME: We should remove this once
@@ -134,7 +133,6 @@ public class AgentInstaller {
             .or(nameContains(".asm."))
             .or(nameContains("$__sisu"))
             .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
-            .or(isAnnotatedWith(named("javax.decorator.Decorator")))
             .or(matchesConfiguredExcludes());
 
     if (log.isDebugEnabled()) {

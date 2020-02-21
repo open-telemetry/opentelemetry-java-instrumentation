@@ -1,5 +1,3 @@
-package datadog.trace.instrumentation;
-
 public class TestBean {
 
   private String someField;
