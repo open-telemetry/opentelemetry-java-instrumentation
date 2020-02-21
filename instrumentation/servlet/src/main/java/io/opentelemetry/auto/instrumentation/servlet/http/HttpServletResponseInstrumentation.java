@@ -12,7 +12,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.servlet.ServletRequestSetter;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
@@ -32,7 +31,6 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.servlet.ServletRequestSetter",
       "io.opentelemetry.auto.decorator.BaseDecorator",
       packageName + ".HttpServletResponseDecorator",
     };
@@ -76,9 +74,6 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
       DECORATE.afterStart(span);
 
       span.setAttribute(MoreTags.RESOURCE_NAME, "HttpServletResponse." + method);
-
-      // In case we lose context, inject trace into to the request.
-      TRACER.getHttpTextFormat().inject(span.getContext(), req, ServletRequestSetter.SETTER);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

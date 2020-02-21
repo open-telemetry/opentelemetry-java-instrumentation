@@ -1,7 +1,6 @@
 package io.opentelemetry.auto.instrumentation.servlet.dispatcher;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet.ServletRequestSetter.SETTER;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
@@ -35,9 +34,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.servlet.ServletRequestSetter",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      packageName + ".RequestDispatcherDecorator",
+      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".RequestDispatcherDecorator",
     };
   }
 
@@ -68,7 +65,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
     public static SpanWithScope start(
         @Advice.Origin("#m") final String method,
         @Advice.This final RequestDispatcher dispatcher,
-        @Advice.Local("_requestSpan") Object requestSpan,
+        @Advice.Local("_originalServletSpan") Object originalServletSpan,
         @Advice.Argument(0) final ServletRequest request) {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         // Don't want to generate a new top-level span
@@ -82,11 +79,11 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
           InstrumentationContext.get(RequestDispatcher.class, String.class).get(dispatcher);
       span.setAttribute(MoreTags.RESOURCE_NAME, target);
 
-      // In case we lose context, inject trace into to the request.
-      TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
+      // save the original servlet span before overwriting the request attribute, so that it can be
+      // restored on method exit
+      originalServletSpan = request.getAttribute(SPAN_ATTRIBUTE);
 
-      // temporarily replace from request to avoid spring resource name bubbling up:
-      requestSpan = request.getAttribute(SPAN_ATTRIBUTE);
+      // this tells the dispatched servlet to use the current span as the parent for its work
       request.setAttribute(SPAN_ATTRIBUTE, span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
@@ -95,17 +92,17 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
         @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Local("_requestSpan") final Object requestSpan,
+        @Advice.Local("_originalServletSpan") final Object originalServletSpan,
         @Advice.Argument(0) final ServletRequest request,
         @Advice.Thrown final Throwable throwable) {
       if (spanWithScope == null) {
         return;
       }
 
-      if (requestSpan != null) {
-        // now add it back...
-        request.setAttribute(SPAN_ATTRIBUTE, requestSpan);
-      }
+      // restore the original servlet span
+      // since spanWithScope is non-null here, originalServletSpan must have been set with the prior
+      // servlet span (as opposed to remaining unset)
+      request.setAttribute(SPAN_ATTRIBUTE, originalServletSpan);
 
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);

@@ -10,14 +10,6 @@ public class HttpServletRequestExtractAdapter implements HttpTextFormat.Getter<H
 
   @Override
   public String get(final HttpServletRequest carrier, final String key) {
-    /*
-     * Read from the attributes and override the headers.
-     * This is used by HttpServletRequestSetter when a request is async-dispatched.
-     */
-    final Object attribute = carrier.getAttribute(key);
-    if (attribute instanceof String) {
-      return (String) attribute;
-    }
     return carrier.getHeader(key);
   }
 }

@@ -60,8 +60,6 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.setAttribute("traceparent", _)
-    then:
     1 * request.getAttribute(SPAN_ATTRIBUTE) >> mockSpan
     then:
     1 * request.setAttribute(SPAN_ATTRIBUTE, { it.name == "servlet.$operation" })
@@ -110,8 +108,6 @@ class RequestDispatcherTest extends AgentTestRunner {
       }
     }
 
-    then:
-    1 * request.setAttribute("traceparent", _)
     then:
     1 * request.getAttribute(SPAN_ATTRIBUTE) >> mockSpan
     then:
