@@ -61,13 +61,13 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope onEnter(@Advice.This final PreparedStatement statement) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(PreparedStatement.class);
-      if (callDepth > 0) {
+      final Connection connection = connectionFromStatement(statement);
+      if (connection == null) {
         return null;
       }
 
-      final Connection connection = connectionFromStatement(statement);
-      if (connection == null) {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(PreparedStatement.class);
+      if (callDepth > 0) {
         return null;
       }
 
