@@ -1,13 +1,11 @@
 package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.skipClassLoader;
+import static datadog.trace.agent.tooling.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
-import static net.bytebuddy.matcher.ElementMatchers.nameContains;
-import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.api.Config;
 import java.lang.instrument.Instrumentation;
@@ -64,75 +62,7 @@ public class AgentInstaller {
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
-            /**
-             * Be very careful about the types of matchers used in this section as they are called
-             * on every class load, so they must be fast. Generally speaking try to only use name
-             * matchers as they don't have to load additional info.
-             */
-            .or(
-                nameStartsWith("datadog.trace.")
-                    // FIXME: We should remove this once
-                    // https://github.com/raphw/byte-buddy/issues/558 is fixed
-                    .and(
-                        not(
-                            named(
-                                    "datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper")
-                                .or(
-                                    named(
-                                        "datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper")))))
-            .or(nameStartsWith("datadog.opentracing."))
-            .or(nameStartsWith("datadog.slf4j."))
-            .or(nameStartsWith("net.bytebuddy."))
-            .or(
-                nameStartsWith("java.")
-                    .and(
-                        not(
-                            named("java.net.URL")
-                                .or(named("java.net.HttpURLConnection"))
-                                .or(nameStartsWith("java.rmi."))
-                                .or(nameStartsWith("java.util.concurrent."))
-                                .or(
-                                    nameStartsWith("java.util.logging.")
-                                        // Concurrent instrumentation modifies the strucutre of
-                                        // Cleaner class incompaibly with java9+ modules.
-                                        // Working around until a long-term fix for modules can be
-                                        // put in place.
-                                        .and(not(named("java.util.logging.LogManager$Cleaner")))))))
-            .or(
-                nameStartsWith("com.sun.")
-                    .and(
-                        not(
-                            nameStartsWith("com.sun.messaging.")
-                                .or(nameStartsWith("com.sun.jersey.api.client")))))
-            .or(
-                nameStartsWith("sun.")
-                    .and(
-                        not(
-                            nameStartsWith("sun.net.www.protocol.")
-                                .or(nameStartsWith("sun.rmi.server"))
-                                .or(nameStartsWith("sun.rmi.transport"))
-                                .or(named("sun.net.www.http.HttpClient")))))
-            .or(nameStartsWith("jdk."))
-            .or(nameStartsWith("org.aspectj."))
-            .or(nameStartsWith("org.groovy."))
-            .or(nameStartsWith("org.codehaus.groovy.macro."))
-            .or(nameStartsWith("com.intellij.rt.debugger."))
-            .or(nameStartsWith("com.p6spy."))
-            .or(nameStartsWith("com.newrelic."))
-            .or(nameStartsWith("com.dynatrace."))
-            .or(nameStartsWith("com.jloadtrace."))
-            .or(nameStartsWith("com.appdynamics."))
-            .or(nameStartsWith("com.singularity."))
-            .or(nameStartsWith("com.jinspired."))
-            .or(nameStartsWith("org.jinspired."))
-            .or(nameStartsWith("org.apache.log4j.").and(not(named("org.apache.log4j.MDC"))))
-            .or(nameStartsWith("org.slf4j.").and(not(named("org.slf4j.MDC"))))
-            .or(nameContains("$JaxbAccessor"))
-            .or(nameContains("CGLIB$$"))
-            .or(nameContains("javassist"))
-            .or(nameContains(".asm."))
-            .or(nameContains("$__sisu"))
-            .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
+            .or(globalIgnoresMatcher())
             .or(matchesConfiguredExcludes());
 
     if (log.isDebugEnabled()) {
