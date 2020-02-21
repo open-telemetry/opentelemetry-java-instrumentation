@@ -7,6 +7,7 @@ import static datadog.trace.instrumentation.playws1.HeadersInjectAdapter.SETTER;
 import static datadog.trace.instrumentation.playws1.PlayWSClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -33,8 +34,10 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     // CachingAsyncHttpClient rejects overrides to AsyncHandler
     // It also delegates to another AsyncHttpClient
-    return safeHasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
-        .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient")));
+    return nameStartsWith("play.")
+        .<TypeDescription>and(
+            safeHasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
+                .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient"))));
   }
 
   @Override

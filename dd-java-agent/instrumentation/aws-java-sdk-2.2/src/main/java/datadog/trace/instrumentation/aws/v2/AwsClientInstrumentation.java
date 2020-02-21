@@ -5,6 +5,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -23,7 +24,8 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
+    return nameStartsWith("software.amazon.awssdk.")
+        .and(not(isInterface()))
         .and(
             safeHasInterface(named("software.amazon.awssdk.core.client.builder.SdkClientBuilder")));
   }

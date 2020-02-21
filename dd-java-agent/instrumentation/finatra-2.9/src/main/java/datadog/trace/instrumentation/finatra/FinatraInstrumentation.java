@@ -8,6 +8,7 @@ import static datadog.trace.instrumentation.finatra.FinatraDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -51,7 +52,8 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return not(isInterface())
+    return nameStartsWith("com.twitter.finatra.")
+        .and(not(isInterface()))
         .and(safeExtendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
   }
 
