@@ -28,7 +28,7 @@ class PlaySmokeTest extends AbstractServerSmokeTest {
 
   def "welcome endpoint #n th time"() {
     setup:
-    def spanCounter = new SpanCounter([
+    def spanCounter = new SpanCounter(logfile, [
       (PLAY_SPAN): 1,
       (AKKA_SPAN): 1,
     ], 10000)
@@ -36,9 +36,8 @@ class PlaySmokeTest extends AbstractServerSmokeTest {
     def request = new Request.Builder().url(url).get().build()
 
     when:
-    spanCounter.run(logfile)
     def response = client.newCall(request).execute()
-    def spans = spanCounter.waitForResult()
+    def spans = spanCounter.countSpans()
 
     then:
     def responseBodyStr = response.body().string()

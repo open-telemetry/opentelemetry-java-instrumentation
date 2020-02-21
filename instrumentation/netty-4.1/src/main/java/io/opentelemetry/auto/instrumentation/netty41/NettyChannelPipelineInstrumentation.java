@@ -97,7 +97,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
    */
   public static class ChannelPipelineAddAdvice {
     @Advice.OnMethodEnter
-    public static int checkDepth(@Advice.Argument(2) final ChannelHandler handler) {
+    public static int trackCallDepth(@Advice.Argument(2) final ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -110,14 +110,15 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
       return CallDepthThreadLocalMap.incrementCallDepth(handler.getClass());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
-        @Advice.Enter final int depth,
+        @Advice.Enter final int callDepth,
         @Advice.This final ChannelPipeline pipeline,
         @Advice.Argument(2) final ChannelHandler handler) {
-      if (depth > 0) {
+      if (callDepth > 0) {
         return;
       }
+      CallDepthThreadLocalMap.reset(handler.getClass());
 
       try {
         // Server pipeline handlers
@@ -148,8 +149,6 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         }
       } catch (final IllegalArgumentException e) {
         // Prevented adding duplicate handlers.
-      } finally {
-        CallDepthThreadLocalMap.reset(handler.getClass());
       }
     }
   }

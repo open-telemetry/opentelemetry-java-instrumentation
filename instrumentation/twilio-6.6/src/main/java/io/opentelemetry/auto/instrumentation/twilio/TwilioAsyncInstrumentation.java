@@ -116,6 +116,8 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(Twilio.class);
+
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       try {
         final Span span = spanWithScope.getSpan();
@@ -134,7 +136,6 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
         }
       } finally {
         spanWithScope.closeScope();
-        CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }
   }

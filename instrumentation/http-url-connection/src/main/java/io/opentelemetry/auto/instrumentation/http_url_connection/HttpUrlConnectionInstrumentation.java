@@ -73,16 +73,16 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.This final HttpURLConnection thiz,
         @Advice.FieldValue("connected") final boolean connected) {
 
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
+      if (callDepth > 0) {
+        return null;
+      }
+
       final ContextStore<HttpURLConnection, HttpUrlState> contextStore =
           InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
       final HttpUrlState state = contextStore.putIfAbsent(thiz, HttpUrlState.FACTORY);
 
       synchronized (state) {
-        final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
-        if (callDepth > 0) {
-          return null;
-        }
-
         if (!state.hasSpan() && !state.isFinished()) {
           final Span span = state.start(thiz);
           if (!connected) {
@@ -103,6 +103,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       if (state == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(HttpURLConnection.class);
 
       synchronized (state) {
         if (state.hasSpan() && !state.isFinished()) {
@@ -113,8 +114,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
           }
         }
       }
-
-      CallDepthThreadLocalMap.reset(HttpURLConnection.class);
     }
   }
 

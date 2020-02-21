@@ -141,13 +141,14 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(Channel.class);
+
       CURRENT_RABBIT_SPAN.remove();
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
-      CallDepthThreadLocalMap.reset(Channel.class);
     }
   }
 
@@ -220,6 +221,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (callDepth > 0) {
         return;
       }
+      CallDepthThreadLocalMap.reset(Channel.class);
 
       // can't create span and put into scope in method enter above, because can't add links after
       // span creation
@@ -256,7 +258,6 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         CONSUMER_DECORATE.beforeFinish(span);
       } finally {
         span.end();
-        CallDepthThreadLocalMap.reset(Channel.class);
       }
     }
   }

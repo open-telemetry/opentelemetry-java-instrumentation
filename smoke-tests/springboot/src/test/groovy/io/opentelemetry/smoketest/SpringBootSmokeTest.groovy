@@ -21,7 +21,7 @@ class SpringBootSmokeTest extends AbstractServerSmokeTest {
 
   def "default home page #n th time"() {
     setup:
-    def spanCounter = new SpanCounter([
+    def spanCounter = new SpanCounter(logfile, [
       (HANDLER_SPAN): 1,
       (SERVLET_SPAN): 1,
     ], 10000)
@@ -29,9 +29,8 @@ class SpringBootSmokeTest extends AbstractServerSmokeTest {
     def request = new Request.Builder().url(url).get().build()
 
     when:
-    spanCounter.run(logfile)
     def response = client.newCall(request).execute()
-    def spans = spanCounter.waitForResult()
+    def spans = spanCounter.countSpans()
 
     then:
     def responseBodyStr = response.body().string()

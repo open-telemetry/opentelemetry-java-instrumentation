@@ -169,6 +169,8 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(HttpClient.class);
+
       try {
         final Span span = spanWithScope.getSpan();
 
@@ -181,7 +183,6 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         span.end();
       } finally {
         spanWithScope.closeScope();
-        CallDepthThreadLocalMap.reset(HttpClient.class);
       }
     }
   }
