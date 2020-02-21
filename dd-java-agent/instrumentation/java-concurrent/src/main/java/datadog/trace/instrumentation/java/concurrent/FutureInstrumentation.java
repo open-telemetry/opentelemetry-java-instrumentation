@@ -79,7 +79,6 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
-        .and(safeHasInterface(named(Future.class.getName())))
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
@@ -90,7 +89,8 @@ public final class FutureInstrumentation extends Instrumenter.Default {
                 }
                 return whitelisted;
               }
-            });
+            })
+        .and(safeHasInterface(named(Future.class.getName()))); // Apply expensive matcher last.
   }
 
   @Override
