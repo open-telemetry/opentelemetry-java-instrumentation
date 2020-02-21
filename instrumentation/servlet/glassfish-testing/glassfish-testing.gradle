@@ -2,15 +2,6 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-muzzle {
-  pass {
-    group = 'org.glassfish.main.extras'
-    module = 'glassfish-embedded-all'
-    versions = "[3.0,)"
-    assertInverse = true
-  }
-}
-
 apply from: "${rootDir}/gradle/java.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'
