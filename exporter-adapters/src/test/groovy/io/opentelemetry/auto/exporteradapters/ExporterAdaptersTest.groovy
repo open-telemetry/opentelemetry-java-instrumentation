@@ -11,25 +11,28 @@ class ExporterAdaptersTest extends Specification {
   def adapterRoot = System.getProperty("adapterRoot")
 
   @Shared
+  def loggingExporterJar = System.getProperty("loggingExporterJar")
+
+  @Shared
+  def jaegerExporterJar = System.getProperty("jaegerExporterJar")
+
+  @Shared
   def jaegerDir = new File("${adapterRoot}/jaeger-adapter/build/libs")
 
-  def "test dirs exist"() {
+  def "test jars exist"() {
     when:
-    def dir = new File("${adapterRoot}/${exporter}-adapter/build/libs")
+    def file = new File(exporter)
 
     then:
-    dir != null
-    dir.exists()
-    dir.list() != null
-    dir.list().length > 0
-
+    file != null
+    
     where:
-    exporter << ['jaeger', 'logging-exporter']
+    exporter << [loggingExporterJar, jaegerExporterJar]
   }
 
   def "test exporter load"() {
     setup:
-    def file = new File("${adapterRoot}/${exporter}-adapter/build/libs/${exporter}-adapter-${projectVersion}-all.jar")
+    def file = new File(exporter)
     println "Attempting to load ${file.toString()} for ${classname}"
     assert file.exists(): "${file.toString()} does not exist"
     URL[] urls = [file.toURI().toURL()]
@@ -47,7 +50,7 @@ class ExporterAdaptersTest extends Specification {
 
     where:
     exporter           | classname
-    'jaeger'           | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
-    'logging-exporter' | 'io.opentelemetry.auto.exporters.loggingexporter.LoggingExporterFactory'
+    jaegerExporterJar  | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
+    loggingExporterJar | 'io.opentelemetry.auto.exporters.loggingexporter.LoggingExporterFactory'
   }
 }
