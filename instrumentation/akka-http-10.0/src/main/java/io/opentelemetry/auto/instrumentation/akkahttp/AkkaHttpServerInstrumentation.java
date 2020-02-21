@@ -89,7 +89,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
             Function1<HttpRequest, Future<HttpResponse>> handler,
-        @Advice.Argument(value = 7) final Materializer materializer) {
+        @Advice.Argument(7) final Materializer materializer) {
       handler = new AsyncWrapper(handler, materializer.executionContext());
     }
   }

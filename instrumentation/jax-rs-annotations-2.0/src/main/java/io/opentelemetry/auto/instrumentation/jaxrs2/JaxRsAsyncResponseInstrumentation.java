@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.jaxrs2;
 
 import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -11,7 +12,6 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.container.AsyncResponse;
@@ -29,7 +29,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap("javax.ws.rs.container.AsyncResponse", Span.class.getName());
+    return singletonMap("javax.ws.rs.container.AsyncResponse", Span.class.getName());
   }
 
   @Override
