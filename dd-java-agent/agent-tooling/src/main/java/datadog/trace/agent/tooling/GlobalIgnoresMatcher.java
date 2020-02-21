@@ -40,7 +40,8 @@ class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.appdynamics.")
         || name.startsWith("com.singularity.")
         || name.startsWith("com.jinspired.")
-        || name.startsWith("org.jinspired.")) {
+        || name.startsWith("org.jinspired.")
+        || name.startsWith("org.springframework.cglib.")) {
       return true;
     }
 
