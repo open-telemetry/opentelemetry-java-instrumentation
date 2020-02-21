@@ -97,6 +97,11 @@ class SpanAssert {
     assert found
   }
 
+  def status(Status status) {
+    assert span.status == status
+    checked.status = true
+  }
+
   def errored(boolean errored) {
     if (errored) {
       assert span.status != Status.OK
