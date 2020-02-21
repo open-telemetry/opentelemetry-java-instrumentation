@@ -138,7 +138,7 @@ jmh {
 //  warmupBenchmarks = ['.*Warmup'] // Warmup benchmarks to include in the run in addition to already selected. JMH will not measure these benchmarks, but only use them for the warmup.
 
 //  zip64 = true // Use ZIP64 format for bigger archives
-  jmhVersion = '1.21' // Specifies JMH version
+  jmhVersion = '1.23' // Specifies JMH version
 //  includeTests = true // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
   duplicateClassesStrategy = 'warn'
   // Strategy to apply when encountring duplicate classes during creation of the fat jar (i.e. while executing jmhJar task)
