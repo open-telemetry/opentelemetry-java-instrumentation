@@ -7,7 +7,6 @@ import io.opentelemetry.sdk.trace.SpanData
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
 import org.apache.catalina.connector.Response
-import org.apache.catalina.core.ApplicationFilterChain
 import org.apache.catalina.core.StandardHost
 import org.apache.catalina.startup.Tomcat
 import org.apache.catalina.valves.ErrorReportValve
@@ -23,7 +22,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.SERVER
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
@@ -261,31 +260,19 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
   @Override
   void dispatchSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
-      spanKind SERVER
+      operationName "servlet.dispatch"
+      spanKind INTERNAL
       childOf((SpanData) parent)
       errored endpoint.errored
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$MoreTags.RESOURCE_NAME" endpoint.path
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Long
-        "$Tags.HTTP_URL" "${endpoint.resolve(address).toString().replace("/dispatch", "")}"
-        "$Tags.HTTP_METHOD" "GET"
         "$Tags.HTTP_STATUS" endpoint.status
-        "servlet.context" "/$context"
-        "servlet.path" endpoint.path
-        "span.origin.type" {
-          it == TestServlet3.DispatchImmediate.name || it == TestServlet3.DispatchAsync.name || it == ApplicationFilterChain.name
-        }
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
-        }
-        if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
         }
       }
     }
