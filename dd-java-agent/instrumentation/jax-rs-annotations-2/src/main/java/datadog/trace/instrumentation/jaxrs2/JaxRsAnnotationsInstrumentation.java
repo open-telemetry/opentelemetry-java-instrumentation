@@ -43,7 +43,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(
         isAnnotatedWith(named("javax.ws.rs.Path"))
-            .or(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))));
+            .<TypeDescription>or(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))));
   }
 
   @Override
