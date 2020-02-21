@@ -91,7 +91,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         "servlet.context" "/$context"
         "servlet.path" { it == endpoint.path || it == "/dispatch$endpoint.path" }
         if (hasDispatchSpan) {
-          "servlet.dispatch" endpoint.path
           "span.origin.type" String
         } else {
           "span.origin.type" { it == servlet.name || it == ApplicationFilterChain.name }
