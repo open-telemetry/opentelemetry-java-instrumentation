@@ -42,7 +42,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   static final int LOADER_CAPACITY = 64;
   static final int TYPE_CAPACITY = 64;
 
-  static final int BOOTSTRAP_HASH = 0;
+  static final int BOOTSTRAP_HASH = 7236344; // Just a random number
 
   /**
    * Cache of recent ClassLoader WeakReferences; used to...
