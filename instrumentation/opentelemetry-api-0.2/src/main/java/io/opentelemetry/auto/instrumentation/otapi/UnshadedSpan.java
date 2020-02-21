@@ -1,0 +1,117 @@
+package io.opentelemetry.auto.instrumentation.otapi;
+
+import static io.opentelemetry.auto.instrumentation.otapi.Bridging.toShaded;
+import static io.opentelemetry.auto.instrumentation.otapi.Bridging.toShadedOrNull;
+
+import java.util.Map;
+import unshaded.io.opentelemetry.trace.AttributeValue;
+import unshaded.io.opentelemetry.trace.EndSpanOptions;
+import unshaded.io.opentelemetry.trace.Event;
+import unshaded.io.opentelemetry.trace.Span;
+import unshaded.io.opentelemetry.trace.SpanContext;
+import unshaded.io.opentelemetry.trace.Status;
+
+public class UnshadedSpan implements Span {
+
+  private final io.opentelemetry.trace.Span shadedSpan;
+
+  public UnshadedSpan(final io.opentelemetry.trace.Span shadedSpan) {
+    this.shadedSpan = shadedSpan;
+  }
+
+  io.opentelemetry.trace.Span getShadedSpan() {
+    return shadedSpan;
+  }
+
+  @Override
+  public void setAttribute(final String key, final String value) {
+    shadedSpan.setAttribute(key, value);
+  }
+
+  @Override
+  public void setAttribute(final String key, final long value) {
+    shadedSpan.setAttribute(key, value);
+  }
+
+  @Override
+  public void setAttribute(final String key, final double value) {
+    shadedSpan.setAttribute(key, value);
+  }
+
+  @Override
+  public void setAttribute(final String key, final boolean value) {
+    shadedSpan.setAttribute(key, value);
+  }
+
+  @Override
+  public void setAttribute(final String key, final AttributeValue value) {
+    final io.opentelemetry.trace.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
+    if (convertedValue != null) {
+      shadedSpan.setAttribute(key, convertedValue);
+    }
+  }
+
+  @Override
+  public void addEvent(final String name) {
+    shadedSpan.addEvent(name);
+  }
+
+  @Override
+  public void addEvent(final String name, final long timestamp) {
+    shadedSpan.addEvent(name, timestamp);
+  }
+
+  @Override
+  public void addEvent(final String name, final Map<String, AttributeValue> attributes) {
+    shadedSpan.addEvent(name, toShaded(attributes));
+  }
+
+  @Override
+  public void addEvent(
+      final String name, final Map<String, AttributeValue> attributes, final long timestamp) {
+    shadedSpan.addEvent(name, toShaded(attributes), timestamp);
+  }
+
+  @Override
+  public void addEvent(final Event event) {
+    addEvent(event.getName(), event.getAttributes());
+  }
+
+  @Override
+  public void addEvent(final Event event, final long timestamp) {
+    addEvent(event.getName(), event.getAttributes(), timestamp);
+  }
+
+  @Override
+  public void setStatus(final Status status) {
+    final io.opentelemetry.trace.Status shadedStatus = toShadedOrNull(status);
+    if (shadedStatus != null) {
+      shadedSpan.setStatus(shadedStatus);
+    }
+  }
+
+  @Override
+  public void updateName(final String name) {
+    shadedSpan.updateName(name);
+  }
+
+  @Override
+  public void end() {
+    shadedSpan.end();
+  }
+
+  @Override
+  public void end(final EndSpanOptions endOptions) {
+    shadedSpan.end(toShaded(endOptions));
+  }
+
+  @Override
+  public SpanContext getContext() {
+    return Bridging.toUnshaded(shadedSpan.getContext());
+  }
+
+  @Override
+  public boolean isRecording() {
+    return shadedSpan.isRecording();
+  }
+}

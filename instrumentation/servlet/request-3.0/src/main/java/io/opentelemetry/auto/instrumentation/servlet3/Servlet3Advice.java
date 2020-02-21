@@ -28,13 +28,45 @@ public class Servlet3Advice {
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response) {
-    final boolean hasActiveTrace = TRACER.getCurrentSpan().getContext().isValid();
-    final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
-
-    final boolean invalidRequest = !(request instanceof HttpServletRequest);
-    if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
-      // Tracing might already be applied by the FilterChain.  If so ignore this.
+    if (!(request instanceof HttpServletRequest)) {
       return null;
+    }
+    final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
+    if (spanAttr instanceof Span) {
+      // inside of an existing servlet span already
+
+      final Span span = (Span) spanAttr;
+      final Object dispatch = request.getAttribute("io.opentelemetry.auto.servlet.dispatch");
+
+      if (dispatch instanceof String) {
+        // inside of a dispatched servlet/filter
+
+        // remove the dispatch attribute so that it won't trigger any additional dispatch spans
+        // beyond this one
+        request.removeAttribute("io.opentelemetry.auto.servlet.dispatch");
+
+        // start an INTERNAL span to group the dispatched work under
+        final Span dispatchSpan =
+            TRACER.spanBuilder("servlet.dispatch").setParent(span).startSpan();
+        DECORATE.afterStart(dispatchSpan);
+        dispatchSpan.setAttribute(MoreTags.RESOURCE_NAME, (String) dispatch);
+        return new SpanWithScope(dispatchSpan, TRACER.withSpan(dispatchSpan));
+      }
+
+      final boolean spanContextWasLost =
+          !TRACER.getCurrentSpan().getContext().getTraceId().equals(span.getContext().getTraceId());
+      if (spanContextWasLost) {
+        // either there is no current span, or there is a current span but it is left over from some
+        // other trace
+
+        // re-scope the current work using the span in the request attribute
+        return new SpanWithScope(null, TRACER.withSpan(span));
+      } else {
+        // everything is good, just inside of a nested servlet/filter
+
+        // do not capture anything
+        return null;
+      }
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -82,11 +114,16 @@ public class Servlet3Advice {
       return;
     }
 
+    final Span span = spanWithScope.getSpan();
+    if (span == null) {
+      // this was just a re-scoping of the current thread using the span in the request attribute
+      spanWithScope.closeScope();
+      return;
+    }
+
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
       final HttpServletRequest req = (HttpServletRequest) request;
       final HttpServletResponse resp = (HttpServletResponse) response;
-
-      final Span span = spanWithScope.getSpan();
 
       if (throwable != null) {
         DECORATE.onResponse(span, resp);

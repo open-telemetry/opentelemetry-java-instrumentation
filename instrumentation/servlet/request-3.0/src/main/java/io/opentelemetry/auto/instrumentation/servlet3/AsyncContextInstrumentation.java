@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.servlet3;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestInjectAdapter.SETTER;
+import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -17,7 +17,6 @@ import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -36,8 +35,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.decorator.ServerDecorator",
       "io.opentelemetry.auto.decorator.HttpServerDecorator",
-      packageName + ".Servlet3Decorator",
-      packageName + ".HttpServletRequestInjectAdapter"
+      packageName + ".Servlet3Decorator"
     };
   }
 
@@ -68,28 +66,33 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
         return false;
       }
 
-      final ServletRequest request = context.getRequest();
-      final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      if (spanAttr instanceof Span) {
-        request.removeAttribute(SPAN_ATTRIBUTE);
-        final Span span = (Span) spanAttr;
-        // Override propagation headers by injecting attributes from the current span
-        // into the new request
-        if (request instanceof HttpServletRequest) {
-          Servlet3Decorator.TRACER
-              .getHttpTextFormat()
-              .inject(span.getContext(), (HttpServletRequest) request, SETTER);
-        }
-        final String path;
-        if (args.length == 1 && args[0] instanceof String) {
-          path = (String) args[0];
-        } else if (args.length == 2 && args[1] instanceof String) {
-          path = (String) args[1];
-        } else {
-          path = "true";
-        }
-        span.setAttribute("servlet.dispatch", path);
+      final String path;
+      if (args.length == 1 && args[0] instanceof String) {
+        path = (String) args[0];
+      } else if (args.length == 2 && args[1] instanceof String) {
+        path = (String) args[1];
+      } else {
+        path = "true";
       }
+
+      final ServletRequest request = context.getRequest();
+
+      // this tells the dispatched servlet that it is already part of an existing servlet request,
+      // so that it will only capture an INTERNAL span to represent the dispatch work
+      request.setAttribute("io.opentelemetry.auto.servlet.dispatch", path);
+
+      final Span currentSpan = TRACER.getCurrentSpan();
+      if (currentSpan.getContext().isValid()) {
+        // this tells the dispatched servlet to use the current span as the parent for its work
+        // (if the currentSpan is not valid for some reason, the original servlet span should still
+        // be present in the same request attribute, and so that will be used)
+        //
+        // the original servlet span stored in the same request attribute does not need to be saved
+        // and restored on method exit, because dispatch() hands off control of the request
+        // processing, and nothing can be done with the request anymore after this
+        request.setAttribute(SPAN_ATTRIBUTE, currentSpan);
+      }
+
       return true;
     }
 

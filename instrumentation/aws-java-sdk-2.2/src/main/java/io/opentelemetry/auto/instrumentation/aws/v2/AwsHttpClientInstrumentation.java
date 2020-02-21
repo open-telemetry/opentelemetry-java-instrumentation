@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.aws.v2;
 
 import static io.opentelemetry.auto.instrumentation.aws.v2.TracingExecutionInterceptor.ScopeHolder.CURRENT;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -11,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -38,7 +38,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
+    return singletonMap(
         isMethod().and(isPublic()).and(named("execute")),
         AwsHttpClientInstrumentation.class.getName() + "$AwsHttpClientAdvice");
   }

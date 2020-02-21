@@ -1,6 +1,7 @@
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_3;
 
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -57,13 +58,9 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-
-    transformers.put(
+    return singletonMap(
         isMethod().and(returns(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")))),
         SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
-
-    return transformers;
   }
 
   public static class GetProcedureCallAdvice {
