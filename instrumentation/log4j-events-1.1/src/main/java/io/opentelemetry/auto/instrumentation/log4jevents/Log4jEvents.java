@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.log4j.Category;
-import org.apache.log4j.Level;
 import org.apache.log4j.Priority;
 
 @Slf4j
@@ -20,10 +19,21 @@ public class Log4jEvents {
   private static final Tracer TRACER =
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.log4j-events-1.1");
 
+  // these constants are copied from org.apache.log4j.Priority and org.apache.log4j.Level because
+  // Level was only introduced in 1.2, and then Level.TRACE was only introduced in 1.2.12
+  private static final int OFF_INT = Integer.MAX_VALUE;
+  private static final int FATAL_INT = 50000;
+  private static final int ERROR_INT = 40000;
+  private static final int WARN_INT = 30000;
+  private static final int INFO_INT = 20000;
+  private static final int DEBUG_INT = 10000;
+  private static final int TRACE_INT = 5000;
+  private static final int ALL_INT = Integer.MIN_VALUE;
+
   public static void capture(
       final Category logger, final Priority level, final Object message, final Throwable t) {
 
-    if (level.toInt() < getThreshold().toInt()) {
+    if (level.toInt() < getThreshold()) {
       return;
     }
     final Span currentSpan = TRACER.getCurrentSpan();
@@ -50,37 +60,37 @@ public class Log4jEvents {
     return out.toString();
   }
 
-  private static Level getThreshold() {
+  private static int getThreshold() {
     final String level = Config.get().getLogsEventsThreshold();
     if (level == null) {
-      return Level.OFF;
+      return OFF_INT;
     }
     switch (level) {
       case "OFF":
-        return Level.OFF;
+        return OFF_INT;
       case "FATAL":
-        return Level.FATAL;
+        return FATAL_INT;
       case "ERROR":
       case "SEVERE":
-        return Level.ERROR;
+        return ERROR_INT;
       case "WARN":
       case "WARNING":
-        return Level.WARN;
+        return WARN_INT;
       case "INFO":
-        return Level.INFO;
+        return INFO_INT;
       case "CONFIG":
       case "DEBUG":
       case "FINE":
       case "FINER":
-        return Level.DEBUG;
+        return DEBUG_INT;
       case "TRACE":
       case "FINEST":
-        return Level.TRACE;
+        return TRACE_INT;
       case "ALL":
-        return Level.ALL;
+        return ALL_INT;
       default:
         log.error("unexpected value for {}: {}", Config.LOGS_EVENTS_THRESHOLD, level);
-        return Level.OFF;
+        return OFF_INT;
     }
   }
 }
