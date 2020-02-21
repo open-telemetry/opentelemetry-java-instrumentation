@@ -93,7 +93,7 @@ public class ByteBuddyElementMatchers {
    * @see net.bytebuddy.matcher.HasSuperTypeMatcher
    */
   @HashCodeAndEqualsPlugin.Enhance
-  public static class SafeHasSuperTypeMatcher<T extends TypeDescription>
+  private static class SafeHasSuperTypeMatcher<T extends TypeDescription>
       extends ElementMatcher.Junction.AbstractBase<T> {
 
     /** The matcher to apply to any super type of the matched type. */
@@ -192,7 +192,7 @@ public class ByteBuddyElementMatchers {
    * @see net.bytebuddy.matcher.ErasureMatcher
    */
   @HashCodeAndEqualsPlugin.Enhance
-  public static class SafeErasureMatcher<T extends TypeDefinition>
+  private static class SafeErasureMatcher<T extends TypeDefinition>
       extends ElementMatcher.Junction.AbstractBase<T> {
 
     /** The matcher to apply to the raw type of the matched element. */
@@ -234,7 +234,7 @@ public class ByteBuddyElementMatchers {
    * @see net.bytebuddy.matcher.FailSafeMatcher
    */
   @HashCodeAndEqualsPlugin.Enhance
-  public static class SafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
+  private static class SafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
 
     /** The delegate matcher that might throw an exception. */
     private final ElementMatcher<? super T> matcher;
@@ -296,7 +296,7 @@ public class ByteBuddyElementMatchers {
 
   // TODO: add javadoc
   @HashCodeAndEqualsPlugin.Enhance
-  public static class HasSuperMethodMatcher<T extends MethodDescription>
+  private static class HasSuperMethodMatcher<T extends MethodDescription>
       extends ElementMatcher.Junction.AbstractBase<T> {
 
     private final ElementMatcher<? super MethodDescription> matcher;
@@ -367,7 +367,7 @@ public class ByteBuddyElementMatchers {
     }
   }
 
-  public static class SafeExtendsClassMatcher<T extends TypeDescription>
+  private static class SafeExtendsClassMatcher<T extends TypeDescription>
       extends ElementMatcher.Junction.AbstractBase<T> {
 
     private final ElementMatcher<? super TypeDescription.Generic> matcher;
