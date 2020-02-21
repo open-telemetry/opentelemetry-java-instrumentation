@@ -1,10 +1,11 @@
 package datadog.trace.agent.tooling;
 
-import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import datadog.trace.bootstrap.PatchLogger;
-import datadog.trace.bootstrap.WeakMap;
 import io.opentracing.util.GlobalTracer;
+import java.util.concurrent.ExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -26,12 +27,20 @@ public class ClassLoaderMatcher {
     return new ClassLoaderHasClassMatcher(names);
   }
 
-  private static class SkipClassLoaderMatcher
-      extends ElementMatcher.Junction.AbstractBase<ClassLoader>
-      implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+  private static final class SkipClassLoaderMatcher
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
     /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-    private static final WeakMap<ClassLoader, Boolean> SKIP_CACHE = newWeakMap();
+    private static final LoadingCache<ClassLoader, Boolean> skipCache =
+        CacheBuilder.newBuilder()
+            .weakKeys()
+            .build(
+                new CacheLoader<ClassLoader, Boolean>() {
+                  @Override
+                  public Boolean load(ClassLoader loader) {
+                    return !delegatesToBootstrap(loader);
+                  }
+                });
     private static final String DATADOG_CLASSLOADER_NAME =
         "datadog.trace.bootstrap.DatadogClassLoader";
 
@@ -46,7 +55,7 @@ public class ClassLoaderMatcher {
       return shouldSkipClass(target) || shouldSkipInstance(target);
     }
 
-    private boolean shouldSkipClass(final ClassLoader loader) {
+    private static boolean shouldSkipClass(final ClassLoader loader) {
       switch (loader.getClass().getName()) {
         case "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader":
         case "sun.reflect.DelegatingClassLoader":
@@ -60,19 +69,13 @@ public class ClassLoaderMatcher {
       return false;
     }
 
-    private boolean shouldSkipInstance(final ClassLoader loader) {
-      return SKIP_CACHE.computeIfAbsent(loader, this);
-    }
-
-    @Override
-    public Boolean get(final ClassLoader loader) {
-      final boolean skip = !delegatesToBootstrap(loader);
-      if (skip) {
-        log.debug(
-            "skipping classloader instance {} of type {}", loader, loader.getClass().getName());
+    private static boolean shouldSkipInstance(final ClassLoader loader) {
+      try {
+        return skipCache.get(loader);
+      } catch (ExecutionException e) {
+        log.warn("Exception while getting from cache", e);
       }
-
-      return skip;
+      return false;
     }
 
     /**
@@ -81,7 +84,7 @@ public class ClassLoaderMatcher {
      * class loading is issued from this check and {@code false} for 'real' class loads. We should
      * come up with some sort of hack to avoid this problem.
      */
-    private boolean delegatesToBootstrap(final ClassLoader loader) {
+    private static boolean delegatesToBootstrap(final ClassLoader loader) {
       boolean delegates = true;
       if (!loadsExpectedClass(loader, GlobalTracer.class)) {
         log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
@@ -94,7 +97,8 @@ public class ClassLoaderMatcher {
       return delegates;
     }
 
-    private boolean loadsExpectedClass(final ClassLoader loader, final Class<?> expectedClass) {
+    private static boolean loadsExpectedClass(
+        final ClassLoader loader, final Class<?> expectedClass) {
       try {
         return loader.loadClass(expectedClass.getName()) == expectedClass;
       } catch (final ClassNotFoundException e) {
@@ -104,10 +108,23 @@ public class ClassLoaderMatcher {
   }
 
   public static class ClassLoaderHasClassMatcher
-      extends ElementMatcher.Junction.AbstractBase<ClassLoader>
-      implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-    private final WeakMap<ClassLoader, Boolean> cache = newWeakMap();
+    private final LoadingCache<ClassLoader, Boolean> cache =
+        CacheBuilder.newBuilder()
+            .weakKeys()
+            .build(
+                new CacheLoader<ClassLoader, Boolean>() {
+                  @Override
+                  public Boolean load(ClassLoader cl) {
+                    for (final String name : names) {
+                      if (cl.getResource(Utils.getResourceName(name)) == null) {
+                        return false;
+                      }
+                    }
+                    return true;
+                  }
+                });
 
     private final String[] names;
 
@@ -118,21 +135,13 @@ public class ClassLoaderMatcher {
     @Override
     public boolean matches(final ClassLoader target) {
       if (target != null) {
-        return cache.computeIfAbsent(target, this);
-      }
-
-      return false;
-    }
-
-    @Override
-    public Boolean get(final ClassLoader target) {
-      for (final String name : names) {
-        if (target.getResource(Utils.getResourceName(name)) == null) {
-          return false;
+        try {
+          return cache.get(target);
+        } catch (ExecutionException e) {
+          log.warn("Can't get from cache", e);
         }
       }
-
-      return true;
+      return false;
     }
   }
 }
