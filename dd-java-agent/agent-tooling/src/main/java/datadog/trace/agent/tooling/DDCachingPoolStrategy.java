@@ -150,11 +150,15 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public boolean equals(final Object obj) {
-      if (!(obj instanceof TypeCacheKey)) return false;
+      if (!(obj instanceof TypeCacheKey)) {
+        return false;
+      }
 
-      TypeCacheKey that = (TypeCacheKey) obj;
+      final TypeCacheKey that = (TypeCacheKey) obj;
 
-      if (loaderHash != that.loaderHash) return false;
+      if (hashCode != that.hashCode) {
+        return false;
+      }
 
       // Fastpath loaderRef equivalence -- works because of WeakReference cache used
       // Also covers the bootstrap null loaderRef case
@@ -172,11 +176,15 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         // In this case, it is fine because that means the ClassLoader is no
         // longer live, so the entries will never match anyway and will fall
         // out of the cache.
-        ClassLoader thisLoader = loaderRef.get();
-        if (thisLoader == null) return false;
+        final ClassLoader thisLoader = loaderRef.get();
+        if (thisLoader == null) {
+          return false;
+        }
 
-        ClassLoader thatLoader = that.loaderRef.get();
-        if (thatLoader == null) return false;
+        final ClassLoader thatLoader = that.loaderRef.get();
+        if (thatLoader == null) {
+          return false;
+        }
 
         return (thisLoader == thatLoader);
       } else {
@@ -205,9 +213,11 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public TypePool.Resolution find(final String className) {
-      TypePool.Resolution existingResolution =
+      final TypePool.Resolution existingResolution =
           sharedResolutionCache.getIfPresent(new TypeCacheKey(loaderHash, loaderRef, className));
-      if (existingResolution != null) return existingResolution;
+      if (existingResolution != null) {
+        return existingResolution;
+      }
 
       if (OBJECT_NAME.equals(className)) {
         return OBJECT_RESOLUTION;
