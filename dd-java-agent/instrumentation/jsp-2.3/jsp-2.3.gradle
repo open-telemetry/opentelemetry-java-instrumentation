@@ -32,7 +32,7 @@ dependencies {
 
   latestDepTestCompile group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '+'
   latestDepTestCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '+'
-  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
-  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
-  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '9.+'
 }
