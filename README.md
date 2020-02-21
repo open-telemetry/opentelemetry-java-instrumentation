@@ -57,9 +57,6 @@ These parameter names are very likely to change over time, so please check back 
 
 Please report any bugs or unexpected behavior you may find.
 
-#### Vendor-specific exporters
-Exporters from observability and Application Performance Management vendors are currently under development. We will compile a list of vendor-specific exporters as they become available.
-
 ## Building from source
 
 Build using Java 8:
