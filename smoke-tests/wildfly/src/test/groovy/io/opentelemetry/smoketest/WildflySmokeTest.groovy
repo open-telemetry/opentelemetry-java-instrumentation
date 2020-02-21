@@ -24,7 +24,7 @@ class WildflySmokeTest extends AbstractServerSmokeTest {
     processBuilder.environment().put("JAVA_OPTS",
       defaultJavaProperties.join(" ")
         + " -Dota.exporter.jar=${exporterPath}"
-        + " -Dota.exporter.dummy.prefix=LOGGED_SPAN"
+        + " -Dota.exporter.logging.prefix=LOGGED_SPAN"
         + " -Djboss.http.port=${httpPort} -Djboss.https.port=${httpsPort}"
         + " -Djboss.management.http.port=${managementPort}")
     return processBuilder

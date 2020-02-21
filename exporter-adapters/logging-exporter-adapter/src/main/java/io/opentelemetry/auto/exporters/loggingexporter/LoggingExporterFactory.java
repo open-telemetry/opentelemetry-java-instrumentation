@@ -7,6 +7,6 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 public class LoggingExporterFactory implements SpanExporterFactory {
   @Override
   public SpanExporter fromConfig(final ConfigProvider config) {
-    return new LoggingExporter(config.getString("dummy.prefix", "no-prefix"));
+    return new LoggingExporter(config.getString("logging.prefix", "no-prefix"));
   }
 }
