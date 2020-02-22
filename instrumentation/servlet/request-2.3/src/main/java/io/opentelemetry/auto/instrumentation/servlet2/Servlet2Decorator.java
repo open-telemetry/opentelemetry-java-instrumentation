@@ -38,11 +38,6 @@ public class Servlet2Decorator
   }
 
   @Override
-  protected String peerHostname(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRemoteHost();
-  }
-
-  @Override
   protected String peerHostIP(final HttpServletRequest httpServletRequest) {
     return httpServletRequest.getRemoteAddr();
   }

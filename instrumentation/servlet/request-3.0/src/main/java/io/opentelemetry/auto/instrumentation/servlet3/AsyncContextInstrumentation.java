@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.servlet3;
 
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -41,7 +41,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("javax.servlet.AsyncContext")));
+    return not(isInterface()).and(safeHasInterface(named("javax.servlet.AsyncContext")));
   }
 
   @Override

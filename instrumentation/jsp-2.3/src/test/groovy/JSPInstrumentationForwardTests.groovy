@@ -96,7 +96,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$forwardFromFileName"
@@ -188,7 +187,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToHtml.jsp"
@@ -250,7 +248,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
@@ -387,7 +384,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToJspForward.jsp"
@@ -499,7 +495,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToCompileError.jsp"
@@ -576,7 +571,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToNonExistent.jsp"

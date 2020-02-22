@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.hibernate.core.v4_0;
 
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -46,7 +46,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.SharedSessionContract")));
+    return not(isInterface()).and(safeHasInterface(named("org.hibernate.SharedSessionContract")));
   }
 
   @Override
@@ -93,11 +93,11 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         SessionInstrumentation.class.getName() + "$GetTransactionAdvice");
 
     transformers.put(
-        isMethod().and(returns(safeHasSuperType(named("org.hibernate.Query")))),
+        isMethod().and(returns(safeHasInterface(named("org.hibernate.Query")))),
         SessionInstrumentation.class.getName() + "$GetQueryAdvice");
 
     transformers.put(
-        isMethod().and(returns(safeHasSuperType(named("org.hibernate.Criteria")))),
+        isMethod().and(returns(safeHasInterface(named("org.hibernate.Criteria")))),
         SessionInstrumentation.class.getName() + "$GetCriteriaAdvice");
 
     return transformers;

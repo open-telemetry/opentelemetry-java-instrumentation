@@ -1,7 +1,8 @@
 package io.opentelemetry.auto.instrumentation.aws.v0;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -26,7 +27,8 @@ public final class RequestInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("com.amazonaws.AmazonWebServiceRequest"));
+    return nameStartsWith("com.amazonaws.")
+        .and(safeExtendsClass(named("com.amazonaws.AmazonWebServiceRequest")));
   }
 
   @Override

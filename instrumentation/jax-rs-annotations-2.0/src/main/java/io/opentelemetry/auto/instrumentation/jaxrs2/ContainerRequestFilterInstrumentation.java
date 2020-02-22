@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.jaxrs2;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -33,7 +33,7 @@ public class ContainerRequestFilterInstrumentation extends Instrumenter.Default 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return not(isInterface())
-        .and(safeHasSuperType(named("javax.ws.rs.container.ContainerRequestFilter")));
+        .and(safeHasInterface(named("javax.ws.rs.container.ContainerRequestFilter")));
   }
 
   @Override
