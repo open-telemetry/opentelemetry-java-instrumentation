@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -129,7 +129,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
               });
     }
     return matcher.and(
-        safeHasInterface(named(Executor.class.getName()))); // Apply expensive matcher last.
+        hasInterface(named(Executor.class.getName()))); // Apply expensive matcher last.
   }
 
   @Override

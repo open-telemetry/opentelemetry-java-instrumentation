@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -35,7 +35,7 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
-        .and(safeHasInterface(named(Runnable.class.getName()).or(named(Callable.class.getName()))));
+        .and(hasInterface(named(Runnable.class.getName()).or(named(Callable.class.getName()))));
   }
 
   @Override

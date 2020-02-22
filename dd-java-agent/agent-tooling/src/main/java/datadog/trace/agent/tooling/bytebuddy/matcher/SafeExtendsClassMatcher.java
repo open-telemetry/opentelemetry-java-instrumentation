@@ -1,5 +1,7 @@
 package datadog.trace.agent.tooling.bytebuddy.matcher;
 
+import static datadog.trace.agent.tooling.bytebuddy.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
+
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -22,7 +24,7 @@ class SafeExtendsClassMatcher<T extends TypeDescription>
       if (matcher.matches(typeDefinition.asGenericType())) {
         return true;
       }
-      typeDefinition = DDElementMatchers.safeGetSuperClass(typeDefinition);
+      typeDefinition = safeGetSuperClass(typeDefinition);
     }
     return false;
   }

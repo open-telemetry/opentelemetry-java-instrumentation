@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.noopSpan;
@@ -36,7 +36,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
           new ImmutableMap.Builder<
                   ElementMatcher<? super TypeDescription>,
                   ElementMatcher<? super MethodDescription>>()
-              .put(safeExtendsClass(named("rx.Scheduler$Worker")), named("schedulePeriodically"))
+              .put(extendsClass(named("rx.Scheduler$Worker")), named("schedulePeriodically"))
               .build();
 
   @Override

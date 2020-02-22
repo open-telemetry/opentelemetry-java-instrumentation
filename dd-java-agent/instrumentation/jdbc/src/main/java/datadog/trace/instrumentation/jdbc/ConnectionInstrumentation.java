@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -27,7 +27,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("java.sql.Connection")));
+    return not(isInterface()).and(hasInterface(named("java.sql.Connection")));
   }
 
   @Override
@@ -43,7 +43,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a sub type of PreparedStatement
-            .and(returns(safeHasInterface(named("java.sql.PreparedStatement")))),
+            .and(returns(hasInterface(named("java.sql.PreparedStatement")))),
         ConnectionInstrumentation.class.getName() + "$ConnectionPrepareAdvice");
   }
 

@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.servlet3.HttpServletRequestInjectAdapter.SETTER;
 import static java.util.Collections.singletonMap;
@@ -38,7 +38,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("javax.servlet.AsyncContext")));
+    return not(isInterface()).and(hasInterface(named("javax.servlet.AsyncContext")));
   }
 
   @Override

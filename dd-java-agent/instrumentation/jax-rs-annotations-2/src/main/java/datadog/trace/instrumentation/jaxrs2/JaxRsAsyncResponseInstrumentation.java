@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jaxrs2;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -35,7 +35,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasInterface(named("javax.ws.rs.container.AsyncResponse"));
+    return hasInterface(named("javax.ws.rs.container.AsyncResponse"));
   }
 
   @Override

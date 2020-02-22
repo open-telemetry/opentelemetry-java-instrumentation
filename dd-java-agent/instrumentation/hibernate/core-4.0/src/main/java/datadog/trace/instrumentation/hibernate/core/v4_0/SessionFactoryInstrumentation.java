@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.hibernate.core.v4_0;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;
@@ -34,7 +34,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("org.hibernate.SessionFactory")));
+    return not(isInterface()).and(hasInterface(named("org.hibernate.SessionFactory")));
   }
 
   @Override

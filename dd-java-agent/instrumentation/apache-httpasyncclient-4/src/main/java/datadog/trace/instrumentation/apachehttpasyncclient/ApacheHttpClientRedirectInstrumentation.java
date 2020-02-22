@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.apachehttpasyncclient;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -31,7 +31,7 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasInterface(named("org.apache.http.client.RedirectStrategy"));
+    return hasInterface(named("org.apache.http.client.RedirectStrategy"));
   }
 
   @Override

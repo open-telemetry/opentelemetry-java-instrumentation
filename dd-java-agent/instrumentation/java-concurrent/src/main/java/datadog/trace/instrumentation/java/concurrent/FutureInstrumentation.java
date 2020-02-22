@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -90,7 +90,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
                 return whitelisted;
               }
             })
-        .and(safeHasInterface(named(Future.class.getName()))); // Apply expensive matcher last.
+        .and(hasInterface(named(Future.class.getName()))); // Apply expensive matcher last.
   }
 
   @Override

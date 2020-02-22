@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.rmi.client;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
@@ -33,7 +33,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeExtendsClass(named("sun.rmi.server.UnicastRef")));
+    return not(isInterface()).and(extendsClass(named("sun.rmi.server.UnicastRef")));
   }
 
   @Override

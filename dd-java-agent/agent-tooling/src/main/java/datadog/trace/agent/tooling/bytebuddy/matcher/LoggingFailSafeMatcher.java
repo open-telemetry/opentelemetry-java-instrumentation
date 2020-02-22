@@ -15,7 +15,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 @Slf4j
 @HashCodeAndEqualsPlugin.Enhance
-class SafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
+class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
 
   /** The delegate matcher that might throw an exception. */
   private final ElementMatcher<? super T> matcher;
@@ -33,7 +33,7 @@ class SafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
    * @param fallback The fallback value in case of an exception.
    * @param description Descriptive string to log along with exception.
    */
-  public SafeMatcher(
+  public LoggingFailSafeMatcher(
       final ElementMatcher<? super T> matcher, final boolean fallback, final String description) {
     this.matcher = matcher;
     this.fallback = fallback;

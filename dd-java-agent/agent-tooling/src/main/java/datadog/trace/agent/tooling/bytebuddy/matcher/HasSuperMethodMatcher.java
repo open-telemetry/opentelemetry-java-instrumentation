@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling.bytebuddy.matcher;
 
+import static datadog.trace.agent.tooling.bytebuddy.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.hasSignature;
 
 import java.util.HashSet;
@@ -39,7 +40,7 @@ class HasSuperMethodMatcher<T extends MethodDescription>
       if (matchesInterface(declaringType.getInterfaces(), signatureMatcher, checkedInterfaces)) {
         return true;
       }
-      declaringType = DDElementMatchers.safeGetSuperClass(declaringType);
+      declaringType = safeGetSuperClass(declaringType);
     }
     return false;
   }

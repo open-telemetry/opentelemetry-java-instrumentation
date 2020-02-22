@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.hibernate.core.v3_3;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -33,7 +33,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("org.hibernate.Query")));
+    return not(isInterface()).and(hasInterface(named("org.hibernate.Query")));
   }
 
   @Override

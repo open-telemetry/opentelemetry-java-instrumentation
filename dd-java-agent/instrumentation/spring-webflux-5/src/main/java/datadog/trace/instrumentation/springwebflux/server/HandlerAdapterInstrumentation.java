@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -25,7 +25,7 @@ public final class HandlerAdapterInstrumentation extends AbstractWebfluxInstrume
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
         .and(not(isAbstract()))
-        .and(safeHasInterface(named("org.springframework.web.reactive.HandlerAdapter")));
+        .and(hasInterface(named("org.springframework.web.reactive.HandlerAdapter")));
   }
 
   @Override

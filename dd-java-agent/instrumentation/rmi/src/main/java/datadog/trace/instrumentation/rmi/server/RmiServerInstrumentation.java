@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.rmi.server;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.bootstrap.instrumentation.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
@@ -43,7 +43,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeExtendsClass(named("java.rmi.server.RemoteServer")));
+    return not(isInterface()).and(extendsClass(named("java.rmi.server.RemoteServer")));
   }
 
   @Override

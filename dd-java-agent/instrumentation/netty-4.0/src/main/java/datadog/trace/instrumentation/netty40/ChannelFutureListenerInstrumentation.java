@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.netty40;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
@@ -35,8 +35,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(safeHasInterface(named("io.netty.channel.ChannelFutureListener")));
+    return not(isInterface()).and(hasInterface(named("io.netty.channel.ChannelFutureListener")));
   }
 
   @Override

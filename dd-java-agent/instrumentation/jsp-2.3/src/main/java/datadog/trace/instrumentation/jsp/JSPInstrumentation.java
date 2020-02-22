@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jsp;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jsp.JSPDecorator.DECORATE;
@@ -31,7 +31,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("javax.servlet.jsp.HttpJspPage")));
+    return not(isInterface()).and(hasInterface(named("javax.servlet.jsp.HttpJspPage")));
   }
 
   @Override

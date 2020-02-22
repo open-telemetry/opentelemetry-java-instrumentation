@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -28,7 +28,7 @@ public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrume
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isAbstract())
         .and(
-            safeExtendsClass(
+            extendsClass(
                 // TODO: this doesn't handle nested routes (DefaultNestedRouterFunction)
                 named(
                     "org.springframework.web.reactive.function.server.RouterFunctions$DefaultRouterFunction")));

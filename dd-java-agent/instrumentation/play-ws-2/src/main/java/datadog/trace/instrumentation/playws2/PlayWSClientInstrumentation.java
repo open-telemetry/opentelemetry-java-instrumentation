@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.playws2;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.playws2.HeadersInjectAdapter.SETTER;
@@ -33,7 +33,7 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     // CachingAsyncHttpClient rejects overrides to AsyncHandler
     // It also delegates to another AsyncHttpClient
-    return safeHasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
+    return hasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
         .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient")));
   }
 

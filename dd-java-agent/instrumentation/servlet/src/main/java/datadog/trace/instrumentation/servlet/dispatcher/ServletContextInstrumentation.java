@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet.dispatcher;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -27,7 +27,7 @@ public final class ServletContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("javax.servlet.ServletContext")));
+    return not(isInterface()).and(hasInterface(named("javax.servlet.ServletContext")));
   }
 
   @Override

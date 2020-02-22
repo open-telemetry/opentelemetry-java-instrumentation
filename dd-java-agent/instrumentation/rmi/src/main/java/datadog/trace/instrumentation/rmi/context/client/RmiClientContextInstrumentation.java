@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.rmi.context.client;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static java.util.Collections.singletonMap;
@@ -53,7 +53,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeExtendsClass(named("sun.rmi.transport.StreamRemoteCall")));
+    return not(isInterface()).and(extendsClass(named("sun.rmi.transport.StreamRemoteCall")));
   }
 
   @Override

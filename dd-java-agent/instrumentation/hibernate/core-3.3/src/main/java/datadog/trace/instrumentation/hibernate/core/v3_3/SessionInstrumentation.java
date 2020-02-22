@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.hibernate.core.v3_3;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static datadog.trace.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -50,7 +50,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
         .and(
-            safeHasInterface(
+            hasInterface(
                 named("org.hibernate.Session").or(named("org.hibernate.StatelessSession"))));
   }
 
@@ -99,11 +99,11 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         SessionInstrumentation.class.getName() + "$GetTransactionAdvice");
 
     transformers.put(
-        isMethod().and(returns(safeHasInterface(named("org.hibernate.Query")))),
+        isMethod().and(returns(hasInterface(named("org.hibernate.Query")))),
         SessionInstrumentation.class.getName() + "$GetQueryAdvice");
 
     transformers.put(
-        isMethod().and(returns(safeHasInterface(named("org.hibernate.Criteria")))),
+        isMethod().and(returns(hasInterface(named("org.hibernate.Criteria")))),
         SessionInstrumentation.class.getName() + "$GetCriteriaAdvice");
 
     return transformers;

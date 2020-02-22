@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.netty41;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -48,7 +48,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("io.netty.channel.ChannelPipeline")));
+    return not(isInterface()).and(hasInterface(named("io.netty.channel.ChannelPipeline")));
   }
 
   @Override

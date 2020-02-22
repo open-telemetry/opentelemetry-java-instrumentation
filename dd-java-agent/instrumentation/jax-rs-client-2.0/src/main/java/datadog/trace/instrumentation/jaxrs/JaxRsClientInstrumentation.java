@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jaxrs;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -25,7 +25,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeExtendsClass(named("javax.ws.rs.client.ClientBuilder"));
+    return extendsClass(named("javax.ws.rs.client.ClientBuilder"));
   }
 
   @Override
@@ -44,7 +44,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        named("build").and(returns(safeHasInterface(named("javax.ws.rs.client.Client")))),
+        named("build").and(returns(hasInterface(named("javax.ws.rs.client.Client")))),
         JaxRsClientInstrumentation.class.getName() + "$ClientBuilderAdvice");
   }
 

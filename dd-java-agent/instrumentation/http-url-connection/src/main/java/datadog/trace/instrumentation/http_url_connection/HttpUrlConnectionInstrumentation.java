@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.http_url_connection;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
@@ -41,7 +41,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         .or(ElementMatchers.<TypeDescription>nameStartsWith("sun.net"))
         // This class is a simple delegator. Skip because it does not update its `connected` field.
         .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")))
-        .and(safeExtendsClass(named("java.net.HttpURLConnection")));
+        .and(extendsClass(named("java.net.HttpURLConnection")));
   }
 
   @Override

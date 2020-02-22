@@ -13,12 +13,12 @@ import net.bytebuddy.matcher.ElementMatchers;
 @Slf4j
 public class DDElementMatchers {
 
-  public static <T extends TypeDescription> ElementMatcher.Junction<T> safeExtendsClass(
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> extendsClass(
       final ElementMatcher<? super TypeDescription> matcher) {
     return new SafeExtendsClassMatcher<>(new SafeErasureMatcher<>(matcher));
   }
 
-  public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasInterface(
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> hasInterface(
       final ElementMatcher<? super TypeDescription> matcher) {
     return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), true);
   }
@@ -54,7 +54,7 @@ public class DDElementMatchers {
    */
   public static <T> ElementMatcher.Junction<T> failSafe(
       final ElementMatcher<? super T> matcher, final String description) {
-    return new SafeMatcher<>(matcher, false, description);
+    return new LoggingFailSafeMatcher<>(matcher, false, description);
   }
 
   static String safeTypeDefinitionName(final TypeDefinition td) {

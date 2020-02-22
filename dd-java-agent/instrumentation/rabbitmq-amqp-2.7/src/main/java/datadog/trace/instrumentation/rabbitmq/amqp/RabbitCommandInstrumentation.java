@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
@@ -28,7 +28,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("com.rabbitmq.client.Command")));
+    return not(isInterface()).and(hasInterface(named("com.rabbitmq.client.Command")));
   }
 
   @Override
