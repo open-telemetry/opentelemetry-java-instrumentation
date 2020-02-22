@@ -58,6 +58,8 @@ public class Config {
 
   public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
   public static final String LOG_CAPTURE_THRESHOLD = "log.capture.threshold";
+  public static final String LOG_CAPTURE_OUTSIDE_TRACE_ENABLED =
+      "log.capture.outside-trace.enabled";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
@@ -75,6 +77,8 @@ public class Config {
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
 
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
+  public static final String DEFAULT_LOG_CAPTURE_THRESHOLD = null;
+  public static final boolean DEFAULT_LOG_CAPTURE_OUTSIDE_TRACE_ENABLED = false;
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
@@ -114,6 +118,8 @@ public class Config {
   // | TRACE/FINEST | FINEST  | TRACE   | TRACE  |
   // | ALL          | ALL     | ALL     | ALL    |
   @Getter private final String logCaptureThreshold;
+
+  @Getter private final boolean logCaptureOutsideTraceEnabled;
 
   @Getter private final String traceAnnotations;
 
@@ -172,7 +178,12 @@ public class Config {
     logInjectionEnabled =
         getBooleanSettingFromEnvironment(LOG_INJECTION_ENABLED, DEFAULT_LOG_INJECTION_ENABLED);
 
-    logCaptureThreshold = getSettingFromEnvironment(LOG_CAPTURE_THRESHOLD, null);
+    logCaptureThreshold =
+        getSettingFromEnvironment(LOG_CAPTURE_THRESHOLD, DEFAULT_LOG_CAPTURE_THRESHOLD);
+
+    logCaptureOutsideTraceEnabled =
+        getBooleanSettingFromEnvironment(
+            LOG_CAPTURE_OUTSIDE_TRACE_ENABLED, DEFAULT_LOG_CAPTURE_OUTSIDE_TRACE_ENABLED);
 
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
@@ -233,6 +244,10 @@ public class Config {
         getPropertyBooleanValue(properties, LOG_INJECTION_ENABLED, parent.logInjectionEnabled);
 
     logCaptureThreshold = properties.getProperty(LOG_CAPTURE_THRESHOLD, parent.logCaptureThreshold);
+
+    logCaptureOutsideTraceEnabled =
+        getPropertyBooleanValue(
+            properties, LOG_CAPTURE_OUTSIDE_TRACE_ENABLED, parent.logCaptureOutsideTraceEnabled);
 
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 

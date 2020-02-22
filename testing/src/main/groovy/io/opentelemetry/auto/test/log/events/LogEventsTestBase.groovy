@@ -66,4 +66,40 @@ abstract class LogEventsTestBase extends AgentTestRunner {
     warn()     | true
     error()    | true
   }
+
+  def "capture #testMethod (#capture) as span when no current span"() {
+    when:
+    def logger = createLogger("abc")
+    withConfigOverride(Config.LOG_CAPTURE_THRESHOLD, "WARN") {
+      withConfigOverride(Config.LOG_CAPTURE_OUTSIDE_TRACE_ENABLED, "true") {
+        logger."$testMethod"("xyz")
+      }
+    }
+
+    then:
+    if (capture) {
+      assertTraces(1) {
+        trace(0, 1) {
+          span(0) {
+            operationName "log.message"
+            tags {
+              "message" "xyz"
+              "level" testMethod.toUpperCase()
+              "loggerName" "abc"
+            }
+          }
+        }
+      }
+    } else {
+      Thread.sleep(500) // sleep a bit just to make sure no span is captured
+      assertTraces(0) {
+      }
+    }
+
+    where:
+    testMethod | capture
+    "info"     | false
+    warn()     | true
+    error()    | true
+  }
 }
