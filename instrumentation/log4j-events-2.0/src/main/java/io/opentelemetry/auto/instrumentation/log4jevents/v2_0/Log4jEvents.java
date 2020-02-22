@@ -42,17 +42,25 @@ public class Log4jEvents {
       return;
     }
     final Span currentSpan = TRACER.getCurrentSpan();
-    if (!currentSpan.getContext().isValid()) {
-      return;
-    }
 
-    final Map<String, AttributeValue> attributes = new HashMap<>(t == null ? 2 : 3);
-    attributes.put("level", newAttributeValue(level.toString()));
-    attributes.put("loggerName", newAttributeValue(logger.getName()));
-    if (t != null) {
-      attributes.put("error.stack", newAttributeValue(toString(t)));
+    if (Config.get().isLogCaptureSpanEnabled()) {
+      final Span span = TRACER.spanBuilder("log.message").startSpan();
+      span.setAttribute("message", message.getFormattedMessage());
+      span.setAttribute("level", level.toString());
+      span.setAttribute("loggerName", logger.getName());
+      if (t != null) {
+        span.setAttribute("error.stack", toString(t));
+      }
+      span.end();
+    } else if (currentSpan.getContext().isValid()) {
+      final Map<String, AttributeValue> attributes = new HashMap<>(t == null ? 2 : 3);
+      attributes.put("level", newAttributeValue(level.toString()));
+      attributes.put("loggerName", newAttributeValue(logger.getName()));
+      if (t != null) {
+        attributes.put("error.stack", newAttributeValue(toString(t)));
+      }
+      currentSpan.addEvent(message.getFormattedMessage(), attributes);
     }
-    currentSpan.addEvent(message.getFormattedMessage(), attributes);
   }
 
   private static AttributeValue newAttributeValue(final String stringValue) {

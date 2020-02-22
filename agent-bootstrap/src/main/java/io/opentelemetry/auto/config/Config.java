@@ -73,6 +73,7 @@ public class Config {
 
   public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
   public static final String LOG_CAPTURE_THRESHOLD = "log.capture.threshold";
+  public static final String LOG_CAPTURE_SPAN_ENABLED = "log.capture.span.enabled";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
@@ -90,6 +91,8 @@ public class Config {
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
 
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
+  public static final String DEFAULT_LOG_CAPTURE_THRESHOLD = null;
+  public static final boolean DEFAULT_LOG_CAPTURE_SPAN_ENABLED = false;
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
@@ -129,6 +132,20 @@ public class Config {
   // | TRACE/FINEST | FINEST  | TRACE   | TRACE  |
   // | ALL          | ALL     | ALL     | ALL    |
   @Getter private final String logCaptureThreshold;
+
+  // when logCaptureThreshold (above) is configured, logs are captured as events by default
+  // capturing logs as events has two limitations
+  // 1. logs will only be captured when there is a current span on which they can added
+  // 2. the default OpenTelemetry SDK holds span events in memory for the duration of the span, and
+  // therefore it has a limit on the number of events (the default limit is 100 events)
+  //
+  // setting logCaptureSpanEnabled to true causes logs to be captured as spans instead of events,
+  // which addresses the above limitations
+  // 1. allows logs to be captured when there is no current span (the log span will be a child of
+  // the current span if there is one)
+  // 2. spans are not held in memory for the duration of their parent span, and so there is no limit
+  // on the number of child spans
+  @Getter private final boolean logCaptureSpanEnabled;
 
   @Getter private final String traceAnnotations;
 
@@ -187,7 +204,12 @@ public class Config {
     logInjectionEnabled =
         getBooleanSettingFromEnvironment(LOG_INJECTION_ENABLED, DEFAULT_LOG_INJECTION_ENABLED);
 
-    logCaptureThreshold = getSettingFromEnvironment(LOG_CAPTURE_THRESHOLD, null);
+    logCaptureThreshold =
+        getSettingFromEnvironment(LOG_CAPTURE_THRESHOLD, DEFAULT_LOG_CAPTURE_THRESHOLD);
+
+    logCaptureSpanEnabled =
+        getBooleanSettingFromEnvironment(
+            LOG_CAPTURE_SPAN_ENABLED, DEFAULT_LOG_CAPTURE_SPAN_ENABLED);
 
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
@@ -248,6 +270,9 @@ public class Config {
         getPropertyBooleanValue(properties, LOG_INJECTION_ENABLED, parent.logInjectionEnabled);
 
     logCaptureThreshold = properties.getProperty(LOG_CAPTURE_THRESHOLD, parent.logCaptureThreshold);
+
+    logCaptureSpanEnabled =
+        getPropertyBooleanValue(properties, LOG_CAPTURE_SPAN_ENABLED, parent.logCaptureSpanEnabled);
 
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 
