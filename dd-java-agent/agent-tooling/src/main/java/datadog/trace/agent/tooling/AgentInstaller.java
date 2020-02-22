@@ -18,6 +18,7 @@ import java.util.ServiceLoader;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
+import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -49,6 +50,8 @@ public class AgentInstaller {
   public static ResettableClassFileTransformer installBytebuddyAgent(
       final Instrumentation inst, final AgentBuilder.Listener... listeners) {
     INSTRUMENTATION = inst;
+
+    addByteBuddyRawSetting();
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
@@ -91,6 +94,23 @@ public class AgentInstaller {
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
     return agentBuilder.installOn(inst);
+  }
+
+  private static void addByteBuddyRawSetting() {
+    final String savedPropertyValue = System.getProperty(TypeDefinition.RAW_TYPES_PROPERTY);
+    try {
+      System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, "true");
+      final boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES;
+      if (!rawTypes) {
+        log.debug("Too late to enable {}", TypeDefinition.RAW_TYPES_PROPERTY);
+      }
+    } finally {
+      if (savedPropertyValue == null) {
+        System.clearProperty(TypeDefinition.RAW_TYPES_PROPERTY);
+      } else {
+        System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, savedPropertyValue);
+      }
+    }
   }
 
   private static ElementMatcher.Junction<Object> matchesConfiguredExcludes() {
