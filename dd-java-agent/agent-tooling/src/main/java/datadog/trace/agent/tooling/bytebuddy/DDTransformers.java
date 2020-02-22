@@ -12,10 +12,10 @@ public class DDTransformers {
       new AgentBuilder.Transformer() {
         @Override
         public DynamicType.Builder<?> transform(
-          final DynamicType.Builder<?> builder,
-          final TypeDescription typeDescription,
-          final ClassLoader classLoader,
-          final JavaModule javaModule) {
+            final DynamicType.Builder<?> builder,
+            final TypeDescription typeDescription,
+            final ClassLoader classLoader,
+            final JavaModule javaModule) {
           return builder.visit(TypeConstantAdjustment.INSTANCE);
         }
       };
