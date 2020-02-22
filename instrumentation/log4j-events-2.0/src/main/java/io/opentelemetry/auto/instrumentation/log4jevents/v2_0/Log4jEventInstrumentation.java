@@ -2,6 +2,7 @@ package io.opentelemetry.auto.instrumentation.log4jevents.v2_0;
 
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -27,7 +28,7 @@ public class Log4jEventInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("org.apache.logging.log4j.spi.ExtendedLogger"));
+    return safeHasSuperType(named("org.apache.logging.log4j.spi.AbstractLogger"));
   }
 
   @Override
@@ -49,6 +50,19 @@ public class Log4jEventInstrumentation extends Instrumenter.Default {
             .and(takesArgument(3, named("org.apache.logging.log4j.message.Message")))
             .and(takesArgument(4, named("java.lang.Throwable"))),
         Log4jEventInstrumentation.class.getName() + "$LogMessageAdvice");
+    // log4j 2.12.1 introduced and started using this new log() method
+    transformers.put(
+        isMethod()
+            .and(isProtected())
+            .and(named("log"))
+            .and(takesArguments(6))
+            .and(takesArgument(0, named("org.apache.logging.log4j.Level")))
+            .and(takesArgument(1, named("org.apache.logging.log4j.Marker")))
+            .and(takesArgument(2, named("java.lang.String")))
+            .and(takesArgument(3, named("java.lang.StackTraceElement")))
+            .and(takesArgument(4, named("org.apache.logging.log4j.message.Message")))
+            .and(takesArgument(5, named("java.lang.Throwable"))),
+        Log4jEventInstrumentation.class.getName() + "$LogAdvice");
     return transformers;
   }
 
@@ -60,6 +74,18 @@ public class Log4jEventInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) final Level level,
         @Advice.Argument(3) final Message message,
         @Advice.Argument(4) final Throwable t) {
+      Log4jEvents.capture(logger, level, message, t);
+    }
+  }
+
+  public static class LogAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(
+        @Advice.This final Logger logger,
+        @Advice.Argument(0) final Level level,
+        @Advice.Argument(4) final Message message,
+        @Advice.Argument(5) final Throwable t) {
       Log4jEvents.capture(logger, level, message, t);
     }
   }
