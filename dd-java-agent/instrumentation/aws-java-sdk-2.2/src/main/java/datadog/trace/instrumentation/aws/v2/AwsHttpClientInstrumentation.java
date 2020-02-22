@@ -5,6 +5,7 @@ import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScop
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -28,11 +29,14 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeExtendsClass(
-            named("software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
-                .or(
-                    named(
-                        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage")))
+    return nameStartsWith("software.amazon.awssdk.")
+        .and(
+            safeExtendsClass(
+                named(
+                        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
+                    .or(
+                        named(
+                            "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage"))))
         .and(not(isInterface()));
   }
 
