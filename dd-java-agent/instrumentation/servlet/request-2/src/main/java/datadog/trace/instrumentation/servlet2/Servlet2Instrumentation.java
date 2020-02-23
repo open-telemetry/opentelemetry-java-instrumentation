@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet2;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -25,7 +25,8 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"));
+    return classLoaderHasNoResources(
+        "javax/servlet/AsyncEvent.class", "javax/servlet/AsyncListener.class");
   }
 
   @Override
