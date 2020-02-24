@@ -1,4 +1,3 @@
-import io.opentelemetry.auto.instrumentation.TestBean
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.jboss.weld.environment.se.Weld
 import org.jboss.weld.environment.se.WeldContainer

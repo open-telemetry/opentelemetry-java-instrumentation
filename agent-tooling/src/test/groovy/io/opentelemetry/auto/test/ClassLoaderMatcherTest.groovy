@@ -33,6 +33,11 @@ class ClassLoaderMatcherTest extends AgentSpecification {
     !ClassLoaderMatcher.skipClassLoader().matches(null)
   }
 
+  def "AgentClassLoader class name is hardcoded in ClassLoaderMatcher"() {
+    expect:
+    AgentClassLoader.name == "io.opentelemetry.auto.bootstrap.AgentClassLoader"
+  }
+
   /*
    * A URLClassloader which only delegates java.* classes
    */

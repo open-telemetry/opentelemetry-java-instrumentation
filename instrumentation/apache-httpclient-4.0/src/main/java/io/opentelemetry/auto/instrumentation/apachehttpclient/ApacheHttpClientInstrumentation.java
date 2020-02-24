@@ -3,7 +3,7 @@ package io.opentelemetry.auto.instrumentation.apachehttpclient;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -44,7 +44,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.apache.http.client.HttpClient")));
+    return not(isInterface()).and(safeHasInterface(named("org.apache.http.client.HttpClient")));
   }
 
   @Override

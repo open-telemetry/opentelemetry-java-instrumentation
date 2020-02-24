@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.hibernate.core.v3_3;
 
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -39,7 +39,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.SessionFactory")));
+    return not(isInterface()).and(safeHasInterface(named("org.hibernate.SessionFactory")));
   }
 
   @Override
@@ -52,7 +52,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
                 returns(
                     named("org.hibernate.Session")
                         .or(named("org.hibernate.StatelessSession"))
-                        .or(safeHasSuperType(named("org.hibernate.Session"))))),
+                        .or(safeHasInterface(named("org.hibernate.Session"))))),
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 

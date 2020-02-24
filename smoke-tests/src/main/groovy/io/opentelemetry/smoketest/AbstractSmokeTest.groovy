@@ -1,10 +1,14 @@
 package io.opentelemetry.smoketest
 
-
+import io.opentelemetry.auto.test.utils.PortUtils
 import spock.lang.Shared
 import spock.lang.Specification
 
 abstract class AbstractSmokeTest extends Specification {
+
+  public static final PROFILING_API_KEY = "org2_api_key"
+  public static final PROFILING_START_DELAY_SECONDS = 1
+  public static final int PROFILING_RECORDING_UPLOAD_PERIOD_SECONDS = 5
 
   @Shared
   protected String workingDirectory = System.getProperty("user.dir")
@@ -12,6 +16,10 @@ abstract class AbstractSmokeTest extends Specification {
   protected String buildDirectory = System.getProperty("io.opentelemetry.smoketest.builddir")
   @Shared
   protected String shadowJarPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
+  @Shared
+  protected int profilingPort
+  @Shared
+  protected String profilingUrl
   @Shared
   protected String[] defaultJavaProperties
   @Shared
@@ -33,6 +41,9 @@ abstract class AbstractSmokeTest extends Specification {
       throw new AssertionError("Expected system properties not found. Smoke tests have to be run from Gradle. Please make sure that is the case.")
     }
 
+    profilingPort = PortUtils.randomOpenPort()
+    profilingUrl = "http://localhost:${profilingPort}/"
+
     defaultJavaProperties = [
       "-javaagent:${shadowJarPath}",
       "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug",
@@ -42,6 +53,7 @@ abstract class AbstractSmokeTest extends Specification {
     ProcessBuilder processBuilder = createProcessBuilder()
 
     processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
+    processBuilder.environment().put("DD_PROFILING_APIKEY", PROFILING_API_KEY)
 
     processBuilder.redirectErrorStream(true)
     logfile = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")

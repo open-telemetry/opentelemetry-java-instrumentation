@@ -2,10 +2,14 @@ package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
 import io.opentelemetry.auto.tooling.context.InstrumentationContextProvider;
+import io.opentelemetry.auto.tooling.context.NoopContextProvider;
 import io.opentelemetry.auto.tooling.muzzle.Reference;
 import io.opentelemetry.auto.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
@@ -53,7 +57,11 @@ public interface Instrumenter {
       instrumentationPrimaryName = instrumentationName;
 
       enabled = Config.get().isIntegrationEnabled(instrumentationNames, defaultEnabled());
-      contextProvider = new FieldBackedProvider(this);
+      if (contextStore().size() > 0) {
+        contextProvider = new FieldBackedProvider(this);
+      } else {
+        contextProvider = NoopContextProvider.INSTANCE;
+      }
     }
 
     @Override
@@ -73,6 +81,9 @@ public interface Instrumenter {
                       classLoaderMatcher(),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))
+              // Added here instead of AgentInstaller's ignores because it's relatively
+              // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
+              .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
               .and(new MuzzleMatcher())
               .and(new PostMatchHook())
               .transform(AgentTransformers.defaultTransformers());

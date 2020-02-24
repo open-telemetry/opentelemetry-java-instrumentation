@@ -1,5 +1,3 @@
-package io.opentelemetry.auto.instrumentation;
-
 public class TestBean {
 
   private String someField;

@@ -24,8 +24,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
 
-  protected abstract String peerHostname(CONNECTION connection);
-
   protected abstract String peerHostIP(CONNECTION connection);
 
   protected abstract Integer peerPort(CONNECTION connection);
@@ -87,10 +85,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      final String peerHostname = peerHostname(connection);
-      if (peerHostname != null) {
-        span.setAttribute(Tags.PEER_HOSTNAME, peerHostname);
-      }
       final String ip = peerHostIP(connection);
       if (ip != null) {
         if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {

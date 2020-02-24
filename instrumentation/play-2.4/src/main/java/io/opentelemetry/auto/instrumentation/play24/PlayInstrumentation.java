@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.play24;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -22,7 +22,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("play.api.mvc.Action"));
+    return safeHasInterface(named("play.api.mvc.Action"));
   }
 
   @Override
