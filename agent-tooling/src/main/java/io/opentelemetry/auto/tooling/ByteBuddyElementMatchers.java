@@ -22,6 +22,16 @@ import net.bytebuddy.matcher.ElementMatchers;
 @Slf4j
 public class ByteBuddyElementMatchers {
 
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> safeExtendsClass(
+      final ElementMatcher<? super TypeDescription> matcher) {
+    return new SafeExtendsClassMatcher<>(new SafeErasureMatcher<>(matcher));
+  }
+
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasInterface(
+      final ElementMatcher<? super TypeDescription> matcher) {
+    return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), true);
+  }
+
   /**
    * Matches any type description that declares a super type that matches the provided matcher.
    * Exceptions during matching process are logged and ignored.
@@ -34,22 +44,7 @@ public class ByteBuddyElementMatchers {
    */
   public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasSuperType(
       final ElementMatcher<? super TypeDescription> matcher) {
-    return safeHasGenericSuperType(new SafeErasureMatcher(matcher));
-  }
-
-  /**
-   * Matches any type description that declares a super type that matches the provided matcher.
-   * Exceptions during matching process are logged and ignored.
-   *
-   * @param matcher The type to be checked for being a super type of the matched type.
-   * @param <T> The type of the matched object.
-   * @return A matcher that matches any type description that declares a super type that matches the
-   *     provided matcher.
-   * @see ElementMatchers#hasGenericSuperType(net.bytebuddy.matcher.ElementMatcher)
-   */
-  public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasGenericSuperType(
-      final ElementMatcher<? super TypeDescription.Generic> matcher) {
-    return new SafeHasSuperTypeMatcher<>(matcher);
+    return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), false);
   }
 
   /**
@@ -98,19 +93,23 @@ public class ByteBuddyElementMatchers {
    * @see net.bytebuddy.matcher.HasSuperTypeMatcher
    */
   @HashCodeAndEqualsPlugin.Enhance
-  public static class SafeHasSuperTypeMatcher<T extends TypeDescription>
+  private static class SafeHasSuperTypeMatcher<T extends TypeDescription>
       extends ElementMatcher.Junction.AbstractBase<T> {
 
     /** The matcher to apply to any super type of the matched type. */
     private final ElementMatcher<? super TypeDescription.Generic> matcher;
 
+    private final boolean interfacesOnly;
     /**
      * Creates a new matcher for a super type.
      *
      * @param matcher The matcher to apply to any super type of the matched type.
      */
-    public SafeHasSuperTypeMatcher(final ElementMatcher<? super TypeDescription.Generic> matcher) {
+    public SafeHasSuperTypeMatcher(
+        final ElementMatcher<? super TypeDescription.Generic> matcher,
+        final boolean interfacesOnly) {
       this.matcher = matcher;
+      this.interfacesOnly = interfacesOnly;
     }
 
     @Override
@@ -120,26 +119,14 @@ public class ByteBuddyElementMatchers {
       // in {@code getSuperClass} calls
       TypeDefinition typeDefinition = target;
       while (typeDefinition != null) {
-        if (matcher.matches(typeDefinition.asGenericType())
+        if (((!interfacesOnly || typeDefinition.isInterface())
+                && matcher.matches(typeDefinition.asGenericType()))
             || hasInterface(typeDefinition, checkedInterfaces)) {
           return true;
         }
         typeDefinition = safeGetSuperClass(typeDefinition);
       }
       return false;
-    }
-
-    private TypeDefinition safeGetSuperClass(final TypeDefinition typeDefinition) {
-      try {
-        return typeDefinition.getSuperClass();
-      } catch (final Exception e) {
-        log.debug(
-            "{} trying to get super class for target {}: {}",
-            e.getClass().getSimpleName(),
-            safeTypeDefinitionName(typeDefinition),
-            e.getMessage());
-        return null;
-      }
     }
 
     /**
@@ -205,7 +192,7 @@ public class ByteBuddyElementMatchers {
    * @see net.bytebuddy.matcher.ErasureMatcher
    */
   @HashCodeAndEqualsPlugin.Enhance
-  public static class SafeErasureMatcher<T extends TypeDefinition>
+  private static class SafeErasureMatcher<T extends TypeDefinition>
       extends ElementMatcher.Junction.AbstractBase<T> {
 
     /** The matcher to apply to the raw type of the matched element. */
@@ -247,7 +234,7 @@ public class ByteBuddyElementMatchers {
    * @see net.bytebuddy.matcher.FailSafeMatcher
    */
   @HashCodeAndEqualsPlugin.Enhance
-  public static class SafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
+  private static class SafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
 
     /** The delegate matcher that might throw an exception. */
     private final ElementMatcher<? super T> matcher;
@@ -309,7 +296,7 @@ public class ByteBuddyElementMatchers {
 
   // TODO: add javadoc
   @HashCodeAndEqualsPlugin.Enhance
-  public static class HasSuperMethodMatcher<T extends MethodDescription>
+  private static class HasSuperMethodMatcher<T extends MethodDescription>
       extends ElementMatcher.Junction.AbstractBase<T> {
 
     private final ElementMatcher<? super MethodDescription> matcher;
@@ -361,22 +348,46 @@ public class ByteBuddyElementMatchers {
       return false;
     }
 
-    private TypeDefinition safeGetSuperClass(final TypeDefinition typeDefinition) {
-      try {
-        return typeDefinition.getSuperClass();
-      } catch (final Exception e) {
-        log.debug(
-            "{} trying to get super class for target {}: {}",
-            e.getClass().getSimpleName(),
-            safeTypeDefinitionName(typeDefinition),
-            e.getMessage());
-        return null;
-      }
-    }
-
     @Override
     public String toString() {
       return "hasSuperMethodMatcher(" + matcher + ")";
+    }
+  }
+
+  private static TypeDefinition safeGetSuperClass(final TypeDefinition typeDefinition) {
+    try {
+      return typeDefinition.getSuperClass();
+    } catch (final Exception e) {
+      log.debug(
+          "{} trying to get super class for target {}: {}",
+          e.getClass().getSimpleName(),
+          safeTypeDefinitionName(typeDefinition),
+          e.getMessage());
+      return null;
+    }
+  }
+
+  private static class SafeExtendsClassMatcher<T extends TypeDescription>
+      extends ElementMatcher.Junction.AbstractBase<T> {
+
+    private final ElementMatcher<? super TypeDescription.Generic> matcher;
+
+    public SafeExtendsClassMatcher(final ElementMatcher<? super TypeDescription.Generic> matcher) {
+      this.matcher = matcher;
+    }
+
+    @Override
+    public boolean matches(final T target) {
+      // We do not use foreach loop and iterator interface here because we need to catch exceptions
+      // in {@code getSuperClass} calls
+      TypeDefinition typeDefinition = target;
+      while (typeDefinition != null) {
+        if (matcher.matches(typeDefinition.asGenericType())) {
+          return true;
+        }
+        typeDefinition = safeGetSuperClass(typeDefinition);
+      }
+      return false;
     }
   }
 }

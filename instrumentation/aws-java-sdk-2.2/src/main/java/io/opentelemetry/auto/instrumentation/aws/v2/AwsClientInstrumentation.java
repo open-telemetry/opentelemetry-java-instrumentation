@@ -1,10 +1,11 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -23,8 +24,10 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("software.amazon.awssdk.core.client.builder.SdkClientBuilder"))
-        .and(not(isInterface()));
+    return nameStartsWith("software.amazon.awssdk.")
+        .and(not(isInterface()))
+        .and(
+            safeHasInterface(named("software.amazon.awssdk.core.client.builder.SdkClientBuilder")));
   }
 
   @Override

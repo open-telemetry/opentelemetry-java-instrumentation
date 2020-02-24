@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_3;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -47,7 +47,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")));
+    return not(isInterface()).and(safeHasInterface(named("org.hibernate.procedure.ProcedureCall")));
   }
 
   @Override
