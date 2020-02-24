@@ -14,9 +14,19 @@ abstract class AbstractSmokeTest extends Specification {
   protected String shadowJarPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
   @Shared
   protected String[] defaultJavaProperties
-
   @Shared
   protected Process serverProcess
+  @Shared
+  protected String exporterPath = System.getProperty("ota.exporter.jar")
+
+  @Shared
+  protected File logfile
+
+  def countSpans(prefix) {
+    return logfile.text.tokenize('\n').count {
+      it.startsWith prefix
+    }
+  }
 
   def setupSpec() {
     if (buildDirectory == null || shadowJarPath == null) {
@@ -34,10 +44,12 @@ abstract class AbstractSmokeTest extends Specification {
     processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
 
     processBuilder.redirectErrorStream(true)
-    File log = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")
-    processBuilder.redirectOutput(ProcessBuilder.Redirect.to(log))
+    logfile = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")
+    processBuilder.redirectOutput(ProcessBuilder.Redirect.to(logfile))
 
     serverProcess = processBuilder.start()
+
+
   }
 
   String javaPath() {

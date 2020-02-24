@@ -10,5 +10,3 @@ dependencies {
   compile project(":exporter-support")
 }
 
-
-
