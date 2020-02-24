@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.aws.v2;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -31,7 +31,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("software.amazon.awssdk.")
         .and(
-            safeExtendsClass(
+            extendsClass(
                 named(
                         "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
                     .or(
