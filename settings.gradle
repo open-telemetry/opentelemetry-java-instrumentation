@@ -102,6 +102,7 @@ include ':instrumentation:lettuce-5.0'
 include ':instrumentation:log4j-events-1.1'
 // FIXME this instrumentation relied on scope listener
 // include ':instrumentation:log4j1'
+include ':instrumentation:log4j-events-2.0'
 // FIXME this instrumentation relied on scope listener
 // include ':instrumentation:log4j2'
 include ':instrumentation:mongo'
