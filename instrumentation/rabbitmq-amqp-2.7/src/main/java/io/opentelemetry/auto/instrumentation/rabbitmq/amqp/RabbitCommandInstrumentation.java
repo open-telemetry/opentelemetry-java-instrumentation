@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -28,7 +28,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("com.rabbitmq.client.Command")));
+    return not(isInterface()).and(safeHasInterface(named("com.rabbitmq.client.Command")));
   }
 
   @Override

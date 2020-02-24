@@ -7,7 +7,7 @@ import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorato
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
@@ -55,7 +55,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("com.rabbitmq.client.Channel")));
+    return not(isInterface()).and(safeHasInterface(named("com.rabbitmq.client.Channel")));
   }
 
   @Override

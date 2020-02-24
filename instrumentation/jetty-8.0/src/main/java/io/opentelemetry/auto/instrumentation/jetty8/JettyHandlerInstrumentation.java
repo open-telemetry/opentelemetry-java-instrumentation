@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.jetty8;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -30,7 +30,7 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
-        .and(safeHasSuperType(named("org.eclipse.jetty.server.Handler")))
+        .and(safeHasInterface(named("org.eclipse.jetty.server.Handler")))
         .and(not(named("org.eclipse.jetty.server.handler.HandlerWrapper")));
   }
 

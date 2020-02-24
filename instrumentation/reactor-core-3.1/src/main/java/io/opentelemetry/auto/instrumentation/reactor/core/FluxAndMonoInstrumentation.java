@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.reactor.core;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -38,7 +38,7 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isAbstract())
         .and(
-            safeHasSuperType(
+            safeExtendsClass(
                 named("reactor.core.publisher.Mono").or(named("reactor.core.publisher.Flux"))));
   }
 

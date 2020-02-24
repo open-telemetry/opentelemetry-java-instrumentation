@@ -3,7 +3,7 @@ package io.opentelemetry.auto.instrumentation.jms;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.PRODUCER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -36,7 +36,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("javax.jms.MessageProducer")));
+    return not(isInterface()).and(safeHasInterface(named("javax.jms.MessageProducer")));
   }
 
   @Override

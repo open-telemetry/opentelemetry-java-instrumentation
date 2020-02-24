@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.servlet.http;
 
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -39,7 +39,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
-        .and(safeHasSuperType(named("javax.servlet.http.HttpServletResponse")));
+        .and(safeHasInterface(named("javax.servlet.http.HttpServletResponse")));
   }
 
   @Override

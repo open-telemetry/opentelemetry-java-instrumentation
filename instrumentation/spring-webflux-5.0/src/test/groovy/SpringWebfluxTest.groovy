@@ -59,7 +59,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" url
@@ -129,7 +128,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" url
@@ -203,7 +201,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /**"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" url
@@ -250,7 +247,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "POST /echo"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" url
@@ -302,7 +298,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" url
@@ -371,7 +366,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /double-greet-redirect"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" url
@@ -403,7 +397,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /double-greet"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
             "$Tags.HTTP_URL" finalUrl
@@ -450,7 +443,6 @@ class SpringWebfluxTest extends AgentTestRunner {
               "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
               "$Tags.COMPONENT" "netty"
-              "$Tags.PEER_HOSTNAME" "localhost"
               "$Tags.PEER_HOST_IPV4" "127.0.0.1"
               "$Tags.PEER_PORT" Long
               "$Tags.HTTP_URL" url

@@ -1,11 +1,12 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
 import static io.opentelemetry.auto.instrumentation.aws.v2.TracingExecutionInterceptor.ScopeHolder.CURRENT;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -28,11 +29,14 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
-            named("software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
-                .or(
-                    named(
-                        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage")))
+    return nameStartsWith("software.amazon.awssdk.")
+        .and(
+            safeExtendsClass(
+                named(
+                        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
+                    .or(
+                        named(
+                            "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage"))))
         .and(not(isInterface()));
   }
 

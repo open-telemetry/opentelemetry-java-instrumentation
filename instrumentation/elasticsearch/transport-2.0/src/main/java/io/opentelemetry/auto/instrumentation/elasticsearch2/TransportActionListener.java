@@ -83,7 +83,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
 
     if (response instanceof BaseNodesResponse) {
       final BaseNodesResponse resp = (BaseNodesResponse) response;
-      if (resp.failures().length > 0) {
+      if (resp.failures() != null && resp.failures().length > 0) {
         span.setAttribute("elasticsearch.node.failures", resp.failures().length);
       }
       span.setAttribute("elasticsearch.node.cluster.name", resp.getClusterName().value());

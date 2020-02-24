@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -79,7 +79,6 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
-        .and(safeHasSuperType(named(Future.class.getName())))
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
@@ -90,7 +89,8 @@ public final class FutureInstrumentation extends Instrumenter.Default {
                 }
                 return whitelisted;
               }
-            });
+            })
+        .and(safeHasInterface(named(Future.class.getName()))); // Apply expensive matcher last.
   }
 
   @Override
