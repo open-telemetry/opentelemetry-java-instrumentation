@@ -93,14 +93,6 @@ class GlobalIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
-    if (name.startsWith("org.apache.log4j.")) {
-      if (name.equals("org.apache.log4j.MDC")) {
-        return false;
-      }
-
-      return true;
-    }
-
     if (name.startsWith("org.slf4j.")) {
       if (name.equals("org.slf4j.MDC")) {
         return false;
