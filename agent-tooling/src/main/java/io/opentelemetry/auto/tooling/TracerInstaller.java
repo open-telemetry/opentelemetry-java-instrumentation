@@ -3,8 +3,6 @@ package io.opentelemetry.auto.tooling;
 import com.google.common.annotations.VisibleForTesting;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.exportersupport.SpanExporterFactory;
-import io.opentelemetry.auto.tooling.exporter.ExporterConfigException;
-import io.opentelemetry.auto.tooling.exporter.ExporterRegistry;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -22,28 +20,16 @@ public class TracerInstaller {
     if (Config.get().isTraceEnabled()) {
 
       // Try to create an exporter
-      SpanExporter exporter = null;
-      final String expName = Config.get().getExporter();
-      if (expName != null) {
-        try {
-          final io.opentelemetry.auto.tooling.exporter.SpanExporterFactory f =
-              ExporterRegistry.getInstance().getFactory(expName);
-          exporter = f.newExporter();
-          log.info("Loaded span exporter: " + expName);
-        } catch (final ExporterConfigException e) {
-          log.warn("Error loading exporter. Spans will be dropped", e);
+      final String exporterJar = Config.get().getExporterJar();
+      if (exporterJar != null) {
+        final SpanExporter exporter = loadFromJar(exporterJar);
+        if (exporter != null) {
+          OpenTelemetrySdk.getTracerFactory()
+              .addSpanProcessor(SimpleSpansProcessor.newBuilder(exporter).build());
+          log.info("Installed span exporter: " + exporter.getClass().getCanonicalName());
+        } else {
+          log.warn("No valid exporter found. Tracing will run but spans are dropped");
         }
-      } else {
-        final String exporterJar = Config.get().getExporterJar();
-        if (exporterJar != null) {
-          exporter = loadFromJar(exporterJar);
-        }
-      }
-      if (exporter != null) {
-        OpenTelemetrySdk.getTracerFactory()
-            .addSpanProcessor(SimpleSpansProcessor.newBuilder(exporter).build());
-        log.info("Installed span exporter: " + exporter.getClass().getCanonicalName());
-      } else {
         log.warn("No exporter is specified. Tracing will run but spans are dropped");
       }
     } else {
