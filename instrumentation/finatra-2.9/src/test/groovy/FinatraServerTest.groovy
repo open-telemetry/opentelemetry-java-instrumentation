@@ -20,7 +20,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
   private static final Duration TIMEOUT = Duration.fromSeconds(5)
-  private static final long STARTUP_TIMEOUT = 20 * 1000
+  private static final long STARTUP_TIMEOUT = 40 * 1000
 
   static closeAndWait(Closable closable) {
     if (closable != null) {
@@ -105,7 +105,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_PORT" Long
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"

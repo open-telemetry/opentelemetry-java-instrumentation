@@ -36,7 +36,6 @@ public class Config {
 
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
-  public static final String EXPORTER = "exporter";
   public static final String EXPORTER_JAR = "exporter.jar";
   public static final String SERVICE = "service";
   public static final String CONFIGURATION_FILE = "trace.config";
@@ -84,7 +83,6 @@ public class Config {
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
 
-  @Getter private final String exporter;
   @Getter private final String exporterJar;
   @Getter private final String serviceName;
   @Getter private final boolean traceEnabled;
@@ -132,7 +130,6 @@ public class Config {
   Config() {
     propertiesFromConfigFile = loadConfigurationFile();
 
-    exporter = getSettingFromEnvironment(EXPORTER, null);
     exporterJar = getSettingFromEnvironment(EXPORTER_JAR, null);
     serviceName = getSettingFromEnvironment(SERVICE, "(unknown)");
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
@@ -191,7 +188,6 @@ public class Config {
 
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
-    exporter = properties.getProperty(EXPORTER, parent.exporter);
     exporterJar = properties.getProperty(EXPORTER_JAR, parent.exporterJar);
     serviceName = properties.getProperty(SERVICE, parent.serviceName);
 

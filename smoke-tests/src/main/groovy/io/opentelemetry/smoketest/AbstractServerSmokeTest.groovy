@@ -17,7 +17,12 @@ abstract class AbstractServerSmokeTest extends AbstractSmokeTest {
   protected OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
-    PortUtils.waitForPortToOpen(httpPort, 240, TimeUnit.SECONDS, serverProcess)
+    try {
+      PortUtils.waitForPortToOpen(httpPort, 240, TimeUnit.SECONDS, serverProcess)
+    } catch (e) {
+      System.err.println(logfile.text)
+      throw e
+    }
   }
 
 }

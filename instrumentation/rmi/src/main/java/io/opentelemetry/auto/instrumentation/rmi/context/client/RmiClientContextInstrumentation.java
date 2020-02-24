@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.rmi.context.client;
 
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.TRACER;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -53,7 +53,7 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("sun.rmi.transport.StreamRemoteCall")));
+    return not(isInterface()).and(safeExtendsClass(named("sun.rmi.transport.StreamRemoteCall")));
   }
 
   @Override

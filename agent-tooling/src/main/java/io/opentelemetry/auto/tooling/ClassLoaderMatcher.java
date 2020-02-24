@@ -2,12 +2,8 @@ package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.auto.bootstrap.AgentClassLoader;
 import io.opentelemetry.auto.bootstrap.PatchLogger;
 import io.opentelemetry.auto.bootstrap.WeakMap;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -35,18 +31,8 @@ public class ClassLoaderMatcher {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
     /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
     private static final WeakMap<ClassLoader, Boolean> SKIP_CACHE = newWeakMap();
-    private static final Set<String> CLASSLOADER_CLASSES_TO_SKIP;
-
-    static {
-      final Set<String> classesToSkip = new HashSet<>();
-      classesToSkip.add("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader");
-      classesToSkip.add("sun.reflect.DelegatingClassLoader");
-      classesToSkip.add("jdk.internal.reflect.DelegatingClassLoader");
-      classesToSkip.add("clojure.lang.DynamicClassLoader");
-      classesToSkip.add("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader");
-      classesToSkip.add(AgentClassLoader.class.getName());
-      CLASSLOADER_CLASSES_TO_SKIP = Collections.unmodifiableSet(classesToSkip);
-    }
+    private static final String AGENT_CLASSLOADER_NAME =
+        "io.opentelemetry.auto.bootstrap.AgentClassLoader";
 
     private SkipClassLoaderMatcher() {}
 
@@ -60,7 +46,17 @@ public class ClassLoaderMatcher {
     }
 
     private boolean shouldSkipClass(final ClassLoader loader) {
-      return CLASSLOADER_CLASSES_TO_SKIP.contains(loader.getClass().getName());
+      switch (loader.getClass().getName()) {
+        case "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader":
+        case "sun.reflect.DelegatingClassLoader":
+        case "jdk.internal.reflect.DelegatingClassLoader":
+        case "clojure.lang.DynamicClassLoader":
+        case "org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader":
+        case "sun.misc.Launcher$ExtClassLoader":
+        case AGENT_CLASSLOADER_NAME:
+          return true;
+      }
+      return false;
     }
 
     private boolean shouldSkipInstance(final ClassLoader loader) {

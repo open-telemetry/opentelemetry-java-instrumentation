@@ -40,6 +40,7 @@ include ':smoke-tests:java9-modules'
 include ':smoke-tests:play'
 include ':smoke-tests:springboot'
 include ':smoke-tests:wildfly'
+include ':smoke-tests:springboot'
 
 // instrumentation:
 include ':instrumentation:akka-http-10.0'
@@ -129,6 +130,7 @@ include ':instrumentation:servlet:request-3.0'
 // include ':instrumentation:slf4j-mdc'
 include ':instrumentation:sparkjava-2.3'
 include ':instrumentation:spring-data-1.8'
+include ':instrumentation:spring-scheduling-3.1'
 include ':instrumentation:spring-webmvc-3.1'
 include ':instrumentation:spring-webflux-5.0'
 include ':instrumentation:spymemcached-2.12'
@@ -136,14 +138,16 @@ include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
 
+// exporter adapters
+include ":exporter-adapters"
+include ":exporter-adapters:logging-exporter-adapter"
+include ":exporter-adapters:jaeger-adapter"
+
 // benchmark
 include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 include ':benchmark-integration:play-perftest'
-
-//Dummy exporter TODO: Move it somewhere better
-include ":dummy-exporter"
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

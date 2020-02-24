@@ -1,0 +1,28 @@
+muzzle {
+  pass {
+    group = 'org.springframework'
+    module = 'spring-context'
+    versions = "[3.1.0.RELEASE,]"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  // 3.2.3 is the first version with which the tests will run. Lower versions require other
+  // classes and packages to be imported. Versions 3.1.0+ work with the instrumentation.
+  compileOnly group: 'org.springframework', name: 'spring-context', version: '3.1.0.RELEASE'
+  testCompile group: 'org.springframework', name: 'spring-context', version: '3.2.3.RELEASE'
+
+  // this is the latest version that supports Java 7
+  latestDepTestCompile group: 'org.springframework', name: 'spring-context', version: '4.+'
+}
