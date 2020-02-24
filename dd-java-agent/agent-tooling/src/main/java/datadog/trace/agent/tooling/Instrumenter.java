@@ -135,9 +135,9 @@ public interface Instrumenter {
         if (null != muzzle) {
           final boolean isMatch = muzzle.matches(classLoader);
           if (!isMatch) {
-            final List<Reference.Mismatch> mismatches =
-                muzzle.getMismatchedReferenceSources(classLoader);
             if (log.isDebugEnabled()) {
+              final List<Reference.Mismatch> mismatches =
+                  muzzle.getMismatchedReferenceSources(classLoader);
               log.debug(
                   "Instrumentation muzzled: {} -- {} on {}",
                   instrumentationNames,

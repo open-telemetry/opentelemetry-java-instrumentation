@@ -22,9 +22,8 @@ import net.bytebuddy.pool.TypePool;
 
 /** Matches a set of references against a classloader. */
 @Slf4j
-public class ReferenceMatcher
-    implements WeakMap.ValueSupplier<ClassLoader, List<Reference.Mismatch>> {
-  private final WeakMap<ClassLoader, List<Reference.Mismatch>> mismatchCache = newWeakMap();
+public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+  private final WeakMap<ClassLoader, Boolean> mismatchCache = newWeakMap();
   private final Reference[] references;
   private final Set<String> helperClassNames;
 
@@ -52,6 +51,11 @@ public class ReferenceMatcher
       loader = Utils.getBootstrapProxy();
     }
 
+    return mismatchCache.computeIfAbsent(loader, this);
+  }
+
+  @Override
+  public Boolean get(final ClassLoader loader) {
     final List<Mismatch> mismatches = new ArrayList<>(0);
 
     for (final Reference reference : references) {
@@ -65,7 +69,6 @@ public class ReferenceMatcher
       }
     }
 
-    mismatchCache.put(loader, mismatches);
     return mismatches.size() == 0;
   }
 
@@ -80,11 +83,6 @@ public class ReferenceMatcher
       loader = Utils.getBootstrapProxy();
     }
 
-    return mismatchCache.computeIfAbsent(loader, this);
-  }
-
-  @Override
-  public List<Mismatch> get(final ClassLoader loader) {
     final List<Mismatch> mismatches = new ArrayList<>(0);
 
     for (final Reference reference : references) {
