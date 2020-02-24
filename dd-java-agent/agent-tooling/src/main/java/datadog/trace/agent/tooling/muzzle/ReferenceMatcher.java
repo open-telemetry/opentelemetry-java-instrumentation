@@ -66,7 +66,7 @@ public class ReferenceMatcher
     }
 
     mismatchCache.put(loader, mismatches);
-    return true;
+    return mismatches.size() == 0;
   }
 
   /**
