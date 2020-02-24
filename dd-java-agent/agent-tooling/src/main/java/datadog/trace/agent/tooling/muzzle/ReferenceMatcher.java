@@ -56,7 +56,7 @@ public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Bool
 
   @Override
   public Boolean get(final ClassLoader loader) {
-    final List<Mismatch> mismatches = new ArrayList<>(0);
+    final List<Mismatch> mismatches = new ArrayList<>();
 
     for (final Reference reference : references) {
       if (mismatches.size() > 0) {
