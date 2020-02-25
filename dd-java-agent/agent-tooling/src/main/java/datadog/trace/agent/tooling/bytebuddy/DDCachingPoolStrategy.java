@@ -82,11 +82,14 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       return createCachingTypePool(bootstrapCacheProvider, classFileLocator);
     }
 
-    WeakReference<ClassLoader> loaderRef = loaderRefCache.getIfPresent(classLoader);
+    WeakReference<ClassLoader> loaderRef;
+    synchronized (loaderRefCache) {
+      loaderRef = loaderRefCache.getIfPresent(classLoader);
 
-    if (loaderRef == null) {
-      loaderRef = new WeakReference<>(classLoader);
-      loaderRefCache.put(classLoader, loaderRef);
+      if (loaderRef == null) {
+        loaderRef = new WeakReference<>(classLoader);
+        loaderRefCache.put(classLoader, loaderRef);
+      }
     }
 
     final int loaderHash = classLoader.hashCode();
