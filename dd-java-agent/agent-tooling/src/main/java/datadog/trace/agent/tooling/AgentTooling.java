@@ -1,5 +1,7 @@
 package datadog.trace.agent.tooling;
 
+import datadog.trace.agent.tooling.bytebuddy.DDCachingPoolStrategy;
+import datadog.trace.agent.tooling.bytebuddy.DDLocationStrategy;
 import datadog.trace.bootstrap.WeakMap;
 
 /**

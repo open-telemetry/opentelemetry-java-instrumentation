@@ -6,68 +6,44 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   jmh project(':dd-trace-api')
-  jmh group: 'net.bytebuddy', name: 'byte-buddy-agent', version: '1.7.6'
-
-  // Add a bunch of dependencies so instrumentation is not disabled.
-  jmh group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
-  jmh group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
-  jmh group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
-  jmh group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
-  jmh(group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119') {
-    exclude(module: 'httpclient')
-    exclude(module: 'jackson-databind')
-    exclude(module: 'jackson-dataformat-cbor')
-  }
-  jmh group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
-  jmh group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
-  jmh(group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0')
+  jmh deps.bytebuddyagent
 }
-
-configurations.testRuntimeClasspath.dependencies.clear()
-
 
 jmh {
   timeUnit = 'us' // Output time unit. Available time units are: [m, s, ms, us, ns].
-  benchmarkMode = ['thrpt', 'avgt']
-//  timeOnIteration = '5s'
-  iterations = 5 // Number of measurement iterations to do.
+  benchmarkMode = ['avgt']
+  timeOnIteration = '20s'
+  iterations = 1 // Number of measurement iterations to do.
   fork = 1 // How many times to forks a single benchmark. Use 0 to disable forking altogether
-//  jvmArgs = ["-Dasdf=123"]
-//  jvmArgs = ["-javaagent:${project(':dd-java-agent').shadowJar.archivePath}"]
+  jvmArgs = ["-Ddd.jmxfetch.enabled=false", "-Ddd.writer.type=LoggingWriter"]
+//  jvmArgs += ["-XX:+UnlockDiagnosticVMOptions", "-XX:+DebugNonSafepoints", "-XX:StartFlightRecording=delay=5s,dumponexit=true,name=jmh-benchmark,filename=${rootDir}/dd-java-agent/benchmark/build/reports/jmh/jmh-benchmark.jfr"]
+//  jvmArgs += ["-agentpath:${rootDir}/dd-java-agent/benchmark/src/jmh/resources/libasyncProfiler.so=start,collapsed,file=${rootDir}/dd-java-agent/benchmark/build/reports/jmh/profiler.txt"]
   failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
-//  warmup = '2s' // Time to spend at each warmup iteration.
-//  warmupIterations = 2 // Number of warmup iterations to do.
-//  warmupForks = 0 // How many warmup forks to make for a single benchmark. 0 to disable warmup forks.
+  warmup = '5s' // Time to spend at each warmup iteration.
+//  warmupBatchSize = 10 // Warmup batch size: number of benchmark method calls per operation.
+  warmupForks = 0 // How many warmup forks to make for a single benchmark. 0 to disable warmup forks.
+  warmupIterations = 1 // Number of warmup iterations to do.
 
-//  profilers = ['stack']
+//  profilers = ['stack:lines=5;detailLine=true;period=5;excludePackages=true']
   // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr]
 
 //  humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
 //  operationsPerInvocation = 10 // Operations per invocation.
 //  synchronizeIterations = false // Synchronize iterations?
-  timeout = '1s' // Timeout for benchmark iteration.
-  includeTests = false
+  timeout = '5s' // Timeout for benchmark iteration.
+//  includeTests = false
   // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
 
-  duplicateClassesStrategy = 'fail'
-  jmhVersion = '1.20' // Specifies JMH version
+  duplicateClassesStrategy = DuplicatesStrategy.EXCLUDE
+  jmhVersion = '1.23' // Specifies JMH version
 }
 
-// configured as a separate task since the 'jmh' task did not like adding a javaagent argument.
-tasks.register("jmhAgent", JavaExec) {
-  classpath = files(project.jmhCompileGeneratedClasses.destinationDir)
-  classpath += sourceSets.jmh.runtimeClasspath
-  main = "org.openjdk.jmh.Main"
-  args += ["-tu", "us"]
-  args += ["-bm", "avgt"]
-//  args += ["-prof", "stack:lines=5;detailLine=true;period=5;excludePackages=true"]
-  args += ["-f", "1"]
-  args += ["-foe", "true"]
+tasks.jmh.dependsOn project(':dd-java-agent').shadowJar
 
-//  args += ["-wi", "2"]
-//  args += ["-i", "5"]
-  dependsOn project.tasks.jmhCompileGeneratedClasses
-}
-
-tasks.jmhAgent.dependsOn project(':dd-java-agent').shadowJar
+/*
+If using libasyncProfiler, use the following to generate nice svg flamegraphs.
+sed '/unknown/d' dd-java-agent/benchmark/build/reports/jmh/profiler.txt | sed '/^thread_start/d' | sed '/not_walkable/d' > dd-java-agent/benchmark/build/reports/jmh/profiler-cleaned.txt
+(using https://github.com/brendangregg/FlameGraph)
+./flamegraph.pl --color=java dd-java-agent/benchmark/build/reports/jmh/profiler-cleaned.txt > dd-java-agent/benchmark/build/reports/jmh/jmh-master.svg
+ */
 

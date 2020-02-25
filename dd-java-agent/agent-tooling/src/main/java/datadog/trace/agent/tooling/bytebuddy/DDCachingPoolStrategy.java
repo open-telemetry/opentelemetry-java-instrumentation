@@ -1,4 +1,4 @@
-package datadog.trace.agent.tooling;
+package datadog.trace.agent.tooling.bytebuddy;
 
 import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 

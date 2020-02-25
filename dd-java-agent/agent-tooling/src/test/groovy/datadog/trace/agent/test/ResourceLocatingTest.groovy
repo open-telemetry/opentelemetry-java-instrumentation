@@ -1,6 +1,6 @@
 package datadog.trace.agent.test
 
-import datadog.trace.agent.tooling.DDLocationStrategy
+import datadog.trace.agent.tooling.bytebuddy.DDLocationStrategy
 import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Shared

@@ -1,4 +1,4 @@
-package datadog.trace.agent.tooling;
+package datadog.trace.agent.tooling.bytebuddy;
 
 import datadog.trace.bootstrap.ExceptionLogger;
 import net.bytebuddy.ClassFileVersion;
