@@ -160,12 +160,13 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         return false;
       }
 
-      // Fastpath loaderRef equivalence -- works because of WeakReference cache used
-      // Also covers the bootstrap null loaderRef case
-      if (loaderRef == that.loaderRef) {
-        // still need to check name
-        return className.equals(that.className);
-      } else if (className.equals(that.className)) {
+      if (className.equals(that.className)) {
+        // Fastpath loaderRef equivalence -- works because of WeakReference cache used
+        // Also covers the bootstrap null loaderRef case
+        if (loaderRef == that.loaderRef) {
+          return true;
+        }
+
         // need to perform a deeper loader check -- requires calling Reference.get
         // which can strengthen the Reference, so deliberately done last
 
