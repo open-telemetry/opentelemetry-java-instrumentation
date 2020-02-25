@@ -1,5 +1,8 @@
 package datadog.trace.agent.tooling.bytebuddy;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.description.type.TypeDescription;
@@ -9,11 +12,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GlobalIgnoresMatcher<T extends TypeDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
+  private final Set<String> blacklistedPrefixes = new HashSet<>();
+
   private static final Pattern COM_MCHANGE_PROXY =
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
-  public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher() {
-    return new GlobalIgnoresMatcher<>();
+  public void addBlacklistedPrefixes(final Collection<String> prefixes) {
+    blacklistedPrefixes.addAll(prefixes);
   }
 
   /**
@@ -40,8 +45,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.appdynamics.")
         || name.startsWith("com.singularity.")
         || name.startsWith("com.jinspired.")
-        || name.startsWith("org.jinspired.")
-        || name.startsWith("org.springframework.cglib.")) {
+        || name.startsWith("org.jinspired.")) {
       return true;
     }
 
@@ -120,6 +124,12 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
 
     if (COM_MCHANGE_PROXY.matcher(name).matches()) {
       return true;
+    }
+
+    for (final String prefix : blacklistedPrefixes) {
+      if (name.startsWith(prefix)) {
+        return true;
+      }
     }
 
     return false;

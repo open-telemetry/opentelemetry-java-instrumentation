@@ -16,6 +16,7 @@ import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import datadog.trace.api.Config;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,13 @@ public interface Instrumenter {
    * @return the original agentBuilder and this instrumentation
    */
   AgentBuilder instrument(AgentBuilder agentBuilder);
+
+  /**
+   * Returns a collection of type name prefixes that should be blacklisted for all instrumentations
+   *
+   * <p>//TODO convert to a default method when the agent is Java 8+
+   */
+  Collection<String> getLibraryBlacklistedPrefixes();
 
   @Slf4j
   abstract class Default implements Instrumenter {
@@ -94,6 +102,11 @@ public interface Instrumenter {
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
       agentBuilder = contextProvider.additionalInstrumentation(agentBuilder);
       return agentBuilder;
+    }
+
+    @Override
+    public Collection<String> getLibraryBlacklistedPrefixes() {
+      return Collections.emptySet();
     }
 
     private AgentBuilder.Identified.Extendable injectHelperClasses(
