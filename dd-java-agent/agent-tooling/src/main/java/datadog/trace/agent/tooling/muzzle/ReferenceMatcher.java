@@ -80,7 +80,7 @@ public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Bool
       loader = Utils.getBootstrapProxy();
     }
 
-    final List<Mismatch> mismatches = new ArrayList<>(0);
+    final List<Mismatch> mismatches = new ArrayList<>();
 
     for (final Reference reference : references) {
       // Don't reference-check helper classes.
@@ -104,7 +104,7 @@ public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Bool
     final TypePool typePool =
         AgentTooling.poolStrategy()
             .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
-    final List<Mismatch> mismatches = new ArrayList<>(0);
+    final List<Mismatch> mismatches = new ArrayList<>();
     try {
       final TypePool.Resolution resolution =
           typePool.describe(Utils.getClassName(reference.getClassName()));
@@ -131,7 +131,7 @@ public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Bool
 
   public static List<Reference.Mismatch> checkMatch(
       final Reference reference, final TypeDescription typeOnClasspath) {
-    final List<Mismatch> mismatches = new ArrayList<>(0);
+    final List<Mismatch> mismatches = new ArrayList<>();
 
     for (final Reference.Flag flag : reference.getFlags()) {
       if (!flag.matches(typeOnClasspath.getModifiers())) {
