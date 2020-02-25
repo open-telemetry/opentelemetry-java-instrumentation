@@ -16,7 +16,11 @@ import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TracingClientInterceptor implements ClientInterceptor {
 
@@ -84,7 +88,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
   static final class TracingClientCallListener<RespT>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
-    final Span span;
+    private final Span span;
+    private final AtomicInteger messageId = new AtomicInteger();
 
     TracingClientCallListener(final Span span, final ClientCall.Listener<RespT> delegate) {
       super(delegate);
@@ -93,18 +98,12 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onMessage(final RespT message) {
-      final Span messageSpan =
-          TRACER.spanBuilder("grpc.message").setSpanKind(CLIENT).setParent(span).startSpan();
-      messageSpan.setAttribute("message.type", message.getClass().getName());
-      DECORATE.afterStart(messageSpan);
-      try (final Scope scope = TRACER.withSpan(messageSpan)) {
+      final Map<String, AttributeValue> attributes = new HashMap<>();
+      attributes.put("message.type", AttributeValue.stringAttributeValue("SENT"));
+      attributes.put("message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
+      span.addEvent("message", attributes);
+      try (final Scope scope = TRACER.withSpan(span)) {
         delegate().onMessage(message);
-      } catch (final Throwable e) {
-        DECORATE.onError(messageSpan, e);
-        throw e;
-      } finally {
-        DECORATE.beforeFinish(messageSpan);
-        messageSpan.end();
       }
     }
 
