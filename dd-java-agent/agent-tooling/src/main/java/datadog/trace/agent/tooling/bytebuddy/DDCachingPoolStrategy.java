@@ -154,10 +154,6 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         return false;
       }
 
-      if (this == obj) {
-        return true;
-      }
-
       final TypeCacheKey that = (TypeCacheKey) obj;
 
       if (hashCode != that.hashCode) {
