@@ -1,5 +1,6 @@
-package datadog.trace.agent.tooling;
+package datadog.trace.agent.tooling.bytebuddy;
 
+import datadog.trace.agent.tooling.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;

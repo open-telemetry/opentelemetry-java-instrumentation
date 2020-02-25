@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling
 
+import datadog.trace.agent.tooling.bytebuddy.DDCachingPoolStrategy
 import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
@@ -204,7 +205,7 @@ class CacheProviderTest extends DDSpecification {
   }
 
   static newClassLoader() {
-    return new URLClassLoader([] as URL[], (ClassLoader)null)
+    return new URLClassLoader([] as URL[], (ClassLoader) null)
   }
 
   static newLocator() {
@@ -215,7 +216,8 @@ class CacheProviderTest extends DDSpecification {
       }
 
       @Override
-      void close() throws IOException {}
+      void close() throws IOException {
+      }
     }
   }
 }

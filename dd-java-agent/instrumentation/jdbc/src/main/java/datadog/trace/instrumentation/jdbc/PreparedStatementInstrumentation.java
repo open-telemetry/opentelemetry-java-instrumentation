@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jdbc.JDBCDecorator.DECORATE;
@@ -35,7 +35,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("java.sql.PreparedStatement")));
+    return not(isInterface()).and(hasInterface(named("java.sql.PreparedStatement")));
   }
 
   @Override
@@ -61,13 +61,13 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope onEnter(@Advice.This final PreparedStatement statement) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(PreparedStatement.class);
-      if (callDepth > 0) {
+      final Connection connection = connectionFromStatement(statement);
+      if (connection == null) {
         return null;
       }
 
-      final Connection connection = connectionFromStatement(statement);
-      if (connection == null) {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(PreparedStatement.class);
+      if (callDepth > 0) {
         return null;
       }
 

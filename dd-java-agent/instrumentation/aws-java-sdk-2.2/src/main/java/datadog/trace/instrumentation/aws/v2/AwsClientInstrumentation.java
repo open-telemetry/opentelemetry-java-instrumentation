@@ -1,10 +1,11 @@
 package datadog.trace.instrumentation.aws.v2;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -23,9 +24,9 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(
-            safeHasInterface(named("software.amazon.awssdk.core.client.builder.SdkClientBuilder")));
+    return nameStartsWith("software.amazon.awssdk.")
+        .and(not(isInterface()))
+        .and(hasInterface(named("software.amazon.awssdk.core.client.builder.SdkClientBuilder")));
   }
 
   @Override
