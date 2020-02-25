@@ -70,7 +70,7 @@ public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Bool
   }
 
   /**
-   * Loads and caches the full list of mismatches. Used in debug contexts only
+   * Loads the full list of mismatches. Used in debug contexts only
    *
    * @param loader Classloader to validate against (or null for bootstrap)
    * @return A list of all mismatches between this ReferenceMatcher and loader's classpath.
