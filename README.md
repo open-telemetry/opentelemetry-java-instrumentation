@@ -24,7 +24,7 @@ java -javaagent:/path/to/opentelemetry-auto-<version>.jar \
      -Dota.exporter.jar=exporter-adapters/logging-exporter-adapter/build/libs/logging-exporter-adapter-0.1.2-SNAPSHOT.jar \
      -Dota.jaeger.host=localhost \
      -Dota.jaeger.port=14250 \
-     -Dota.jaeger.service=shopping \
+     -Dota.service=shopping \
      -jar myapp.jar
 ```
 
