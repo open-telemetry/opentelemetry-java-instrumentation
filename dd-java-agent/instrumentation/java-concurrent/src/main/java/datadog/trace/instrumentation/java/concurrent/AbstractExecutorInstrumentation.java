@@ -103,6 +103,8 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     ElementMatcher.Junction<TypeDescription> matcher = not(isInterface());
+    final ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
+        hasInterface(named(Executor.class.getName()));
     if (!TRACE_ALL_EXECUTORS) {
       matcher =
           matcher.and(
@@ -121,15 +123,16 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
                     }
                   }
 
-                  if (!whitelisted) {
+                  if (!whitelisted
+                      && log.isDebugEnabled()
+                      && hasExecutorInterfaceMatcher.matches(target)) {
                     log.debug("Skipping executor instrumentation for {}", target.getName());
                   }
                   return whitelisted;
                 }
               });
     }
-    return matcher.and(
-        hasInterface(named(Executor.class.getName()))); // Apply expensive matcher last.
+    return matcher.and(hasExecutorInterfaceMatcher); // Apply expensive matcher last.
   }
 
   @Override
