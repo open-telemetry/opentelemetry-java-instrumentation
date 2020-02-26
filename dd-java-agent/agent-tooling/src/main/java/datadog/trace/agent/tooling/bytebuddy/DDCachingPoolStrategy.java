@@ -42,7 +42,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   static final int LOADER_CAPACITY = 64;
   static final int TYPE_CAPACITY = 64;
 
-  static final int BOOTSTRAP_HASH = 0;
+  static final int BOOTSTRAP_HASH = 7236344; // Just a random number
 
   /**
    * Cache of recent ClassLoader WeakReferences; used to...
@@ -89,7 +89,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       loaderRefCache.put(classLoader, loaderRef);
     }
 
-    int loaderHash = classLoader.hashCode();
+    final int loaderHash = classLoader.hashCode();
     return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
   }
 
@@ -140,7 +140,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       this.loaderRef = loaderRef;
       this.className = className;
 
-      hashCode = (int) (31 * this.loaderHash) ^ className.hashCode();
+      hashCode = 31 * this.loaderHash + className.hashCode();
     }
 
     @Override
@@ -150,18 +150,23 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public boolean equals(final Object obj) {
-      if (!(obj instanceof TypeCacheKey)) return false;
+      if (!(obj instanceof TypeCacheKey)) {
+        return false;
+      }
 
-      TypeCacheKey that = (TypeCacheKey) obj;
+      final TypeCacheKey that = (TypeCacheKey) obj;
 
-      if (loaderHash != that.loaderHash) return false;
+      if (loaderHash != that.loaderHash) {
+        return false;
+      }
 
-      // Fastpath loaderRef equivalence -- works because of WeakReference cache used
-      // Also covers the bootstrap null loaderRef case
-      if (loaderRef == that.loaderRef) {
-        // still need to check name
-        return className.equals(that.className);
-      } else if (className.equals(that.className)) {
+      if (className.equals(that.className)) {
+        // Fastpath loaderRef equivalence -- works because of WeakReference cache used
+        // Also covers the bootstrap null loaderRef case
+        if (loaderRef == that.loaderRef) {
+          return true;
+        }
+
         // need to perform a deeper loader check -- requires calling Reference.get
         // which can strengthen the Reference, so deliberately done last
 
@@ -172,11 +177,15 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         // In this case, it is fine because that means the ClassLoader is no
         // longer live, so the entries will never match anyway and will fall
         // out of the cache.
-        ClassLoader thisLoader = loaderRef.get();
-        if (thisLoader == null) return false;
+        final ClassLoader thisLoader = loaderRef.get();
+        if (thisLoader == null) {
+          return false;
+        }
 
-        ClassLoader thatLoader = that.loaderRef.get();
-        if (thatLoader == null) return false;
+        final ClassLoader thatLoader = that.loaderRef.get();
+        if (thatLoader == null) {
+          return false;
+        }
 
         return (thisLoader == thatLoader);
       } else {
@@ -205,9 +214,11 @@ public class DDCachingPoolStrategy implements PoolStrategy {
 
     @Override
     public TypePool.Resolution find(final String className) {
-      TypePool.Resolution existingResolution =
+      final TypePool.Resolution existingResolution =
           sharedResolutionCache.getIfPresent(new TypeCacheKey(loaderHash, loaderRef, className));
-      if (existingResolution != null) return existingResolution;
+      if (existingResolution != null) {
+        return existingResolution;
+      }
 
       if (OBJECT_NAME.equals(className)) {
         return OBJECT_RESOLUTION;
