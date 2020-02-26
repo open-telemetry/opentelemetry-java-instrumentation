@@ -78,19 +78,23 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    final ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
+        hasInterface(named(Future.class.getName()));
     return not(isInterface())
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
               public boolean matches(final TypeDescription target) {
                 final boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
-                if (!whitelisted) {
+                if (!whitelisted
+                    && log.isDebugEnabled()
+                    && hasFutureInterfaceMatcher.matches(target)) {
                   log.debug("Skipping future instrumentation for {}", target.getName());
                 }
                 return whitelisted;
               }
             })
-        .and(hasInterface(named(Future.class.getName()))); // Apply expensive matcher last.
+        .and(hasFutureInterfaceMatcher); // Apply expensive matcher last.
   }
 
   @Override
