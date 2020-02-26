@@ -12,6 +12,8 @@ plugins {
   id 'com.dorongold.task-tree' version '1.5'
 
   id "com.github.johnrengelman.shadow" version "5.2.0"
+
+  id "com.diffplug.gradle.spotless" version "3.27.1"
 }
 
 def isCI = System.getenv("CI") != null

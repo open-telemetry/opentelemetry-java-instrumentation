@@ -3,6 +3,7 @@ import java.time.Duration
 apply plugin: 'java'
 apply plugin: 'groovy'
 
+apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
 
