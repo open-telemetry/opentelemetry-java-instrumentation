@@ -22,7 +22,7 @@ import net.bytebuddy.pool.TypePool;
 
 /** Matches a set of references against a classloader. */
 @Slf4j
-public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+public final class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
   private final WeakMap<ClassLoader, Boolean> mismatchCache = newWeakMap();
   private final Reference[] references;
   private final Set<String> helperClassNames;
@@ -99,7 +99,7 @@ public class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Bool
    * @param loader
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */
-  public static List<Reference.Mismatch> checkMatch(
+  private static List<Reference.Mismatch> checkMatch(
       final Reference reference, final ClassLoader loader) {
     final TypePool typePool =
         AgentTooling.poolStrategy()
