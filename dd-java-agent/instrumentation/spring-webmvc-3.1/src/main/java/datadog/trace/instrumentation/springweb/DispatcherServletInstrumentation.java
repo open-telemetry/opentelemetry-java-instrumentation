@@ -15,8 +15,6 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -47,46 +45,6 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       packageName + ".SpringWebHttpServerDecorator",
       packageName + ".SpringWebHttpServerDecorator$1",
     };
-  }
-
-  @Override
-  public Collection<String> getLibraryBlacklistedPrefixes() {
-    return Arrays.asList(
-        "org.springframework.cglib.",
-        "org.springframework.aop.",
-        "org.springframework.beans.factory.annotation.",
-        "org.springframework.beans.factory.config.",
-        "org.springframework.beans.factory.parsing.",
-        "org.springframework.beans.factory.xml.",
-        "org.springframework.beans.propertyeditors.",
-        "org.springframework.boot.autoconfigure.cache.",
-        "org.springframework.boot.autoconfigure.condition.",
-        "org.springframework.boot.autoconfigure.http.",
-        "org.springframework.boot.autoconfigure.jackson.",
-        "org.springframework.boot.autoconfigure.web.",
-        "org.springframework.boot.context.",
-        "org.springframework.boot.convert.",
-        "org.springframework.boot.diagnostics.",
-        "org.springframework.boot.web.server.",
-        "org.springframework.boot.web.servlet.",
-        "org.springframework.context.annotation.",
-        "org.springframework.context.event.",
-        "org.springframework.context.expression.",
-        "org.springframework.core.annotation.",
-        "org.springframework.core.convert.",
-        "org.springframework.core.env.",
-        "org.springframework.core.io.",
-        "org.springframework.core.type.",
-        "org.springframework.expression",
-        "org.springframework.format",
-        "org.springframework.http",
-        "org.springframework.ui",
-        "org.springframework.validation",
-        "org.springframework.web.context",
-        "org.springframework.web.filter",
-        "org.springframework.web.method",
-        "org.springframework.web.multipart",
-        "org.springframework.web.util");
   }
 
   @Override

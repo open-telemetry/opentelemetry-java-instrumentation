@@ -1,12 +1,12 @@
 package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.skipClassLoader;
+import static datadog.trace.agent.tooling.bytebuddy.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
-import datadog.trace.agent.tooling.bytebuddy.GlobalIgnoresMatcher;
 import datadog.trace.api.Config;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -53,8 +53,6 @@ public class AgentInstaller {
 
     addByteBuddyRawSetting();
 
-    final GlobalIgnoresMatcher<TypeDescription> globalIgnoresMatcher = new GlobalIgnoresMatcher<>();
-
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
@@ -67,7 +65,7 @@ public class AgentInstaller {
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
-            .or(globalIgnoresMatcher)
+            .or(globalIgnoresMatcher())
             .or(matchesConfiguredExcludes());
 
     if (log.isDebugEnabled()) {
@@ -88,8 +86,6 @@ public class AgentInstaller {
 
       try {
         agentBuilder = instrumenter.instrument(agentBuilder);
-        globalIgnoresMatcher.addBlacklistedPrefixes(instrumenter.getLibraryBlacklistedPrefixes());
-
         numInstrumenters++;
       } catch (final Exception | LinkageError e) {
         log.error("Unable to load instrumentation {}", instrumenter.getClass().getName(), e);

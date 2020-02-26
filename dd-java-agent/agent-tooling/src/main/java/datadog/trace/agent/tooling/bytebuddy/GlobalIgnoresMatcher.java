@@ -1,8 +1,5 @@
 package datadog.trace.agent.tooling.bytebuddy;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Pattern;
 import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.description.type.TypeDescription;
@@ -12,13 +9,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GlobalIgnoresMatcher<T extends TypeDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
-  private final Set<String> blacklistedPrefixes = new HashSet<>();
-
   private static final Pattern COM_MCHANGE_PROXY =
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
-  public void addBlacklistedPrefixes(final Collection<String> prefixes) {
-    blacklistedPrefixes.addAll(prefixes);
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher() {
+    return new GlobalIgnoresMatcher<>();
   }
 
   /**
@@ -45,7 +40,43 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.appdynamics.")
         || name.startsWith("com.singularity.")
         || name.startsWith("com.jinspired.")
-        || name.startsWith("org.jinspired.")) {
+        || name.startsWith("org.jinspired.")
+        || name.startsWith("org.springframework.cglib.")
+        || name.startsWith("org.springframework.aop.")
+        || name.startsWith("org.springframework.beans.factory.annotation.")
+        || name.startsWith("org.springframework.beans.factory.config.")
+        || name.startsWith("org.springframework.beans.factory.parsing.")
+        || name.startsWith("org.springframework.beans.factory.xml.")
+        || name.startsWith("org.springframework.beans.propertyeditors.")
+        || name.startsWith("org.springframework.boot.autoconfigure.cache.")
+        || name.startsWith("org.springframework.boot.autoconfigure.condition.")
+        || name.startsWith("org.springframework.boot.autoconfigure.http.")
+        || name.startsWith("org.springframework.boot.autoconfigure.jackson.")
+        || name.startsWith("org.springframework.boot.autoconfigure.web.")
+        || name.startsWith("org.springframework.boot.context.")
+        || name.startsWith("org.springframework.boot.convert.")
+        || name.startsWith("org.springframework.boot.diagnostics.")
+        || name.startsWith("org.springframework.boot.web.server.")
+        || name.startsWith("org.springframework.boot.web.servlet.")
+        || name.startsWith("org.springframework.context.annotation.")
+        || name.startsWith("org.springframework.context.event.")
+        || name.startsWith("org.springframework.context.expression.")
+        || name.startsWith("org.springframework.core.annotation.")
+        || name.startsWith("org.springframework.core.convert.")
+        || name.startsWith("org.springframework.core.env.")
+        || name.startsWith("org.springframework.core.io.")
+        || name.startsWith("org.springframework.core.type.")
+        || name.startsWith("org.springframework.expression.")
+        || name.startsWith("org.springframework.format.")
+        || name.startsWith("org.springframework.http.")
+        || name.startsWith("org.springframework.ui.")
+        || name.startsWith("org.springframework.validation.")
+        || name.startsWith("org.springframework.web.context.")
+        || name.startsWith("org.springframework.web.filter.")
+        || name.startsWith("org.springframework.web.method.")
+        || name.startsWith("org.springframework.web.multipart.")
+        || name.startsWith("org.springframework.web.util.")) {
+
       return true;
     }
 
@@ -124,12 +155,6 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
 
     if (COM_MCHANGE_PROXY.matcher(name).matches()) {
       return true;
-    }
-
-    for (final String prefix : blacklistedPrefixes) {
-      if (name.startsWith(prefix)) {
-        return true;
-      }
     }
 
     return false;

@@ -12,8 +12,6 @@ import com.google.common.collect.ImmutableMap;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.context.TraceScope;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -52,11 +50,6 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
               .instrument(agentBuilder);
     }
     return agentBuilder;
-  }
-
-  @Override
-  public Collection<String> getLibraryBlacklistedPrefixes() {
-    return Collections.emptySet();
   }
 
   // Not Using AutoService to hook up this instrumentation

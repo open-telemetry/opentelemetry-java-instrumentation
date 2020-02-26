@@ -5,8 +5,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.test.base.HttpServerTestAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
-import java.util.Collection;
-import java.util.Collections;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 @AutoService(Instrumenter.class)
@@ -20,10 +18,5 @@ public class NettyServerTestInstrumentation implements Instrumenter {
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
                     named("channelRead"), HttpServerTestAdvice.ServerEntryAdvice.class.getName()));
-  }
-
-  @Override
-  public Collection<String> getLibraryBlacklistedPrefixes() {
-    return Collections.emptySet();
   }
 }

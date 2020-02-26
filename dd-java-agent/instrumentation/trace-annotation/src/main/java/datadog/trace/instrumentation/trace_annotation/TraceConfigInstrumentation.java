@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -107,11 +106,6 @@ public class TraceConfigInstrumentation implements Instrumenter {
       agentBuilder = tracerConfigClass.instrument(agentBuilder);
     }
     return agentBuilder;
-  }
-
-  @Override
-  public Collection<String> getLibraryBlacklistedPrefixes() {
-    return Collections.emptySet();
   }
 
   // Not Using AutoService to hook up this instrumentation
