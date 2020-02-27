@@ -4,7 +4,7 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 
 class CouchbaseSpringRepository26Test extends CouchbaseSpringRepositoryTest {
   @Override
-  def getFindAllStatememt() {
+  def getFindAllStatement() {
     return 'ViewQuery(doc/all){params="reduce=false&stale=false", includeDocs}'
   }
 

@@ -35,6 +35,8 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
   ConfigurableApplicationContext applicationContext
   @Shared
   DocRepository repo
+  @Shared
+  String query
 
   def setupSpec() {
     CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build()
@@ -61,13 +63,14 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
     applicationContext = new AnnotationConfigApplicationContext(CouchbaseConfig)
     repo = applicationContext.getBean(DocRepository)
+    query = getFindAllStatement()
   }
 
   def cleanupSpec() {
     applicationContext.close()
   }
 
-  def getFindAllStatememt() {
+  def getFindAllStatement() {
     return 'ViewQuery(doc/all){params="reduce=false&stale=update_after"}'
   }
 
@@ -81,7 +84,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name(), getFindAllStatememt())
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name(), query)
       }
     }
   }
@@ -180,7 +183,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
         basicSpan(it, 0, "someTrace")
         assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
         assertCouchbaseCall(it, 2, "Bucket.remove", bucketCouchbase.name(), null, span(0))
-        assertCouchbaseCall(it, 3, "Bucket.query", bucketCouchbase.name(), getFindAllStatememt(), span(0))
+        assertCouchbaseCall(it, 3, "Bucket.query", bucketCouchbase.name(), getFindAllStatement(), span(0))
       }
     }
   }
