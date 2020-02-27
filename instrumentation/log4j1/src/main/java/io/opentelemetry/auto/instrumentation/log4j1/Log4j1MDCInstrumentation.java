@@ -26,7 +26,7 @@ public class Log4j1MDCInstrumentation extends Instrumenter.Default {
 
   @Override
   protected boolean defaultEnabled() {
-    return Config.get().isLogsInjectionEnabled();
+    return Config.get().isLogInjectionEnabled();
   }
 
   @Override
@@ -47,13 +47,13 @@ public class Log4j1MDCInstrumentation extends Instrumenter.Default {
 
   public static class MDCContextAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void mdcClassInitialized(@Advice.This Object instance) {
+    public static void mdcClassInitialized(@Advice.This final Object instance) {
       if (instance == null) {
         return;
       }
 
       try {
-        Class<?> mdcClass = instance.getClass();
+        final Class<?> mdcClass = instance.getClass();
         final Method putMethod = mdcClass.getMethod("put", String.class, Object.class);
         final Method removeMethod = mdcClass.getMethod("remove", String.class);
         GlobalTracer.get().addScopeListener(new LogContextScopeListener(putMethod, removeMethod));

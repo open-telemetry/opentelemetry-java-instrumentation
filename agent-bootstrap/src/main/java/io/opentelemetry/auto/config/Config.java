@@ -71,8 +71,8 @@ public class Config {
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
-  public static final String LOGS_INJECTION_ENABLED = "logs.injection.enabled";
-  public static final String LOGS_EVENTS_THRESHOLD = "logs.events.threshold";
+  public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
+  public static final String LOG_CAPTURE_THRESHOLD = "log.capture.threshold";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
@@ -89,7 +89,7 @@ public class Config {
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
 
-  public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
+  public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
@@ -112,7 +112,7 @@ public class Config {
   @Getter private final Integer scopeDepthLimit;
   @Getter private final boolean runtimeContextFieldInjection;
 
-  @Getter private final boolean logsInjectionEnabled;
+  @Getter private final boolean logInjectionEnabled;
 
   // mapping of threshold values to different logging frameworks:
   //
@@ -128,7 +128,7 @@ public class Config {
   // | FINER        | FINER   | DEBUG   | DEBUG  |
   // | TRACE/FINEST | FINEST  | TRACE   | TRACE  |
   // | ALL          | ALL     | ALL     | ALL    |
-  @Getter private final String logsEventsThreshold;
+  @Getter private final String logCaptureThreshold;
 
   @Getter private final String traceAnnotations;
 
@@ -184,10 +184,10 @@ public class Config {
         getBooleanSettingFromEnvironment(
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
 
-    logsInjectionEnabled =
-        getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
+    logInjectionEnabled =
+        getBooleanSettingFromEnvironment(LOG_INJECTION_ENABLED, DEFAULT_LOG_INJECTION_ENABLED);
 
-    logsEventsThreshold = getSettingFromEnvironment(LOGS_EVENTS_THRESHOLD, null);
+    logCaptureThreshold = getSettingFromEnvironment(LOG_CAPTURE_THRESHOLD, null);
 
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
@@ -244,10 +244,10 @@ public class Config {
         getPropertyBooleanValue(
             properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
 
-    logsInjectionEnabled =
-        getPropertyBooleanValue(properties, LOGS_INJECTION_ENABLED, parent.logsInjectionEnabled);
+    logInjectionEnabled =
+        getPropertyBooleanValue(properties, LOG_INJECTION_ENABLED, parent.logInjectionEnabled);
 
-    logsEventsThreshold = properties.getProperty(LOGS_EVENTS_THRESHOLD, parent.logsEventsThreshold);
+    logCaptureThreshold = properties.getProperty(LOG_CAPTURE_THRESHOLD, parent.logCaptureThreshold);
 
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 

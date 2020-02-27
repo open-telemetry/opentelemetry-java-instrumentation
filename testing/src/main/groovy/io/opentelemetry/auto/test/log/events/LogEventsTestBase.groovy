@@ -48,7 +48,7 @@ abstract class LogEventsTestBase extends AgentTestRunner {
     def parentScope = tracer.withSpan(parentSpan)
 
     def logger = createLogger("abc")
-    withConfigOverride(Config.LOGS_EVENTS_THRESHOLD, "WARN") {
+    withConfigOverride(Config.LOG_CAPTURE_THRESHOLD, "WARN") {
       logger."$testMethod"("xyz")
     }
 
