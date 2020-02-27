@@ -1,6 +1,5 @@
 package io.opentelemetry.auto.instrumentation.couchbase.client;
 
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,6 +12,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -52,9 +52,14 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod().and(isPublic()).and(returns(named("rx.Observable"))),
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod().and(isPublic()).and(returns(named("rx.Observable"))).and(not(named("query"))),
         CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientAdvice");
+    transformers.put(
+        isMethod().and(isPublic()).and(returns(named("rx.Observable"))).and(named("query")),
+        CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientQueryAdvice");
+    return transformers;
   }
 
   public static class CouchbaseClientAdvice {
@@ -74,8 +79,35 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
         return;
       }
       CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
+      result = Observable.create(new CouchbaseOnSubscribe(result, method, bucket, null));
+    }
+  }
 
-      result = Observable.create(new CouchbaseOnSubscribe(result, method, bucket));
+  public static class CouchbaseClientQueryAdvice {
+
+    @Advice.OnMethodEnter
+    public static int trackCallDepth() {
+      return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    public static void subscribeResult(
+        @Advice.Enter final int callDepth,
+        @Advice.Origin final Method method,
+        @Advice.FieldValue("bucket") final String bucket,
+        @Advice.Argument(value = 0, optional = true) final Object query,
+        @Advice.Return(readOnly = false) Observable result) {
+      if (callDepth > 0) {
+        return;
+      }
+      CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
+
+      // A query can be of many different types. We could track the creation of them and try to
+      // rewind back to when they were created from a string, but for now we rely on toString()
+      // returning something useful. That seems to be the case. If we're starting to see strange
+      // query texts, this is the place to look!
+      final String queryText = query != null ? query.toString() : null;
+      result = Observable.create(new CouchbaseOnSubscribe(result, method, bucket, queryText));
     }
   }
 }

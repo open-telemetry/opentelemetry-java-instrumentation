@@ -67,6 +67,10 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     applicationContext.close()
   }
 
+  def getFindAllStatememt() {
+    return 'ViewQuery(doc/all){params="reduce=false&stale=update_after"}'
+  }
+
   def "test empty repo"() {
     when:
     def result = repo.findAll()
@@ -77,7 +81,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name(), getFindAllStatememt())
       }
     }
   }
@@ -119,8 +123,8 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.get", bucketCouchbase.name(), null, span(0))
       }
     }
 
@@ -146,8 +150,8 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
       }
     }
 
@@ -174,9 +178,9 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
-        assertCouchbaseCall(it, 2, "Bucket.remove", bucketCouchbase.name(), span(0))
-        assertCouchbaseCall(it, 3, "Bucket.query", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.remove", bucketCouchbase.name(), null, span(0))
+        assertCouchbaseCall(it, 3, "Bucket.query", bucketCouchbase.name(), getFindAllStatememt(), span(0))
       }
     }
   }
