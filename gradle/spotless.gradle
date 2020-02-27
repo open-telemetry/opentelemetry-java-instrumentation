@@ -1,0 +1,16 @@
+apply plugin: 'com.diffplug.gradle.spotless'
+
+spotless {
+  java {
+    licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
+  }
+  groovy {
+    licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
+  }
+  scala {
+    licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
+  }
+  kotlin {
+    licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
+  }
+}
