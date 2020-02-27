@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -342,6 +343,20 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     };
   }
 
+  /*
+  Set of pairs (context holder, context class) for which we have matchers installed.
+  We use this to make sure we do not install matchers repeatedly for cases when same
+  context class is used by multiple instrumentations.
+   */
+  private static final Set<Map.Entry<String, String>> INSTALLED_CONTEXT_MATCHERS = new HashSet<>();
+
+  /** Clear set that prevents multiple matchers for same context class */
+  public static void resetContextMatchers() {
+    synchronized (INSTALLED_CONTEXT_MATCHERS) {
+      INSTALLED_CONTEXT_MATCHERS.clear();
+    }
+  }
+
   @Override
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
       AgentBuilder.Identified.Extendable builder) {
@@ -351,29 +366,50 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         /*
          * For each context store defined in a current instrumentation we create an agent builder
          * that injects necessary fields.
+         * Note: this synchronization should not have any impact on performance
+         * since this is done when agent builder is being made, it doesn't affect actual
+         * class transformation.
          */
-        builder =
-            builder
-                .type(
-                    not(isInterface()).and(safeHasSuperType(named(entry.getKey()))),
-                    instrumenter.classLoaderMatcher())
-                .and(safeToInjectFieldsMatcher())
-                // Added here instead of AgentInstaller's ignores because it's relatively
-                // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
-                .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
-                .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
+        synchronized (INSTALLED_CONTEXT_MATCHERS) {
+          // FIXME: This makes an assumption that class loader matchers for instrumenters that use
+          // same context classes should be the same - which seems reasonable, but is not checked.
+          // Addressing this properly requires some notion of 'compound intrumenters' which we
+          // currently do not have.
+          if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
+            log.debug("Skipping builder for {} {}", instrumenter.getClass().getName(), entry);
+            continue;
+          }
 
-        /*
-         * We inject helpers here as well as when instrumentation is applied to ensure that helpers
-         * are present even if instrumented classes are not loaded, but classes with state fields
-         * added are loaded (e.g. sun.net.www.protocol.https.HttpsURLConnectionImpl).
-         */
-        builder = injectHelpersIntoBootstrapClassloader(builder);
+          log.debug("Making builder for {} {}", instrumenter.getClass().getName(), entry);
+          INSTALLED_CONTEXT_MATCHERS.add(entry);
 
-        builder =
-            builder.transform(
-                getTransformerForASMVisitor(
-                    getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
+          /*
+           * For each context store defined in a current instrumentation we create an agent builder
+           * that injects necessary fields.
+           */
+          builder =
+              builder
+                  .type(
+                      not(isInterface()).and(safeHasSuperType(named(entry.getKey()))),
+                      instrumenter.classLoaderMatcher())
+                  .and(safeToInjectFieldsMatcher())
+                  // Added here instead of AgentInstaller's ignores because it's relatively
+                  // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
+                  .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
+                  .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
+
+          /*
+           * We inject helpers here as well as when instrumentation is applied to ensure that
+           * helpers are present even if instrumented classes are not loaded, but classes with state
+           * fields added are loaded (e.g. sun.net.www.protocol.https.HttpsURLConnectionImpl).
+           */
+          builder = injectHelpersIntoBootstrapClassloader(builder);
+
+          builder =
+              builder.transform(
+                  getTransformerForASMVisitor(
+                      getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
+        }
       }
     }
     return builder;
