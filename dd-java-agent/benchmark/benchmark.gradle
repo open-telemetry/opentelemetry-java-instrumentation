@@ -10,14 +10,14 @@ dependencies {
 }
 
 jmh {
-  timeUnit = 'us' // Output time unit. Available time units are: [m, s, ms, us, ns].
+  timeUnit = 'ms' // Output time unit. Available time units are: [m, s, ms, us, ns].
   benchmarkMode = ['avgt']
   timeOnIteration = '20s'
   iterations = 1 // Number of measurement iterations to do.
   fork = 1 // How many times to forks a single benchmark. Use 0 to disable forking altogether
   jvmArgs = ["-Ddd.jmxfetch.enabled=false", "-Ddd.writer.type=LoggingWriter"]
 //  jvmArgs += ["-XX:+UnlockDiagnosticVMOptions", "-XX:+DebugNonSafepoints", "-XX:StartFlightRecording=delay=5s,dumponexit=true,name=jmh-benchmark,filename=${rootDir}/dd-java-agent/benchmark/build/reports/jmh/jmh-benchmark.jfr"]
-//  jvmArgs += ["-agentpath:${rootDir}/dd-java-agent/benchmark/src/jmh/resources/libasyncProfiler.so=start,collapsed,file=${rootDir}/dd-java-agent/benchmark/build/reports/jmh/profiler.txt"]
+//  jvmArgs += ["-agentpath:${rootDir}/dd-java-agent/benchmark/src/jmh/resources/libasyncProfiler.so=start,collapsed,file=${rootDir}/dd-java-agent/benchmark/build/reports/jmh/profiler.txt".toString()]
   failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
   warmup = '5s' // Time to spend at each warmup iteration.
 //  warmupBatchSize = 10 // Warmup batch size: number of benchmark method calls per operation.

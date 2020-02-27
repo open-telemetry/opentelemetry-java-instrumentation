@@ -28,4 +28,9 @@ class SafeExtendsClassMatcher<T extends TypeDescription>
     }
     return false;
   }
+
+  @Override
+  public String toString() {
+    return "safeExtendsClass(" + matcher + ")";
+  }
 }
