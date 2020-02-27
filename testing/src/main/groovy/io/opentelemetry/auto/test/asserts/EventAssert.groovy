@@ -30,7 +30,7 @@ class EventAssert {
     clone(this)
   }
 
-  def name(String name) {
+  def eventName(String name) {
     assert event.name == name
     checked.name = true
   }
