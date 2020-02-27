@@ -1,14 +1,11 @@
 package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.skipClassLoader;
+import static io.opentelemetry.auto.tooling.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
-import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static net.bytebuddy.matcher.ElementMatchers.nameContains;
-import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
@@ -22,10 +19,10 @@ import java.util.ServiceLoader;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
+import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
@@ -73,89 +70,30 @@ public class AgentInstaller {
 
     INSTRUMENTATION = inst;
 
+    addByteBuddyRawSetting();
+
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-            .with(new RedefinitionLoggingListener())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
-            .with(new TransformLoggingListener())
             .with(new ClassLoadListener())
             .with(AgentTooling.locationStrategy())
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
-            // Unlikely to ever need to instrument an annotation:
-            .or(ElementMatchers.<TypeDescription>isAnnotation())
-            // Unlikely to ever need to instrument an enum:
-            .or(ElementMatchers.<TypeDescription>isEnum())
-            .or(
-                nameStartsWith("io.opentelemetry.auto.")
-                    // FIXME: We should remove this once
-                    // https://github.com/raphw/byte-buddy/issues/558 is fixed
-                    .and(
-                        not(
-                            named(
-                                    "io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper")
-                                .or(
-                                    named(
-                                        "io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableWrapper")))))
-            .or(nameStartsWith("io.opentelemetry.auto.slf4j."))
-            .or(nameStartsWith("net.bytebuddy."))
-            .or(
-                nameStartsWith("java.")
-                    .and(
-                        not(
-                            named("java.net.URL")
-                                .or(named("java.net.HttpURLConnection"))
-                                .or(nameStartsWith("java.rmi."))
-                                .or(nameStartsWith("java.util.concurrent."))
-                                .or(
-                                    nameStartsWith("java.util.logging.")
-                                        // Concurrent instrumentation modifies the strucutre of
-                                        // Cleaner class incompaibly with java9+ modules.
-                                        // Working around until a long-term fix for modules can be
-                                        // put in place.
-                                        .and(not(named("java.util.logging.LogManager$Cleaner")))))))
-            .or(
-                nameStartsWith("com.sun.")
-                    .and(
-                        not(
-                            nameStartsWith("com.sun.messaging.")
-                                .or(nameStartsWith("com.sun.jersey.api.client")))))
-            .or(
-                nameStartsWith("sun.")
-                    .and(
-                        not(
-                            nameStartsWith("sun.net.www.protocol.")
-                                .or(nameStartsWith("sun.rmi.server"))
-                                .or(nameStartsWith("sun.rmi.transport"))
-                                .or(named("sun.net.www.http.HttpClient")))))
-            .or(nameStartsWith("jdk."))
-            .or(nameStartsWith("org.aspectj."))
-            .or(nameStartsWith("org.groovy."))
-            .or(nameStartsWith("org.codehaus.groovy.macro."))
-            .or(nameStartsWith("com.intellij.rt.debugger."))
-            .or(nameStartsWith("com.p6spy."))
-            .or(nameStartsWith("com.newrelic."))
-            .or(nameStartsWith("com.dynatrace."))
-            .or(nameStartsWith("com.jloadtrace."))
-            .or(nameStartsWith("com.appdynamics."))
-            .or(nameStartsWith("com.singularity."))
-            .or(nameStartsWith("com.jinspired."))
-            .or(nameStartsWith("org.jinspired."))
-            .or(nameStartsWith("org.apache.log4j.").and(not(named("org.apache.log4j.MDC"))))
-            .or(nameStartsWith("org.slf4j.").and(not(named("org.slf4j.MDC"))))
-            .or(nameContains("$JaxbAccessor"))
-            .or(nameContains("CGLIB$$"))
-            .or(nameContains("javassist"))
-            .or(nameContains(".asm."))
-            .or(nameContains("$__sisu"))
-            .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
-            .or(isAnnotatedWith(named("javax.decorator.Decorator")))
+            .or(globalIgnoresMatcher())
             .or(matchesConfiguredExcludes());
+
+    if (log.isDebugEnabled()) {
+      agentBuilder =
+          agentBuilder
+              .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+              .with(new RedefinitionLoggingListener())
+              .with(new TransformLoggingListener());
+    }
 
     for (final AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
@@ -175,6 +113,23 @@ public class AgentInstaller {
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
     return agentBuilder.installOn(inst);
+  }
+
+  private static void addByteBuddyRawSetting() {
+    final String savedPropertyValue = System.getProperty(TypeDefinition.RAW_TYPES_PROPERTY);
+    try {
+      System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, "true");
+      final boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES;
+      if (!rawTypes) {
+        log.debug("Too late to enable {}", TypeDefinition.RAW_TYPES_PROPERTY);
+      }
+    } finally {
+      if (savedPropertyValue == null) {
+        System.clearProperty(TypeDefinition.RAW_TYPES_PROPERTY);
+      } else {
+        System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, savedPropertyValue);
+      }
+    }
   }
 
   private static ElementMatcher.Junction<Object> matchesConfiguredExcludes() {

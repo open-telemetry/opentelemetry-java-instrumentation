@@ -88,7 +88,6 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (conn) {
-      1 * span.setAttribute(Tags.PEER_HOSTNAME, "test-host")
       1 * span.setAttribute(Tags.PEER_PORT, 555)
       if (ipv4) {
         1 * span.setAttribute(Tags.PEER_HOST_IPV4, "10.0.0.1")
@@ -101,9 +100,9 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     where:
     ipv4  | conn
     null  | null
-    null  | [host: "test-host", ip: null, port: 555]
-    true  | [host: "test-host", ip: "10.0.0.1", port: 555]
-    false | [host: "test-host", ip: "3ffe:1900:4545:3:200:f8ff:fe21:67cf", port: 555]
+    null  | [ip: null, port: 555]
+    true  | [ip: "10.0.0.1", port: 555]
+    false | [ip: "3ffe:1900:4545:3:200:f8ff:fe21:67cf", port: 555]
   }
 
   def "test onResponse"() {
@@ -172,11 +171,6 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       @Override
       protected URI url(Map m) {
         return m.url
-      }
-
-      @Override
-      protected String peerHostname(Map m) {
-        return m.host
       }
 
       @Override

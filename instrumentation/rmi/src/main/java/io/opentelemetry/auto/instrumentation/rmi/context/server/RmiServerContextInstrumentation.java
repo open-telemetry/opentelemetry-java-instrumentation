@@ -1,7 +1,7 @@
 package io.opentelemetry.auto.instrumentation.rmi.context.server;
 
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -28,7 +28,7 @@ public class RmiServerContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("sun.rmi.transport.ObjectTable")));
+    return not(isInterface()).and(safeExtendsClass(named("sun.rmi.transport.ObjectTable")));
   }
 
   @Override

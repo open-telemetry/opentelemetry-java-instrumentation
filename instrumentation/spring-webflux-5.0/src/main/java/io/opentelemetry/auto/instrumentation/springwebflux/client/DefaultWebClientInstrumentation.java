@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -37,7 +37,7 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return safeHasSuperType(
+    return safeHasInterface(
         named("org.springframework.web.reactive.function.client.ExchangeFunction"));
   }
 

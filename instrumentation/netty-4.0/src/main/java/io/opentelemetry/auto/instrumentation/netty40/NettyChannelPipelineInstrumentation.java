@@ -1,6 +1,6 @@
 package io.opentelemetry.auto.instrumentation.netty40;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -48,7 +48,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("io.netty.channel.ChannelPipeline")));
+    return not(isInterface()).and(safeHasInterface(named("io.netty.channel.ChannelPipeline")));
   }
 
   @Override

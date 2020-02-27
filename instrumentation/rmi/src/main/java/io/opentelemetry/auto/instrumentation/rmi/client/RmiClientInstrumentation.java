@@ -2,7 +2,7 @@ package io.opentelemetry.auto.instrumentation.rmi.client;
 
 import static io.opentelemetry.auto.instrumentation.rmi.client.RmiClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rmi.client.RmiClientDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -32,7 +32,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("sun.rmi.server.UnicastRef")));
+    return not(isInterface()).and(safeExtendsClass(named("sun.rmi.server.UnicastRef")));
   }
 
   @Override

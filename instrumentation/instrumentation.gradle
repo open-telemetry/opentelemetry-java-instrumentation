@@ -142,5 +142,9 @@ shadowJar {
 
   // this is for instrumentation on opentelemetry-api itself
   relocate "unshaded.io.opentelemetry", "io.opentelemetry"
+
+  // this is for instrumentation on logback
+  relocate "unshaded.ch.qos.logback", "ch.qos.logback"
+  relocate "unshaded.org.slf4j", "org.slf4j"
 }
 

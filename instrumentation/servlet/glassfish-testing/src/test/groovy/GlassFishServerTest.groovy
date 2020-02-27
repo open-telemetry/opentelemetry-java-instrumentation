@@ -18,7 +18,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 /**
  * Unfortunately because we're using an embedded GlassFish instance, we aren't exercising the standard
- * OSGi setup that required {@link io.opentelemetry.auto.instrumentation.glassfish.GlassFishInstrumentation}.
+ * OSGi setup that requires {@link io.opentelemetry.auto.instrumentation.classloading.ClassloadingInstrumentation}.
  */
 // TODO: Figure out a better way to test with OSGi included.
 class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
@@ -97,7 +97,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Long
         "$Tags.HTTP_STATUS" endpoint.status

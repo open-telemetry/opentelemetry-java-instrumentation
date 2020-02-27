@@ -4,7 +4,8 @@ import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -33,7 +34,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("com.sun.jersey.api.client.ClientHandler"));
+    return safeHasInterface(named("com.sun.jersey.api.client.ClientHandler"));
   }
 
   @Override
@@ -53,8 +54,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         named("handle")
             .and(
                 takesArgument(
-                    0, safeHasSuperType(named("com.sun.jersey.api.client.ClientRequest"))))
-            .and(returns(safeHasSuperType(named("com.sun.jersey.api.client.ClientResponse")))),
+                    0, safeExtendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
+            .and(returns(safeExtendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
         JaxRsClientV1Instrumentation.class.getName() + "$HandleAdvice");
   }
 

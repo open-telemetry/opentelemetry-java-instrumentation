@@ -12,7 +12,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.TimeUnit
 
@@ -44,27 +43,19 @@ class GrpcTest extends AgentTestRunner {
     response.message == "Hello $name"
 
     assertTraces(1) {
-      trace(0, 4) {
-        sortSpans {
-          // sort for consistent ordering
-          List<SpanData> serverMessages = new ArrayList<>()
-          for (SpanData span : spans) {
-            if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
-              serverMessages.add(span)
-            }
-            if (span.name == "grpc.server" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
-              serverMessages.add(0, span)
-            }
-          }
-          // move the server messages to the end
-          spans.removeAll(serverMessages)
-          spans.addAll(serverMessages)
-        }
+      trace(0, 2) {
         span(0) {
           operationName "grpc.client"
           spanKind CLIENT
           parent()
           errored false
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
@@ -73,37 +64,22 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "grpc.message"
-          spanKind CLIENT
-          childOf span(0)
-          errored false
-          tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.COMPONENT" "grpc-client"
-            "message.type" "example.Helloworld\$Response"
-          }
-        }
-        span(2) {
           operationName "grpc.server"
           spanKind SERVER
           childOf span(0)
           errored false
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "status.code" "OK"
-          }
-        }
-        span(3) {
-          operationName "grpc.message"
-          spanKind SERVER
-          childOf span(2)
-          errored false
-          tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.COMPONENT" "grpc-server"
-            "message.type" "example.Helloworld\$Request"
           }
         }
       }
@@ -139,7 +115,7 @@ class GrpcTest extends AgentTestRunner {
     thrown StatusRuntimeException
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           operationName "grpc.client"
           spanKind CLIENT
@@ -158,6 +134,13 @@ class GrpcTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(0)
           errored true
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
@@ -167,17 +150,6 @@ class GrpcTest extends AgentTestRunner {
             if (status.cause != null) {
               errorTags status.cause.class, status.cause.message
             }
-          }
-        }
-        span(2) {
-          operationName "grpc.message"
-          spanKind SERVER
-          childOf span(1)
-          errored false
-          tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.COMPONENT" "grpc-server"
-            "message.type" "example.Helloworld\$Request"
           }
         }
       }
@@ -219,7 +191,7 @@ class GrpcTest extends AgentTestRunner {
     thrown StatusRuntimeException
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           operationName "grpc.client"
           spanKind CLIENT
@@ -237,22 +209,18 @@ class GrpcTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(0)
           errored true
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             errorTags error.class, error.message
-          }
-        }
-        span(2) {
-          operationName "grpc.message"
-          spanKind SERVER
-          childOf span(1)
-          errored false
-          tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-            "$Tags.COMPONENT" "grpc-server"
-            "message.type" "example.Helloworld\$Request"
           }
         }
       }
