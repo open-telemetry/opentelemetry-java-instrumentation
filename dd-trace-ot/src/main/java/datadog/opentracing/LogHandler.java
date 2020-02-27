@@ -2,7 +2,7 @@ package datadog.opentracing;
 
 import java.util.Map;
 
-public interface LogsHandler {
+public interface LogHandler {
 
   /**
    * Handles the log implementation in the Span.

@@ -51,7 +51,7 @@ public class DDSpan implements Span, MutableSpan {
   private final AtomicLong durationNano = new AtomicLong();
 
   /** Delegates to for handling the logs if present. */
-  private final LogsHandler logsHandler;
+  private final LogHandler logHandler;
 
   /** Implementation detail. Stores the weak reference to this span. Used by TraceCollection. */
   volatile WeakReference<DDSpan> ref;
@@ -63,7 +63,7 @@ public class DDSpan implements Span, MutableSpan {
    * @param context the context used for the span
    */
   DDSpan(final long timestampMicro, final DDSpanContext context) {
-    this(timestampMicro, context, null);
+    this(timestampMicro, context, new DefaultLogHandler());
   }
 
   /**
@@ -71,11 +71,11 @@ public class DDSpan implements Span, MutableSpan {
    *
    * @param timestampMicro if greater than zero, use this time instead of the current time
    * @param context the context used for the span
-   * @param logsHandler as the handler where to delegate the log actions
+   * @param logHandler as the handler where to delegate the log actions
    */
-  DDSpan(final long timestampMicro, final DDSpanContext context, final LogsHandler logsHandler) {
+  DDSpan(final long timestampMicro, final DDSpanContext context, final LogHandler logHandler) {
     this.context = context;
-    this.logsHandler = logsHandler;
+    this.logHandler = logHandler;
 
     if (timestampMicro <= 0L) {
       // record the start time
@@ -242,11 +242,8 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final Map<String, ?> map) {
-    if (!extractError(map) && logsHandler != null) {
-      logsHandler.log(map);
-    } else {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
+    extractError(map);
+    logHandler.log(map);
     return this;
   }
 
@@ -255,11 +252,8 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final long l, final Map<String, ?> map) {
-    if (!extractError(map) && logsHandler != null) {
-      logsHandler.log(l, map);
-    } else {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
+    extractError(map);
+    logHandler.log(l, map);
     return this;
   }
 
@@ -268,11 +262,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final String s) {
-    if (logsHandler != null) {
-      logsHandler.log(s);
-    } else {
-      log.debug("`log` method is not implemented. Provided log: {}", s);
-    }
+    logHandler.log(s);
     return this;
   }
 
@@ -281,11 +271,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final long l, final String s) {
-    if (logsHandler != null) {
-      logsHandler.log(l, s);
-    } else {
-      log.debug("`log` method is not implemented. Provided log: {}", s);
-    }
+    logHandler.log(l, s);
     return this;
   }
 

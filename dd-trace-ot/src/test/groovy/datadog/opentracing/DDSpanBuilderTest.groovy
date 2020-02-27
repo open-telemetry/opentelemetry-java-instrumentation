@@ -480,7 +480,7 @@ class DDSpanBuilderTest extends DDSpecification {
     "a:1,b-c:d"   | [a: "1", "b-c": "d"]
   }
 
-  def "sanity test for logs if logsHandler is null"() {
+  def "sanity test for logs if logHandler is null"() {
     setup:
     final String expectedName = "fakeName"
 
@@ -502,13 +502,13 @@ class DDSpanBuilderTest extends DDSpecification {
 
   def "should delegate simple logs to logHandler"() {
     setup:
-    final LogsHandler logsHandler = new TestLogsHandler()
+    final LogHandler logHandler = new TestLogHandler()
     final String expectedName = "fakeName"
 
     final DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withLogsHandler(logsHandler)
+        .withLogHandler(logHandler)
         .withServiceName("foo")
         .start()
     final String expectedLogEvent = "fakeEvent"
@@ -516,56 +516,56 @@ class DDSpanBuilderTest extends DDSpecification {
     span.log(timeStamp, expectedLogEvent)
 
     expect:
-    logsHandler.assertLogCalledWithArgs(timeStamp, expectedLogEvent)
+    logHandler.assertLogCalledWithArgs(timeStamp, expectedLogEvent)
   }
 
   def "should delegate simple logs with timestamp to logHandler"() {
     setup:
-    final LogsHandler logsHandler = new TestLogsHandler()
+    final LogHandler logHandler = new TestLogHandler()
     final String expectedName = "fakeName"
 
     final DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withLogsHandler(logsHandler)
+        .withLogHandler(logHandler)
         .withServiceName("foo")
         .start()
     final String expectedLogEvent = "fakeEvent"
     span.log(expectedLogEvent)
 
     expect:
-    logsHandler.assertLogCalledWithArgs(expectedLogEvent)
+    logHandler.assertLogCalledWithArgs(expectedLogEvent)
 
   }
 
   def "should delegate logs with fields to logHandler"() {
     setup:
-    final LogsHandler logsHandler = new TestLogsHandler()
+    final LogHandler logHandler = new TestLogHandler()
     final String expectedName = "fakeName"
 
     final DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withLogsHandler(logsHandler)
+        .withLogHandler(logHandler)
         .withServiceName("foo")
         .start()
     final Map<String, String> fieldsMap = new HashMap<>()
     span.log(fieldsMap)
 
     expect:
-    logsHandler.assertLogCalledWithArgs(fieldsMap)
+    logHandler.assertLogCalledWithArgs(fieldsMap)
 
   }
 
   def "should delegate logs with fields and timestamp to logHandler"() {
     setup:
-    final LogsHandler logsHandler = new TestLogsHandler()
+    final LogHandler logHandler = new TestLogHandler()
     final String expectedName = "fakeName"
 
     final DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withLogsHandler(logsHandler)
+        .withLogHandler(logHandler)
         .withServiceName("foo")
         .start()
     final Map<String, String> fieldsMap = new HashMap<>()
@@ -573,11 +573,24 @@ class DDSpanBuilderTest extends DDSpecification {
     span.log(timeStamp, fieldsMap)
 
     expect:
-    logsHandler.assertLogCalledWithArgs(timeStamp, fieldsMap)
+    logHandler.assertLogCalledWithArgs(timeStamp, fieldsMap)
 
   }
 
-  private static class TestLogsHandler implements LogsHandler {
+  def "test assertion not null LogHandler"() {
+    setup:
+    final String expectedName = "fakeName"
+
+    when:
+      tracer
+        .buildSpan(expectedName)
+        .withLogHandler(null)
+
+    then:
+    thrown(AssertionError)
+  }
+
+  private static class TestLogHandler implements LogHandler {
     Object[] arguments = null
 
     @Override
