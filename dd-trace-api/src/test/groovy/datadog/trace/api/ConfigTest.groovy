@@ -56,6 +56,7 @@ import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SERVICE_TAG
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.SPLIT_BY_TAGS
+import static datadog.trace.api.Config.TAGS
 import static datadog.trace.api.Config.TRACE_AGENT_PORT
 import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_RATE_LIMIT
@@ -76,8 +77,11 @@ class ConfigTest extends DDSpecification {
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
   private static final DD_SERVICE_MAPPING_ENV = "DD_SERVICE_MAPPING"
-  private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
-  private static final DD_HEADER_TAGS_ENV = "DD_HEADER_TAGS"
+  private static final DD_TAGS_ENV = "DD_TAGS"
+  private static final DD_GLOBAL_TAGS_ENV = "DD_TRACE_GLOBAL_TAGS"
+  private static final DD_SPAN_TAGS_ENV = "DD_TRACE_SPAN_TAGS"
+  private static final DD_HEADER_TAGS_ENV = "DD_TRACE_HEADER_TAGS"
+  private static final DD_JMX_TAGS_ENV = "DD_TRACE_JMX_TAGS"
   private static final DD_PROPAGATION_STYLE_EXTRACT = "DD_PROPAGATION_STYLE_EXTRACT"
   private static final DD_PROPAGATION_STYLE_INJECT = "DD_PROPAGATION_STYLE_INJECT"
   private static final DD_JMXFETCH_METRICS_CONFIGS_ENV = "DD_JMXFETCH_METRICS_CONFIGS"
@@ -85,8 +89,9 @@ class ConfigTest extends DDSpecification {
   private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
   private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
 
-  private static final DD_PROFILING_API_KEY = "DD_PROFILING_API_KEY"
-  private static final DD_PROFILING_API_KEY_OLD = "DD_PROFILING_APIKEY"
+  private static final DD_PROFILING_API_KEY_ENV = "DD_PROFILING_API_KEY"
+  private static final DD_PROFILING_API_KEY_OLD_ENV = "DD_PROFILING_APIKEY"
+  private static final DD_PROFILING_TAGS_ENV = "DD_PROFILING_TAGS"
 
   def "verify defaults"() {
     when:
@@ -379,7 +384,7 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
     environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
     environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
-    environmentVariables.set(DD_PROFILING_API_KEY, "test-api-key")
+    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "test-api-key")
 
     when:
     def config = new Config()
@@ -990,7 +995,7 @@ class ConfigTest extends DDSpecification {
 
   def "verify api key loaded from file: #path"() {
     setup:
-    environmentVariables.set(DD_PROFILING_API_KEY, "default-api-key")
+    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "default-api-key")
     System.setProperty(PREFIX + PROFILING_API_KEY_FILE, path)
 
     when:
@@ -1007,7 +1012,7 @@ class ConfigTest extends DDSpecification {
 
   def "verify api key loaded from file for old option name: #path"() {
     setup:
-    environmentVariables.set(DD_PROFILING_API_KEY_OLD, "default-api-key")
+    environmentVariables.set(DD_PROFILING_API_KEY_OLD_ENV, "default-api-key")
     System.setProperty(PREFIX + PROFILING_API_KEY_FILE_OLD, path)
 
     when:
@@ -1032,5 +1037,66 @@ class ConfigTest extends DDSpecification {
 
     then:
     config.profilingApiKey == "test-api-key"
+  }
+
+  def "verify dd.tags overrides global tags in properties"() {
+    setup:
+    def prop = new Properties()
+    prop.setProperty(TAGS, "a:1")
+    prop.setProperty(GLOBAL_TAGS, "b:2")
+    prop.setProperty(SPAN_TAGS, "c:3")
+    prop.setProperty(JMX_TAGS, "d:4")
+    prop.setProperty(HEADER_TAGS, "e:5")
+    prop.setProperty(PROFILING_TAGS, "f:6")
+
+    when:
+    Config config = Config.get(prop)
+
+    then:
+    config.mergedSpanTags == [a: "1", c: "3"]
+    config.mergedJmxTags == [a: "1", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
+    config.headerTags == [e: "5"]
+
+    config.mergedProfilingTags == [a: "1", f: "6", (HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+  }
+
+  def "verify dd.tags overrides global tags in system properties"() {
+    setup:
+    System.setProperty(PREFIX + TAGS, "a:1")
+    System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
+    System.setProperty(PREFIX + SPAN_TAGS, "c:3")
+    System.setProperty(PREFIX + JMX_TAGS, "d:4")
+    System.setProperty(PREFIX + HEADER_TAGS, "e:5")
+    System.setProperty(PREFIX + PROFILING_TAGS, "f:6")
+
+    when:
+    Config config = new Config()
+
+    then:
+    config.mergedSpanTags == [a: "1", c: "3"]
+    config.mergedJmxTags == [a: "1", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
+    config.headerTags == [e: "5"]
+
+    config.mergedProfilingTags == [a: "1", f: "6", (HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+  }
+
+  def "verify dd.tags overrides global tags in env variables"() {
+    setup:
+    environmentVariables.set(DD_TAGS_ENV, "a:1")
+    environmentVariables.set(DD_GLOBAL_TAGS_ENV, "b:2")
+    environmentVariables.set(DD_SPAN_TAGS_ENV, "c:3")
+    environmentVariables.set(DD_JMX_TAGS_ENV, "d:4")
+    environmentVariables.set(DD_HEADER_TAGS_ENV, "e:5")
+    environmentVariables.set(DD_PROFILING_TAGS_ENV, "f:6")
+
+    when:
+    Config config = new Config()
+
+    then:
+    config.mergedSpanTags == [a: "1", c: "3"]
+    config.mergedJmxTags == [a: "1", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
+    config.headerTags == [e: "5"]
+
+    config.mergedProfilingTags == [a: "1", f: "6", (HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
   }
 }

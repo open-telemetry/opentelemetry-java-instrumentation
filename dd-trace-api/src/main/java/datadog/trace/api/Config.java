@@ -58,6 +58,8 @@ public class Config {
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String SERVICE_MAPPING = "service.mapping";
 
+  public static final String TAGS = "tags";
+  @Deprecated // Use dd.tags instead
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
@@ -211,7 +213,8 @@ public class Config {
   @Getter private final boolean prioritySamplingEnabled;
   @Getter private final boolean traceResolverEnabled;
   @Getter private final Map<String, String> serviceMapping;
-  private final Map<String, String> globalTags;
+  private final Map<String, String> tags;
+  @Deprecated private final Map<String, String> globalTags;
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final List<String> excludedClasses;
@@ -303,6 +306,7 @@ public class Config {
         getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
     serviceMapping = getMapSettingFromEnvironment(SERVICE_MAPPING, null);
 
+    tags = getMapSettingFromEnvironment(TAGS, null);
     globalTags = getMapSettingFromEnvironment(GLOBAL_TAGS, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
@@ -485,6 +489,7 @@ public class Config {
         getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
     serviceMapping = getPropertyMapValue(properties, SERVICE_MAPPING, parent.serviceMapping);
 
+    tags = getPropertyMapValue(properties, TAGS, parent.tags);
     globalTags = getPropertyMapValue(properties, GLOBAL_TAGS, parent.globalTags);
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
@@ -638,9 +643,9 @@ public class Config {
   }
 
   public Map<String, String> getMergedSpanTags() {
-    // DO not include runtimeId into span tags: we only want that added to the root span
-    final Map<String, String> result = newHashMap(globalTags.size() + spanTags.size());
-    result.putAll(globalTags);
+    // Do not include runtimeId into span tags: we only want that added to the root span
+    final Map<String, String> result = newHashMap(getGlobalTags().size() + spanTags.size());
+    result.putAll(getGlobalTags());
     result.putAll(spanTags);
     return Collections.unmodifiableMap(result);
   }
@@ -649,8 +654,8 @@ public class Config {
     final Map<String, String> runtimeTags = getRuntimeTags();
     final Map<String, String> result =
         newHashMap(
-            globalTags.size() + jmxTags.size() + runtimeTags.size() + 1 /* for serviceName */);
-    result.putAll(globalTags);
+            getGlobalTags().size() + jmxTags.size() + runtimeTags.size() + 1 /* for serviceName */);
+    result.putAll(getGlobalTags());
     result.putAll(jmxTags);
     result.putAll(runtimeTags);
     // service name set here instead of getRuntimeTags because apm already manages the service tag
@@ -665,12 +670,12 @@ public class Config {
     final String host = getHostName();
     final Map<String, String> result =
         newHashMap(
-            globalTags.size()
+            getGlobalTags().size()
                 + profilingTags.size()
                 + runtimeTags.size()
                 + 3 /* for serviceName and host and language */);
     result.put(HOST_TAG, host); // Host goes first to allow to override it
-    result.putAll(globalTags);
+    result.putAll(getGlobalTags());
     result.putAll(profilingTags);
     result.putAll(runtimeTags);
     // service name set here instead of getRuntimeTags because apm already manages the service tag
@@ -692,6 +697,14 @@ public class Config {
       }
     }
     return DEFAULT_ANALYTICS_SAMPLE_RATE;
+  }
+
+  /**
+   * Provide 'global' tags, i.e. tags set everywhere. We have to support old (dd.trace.global.tags)
+   * version of this setting if new (dd.tags) version has not been specified.
+   */
+  private Map<String, String> getGlobalTags() {
+    return tags.isEmpty() ? globalTags : tags;
   }
 
   /**
