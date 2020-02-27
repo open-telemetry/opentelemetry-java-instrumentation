@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -37,7 +37,8 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return hasInterface(named("org.springframework.web.reactive.function.client.ExchangeFunction"));
+    return implementsInterface(
+        named("org.springframework.web.reactive.function.client.ExchangeFunction"));
   }
 
   @Override

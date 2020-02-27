@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.play26;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -22,7 +22,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return hasInterface(named("play.api.mvc.Action"));
+    return implementsInterface(named("play.api.mvc.Action"));
   }
 
   @Override
