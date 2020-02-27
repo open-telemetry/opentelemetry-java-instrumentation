@@ -89,7 +89,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       }
       CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
 
-      result = Observable.create(new CouchbaseOnSubscribe(result, method, null));
+      result = Observable.create(new CouchbaseOnSubscribe(result, method, null, null));
     }
   }
 }

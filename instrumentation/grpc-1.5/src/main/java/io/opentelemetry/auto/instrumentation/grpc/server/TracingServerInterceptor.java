@@ -29,8 +29,12 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TracingServerInterceptor implements ServerInterceptor {
 
@@ -104,6 +108,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
   static final class TracingServerCallListener<ReqT>
       extends ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT> {
     private final Span span;
+    private final AtomicInteger messageId = new AtomicInteger();
 
     TracingServerCallListener(final Span span, final ServerCall.Listener<ReqT> delegate) {
       super(delegate);
@@ -112,26 +117,12 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onMessage(final ReqT message) {
-      final Span span =
-          TRACER
-              .spanBuilder("grpc.message")
-              .setSpanKind(SERVER)
-              .setParent(this.span.getContext())
-              .startSpan();
-      span.setAttribute("message.type", message.getClass().getName());
-      DECORATE.afterStart(span);
-      final Scope scope = TRACER.withSpan(span);
-      try {
+      final Map<String, AttributeValue> attributes = new HashMap<>();
+      attributes.put("message.type", AttributeValue.stringAttributeValue("RECEIVED"));
+      attributes.put("message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
+      span.addEvent("message", attributes);
+      try (final Scope scope = TRACER.withSpan(span)) {
         delegate().onMessage(message);
-      } catch (final Throwable e) {
-        DECORATE.onError(span, e);
-        DECORATE.beforeFinish(this.span);
-        this.span.end();
-        throw e;
-      } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
-        scope.close();
       }
     }
 

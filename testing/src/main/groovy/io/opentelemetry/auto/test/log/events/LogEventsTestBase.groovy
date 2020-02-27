@@ -62,7 +62,7 @@ abstract class LogEventsTestBase extends AgentTestRunner {
           operationName "test"
           if (capture) {
             event(0) {
-              name "xyz"
+              eventName "xyz"
               attributes {
                 "level" testMethod.toUpperCase()
                 "loggerName" "abc"
