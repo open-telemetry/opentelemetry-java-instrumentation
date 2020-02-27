@@ -9,7 +9,7 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
   // Of the class hierarchy of these tests
-  static void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, String dbStatement = null, Object parentSpan = null) {
+  static void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object dbStatement = null, Object parentSpan = null) {
     trace.span(index) {
       operationName "couchbase.call"
       spanKind CLIENT
