@@ -10,7 +10,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.sdk.trace.SpanData
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -86,22 +85,7 @@ class GrpcStreamingTest extends AgentTestRunner {
     error.get() == null
 
     assertTraces(1) {
-      trace(0, clientMessageCount * serverMessageCount + 1 + clientMessageCount + 1) {
-        sortSpans {
-          // sort for consistent ordering
-          List<SpanData> serverMessages = new ArrayList<>()
-          for (SpanData span : spans) {
-            if (span.name == "grpc.message" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
-              serverMessages.add(span)
-            }
-            if (span.name == "grpc.server" && span.attributes[Tags.COMPONENT].stringValue == "grpc-server") {
-              serverMessages.add(0, span)
-            }
-          }
-          // move the server messages to the end
-          spans.removeAll(serverMessages)
-          spans.addAll(serverMessages)
-        }
+      trace(0, 2) {
         span(0) {
           operationName "grpc.client"
           spanKind CLIENT
@@ -113,22 +97,18 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "OK"
           }
-        }
-        (1..(clientMessageCount * serverMessageCount)).each {
-          println it
-          span(it) {
-            operationName "grpc.message"
-            spanKind CLIENT
-            childOf span(0)
-            errored false
-            tags {
-              "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-              "$Tags.COMPONENT" "grpc-client"
-              "message.type" "example.Helloworld\$Response"
+          (1..(clientMessageCount * serverMessageCount)).each {
+            def messageId = it
+            event(it - 1) {
+              eventName "message"
+              attributes {
+                "message.type" "SENT"
+                "message.id" messageId
+              }
             }
           }
         }
-        span(clientMessageCount * serverMessageCount + 1) {
+        span(1) {
           operationName "grpc.server"
           spanKind SERVER
           childOf span(0)
@@ -139,17 +119,14 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-server"
             "status.code" "OK"
           }
-        }
-        clientRange.each {
-          span(clientMessageCount * serverMessageCount + 1 + it) {
-            operationName "grpc.message"
-            spanKind SERVER
-            childOf span(clientMessageCount * serverMessageCount + 1)
-            errored false
-            tags {
-              "$MoreTags.SPAN_TYPE" SpanTypes.RPC
-              "$Tags.COMPONENT" "grpc-server"
-              "message.type" "example.Helloworld\$Response"
+          clientRange.each {
+            def messageId = it
+            event(it - 1) {
+              eventName "message"
+              attributes {
+                "message.type" "RECEIVED"
+                "message.id" messageId
+              }
             }
           }
         }
