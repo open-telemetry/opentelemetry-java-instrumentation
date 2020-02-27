@@ -61,9 +61,6 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
     applicationContext = new AnnotationConfigApplicationContext(CouchbaseConfig)
     repo = applicationContext.getBean(DocRepository)
-    \
-
-
   }
 
   def cleanupSpec() {
