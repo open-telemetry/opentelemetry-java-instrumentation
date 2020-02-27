@@ -7,23 +7,25 @@ import datadog.trace.agent.tooling.bytebuddy.matcher.testclasses.F
 import datadog.trace.agent.tooling.bytebuddy.matcher.testclasses.G
 import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.description.type.TypeDescription
+import net.bytebuddy.jar.asm.Opcodes
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface
 import static net.bytebuddy.matcher.ElementMatchers.named
 
-class SafeHasInterfaceMatcherTest extends DDSpecification {
+class ImplementsInterfaceMatcherTest extends DDSpecification {
 
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
-    hasInterface(matcher).matches(argument) == result
+    implementsInterface(matcher).matches(argument) == result
 
     where:
     matcherClass | type | result
-    A            | A    | true
-    A            | B    | true
+    A            | A    | false
+    A            | B    | false
     B            | A    | false
-    A            | E    | true
+    A            | E    | false
     A            | F    | true
+    A            | G    | true
     F            | A    | false
     F            | F    | false
     F            | G    | false
@@ -36,7 +38,7 @@ class SafeHasInterfaceMatcherTest extends DDSpecification {
     setup:
     def type = Mock(TypeDescription)
     def typeGeneric = Mock(TypeDescription.Generic)
-    def matcher = hasInterface(named(Object.name))
+    def matcher = implementsInterface(named(Object.name))
 
     when:
     def result = matcher.matches(type)
@@ -44,6 +46,7 @@ class SafeHasInterfaceMatcherTest extends DDSpecification {
     then:
     !result // default to false
     noExceptionThrown()
+    1 * type.getModifiers() >> Opcodes.ACC_ABSTRACT
     1 * type.isInterface() >> true
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }

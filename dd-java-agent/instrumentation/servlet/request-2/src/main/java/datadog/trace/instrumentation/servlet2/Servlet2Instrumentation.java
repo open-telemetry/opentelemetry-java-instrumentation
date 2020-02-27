@@ -3,7 +3,6 @@ package datadog.trace.instrumentation.servlet2;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -43,10 +42,8 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(
-            safeHasSuperType(
-                named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet"))));
+    return safeHasSuperType(
+        named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet")));
   }
 
   @Override
