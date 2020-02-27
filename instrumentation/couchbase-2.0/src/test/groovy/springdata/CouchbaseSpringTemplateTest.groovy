@@ -73,8 +73,8 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", name, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", name, null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.get", name, null, span(0))
       }
     }
 
@@ -98,8 +98,8 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", name, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.remove", name, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", name, null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.remove", name, null, span(0))
       }
     }
 
