@@ -127,7 +127,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   @Override
   public AgentBuilder.Identified.Extendable instrumentationTransformer(
       AgentBuilder.Identified.Extendable builder) {
-    if (instrumenter.contextStore().size() > 0) {
+    if (!instrumenter.contextStore().isEmpty()) {
       /*
        * Install transformer that rewrites accesses to context store with specialized bytecode that
        * invokes appropriate storage implementation.
