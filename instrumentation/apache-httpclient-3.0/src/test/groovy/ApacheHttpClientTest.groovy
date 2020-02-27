@@ -47,7 +47,7 @@ abstract class ApacheHttpClientTest extends HttpClientTest<ApacheHttpClientDecor
 
     def statusCode = executeRequest(httpMethod, uri)
     callback?.call()
-    httpMethod.releaseConnection();
+    httpMethod.releaseConnection()
 
     return statusCode
   }
