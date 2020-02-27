@@ -127,8 +127,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   @Override
   public AgentBuilder.Identified.Extendable instrumentationTransformer(
       AgentBuilder.Identified.Extendable builder) {
-    if (instrumenter.contextStore().size() > 0) {
-      /**
+    if (!instrumenter.contextStore().isEmpty()) {
+      /*
        * Install transformer that rewrites accesses to context store with specialized bytecode that
        * invokes appropriate storage implementation.
        */
@@ -304,14 +304,14 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private AgentBuilder.Identified.Extendable injectHelpersIntoBootstrapClassloader(
       AgentBuilder.Identified.Extendable builder) {
-    /**
+    /*
      * We inject into bootstrap classloader because field accessor interfaces are needed by context
      * store implementations. Unfortunately this forces us to remove stored type checking because
      * actual classes may not be available at this point.
      */
     builder = builder.transform(fieldAccessorInterfacesInjector);
 
-    /**
+    /*
      * We inject context store implementation into bootstrap classloader because same implementation
      * may be used by different instrumentations and it has to use same static map in case of
      * fallback to map-backed storage.
@@ -348,7 +348,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
     if (fieldInjectionEnabled) {
       for (final Map.Entry<String, String> entry : instrumenter.contextStore().entrySet()) {
-        /**
+        /*
          * For each context store defined in a current instrumentation we create an agent builder
          * that injects necessary fields.
          */
@@ -363,7 +363,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                 .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
                 .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
 
-        /**
+        /*
          * We inject helpers here as well as when instrumentation is applied to ensure that helpers
          * are present even if instrumented classes are not loaded, but classes with state fields
          * added are loaded (e.g. sun.net.www.protocol.https.HttpsURLConnectionImpl).
@@ -388,7 +388,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           final JavaModule module,
           final Class<?> classBeingRedefined,
           final ProtectionDomain protectionDomain) {
-        /**
+        /*
          * The idea here is that we can add fields if class is just being loaded
          * (classBeingRedefined == null) and we have to add same fields again if class we added
          * fields before is being transformed again. Note: here we assume that Class#getInterfaces()

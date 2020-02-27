@@ -217,11 +217,13 @@ public interface Instrumenter {
     public abstract Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
 
     /**
-     * A map of {class-name -> context-class-name}. Keys (and their subclasses) will be associated
-     * with a context of the value.
+     * Context stores to define for this instrumentation.
+     *
+     * <p>A map of {class-name -> context-class-name}. Keys (and their subclasses) will be
+     * associated with a context of the value.
      */
     public Map<String, String> contextStore() {
-      return Collections.EMPTY_MAP;
+      return Collections.emptyMap();
     }
 
     protected boolean defaultEnabled() {
