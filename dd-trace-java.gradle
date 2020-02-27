@@ -21,6 +21,10 @@ scmVersion {
     versionSeparator = ''
   }
 
+  createReleaseCommit true
+
+  releaseCommitMessage { version, position -> "Version ${version}" }
+
   versionIncrementer 'incrementMinor'
 
   checks {
