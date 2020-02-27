@@ -59,7 +59,7 @@ public class JavaUtilLoggingEvents {
   }
 
   private static Level getThreshold() {
-    final String level = Config.get().getLogsEventsThreshold();
+    final String level = Config.get().getLogCaptureThreshold();
     if (level == null) {
       return Level.OFF;
     }
@@ -88,7 +88,7 @@ public class JavaUtilLoggingEvents {
       case "ALL":
         return Level.ALL;
       default:
-        log.error("unexpected value for {}: {}", Config.LOGS_EVENTS_THRESHOLD, level);
+        log.error("unexpected value for {}: {}", Config.LOG_CAPTURE_THRESHOLD, level);
         return Level.OFF;
     }
   }
