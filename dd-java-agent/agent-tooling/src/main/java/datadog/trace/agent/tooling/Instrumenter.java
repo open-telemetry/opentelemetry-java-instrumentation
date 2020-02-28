@@ -23,9 +23,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatcher.Junction;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -45,6 +47,12 @@ public interface Instrumenter {
 
   @Slf4j
   abstract class Default implements Instrumenter {
+
+    // Added here instead of AgentInstaller's ignores because it's relatively
+    // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
+    public static final Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
+        not(isAnnotatedWith(named("javax.decorator.Decorator")));
+
     private final SortedSet<String> instrumentationNames;
     private final String instrumentationPrimaryName;
     private final InstrumentationContextProvider contextProvider;
@@ -83,9 +91,7 @@ public interface Instrumenter {
                       classLoaderMatcher(),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))
-              // Added here instead of AgentInstaller's ignores because it's relatively
-              // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
-              .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
+              .and(NOT_DECORATOR_MATCHER)
               .and(new MuzzleMatcher())
               .and(new PostMatchHook())
               .transform(DDTransformers.defaultTransformers());

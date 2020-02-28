@@ -2,12 +2,12 @@ package datadog.trace.agent.tooling.context;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.agent.tooling.Instrumenter.Default;
 import datadog.trace.agent.tooling.Utils;
 import datadog.trace.api.Config;
 import datadog.trace.bootstrap.ContextStore;
@@ -355,9 +355,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             builder
                 .type(safeHasSuperType(named(entry.getKey())), instrumenter.classLoaderMatcher())
                 .and(safeToInjectFieldsMatcher())
-                // Added here instead of AgentInstaller's ignores because it's relatively
-                // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
-                .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
+                .and(Default.NOT_DECORATOR_MATCHER)
                 .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
 
         /*
