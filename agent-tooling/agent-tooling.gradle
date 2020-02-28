@@ -21,13 +21,9 @@ dependencies {
 
   compile deps.opentelemetryApi
   compile deps.opentelemetrySdk
-  compileOnly deps.opentelemetryJaeger
 
   // TODO: This might have to live in opentelemetry-java
   compile project(':exporter-support')
-
-  // Needed for Jaeger exporter
-  compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
 
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy
