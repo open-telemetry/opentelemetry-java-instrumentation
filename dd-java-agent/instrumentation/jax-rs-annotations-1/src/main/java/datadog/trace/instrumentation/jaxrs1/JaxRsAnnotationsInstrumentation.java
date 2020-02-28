@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jaxrs1;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasSuperMethod;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -37,7 +36,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   // this is required to make sure instrumentation won't apply to jax-rs 2
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(classLoaderHasClasses("javax.ws.rs.container.AsyncResponse"));
+    return classLoaderHasNoResources("javax/ws/rs/container/AsyncResponse.class");
   }
 
   @Override

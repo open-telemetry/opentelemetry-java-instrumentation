@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.couchbase.client;
 
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,10 +28,8 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(
-            named("com.couchbase.client.java.cluster.DefaultAsyncClusterManager")
-                .or(named("com.couchbase.client.java.CouchbaseAsyncCluster")));
+    return named("com.couchbase.client.java.cluster.DefaultAsyncClusterManager")
+        .or(named("com.couchbase.client.java.CouchbaseAsyncCluster"));
   }
 
   @Override

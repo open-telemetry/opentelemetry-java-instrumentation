@@ -4,10 +4,8 @@ import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSp
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -36,7 +34,7 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
   public ElementMatcher<TypeDescription> typeMatcher() {
     // If we want to be more generic, we could instrument the interface instead:
     // .and(safeHasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
-    return not(isInterface()).and(named("org.elasticsearch.client.support.AbstractClient"));
+    return named("org.elasticsearch.client.support.AbstractClient");
   }
 
   @Override

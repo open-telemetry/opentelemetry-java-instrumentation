@@ -6,7 +6,11 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.lang.ref.WeakReference;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.description.annotation.AnnotationList;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.pool.TypePool;
 
@@ -93,12 +97,12 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
   }
 
-  private final TypePool.CacheProvider createCacheProvider(
+  private TypePool.CacheProvider createCacheProvider(
       final int loaderHash, final WeakReference<ClassLoader> loaderRef) {
     return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
   }
 
-  private final TypePool createCachingTypePool(
+  private TypePool createCachingTypePool(
       final int loaderHash,
       final WeakReference<ClassLoader> loaderRef,
       final ClassFileLocator classFileLocator) {
@@ -108,7 +112,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         TypePool.Default.ReaderMode.FAST);
   }
 
-  private final TypePool createCachingTypePool(
+  private TypePool createCachingTypePool(
       final TypePool.CacheProvider cacheProvider, final ClassFileLocator classFileLocator) {
     return new TypePool.Default.WithLazyResolution(
         cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
@@ -197,7 +201,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   static final class SharedResolutionCacheAdapter implements TypePool.CacheProvider {
     private static final String OBJECT_NAME = "java.lang.Object";
     private static final TypePool.Resolution OBJECT_RESOLUTION =
-        new TypePool.Resolution.Simple(TypeDescription.OBJECT);
+        new TypePool.Resolution.Simple(new CachingTypeDescription(TypeDescription.OBJECT));
 
     private final int loaderHash;
     private final WeakReference<ClassLoader> loaderRef;
@@ -228,11 +232,12 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     }
 
     @Override
-    public TypePool.Resolution register(
-        final String className, final TypePool.Resolution resolution) {
+    public TypePool.Resolution register(final String className, TypePool.Resolution resolution) {
       if (OBJECT_NAME.equals(className)) {
         return resolution;
       }
+
+      resolution = new CachingResolution(resolution);
 
       sharedResolutionCache.put(new TypeCacheKey(loaderHash, loaderRef, className), resolution);
       return resolution;
@@ -241,6 +246,92 @@ public class DDCachingPoolStrategy implements PoolStrategy {
     @Override
     public void clear() {
       // Allowing the high-level eviction policy make the clearing decisions
+    }
+  }
+
+  private static class CachingResolution implements TypePool.Resolution {
+    private final TypePool.Resolution delegate;
+    private TypeDescription cachedResolution;
+
+    public CachingResolution(final TypePool.Resolution delegate) {
+
+      this.delegate = delegate;
+    }
+
+    @Override
+    public boolean isResolved() {
+      return delegate.isResolved();
+    }
+
+    @Override
+    public TypeDescription resolve() {
+      // Intentionally not "thread safe". Duplicate work deemed an acceptable trade-off.
+      if (cachedResolution == null) {
+        cachedResolution = new CachingTypeDescription(delegate.resolve());
+      }
+      return cachedResolution;
+    }
+  }
+
+  /**
+   * TypeDescription implementation that delegates and caches the results for the expensive calls
+   * commonly used by our instrumentation.
+   */
+  private static class CachingTypeDescription
+      extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation {
+    private final TypeDescription delegate;
+
+    // These fields are intentionally not "thread safe".
+    // Duplicate work deemed an acceptable trade-off.
+    private Generic superClass;
+    private TypeList.Generic interfaces;
+    private AnnotationList annotations;
+    private MethodList<MethodDescription.InDefinedShape> methods;
+
+    public CachingTypeDescription(final TypeDescription delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    protected TypeDescription delegate() {
+      return delegate;
+    }
+
+    @Override
+    public Generic getSuperClass() {
+      if (superClass == null) {
+        superClass = delegate.getSuperClass();
+      }
+      return superClass;
+    }
+
+    @Override
+    public TypeList.Generic getInterfaces() {
+      if (interfaces == null) {
+        interfaces = delegate.getInterfaces();
+      }
+      return interfaces;
+    }
+
+    @Override
+    public AnnotationList getDeclaredAnnotations() {
+      if (annotations == null) {
+        annotations = delegate.getDeclaredAnnotations();
+      }
+      return annotations;
+    }
+
+    @Override
+    public MethodList<MethodDescription.InDefinedShape> getDeclaredMethods() {
+      if (methods == null) {
+        methods = delegate.getDeclaredMethods();
+      }
+      return methods;
+    }
+
+    @Override
+    public String getName() {
+      return delegate.getName();
     }
   }
 }

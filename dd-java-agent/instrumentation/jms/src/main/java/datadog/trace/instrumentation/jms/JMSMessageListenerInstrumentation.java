@@ -1,16 +1,14 @@
 package datadog.trace.instrumentation.jms;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
 import static datadog.trace.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -35,7 +33,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("javax.jms.MessageListener")));
+    return implementsInterface(named("javax.jms.MessageListener"));
   }
 
   @Override

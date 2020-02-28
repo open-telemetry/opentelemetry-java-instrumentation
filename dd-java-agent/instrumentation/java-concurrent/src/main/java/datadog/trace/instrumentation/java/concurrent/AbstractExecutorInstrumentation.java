@@ -1,9 +1,8 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
+import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
@@ -102,9 +101,9 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    ElementMatcher.Junction<TypeDescription> matcher = not(isInterface());
+    ElementMatcher.Junction<TypeDescription> matcher = any();
     final ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
-        hasInterface(named(Executor.class.getName()));
+        implementsInterface(named(Executor.class.getName()));
     if (!TRACE_ALL_EXECUTORS) {
       matcher =
           matcher.and(
