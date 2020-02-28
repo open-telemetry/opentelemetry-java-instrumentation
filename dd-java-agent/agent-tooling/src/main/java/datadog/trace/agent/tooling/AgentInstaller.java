@@ -7,6 +7,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
+import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.api.Config;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -52,6 +53,8 @@ public class AgentInstaller {
     INSTRUMENTATION = inst;
 
     addByteBuddyRawSetting();
+
+    FieldBackedProvider.resetContextMatchers();
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
