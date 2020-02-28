@@ -72,12 +72,10 @@ class JMS1Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 2) {
         producerSpan(it, 0, jmsResourceName)
-      }
-      trace(1, 1) {
-        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0))
       }
     }
 
@@ -274,17 +272,18 @@ class JMS1Test extends AgentTestRunner {
     }
   }
 
-  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
+  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentSpan, Object linkSpan = null) {
     trace.span(index) {
       if (messageListener) {
         operationName "jms.onMessage"
         spanKind CONSUMER
-        childOf((SpanData) parentOrLinkedSpan)
       } else {
         operationName "jms.consume"
         spanKind CLIENT
-        parent()
-        hasLink((SpanData) parentOrLinkedSpan)
+      }
+      childOf((SpanData) parentSpan)
+      if (linkSpan) {
+        hasLink((SpanData) linkSpan)
       }
       errored false
       tags {

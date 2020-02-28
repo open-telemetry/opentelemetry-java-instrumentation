@@ -30,6 +30,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,10 +99,18 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
               .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
+        SpanContext spanContext = null;
         try {
-          spanBuilder.addLink(TRACER.getHttpTextFormat().extract(message, GETTER));
+          spanContext = TRACER.getHttpTextFormat().extract(message, GETTER);
         } catch (final IllegalArgumentException e) {
           // Couldn't extract a context
+        }
+        if (spanContext != null) {
+          if (TRACER.getCurrentSpan().getContext().isValid()) {
+            spanBuilder.addLink(spanContext);
+          } else {
+            spanBuilder.setParent(spanContext);
+          }
         }
       }
       final Span span = spanBuilder.startSpan();
