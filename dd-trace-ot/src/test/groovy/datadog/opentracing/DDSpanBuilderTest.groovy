@@ -499,6 +499,23 @@ class DDSpanBuilderTest extends DDSpecification {
     span.log(timeStamp, fieldsMap)
   }
 
+  def "sanity test when passed log handler is null"() {
+    setup:
+    final String expectedName = "fakeName"
+    final DDSpan span = tracer
+      .buildSpan(expectedName)
+      .withLogHandler(null)
+      .start()
+    final String expectedLogEvent = "fakeEvent"
+    final timeStamp = System.currentTimeMillis()
+    final Map<String, String> fieldsMap = new HashMap<>()
+
+    span.log(expectedLogEvent)
+    span.log(timeStamp, expectedLogEvent)
+    span.log(fieldsMap)
+    span.log(timeStamp, fieldsMap)
+  }
+
 
   def "should delegate simple logs to logHandler"() {
     setup:
@@ -516,7 +533,7 @@ class DDSpanBuilderTest extends DDSpecification {
     span.log(timeStamp, expectedLogEvent)
 
     expect:
-    logHandler.assertLogCalledWithArgs(timeStamp, expectedLogEvent)
+    logHandler.assertLogCalledWithArgs(timeStamp, expectedLogEvent, span)
   }
 
   def "should delegate simple logs with timestamp to logHandler"() {
@@ -534,7 +551,7 @@ class DDSpanBuilderTest extends DDSpecification {
     span.log(expectedLogEvent)
 
     expect:
-    logHandler.assertLogCalledWithArgs(expectedLogEvent)
+    logHandler.assertLogCalledWithArgs(expectedLogEvent, span)
 
   }
 
@@ -553,7 +570,7 @@ class DDSpanBuilderTest extends DDSpecification {
     span.log(fieldsMap)
 
     expect:
-    logHandler.assertLogCalledWithArgs(fieldsMap)
+    logHandler.assertLogCalledWithArgs(fieldsMap, span)
 
   }
 
@@ -573,50 +590,41 @@ class DDSpanBuilderTest extends DDSpecification {
     span.log(timeStamp, fieldsMap)
 
     expect:
-    logHandler.assertLogCalledWithArgs(timeStamp, fieldsMap)
+    logHandler.assertLogCalledWithArgs(timeStamp, fieldsMap, span)
 
-  }
-
-  def "test assertion not null LogHandler"() {
-    setup:
-    final String expectedName = "fakeName"
-
-    when:
-      tracer
-        .buildSpan(expectedName)
-        .withLogHandler(null)
-
-    then:
-    thrown(AssertionError)
   }
 
   private static class TestLogHandler implements LogHandler {
     Object[] arguments = null
 
     @Override
-    void log(Map<String, ?> fields) {
-      arguments = new Object[1]
+    void log(Map<String, ?> fields, DDSpan span) {
+      arguments = new Object[2]
       arguments[0] = fields
+      arguments[1] = span
     }
 
     @Override
-    void log(long timestampMicroseconds, Map<String, ?> fields) {
-      arguments = new Object[2]
+    void log(long timestampMicroseconds, Map<String, ?> fields, DDSpan span) {
+      arguments = new Object[3]
       arguments[0] = timestampMicroseconds
       arguments[1] = fields
+      arguments[2] = span
     }
 
     @Override
-    void log(String event) {
-      arguments = new Object[1]
-      arguments[0] = event
-    }
-
-    @Override
-    void log(long timestampMicroseconds, String event) {
+    void log(String event, DDSpan span) {
       arguments = new Object[2]
+      arguments[0] = event
+      arguments[1] = span
+    }
+
+    @Override
+    void log(long timestampMicroseconds, String event, DDSpan span) {
+      arguments = new Object[3]
       arguments[0] = timestampMicroseconds
       arguments[1] = event
+      arguments[2] = span
     }
 
     boolean assertLogCalledWithArgs(Object... args) {

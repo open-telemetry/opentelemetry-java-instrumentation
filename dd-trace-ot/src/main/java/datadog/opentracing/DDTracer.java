@@ -672,8 +672,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     public DDSpanBuilder withLogHandler(final LogHandler logHandler) {
-      assert logHandler != null : "LogHandler must not be null";
-      this.logHandler = logHandler;
+      if (logHandler != null) {
+        this.logHandler = logHandler;
+      }
       return this;
     }
 

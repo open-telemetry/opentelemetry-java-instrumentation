@@ -1,8 +1,5 @@
 package datadog.opentracing;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static io.opentracing.log.Fields.MESSAGE;
-
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -158,18 +155,6 @@ public class DDSpan implements Span, MutableSpan {
     setTag(DDTags.ERROR_STACK, errorString.toString());
   }
 
-  private boolean extractError(final Map<String, ?> map) {
-    if (map.get(ERROR_OBJECT) instanceof Throwable) {
-      final Throwable error = (Throwable) map.get(ERROR_OBJECT);
-      setErrorMeta(error);
-      return true;
-    } else if (map.get(MESSAGE) instanceof String) {
-      setTag(DDTags.ERROR_MSG, (String) map.get(MESSAGE));
-      return true;
-    }
-    return false;
-  }
-
   /* (non-Javadoc)
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.String)
    */
@@ -242,8 +227,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final Map<String, ?> map) {
-    extractError(map);
-    logHandler.log(map);
+    logHandler.log(map, this);
     return this;
   }
 
@@ -252,8 +236,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final long l, final Map<String, ?> map) {
-    extractError(map);
-    logHandler.log(l, map);
+    logHandler.log(l, map, this);
     return this;
   }
 
@@ -262,7 +245,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final String s) {
-    logHandler.log(s);
+    logHandler.log(s, this);
     return this;
   }
 
@@ -271,7 +254,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final long l, final String s) {
-    logHandler.log(l, s);
+    logHandler.log(l, s, this);
     return this;
   }
 
