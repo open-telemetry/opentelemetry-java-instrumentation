@@ -139,10 +139,11 @@ public interface Instrumenter {
          */
         final ReferenceMatcher muzzle = getInstrumentationMuzzle();
         if (null != muzzle) {
-          final List<Reference.Mismatch> mismatches =
-              muzzle.getMismatchedReferenceSources(classLoader);
-          if (mismatches.size() > 0) {
+          final boolean isMatch = muzzle.matches(classLoader);
+          if (!isMatch) {
             if (log.isDebugEnabled()) {
+              final List<Reference.Mismatch> mismatches =
+                  muzzle.getMismatchedReferenceSources(classLoader);
               log.debug(
                   "Instrumentation muzzled: {} -- {} on {}",
                   instrumentationNames,
@@ -159,7 +160,7 @@ public interface Instrumenter {
                 Instrumenter.Default.this.getClass().getName(),
                 classLoader);
           }
-          return mismatches.size() == 0;
+          return isMatch;
         }
         return true;
       }
