@@ -24,6 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,12 +97,25 @@ public class Log4jSpansInstrumentation extends Instrumenter.Default {
   public static class LogAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
+    public static boolean methodEnter(
         @Advice.This final Logger logger,
         @Advice.Argument(0) final Level level,
         @Advice.Argument(4) final Message message,
         @Advice.Argument(5) final Throwable t) {
-      Log4jSpans.capture(logger, level, message, t);
+      // need to track call depth across all loggers in order to avoid double capture when one
+      // logging framework delegates to another
+      final boolean topLevel = CallDepthThreadLocalMap.incrementCallDepth("logger") == 0;
+      if (topLevel) {
+        Log4jSpans.capture(logger, level, message, t);
+      }
+      return topLevel;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(@Advice.Enter final boolean topLevel) {
+      if (topLevel) {
+        CallDepthThreadLocalMap.reset("logger");
+      }
     }
   }
 }
