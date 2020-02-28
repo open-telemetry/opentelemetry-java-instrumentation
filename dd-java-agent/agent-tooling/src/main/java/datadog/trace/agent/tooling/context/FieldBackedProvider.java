@@ -4,7 +4,6 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOAD
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -354,9 +353,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          */
         builder =
             builder
-                .type(
-                    not(isInterface()).and(safeHasSuperType(named(entry.getKey()))),
-                    instrumenter.classLoaderMatcher())
+                .type(safeHasSuperType(named(entry.getKey())), instrumenter.classLoaderMatcher())
                 .and(safeToInjectFieldsMatcher())
                 .and(Default.NOT_DECORATOR_MATCHER)
                 .transform(AgentBuilder.Transformer.NoOp.INSTANCE);

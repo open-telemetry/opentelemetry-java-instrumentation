@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.servlet.dispatcher;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
@@ -9,10 +9,8 @@ import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.servlet.ServletRequestSetter.SETTER;
 import static datadog.trace.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -46,7 +44,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("javax.servlet.RequestDispatcher")));
+    return implementsInterface(named("javax.servlet.RequestDispatcher"));
   }
 
   @Override
