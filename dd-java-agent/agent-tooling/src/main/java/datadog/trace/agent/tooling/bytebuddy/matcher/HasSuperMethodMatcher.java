@@ -5,14 +5,12 @@ import static net.bytebuddy.matcher.ElementMatchers.hasSignature;
 
 import java.util.HashSet;
 import java.util.Set;
-import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // TODO: add javadoc
-@HashCodeAndEqualsPlugin.Enhance
 class HasSuperMethodMatcher<T extends MethodDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
@@ -68,5 +66,23 @@ class HasSuperMethodMatcher<T extends MethodDescription>
   @Override
   public String toString() {
     return "hasSuperMethodMatcher(" + matcher + ")";
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else if (getClass() != other.getClass()) {
+      return false;
+    } else {
+      return matcher.equals(((HasSuperMethodMatcher) other).matcher);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return 17 * 31 + matcher.hashCode();
   }
 }

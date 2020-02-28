@@ -3,7 +3,6 @@ package datadog.trace.instrumentation.ratpack;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -24,8 +23,7 @@ public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface().or(isAbstract()))
-        .and(implementsInterface(named("ratpack.error.ServerErrorHandler")));
+    return not(isAbstract()).and(implementsInterface(named("ratpack.error.ServerErrorHandler")));
   }
 
   @Override

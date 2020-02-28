@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,7 +32,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * @see net.bytebuddy.matcher.HasSuperTypeMatcher
  */
 @Slf4j
-@HashCodeAndEqualsPlugin.Enhance
 class SafeHasSuperTypeMatcher<T extends TypeDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
@@ -131,5 +129,23 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
   @Override
   public String toString() {
     return "safeHasSuperType(" + matcher + ")";
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else if (getClass() != other.getClass()) {
+      return false;
+    } else {
+      return matcher.equals(((SafeHasSuperTypeMatcher) other).matcher);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return 17 * 31 + matcher.hashCode();
   }
 }

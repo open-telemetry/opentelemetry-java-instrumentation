@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling.bytebuddy.matcher
 
+import datadog.trace.agent.tooling.AgentTooling
 import datadog.trace.agent.tooling.bytebuddy.matcher.testclasses.A
 import datadog.trace.agent.tooling.bytebuddy.matcher.testclasses.B
 import datadog.trace.agent.tooling.bytebuddy.matcher.testclasses.E
@@ -8,12 +9,17 @@ import datadog.trace.agent.tooling.bytebuddy.matcher.testclasses.G
 import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.jar.asm.Opcodes
+import spock.lang.Shared
 
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface
 import static net.bytebuddy.matcher.ElementMatchers.named
 
 class HasInterfaceMatcherTest extends DDSpecification {
+  @Shared
+  def typePool =
+    AgentTooling.poolStrategy()
+      .typePool(AgentTooling.locationStrategy().classFileLocator(this.class.classLoader, null), this.class.classLoader)
 
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
@@ -32,7 +38,7 @@ class HasInterfaceMatcherTest extends DDSpecification {
     F            | G    | false
 
     matcher = named(matcherClass.name)
-    argument = TypeDescription.ForLoadedType.of(type)
+    argument = typePool.describe(type.name).resolve()
   }
 
   def "test traversal exceptions"() {
