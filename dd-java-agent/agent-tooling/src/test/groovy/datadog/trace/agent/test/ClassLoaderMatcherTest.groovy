@@ -6,13 +6,6 @@ import datadog.trace.util.test.DDSpecification
 
 class ClassLoaderMatcherTest extends DDSpecification {
 
-  def "skip non-delegating classloader"() {
-    setup:
-    final URLClassLoader badLoader = new NonDelegatingClassLoader()
-    expect:
-    ClassLoaderMatcher.skipClassLoader().matches(badLoader)
-  }
-
   def "skips agent classloader"() {
     setup:
     URL root = new URL("file://")
@@ -37,23 +30,4 @@ class ClassLoaderMatcherTest extends DDSpecification {
     expect:
     DatadogClassLoader.name == "datadog.trace.bootstrap.DatadogClassLoader"
   }
-
-  /*
-   * A URLClassloader which only delegates java.* classes
-   */
-
-  private static class NonDelegatingClassLoader extends URLClassLoader {
-    NonDelegatingClassLoader() {
-      super(new URL[0], (ClassLoader) null)
-    }
-
-    @Override
-    Class<?> loadClass(String className) {
-      if (className.startsWith("java.")) {
-        return super.loadClass(className)
-      }
-      throw new ClassNotFoundException(className)
-    }
-  }
-
 }
