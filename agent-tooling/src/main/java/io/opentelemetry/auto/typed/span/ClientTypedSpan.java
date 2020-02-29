@@ -1,12 +1,13 @@
 package io.opentelemetry.auto.typed.span;
 
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 
 public abstract class ClientTypedSpan<T extends ClientTypedSpan, REQUEST, RESPONSE>
-    extends BaseTypedSpan {
+    extends BaseTypedSpan<T> {
 
-  public ClientTypedSpan(Span delegate) {
-    super(delegate);
+  public ClientTypedSpan(Tracer tracer, Span delegate) {
+    super(tracer, delegate);
   }
 
   public abstract T onRequest(REQUEST request);

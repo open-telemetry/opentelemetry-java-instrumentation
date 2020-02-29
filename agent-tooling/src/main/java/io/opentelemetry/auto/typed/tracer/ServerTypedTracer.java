@@ -13,7 +13,7 @@ public abstract class ServerTypedTracer<
   }
 
   @Override
-  protected T startSpan(T span, REQUEST request) {
+  protected T startSpan(REQUEST request, T span) {
     return span.onRequest(request);
   }
 }
