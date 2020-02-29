@@ -15,13 +15,14 @@
  */
 package io.opentelemetry.auto.tooling;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.failSafe;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
 import io.opentelemetry.auto.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.auto.tooling.context.NoopContextProvider;

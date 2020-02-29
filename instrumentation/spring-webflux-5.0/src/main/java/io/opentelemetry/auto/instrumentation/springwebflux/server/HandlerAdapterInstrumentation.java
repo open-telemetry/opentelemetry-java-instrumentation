@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -40,7 +40,7 @@ public final class HandlerAdapterInstrumentation extends AbstractWebfluxInstrume
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
         .and(not(isAbstract()))
-        .and(safeHasInterface(named("org.springframework.web.reactive.HandlerAdapter")));
+        .and(hasInterface(named("org.springframework.web.reactive.HandlerAdapter")));
   }
 
   @Override

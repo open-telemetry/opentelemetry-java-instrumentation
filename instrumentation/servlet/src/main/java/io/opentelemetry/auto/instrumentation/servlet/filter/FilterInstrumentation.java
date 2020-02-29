@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.servlet.filter;
 
 import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -56,7 +56,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("javax.servlet.Filter")));
+    return not(isInterface()).and(hasInterface(named("javax.servlet.Filter")));
   }
 
   @Override

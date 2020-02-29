@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
 import static io.opentelemetry.auto.instrumentation.aws.v2.TracingExecutionInterceptor.ScopeHolder.CURRENT;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -46,7 +46,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("software.amazon.awssdk.")
         .and(
-            safeExtendsClass(
+            extendsClass(
                 named(
                         "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
                     .or(

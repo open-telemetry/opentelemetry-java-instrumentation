@@ -15,8 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet2;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;

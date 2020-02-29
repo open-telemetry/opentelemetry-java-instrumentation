@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.tooling
 
+import io.opentelemetry.auto.tooling.bytebuddy.AgentCachingPoolStrategy
 import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
@@ -230,7 +231,8 @@ class CacheProviderTest extends AgentSpecification {
       }
 
       @Override
-      void close() throws IOException {}
+      void close() throws IOException {
+      }
     }
   }
 }
