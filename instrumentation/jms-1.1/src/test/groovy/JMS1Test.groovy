@@ -34,6 +34,8 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
@@ -76,6 +78,41 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 2) {
         producerSpan(it, 0, jmsResourceName)
         consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0))
+      }
+    }
+
+    cleanup:
+    producer.close()
+    consumer.close()
+
+    where:
+    destination                      | jmsResourceName
+    session.createQueue("someQueue") | "Queue someQueue"
+    session.createTopic("someTopic") | "Topic someTopic"
+    session.createTemporaryQueue()   | "Temporary Queue"
+    session.createTemporaryTopic()   | "Temporary Topic"
+  }
+
+  def "sending a message to #jmsResourceName and receive under existing parent generates link"() {
+    setup:
+    def producer = session.createProducer(destination)
+    def consumer = session.createConsumer(destination)
+
+    producer.send(message)
+
+    TextMessage receivedMessage = runUnderTrace("parent") {
+      consumer.receive()
+    }
+
+    expect:
+    receivedMessage.text == messageText
+    assertTraces(2) {
+      trace(0, 1) {
+        producerSpan(it, 0, jmsResourceName)
+      }
+      trace(1, 2) {
+        basicSpan(it, 0, "parent")
+        consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0), traces[0][0])
       }
     }
 

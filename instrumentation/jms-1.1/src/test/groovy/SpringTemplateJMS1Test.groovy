@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit
 
 import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class SpringTemplateJMS1Test extends AgentTestRunner {
   @Shared
@@ -67,6 +69,30 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
       trace(0, 2) {
         producerSpan(it, 0, jmsResourceName)
         consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0))
+      }
+    }
+
+    where:
+    destination                            | jmsResourceName
+    session.createQueue("someSpringQueue") | "Queue someSpringQueue"
+  }
+
+  def "sending a message to #jmsResourceName and receive under existing parent generates link"() {
+    setup:
+    template.convertAndSend(destination, messageText)
+    TextMessage receivedMessage = runUnderTrace("parent") {
+      template.receive(destination)
+    }
+
+    expect:
+    receivedMessage.text == messageText
+    assertTraces(2) {
+      trace(0, 1) {
+        producerSpan(it, 0, jmsResourceName)
+      }
+      trace(1, 2) {
+        basicSpan(it, 0, "parent")
+        consumerSpan(it, 1, jmsResourceName, false, ActiveMQMessageConsumer, span(0), traces[0][0])
       }
     }
 
