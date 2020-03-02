@@ -60,7 +60,7 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "grpc.client"
+          operationName "example.Greeter/SayHello"
           spanKind CLIENT
           parent()
           errored false
@@ -74,12 +74,13 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "OK"
           }
         }
         span(1) {
-          operationName "grpc.server"
+          operationName "example.Greeter/SayHello"
           spanKind SERVER
           childOf span(0)
           errored false
@@ -93,6 +94,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
             "status.code" "OK"
           }
@@ -132,20 +134,21 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "grpc.client"
+          operationName "example.Greeter/SayHello"
           spanKind CLIENT
           parent()
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "${status.code.name()}"
             "status.description" description
           }
         }
         span(1) {
-          operationName "grpc.server"
+          operationName "example.Greeter/SayHello"
           spanKind SERVER
           childOf span(0)
           errored true
@@ -160,6 +163,7 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
+            "$MoreTags.RPC_SERVICE" "Greeter"
             "status.code" "${status.code.name()}"
             "status.description" description
             if (status.cause != null) {
@@ -208,19 +212,20 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "grpc.client"
+          operationName "example.Greeter/SayHello"
           spanKind CLIENT
           parent()
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "UNKNOWN"
           }
         }
         span(1) {
-          operationName "grpc.server"
+          operationName "example.Greeter/SayHello"
           spanKind SERVER
           childOf span(0)
           errored true
@@ -235,6 +240,7 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
+            "$MoreTags.RPC_SERVICE" "Greeter"
             errorTags error.class, error.message
           }
         }

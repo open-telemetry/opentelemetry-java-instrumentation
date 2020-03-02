@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
@@ -102,13 +104,14 @@ class GrpcStreamingTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "grpc.client"
+          operationName "example.Greeter/Conversation"
           spanKind CLIENT
           parent()
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/Conversation"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "OK"
           }
@@ -124,13 +127,14 @@ class GrpcStreamingTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "grpc.server"
+          operationName "example.Greeter/Conversation"
           spanKind SERVER
           childOf span(0)
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "example.Greeter/Conversation"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
+            "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
             "status.code" "OK"
           }

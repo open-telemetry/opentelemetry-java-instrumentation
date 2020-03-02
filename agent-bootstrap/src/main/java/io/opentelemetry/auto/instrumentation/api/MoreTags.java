@@ -29,4 +29,6 @@ public class MoreTags {
   public static final String ERROR_MSG = "error.msg"; // string representing the error message
   public static final String ERROR_TYPE = "error.type"; // string representing the type of the error
   public static final String ERROR_STACK = "error.stack"; // human readable version of the stack
+
+  public static final String RPC_SERVICE = "rpc.service";
 }

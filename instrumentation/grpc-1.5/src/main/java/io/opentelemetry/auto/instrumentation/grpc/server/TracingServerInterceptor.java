@@ -28,6 +28,7 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
@@ -48,7 +49,8 @@ public class TracingServerInterceptor implements ServerInterceptor {
       final Metadata headers,
       final ServerCallHandler<ReqT, RespT> next) {
 
-    final Span.Builder spanBuilder = TRACER.spanBuilder("grpc.server").setSpanKind(SERVER);
+    final String methodName = call.getMethodDescriptor().getFullMethodName();
+    final Span.Builder spanBuilder = TRACER.spanBuilder(methodName).setSpanKind(SERVER);
     try {
       final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
       spanBuilder.setParent(extractedContext);
@@ -57,7 +59,8 @@ public class TracingServerInterceptor implements ServerInterceptor {
       spanBuilder.setNoParent();
     }
     final Span span = spanBuilder.startSpan();
-    span.setAttribute(MoreTags.RESOURCE_NAME, call.getMethodDescriptor().getFullMethodName());
+    span.setAttribute(MoreTags.RESOURCE_NAME, methodName);
+    GrpcHelper.addServiceName(span, methodName);
 
     DECORATE.afterStart(span);
 
