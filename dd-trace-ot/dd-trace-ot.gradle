@@ -53,7 +53,7 @@ dependencies {
   testImplementation deps.autoservice
 
   testCompile project(":dd-java-agent:testing")
-  testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
+  testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
   testCompile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.20'
 
   traceAgentTestCompile deps.testcontainers
