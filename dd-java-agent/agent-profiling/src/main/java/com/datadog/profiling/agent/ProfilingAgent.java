@@ -26,7 +26,7 @@ public class ProfilingAgent {
     if (PROFILER == null) {
       final Config config = Config.get();
       if (isStartingFirst && !config.isProfilingStartForceFirst()) {
-        log.info("Profiling: not starting first");
+        log.debug("Profiling: not starting first");
         // early startup is disabled;
         return;
       }
