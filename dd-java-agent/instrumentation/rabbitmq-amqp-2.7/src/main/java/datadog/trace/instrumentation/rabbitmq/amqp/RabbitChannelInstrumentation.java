@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.noopSpan;
@@ -13,7 +13,6 @@ import static datadog.trace.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.
 import static datadog.trace.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSetter;
@@ -56,7 +55,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("com.rabbitmq.client.Channel")));
+    return implementsInterface(named("com.rabbitmq.client.Channel"));
   }
 
   @Override

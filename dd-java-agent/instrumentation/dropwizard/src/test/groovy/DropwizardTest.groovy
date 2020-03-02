@@ -113,7 +113,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       tags {
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Integer
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"

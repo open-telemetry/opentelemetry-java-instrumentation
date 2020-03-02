@@ -35,8 +35,9 @@ class DDSpanTest extends DDSpecification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, 1G, [:]),
-        tracer)
+        new PendingTrace(tracer, 1G),
+        tracer,
+        [:])
 
     final DDSpan span = new DDSpan(1L, context)
 

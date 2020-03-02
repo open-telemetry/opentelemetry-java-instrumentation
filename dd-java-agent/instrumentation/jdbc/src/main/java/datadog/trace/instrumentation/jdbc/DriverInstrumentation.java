@@ -1,11 +1,9 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -30,7 +28,7 @@ public final class DriverInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("java.sql.Driver")));
+    return implementsInterface(named("java.sql.Driver"));
   }
 
   @Override

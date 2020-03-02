@@ -1,9 +1,8 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -44,7 +43,7 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named(TASK_CLASS_NAME)));
+    return extendsClass(named(TASK_CLASS_NAME));
   }
 
   @Override

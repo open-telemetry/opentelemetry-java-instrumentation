@@ -127,7 +127,7 @@ class SpanDecoratorTest extends DDSpecification {
     "other-context" | "my-service"         | "my-service"
   }
 
-  def "set service name from servlet.context with context '#context' for service #serviceName"() {
+  def "mapping causes servlet.context to not change service name"() {
     setup:
     tracer = DDTracer.builder()
       .serviceName(serviceName)
@@ -142,18 +142,12 @@ class SpanDecoratorTest extends DDSpecification {
     span.finish()
 
     then:
-    span.serviceName == expected
+    span.serviceName == "new-service"
 
     where:
-    context         | serviceName          | expected
-    "/"             | DEFAULT_SERVICE_NAME | "new-service"
-    ""              | DEFAULT_SERVICE_NAME | "new-service"
-    "/some-context" | DEFAULT_SERVICE_NAME | "some-context"
-    "other-context" | DEFAULT_SERVICE_NAME | "other-context"
-    "/"             | "my-service"         | "new-service"
-    ""              | "my-service"         | "new-service"
-    "/some-context" | "my-service"         | "new-service"
-    "other-context" | "my-service"         | "new-service"
+    context         | serviceName
+    "/some-context" | DEFAULT_SERVICE_NAME
+    "/some-context" | "my-service"
 
     mapping = [(serviceName): "new-service"]
   }

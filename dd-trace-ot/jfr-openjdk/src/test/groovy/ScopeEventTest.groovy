@@ -37,8 +37,9 @@ class ScopeEventTest extends Specification {
       false,
       "fakeType",
       null,
-      new PendingTrace(tracer, 123, [:]),
-      tracer)
+      new PendingTrace(tracer, 123),
+      tracer,
+      [:])
   def builder = tracer.buildSpan("test operation")
     .asChildOf(parentContext)
     .withServiceName("test service")

@@ -33,6 +33,11 @@ class ClassLoaderMatcherTest extends DDSpecification {
     !ClassLoaderMatcher.skipClassLoader().matches(null)
   }
 
+  def "DatadogClassLoader class name is hardcoded in ClassLoaderMatcher"() {
+    expect:
+    DatadogClassLoader.name == "datadog.trace.bootstrap.DatadogClassLoader"
+  }
+
   /*
    * A URLClassloader which only delegates java.* classes
    */

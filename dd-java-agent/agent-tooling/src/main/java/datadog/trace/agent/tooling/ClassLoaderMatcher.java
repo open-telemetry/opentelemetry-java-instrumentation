@@ -1,20 +1,17 @@
 package datadog.trace.agent.tooling;
 
-import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
-
-import datadog.trace.bootstrap.DatadogClassLoader;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import datadog.trace.bootstrap.PatchLogger;
-import datadog.trace.bootstrap.WeakMap;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
-public class ClassLoaderMatcher {
+public final class ClassLoaderMatcher {
   public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
+  public static final int CACHE_CONCURRENCY =
+      Math.max(8, Runtime.getRuntime().availableProcessors());
 
   /** A private constructor that must not be invoked. */
   private ClassLoaderMatcher() {
@@ -25,58 +22,49 @@ public class ClassLoaderMatcher {
     return SkipClassLoaderMatcher.INSTANCE;
   }
 
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasClasses(
-      final String... names) {
-    return new ClassLoaderHasClassMatcher(names);
+  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasNoResources(
+      final String... resources) {
+    return new ClassLoaderHasNoResourceMatcher(resources);
   }
 
-  private static class SkipClassLoaderMatcher
-      extends ElementMatcher.Junction.AbstractBase<ClassLoader>
-      implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+  private static final class SkipClassLoaderMatcher
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
     /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-    private static final WeakMap<ClassLoader, Boolean> SKIP_CACHE = newWeakMap();
-    private static final Set<String> CLASSLOADER_CLASSES_TO_SKIP;
-
-    static {
-      final Set<String> classesToSkip = new HashSet<>();
-      classesToSkip.add("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader");
-      classesToSkip.add("sun.reflect.DelegatingClassLoader");
-      classesToSkip.add("jdk.internal.reflect.DelegatingClassLoader");
-      classesToSkip.add("clojure.lang.DynamicClassLoader");
-      classesToSkip.add("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader");
-      classesToSkip.add(DatadogClassLoader.class.getName());
-      CLASSLOADER_CLASSES_TO_SKIP = Collections.unmodifiableSet(classesToSkip);
-    }
+    private static final Cache<ClassLoader, Boolean> skipCache =
+        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
+    private static final String DATADOG_CLASSLOADER_NAME =
+        "datadog.trace.bootstrap.DatadogClassLoader";
 
     private SkipClassLoaderMatcher() {}
 
     @Override
-    public boolean matches(final ClassLoader target) {
-      if (target == BOOTSTRAP_CLASSLOADER) {
+    public boolean matches(final ClassLoader cl) {
+      if (cl == BOOTSTRAP_CLASSLOADER) {
         // Don't skip bootstrap loader
         return false;
       }
-      return shouldSkipClass(target) || shouldSkipInstance(target);
-    }
-
-    private boolean shouldSkipClass(final ClassLoader loader) {
-      return CLASSLOADER_CLASSES_TO_SKIP.contains(loader.getClass().getName());
-    }
-
-    private boolean shouldSkipInstance(final ClassLoader loader) {
-      return SKIP_CACHE.computeIfAbsent(loader, this);
-    }
-
-    @Override
-    public Boolean get(final ClassLoader loader) {
-      final boolean skip = !delegatesToBootstrap(loader);
-      if (skip) {
-        log.debug(
-            "skipping classloader instance {} of type {}", loader, loader.getClass().getName());
+      Boolean v = skipCache.getIfPresent(cl);
+      if (v != null) {
+        return v;
       }
+      v = shouldSkipClass(cl) || !delegatesToBootstrap(cl);
+      skipCache.put(cl, v);
+      return v;
+    }
 
-      return skip;
+    private static boolean shouldSkipClass(final ClassLoader loader) {
+      switch (loader.getClass().getName()) {
+        case "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader":
+        case "sun.reflect.DelegatingClassLoader":
+        case "jdk.internal.reflect.DelegatingClassLoader":
+        case "clojure.lang.DynamicClassLoader":
+        case "org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader":
+        case "sun.misc.Launcher$ExtClassLoader":
+        case DATADOG_CLASSLOADER_NAME:
+          return true;
+      }
+      return false;
     }
 
     /**
@@ -85,7 +73,7 @@ public class ClassLoaderMatcher {
      * class loading is issued from this check and {@code false} for 'real' class loads. We should
      * come up with some sort of hack to avoid this problem.
      */
-    private boolean delegatesToBootstrap(final ClassLoader loader) {
+    private static boolean delegatesToBootstrap(final ClassLoader loader) {
       boolean delegates = true;
       if (!loadsExpectedClass(loader, GlobalTracer.class)) {
         log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
@@ -98,7 +86,8 @@ public class ClassLoaderMatcher {
       return delegates;
     }
 
-    private boolean loadsExpectedClass(final ClassLoader loader, final Class<?> expectedClass) {
+    private static boolean loadsExpectedClass(
+        final ClassLoader loader, final Class<?> expectedClass) {
       try {
         return loader.loadClass(expectedClass.getName()) == expectedClass;
       } catch (final ClassNotFoundException e) {
@@ -107,36 +96,38 @@ public class ClassLoaderMatcher {
     }
   }
 
-  public static class ClassLoaderHasClassMatcher
-      extends ElementMatcher.Junction.AbstractBase<ClassLoader>
-      implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+  private static class ClassLoaderHasNoResourceMatcher
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+    private final Cache<ClassLoader, Boolean> cache =
+        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
 
-    private final WeakMap<ClassLoader, Boolean> cache = newWeakMap();
+    private final String[] resources;
 
-    private final String[] names;
-
-    private ClassLoaderHasClassMatcher(final String... names) {
-      this.names = names;
+    private ClassLoaderHasNoResourceMatcher(final String... resources) {
+      this.resources = resources;
     }
 
-    @Override
-    public boolean matches(final ClassLoader target) {
-      if (target != null) {
-        return cache.computeIfAbsent(target, this);
+    private boolean hasNoResources(ClassLoader cl) {
+      for (final String resource : resources) {
+        if (cl.getResource(resource) == null) {
+          return true;
+        }
       }
-
       return false;
     }
 
     @Override
-    public Boolean get(final ClassLoader target) {
-      for (final String name : names) {
-        if (target.getResource(Utils.getResourceName(name)) == null) {
-          return false;
-        }
+    public boolean matches(final ClassLoader cl) {
+      if (cl == null) {
+        return false;
       }
-
-      return true;
+      Boolean v = cache.getIfPresent(cl);
+      if (v != null) {
+        return v;
+      }
+      v = hasNoResources(cl);
+      cache.put(cl, v);
+      return v;
     }
   }
 }

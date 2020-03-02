@@ -1,13 +1,11 @@
 package datadog.trace.instrumentation.netty41;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -35,8 +33,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(safeHasSuperType(named("io.netty.channel.ChannelFutureListener")));
+    return implementsInterface(named("io.netty.channel.ChannelFutureListener"));
   }
 
   @Override

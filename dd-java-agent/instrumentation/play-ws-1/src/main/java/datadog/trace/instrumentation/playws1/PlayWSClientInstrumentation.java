@@ -1,12 +1,13 @@
 package datadog.trace.instrumentation.playws1;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.playws1.HeadersInjectAdapter.SETTER;
 import static datadog.trace.instrumentation.playws1.PlayWSClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -33,8 +34,10 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     // CachingAsyncHttpClient rejects overrides to AsyncHandler
     // It also delegates to another AsyncHttpClient
-    return safeHasSuperType(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
-        .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient")));
+    return nameStartsWith("play.")
+        .<TypeDescription>and(
+            hasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
+                .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient"))));
   }
 
   @Override

@@ -4,14 +4,15 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.jetty8.JettyDecorator
-import javax.servlet.DispatcherType
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.ErrorHandler
+
+import javax.servlet.DispatcherType
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -131,7 +132,6 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
       tags {
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Integer
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"

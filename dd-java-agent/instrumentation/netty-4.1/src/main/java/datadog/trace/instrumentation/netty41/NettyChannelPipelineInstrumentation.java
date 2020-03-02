@@ -1,12 +1,10 @@
 package datadog.trace.instrumentation.netty41;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -48,7 +46,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("io.netty.channel.ChannelPipeline")));
+    return implementsInterface(named("io.netty.channel.ChannelPipeline"));
   }
 
   @Override
@@ -110,7 +108,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
       return CallDepthThreadLocalMap.incrementCallDepth(handler.getClass());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
         @Advice.Enter final int depth,
         @Advice.This final ChannelPipeline pipeline,

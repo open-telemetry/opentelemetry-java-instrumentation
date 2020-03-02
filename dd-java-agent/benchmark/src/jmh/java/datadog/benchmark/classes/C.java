@@ -1,5 +1,5 @@
 package datadog.benchmark.classes;
 
-public interface C extends B {
+public interface C extends A, B {
   void c();
 }

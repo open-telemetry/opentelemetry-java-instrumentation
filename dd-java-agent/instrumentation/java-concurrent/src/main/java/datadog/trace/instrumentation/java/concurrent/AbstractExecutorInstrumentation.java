@@ -1,9 +1,8 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
+import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
@@ -102,33 +101,37 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    final ElementMatcher.Junction<TypeDescription> matcher =
-        not(isInterface()).and(safeHasSuperType(named(Executor.class.getName())));
-    if (TRACE_ALL_EXECUTORS) {
-      return matcher;
-    }
-    return matcher.and(
-        new ElementMatcher<TypeDescription>() {
-          @Override
-          public boolean matches(final TypeDescription target) {
-            boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
+    ElementMatcher.Junction<TypeDescription> matcher = any();
+    final ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
+        implementsInterface(named(Executor.class.getName()));
+    if (!TRACE_ALL_EXECUTORS) {
+      matcher =
+          matcher.and(
+              new ElementMatcher<TypeDescription>() {
+                @Override
+                public boolean matches(final TypeDescription target) {
+                  boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
 
-            // Check for possible prefixes match only if not whitelisted already
-            if (!whitelisted) {
-              for (final String name : WHITELISTED_EXECUTORS_PREFIXES) {
-                if (target.getName().startsWith(name)) {
-                  whitelisted = true;
-                  break;
+                  // Check for possible prefixes match only if not whitelisted already
+                  if (!whitelisted) {
+                    for (final String name : WHITELISTED_EXECUTORS_PREFIXES) {
+                      if (target.getName().startsWith(name)) {
+                        whitelisted = true;
+                        break;
+                      }
+                    }
+                  }
+
+                  if (!whitelisted
+                      && log.isDebugEnabled()
+                      && hasExecutorInterfaceMatcher.matches(target)) {
+                    log.debug("Skipping executor instrumentation for {}", target.getName());
+                  }
+                  return whitelisted;
                 }
-              }
-            }
-
-            if (!whitelisted) {
-              log.debug("Skipping executor instrumentation for {}", target.getName());
-            }
-            return whitelisted;
-          }
-        });
+              });
+    }
+    return matcher.and(hasExecutorInterfaceMatcher); // Apply expensive matcher last.
   }
 
   @Override

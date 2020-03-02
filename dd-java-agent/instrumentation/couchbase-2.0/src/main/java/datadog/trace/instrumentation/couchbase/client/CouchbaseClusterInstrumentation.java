@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.couchbase.client;
 
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,10 +28,8 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(
-            named("com.couchbase.client.java.cluster.DefaultAsyncClusterManager")
-                .or(named("com.couchbase.client.java.CouchbaseAsyncCluster")));
+    return named("com.couchbase.client.java.cluster.DefaultAsyncClusterManager")
+        .or(named("com.couchbase.client.java.CouchbaseAsyncCluster"));
   }
 
   @Override
@@ -64,7 +61,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void subscribeResult(
         @Advice.Enter final int callDepth,
         @Advice.Origin final Method method,

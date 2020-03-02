@@ -1,11 +1,9 @@
 package datadog.trace.instrumentation.hibernate.core.v4_3;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -47,7 +45,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")));
+    return implementsInterface(named("org.hibernate.procedure.ProcedureCall"));
   }
 
   @Override

@@ -96,7 +96,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
@@ -172,7 +171,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/getQuery.jsp"
@@ -245,7 +243,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/post.jsp"
@@ -315,7 +312,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
@@ -406,7 +402,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
@@ -475,7 +470,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
@@ -600,7 +594,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
@@ -664,7 +657,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$staticFile"

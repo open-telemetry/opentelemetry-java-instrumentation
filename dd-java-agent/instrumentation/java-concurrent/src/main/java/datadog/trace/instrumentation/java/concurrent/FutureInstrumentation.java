@@ -1,10 +1,8 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
@@ -78,19 +76,18 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(safeHasSuperType(named(Future.class.getName())))
-        .and(
-            new ElementMatcher<TypeDescription>() {
-              @Override
-              public boolean matches(final TypeDescription target) {
-                final boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
-                if (!whitelisted) {
-                  log.debug("Skipping future instrumentation for {}", target.getName());
-                }
-                return whitelisted;
-              }
-            });
+    final ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
+        implementsInterface(named(Future.class.getName()));
+    return new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
+      @Override
+      public boolean matches(final TypeDescription target) {
+        final boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
+        if (!whitelisted && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
+          log.debug("Skipping future instrumentation for {}", target.getName());
+        }
+        return whitelisted;
+      }
+    }.and(hasFutureInterfaceMatcher); // Apply expensive matcher last.
   }
 
   @Override

@@ -3,7 +3,7 @@ package datadog.trace.agent.test
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
-import datadog.trace.agent.tooling.ExceptionHandlers
+import datadog.trace.agent.tooling.bytebuddy.ExceptionHandlers
 import datadog.trace.bootstrap.ExceptionLogger
 import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.agent.ByteBuddyAgent

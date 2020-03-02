@@ -201,12 +201,13 @@ class DDAgentWriterTest extends DDSpecification {
       "",
       PrioritySampling.UNSET,
       "",
-      Collections.emptyMap(),
+      [:],
       false,
       "",
-      Collections.emptyMap(),
+      [:],
       Mock(PendingTrace),
-      Mock(DDTracer))
+      Mock(DDTracer),
+      [:])
     minimalSpan = new DDSpan(0, minimalContext)
     minimalTrace = [minimalSpan]
     traceSize = calculateSize(minimalTrace)
@@ -262,12 +263,13 @@ class DDAgentWriterTest extends DDSpecification {
       "",
       PrioritySampling.UNSET,
       "",
-      Collections.emptyMap(),
+      [:],
       false,
       "",
-      Collections.emptyMap(),
+      [:],
       Mock(PendingTrace),
-      Mock(DDTracer))
+      Mock(DDTracer),
+      [:])
     def minimalSpan = new DDSpan(0, minimalContext)
     def minimalTrace = [minimalSpan]
 

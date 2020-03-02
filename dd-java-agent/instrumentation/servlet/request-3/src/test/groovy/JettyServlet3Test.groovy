@@ -5,11 +5,12 @@ import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
+
+import javax.servlet.Servlet
+import javax.servlet.http.HttpServletRequest
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -253,7 +254,6 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
           tags {
             "$Tags.COMPONENT" serverDecorator.component()
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
             "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
             "$Tags.PEER_PORT" Integer
             "$Tags.HTTP_URL" "${endpoint.resolve(address)}"

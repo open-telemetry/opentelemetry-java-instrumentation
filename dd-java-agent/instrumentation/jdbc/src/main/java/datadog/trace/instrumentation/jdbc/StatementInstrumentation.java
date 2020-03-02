@@ -1,16 +1,14 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jdbc.JDBCDecorator.DECORATE;
 import static datadog.trace.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -35,7 +33,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("java.sql.Statement")));
+    return implementsInterface(named("java.sql.Statement"));
   }
 
   @Override
@@ -62,13 +60,13 @@ public final class StatementInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope onEnter(
         @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
-      if (callDepth > 0) {
+      final Connection connection = connectionFromStatement(statement);
+      if (connection == null) {
         return null;
       }
 
-      final Connection connection = connectionFromStatement(statement);
-      if (connection == null) {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
+      if (callDepth > 0) {
         return null;
       }
 

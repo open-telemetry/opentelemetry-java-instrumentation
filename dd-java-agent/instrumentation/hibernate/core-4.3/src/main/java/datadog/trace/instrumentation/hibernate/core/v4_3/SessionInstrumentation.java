@@ -1,10 +1,9 @@
 package datadog.trace.instrumentation.hibernate.core.v4_3;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
@@ -53,7 +52,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.SharedSessionContract")));
+    return implementsInterface(named("org.hibernate.SharedSessionContract"));
   }
 
   @Override
@@ -61,7 +60,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
 
     transformers.put(
-        isMethod().and(returns(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")))),
+        isMethod().and(returns(hasInterface(named("org.hibernate.procedure.ProcedureCall")))),
         SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
 
     return transformers;

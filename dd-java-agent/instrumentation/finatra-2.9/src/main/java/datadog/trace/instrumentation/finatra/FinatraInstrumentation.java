@@ -1,15 +1,14 @@
 package datadog.trace.instrumentation.finatra;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.finatra.FinatraDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -51,8 +50,9 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(safeHasSuperType(named("com.twitter.finatra.http.internal.routing.Route")));
+    return nameStartsWith("com.twitter.finatra.")
+        .<TypeDescription>and(
+            extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
   }
 
   @Override

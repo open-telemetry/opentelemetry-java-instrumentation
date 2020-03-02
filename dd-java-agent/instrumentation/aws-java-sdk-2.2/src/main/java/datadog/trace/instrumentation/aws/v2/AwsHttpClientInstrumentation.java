@@ -1,12 +1,11 @@
 package datadog.trace.instrumentation.aws.v2;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -28,12 +27,14 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
-            named("software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
-                .or(
-                    named(
-                        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage")))
-        .and(not(isInterface()));
+    return nameStartsWith("software.amazon.awssdk.")
+        .and(
+            extendsClass(
+                named(
+                        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
+                    .or(
+                        named(
+                            "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage"))));
   }
 
   @Override
