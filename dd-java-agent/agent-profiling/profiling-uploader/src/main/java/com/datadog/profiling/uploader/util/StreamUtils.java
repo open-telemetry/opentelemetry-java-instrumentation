@@ -8,10 +8,14 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
+import net.jpountz.lz4.LZ4FrameOutputStream;
 import org.openjdk.jmc.common.io.IOToolkit;
 
 /** A collection of I/O stream related helper methods */
 public final class StreamUtils {
+
+  // https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md#general-structure-of-lz4-frame-format
+  static final int[] LZ4_MAGIC = new int[] {0x04, 0x22, 0x4D, 0x18};
 
   // JMC's IOToolkit hides this from us...
   static final int ZIP_MAGIC[] = new int[] {80, 75, 3, 4};
@@ -32,10 +36,10 @@ public final class StreamUtils {
 
   /**
    * Read a stream into a consumer gzip-compressing content. If the stream is already compressed
-   * (gzip, zip) the original data will be returned.
+   * (gzip, zip, lz4) the original data will be returned.
    *
    * @param is the input stream
-   * @return zipped contents of the input stream or the the original content if the stream is
+   * @return gzipped contents of the input stream or the the original content if the stream is
    *     already compressed
    * @throws IOException
    */
@@ -47,6 +51,29 @@ public final class StreamUtils {
     } else {
       final FastByteArrayOutputStream baos = new FastByteArrayOutputStream(expectedSize);
       try (final OutputStream zipped = new GZIPOutputStream(baos)) {
+        copy(is, zipped);
+      }
+      return baos.consume(consumer);
+    }
+  }
+
+  /**
+   * Read a stream into a consumer lz4-compressing content. If the stream is already compressed
+   * (gzip, zip, lz4) the original data will be returned.
+   *
+   * @param is the input stream
+   * @return lz4ed contents of the input stream or the the original content if the stream is already
+   *     compressed
+   * @throws IOException
+   */
+  public static <T> T lz4Stream(
+      InputStream is, final int expectedSize, final BytesConsumer<T> consumer) throws IOException {
+    is = ensureMarkSupported(is);
+    if (isCompressed(is)) {
+      return readStream(is, expectedSize, consumer);
+    } else {
+      final FastByteArrayOutputStream baos = new FastByteArrayOutputStream(expectedSize);
+      try (final OutputStream zipped = new LZ4FrameOutputStream(baos)) {
         copy(is, zipped);
       }
       return baos.consume(consumer);
@@ -168,7 +195,7 @@ public final class StreamUtils {
    */
   private static boolean isCompressed(final InputStream is) throws IOException {
     checkMarkSupported(is);
-    return isGzip(is) || isZip(is);
+    return isGzip(is) || isLz4(is) || isZip(is);
   }
 
   /**
@@ -200,6 +227,23 @@ public final class StreamUtils {
     is.mark(ZIP_MAGIC.length);
     try {
       return IOToolkit.hasMagic(is, ZIP_MAGIC);
+    } finally {
+      is.reset();
+    }
+  }
+
+  /**
+   * Check whether the stream represents LZ4 data
+   *
+   * @param is input stream; must support {@linkplain InputStream#mark(int)}
+   * @return {@literal true} if the stream represents LZ4 data
+   * @throws IOException
+   */
+  private static boolean isLz4(final InputStream is) throws IOException {
+    checkMarkSupported(is);
+    is.mark(LZ4_MAGIC.length);
+    try {
+      return IOToolkit.hasMagic(is, LZ4_MAGIC);
     } finally {
       is.reset();
     }

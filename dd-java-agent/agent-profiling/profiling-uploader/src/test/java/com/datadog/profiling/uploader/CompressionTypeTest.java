@@ -9,10 +9,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class CompressionTypeTest {
+
   @Test
-  void testDefault() {
-    assertEquals(CompressionType.UNKNOWN, CompressionType.of(""));
-    assertEquals(CompressionType.UNKNOWN, CompressionType.of(null));
+  void testEmpty() {
+    assertEquals(CompressionType.ON, CompressionType.of(""));
+  }
+
+  @Test
+  void testNull() {
+    assertEquals(CompressionType.ON, CompressionType.of(null));
   }
 
   @ParameterizedTest

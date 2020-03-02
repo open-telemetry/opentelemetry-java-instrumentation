@@ -1,16 +1,21 @@
 package com.datadog.profiling.uploader;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 enum CompressionType {
   /** No compression */
   OFF,
   /** Default compression */
   ON,
-  /** Unknown compression config value */
-  UNKNOWN;
+  /** Lower compression ratio with less CPU overhead * */
+  LZ4,
+  /** Better compression ratio for the price of higher CPU usage * */
+  GZIP;
 
-  static CompressionType of(final String type) {
+  static CompressionType of(String type) {
     if (type == null) {
-      return UNKNOWN;
+      type = "";
     }
 
     switch (type.toLowerCase()) {
@@ -18,8 +23,13 @@ enum CompressionType {
         return OFF;
       case "on":
         return ON;
+      case "lz4":
+        return LZ4;
+      case "gzip":
+        return GZIP;
       default:
-        return UNKNOWN;
+        log.warn("Unrecognizable compression type: {}. Defaulting to 'on'.", type);
+        return ON;
     }
   }
 }
