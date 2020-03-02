@@ -139,7 +139,7 @@ public class RecordingUploaderTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"on", "low", "medium", "off", "invalid"})
+  @ValueSource(strings = {"on", "lz4", "gzip", "off", "invalid"})
   public void testRequestParameters(final String compression)
       throws IOException, InterruptedException {
     when(config.getProfilingUploadCompression()).thenReturn(compression);
@@ -185,9 +185,11 @@ public class RecordingUploaderTest {
 
     byte[] uploadedBytes =
         (byte[]) Iterables.getFirst(parameters.get(RecordingUploader.DATA_PARAM), new byte[] {});
-    if (compression.equals("on") || compression.equals("medium") || compression.equals("invalid")) {
+    if (compression.equals("gzip")) {
       uploadedBytes = unGzip(uploadedBytes);
-    } else if (compression.equals("low")) {
+    } else if (compression.equals("on")
+        || compression.equals("lz4")
+        || compression.equals("invalid")) {
       uploadedBytes = unLz4(uploadedBytes);
     }
     assertArrayEquals(expectedBytes, uploadedBytes);

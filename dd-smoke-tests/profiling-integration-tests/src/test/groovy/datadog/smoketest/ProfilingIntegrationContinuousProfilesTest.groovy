@@ -2,6 +2,7 @@ package datadog.smoketest
 
 import com.datadog.profiling.testing.ProfilingTestUtils
 import com.google.common.collect.Multimap
+import net.jpountz.lz4.LZ4FrameInputStream
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -11,7 +12,6 @@ import org.openjdk.jmc.flightrecorder.JfrLoaderToolkit
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import java.util.zip.GZIPInputStream
 
 class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
 
@@ -97,7 +97,7 @@ class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
 
     firstRequestParameters.get("chunk-data").get(0) != null
 
-    IItemCollection events = JfrLoaderToolkit.loadEvents(new GZIPInputStream(new ByteArrayInputStream(secondRequestParameters.get("chunk-data").get(0))))
+    IItemCollection events = JfrLoaderToolkit.loadEvents(new LZ4FrameInputStream(new ByteArrayInputStream(secondRequestParameters.get("chunk-data").get(0))))
     IItemCollection scopeEvents = events.apply(ItemFilters.type("datadog.Scope"))
 
     scopeEvents.size() > 0

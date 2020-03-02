@@ -9,9 +9,9 @@ enum CompressionType {
   /** Default compression */
   ON,
   /** Lower compression ratio with less CPU overhead * */
-  LOW,
+  LZ4,
   /** Better compression ratio for the price of higher CPU usage * */
-  MEDIUM;
+  GZIP;
 
   static CompressionType of(String type) {
     if (type == null) {
@@ -23,10 +23,10 @@ enum CompressionType {
         return OFF;
       case "on":
         return ON;
-      case "low":
-        return LOW;
-      case "medium":
-        return MEDIUM;
+      case "lz4":
+        return LZ4;
+      case "gzip":
+        return GZIP;
       default:
         log.warn("Unrecognizable compression type: {}. Defaulting to 'on'.", type);
         return ON;
