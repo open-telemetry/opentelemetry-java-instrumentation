@@ -17,7 +17,9 @@ import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
 import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
 import io.grpc.Server
+import io.grpc.ServerBuilder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.inprocess.InProcessChannelBuilder
@@ -27,6 +29,7 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.PortUtils
 
 import java.util.concurrent.TimeUnit
 
@@ -120,9 +123,9 @@ class GrpcTest extends AgentTestRunner {
         responseObserver.onError(error)
       }
     }
-    Server server = InProcessServerBuilder.forName(getClass().name).addService(greeter).directExecutor().build().start()
-
-    ManagedChannel channel = InProcessChannelBuilder.forName(getClass().name).build()
+    def port = PortUtils.randomOpenPort()
+    Server server = ServerBuilder.forPort(port).addService(greeter).build().start()
+    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(true).build()
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
@@ -145,6 +148,8 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "${status.code.name()}"
             "status.description" description
+            "net.peer.name" "localhost"
+            "net.peer.port" port
           }
         }
         span(1) {
@@ -222,6 +227,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "UNKNOWN"
+            "net.peer.name" "(unknown)"
+            "net.peer.port" 0
           }
         }
         span(1) {
