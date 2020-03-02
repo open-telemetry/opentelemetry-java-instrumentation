@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -45,7 +45,7 @@ public final class DriverInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("java.sql.Driver")));
+    return not(isInterface()).and(hasInterface(named("java.sql.Driver")));
   }
 
   @Override

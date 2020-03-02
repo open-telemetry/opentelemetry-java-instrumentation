@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_0;
 
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -49,7 +49,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("org.hibernate.Query")));
+    return not(isInterface()).and(hasInterface(named("org.hibernate.Query")));
   }
 
   @Override

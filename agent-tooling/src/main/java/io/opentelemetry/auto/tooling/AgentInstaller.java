@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.skipClassLoader;
-import static io.opentelemetry.auto.tooling.GlobalIgnoresMatcher.globalIgnoresMatcher;
+import static io.opentelemetry.auto.tooling.bytebuddy.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;

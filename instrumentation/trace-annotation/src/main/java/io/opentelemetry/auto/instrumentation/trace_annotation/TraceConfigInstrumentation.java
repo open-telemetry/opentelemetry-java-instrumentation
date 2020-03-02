@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.trace_annotation;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -61,8 +61,8 @@ public class TraceConfigInstrumentation implements Instrumenter {
 
   private final Map<String, Set<String>> classMethodsToTrace;
 
-  private boolean validateConfigString(String configString) {
-    for (String segment : configString.split(";")) {
+  private boolean validateConfigString(final String configString) {
+    for (final String segment : configString.split(";")) {
       if (!segment.trim().matches(CONFIG_FORMAT)) {
         return false;
       }

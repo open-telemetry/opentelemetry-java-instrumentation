@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.netty40;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -47,8 +47,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(safeHasInterface(named("io.netty.channel.ChannelFutureListener")));
+    return not(isInterface()).and(hasInterface(named("io.netty.channel.ChannelFutureListener")));
   }
 
   @Override

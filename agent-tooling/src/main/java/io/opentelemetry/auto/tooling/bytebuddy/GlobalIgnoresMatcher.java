@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.tooling;
+package io.opentelemetry.auto.tooling.bytebuddy;
 
 import java.util.regex.Pattern;
 import net.bytebuddy.build.HashCodeAndEqualsPlugin;
@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @HashCodeAndEqualsPlugin.Enhance
-class GlobalIgnoresMatcher<T extends TypeDescription>
+public class GlobalIgnoresMatcher<T extends TypeDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
   private static final Pattern COM_MCHANGE_PROXY =

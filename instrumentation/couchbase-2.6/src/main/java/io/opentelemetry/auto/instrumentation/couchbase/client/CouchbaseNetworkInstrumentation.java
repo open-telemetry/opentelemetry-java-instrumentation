@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.couchbase.client;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -48,7 +48,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
     // Exact class because private fields are used
     return nameStartsWith("com.couchbase.client.")
         .<TypeDescription>and(
-            safeExtendsClass(named("com.couchbase.client.core.endpoint.AbstractGenericHandler")));
+            extendsClass(named("com.couchbase.client.core.endpoint.AbstractGenericHandler")));
   }
 
   @Override
