@@ -113,7 +113,11 @@ public class Config {
   public static final String PROFILING_API_KEY_OLD = "profiling.apikey";
   public static final String PROFILING_API_KEY_FILE_OLD = "profiling.apikey.file";
   public static final String PROFILING_TAGS = "profiling.tags";
-  public static final String PROFILING_STARTUP_DELAY = "profiling.start-delay";
+  public static final String PROFILING_START_DELAY = "profiling.start-delay";
+  // DANGEROUS! May lead on sigsegv on JVMs before 14
+  // Not intended for production use
+  public static final String PROFILING_START_FORCE_FIRST =
+      "profiling.experimental.start-force-first";
   public static final String PROFILING_UPLOAD_PERIOD = "profiling.upload.period";
   public static final String PROFILING_TEMPLATE_OVERRIDE_FILE =
       "profiling.jfr-template-override-file";
@@ -171,7 +175,8 @@ public class Config {
   public static final boolean DEFAULT_PROFILING_ENABLED = false;
   public static final String DEFAULT_PROFILING_URL =
       "https://intake.profile.datadoghq.com/v1/input";
-  public static final int DEFAULT_PROFILING_STARTUP_DELAY = 10;
+  public static final int DEFAULT_PROFILING_START_DELAY = 10;
+  public static final boolean DEFAULT_PROFILING_START_FORCE_FIRST = false;
   public static final int DEFAULT_PROFILING_UPLOAD_PERIOD = 60; // 1 min
   public static final int DEFAULT_PROFILING_UPLOAD_TIMEOUT = 30; // seconds
   public static final String DEFAULT_PROFILING_UPLOAD_COMPRESSION = "on";
@@ -267,7 +272,8 @@ public class Config {
   @Getter private final String profilingUrl;
   @Getter private final String profilingApiKey;
   private final Map<String, String> profilingTags;
-  @Getter private final int profilingStartupDelay;
+  @Getter private final int profilingStartDelay;
+  @Getter private final boolean profilingStartForceFirst;
   @Getter private final int profilingUploadPeriod;
   @Getter private final String profilingTemplateOverrideFile;
   @Getter private final int profilingUploadTimeout;
@@ -444,8 +450,11 @@ public class Config {
     profilingApiKey = tmpProfilingApiKey;
 
     profilingTags = getMapSettingFromEnvironment(PROFILING_TAGS, null);
-    profilingStartupDelay =
-        getIntegerSettingFromEnvironment(PROFILING_STARTUP_DELAY, DEFAULT_PROFILING_STARTUP_DELAY);
+    profilingStartDelay =
+        getIntegerSettingFromEnvironment(PROFILING_START_DELAY, DEFAULT_PROFILING_START_DELAY);
+    profilingStartForceFirst =
+        getBooleanSettingFromEnvironment(
+            PROFILING_START_FORCE_FIRST, DEFAULT_PROFILING_START_FORCE_FIRST);
     profilingUploadPeriod =
         getIntegerSettingFromEnvironment(PROFILING_UPLOAD_PERIOD, DEFAULT_PROFILING_UPLOAD_PERIOD);
     profilingTemplateOverrideFile =
@@ -603,8 +612,11 @@ public class Config {
     profilingUrl = properties.getProperty(PROFILING_URL, parent.profilingUrl);
     profilingApiKey = properties.getProperty(PROFILING_API_KEY, parent.profilingApiKey);
     profilingTags = getPropertyMapValue(properties, PROFILING_TAGS, parent.profilingTags);
-    profilingStartupDelay =
-        getPropertyIntegerValue(properties, PROFILING_STARTUP_DELAY, parent.profilingStartupDelay);
+    profilingStartDelay =
+        getPropertyIntegerValue(properties, PROFILING_START_DELAY, parent.profilingStartDelay);
+    profilingStartForceFirst =
+        getPropertyBooleanValue(
+            properties, PROFILING_START_FORCE_FIRST, parent.profilingStartForceFirst);
     profilingUploadPeriod =
         getPropertyIntegerValue(properties, PROFILING_UPLOAD_PERIOD, parent.profilingUploadPeriod);
     profilingTemplateOverrideFile =

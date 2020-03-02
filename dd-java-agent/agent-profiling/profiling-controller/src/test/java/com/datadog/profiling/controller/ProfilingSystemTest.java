@@ -87,6 +87,7 @@ public class ProfilingSystemTest {
             Duration.ofMillis(10),
             Duration.ZERO,
             Duration.ofMillis(300),
+            false,
             pool,
             threadLocalRandom);
     startProfilingSystem(system);
@@ -106,6 +107,7 @@ public class ProfilingSystemTest {
             Duration.ofMillis(10),
             Duration.ZERO,
             Duration.ofMillis(300),
+            false,
             pool,
             threadLocalRandom);
     startProfilingSystem(system);
@@ -114,6 +116,23 @@ public class ProfilingSystemTest {
 
     verify(recording).close();
     assertTrue(pool.isTerminated());
+  }
+
+  @Test
+  public void testForceEarlySTartup() throws ConfigurationException {
+    final ProfilingSystem system =
+        new ProfilingSystem(
+            controller,
+            listener,
+            Duration.ofMillis(10),
+            Duration.ZERO,
+            Duration.ofMillis(300),
+            true,
+            pool,
+            threadLocalRandom);
+    system.start();
+    assertTrue(system.isStarted());
+    verify(controller).createRecording(any());
   }
 
   @Test
@@ -142,6 +161,7 @@ public class ProfilingSystemTest {
             Duration.ofMillis(10),
             Duration.ofMillis(5),
             Duration.ofMillis(100),
+            false,
             pool,
             threadLocalRandom);
     startProfilingSystem(system);
@@ -160,6 +180,7 @@ public class ProfilingSystemTest {
             Duration.ofMillis(10),
             Duration.ofMillis(5),
             Duration.ofMillis(300),
+            false,
             pool,
             threadLocalRandom);
     system.shutdown();
@@ -174,7 +195,8 @@ public class ProfilingSystemTest {
             listener,
             Duration.ofMillis(10),
             Duration.ofMillis(5),
-            Duration.ofMillis(1));
+            Duration.ofMillis(1),
+            false);
     Thread.sleep(50);
     system.shutdown();
     verify(controller, never()).createRecording(any());
@@ -191,7 +213,8 @@ public class ProfilingSystemTest {
             listener,
             Duration.ofMillis(10),
             Duration.ofMillis(5),
-            Duration.ofMillis(10));
+            Duration.ofMillis(10),
+            false);
     startProfilingSystem(system);
     Thread.sleep(200);
     system.shutdown();
@@ -204,7 +227,12 @@ public class ProfilingSystemTest {
         ConfigurationException.class,
         () -> {
           new ProfilingSystem(
-              controller, listener, Duration.ofMillis(-10), Duration.ZERO, Duration.ofMillis(200));
+              controller,
+              listener,
+              Duration.ofMillis(-10),
+              Duration.ZERO,
+              Duration.ofMillis(200),
+              false);
         });
   }
 
@@ -218,7 +246,8 @@ public class ProfilingSystemTest {
               listener,
               Duration.ofMillis(10),
               Duration.ofMillis(-20),
-              Duration.ofMillis(200));
+              Duration.ofMillis(200),
+              false);
         });
   }
 
@@ -232,7 +261,8 @@ public class ProfilingSystemTest {
               listener,
               Duration.ofMillis(10),
               Duration.ofMillis(20),
-              Duration.ofMillis(-200));
+              Duration.ofMillis(-200),
+              false);
         });
   }
 
@@ -252,6 +282,7 @@ public class ProfilingSystemTest {
             Duration.ofMillis(10),
             Duration.ofMillis(5),
             uploadPeriod,
+            false,
             pool,
             threadLocalRandom);
     startProfilingSystem(system);
@@ -279,6 +310,7 @@ public class ProfilingSystemTest {
             Duration.ofMillis(10),
             Duration.ofMillis(5),
             uploadPeriod,
+            false,
             pool,
             threadLocalRandom);
     startProfilingSystem(system);
@@ -307,6 +339,7 @@ public class ProfilingSystemTest {
             startupDelay,
             startupDelayRandomRange,
             Duration.ofMillis(100),
+            false,
             pool,
             threadLocalRandom);
 
@@ -326,6 +359,7 @@ public class ProfilingSystemTest {
             startupDelay,
             Duration.ZERO,
             Duration.ofMillis(100),
+            false,
             pool,
             threadLocalRandom);
 

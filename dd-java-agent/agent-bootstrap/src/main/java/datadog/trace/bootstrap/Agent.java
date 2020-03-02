@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Agent start up logic.
  *
- * <p>This class is loaded and called by {@code datadog.trace.agent.AgentBootstrap}
+ * <p>This class is loaded and called by {@code datadog.trace.bootstrap.AgentBootstrap}
  *
  * <p>The intention is for this class to be loaded by bootstrap classloader to make sure we have
  * unimpeded access to the rest of Datadog's agent parts.
@@ -46,6 +46,13 @@ public class Agent {
 
   public static void start(final Instrumentation inst, final URL bootstrapURL) {
     createParentClassloader(bootstrapURL);
+
+    // Profiling agent startup code is written in a way to allow `startProfilingAgent` be called
+    // multiple times
+    // If early profiling is enabled then this call will start profiling.
+    // If early profiling is disabled then later call will do this.
+    startProfilingAgent(bootstrapURL, true);
+
     startDatadogAgent(inst, bootstrapURL);
 
     final boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
@@ -91,7 +98,7 @@ public class Agent {
       log.debug("Custom logger detected. Delaying Profiling Agent startup.");
       registerLogManagerCallback(new StartProfilingAgentCallback(inst, bootstrapURL));
     } else {
-      startProfilingAgent(bootstrapURL);
+      startProfilingAgent(bootstrapURL, false);
     }
   }
 
@@ -188,7 +195,7 @@ public class Agent {
 
     @Override
     public void execute() {
-      startProfilingAgent(bootstrapURL);
+      startProfilingAgent(bootstrapURL, false);
     }
   }
 
@@ -275,29 +282,29 @@ public class Agent {
     }
   }
 
-  private static synchronized void startProfilingAgent(final URL bootstrapURL) {
-    if (PROFILING_CLASSLOADER == null) {
-      final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-      try {
-        final ClassLoader profilingClassLoader =
+  private static synchronized void startProfilingAgent(
+      final URL bootstrapURL, final boolean isStartingFirst) {
+    final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      if (PROFILING_CLASSLOADER == null) {
+        PROFILING_CLASSLOADER =
             createDatadogClassLoader("agent-profiling.isolated", bootstrapURL, PARENT_CLASSLOADER);
-        Thread.currentThread().setContextClassLoader(profilingClassLoader);
-        final Class<?> profilingAgentClass =
-            profilingClassLoader.loadClass("com.datadog.profiling.agent.ProfilingAgent");
-        final Method profilingInstallerMethod = profilingAgentClass.getMethod("run");
-        profilingInstallerMethod.invoke(null);
-        PROFILING_CLASSLOADER = profilingClassLoader;
-      } catch (final ClassFormatError e) {
-        /*
-        Profiling is compiled for Java8. Loading it on Java7 results in ClassFormatError
-        (more specifically UnsupportedClassVersionError). Just ignore and continue when this happens.
-        */
-        log.error("Cannot start profiling agent ", e);
-      } catch (final Throwable ex) {
-        log.error("Throwable thrown while starting profiling agent", ex);
-      } finally {
-        Thread.currentThread().setContextClassLoader(contextLoader);
       }
+      Thread.currentThread().setContextClassLoader(PROFILING_CLASSLOADER);
+      final Class<?> profilingAgentClass =
+          PROFILING_CLASSLOADER.loadClass("com.datadog.profiling.agent.ProfilingAgent");
+      final Method profilingInstallerMethod = profilingAgentClass.getMethod("run", Boolean.TYPE);
+      profilingInstallerMethod.invoke(null, isStartingFirst);
+    } catch (final ClassFormatError e) {
+      /*
+      Profiling is compiled for Java8. Loading it on Java7 results in ClassFormatError
+      (more specifically UnsupportedClassVersionError). Just ignore and continue when this happens.
+      */
+      log.error("Cannot start profiling agent ", e);
+    } catch (final Throwable ex) {
+      log.error("Throwable thrown while starting profiling agent", ex);
+    } finally {
+      Thread.currentThread().setContextClassLoader(contextLoader);
     }
   }
 

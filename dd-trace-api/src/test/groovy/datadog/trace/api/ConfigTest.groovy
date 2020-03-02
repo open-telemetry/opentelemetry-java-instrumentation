@@ -40,7 +40,8 @@ import static datadog.trace.api.Config.PROFILING_PROXY_HOST
 import static datadog.trace.api.Config.PROFILING_PROXY_PASSWORD
 import static datadog.trace.api.Config.PROFILING_PROXY_PORT
 import static datadog.trace.api.Config.PROFILING_PROXY_USERNAME
-import static datadog.trace.api.Config.PROFILING_STARTUP_DELAY
+import static datadog.trace.api.Config.PROFILING_START_DELAY
+import static datadog.trace.api.Config.PROFILING_START_FORCE_FIRST
 import static datadog.trace.api.Config.PROFILING_TAGS
 import static datadog.trace.api.Config.PROFILING_TEMPLATE_OVERRIDE_FILE
 import static datadog.trace.api.Config.PROFILING_UPLOAD_COMPRESSION
@@ -135,7 +136,8 @@ class ConfigTest extends DDSpecification {
     config.profilingUrl == Config.DEFAULT_PROFILING_URL
     config.profilingApiKey == null
     config.mergedProfilingTags == [(HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
-    config.profilingStartupDelay == 10
+    config.profilingStartDelay == 10
+    config.profilingStartForceFirst == false
     config.profilingUploadPeriod == 60
     config.profilingTemplateOverrideFile == null
     config.profilingUploadTimeout == 30
@@ -199,7 +201,8 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(PROFILING_URL, "new url")
     prop.setProperty(PROFILING_API_KEY, "new api key")
     prop.setProperty(PROFILING_TAGS, "f:6,host:test-host")
-    prop.setProperty(PROFILING_STARTUP_DELAY, "1111")
+    prop.setProperty(PROFILING_START_DELAY, "1111")
+    prop.setProperty(PROFILING_START_FORCE_FIRST, "true")
     prop.setProperty(PROFILING_UPLOAD_PERIOD, "1112")
     prop.setProperty(PROFILING_TEMPLATE_OVERRIDE_FILE, "/path")
     prop.setProperty(PROFILING_UPLOAD_TIMEOUT, "1116")
@@ -254,7 +257,8 @@ class ConfigTest extends DDSpecification {
     config.profilingUrl == "new url"
     config.profilingApiKey == "new api key" // we can still override via internal properties object
     config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
-    config.profilingStartupDelay == 1111
+    config.profilingStartDelay == 1111
+    config.profilingStartForceFirst == true
     config.profilingUploadPeriod == 1112
     config.profilingUploadCompression == "off"
     config.profilingTemplateOverrideFile == "/path"
@@ -309,7 +313,8 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + PROFILING_URL, "new url")
     System.setProperty(PREFIX + PROFILING_API_KEY, "new api key")
     System.setProperty(PREFIX + PROFILING_TAGS, "f:6,host:test-host")
-    System.setProperty(PREFIX + PROFILING_STARTUP_DELAY, "1111")
+    System.setProperty(PREFIX + PROFILING_START_DELAY, "1111")
+    System.setProperty(PREFIX + PROFILING_START_FORCE_FIRST, "true")
     System.setProperty(PREFIX + PROFILING_UPLOAD_PERIOD, "1112")
     System.setProperty(PREFIX + PROFILING_TEMPLATE_OVERRIDE_FILE, "/path")
     System.setProperty(PREFIX + PROFILING_UPLOAD_TIMEOUT, "1116")
@@ -364,7 +369,8 @@ class ConfigTest extends DDSpecification {
     config.profilingUrl == "new url"
     config.profilingApiKey == null // system properties cannot be used to provide a key
     config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
-    config.profilingStartupDelay == 1111
+    config.profilingStartDelay == 1111
+    config.profilingStartForceFirst == true
     config.profilingUploadPeriod == 1112
     config.profilingTemplateOverrideFile == "/path"
     config.profilingUploadTimeout == 1116
