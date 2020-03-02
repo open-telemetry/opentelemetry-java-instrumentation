@@ -257,7 +257,7 @@ public class ProfilingSystemTest {
     startProfilingSystem(system);
 
     final ArgumentCaptor<RecordingData> captor = ArgumentCaptor.forClass(RecordingData.class);
-    verify(listener, timeout(REASONABLE_TIMEOUT).times(2))
+    verify(listener, timeout(REASONABLE_TIMEOUT).atLeast(2))
         .onNewData(eq(CONTINUOUS), captor.capture());
     assertEquals(generatedRecordingData, captor.getAllValues());
 

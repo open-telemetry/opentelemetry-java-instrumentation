@@ -34,7 +34,7 @@ class CleanerTest extends DDSpecification {
     cleaner.scheduleCleaning(target, action, 10, MILLISECONDS)
 
     then:
-    latch.await(200, MILLISECONDS)
+    latch.await(500, MILLISECONDS)
   }
 
   def "test canceling"() {
