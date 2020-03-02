@@ -63,11 +63,11 @@ public class TracingClientInterceptor implements ClientInterceptor {
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       GrpcHelper.addServiceName(span, methodName);
-      span.setAttribute("net.peer.port", peerPort); // TODO: Move to constant
+      span.setAttribute(MoreTags.NET_PEER_PORT, peerPort);
       if (isIp) {
-        span.setAttribute("net.peer.ip", peerAddress); // TODO: Move to constant
+        span.setAttribute(MoreTags.NET_PEER_IP, peerAddress);
       } else {
-        span.setAttribute("net.peer.name", peerAddress); // TODO: Move to constant
+        span.setAttribute(MoreTags.NET_PEER_NAME, peerAddress);
       }
 
       final ClientCall<ReqT, RespT> result;

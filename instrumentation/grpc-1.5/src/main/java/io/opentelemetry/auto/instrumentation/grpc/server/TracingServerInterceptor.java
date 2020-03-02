@@ -68,12 +68,11 @@ public class TracingServerInterceptor implements ServerInterceptor {
     if (addr != null && addr instanceof InetSocketAddress) {
       final InetSocketAddress iAddr = (InetSocketAddress) addr;
       if (iAddr.isUnresolved()) {
-        span.setAttribute("net.peer.ip", iAddr.getHostName()); // TODO: Use constant
+        span.setAttribute(MoreTags.NET_PEER_IP, iAddr.getHostName());
       } else {
-        span.setAttribute("net.peer.name", iAddr.getHostName()); // TODO: Use constant
+        span.setAttribute(MoreTags.NET_PEER_NAME, iAddr.getHostName());
       }
-      span.setAttribute(
-          "net.peer.port", ((InetSocketAddress) addr).getPort()); // TODO: Use constant
+      span.setAttribute(MoreTags.NET_PEER_PORT, iAddr.getPort());
     }
 
     DECORATE.afterStart(span);

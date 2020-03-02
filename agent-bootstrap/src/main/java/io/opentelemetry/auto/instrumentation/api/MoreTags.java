@@ -31,4 +31,8 @@ public class MoreTags {
   public static final String ERROR_STACK = "error.stack"; // human readable version of the stack
 
   public static final String RPC_SERVICE = "rpc.service";
+
+  public static final String NET_PEER_NAME = "net.peer.name";
+  public static final String NET_PEER_IP = "net.peer.ip";
+  public static final String NET_PEER_PORT = "net.peer.port";
 }

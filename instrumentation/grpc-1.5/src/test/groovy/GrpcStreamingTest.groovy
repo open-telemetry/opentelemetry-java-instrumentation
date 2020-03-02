@@ -73,7 +73,15 @@ class GrpcStreamingTest extends AgentTestRunner {
     }
     def port = PortUtils.randomOpenPort()
     Server server = ServerBuilder.forPort(port).addService(greeter).build().start()
-    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(true).build()
+    ManagedChannelBuilder channelBuilder = ManagedChannelBuilder.forAddress("localhost", port)
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel).withWaitForReady()
 
     when:
@@ -114,8 +122,8 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
-            "net.peer.name" "localhost"
-            "net.peer.port" port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" port
             "status.code" "OK"
           }
           (1..(clientMessageCount * serverMessageCount)).each {
@@ -139,8 +147,8 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
-            "net.peer.name" "localhost"
-            "net.peer.port" Long
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" Long
             "status.code" "OK"
           }
           clientRange.each {

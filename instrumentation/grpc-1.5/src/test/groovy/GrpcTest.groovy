@@ -51,7 +51,15 @@ class GrpcTest extends AgentTestRunner {
     }
     def port = PortUtils.randomOpenPort()
     Server server = ServerBuilder.forPort(port).addService(greeter).build().start()
-    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(true).build()
+    ManagedChannelBuilder channelBuilder = ManagedChannelBuilder.forAddress("localhost", port)
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
@@ -79,8 +87,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
-            "net.peer.name" "localhost"
-            "net.peer.port" port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" port
             "status.code" "OK"
           }
         }
@@ -101,8 +109,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
-            "net.peer.name" "localhost"
-            "net.peer.port" Long
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" Long
             "status.code" "OK"
           }
         }
@@ -129,7 +137,15 @@ class GrpcTest extends AgentTestRunner {
     }
     def port = PortUtils.randomOpenPort()
     Server server = ServerBuilder.forPort(port).addService(greeter).build().start()
-    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(true).build()
+    ManagedChannelBuilder channelBuilder = ManagedChannelBuilder.forAddress("localhost", port)
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
@@ -152,8 +168,8 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "${status.code.name()}"
             "status.description" description
-            "net.peer.name" "localhost"
-            "net.peer.port" port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" port
           }
         }
         span(1) {
@@ -175,8 +191,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "status.code" "${status.code.name()}"
             "status.description" description
-            "net.peer.name" "localhost"
-            "net.peer.port" Long
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" Long
             if (status.cause != null) {
               errorTags status.cause.class, status.cause.message
             }
@@ -233,8 +249,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "UNKNOWN"
-            "net.peer.name" "(unknown)"
-            "net.peer.port" 0
+            "$MoreTags.NET_PEER_NAME" "(unknown)"
+            "$MoreTags.NET_PEER_PORT" 0
           }
         }
         span(1) {
