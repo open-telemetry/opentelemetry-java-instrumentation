@@ -3,7 +3,6 @@ package datadog.trace.agent.tooling.bytebuddy.matcher;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeTypeDefinitionName;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -19,7 +18,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * @see net.bytebuddy.matcher.ErasureMatcher
  */
 @Slf4j
-@HashCodeAndEqualsPlugin.Enhance
 class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Junction.AbstractBase<T> {
 
   /** The matcher to apply to the raw type of the matched element. */
@@ -45,11 +43,6 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
     }
   }
 
-  @Override
-  public String toString() {
-    return "safeErasure(" + matcher + ")";
-  }
-
   static TypeDescription safeAsErasure(final TypeDefinition typeDefinition) {
     try {
       return typeDefinition.asErasure();
@@ -61,5 +54,28 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
           e.getMessage());
       return null;
     }
+  }
+
+  @Override
+  public String toString() {
+    return "safeErasure(" + matcher + ")";
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else if (getClass() != other.getClass()) {
+      return false;
+    } else {
+      return matcher.equals(((SafeErasureMatcher) other).matcher);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return 17 * 31 + matcher.hashCode();
   }
 }

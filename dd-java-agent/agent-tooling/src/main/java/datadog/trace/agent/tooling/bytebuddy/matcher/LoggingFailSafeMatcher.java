@@ -1,7 +1,6 @@
 package datadog.trace.agent.tooling.bytebuddy.matcher;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -14,7 +13,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * @see net.bytebuddy.matcher.FailSafeMatcher
  */
 @Slf4j
-@HashCodeAndEqualsPlugin.Enhance
 class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
 
   /** The delegate matcher that might throw an exception. */
@@ -52,6 +50,26 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
 
   @Override
   public String toString() {
-    return "safeMatcher(try(" + matcher + ") or " + fallback + ")";
+    return "failSafe(try(" + matcher + ") or " + fallback + ")";
+  }
+
+  @Override
+  public boolean equals(final Object var1) {
+    if (this == var1) {
+      return true;
+    } else if (var1 == null) {
+      return false;
+    } else if (getClass() != var1.getClass()) {
+      return false;
+    } else if (fallback != ((LoggingFailSafeMatcher) var1).fallback) {
+      return false;
+    } else {
+      return matcher.equals(((LoggingFailSafeMatcher) var1).matcher);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return (17 * 31 + matcher.hashCode()) * 31 + (fallback ? 1231 : 1237);
   }
 }
