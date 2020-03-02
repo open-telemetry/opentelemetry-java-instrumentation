@@ -38,7 +38,7 @@ public final class ProfilingSystem {
 
   private final Duration startupDelay;
   private final Duration uploadPeriod;
-  private final boolean forceEarly;
+  private final boolean isStartingFirst;
 
   private OngoingRecording recording;
   private boolean started = false;
@@ -51,6 +51,7 @@ public final class ProfilingSystem {
    * @param startupDelay delay before starting jfr
    * @param startupDelayRandomRange randomization range for startup delay
    * @param uploadPeriod how often to upload data
+   * @param isStartingFirst starting profiling before other tools
    * @throws ConfigurationException if the configuration information was bad.
    */
   public ProfilingSystem(
@@ -59,7 +60,7 @@ public final class ProfilingSystem {
       final Duration startupDelay,
       final Duration startupDelayRandomRange,
       final Duration uploadPeriod,
-      final boolean forceEarly)
+      final boolean isStartingFirst)
       throws ConfigurationException {
     this(
         controller,
@@ -67,7 +68,7 @@ public final class ProfilingSystem {
         startupDelay,
         startupDelayRandomRange,
         uploadPeriod,
-        forceEarly,
+        isStartingFirst,
         Executors.newScheduledThreadPool(
             1, new ProfilingThreadFactory("dd-profiler-recording-scheduler")),
         ThreadLocalRandom.current());
@@ -79,14 +80,14 @@ public final class ProfilingSystem {
       final Duration baseStartupDelay,
       final Duration startupDelayRandomRange,
       final Duration uploadPeriod,
-      final boolean forceEarly,
+      final boolean isStartingFirst,
       final ScheduledExecutorService executorService,
       final ThreadLocalRandom threadLocalRandom)
       throws ConfigurationException {
     this.controller = controller;
     this.dataListener = dataListener;
     this.uploadPeriod = uploadPeriod;
-    this.forceEarly = forceEarly;
+    this.isStartingFirst = isStartingFirst;
     this.executorService = executorService;
 
     if (baseStartupDelay.isNegative()) {
@@ -108,12 +109,12 @@ public final class ProfilingSystem {
 
   public final void start() {
     log.info(
-        "Starting profiling system: startupDelay={}ms, uploadPeriod={}ms, forceEarly={}",
+        "Starting profiling system: startupDelay={}ms, uploadPeriod={}ms, isStartingFirst={}",
         startupDelay.toMillis(),
         uploadPeriod.toMillis(),
-        forceEarly);
+        isStartingFirst);
 
-    if (forceEarly) {
+    if (isStartingFirst) {
       startProfilingRecording();
     } else {
       // Delay JFR initialization. This code is run from 'premain' and there is a known bug in JVM

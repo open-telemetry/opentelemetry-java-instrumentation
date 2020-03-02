@@ -19,13 +19,14 @@ public class ProfilingAgent {
 
   /**
    * Main entry point into profiling Note: this must be reentrant because we may want to start
-   * profiling early, and then attempt to start it again at normal time
+   * profiling before any other tool, and then attempt to start it again at normal time
    */
-  public static synchronized void run(final boolean early) throws IllegalArgumentException {
+  public static synchronized void run(final boolean isStartingFirst)
+      throws IllegalArgumentException {
     if (PROFILER == null) {
       final Config config = Config.get();
-      if (early && !config.isProfilingStartForceEarly()) {
-        log.info("Profiling: not starting early");
+      if (isStartingFirst && !config.isProfilingStartForceFirst()) {
+        log.info("Profiling: not starting first");
         // early startup is disabled;
         return;
       }
@@ -57,7 +58,7 @@ public class ProfilingAgent {
                 startupDelay,
                 startupDelayRandomRange,
                 uploadPeriod,
-                config.isProfilingStartForceEarly());
+                config.isProfilingStartForceFirst());
         PROFILER.start();
         log.info("Profiling has started!");
 

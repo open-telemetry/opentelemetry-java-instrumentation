@@ -47,6 +47,10 @@ public class Agent {
   public static void start(final Instrumentation inst, final URL bootstrapURL) {
     createParentClassloader(bootstrapURL);
 
+    // Profiling agent startup code is written in a way to allow `startProfilingAgent` be called
+    // multiple times
+    // If early profiling is enabled then this call will start profiling.
+    // If early profiling is disabled then later call will do this.
     startProfilingAgent(bootstrapURL, true);
 
     startDatadogAgent(inst, bootstrapURL);
@@ -279,7 +283,7 @@ public class Agent {
   }
 
   private static synchronized void startProfilingAgent(
-      final URL bootstrapURL, final boolean early) {
+      final URL bootstrapURL, final boolean isStartingFirst) {
     final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
     try {
       if (PROFILING_CLASSLOADER == null) {
@@ -290,7 +294,7 @@ public class Agent {
       final Class<?> profilingAgentClass =
           PROFILING_CLASSLOADER.loadClass("com.datadog.profiling.agent.ProfilingAgent");
       final Method profilingInstallerMethod = profilingAgentClass.getMethod("run", Boolean.TYPE);
-      profilingInstallerMethod.invoke(null, early);
+      profilingInstallerMethod.invoke(null, isStartingFirst);
     } catch (final ClassFormatError e) {
       /*
       Profiling is compiled for Java8. Loading it on Java7 results in ClassFormatError
