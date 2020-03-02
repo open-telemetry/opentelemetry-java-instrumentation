@@ -37,20 +37,8 @@ import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 public class TracingClientInterceptor implements ClientInterceptor {
-  private static final Pattern IPV4 =
-      Pattern.compile(
-          "^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$");
-
-  private static final Pattern IPV6_STD =
-      Pattern.compile("^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$");
-
-  private static final Pattern IPV6_COMPRESSED =
-      Pattern.compile(
-          "^((?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4})*)?)::((?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4})*)?)$");
-
   private final String peerAddress;
 
   private final int peerPort;
@@ -60,10 +48,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
   public TracingClientInterceptor(final String peerAddress, final int peerPort) {
     this.peerAddress = peerAddress;
     this.peerPort = peerPort;
-    isIp =
-        IPV4.matcher(peerAddress).matches()
-            || IPV6_STD.matcher(peerAddress).matches()
-            || IPV6_COMPRESSED.matcher(peerAddress).matches();
+    isIp = GrpcHelper.isNumericAddress(peerAddress);
   }
 
   @Override

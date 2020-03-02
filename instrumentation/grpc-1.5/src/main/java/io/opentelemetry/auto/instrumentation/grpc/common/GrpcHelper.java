@@ -19,8 +19,20 @@ import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
+import java.util.regex.Pattern;
 
 public class GrpcHelper {
+  private static final Pattern IPV4 =
+      Pattern.compile(
+          "^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$");
+
+  private static final Pattern IPV6_STD =
+      Pattern.compile("^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$");
+
+  private static final Pattern IPV6_COMPRESSED =
+      Pattern.compile(
+          "^((?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4})*)?)::((?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4})*)?)$");
+
   public static class AddressAndPort {
     public final String address;
 
@@ -64,5 +76,11 @@ public class GrpcHelper {
 
   public static AddressAndPort getAddressForBuilder(final ManagedChannelBuilder builder) {
     return builderToAddress.get(builder);
+  }
+
+  public static boolean isNumericAddress(final String addr) {
+    return IPV4.matcher(addr).matches()
+        || IPV6_STD.matcher(addr).matches()
+        || IPV6_COMPRESSED.matcher(addr).matches();
   }
 }

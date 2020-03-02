@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.grpc.client;
 import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.grpc.ClientInterceptor;
@@ -32,6 +31,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatchers;
 
 @AutoService(Instrumenter.class)
 public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
@@ -42,7 +42,8 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("io.grpc.ManagedChannelBuilder"));
+    return safeHasSuperType(named("io.grpc.ManagedChannelBuilder"))
+        .or(named("io.grpc.ManagedChannelBuilder"));
   }
 
   @Override
@@ -67,7 +68,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         isMethod().and(named("build")),
         GrpcClientBuilderInstrumentation.class.getName() + "$AddInterceptorAdvice");
     map.put(
-        isMethod().and(named("forAddress")).and(takesArguments(String.class, Integer.class)),
+        isMethod().and(named("forAddress").and(ElementMatchers.takesArguments(2))),
         GrpcClientBuilderInstrumentation.class.getName() + "$ForAddressAdvice");
     return map;
   }
@@ -99,10 +100,10 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   public static class ForAddressAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static final void forAddress(
-        @Advice.Argument(0) final String address,
+        @Advice.Argument(0) final Object address,
         @Advice.Argument(1) final int port,
         @Advice.Return final ManagedChannelBuilder builder) {
-      GrpcHelper.registerAddressForBuilder(builder, address, port);
+      GrpcHelper.registerAddressForBuilder(builder, address.toString(), port);
     }
   }
 }

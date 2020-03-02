@@ -49,9 +49,9 @@ class GrpcTest extends AgentTestRunner {
         responseObserver.onCompleted()
       }
     }
-    Server server = InProcessServerBuilder.forName(getClass().name).addService(greeter).directExecutor().build().start()
-
-    ManagedChannel channel = InProcessChannelBuilder.forName(getClass().name).build()
+    def port = PortUtils.randomOpenPort()
+    Server server = ServerBuilder.forPort(port).addService(greeter).build().start()
+    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(true).build()
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
@@ -79,6 +79,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
+            "net.peer.name" "localhost"
+            "net.peer.port" port
             "status.code" "OK"
           }
         }
@@ -99,6 +101,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
+            "net.peer.name" "localhost"
+            "net.peer.port" Long
             "status.code" "OK"
           }
         }
@@ -171,6 +175,8 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "status.code" "${status.code.name()}"
             "status.description" description
+            "net.peer.name" "localhost"
+            "net.peer.port" Long
             if (status.cause != null) {
               errorTags status.cause.class, status.cause.message
             }

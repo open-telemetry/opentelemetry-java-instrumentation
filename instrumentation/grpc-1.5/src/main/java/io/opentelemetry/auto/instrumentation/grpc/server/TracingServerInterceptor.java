@@ -22,6 +22,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
+import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
@@ -33,6 +34,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -61,6 +64,17 @@ public class TracingServerInterceptor implements ServerInterceptor {
     final Span span = spanBuilder.startSpan();
     span.setAttribute(MoreTags.RESOURCE_NAME, methodName);
     GrpcHelper.addServiceName(span, methodName);
+    final SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
+    if (addr != null && addr instanceof InetSocketAddress) {
+      final InetSocketAddress iAddr = (InetSocketAddress) addr;
+      if (iAddr.isUnresolved()) {
+        span.setAttribute("net.peer.ip", iAddr.getHostName()); // TODO: Use constant
+      } else {
+        span.setAttribute("net.peer.name", iAddr.getHostName()); // TODO: Use constant
+      }
+      span.setAttribute(
+          "net.peer.port", ((InetSocketAddress) addr).getPort()); // TODO: Use constant
+    }
 
     DECORATE.afterStart(span);
 
