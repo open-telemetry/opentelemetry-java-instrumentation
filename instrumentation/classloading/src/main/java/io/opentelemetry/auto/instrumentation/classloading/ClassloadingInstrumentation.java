@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.classloading;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -59,7 +59,7 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
     return not(named("java.lang.ClassLoader"))
         .and(not(named("com.ibm.oti.vm.BootstrapClassLoader")))
         .and(not(named("io.opentelemetry.auto.bootstrap.AgentClassLoader")))
-        .and(safeHasSuperType(named("java.lang.ClassLoader")));
+        .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
   @Override

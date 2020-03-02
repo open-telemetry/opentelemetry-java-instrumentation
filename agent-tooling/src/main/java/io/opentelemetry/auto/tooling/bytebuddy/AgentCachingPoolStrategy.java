@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.tooling;
+package io.opentelemetry.auto.tooling.bytebuddy;
 
 import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 
@@ -57,7 +57,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
   static final int LOADER_CAPACITY = 64;
   static final int TYPE_CAPACITY = 64;
 
-  static final int BOOTSTRAP_HASH = 0;
+  static final int BOOTSTRAP_HASH = 7236344; // Just a random number
 
   /**
    * Cache of recent ClassLoader WeakReferences; used to...
@@ -155,7 +155,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
       this.loaderRef = loaderRef;
       this.className = className;
 
-      hashCode = (int) (31 * this.loaderHash) ^ className.hashCode();
+      hashCode = 31 * this.loaderHash + className.hashCode();
     }
 
     @Override
@@ -175,12 +175,13 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
         return false;
       }
 
-      // Fastpath loaderRef equivalence -- works because of WeakReference cache used
-      // Also covers the bootstrap null loaderRef case
-      if (loaderRef == that.loaderRef) {
-        // still need to check name
-        return className.equals(that.className);
-      } else if (className.equals(that.className)) {
+      if (className.equals(that.className)) {
+        // Fastpath loaderRef equivalence -- works because of WeakReference cache used
+        // Also covers the bootstrap null loaderRef case
+        if (loaderRef == that.loaderRef) {
+          return true;
+        }
+
         // need to perform a deeper loader check -- requires calling Reference.get
         // which can strengthen the Reference, so deliberately done last
 

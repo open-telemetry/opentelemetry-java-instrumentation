@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.jms;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -49,7 +49,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("javax.jms.MessageListener")));
+    return not(isInterface()).and(hasInterface(named("javax.jms.MessageListener")));
   }
 
   @Override

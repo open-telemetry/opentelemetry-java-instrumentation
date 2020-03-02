@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -57,7 +57,7 @@ public final class JavaForkJoinTaskInstrumentation extends Instrumenter.Default 
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeExtendsClass(named(ForkJoinTask.class.getName())));
+    return not(isInterface()).and(extendsClass(named(ForkJoinTask.class.getName())));
   }
 
   @Override

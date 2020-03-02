@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.jdbc;
 
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -56,7 +56,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("javax.sql.DataSource")));
+    return not(isInterface()).and(hasInterface(named("javax.sql.DataSource")));
   }
 
   @Override

@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_3;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -68,13 +68,13 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("org.hibernate.SharedSessionContract")));
+    return not(isInterface()).and(hasInterface(named("org.hibernate.SharedSessionContract")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(returns(safeHasInterface(named("org.hibernate.procedure.ProcedureCall")))),
+        isMethod().and(returns(hasInterface(named("org.hibernate.procedure.ProcedureCall")))),
         SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
   }
 

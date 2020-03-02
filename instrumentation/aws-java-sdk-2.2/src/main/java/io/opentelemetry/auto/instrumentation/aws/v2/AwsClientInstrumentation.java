@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -41,8 +41,7 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("software.amazon.awssdk.")
         .and(not(isInterface()))
-        .and(
-            safeHasInterface(named("software.amazon.awssdk.core.client.builder.SdkClientBuilder")));
+        .and(hasInterface(named("software.amazon.awssdk.core.client.builder.SdkClientBuilder")));
   }
 
   @Override

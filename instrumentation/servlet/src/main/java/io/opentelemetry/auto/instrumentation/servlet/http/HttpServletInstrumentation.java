@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.servlet.http;
 
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -59,7 +59,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeExtendsClass(named("javax.servlet.http.HttpServlet")));
+    return not(isInterface()).and(extendsClass(named("javax.servlet.http.HttpServlet")));
   }
 
   /**
