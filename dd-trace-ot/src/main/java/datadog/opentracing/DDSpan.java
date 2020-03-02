@@ -1,8 +1,5 @@
 package datadog.opentracing;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static io.opentracing.log.Fields.MESSAGE;
-
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -50,6 +47,9 @@ public class DDSpan implements Span, MutableSpan {
    */
   private final AtomicLong durationNano = new AtomicLong();
 
+  /** Delegates to for handling the logs if present. */
+  private final LogHandler logHandler;
+
   /** Implementation detail. Stores the weak reference to this span. Used by TraceCollection. */
   volatile WeakReference<DDSpan> ref;
 
@@ -60,7 +60,19 @@ public class DDSpan implements Span, MutableSpan {
    * @param context the context used for the span
    */
   DDSpan(final long timestampMicro, final DDSpanContext context) {
+    this(timestampMicro, context, new DefaultLogHandler());
+  }
+
+  /**
+   * Spans should be constructed using the builder, not by calling the constructor directly.
+   *
+   * @param timestampMicro if greater than zero, use this time instead of the current time
+   * @param context the context used for the span
+   * @param logHandler as the handler where to delegate the log actions
+   */
+  DDSpan(final long timestampMicro, final DDSpanContext context, final LogHandler logHandler) {
     this.context = context;
+    this.logHandler = logHandler;
 
     if (timestampMicro <= 0L) {
       // record the start time
@@ -143,18 +155,6 @@ public class DDSpan implements Span, MutableSpan {
     setTag(DDTags.ERROR_STACK, errorString.toString());
   }
 
-  private boolean extractError(final Map<String, ?> map) {
-    if (map.get(ERROR_OBJECT) instanceof Throwable) {
-      final Throwable error = (Throwable) map.get(ERROR_OBJECT);
-      setErrorMeta(error);
-      return true;
-    } else if (map.get(MESSAGE) instanceof String) {
-      setTag(DDTags.ERROR_MSG, (String) map.get(MESSAGE));
-      return true;
-    }
-    return false;
-  }
-
   /* (non-Javadoc)
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.String)
    */
@@ -227,9 +227,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final Map<String, ?> map) {
-    if (!extractError(map)) {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
+    logHandler.log(map, this);
     return this;
   }
 
@@ -238,9 +236,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final long l, final Map<String, ?> map) {
-    if (!extractError(map)) {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
+    logHandler.log(l, map, this);
     return this;
   }
 
@@ -249,7 +245,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final String s) {
-    log.debug("`log` method is not implemented. Provided log: {}", s);
+    logHandler.log(s, this);
     return this;
   }
 
@@ -258,7 +254,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan log(final long l, final String s) {
-    log.debug("`log` method is not implemented. Provided log: {}", s);
+    logHandler.log(l, s, this);
     return this;
   }
 
