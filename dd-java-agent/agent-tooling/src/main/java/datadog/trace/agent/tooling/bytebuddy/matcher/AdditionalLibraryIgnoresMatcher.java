@@ -32,6 +32,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.couchbase.client.deps.")
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
+        || name.startsWith("com.github.mustachejava.")
         || name.startsWith("net.sf.cglib.")
         || name.startsWith("org.objectweb.asm.")) {
       return true;
