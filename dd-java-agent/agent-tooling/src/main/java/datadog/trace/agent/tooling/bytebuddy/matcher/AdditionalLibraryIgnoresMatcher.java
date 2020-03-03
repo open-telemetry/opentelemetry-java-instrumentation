@@ -27,7 +27,10 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
   public boolean matches(final T target) {
     final String name = target.getActualName();
 
-    if (name.startsWith("org.springframework.aop.")
+    if (name.startsWith("com.fasterxml.classmate.")
+        || name.startsWith("com.fasterxml.jackson.")
+        || name.startsWith("net.sf.cglib.")
+        || name.startsWith("org.springframework.aop.")
         || name.startsWith("org.springframework.beans.factory.annotation.")
         || name.startsWith("org.springframework.beans.factory.config.")
         || name.startsWith("org.springframework.beans.factory.parsing.")
