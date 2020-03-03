@@ -73,6 +73,11 @@ public class AgentInstaller {
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader());
     if (skipAdditionalLibraryMatcher) {
+      // Ignore classes matched by globalIgnoresMatcher but not matched by
+      // additionalLibraryIgnoresMatcher.
+      // Note: globalIgnoresMatcher includes additionalLibraryIgnoresMatcher internally for
+      // efficiency purposes.
+      // Note2: this is expected to be used by tests only.
       ignoredAgentBuilder =
           ignoredAgentBuilder.or(
               globalIgnoresMatcher().and(not(additionalLibraryIgnoresMatcher())));
