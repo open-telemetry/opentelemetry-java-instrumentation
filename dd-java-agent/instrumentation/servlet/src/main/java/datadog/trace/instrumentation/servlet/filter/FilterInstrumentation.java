@@ -38,7 +38,8 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/servlet/Filter.class"));
+    // return not(classLoaderHasNoResources("javax/servlet/Filter.class")); // Not available in 2.2
+    return not(classLoaderHasNoResources("javax/servlet/http/HttpServlet.class"));
   }
 
   @Override
