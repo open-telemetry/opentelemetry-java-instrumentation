@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.apachehttpclient.v3_0;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.v3_0.ApacheHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.v3_0.ApacheHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.v3_0.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -51,7 +51,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("org.apache.commons.httpclient.HttpClient"));
+    return extendsClass(named("org.apache.commons.httpclient.HttpClient"));
   }
 
   @Override

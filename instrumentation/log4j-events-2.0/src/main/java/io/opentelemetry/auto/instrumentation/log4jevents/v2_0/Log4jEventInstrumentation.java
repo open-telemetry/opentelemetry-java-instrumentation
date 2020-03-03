@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.log4jevents.v2_0;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -43,7 +43,7 @@ public class Log4jEventInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("org.apache.logging.log4j.spi.AbstractLogger"));
+    return extendsClass(named("org.apache.logging.log4j.spi.AbstractLogger"));
   }
 
   @Override

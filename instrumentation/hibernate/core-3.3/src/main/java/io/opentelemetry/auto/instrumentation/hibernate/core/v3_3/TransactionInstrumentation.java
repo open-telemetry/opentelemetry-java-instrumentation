@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v3_3;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -47,7 +47,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("org.hibernate.Transaction")));
+    return not(isInterface()).and(hasInterface(named("org.hibernate.Transaction")));
   }
 
   @Override

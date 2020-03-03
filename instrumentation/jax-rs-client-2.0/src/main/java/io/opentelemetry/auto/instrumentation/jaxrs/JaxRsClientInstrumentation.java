@@ -15,8 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.jaxrs;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -40,7 +40,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeExtendsClass(named("javax.ws.rs.client.ClientBuilder"));
+    return extendsClass(named("javax.ws.rs.client.ClientBuilder"));
   }
 
   @Override
@@ -59,7 +59,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        named("build").and(returns(safeHasInterface(named("javax.ws.rs.client.Client")))),
+        named("build").and(returns(hasInterface(named("javax.ws.rs.client.Client")))),
         JaxRsClientInstrumentation.class.getName() + "$ClientBuilderAdvice");
   }
 

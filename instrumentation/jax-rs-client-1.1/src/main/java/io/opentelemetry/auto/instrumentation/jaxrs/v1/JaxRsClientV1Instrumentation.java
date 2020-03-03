@@ -19,8 +19,8 @@ import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -49,7 +49,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasInterface(named("com.sun.jersey.api.client.ClientHandler"));
+    return hasInterface(named("com.sun.jersey.api.client.ClientHandler"));
   }
 
   @Override
@@ -67,10 +67,8 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("handle")
-            .and(
-                takesArgument(
-                    0, safeExtendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
-            .and(returns(safeExtendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
+            .and(takesArgument(0, extendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
+            .and(returns(extendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
         JaxRsClientV1Instrumentation.class.getName() + "$HandleAdvice");
   }
 

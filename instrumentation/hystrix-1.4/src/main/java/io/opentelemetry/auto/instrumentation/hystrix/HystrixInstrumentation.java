@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.hystrix;
 
 import static io.opentelemetry.auto.instrumentation.hystrix.HystrixDecorator.DECORATE;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.INTERNAL;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -45,7 +45,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeExtendsClass(
+    return extendsClass(
         named("com.netflix.hystrix.HystrixCommand")
             .or(named("com.netflix.hystrix.HystrixObservableCommand")));
   }

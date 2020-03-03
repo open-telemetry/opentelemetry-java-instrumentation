@@ -17,9 +17,9 @@ package io.opentelemetry.auto.instrumentation.jaxrs1;
 
 import static io.opentelemetry.auto.instrumentation.jaxrs1.JaxRsAnnotationsDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrs1.JaxRsAnnotationsDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.hasSuperMethod;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;

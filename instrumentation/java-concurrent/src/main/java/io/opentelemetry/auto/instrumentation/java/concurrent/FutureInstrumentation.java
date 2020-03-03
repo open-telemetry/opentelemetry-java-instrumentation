@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -93,19 +93,23 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    final ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
+        hasInterface(named(Future.class.getName()));
     return not(isInterface())
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
               public boolean matches(final TypeDescription target) {
                 final boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
-                if (!whitelisted) {
+                if (!whitelisted
+                    && log.isDebugEnabled()
+                    && hasFutureInterfaceMatcher.matches(target)) {
                   log.debug("Skipping future instrumentation for {}", target.getName());
                 }
                 return whitelisted;
               }
             })
-        .and(safeHasInterface(named(Future.class.getName()))); // Apply expensive matcher last.
+        .and(hasFutureInterfaceMatcher); // Apply expensive matcher last.
   }
 
   @Override

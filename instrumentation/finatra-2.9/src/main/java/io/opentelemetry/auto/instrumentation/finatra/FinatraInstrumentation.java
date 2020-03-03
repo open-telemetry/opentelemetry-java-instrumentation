@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.finatra;
 
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -68,7 +68,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return nameStartsWith("com.twitter.finatra.")
         .and(not(isInterface()))
-        .and(safeExtendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
+        .and(extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
   }
 
   @Override
