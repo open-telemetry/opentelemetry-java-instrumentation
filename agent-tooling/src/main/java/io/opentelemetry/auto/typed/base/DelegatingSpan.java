@@ -1,4 +1,4 @@
-package io.opentelemetry.auto.typed.span;
+package io.opentelemetry.auto.typed.base;
 
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.EndSpanOptions;

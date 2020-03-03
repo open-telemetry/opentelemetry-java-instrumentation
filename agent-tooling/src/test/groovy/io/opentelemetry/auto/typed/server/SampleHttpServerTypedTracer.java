@@ -1,7 +1,6 @@
-package io.opentelemetry.auto.typed;
+package io.opentelemetry.auto.typed.server;
 
-import io.opentelemetry.auto.typed.tracer.HttpClientTypedTracer;
-import io.opentelemetry.auto.typed.tracer.HttpServerTypedTracer;
+import io.opentelemetry.auto.typed.server.http.HttpServerTypedTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 
@@ -26,7 +25,7 @@ public class SampleHttpServerTypedTracer
 
   @Override
   protected SampleHttpServerTypedSpan wrapSpan(Span span) {
-    return new SampleHttpServerTypedSpan(tracer, span);
+    return new SampleHttpServerTypedSpan(span);
   }
 
   @Override

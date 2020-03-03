@@ -1,8 +1,12 @@
 package io.opentelemetry.auto.typed;
 
+import io.opentelemetry.auto.typed.client.SampleHttpClientTypedSpan;
+import io.opentelemetry.auto.typed.client.SampleHttpClientTypedTracer;
+import io.opentelemetry.auto.typed.server.SampleHttpServerTypedSpan;
+import io.opentelemetry.auto.typed.server.SampleHttpServerTypedTracer;
 import io.opentelemetry.context.Scope;
 
-class HttpClientTracerDemonstration {
+class TypedTracerDemonstration {
 
   private void serverDemonstration() {
     SampleHttpServerTypedTracer tracer = new SampleHttpServerTypedTracer();
@@ -14,8 +18,8 @@ class HttpClientTracerDemonstration {
       // make request
       String response = "response instance";
 
-      // span.onResponse("response instance"); // implicitly called on end.
       span.end(response);
+      // span.onResponse("response instance"); // implicitly called on end.
     } catch (Exception ex) {
       span.end(ex);
     }
@@ -31,8 +35,8 @@ class HttpClientTracerDemonstration {
       // make request
       String response = "response instance";
 
-      // span.onResponse("response instance"); // implicitly called on end.
       span.end(response);
+      // span.onResponse("response instance"); // implicitly called on end.
     } catch (Exception ex) {
       span.end(ex);
     }

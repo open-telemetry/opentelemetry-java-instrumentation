@@ -1,15 +1,11 @@
-package io.opentelemetry.auto.typed.span;
+package io.opentelemetry.auto.typed.base;
 
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 
 public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingSpan {
 
-  protected final Tracer tracer;
-
-  public BaseTypedSpan(Tracer tracer, Span delegate) {
+  public BaseTypedSpan(Span delegate) {
     super(delegate);
-    this.tracer = tracer;
   }
 
   public void end(Throwable throwable) {
@@ -17,5 +13,5 @@ public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingS
     super.end();
   }
 
-  abstract protected T self();
+  protected abstract T self();
 }

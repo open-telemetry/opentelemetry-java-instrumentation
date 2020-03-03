@@ -1,6 +1,6 @@
-package io.opentelemetry.auto.typed.tracer;
+package io.opentelemetry.auto.typed.server.http;
 
-import io.opentelemetry.auto.typed.span.HttpServerTypedSpan;
+import io.opentelemetry.auto.typed.server.ServerTypedTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -14,7 +14,9 @@ public abstract class HttpServerTypedTracer<
   @Override
   protected Span.Builder buildSpan(REQUEST request, Span.Builder spanBuilder) {
     SpanContext extract = tracer.getHttpTextFormat().extract(request, getGetter());
-    spanBuilder.setParent(extract);
+    if (extract.isValid()) {
+      spanBuilder.setParent(extract);
+    }
     return super.buildSpan(request, spanBuilder);
   }
 

@@ -1,7 +1,6 @@
-package io.opentelemetry.auto.typed.tracer;
+package io.opentelemetry.auto.typed.base;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.typed.span.BaseTypedSpan;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;

@@ -1,6 +1,7 @@
-package io.opentelemetry.auto.typed;
+package io.opentelemetry.auto.typed.client;
 
-import io.opentelemetry.auto.typed.tracer.HttpClientTypedTracer;
+import io.opentelemetry.auto.typed.client.http.HttpClientTypedTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 
 public class SampleHttpClientTypedTracer
@@ -21,7 +22,15 @@ public class SampleHttpClientTypedTracer
   }
 
   @Override
+  protected HttpTextFormat.Setter<String> getSetter() {
+    return new HttpTextFormat.Setter<String>() {
+      @Override
+      public void put(String carrier, String key, String value) {}
+    };
+  }
+
+  @Override
   protected SampleHttpClientTypedSpan wrapSpan(Span span) {
-    return new SampleHttpClientTypedSpan(tracer, span);
+    return new SampleHttpClientTypedSpan(span);
   }
 }

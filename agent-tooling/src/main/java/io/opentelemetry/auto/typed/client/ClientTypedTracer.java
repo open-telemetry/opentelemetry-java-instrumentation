@@ -1,6 +1,6 @@
-package io.opentelemetry.auto.typed.tracer;
+package io.opentelemetry.auto.typed.client;
 
-import io.opentelemetry.auto.typed.span.ClientTypedSpan;
+import io.opentelemetry.auto.typed.base.BaseTypedTracer;
 import io.opentelemetry.trace.Span;
 
 public abstract class ClientTypedTracer<
