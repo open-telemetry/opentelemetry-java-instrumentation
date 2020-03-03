@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.tooling;
+package io.opentelemetry.auto.tooling.bytebuddy;
 
+import io.opentelemetry.auto.tooling.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;

@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.test
 
-import io.opentelemetry.auto.tooling.AgentLocationStrategy
+import io.opentelemetry.auto.tooling.bytebuddy.AgentLocationStrategy
 import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Shared
