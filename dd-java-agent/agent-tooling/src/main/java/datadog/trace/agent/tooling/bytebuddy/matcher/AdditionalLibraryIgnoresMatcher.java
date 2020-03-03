@@ -27,8 +27,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
   public boolean matches(final T target) {
     final String name = target.getActualName();
 
-    if (name.startsWith("ch.qos.logback.")
-        || name.startsWith("com.beust.jcommander.")
+    if (name.startsWith("com.beust.jcommander.")
         || name.startsWith("com.carrotsearch.hppc.")
         || name.startsWith("com.couchbase.client.deps.")
         || name.startsWith("com.fasterxml.classmate.")
@@ -85,6 +84,15 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("org.apache.xml.")
         || name.startsWith("org.apache.xpath.")
         || name.startsWith("org.xml.")) {
+      return true;
+    }
+
+    if (name.startsWith("ch.qos.logback.")) {
+      // We instrument this Runnable
+      if (name.startsWith("ch.qos.logback.core.AsyncAppenderBase$")) {
+        return true;
+      }
+
       return true;
     }
 
