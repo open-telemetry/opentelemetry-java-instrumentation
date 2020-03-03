@@ -29,17 +29,21 @@ import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TracingClientInterceptor implements ClientInterceptor {
+  private final InetSocketAddress peerAddress;
 
-  public static final TracingClientInterceptor INSTANCE = new TracingClientInterceptor();
+  public TracingClientInterceptor(final InetSocketAddress peerAddress) {
+    this.peerAddress = peerAddress;
+  }
 
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
@@ -47,10 +51,11 @@ public class TracingClientInterceptor implements ClientInterceptor {
       final CallOptions callOptions,
       final Channel next) {
 
-    final Span span = TRACER.spanBuilder("grpc.client").setSpanKind(CLIENT).startSpan();
-    span.setAttribute(MoreTags.RESOURCE_NAME, method.getFullMethodName());
+    final String methodName = method.getFullMethodName();
+    final Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
+      GrpcHelper.prepareSpan(span, methodName, peerAddress);
 
       final ClientCall<ReqT, RespT> result;
       try {
