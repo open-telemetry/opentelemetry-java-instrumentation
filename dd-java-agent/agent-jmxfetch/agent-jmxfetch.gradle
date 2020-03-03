@@ -4,7 +4,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile('com.datadoghq:jmxfetch:0.34.0') {
+  compile('com.datadoghq:jmxfetch:0.35.0') {
     exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
     exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
     exclude group: 'org.slf4j', module: 'slf4j-api'
