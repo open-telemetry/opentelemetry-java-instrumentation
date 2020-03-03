@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.dropwizard.view;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -50,7 +50,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("io.dropwizard.views.ViewRenderer")));
+    return not(isInterface()).and(hasInterface(named("io.dropwizard.views.ViewRenderer")));
   }
 
   @Override

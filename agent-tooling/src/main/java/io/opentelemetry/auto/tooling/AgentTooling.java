@@ -16,6 +16,8 @@
 package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.auto.bootstrap.WeakMap;
+import io.opentelemetry.auto.tooling.bytebuddy.AgentCachingPoolStrategy;
+import io.opentelemetry.auto.tooling.bytebuddy.AgentLocationStrategy;
 
 /**
  * This class contains class references for objects shared by the agent installer as well as muzzle

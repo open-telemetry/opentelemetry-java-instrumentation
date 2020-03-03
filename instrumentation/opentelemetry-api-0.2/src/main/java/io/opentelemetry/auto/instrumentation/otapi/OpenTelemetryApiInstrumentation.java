@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.otapi;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,7 +37,7 @@ public class OpenTelemetryApiInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("unshaded.io.opentelemetry.OpenTelemetry"));
+    return named("unshaded.io.opentelemetry.OpenTelemetry");
   }
 
   @Override

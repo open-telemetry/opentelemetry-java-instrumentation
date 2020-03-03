@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.classloading;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -59,7 +59,7 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
     return not(named("java.lang.ClassLoader"))
         .and(not(named("com.ibm.oti.vm.BootstrapClassLoader")))
         .and(not(named("io.opentelemetry.auto.bootstrap.AgentClassLoader")))
-        .and(safeHasSuperType(named("java.lang.ClassLoader")));
+        .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
   @Override
@@ -86,32 +86,39 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
 
   public static class LoadClassAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(
-        @Advice.Argument(0) final String name, @Advice.Local("_callDepth") int callDepth) {
-      callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
+    public static Class<?> onEnter(@Advice.Argument(0) final String name) {
+      // need to use call depth here to prevent re-entry from call to Class.forName() below
+      // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
+      // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
+      // back to this instrumentation over and over, causing a StackOverflowError
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
       if (callDepth > 0) {
         return null;
       }
-      for (final String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
-        if (name.startsWith(prefix)) {
-          try {
-            return Class.forName(name, false, null);
-          } catch (final ClassNotFoundException e) {
+      try {
+        for (final String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
+          if (name.startsWith(prefix)) {
+            try {
+              return Class.forName(name, false, null);
+            } catch (final ClassNotFoundException e) {
+            }
           }
         }
+      } finally {
+        // need to reset it right away, not waiting until onExit()
+        // otherwise it will prevent this instrumentation from being applied when loadClass()
+        // ends up calling a ClassFileTransformer which ends up calling loadClass() further down the
+        // stack on one of our bootstrap packages (since the call depth check would then suppress
+        // the nested loadClass instrumentation)
+        CallDepthThreadLocalMap.reset(ClassLoader.class);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.Local("_callDepth") final int callDepth,
         @Advice.Return(readOnly = false) Class<?> result,
         @Advice.Enter final Class<?> resultFromBootstrapLoader) {
-      if (callDepth > 0) {
-        return;
-      }
-      CallDepthThreadLocalMap.reset(ClassLoader.class);
       if (resultFromBootstrapLoader != null) {
         result = resultFromBootstrapLoader;
       }

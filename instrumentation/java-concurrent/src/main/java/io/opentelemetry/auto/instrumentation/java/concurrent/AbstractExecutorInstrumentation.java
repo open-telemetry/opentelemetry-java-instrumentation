@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -118,6 +118,8 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     ElementMatcher.Junction<TypeDescription> matcher = not(isInterface());
+    final ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
+        hasInterface(named(Executor.class.getName()));
     if (!TRACE_ALL_EXECUTORS) {
       matcher =
           matcher.and(
@@ -136,15 +138,16 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
                     }
                   }
 
-                  if (!whitelisted) {
+                  if (!whitelisted
+                      && log.isDebugEnabled()
+                      && hasExecutorInterfaceMatcher.matches(target)) {
                     log.debug("Skipping executor instrumentation for {}", target.getName());
                   }
                   return whitelisted;
                 }
               });
     }
-    return matcher.and(
-        safeHasInterface(named(Executor.class.getName()))); // Apply expensive matcher last.
+    return matcher.and(hasExecutorInterfaceMatcher); // Apply expensive matcher last.
   }
 
   @Override

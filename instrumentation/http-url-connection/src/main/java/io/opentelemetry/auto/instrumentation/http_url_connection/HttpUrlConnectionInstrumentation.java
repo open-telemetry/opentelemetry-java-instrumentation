@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.http_url_connection;
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -55,7 +55,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         .or(ElementMatchers.<TypeDescription>nameStartsWith("sun.net"))
         // This class is a simple delegator. Skip because it does not update its `connected` field.
         .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")))
-        .and(safeExtendsClass(named("java.net.HttpURLConnection")));
+        .and(extendsClass(named("java.net.HttpURLConnection")));
   }
 
   @Override

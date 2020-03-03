@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.playws21;
 import static io.opentelemetry.auto.instrumentation.playws21.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.playws21.PlayWSClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.playws21.PlayWSClientDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -48,7 +48,7 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     // CachingAsyncHttpClient rejects overrides to AsyncHandler
     // It also delegates to another AsyncHttpClient
-    return safeHasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
+    return hasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
         .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient")));
   }
 
