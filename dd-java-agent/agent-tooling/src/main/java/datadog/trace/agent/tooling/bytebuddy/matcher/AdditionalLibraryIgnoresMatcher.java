@@ -146,6 +146,18 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
+    if (name.startsWith("org.h2.")) {
+      if (name.equals("org.h2.Driver")
+          || name.startsWith("org.h2.jdbc.")
+          || name.startsWith("org.h2.jdbcx.")
+          // Some runnables that get instrumented
+          || name.equals("org.h2.store.FileLock")
+          || name.equals("org.h2.engine.DatabaseCloser")) {
+        return false;
+      }
+      return true;
+    }
+
     // kotlin, note we do not ignore kotlinx because we instrument coroutins code
     if (name.startsWith("kotlin.")) {
       return true;
