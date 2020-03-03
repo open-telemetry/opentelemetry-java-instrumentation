@@ -191,6 +191,9 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   def "trace request with callback and parent"() {
+    given:
+    assumeTrue(testCallbackWithParent())
+
     when:
     def status = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"), ["is-dd-server": "false"]) {
@@ -391,6 +394,12 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   boolean testConnectionFailure() {
+    true
+  }
+
+  boolean testCallbackWithParent() {
+    // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
+    // function is used.  There is no way to stop a test from a derived class hence the flag
     true
   }
 }

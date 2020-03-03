@@ -7,12 +7,11 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
-// TODO: Uncomment when there are more releases, right now 2.1.0 is the latest release
-//testSets {
-//  latestDepTest {
-//    dirName = 'test'
-//  }
-//}
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
 
 muzzle {
   // 2.0.5 was a bad release
@@ -62,6 +61,9 @@ def scalaVersion = '2.12'
 dependencies {
   compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.0'
 
+  compile project(':dd-java-agent:instrumentation:play-ws')
+  testCompile project(path: ':dd-java-agent:instrumentation:play-ws', configuration: 'testArtifacts')
+
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
 
   // These are to ensure cross compatibility
@@ -69,9 +71,7 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:netty-4.1')
   testCompile project(':dd-java-agent:instrumentation:akka-http-10.0')
 
-  testCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.0'
+  testCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.2'
 
-  // TODO: Uncomment when there are more releases, right now 2.1.0 is the latest release
-
-  // latestDepTestCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '+'
+  latestDepTestCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '+'
 }
