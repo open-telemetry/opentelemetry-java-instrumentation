@@ -50,6 +50,7 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
       "datadog.trace.instrumentation.playws.PlayWSClientDecorator",
       "datadog.trace.instrumentation.playws.HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper",
+      packageName + ".StreamedAsyncHandlerWrapper"
     };
   }
 }

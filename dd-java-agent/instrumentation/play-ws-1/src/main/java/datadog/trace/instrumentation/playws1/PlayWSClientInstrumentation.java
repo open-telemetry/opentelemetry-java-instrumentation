@@ -28,7 +28,11 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
       DECORATE.onRequest(span, request);
       propagate().inject(span, request, SETTER);
 
-      asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
+      if (asyncHandler instanceof StreamedAsyncHandler) {
+        asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);
+      } else {
+        asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
+      }
 
       return span;
     }
