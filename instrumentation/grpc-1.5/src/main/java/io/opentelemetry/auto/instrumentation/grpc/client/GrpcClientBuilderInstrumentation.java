@@ -15,16 +15,18 @@
  */
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
-import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
+import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +45,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("io.grpc.ManagedChannelBuilder"))
-        .or(named("io.grpc.ManagedChannelBuilder"));
+    return extendsClass(named("io.grpc.ManagedChannelBuilder"));
   }
 
   @Override
@@ -59,6 +60,12 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.decorator.ClientDecorator",
       packageName + ".GrpcClientDecorator",
     };
+  }
+
+  @Override
+  public Map<String, String> contextStore() {
+    return Collections.singletonMap(
+        "io.grpc.ManagedChannelBuilder", InetSocketAddress.class.getName());
   }
 
   @Override
@@ -87,7 +94,9 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         }
       }
       if (shouldRegister) {
-        final InetSocketAddress sockAddr = GrpcHelper.getAddressForBuilder(thiz);
+        final ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
+            InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
+        final InetSocketAddress sockAddr = contextStore.get(thiz);
         interceptors.add(0, new TracingClientInterceptor(sockAddr));
       }
     }
@@ -99,8 +108,9 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final String address,
         @Advice.Argument(1) final int port,
         @Advice.Return final ManagedChannelBuilder builder) {
-      GrpcHelper.registerAddressForBuilder(
-          builder, new InetSocketAddress(address.toString(), port));
+      final ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
+          InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
+      contextStore.put(builder, new InetSocketAddress(address, port));
     }
   }
 }

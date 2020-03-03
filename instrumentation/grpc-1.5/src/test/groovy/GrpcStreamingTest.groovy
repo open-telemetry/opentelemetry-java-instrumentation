@@ -116,7 +116,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/Conversation"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
@@ -142,7 +141,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/Conversation"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"

@@ -15,16 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.grpc.common;
 
-import io.grpc.ManagedChannelBuilder;
-import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 
 public class GrpcHelper {
-  private static final WeakMap<ManagedChannelBuilder, InetSocketAddress> builderToAddress =
-      WeakMap.Provider.newWeakMap();
-
   public static void prepareSpan(
       final Span span, final String methodName, final InetSocketAddress peerAddress) {
     String serviceName =
@@ -48,14 +43,5 @@ public class GrpcHelper {
       span.setAttribute(MoreTags.NET_PEER_PORT, 0);
       span.setAttribute(MoreTags.NET_PEER_NAME, "(unknown)");
     }
-  }
-
-  public static void registerAddressForBuilder(
-      final io.grpc.ManagedChannelBuilder builder, final InetSocketAddress address) {
-    builderToAddress.put(builder, address);
-  }
-
-  public static InetSocketAddress getAddressForBuilder(final ManagedChannelBuilder builder) {
-    return builderToAddress.get(builder);
   }
 }

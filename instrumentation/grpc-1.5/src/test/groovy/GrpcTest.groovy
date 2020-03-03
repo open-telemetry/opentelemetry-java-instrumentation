@@ -81,7 +81,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
@@ -104,7 +103,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
@@ -162,7 +160,6 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
@@ -186,7 +183,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.RPC_SERVICE" "Greeter"
@@ -254,7 +250,6 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
@@ -277,7 +272,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.RESOURCE_NAME" "example.Greeter/SayHello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.RPC_SERVICE" "Greeter"

@@ -29,7 +29,6 @@ import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.AttributeValue;
@@ -54,7 +53,6 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     final String methodName = method.getFullMethodName();
     final Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();
-    span.setAttribute(MoreTags.RESOURCE_NAME, methodName);
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       GrpcHelper.prepareSpan(span, methodName, peerAddress);

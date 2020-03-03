@@ -28,7 +28,6 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.AttributeValue;
@@ -62,7 +61,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
       spanBuilder.setNoParent();
     }
     final Span span = spanBuilder.startSpan();
-    span.setAttribute(MoreTags.RESOURCE_NAME, methodName);
     final SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     final InetSocketAddress iAddr =
         addr instanceof InetSocketAddress ? (InetSocketAddress) addr : null;
