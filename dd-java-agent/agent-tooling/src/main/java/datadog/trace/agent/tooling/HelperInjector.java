@@ -25,10 +25,12 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
+import net.bytebuddy.utility.RandomString;
 
 /** Injects instrumentation helper classes into the user's classloader. */
 @Slf4j
 public class HelperInjector implements Transformer {
+  private static final File TEMP_DIR = computeTempDir();
 
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
@@ -145,16 +147,28 @@ public class HelperInjector implements Transformer {
     return builder;
   }
 
-  private Map<String, Class<?>> injectBootstrapClassLoader(final Map<String, byte[]> classnameToBytes) {
-    return ClassInjector.UsingInstrumentation.of(
-        new File(System.getProperty("java.io.tmpdir")),
-        ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
-        AgentInstaller.getInstrumentation())
-        .injectRaw(classnameToBytes);
+  private Map<String, Class<?>> injectBootstrapClassLoader(
+      final Map<String, byte[]> classnameToBytes) {
+    if (!TEMP_DIR.exists()) {
+      TEMP_DIR.mkdir();
+    }
+    try {
+      return ClassInjector.UsingInstrumentation.of(
+              TEMP_DIR,
+              ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
+              AgentInstaller.getInstrumentation())
+          .injectRaw(classnameToBytes);
+    } finally {
+      if (TEMP_DIR.list().length == 0) {
+        if (!TEMP_DIR.delete()) {
+          TEMP_DIR.deleteOnExit();
+        }
+      }
+    }
   }
 
   private Map<String, Class<?>> injectClassLoader(
-    final ClassLoader classLoader, final Map<String, byte[]> classnameToBytes) {
+      final ClassLoader classLoader, final Map<String, byte[]> classnameToBytes) {
     return new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
   }
 
@@ -178,5 +192,26 @@ public class HelperInjector implements Transformer {
         }
       }
     }
+  }
+
+  /*
+   * Tries to temp file naming collisions by creating a unique directory per
+   * process.  Generates up to random names.  If a no file exists with a
+   * generated name, settles on using that name.  If name can be found falls
+   * back using java.io.tmpdir directly.
+   */
+  private static final File computeTempDir() {
+    File rootTempDir = new File(System.getProperty("java.io.tmpdir"));
+    rootTempDir.mkdir();
+
+    RandomString randString = new RandomString(16);
+    for (int i = 0; i < 10; ++i) {
+      String dirName = "datadog-temp-jars-" + randString.nextString();
+      File processTempDir = new File(rootTempDir, dirName);
+      if (!processTempDir.exists()) {
+        return processTempDir;
+      }
+    }
+    return rootTempDir;
   }
 }
