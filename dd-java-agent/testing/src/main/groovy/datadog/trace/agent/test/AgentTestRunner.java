@@ -23,6 +23,7 @@ import io.opentracing.Span;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -191,10 +192,14 @@ public abstract class AgentTestRunner extends DDSpecification {
     assert INSTRUMENTATION_ERROR_COUNT.get() == 0
         : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
 
+    final List<TypeDescription> ignoredClassesTransformed = new ArrayList<>();
     for (final TypeDescription type : TRANSFORMED_CLASSES_TYPES) {
-      assert !GLOBAL_LIBRARIES_IGNORES_MATCHER.matches(type)
-          : "Transformed class matches global libraries ignore matcher: " + type;
+      if (GLOBAL_LIBRARIES_IGNORES_MATCHER.matches(type)) {
+        ignoredClassesTransformed.add(type);
+      }
     }
+    assert ignoredClassesTransformed.isEmpty()
+        : "Transformed classes match global libraries ignore matcher: " + ignoredClassesTransformed;
   }
 
   public static void assertTraces(
