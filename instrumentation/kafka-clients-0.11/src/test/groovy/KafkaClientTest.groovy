@@ -96,8 +96,8 @@ class KafkaClientTest extends AgentTestRunner {
     received.value() == greeting
     received.key() == null
 
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 2) {
         span(0) {
           operationName "kafka.produce"
           spanKind PRODUCER
@@ -110,13 +110,11 @@ class KafkaClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-kafka"
           }
         }
-      }
-      trace(1, 1) {
-        span(0) {
+        span(1) {
           operationName "kafka.consume"
           spanKind CONSUMER
           errored false
-          hasLink traces[0][0]
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
@@ -169,8 +167,8 @@ class KafkaClientTest extends AgentTestRunner {
     first.value() == greeting
     first.key() == null
 
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 2) {
         span(0) {
           operationName "kafka.produce"
           spanKind PRODUCER
@@ -184,13 +182,11 @@ class KafkaClientTest extends AgentTestRunner {
             "kafka.partition" { it >= 0 }
           }
         }
-      }
-      trace(1, 1) {
-        span(0) {
+        span(1) {
           operationName "kafka.consume"
           spanKind CONSUMER
           errored false
-          hasLink traces[0][0]
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
