@@ -33,6 +33,8 @@ public class HelperInjector implements Transformer {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
       new SecureClassLoader(null) {};
 
+  private final String requestingName;
+
   private final Set<String> helperClassNames;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
@@ -48,21 +50,26 @@ public class HelperInjector implements Transformer {
    *     provided. This is important if there is interdependency between helper classes that
    *     requires them to be injected in a specific order.
    */
-  public HelperInjector(final String... helperClassNames) {
+  public HelperInjector(final String requestingName, final String... helperClassNames) {
+    this.requestingName = requestingName;
+
     this.helperClassNames = new LinkedHashSet<>(Arrays.asList(helperClassNames));
   }
 
-  public HelperInjector(final Map<String, byte[]> helperMap) {
+  public HelperInjector(final String requestingName, final Map<String, byte[]> helperMap) {
+    this.requestingName = requestingName;
+
     helperClassNames = helperMap.keySet();
     dynamicTypeMap.putAll(helperMap);
   }
 
-  public static HelperInjector forDynamicTypes(final Collection<DynamicType.Unloaded<?>> helpers) {
+  public static HelperInjector forDynamicTypes(
+      final String requestingName, final Collection<DynamicType.Unloaded<?>> helpers) {
     final Map<String, byte[]> bytes = new HashMap<>(helpers.size());
     for (final DynamicType.Unloaded<?> helper : helpers) {
       bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
     }
-    return new HelperInjector(bytes);
+    return new HelperInjector(requestingName, bytes);
   }
 
   private Map<String, byte[]> getHelperMap() throws IOException {
@@ -125,8 +132,9 @@ public class HelperInjector implements Transformer {
                   : classLoader.getClass().getName();
 
           log.error(
-              "Error preparing helpers for {}. Failed to inject helper classes into instance {} of type {}",
+              "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {} of type {}",
               typeDescription,
+              requestingName,
               classLoader,
               classLoaderType,
               e);

@@ -106,7 +106,9 @@ public interface Instrumenter {
         AgentBuilder.Identified.Extendable agentBuilder) {
       final String[] helperClassNames = helperClassNames();
       if (helperClassNames.length > 0) {
-        agentBuilder = agentBuilder.transform(new HelperInjector(helperClassNames));
+        agentBuilder =
+            agentBuilder.transform(
+                new HelperInjector(this.getClass().getSimpleName(), helperClassNames));
       }
       return agentBuilder;
     }

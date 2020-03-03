@@ -102,7 +102,9 @@ public class MuzzleVersionScanPlugin {
           // verify helper injector works
           final String[] helperClassNames = defaultInstrumenter.helperClassNames();
           if (helperClassNames.length > 0) {
-            new HelperInjector(createHelperMap(defaultInstrumenter))
+            new HelperInjector(
+                    MuzzleVersionScanPlugin.class.getSimpleName(),
+                    createHelperMap(defaultInstrumenter))
                 .transform(null, null, userClassLoader, null);
           }
         } catch (final Exception e) {

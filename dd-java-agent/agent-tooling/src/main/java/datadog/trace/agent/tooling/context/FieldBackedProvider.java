@@ -322,8 +322,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   /** Get transformer that forces helper injection onto bootstrap classloader. */
   private AgentBuilder.Transformer bootstrapHelperInjector(
       final Collection<DynamicType.Unloaded<?>> helpers) {
+    // TODO: Better to pass through the context of the Instrumenter
     return new AgentBuilder.Transformer() {
-      final HelperInjector injector = HelperInjector.forDynamicTypes(helpers);
+      final HelperInjector injector =
+          HelperInjector.forDynamicTypes(this.getClass().getSimpleName(), helpers);
 
       @Override
       public DynamicType.Builder<?> transform(
