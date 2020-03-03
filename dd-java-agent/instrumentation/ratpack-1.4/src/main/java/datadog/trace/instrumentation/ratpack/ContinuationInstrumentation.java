@@ -1,10 +1,12 @@
 package datadog.trace.instrumentation.ratpack;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -22,6 +24,12 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
 
   public ContinuationInstrumentation() {
     super("ratpack");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("ratpack/exec/internal/Continuation.class"));
   }
 
   @Override

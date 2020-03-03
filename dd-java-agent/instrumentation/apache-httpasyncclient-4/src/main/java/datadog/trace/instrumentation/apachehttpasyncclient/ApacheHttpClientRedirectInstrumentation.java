@@ -1,9 +1,11 @@
 package datadog.trace.instrumentation.apachehttpasyncclient;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -27,6 +29,12 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
 
   public ApacheHttpClientRedirectInstrumentation() {
     super("httpasyncclient", "apache-httpasyncclient");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("org/apache/http/client/RedirectStrategy.class"));
   }
 
   @Override

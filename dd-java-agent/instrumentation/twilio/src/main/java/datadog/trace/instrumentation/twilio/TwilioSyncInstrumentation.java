@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.twilio;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
@@ -28,6 +29,12 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
 
   public TwilioSyncInstrumentation() {
     super("twilio-sdk");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("com/twilio/Twilio.class"));
   }
 
   /** Match any child class of the base Twilio service classes. */

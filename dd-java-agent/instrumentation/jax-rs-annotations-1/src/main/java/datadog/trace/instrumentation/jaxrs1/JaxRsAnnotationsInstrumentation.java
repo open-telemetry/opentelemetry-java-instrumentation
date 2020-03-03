@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -36,7 +37,9 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   // this is required to make sure instrumentation won't apply to jax-rs 2
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasNoResources("javax/ws/rs/container/AsyncResponse.class");
+    return classLoaderHasNoResources("javax/ws/rs/container/AsyncResponse.class")
+        // Optimization for expensive typeMatcher.
+        .and(not(classLoaderHasNoResources("javax/ws/rs/Path.class")));
   }
 
   @Override

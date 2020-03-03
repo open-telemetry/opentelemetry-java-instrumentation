@@ -1,9 +1,11 @@
 package datadog.trace.instrumentation.servlet.dispatcher;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -21,6 +23,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class ServletContextInstrumentation extends Instrumenter.Default {
   public ServletContextInstrumentation() {
     super("servlet", "servlet-dispatcher");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/servlet/ServletContext.class"));
   }
 
   @Override

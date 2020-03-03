@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jaxrs2;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasSuperMethod;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
@@ -11,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -37,6 +39,12 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public Map<String, String> contextStore() {
     return singletonMap("javax.ws.rs.container.AsyncResponse", AgentSpan.class.getName());
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/ws/rs/Path.class"));
   }
 
   @Override

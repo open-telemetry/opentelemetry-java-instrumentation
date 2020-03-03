@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.reactor.core;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -25,11 +26,9 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".ReactorCoreAdviceUtils",
-      packageName + ".ReactorCoreAdviceUtils$TracingSubscriber",
-    };
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("reactor/core/publisher/Mono.class"));
   }
 
   @Override
@@ -38,6 +37,14 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
         .and(
             extendsClass(
                 named("reactor.core.publisher.Mono").or(named("reactor.core.publisher.Flux"))));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      packageName + ".ReactorCoreAdviceUtils",
+      packageName + ".ReactorCoreAdviceUtils$TracingSubscriber",
+    };
   }
 
   @Override
