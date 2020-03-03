@@ -27,7 +27,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
   public boolean matches(final T target) {
     final String name = target.getActualName();
 
-    if (name.startsWith("com.fasterxml.classmate.")
+    if (name.startsWith("ch.qos.logback.")
+        || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("net.sf.cglib.")
         || name.startsWith("org.objectweb.asm.")) {
