@@ -104,6 +104,13 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
+    if (name.startsWith("com.datastax.driver.")) {
+      if (name.startsWith("com.datastax.driver.core.Cluster$")) {
+        return false;
+      }
+      return true;
+    }
+
     // kotlin, note we do not ignore kotlinx because we instrument coroutins code
     if (name.startsWith("kotlin.")) {
       return true;
