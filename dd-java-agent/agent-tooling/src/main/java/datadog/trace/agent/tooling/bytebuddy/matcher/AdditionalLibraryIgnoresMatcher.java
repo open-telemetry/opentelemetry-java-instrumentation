@@ -36,6 +36,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.jayway.jsonpath.")
         || name.startsWith("com.lightbend.lagom")
         || name.startsWith("net.sf.cglib.")
+        || name.startsWith("org.apache.lucene")
+        || name.startsWith("org.apache.tartarus")
         || name.startsWith("org.json.simple")
         || name.startsWith("org.objectweb.asm.")) {
       return true;
