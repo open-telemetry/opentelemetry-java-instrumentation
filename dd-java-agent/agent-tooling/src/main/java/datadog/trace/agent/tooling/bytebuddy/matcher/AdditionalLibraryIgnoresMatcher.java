@@ -30,7 +30,11 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     if (name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("net.sf.cglib.")
-        || name.startsWith("org.springframework.aop.")
+        || name.startsWith("org.objectweb.asm.")) {
+      return true;
+    }
+
+    if (name.startsWith("org.springframework.aop.")
         || name.startsWith("org.springframework.beans.factory.annotation.")
         || name.startsWith("org.springframework.beans.factory.config.")
         || name.startsWith("org.springframework.beans.factory.parsing.")
