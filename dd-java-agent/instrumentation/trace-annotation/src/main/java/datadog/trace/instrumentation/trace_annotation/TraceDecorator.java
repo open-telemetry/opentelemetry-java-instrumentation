@@ -7,7 +7,8 @@ public class TraceDecorator extends BaseDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[0];
+    // Can't use "trace" because that's used as the general config name:
+    return new String[] {"trace-annotation", "trace-config"};
   }
 
   @Override
