@@ -33,6 +33,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("com.github.mustachejava.")
+        || name.startsWith("com.jayway.jsonpath.")
         || name.startsWith("net.sf.cglib.")
         || name.startsWith("org.json.simple")
         || name.startsWith("org.objectweb.asm.")) {
