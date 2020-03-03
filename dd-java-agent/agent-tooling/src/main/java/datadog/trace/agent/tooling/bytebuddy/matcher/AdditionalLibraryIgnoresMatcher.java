@@ -30,7 +30,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     if (name.startsWith("ch.qos.logback.")
         || name.startsWith("com.beust.jcommander.")
         || name.startsWith("com.carrotsearch.hppc.")
-        || name.startsWith("com.codahale.metrics.")
         || name.startsWith("com.couchbase.client.deps.")
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
@@ -86,6 +85,14 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("org.apache.xml.")
         || name.startsWith("org.apache.xpath.")
         || name.startsWith("org.xml.")) {
+      return true;
+    }
+
+    if (name.startsWith("com.codahale.metrics.")) {
+      // We instrument servlets
+      if (name.startsWith("com.codahale.metrics.servlets.")) {
+        return false;
+      }
       return true;
     }
 
