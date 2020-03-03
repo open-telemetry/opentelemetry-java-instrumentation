@@ -71,10 +71,10 @@ include ':instrumentation:finatra-2.9'
 include ':instrumentation:google-http-client-1.19'
 include ':instrumentation:grizzly-2.0'
 include ':instrumentation:grpc-1.5'
-include ':instrumentation:hibernate'
-include ':instrumentation:hibernate:core-3.3'
-include ':instrumentation:hibernate:core-4.0'
-include ':instrumentation:hibernate:core-4.3'
+include ':instrumentation:hibernate-3.3'
+include ':instrumentation:hibernate-4.0'
+include ':instrumentation:hibernate-4.3'
+include ':instrumentation:hibernate-common'
 include ':instrumentation:http-url-connection'
 include ':instrumentation:hystrix-1.4'
 include ':instrumentation:jax-rs-annotations-1.0'
@@ -166,3 +166,7 @@ project(':agent-bootstrap').name = 'auto-bootstrap'
 project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
 
+project(':instrumentation:hibernate-3.3').projectDir = new File(settingsDir, 'instrumentation/hibernate/hibernate-3.3')
+project(':instrumentation:hibernate-4.0').projectDir = new File(settingsDir, 'instrumentation/hibernate/hibernate-4.0')
+project(':instrumentation:hibernate-4.3').projectDir = new File(settingsDir, 'instrumentation/hibernate/hibernate-4.3')
+project(':instrumentation:hibernate-common').projectDir = new File(settingsDir, 'instrumentation/hibernate/hibernate-common')
