@@ -31,6 +31,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.beust.jcommander.")
         || name.startsWith("com.carrotsearch.hppc.")
         || name.startsWith("com.codahale.metrics.")
+        || name.startsWith("com.couchbase.client.deps.")
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("net.sf.cglib.")
