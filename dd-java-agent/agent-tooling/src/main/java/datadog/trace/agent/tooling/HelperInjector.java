@@ -29,6 +29,7 @@ import net.bytebuddy.utility.JavaModule;
 /** Injects instrumentation helper classes into the user's classloader. */
 @Slf4j
 public class HelperInjector implements Transformer {
+
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
       new SecureClassLoader(null) {};
@@ -108,14 +109,9 @@ public class HelperInjector implements Transformer {
           final Map<String, byte[]> classnameToBytes = getHelperMap();
           final Map<String, Class<?>> classes;
           if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
-            classes =
-                ClassInjector.UsingInstrumentation.of(
-                        new File(System.getProperty("java.io.tmpdir")),
-                        ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
-                        AgentInstaller.getInstrumentation())
-                    .injectRaw(classnameToBytes);
+            classes = injectBootstrapClassLoader(classnameToBytes);
           } else {
-            classes = new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
+            classes = injectClassLoader(classLoader, classnameToBytes);
           }
 
           // All datadog helper classes are in the unnamed module
@@ -147,6 +143,19 @@ public class HelperInjector implements Transformer {
       ensureModuleCanReadHelperModules(module);
     }
     return builder;
+  }
+
+  private Map<String, Class<?>> injectBootstrapClassLoader(final Map<String, byte[]> classnameToBytes) {
+    return ClassInjector.UsingInstrumentation.of(
+        new File(System.getProperty("java.io.tmpdir")),
+        ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
+        AgentInstaller.getInstrumentation())
+        .injectRaw(classnameToBytes);
+  }
+
+  private Map<String, Class<?>> injectClassLoader(
+    final ClassLoader classLoader, final Map<String, byte[]> classnameToBytes) {
+    return new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
   }
 
   private void ensureModuleCanReadHelperModules(final JavaModule target) {
