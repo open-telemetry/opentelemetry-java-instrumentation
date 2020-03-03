@@ -29,6 +29,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
     if (name.startsWith("ch.qos.logback.")
         || name.startsWith("com.beust.jcommander.")
+        || name.startsWith("com.carrotsearch.hppc.")
+        || name.startsWith("com.codahale.metrics.")
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("net.sf.cglib.")
