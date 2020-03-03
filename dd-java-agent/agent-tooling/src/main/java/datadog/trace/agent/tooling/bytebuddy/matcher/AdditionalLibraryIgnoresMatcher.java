@@ -84,6 +84,11 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
+    // kotlin, note we do not ignore kotlinx because we instrument coroutins code
+    if (name.startsWith("kotlin.")) {
+      return true;
+    }
+
     // Dynamic proxy classes we should not touch
     if (name.startsWith("org.springframework.core.$Proxy")) {
       return true;
