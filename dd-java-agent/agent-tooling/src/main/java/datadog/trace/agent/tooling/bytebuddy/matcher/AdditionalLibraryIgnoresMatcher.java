@@ -28,6 +28,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     final String name = target.getActualName();
 
     if (name.startsWith("ch.qos.logback.")
+        || name.startsWith("com.beust.jcommander.")
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("net.sf.cglib.")
