@@ -30,7 +30,7 @@ import net.bytebuddy.utility.RandomString;
 /** Injects instrumentation helper classes into the user's classloader. */
 @Slf4j
 public class HelperInjector implements Transformer {
-  private static final File TEMP_DIR = computeTempDir();
+  private static final TempDir TEMP_DIR = computeTempDir();
 
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
@@ -149,21 +149,15 @@ public class HelperInjector implements Transformer {
 
   private Map<String, Class<?>> injectBootstrapClassLoader(
       final Map<String, byte[]> classnameToBytes) {
-    if (!TEMP_DIR.exists()) {
-      TEMP_DIR.mkdir();
-    }
+    TEMP_DIR.prepare();
     try {
       return ClassInjector.UsingInstrumentation.of(
-              TEMP_DIR,
+              TEMP_DIR.dir,
               ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
               AgentInstaller.getInstrumentation())
           .injectRaw(classnameToBytes);
     } finally {
-      if (TEMP_DIR.list().length == 0) {
-        if (!TEMP_DIR.delete()) {
-          TEMP_DIR.deleteOnExit();
-        }
-      }
+      TEMP_DIR.cleanup();
     }
   }
 
@@ -200,7 +194,7 @@ public class HelperInjector implements Transformer {
    * generated name, settles on using that name.  If name can be found falls
    * back using java.io.tmpdir directly.
    */
-  private static final File computeTempDir() {
+  private static final TempDir computeTempDir() {
     File rootTempDir = new File(System.getProperty("java.io.tmpdir"));
     rootTempDir.mkdir();
 
@@ -209,9 +203,66 @@ public class HelperInjector implements Transformer {
       String dirName = "datadog-temp-jars-" + randString.nextString();
       File processTempDir = new File(rootTempDir, dirName);
       if (!processTempDir.exists()) {
-        return processTempDir;
+        return TempDir.makePerProcess(processTempDir);
       }
     }
-    return rootTempDir;
+    return TempDir.makeShared(rootTempDir);
+  }
+
+  static final class TempDir {
+    static final TempDir makePerProcess(final File dir) {
+      return new TempDir(dir, true);
+    }
+
+    static final TempDir makeShared(final File dir) {
+      return new TempDir(dir, false);
+    }
+
+    public final File dir;
+    private final boolean perProcess;
+    private volatile boolean scheduledDelete = false;
+
+    TempDir(final File dir, final boolean perProcess) {
+      this.dir = dir;
+      this.perProcess = perProcess;
+    }
+
+    void prepare() {
+      // If shared, we're using java.io.tmpdir which should already exist
+      if (!perProcess) {
+        return;
+      }
+
+      // If per process, need to create directory for this process
+      dir.mkdirs();
+    }
+
+    void cleanup() {
+      // If not per process, no directory clean-up
+      if (!perProcess) {
+        return;
+      }
+
+      // If per process, clean-up the directory -- if it is empty
+      if (dir.list().length != 0) {
+        return;
+      }
+
+      // Try to delete -- if the delete is successful, we're done
+      // Otherwise, schedule a delete -- see below...
+      boolean deleted = dir.delete();
+      if (deleted) {
+        return;
+      }
+
+      // Avoid needlessly repeatedly scheduling a deleteOnExit
+      // deleteOnExit does maintain a set, so extra calls are benign
+      // just consume some extra CPU and create contention
+      if (scheduledDelete) {
+        return;
+      }
+      dir.deleteOnExit();
+      scheduledDelete = true;
+    }
   }
 }
