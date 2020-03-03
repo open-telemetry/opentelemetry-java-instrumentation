@@ -24,6 +24,8 @@ import spock.lang.Shared
 
 import java.time.Duration
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 class ReactorCoreTest extends AgentTestRunner {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
@@ -182,9 +184,7 @@ class ReactorCoreTest extends AgentTestRunner {
   }
 
   def runUnderTrace(def publisher) {
-    def parentSpan = TEST_TRACER.spanBuilder("trace-parent").startSpan()
-    def parentScope = TEST_TRACER.withSpan(parentSpan)
-    try {
+    runUnderTrace("trace-parent") {
       // This is important sequence of events:
       // We have a 'trace-parent' that covers whole span and then we have publisher-parent that overs only
       // operation to create publisher (and set its context).
@@ -201,16 +201,11 @@ class ReactorCoreTest extends AgentTestRunner {
       }
 
       throw new RuntimeException("Unknown publisher: " + publisher)
-    } finally {
-      parentSpan.end()
-      parentScope.close()
     }
   }
 
   def cancelUnderTrace(def publisher) {
-    def parentSpan = TEST_TRACER.spanBuilder("trace-parent").startSpan()
-    def parentScope = TEST_TRACER.withSpan(parentSpan)
-    try {
+    runUnderTrace("trace-parent") {
       final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
       publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
       span.end()
@@ -229,9 +224,6 @@ class ReactorCoreTest extends AgentTestRunner {
         void onComplete() {
         }
       })
-    } finally {
-      parentSpan.end()
-      parentScope.close()
     }
   }
 

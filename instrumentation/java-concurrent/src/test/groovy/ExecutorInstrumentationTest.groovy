@@ -37,6 +37,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
@@ -81,9 +82,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     new Runnable() {
       @Override
       void run() {
-        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
-        def parentScope = TEST_TRACER.withSpan(parentSpan)
-        try {
+        runUnderTrace("parent") {
           // this child will have a span
           def child1 = new JavaAsyncChild()
           // this child won't
@@ -92,9 +91,6 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
           m(pool, child2)
           child1.waitForCompletion()
           child2.waitForCompletion()
-        } finally {
-          parentSpan.end()
-          parentScope.close()
         }
       }
     }.run()
@@ -171,13 +167,8 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     new Runnable() {
       @Override
       void run() {
-        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
-        def parentScope = TEST_TRACER.withSpan(parentSpan)
-        try {
+        runUnderTrace("parent") {
           m(pool, w(child))
-        } finally {
-          parentSpan.end()
-          parentScope.close()
         }
       }
     }.run()
@@ -219,9 +210,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     new Runnable() {
       @Override
       void run() {
-        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
-        def parentScope = TEST_TRACER.withSpan(parentSpan)
-        try {
+        runUnderTrace("parent") {
           try {
             for (int i = 0; i < 20; ++i) {
               // Our current instrumentation instrumentation does not behave very well
@@ -248,9 +237,6 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
           for (JavaAsyncChild child : children) {
             child.unblock()
           }
-        } finally {
-          parentSpan.end()
-          parentScope.close()
         }
       }
     }.run()
