@@ -90,8 +90,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
     if (name.startsWith("ch.qos.logback.")) {
       // We instrument this Runnable
-      if (name.startsWith("ch.qos.logback.core.AsyncAppenderBase$")) {
-        return true;
+      if (name.equals("ch.qos.logback.core.AsyncAppenderBase$Worker")) {
+        return false;
       }
 
       return true;
