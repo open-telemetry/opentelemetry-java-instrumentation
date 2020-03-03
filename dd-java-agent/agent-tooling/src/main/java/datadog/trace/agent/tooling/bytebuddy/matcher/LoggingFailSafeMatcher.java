@@ -54,17 +54,17 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
   }
 
   @Override
-  public boolean equals(final Object var1) {
-    if (this == var1) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
-    } else if (var1 == null) {
+    } else if (other == null) {
       return false;
-    } else if (getClass() != var1.getClass()) {
+    } else if (getClass() != other.getClass()) {
       return false;
-    } else if (fallback != ((LoggingFailSafeMatcher) var1).fallback) {
+    } else if (fallback != ((LoggingFailSafeMatcher) other).fallback) {
       return false;
     } else {
-      return matcher.equals(((LoggingFailSafeMatcher) var1).matcher);
+      return matcher.equals(((LoggingFailSafeMatcher) other).matcher);
     }
   }
 
