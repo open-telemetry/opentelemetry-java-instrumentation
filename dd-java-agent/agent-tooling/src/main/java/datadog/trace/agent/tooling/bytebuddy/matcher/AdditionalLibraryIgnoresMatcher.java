@@ -66,6 +66,20 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
+    // xml-apis, xerces, xalan
+    if (name.startsWith("javax.xml.")
+        || name.startsWith("org.apache.bcel.")
+        || name.startsWith("org.apache.html.")
+        || name.startsWith("org.apache.regexp.")
+        || name.startsWith("org.apache.wml.")
+        || name.startsWith("org.apache.xalan.")
+        || name.startsWith("org.apache.xerces.")
+        || name.startsWith("org.apache.xml.")
+        || name.startsWith("org.apache.xpath.")
+        || name.startsWith("org.xml.")) {
+      return true;
+    }
+
     // Dynamic proxy classes we should not touch
     if (name.startsWith("org.springframework.core.$Proxy")) {
       return true;
