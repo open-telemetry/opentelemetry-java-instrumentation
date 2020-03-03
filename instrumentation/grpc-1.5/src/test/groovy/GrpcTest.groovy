@@ -22,8 +22,6 @@ import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import io.grpc.inprocess.InProcessChannelBuilder
-import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
@@ -88,6 +86,7 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" port
             "status.code" "OK"
           }
@@ -110,6 +109,7 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "status.code" "OK"
           }
@@ -169,6 +169,7 @@ class GrpcTest extends AgentTestRunner {
             "status.code" "${status.code.name()}"
             "status.description" description
             "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" port
           }
         }
@@ -192,6 +193,7 @@ class GrpcTest extends AgentTestRunner {
             "status.code" "${status.code.name()}"
             "status.description" description
             "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             if (status.cause != null) {
               errorTags status.cause.class, status.cause.message
@@ -225,9 +227,17 @@ class GrpcTest extends AgentTestRunner {
         throw error
       }
     }
-    Server server = InProcessServerBuilder.forName(getClass().name).addService(greeter).directExecutor().build().start()
+    def port = PortUtils.randomOpenPort()
+    Server server = ServerBuilder.forPort(port).addService(greeter).build().start()
+    ManagedChannelBuilder channelBuilder = ManagedChannelBuilder.forAddress("localhost", port)
 
-    ManagedChannel channel = InProcessChannelBuilder.forName(getClass().name).build()
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
@@ -249,8 +259,9 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "UNKNOWN"
-            "$MoreTags.NET_PEER_NAME" "(unknown)"
-            "$MoreTags.NET_PEER_PORT" 0
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
           }
         }
         span(1) {
@@ -270,6 +281,9 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.RPC_SERVICE" "Greeter"
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             errorTags error.class, error.message
           }
         }

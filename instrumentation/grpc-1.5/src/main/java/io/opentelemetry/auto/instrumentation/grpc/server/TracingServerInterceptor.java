@@ -63,17 +63,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
     final Span span = spanBuilder.startSpan();
     span.setAttribute(MoreTags.RESOURCE_NAME, methodName);
-    GrpcHelper.addServiceName(span, methodName);
     final SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
-    if (addr != null && addr instanceof InetSocketAddress) {
-      final InetSocketAddress iAddr = (InetSocketAddress) addr;
-      if (iAddr.isUnresolved()) {
-        span.setAttribute(MoreTags.NET_PEER_IP, iAddr.getHostName());
-      } else {
-        span.setAttribute(MoreTags.NET_PEER_NAME, iAddr.getHostName());
-      }
-      span.setAttribute(MoreTags.NET_PEER_PORT, iAddr.getPort());
-    }
+    final InetSocketAddress iAddr =
+        addr instanceof InetSocketAddress ? (InetSocketAddress) addr : null;
+    GrpcHelper.prepareSpan(span, methodName, iAddr);
 
     DECORATE.afterStart(span);
 

@@ -121,6 +121,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" port
             "status.code" "OK"
           }
@@ -146,6 +147,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "status.code" "OK"
           }

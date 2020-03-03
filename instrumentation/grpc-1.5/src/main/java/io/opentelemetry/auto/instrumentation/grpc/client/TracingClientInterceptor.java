@@ -34,21 +34,16 @@ import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TracingClientInterceptor implements ClientInterceptor {
-  private final String peerAddress;
+  private final InetSocketAddress peerAddress;
 
-  private final int peerPort;
-
-  private final boolean isIp;
-
-  public TracingClientInterceptor(final String peerAddress, final int peerPort) {
+  public TracingClientInterceptor(final InetSocketAddress peerAddress) {
     this.peerAddress = peerAddress;
-    this.peerPort = peerPort;
-    isIp = GrpcHelper.isNumericAddress(peerAddress);
   }
 
   @Override
@@ -62,13 +57,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     span.setAttribute(MoreTags.RESOURCE_NAME, methodName);
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
-      GrpcHelper.addServiceName(span, methodName);
-      span.setAttribute(MoreTags.NET_PEER_PORT, peerPort);
-      if (isIp) {
-        span.setAttribute(MoreTags.NET_PEER_IP, peerAddress);
-      } else {
-        span.setAttribute(MoreTags.NET_PEER_NAME, peerAddress);
-      }
+      GrpcHelper.prepareSpan(span, methodName, peerAddress);
 
       final ClientCall<ReqT, RespT> result;
       try {

@@ -24,6 +24,7 @@ import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,6 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCall",
       "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCallListener",
       "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
-      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper$AddressAndPort",
       "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.decorator.ClientDecorator",
       packageName + ".GrpcClientDecorator",
@@ -87,12 +87,8 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         }
       }
       if (shouldRegister) {
-        final GrpcHelper.AddressAndPort addressAndPort = GrpcHelper.getAddressForBuilder(thiz);
-        interceptors.add(
-            0,
-            new TracingClientInterceptor(
-                addressAndPort != null ? addressAndPort.getAddress() : "(unknown)",
-                addressAndPort != null ? addressAndPort.getPort() : 0));
+        final InetSocketAddress sockAddr = GrpcHelper.getAddressForBuilder(thiz);
+        interceptors.add(0, new TracingClientInterceptor(sockAddr));
       }
     }
   }
@@ -100,10 +96,11 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   public static class ForAddressAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static final void forAddress(
-        @Advice.Argument(0) final Object address,
+        @Advice.Argument(0) final String address,
         @Advice.Argument(1) final int port,
         @Advice.Return final ManagedChannelBuilder builder) {
-      GrpcHelper.registerAddressForBuilder(builder, address.toString(), port);
+      GrpcHelper.registerAddressForBuilder(
+          builder, new InetSocketAddress(address.toString(), port));
     }
   }
 }
