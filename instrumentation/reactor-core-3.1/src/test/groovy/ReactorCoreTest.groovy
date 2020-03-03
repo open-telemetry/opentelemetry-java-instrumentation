@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.Span
@@ -23,8 +24,6 @@ import reactor.core.publisher.Mono
 import spock.lang.Shared
 
 import java.time.Duration
-
-import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 class ReactorCoreTest extends AgentTestRunner {
 
@@ -184,7 +183,9 @@ class ReactorCoreTest extends AgentTestRunner {
   }
 
   def runUnderTrace(def publisher) {
-    runUnderTrace("trace-parent") {
+    def parentSpan = TEST_TRACER.spanBuilder("trace-parent").startSpan()
+    def parentScope = TEST_TRACER.withSpan(parentSpan)
+    try {
       // This is important sequence of events:
       // We have a 'trace-parent' that covers whole span and then we have publisher-parent that overs only
       // operation to create publisher (and set its context).
@@ -201,11 +202,16 @@ class ReactorCoreTest extends AgentTestRunner {
       }
 
       throw new RuntimeException("Unknown publisher: " + publisher)
+    } finally {
+      parentSpan.end()
+      parentScope.close()
     }
   }
 
   def cancelUnderTrace(def publisher) {
-    runUnderTrace("trace-parent") {
+    def parentSpan = TEST_TRACER.spanBuilder("trace-parent").startSpan()
+    def parentScope = TEST_TRACER.withSpan(parentSpan)
+    try {
       final Span span = TEST_TRACER.spanBuilder("publisher-parent").startSpan()
       publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
       span.end()
@@ -224,6 +230,9 @@ class ReactorCoreTest extends AgentTestRunner {
         void onComplete() {
         }
       })
+    } finally {
+      parentSpan.end()
+      parentScope.close()
     }
   }
 
