@@ -71,7 +71,7 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:netty-4.1')
   testCompile project(':dd-java-agent:instrumentation:akka-http-10.0')
 
-  testCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.2'
+  testCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.0'
 
   latestDepTestCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '+'
 }
