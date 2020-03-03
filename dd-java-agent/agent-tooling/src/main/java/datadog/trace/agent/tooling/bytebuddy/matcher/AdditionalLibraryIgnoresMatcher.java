@@ -113,6 +113,39 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
+    if (name.startsWith("com.google.cloud.")
+        || name.startsWith("com.google.instrumentation.")
+        || name.startsWith("com.google.j2objc.")
+        || name.startsWith("com.google.gson.")
+        || name.startsWith("com.google.logging.")
+        || name.startsWith("com.google.longrunning.")
+        || name.startsWith("com.google.protobuf.")
+        || name.startsWith("com.google.rpc.")
+        || name.startsWith("com.google.thirdparty.")
+        || name.startsWith("com.google.type.")) {
+      return true;
+    }
+    if (name.startsWith("com.google.common.")) {
+      if (name.startsWith("com.google.common.util.concurrent.")
+          || name.equals("com.google.common.base.internal.Finalizer")) {
+        return false;
+      }
+      return true;
+    }
+    if (name.startsWith("com.google.inject.")) {
+      // We instrument Runnable there
+      if (name.startsWith("com.google.inject.internal.AbstractBindingProcessor$")) {
+        return false;
+      }
+      return true;
+    }
+    if (name.startsWith("com.google.api.")) {
+      if (name.equals("com.google.api.client.http.HttpRequest")) {
+        return false;
+      }
+      return true;
+    }
+
     // kotlin, note we do not ignore kotlinx because we instrument coroutins code
     if (name.startsWith("kotlin.")) {
       return true;
