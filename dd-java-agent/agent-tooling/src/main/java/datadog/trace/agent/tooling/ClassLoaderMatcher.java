@@ -28,9 +28,6 @@ public final class ClassLoaderMatcher {
   private static final class SkipClassLoaderMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
-    /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-    private static final Cache<ClassLoader, Boolean> skipCache =
-        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
     private static final String DATADOG_CLASSLOADER_NAME =
         "datadog.trace.bootstrap.DatadogClassLoader";
 
@@ -42,13 +39,7 @@ public final class ClassLoaderMatcher {
         // Don't skip bootstrap loader
         return false;
       }
-      Boolean v = skipCache.getIfPresent(cl);
-      if (v != null) {
-        return v;
-      }
-      v = shouldSkipClass(cl);
-      skipCache.put(cl, v);
-      return v;
+      return shouldSkipClass(cl);
     }
 
     private static boolean shouldSkipClass(final ClassLoader loader) {
