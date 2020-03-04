@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.classloading;
+package io.opentelemetry.auto.instrumentation.classloader;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
@@ -47,9 +47,9 @@ import net.bytebuddy.matcher.ElementMatcher;
  * for the classes that we have put in the bootstrap class loader.
  */
 @AutoService(Instrumenter.class)
-public final class ClassloadingInstrumentation extends Instrumenter.Default {
-  public ClassloadingInstrumentation() {
-    super("classloading");
+public final class ClassLoaderInstrumentation extends Instrumenter.Default {
+  public ClassLoaderInstrumentation() {
+    super("class-loader");
   }
 
   @Override
@@ -81,7 +81,7 @@ public final class ClassloadingInstrumentation extends Instrumenter.Default {
                             .and(takesArgument(1, named("boolean")))))
             .and(isPublic().or(isProtected()))
             .and(not(isStatic())),
-        ClassloadingInstrumentation.class.getName() + "$LoadClassAdvice");
+        ClassLoaderInstrumentation.class.getName() + "$LoadClassAdvice");
   }
 
   public static class LoadClassAdvice {

@@ -15,7 +15,7 @@
  */
 import io.opentelemetry.auto.test.AgentTestRunner
 
-class ClassloadingTest extends AgentTestRunner {
+class ClassLoadingTest extends AgentTestRunner {
   def "delegates to bootstrap class loader for agent classes"() {
     setup:
     def classLoader = new NonDelegatingURLClassLoader()

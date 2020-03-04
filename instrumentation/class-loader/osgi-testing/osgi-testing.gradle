@@ -1,7 +1,7 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  testCompile project(':instrumentation:classloading')
+  testCompile project(':instrumentation:class-loader')
 
   // TODO: we should separate core and Eclipse tests at some point,
   // but right now core-specific tests are quite dump and are run with
