@@ -47,8 +47,6 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("net.bytebuddy.")
         || name.startsWith("jdk.")
         || name.startsWith("org.aspectj.")
-        || name.startsWith("org.groovy.")
-        || name.startsWith("org.codehaus.groovy.macro.")
         || name.startsWith("com.intellij.rt.debugger.")
         || name.startsWith("com.p6spy.")
         || name.startsWith("com.newrelic.")
@@ -58,6 +56,18 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.singularity.")
         || name.startsWith("com.jinspired.")
         || name.startsWith("org.jinspired.")) {
+      return true;
+    }
+
+    // groovy
+    if (name.startsWith("org.groovy.") || name.startsWith("org.apache.groovy.")) {
+      return true;
+    }
+    if (name.startsWith("org.codehaus.groovy.")) {
+      // We seem to instrument some classes in runtime
+      if (name.startsWith("org.codehaus.groovy.runtime.")) {
+        return false;
+      }
       return true;
     }
 

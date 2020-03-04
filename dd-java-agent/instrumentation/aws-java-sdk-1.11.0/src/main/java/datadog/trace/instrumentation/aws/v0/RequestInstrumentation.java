@@ -27,7 +27,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return nameStartsWith("com.amazonaws.")
+    return nameStartsWith("com.amazonaws.services.")
         .and(extendsClass(named("com.amazonaws.AmazonWebServiceRequest")));
   }
 
