@@ -2,8 +2,6 @@ package datadog.trace.agent.tooling;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import datadog.trace.bootstrap.PatchLogger;
-import io.opentracing.util.GlobalTracer;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -30,9 +28,6 @@ public final class ClassLoaderMatcher {
   private static final class SkipClassLoaderMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
-    /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-    private static final Cache<ClassLoader, Boolean> skipCache =
-        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
     private static final String DATADOG_CLASSLOADER_NAME =
         "datadog.trace.bootstrap.DatadogClassLoader";
 
@@ -44,13 +39,7 @@ public final class ClassLoaderMatcher {
         // Don't skip bootstrap loader
         return false;
       }
-      Boolean v = skipCache.getIfPresent(cl);
-      if (v != null) {
-        return v;
-      }
-      v = shouldSkipClass(cl) || !delegatesToBootstrap(cl);
-      skipCache.put(cl, v);
-      return v;
+      return shouldSkipClass(cl);
     }
 
     private static boolean shouldSkipClass(final ClassLoader loader) {
@@ -66,34 +55,6 @@ public final class ClassLoaderMatcher {
       }
       return false;
     }
-
-    /**
-     * TODO: this turns out to be useless with OSGi: {@code
-     * org.eclipse.osgi.internal.loader.BundleLoader#isRequestFromVM} returns {@code true} when
-     * class loading is issued from this check and {@code false} for 'real' class loads. We should
-     * come up with some sort of hack to avoid this problem.
-     */
-    private static boolean delegatesToBootstrap(final ClassLoader loader) {
-      boolean delegates = true;
-      if (!loadsExpectedClass(loader, GlobalTracer.class)) {
-        log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
-        delegates = false;
-      }
-      if (!loadsExpectedClass(loader, PatchLogger.class)) {
-        log.debug("loader {} failed to delegate bootstrap datadog class", loader);
-        delegates = false;
-      }
-      return delegates;
-    }
-
-    private static boolean loadsExpectedClass(
-        final ClassLoader loader, final Class<?> expectedClass) {
-      try {
-        return loader.loadClass(expectedClass.getName()) == expectedClass;
-      } catch (final ClassNotFoundException e) {
-        return false;
-      }
-    }
   }
 
   private static class ClassLoaderHasNoResourceMatcher
@@ -107,7 +68,7 @@ public final class ClassLoaderMatcher {
       this.resources = resources;
     }
 
-    private boolean hasNoResources(ClassLoader cl) {
+    private boolean hasNoResources(final ClassLoader cl) {
       for (final String resource : resources) {
         if (cl.getResource(resource) == null) {
           return true;
