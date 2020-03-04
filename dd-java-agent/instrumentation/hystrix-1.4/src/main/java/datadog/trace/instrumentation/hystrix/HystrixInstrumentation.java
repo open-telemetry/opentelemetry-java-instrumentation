@@ -1,8 +1,10 @@
 package datadog.trace.instrumentation.hystrix;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.instrumentation.hystrix.HystrixDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
@@ -25,6 +27,12 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
   public HystrixInstrumentation() {
     super("hystrix");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("com/netflix/hystrix/HystrixCommand.class"));
   }
 
   @Override

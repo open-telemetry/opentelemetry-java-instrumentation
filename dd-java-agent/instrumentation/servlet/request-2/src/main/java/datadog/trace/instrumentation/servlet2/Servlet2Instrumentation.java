@@ -29,6 +29,12 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return safeHasSuperType(
+        named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet")));
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.agent.decorator.BaseDecorator",
@@ -38,12 +44,6 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
       packageName + ".HttpServletRequestExtractAdapter",
       packageName + ".StatusSavingHttpServletResponseWrapper",
     };
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
-        named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet")));
   }
 
   @Override

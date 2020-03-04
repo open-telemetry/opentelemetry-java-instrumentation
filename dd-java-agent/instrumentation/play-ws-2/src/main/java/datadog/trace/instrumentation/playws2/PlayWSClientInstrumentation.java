@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.playws2;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
@@ -27,6 +28,13 @@ import play.shaded.ahc.org.asynchttpclient.Request;
 public class PlayWSClientInstrumentation extends Instrumenter.Default {
   public PlayWSClientInstrumentation() {
     super("play-ws");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(
+        classLoaderHasNoResources("play/shaded/ahc/org/asynchttpclient/AsyncHttpClient.class"));
   }
 
   @Override

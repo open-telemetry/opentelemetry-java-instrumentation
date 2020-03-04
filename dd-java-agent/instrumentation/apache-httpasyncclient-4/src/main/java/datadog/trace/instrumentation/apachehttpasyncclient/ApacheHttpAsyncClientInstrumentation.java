@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.apachehttpasyncclient;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
@@ -9,6 +10,7 @@ import static datadog.trace.instrumentation.apachehttpasyncclient.HttpHeadersInj
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -36,6 +38,12 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
   public ApacheHttpAsyncClientInstrumentation() {
     super("httpasyncclient", "apache-httpasyncclient");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("org/apache/http/nio/client/HttpAsyncClient.class"));
   }
 
   @Override

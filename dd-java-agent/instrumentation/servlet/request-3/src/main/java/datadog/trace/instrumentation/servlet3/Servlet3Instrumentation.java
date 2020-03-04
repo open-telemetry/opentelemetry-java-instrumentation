@@ -1,9 +1,11 @@
 package datadog.trace.instrumentation.servlet3;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -20,6 +22,18 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/servlet/http/HttpServlet.class"));
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return safeHasSuperType(
+        named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet")));
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.agent.decorator.BaseDecorator",
@@ -29,12 +43,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
       packageName + ".HttpServletRequestExtractAdapter",
       packageName + ".TagSettingAsyncListener"
     };
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(
-        named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet")));
   }
 
   @Override

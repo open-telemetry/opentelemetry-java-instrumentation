@@ -1,9 +1,11 @@
 package datadog.trace.instrumentation.aws.v0;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -23,6 +25,12 @@ public final class RequestInstrumentation extends Instrumenter.Default {
 
   public RequestInstrumentation() {
     super("aws-sdk");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("com/amazonaws/AmazonWebServiceRequest.class"));
   }
 
   @Override

@@ -8,6 +8,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -33,7 +34,9 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasNoResources("redis/clients/jedis/commands/ProtocolCommand.class");
+    return classLoaderHasNoResources("redis/clients/jedis/commands/ProtocolCommand.class")
+        // Optimization for expensive typeMatcher.
+        .and(not(classLoaderHasNoResources("redis/clients/jedis/Protocol.class")));
   }
 
   @Override

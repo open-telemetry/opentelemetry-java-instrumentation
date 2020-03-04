@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.servlet.filter;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
@@ -8,6 +9,7 @@ import static datadog.trace.instrumentation.servlet.filter.FilterDecorator.DECOR
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -34,15 +36,22 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".FilterDecorator",
-    };
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    // return not(classLoaderHasNoResources("javax/servlet/Filter.class")); // Not available in 2.2
+    return not(classLoaderHasNoResources("javax/servlet/http/HttpServlet.class"));
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("javax.servlet.Filter"));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".FilterDecorator",
+    };
   }
 
   @Override

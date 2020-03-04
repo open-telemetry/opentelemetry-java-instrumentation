@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.servlet.http;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
@@ -9,6 +10,7 @@ import static datadog.trace.instrumentation.servlet.ServletRequestSetter.SETTER;
 import static datadog.trace.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -31,17 +33,23 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/servlet/http/HttpServletResponse.class"));
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return implementsInterface(named("javax.servlet.http.HttpServletResponse"));
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.servlet.ServletRequestSetter",
       "datadog.trace.agent.decorator.BaseDecorator",
       packageName + ".HttpServletResponseDecorator",
     };
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("javax.servlet.http.HttpServletResponse"));
   }
 
   @Override
