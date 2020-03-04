@@ -51,14 +51,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
         handleDistributedRequest()
         redirect(server.address.resolve("/circular-redirect").toURL().toString())
       }
-      prefix("chunked-response") {
-        handleDistributedRequest()
-        response.status(200)
-          .startChunked()
-          .sendChunk("first part")
-          .sendChunk("-second part")
-          .finishChunks()
-      }
     }
   }
 
@@ -145,26 +137,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
     where:
     method = "HEAD"
-  }
-
-  def "handle chunked response"() {
-    when:
-    def status = runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/chunked-response"))
-    }
-
-    then:
-    status == 200
-    assertTraces(2) {
-      server.distributedRequestTrace(it, 0, trace(1).last())
-      trace(1, size(2)) {
-        basicSpan(it, 0, "parent")
-        clientSpan(it, 1, span(0), method, false, false, server.address.resolve("/chunked-response"))
-      }
-    }
-
-    where:
-    method << BODY_METHODS
   }
 
   def "trace request without propagation"() {

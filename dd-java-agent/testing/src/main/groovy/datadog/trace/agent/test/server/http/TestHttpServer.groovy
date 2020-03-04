@@ -302,29 +302,6 @@ class TestHttpServer implements AutoCloseable {
         resp.setContentLength(body.bytes.length)
         resp.writer.print(body)
       }
-
-      ResponseApi startChunked() {
-        assert !req.handled
-        resp.setHeader("Transfer-Encoding", "chunked")
-        resp.status = status
-        return this
-      }
-
-      ResponseApi sendChunk(String partial) {
-        assert !req.handled
-        resp.writer.print(Integer.toHexString(partial.length()).toUpperCase())
-        resp.writer.print("\r\n")
-        resp.writer.print(partial)
-        resp.writer.print("\r\n")
-        resp.writer.flush()
-        return this
-      }
-
-      void finishChunks() {
-        resp.writer.print("0\r\n\r\n")
-        resp.writer.flush()
-        req.handled = true
-      }
     }
 
     static class Headers {
