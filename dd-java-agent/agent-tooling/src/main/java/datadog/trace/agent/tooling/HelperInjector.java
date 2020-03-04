@@ -7,6 +7,7 @@ import datadog.trace.bootstrap.WeakMap;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.nio.file.Files;
 import java.security.SecureClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,13 +26,10 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
-import net.bytebuddy.utility.RandomString;
 
 /** Injects instrumentation helper classes into the user's classloader. */
 @Slf4j
 public class HelperInjector implements Transformer {
-  private static final TempDir TEMP_DIR = computeTempDir();
-
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
       new SecureClassLoader(null) {};
@@ -148,16 +146,22 @@ public class HelperInjector implements Transformer {
   }
 
   private Map<String, Class<?>> injectBootstrapClassLoader(
-      final Map<String, byte[]> classnameToBytes) {
-    TEMP_DIR.prepare();
+      final Map<String, byte[]> classnameToBytes) throws IOException {
+    // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
+    // If this proves expensive, we could do a per-process tempDir with
+    // a reference count -- but for now, starting simple.
+
+    // Failures to create a tempDir are propagated as IOException and handled by transform
+    File tempDir = createTempDir();
     try {
       return ClassInjector.UsingInstrumentation.of(
-              TEMP_DIR.dir,
+              tempDir,
               ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
               AgentInstaller.getInstrumentation())
           .injectRaw(classnameToBytes);
     } finally {
-      TEMP_DIR.cleanup();
+      // Delete fails silently
+      deleteTempDir(tempDir);
     }
   }
 
@@ -188,81 +192,17 @@ public class HelperInjector implements Transformer {
     }
   }
 
-  /*
-   * Tries to temp file naming collisions by creating a unique directory per
-   * process.  Generates up to random names.  If a no file exists with a
-   * generated name, settles on using that name.  If name can be found falls
-   * back using java.io.tmpdir directly.
-   */
-  private static final TempDir computeTempDir() {
-    File rootTempDir = new File(System.getProperty("java.io.tmpdir"));
-    rootTempDir.mkdir();
-
-    RandomString randString = new RandomString(16);
-    for (int i = 0; i < 10; ++i) {
-      String dirName = "datadog-temp-jars-" + randString.nextString();
-      File processTempDir = new File(rootTempDir, dirName);
-      if (!processTempDir.exists()) {
-        return TempDir.makePerProcess(processTempDir);
-      }
-    }
-    return TempDir.makeShared(rootTempDir);
+  private static final File createTempDir() throws IOException {
+    return Files.createTempDirectory("datadog-temp-jars").toFile();
   }
 
-  static final class TempDir {
-    static final TempDir makePerProcess(final File dir) {
-      return new TempDir(dir, true);
-    }
-
-    static final TempDir makeShared(final File dir) {
-      return new TempDir(dir, false);
-    }
-
-    public final File dir;
-    private final boolean perProcess;
-    private volatile boolean scheduledDelete = false;
-
-    TempDir(final File dir, final boolean perProcess) {
-      this.dir = dir;
-      this.perProcess = perProcess;
-    }
-
-    void prepare() {
-      // If shared, we're using java.io.tmpdir which should already exist
-      if (!perProcess) {
-        return;
-      }
-
-      // If per process, need to create directory for this process
-      dir.mkdirs();
-    }
-
-    void cleanup() {
-      // If not per process, no directory clean-up
-      if (!perProcess) {
-        return;
-      }
-
-      // If per process, clean-up the directory -- if it is empty
-      if (dir.list().length != 0) {
-        return;
-      }
-
-      // Try to delete -- if the delete is successful, we're done
-      // Otherwise, schedule a delete -- see below...
-      boolean deleted = dir.delete();
-      if (deleted) {
-        return;
-      }
-
-      // Avoid needlessly repeatedly scheduling a deleteOnExit
-      // deleteOnExit does maintain a set, so extra calls are benign
-      // just consume some extra CPU and create contention
-      if (scheduledDelete) {
-        return;
-      }
-      dir.deleteOnExit();
-      scheduledDelete = true;
+  private static final void deleteTempDir(final File file) {
+    // Not using Files.delete for deleting the directory because failures
+    // create Exceptions which may prove expensive.  Instead using the
+    // older File API which simply returns a boolean.
+    boolean deleted = file.delete();
+    if (!deleted) {
+      file.deleteOnExit();
     }
   }
 }
