@@ -37,8 +37,9 @@ import org.bson.BsonValue;
 public class MongoClientDecorator extends DatabaseClientDecorator<CommandStartedEvent> {
   public static final MongoClientDecorator DECORATE = new MongoClientDecorator();
 
+  // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.mongo-driver-3.1");
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.mongo");
 
   @Override
   protected String service() {
