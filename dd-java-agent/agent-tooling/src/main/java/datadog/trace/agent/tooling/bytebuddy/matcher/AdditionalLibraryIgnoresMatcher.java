@@ -29,7 +29,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
     if (name.startsWith("com.beust.jcommander.")
         || name.startsWith("com.fasterxml.classmate.")
-        || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("com.github.mustachejava.")
         || name.startsWith("com.jayway.jsonpath.")
         || name.startsWith("com.lightbend.lagom.")
@@ -49,7 +48,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.startsWith("org.springframework.ejb.")
           || name.startsWith("org.springframework.expression.")
           || name.startsWith("org.springframework.format.")
-          || name.startsWith("org.springframework.instrument.")
           || name.startsWith("org.springframework.jca.")
           || name.startsWith("org.springframework.jdbc.")
           || name.startsWith("org.springframework.jms.")
@@ -69,8 +67,11 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       }
 
       if (name.startsWith("org.springframework.data.")) {
-        if (name.equals(
-            "org.springframework.data.repository.core.support.RepositoryFactorySupport")) {
+        if (name.equals("org.springframework.data.repository.core.support.RepositoryFactorySupport")
+            || name.startsWith(
+                "org.springframework.data.convert.ClassGeneratingEntityInstantiator$")
+            || name.equals(
+                "org.springframework.data.jpa.repository.config.InspectionClassLoader")) {
           return false;
         }
         return true;
@@ -98,7 +99,9 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
             || name.startsWith("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
             || name.startsWith("org.springframework.boot.web.embedded.netty.NettyWebServer$")
             || name.startsWith(
-                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")) {
+                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")
+            || name.equals(
+                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader")) {
           return false;
         }
         return true;
@@ -116,14 +119,25 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
       if (name.startsWith("org.springframework.context.")) {
         // More runnables to deal with
-        if (name.startsWith("org.springframework.context.support.AbstractApplicationContext$")) {
+        if (name.startsWith("org.springframework.context.support.AbstractApplicationContext$")
+            || name.equals("org.springframework.context.support.ContextTypeMatchClassLoader")) {
           return false;
         }
         return true;
       }
 
       if (name.startsWith("org.springframework.core.")) {
-        if (name.startsWith("org.springframework.core.task.")) {
+        if (name.startsWith("org.springframework.core.task.")
+            || name.equals("org.springframework.core.DecoratingClassLoader")
+            || name.equals("org.springframework.core.OverridingClassLoader")) {
+          return false;
+        }
+        return true;
+      }
+
+      if (name.startsWith("org.springframework.instrument.")) {
+        if (name.equals("org.springframework.instrument.classloading.SimpleThrowawayClassLoader")
+            || name.equals("org.springframework.instrument.classloading.ShadowingClassLoader")) {
           return false;
         }
         return true;
@@ -219,7 +233,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     }
     if (name.startsWith("com.google.inject.")) {
       // We instrument Runnable there
-      if (name.startsWith("com.google.inject.internal.AbstractBindingProcessor$")) {
+      if (name.startsWith("com.google.inject.internal.AbstractBindingProcessor$")
+          || name.startsWith("com.google.inject.internal.BytecodeGen$")) {
         return false;
       }
       return true;
@@ -247,6 +262,13 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
     if (name.startsWith("com.carrotsearch.hppc.")) {
       if (name.startsWith("com.carrotsearch.hppc.HashOrderMixing$")) {
+        return false;
+      }
+      return true;
+    }
+
+    if (name.startsWith("com.fasterxml.jackson.")) {
+      if (name.equals("com.fasterxml.jackson.module.afterburner.util.MyClassLoader")) {
         return false;
       }
       return true;
