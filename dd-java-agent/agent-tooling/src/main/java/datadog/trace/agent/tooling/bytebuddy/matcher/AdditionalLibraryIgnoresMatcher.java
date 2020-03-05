@@ -29,7 +29,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
     if (name.startsWith("com.beust.jcommander.")
         || name.startsWith("com.carrotsearch.hppc.")
-        || name.startsWith("com.couchbase.client.deps.")
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("com.github.mustachejava.")
@@ -184,6 +183,17 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
     if (name.startsWith("com.datastax.driver.")) {
       if (name.startsWith("com.datastax.driver.core.Cluster$")) {
+        return false;
+      }
+      return true;
+    }
+
+    if (name.startsWith("com.couchbase.client.deps.")) {
+      // Couchbase library includes some packaged dependencies, unfortunately some of them are
+      // instrumented by java-concurrent instrumentation
+      if (name.startsWith("com.couchbase.client.deps.io.netty.")
+          || name.startsWith("com.couchbase.client.deps.org.LatencyUtils.")
+          || name.startsWith("com.couchbase.client.deps.com.lmax.disruptor.")) {
         return false;
       }
       return true;
