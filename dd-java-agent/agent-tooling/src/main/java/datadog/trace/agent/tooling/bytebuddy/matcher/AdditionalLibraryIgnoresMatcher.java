@@ -234,7 +234,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.startsWith("org.h2.jdbcx.")
           // Some runnables that get instrumented
           || name.equals("org.h2.store.FileLock")
-          || name.equals("org.h2.engine.DatabaseCloser")) {
+          || name.equals("org.h2.engine.DatabaseCloser")
+          || name.equals("org.h2.engine.OnExitDatabaseCloser")) {
         return false;
       }
       return true;
