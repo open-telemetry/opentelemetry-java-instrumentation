@@ -23,6 +23,8 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import java.util.function.Supplier
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 /**
  * Note: ideally this should live with the rest of ExecutorInstrumentationTest,
  * but this code needs java8 so we put it here for now.
@@ -53,16 +55,11 @@ class CompletableFutureTest extends AgentTestRunner {
     def result = new Supplier<String>() {
       @Override
       String get() {
-        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
-        def parentScope = TEST_TRACER.withSpan(parentSpan)
-        try {
+        runUnderTrace("parent") {
           return CompletableFuture.supplyAsync(supplier, pool)
             .thenCompose({ s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), differentPool) })
             .thenApply(function)
             .get()
-        } finally {
-          parentSpan.end()
-          parentScope.close()
         }
       }
     }.get()

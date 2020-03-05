@@ -17,6 +17,7 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import unshaded.io.opentelemetry.OpenTelemetry
 import unshaded.io.opentelemetry.trace.Status
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static unshaded.io.opentelemetry.trace.Span.Kind.PRODUCER
 
 class OpenTelemetryApiTest extends AgentTestRunner {
@@ -54,12 +55,10 @@ class OpenTelemetryApiTest extends AgentTestRunner {
   def "capture span with implicit parent"() {
     when:
     def tracer = OpenTelemetry.getTracerFactory().get("test")
-    def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def parentScope = tracer.withSpan(parentSpan)
-    def testSpan = tracer.spanBuilder("test").startSpan()
-    testSpan.end()
-    parentSpan.end()
-    parentScope.close()
+    runUnderTrace("parent") {
+      def testSpan = tracer.spanBuilder("test").startSpan()
+      testSpan.end()
+    }
 
     then:
     assertTraces(1) {
