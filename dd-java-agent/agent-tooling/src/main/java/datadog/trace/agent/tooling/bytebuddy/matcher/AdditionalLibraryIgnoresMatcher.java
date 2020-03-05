@@ -33,13 +33,13 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("com.github.mustachejava.")
         || name.startsWith("com.jayway.jsonpath.")
-        || name.startsWith("com.lightbend.lagom")
+        || name.startsWith("com.lightbend.lagom.")
         || name.startsWith("javax.el.")
         || name.startsWith("net.sf.cglib.")
-        || name.startsWith("org.apache.lucene")
-        || name.startsWith("org.apache.tartarus")
-        || name.startsWith("org.json.simple")
-        || name.startsWith("org.yaml.snakeyaml")) {
+        || name.startsWith("org.apache.lucene.")
+        || name.startsWith("org.apache.tartarus.")
+        || name.startsWith("org.json.simple.")
+        || name.startsWith("org.yaml.snakeyaml.")) {
       return true;
     }
 
