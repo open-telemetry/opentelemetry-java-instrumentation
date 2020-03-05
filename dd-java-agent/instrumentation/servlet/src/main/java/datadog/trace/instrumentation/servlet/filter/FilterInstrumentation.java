@@ -61,7 +61,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        FilterAdvice.class.getName());
+        getClass().getName() + "$FilterAdvice");
   }
 
   public static class FilterAdvice {

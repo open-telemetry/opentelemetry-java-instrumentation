@@ -68,7 +68,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        RequestDispatcherAdvice.class.getName());
+        getClass().getName() + "$RequestDispatcherAdvice");
   }
 
   public static class RequestDispatcherAdvice {

@@ -67,7 +67,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isProtected().or(isPublic())),
-        HttpServletAdvice.class.getName());
+        getClass().getName() + "$HttpServletAdvice");
   }
 
   public static class HttpServletAdvice {
