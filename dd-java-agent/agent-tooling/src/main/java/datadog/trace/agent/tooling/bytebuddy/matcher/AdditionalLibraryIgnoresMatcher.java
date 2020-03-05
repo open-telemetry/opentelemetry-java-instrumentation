@@ -63,7 +63,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.startsWith("org.springframework.objenesis.")
           || name.startsWith("org.springframework.orm.")
           || name.startsWith("org.springframework.remoting.")
-          || name.startsWith("org.springframework.scheduling.annotation")
           || name.startsWith("org.springframework.scripting.")
           || name.startsWith("org.springframework.stereotype.")
           || name.startsWith("org.springframework.transaction.")
