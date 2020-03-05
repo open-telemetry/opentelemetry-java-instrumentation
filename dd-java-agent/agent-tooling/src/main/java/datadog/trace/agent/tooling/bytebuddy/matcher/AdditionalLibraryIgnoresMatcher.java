@@ -96,7 +96,10 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("org.springframework.boot.")) {
         // More runnables to deal with
         if (name.startsWith("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
-            || name.startsWith("org.springframework.boot.web.embedded.netty.NettyWebServer$")) {
+            || name.startsWith("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
+            || name.startsWith("org.springframework.boot.web.embedded.netty.NettyWebServer$")
+            || name.startsWith(
+                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")) {
           return false;
         }
         return true;
@@ -144,7 +147,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
       if (name.startsWith("org.springframework.web.")) {
         if (name.startsWith("org.springframework.web.servlet.")
-            || name.startsWith("org.springframework.web.reactive.")) {
+            || name.startsWith("org.springframework.web.reactive.")
+            || name.startsWith("org.springframework.web.context.request.async.")) {
           return false;
         }
         return true;
