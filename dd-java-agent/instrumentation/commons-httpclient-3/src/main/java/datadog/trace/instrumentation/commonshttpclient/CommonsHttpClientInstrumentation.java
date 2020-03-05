@@ -80,13 +80,8 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, httpMethod);
+      propagate().inject(span, httpMethod, SETTER);
 
-      final boolean awsClientCall =
-          httpMethod.getRequestHeaders("amz-sdk-invocation-id").length > 0;
-      // AWS calls are often signed, so we can't add headers without breaking the signature.
-      if (!awsClientCall) {
-        propagate().inject(span, httpMethod, SETTER);
-      }
       return scope;
     }
 
