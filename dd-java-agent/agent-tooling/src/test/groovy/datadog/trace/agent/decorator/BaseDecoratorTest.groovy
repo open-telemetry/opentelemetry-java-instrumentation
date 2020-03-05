@@ -7,7 +7,10 @@ import datadog.trace.bootstrap.instrumentation.api.AgentSpan
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.Tags
 import spock.lang.Shared
+import spock.lang.Timeout
 
+@Timeout(20)
+// onPeerConnection might be slow...
 class BaseDecoratorTest extends DDSpecification {
 
   @Shared

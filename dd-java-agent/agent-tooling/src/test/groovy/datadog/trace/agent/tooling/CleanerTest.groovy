@@ -3,6 +3,7 @@ package datadog.trace.agent.tooling
 import datadog.common.exec.CommonTaskExecutor
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
+import spock.lang.Retry
 import spock.lang.Subject
 
 import java.lang.ref.WeakReference
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
+@Retry
 class CleanerTest extends DDSpecification {
 
   @Subject
