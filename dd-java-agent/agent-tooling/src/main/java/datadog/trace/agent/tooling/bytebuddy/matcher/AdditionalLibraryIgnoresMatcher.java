@@ -65,7 +65,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.startsWith("org.springframework.stereotype.")
           || name.startsWith("org.springframework.transaction.")
           || name.startsWith("org.springframework.ui.")
-          || name.startsWith("org.springframework.util.")
           || name.startsWith("org.springframework.validation.")) {
         return true;
       }
@@ -131,6 +130,13 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("org.springframework.http.")) {
         // There are some Mono implementation that get instrumented
         if (name.startsWith("org.springframework.http.server.reactive.")) {
+          return false;
+        }
+        return true;
+      }
+
+      if (name.startsWith("org.springframework.util.")) {
+        if (name.startsWith("org.springframework.util.concurrent.")) {
           return false;
         }
         return true;
