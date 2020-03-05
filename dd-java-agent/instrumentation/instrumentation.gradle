@@ -56,6 +56,8 @@ subprojects { Project subProj ->
       annotationProcessor deps.autoservice
       implementation deps.autoservice
 
+      // Always include concurrent instrumentation dependency to make sure that all instrumentations are tested with async parts instrumented
+      testCompile project(':dd-java-agent:instrumentation:java-concurrent')
       testCompile project(':dd-java-agent:testing')
       testAnnotationProcessor deps.autoservice
       testImplementation deps.autoservice
