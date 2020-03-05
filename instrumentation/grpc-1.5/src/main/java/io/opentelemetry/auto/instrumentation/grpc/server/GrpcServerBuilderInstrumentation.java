@@ -47,6 +47,7 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor",
       "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCall",
       "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCallListener",
+      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
       "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.decorator.ServerDecorator",
       packageName + ".GrpcServerDecorator",

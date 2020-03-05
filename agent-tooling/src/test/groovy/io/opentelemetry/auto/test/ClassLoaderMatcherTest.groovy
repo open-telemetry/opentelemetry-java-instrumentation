@@ -21,13 +21,6 @@ import io.opentelemetry.auto.util.test.AgentSpecification
 
 class ClassLoaderMatcherTest extends AgentSpecification {
 
-  def "skip non-delegating classloader"() {
-    setup:
-    final URLClassLoader badLoader = new NonDelegatingClassLoader()
-    expect:
-    ClassLoaderMatcher.skipClassLoader().matches(badLoader)
-  }
-
   def "skips agent classloader"() {
     setup:
     URL root = new URL("file://")
@@ -52,23 +45,4 @@ class ClassLoaderMatcherTest extends AgentSpecification {
     expect:
     AgentClassLoader.name == "io.opentelemetry.auto.bootstrap.AgentClassLoader"
   }
-
-  /*
-   * A URLClassloader which only delegates java.* classes
-   */
-
-  private static class NonDelegatingClassLoader extends URLClassLoader {
-    NonDelegatingClassLoader() {
-      super(new URL[0], (ClassLoader) null)
-    }
-
-    @Override
-    Class<?> loadClass(String className) {
-      if (className.startsWith("java.")) {
-        return super.loadClass(className)
-      }
-      throw new ClassNotFoundException(className)
-    }
-  }
-
 }
