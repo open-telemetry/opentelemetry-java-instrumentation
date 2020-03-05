@@ -218,7 +218,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
     if (name.startsWith("com.google.api.")) {
-      if (name.equals("com.google.api.client.http.HttpRequest")) {
+      if (name.startsWith("com.google.api.client.http.HttpRequest")) {
         return false;
       }
       return true;
