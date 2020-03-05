@@ -43,8 +43,6 @@ testSets {
 dependencies {
   compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
 
-  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
-
   testCompile group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
   testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.0'
 

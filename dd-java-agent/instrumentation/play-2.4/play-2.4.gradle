@@ -36,7 +36,6 @@ testSets {
 dependencies {
   main_java8Compile group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
-  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:netty-4.0')
   testCompile project(':dd-java-agent:instrumentation:netty-4.1')
   testCompile project(':dd-java-agent:instrumentation:akka-http-10.0')
