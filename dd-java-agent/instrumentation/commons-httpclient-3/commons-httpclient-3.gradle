@@ -1,10 +1,9 @@
 muzzle {
-  // There are lots of weird versions in this project like "20020423"
-  // Keep things simple with just 3.x
   pass {
     group = "commons-httpclient"
     module = "commons-httpclient"
-    versions = "3.+"
+    versions = "[2.0,]"
+    assertInverse = true
   }
 }
 
@@ -18,9 +17,9 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'commons-httpclient', name: 'commons-httpclient', version: '3.0'
+  compileOnly group: 'commons-httpclient', name: 'commons-httpclient', version: '2.0'
 
-  testCompile group: 'commons-httpclient', name: 'commons-httpclient', version: '3.0'
+  testCompile group: 'commons-httpclient', name: 'commons-httpclient', version: '2.0'
 
-  latestDepTestCompile group: 'commons-httpclient', name: 'commons-httpclient', version: '3.+'
+  latestDepTestCompile group: 'commons-httpclient', name: 'commons-httpclient', version: '+'
 }
