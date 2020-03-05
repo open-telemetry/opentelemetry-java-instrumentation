@@ -20,6 +20,7 @@ import io.opentracing.propagation.TextMapInject
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
+import spock.lang.Timeout
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.Config.HEADER_TAGS
@@ -31,6 +32,7 @@ import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.WRITER_TYPE
 import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT
 
+@Timeout(10)
 class DDTracerTest extends DDSpecification {
 
   @Rule

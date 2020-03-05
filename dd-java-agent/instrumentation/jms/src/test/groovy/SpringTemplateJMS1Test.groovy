@@ -3,6 +3,7 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import org.springframework.jms.core.JmsTemplate
+import spock.lang.Retry
 import spock.lang.Shared
 
 import javax.jms.Connection
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit
 import static JMS1Test.consumerTrace
 import static JMS1Test.producerTrace
 
+@Retry
 class SpringTemplateJMS1Test extends AgentTestRunner {
   @Shared
   EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()

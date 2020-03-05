@@ -2,8 +2,10 @@ package datadog.smoketest
 
 import datadog.trace.agent.test.utils.PortUtils
 import okhttp3.Request
+import spock.lang.Retry
 import spock.lang.Shared
 
+@Retry(delay = 20)
 class WildflySmokeTest extends AbstractServerSmokeTest {
 
   @Shared

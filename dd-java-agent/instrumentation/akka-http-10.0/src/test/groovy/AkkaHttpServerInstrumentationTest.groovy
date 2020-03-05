@@ -2,8 +2,9 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
 import datadog.trace.bootstrap.instrumentation.api.Tags
+import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
+import spock.lang.Retry
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -70,6 +71,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
   }
 }
 
+@Retry
 class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {
   @Override
   def startServer(int port) {
@@ -82,6 +84,7 @@ class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentatio
   }
 }
 
+@Retry
 class AkkaHttpServerInstrumentationTestAsync extends AkkaHttpServerInstrumentationTest {
   @Override
   def startServer(int port) {
