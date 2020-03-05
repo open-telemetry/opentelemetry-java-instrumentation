@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
+import datadog.trace.api.Trace;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -116,7 +117,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
 
     /** No-arg constructor only used by muzzle and tests. */
     public TracerClassInstrumentation() {
-      this("noop", Collections.singleton("noop"));
+      this(Trace.class.getName(), Collections.singleton("noop"));
     }
 
     public TracerClassInstrumentation(final String className, final Set<String> methodNames) {
