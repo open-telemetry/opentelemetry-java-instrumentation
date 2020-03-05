@@ -333,7 +333,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       } else {
         childOf((SpanData) parentSpan)
       }
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind CLIENT
       errored exception != null
       tags {
@@ -374,8 +374,8 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     }
   }
 
-  String expectedOperationName() {
-    return "http.request"
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 
   int extraClientSpans() {

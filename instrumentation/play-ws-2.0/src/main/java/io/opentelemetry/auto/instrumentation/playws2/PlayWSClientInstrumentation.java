@@ -84,7 +84,8 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
 
-      final Span span = TRACER.spanBuilder("play-ws.request").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);

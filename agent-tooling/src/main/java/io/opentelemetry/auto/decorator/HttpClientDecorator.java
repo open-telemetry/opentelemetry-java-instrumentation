@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecorator {
 
+  public static final String DEFAULT_SPAN_NAME = "HTTP request";
+
   protected abstract String method(REQUEST request);
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
@@ -46,6 +48,14 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   @Override
   protected String service() {
     return null;
+  }
+
+  public String spanNameForRequest(REQUEST request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    final String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 
   public Span onRequest(final Span span, final REQUEST request) {

@@ -56,7 +56,8 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY).set(null);
     }
 
-    final Span span = TRACER.spanBuilder("netty.client.request").setSpanKind(CLIENT).startSpan();
+    final Span span =
+        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);

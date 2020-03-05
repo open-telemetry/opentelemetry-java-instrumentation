@@ -43,6 +43,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import com.amazonaws.services.sqs.model.CreateQueueRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -150,7 +151,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           parent()
@@ -172,7 +173,7 @@ class AWSClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           childOf(span(0))
@@ -241,7 +242,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored true
           parent()
@@ -263,7 +264,7 @@ class AWSClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored true
           childOf(span(0))
@@ -304,7 +305,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName("HEAD")
           spanKind CLIENT
           errored true
           parent()
@@ -349,7 +350,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           errored true
           parent()
@@ -374,7 +375,7 @@ class AWSClientTest extends AgentTestRunner {
         }
         (1..4).each {
           span(it) {
-            operationName "http.request"
+            operationName expectedOperationName("GET")
             spanKind CLIENT
             errored true
             childOf(span(0))
@@ -398,5 +399,9 @@ class AWSClientTest extends AgentTestRunner {
 
     cleanup:
     server.close()
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 }

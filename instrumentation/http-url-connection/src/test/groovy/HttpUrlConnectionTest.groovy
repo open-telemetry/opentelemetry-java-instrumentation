@@ -23,7 +23,6 @@ import spock.lang.Ignore
 import spock.lang.Requires
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -104,7 +103,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -121,7 +120,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(2) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -186,7 +185,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -203,7 +202,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(2) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -253,7 +252,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -319,7 +318,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("POST")
           spanKind CLIENT
           childOf span(0)
           errored false

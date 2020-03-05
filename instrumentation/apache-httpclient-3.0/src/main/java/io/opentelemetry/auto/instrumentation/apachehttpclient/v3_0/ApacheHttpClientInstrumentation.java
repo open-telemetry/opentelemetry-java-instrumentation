@@ -85,7 +85,8 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       if (callDepth > 0) {
         return null;
       }
-      final Span span = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder(DECORATE.spanNameForRequest(httpMethod)).setSpanKind(CLIENT).startSpan();
       final Scope scope = TRACER.withSpan(span);
 
       DECORATE.afterStart(span);

@@ -165,7 +165,8 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class HelperMethods {
     public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
-      final Span span = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
       final Scope scope = TRACER.withSpan(span);
 
       DECORATE.afterStart(span);

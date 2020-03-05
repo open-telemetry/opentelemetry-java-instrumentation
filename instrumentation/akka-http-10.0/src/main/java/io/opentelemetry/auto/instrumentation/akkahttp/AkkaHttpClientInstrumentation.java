@@ -96,7 +96,8 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("akka-http.request").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -91,7 +93,7 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           parent()
@@ -123,7 +125,7 @@ class AwsClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           childOf(span(0))
@@ -197,7 +199,7 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           parent()
@@ -232,7 +234,7 @@ class AwsClientTest extends AgentTestRunner {
       // TODO: this should be part of the same trace but netty instrumentation doesn't cooperate
       trace(1, 1) {
         span(0) {
-          operationName "netty.client.request"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           parent()
@@ -314,7 +316,7 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           errored true
           parent()
@@ -336,7 +338,7 @@ class AwsClientTest extends AgentTestRunner {
         }
         (1..4).each {
           span(it) {
-            operationName "http.request"
+            operationName expectedOperationName("GET")
             spanKind CLIENT
             errored true
             childOf(span(0))
@@ -356,5 +358,9 @@ class AwsClientTest extends AgentTestRunner {
 
     cleanup:
     server.close()
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import groovy.json.JsonSlurper
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -115,7 +116,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           tags {
@@ -137,5 +138,9 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
 
     @Override
     protected void registerDerivedNodeNameWithLogger(String nodeName) {}
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 }
