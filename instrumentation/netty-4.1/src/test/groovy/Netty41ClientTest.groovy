@@ -226,13 +226,8 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
   class TracedClass {
     int tracedMethod(String method) {
-      def span = TEST_TRACER.spanBuilder("tracedMethod").startSpan()
-      def scope = TEST_TRACER.withSpan(span)
-      try {
-        return doRequest(method, server.address.resolve("/success"))
-      } finally {
-        span.end()
-        scope.close()
+      runUnderTrace("tracedMethod") {
+        doRequest(method, server.address.resolve("/success"))
       }
     }
   }

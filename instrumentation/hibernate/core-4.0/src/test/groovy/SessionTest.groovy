@@ -23,6 +23,7 @@ import org.hibernate.ReplicationMode
 import org.hibernate.Session
 import spock.lang.Shared
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
@@ -460,28 +461,23 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate overlapping Sessions"() {
     setup:
 
-    def rootSpan = TEST_TRACER.spanBuilder("overlapping Sessions").startSpan()
-    def scope = TEST_TRACER.withSpan(rootSpan)
+    runUnderTrace("overlapping Sessions") {
+      def session1 = sessionFactory.openSession()
+      session1.beginTransaction()
+      def session2 = sessionFactory.openStatelessSession()
+      def session3 = sessionFactory.openSession()
 
-    def session1 = sessionFactory.openSession()
-    session1.beginTransaction()
-    def session2 = sessionFactory.openStatelessSession()
-    def session3 = sessionFactory.openSession()
+      def value1 = new Value("Value 1")
+      session1.save(value1)
+      session2.insert(new Value("Value 2"))
+      session3.save(new Value("Value 3"))
+      session1.delete(value1)
 
-    def value1 = new Value("Value 1")
-    session1.save(value1)
-    session2.insert(new Value("Value 2"))
-    session3.save(new Value("Value 3"))
-    session1.delete(value1)
-
-    session2.close()
-    session1.getTransaction().commit()
-    session1.close()
-    session3.close()
-
-    rootSpan.end()
-    scope.close()
-
+      session2.close()
+      session1.getTransaction().commit()
+      session1.close()
+      session3.close()
+    }
 
     expect:
     assertTraces(1) {
