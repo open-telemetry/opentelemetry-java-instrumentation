@@ -8,6 +8,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @Slf4j
 public final class ClassLoaderMatcher {
   public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
+  public static final int CACHE_MAX_SIZE = 25; // limit number of cached responses for each matcher.
   public static final int CACHE_CONCURRENCY =
       Math.max(8, Runtime.getRuntime().availableProcessors());
 
@@ -20,9 +21,16 @@ public final class ClassLoaderMatcher {
     return SkipClassLoaderMatcher.INSTANCE;
   }
 
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasNoResources(
-      final String... resources) {
-    return new ClassLoaderHasNoResourceMatcher(resources);
+  /**
+   * NOTICE: Does not match the bootstrap classpath. Don't use with classes expected to be on the
+   * bootstrap.
+   *
+   * @param classNames list of names to match. returns true if empty.
+   * @return true if class is available as a resource and not the bootstrap classloader.
+   */
+  public static ElementMatcher.Junction.AbstractBase<ClassLoader> hasClassesNamed(
+      final String... classNames) {
+    return new ClassLoaderHasClassesNamedMatcher(classNames);
   }
 
   private static final class SkipClassLoaderMatcher
@@ -57,38 +65,47 @@ public final class ClassLoaderMatcher {
     }
   }
 
-  private static class ClassLoaderHasNoResourceMatcher
+  private static class ClassLoaderHasClassesNamedMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+
     private final Cache<ClassLoader, Boolean> cache =
-        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
+        CacheBuilder.newBuilder()
+            .weakKeys()
+            .maximumSize(CACHE_MAX_SIZE)
+            .concurrencyLevel(CACHE_CONCURRENCY)
+            .build();
 
     private final String[] resources;
 
-    private ClassLoaderHasNoResourceMatcher(final String... resources) {
-      this.resources = resources;
+    private ClassLoaderHasClassesNamedMatcher(final String... classNames) {
+      resources = classNames;
+      for (int i = 0; i < resources.length; i++) {
+        resources[i] = resources[i].replace(".", "/") + ".class";
+      }
     }
 
-    private boolean hasNoResources(final ClassLoader cl) {
+    private boolean hasResources(final ClassLoader cl) {
       for (final String resource : resources) {
         if (cl.getResource(resource) == null) {
-          return true;
+          return false;
         }
       }
-      return false;
+      return true;
     }
 
     @Override
     public boolean matches(final ClassLoader cl) {
-      if (cl == null) {
+      if (cl == BOOTSTRAP_CLASSLOADER) {
+        // Can't match the bootstrap classloader.
         return false;
       }
-      Boolean v = cache.getIfPresent(cl);
-      if (v != null) {
-        return v;
+      final Boolean cached;
+      if ((cached = cache.getIfPresent(cl)) != null) {
+        return cached;
       }
-      v = hasNoResources(cl);
-      cache.put(cl, v);
-      return v;
+      final boolean value = hasResources(cl);
+      cache.put(cl, value);
+      return value;
     }
   }
 }

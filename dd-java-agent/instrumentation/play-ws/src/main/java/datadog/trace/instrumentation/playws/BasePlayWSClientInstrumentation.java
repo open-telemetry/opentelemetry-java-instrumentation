@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.playws;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -24,8 +24,7 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(
-        classLoaderHasNoResources("play/shaded/ahc/org/asynchttpclient/AsyncHttpClient.class"));
+    return hasClassesNamed("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient");
   }
 
   @Override
