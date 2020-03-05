@@ -622,14 +622,23 @@ public class Config {
       return properties;
     }
 
+    FileReader fileReader = null;
     try {
-      final FileReader fileReader = new FileReader(configurationFile);
+      fileReader = new FileReader(configurationFile);
       properties.load(fileReader);
     } catch (final FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
     } catch (final IOException ioe) {
       log.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
+    } finally {
+      if (fileReader != null) {
+        try {
+          fileReader.close();
+        } catch (IOException ioe) {
+          log.error("Configuration file '{}' was not closed correctly.", configurationFilePath);
+        }
+      }
     }
 
     return properties;
