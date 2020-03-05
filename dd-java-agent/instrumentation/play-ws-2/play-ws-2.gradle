@@ -61,6 +61,9 @@ def scalaVersion = '2.12'
 dependencies {
   compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.0.0'
 
+  compile project(':dd-java-agent:instrumentation:play-ws')
+  testCompile project(path: ':dd-java-agent:instrumentation:play-ws', configuration: 'testArtifacts')
+
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
 
   // These are to ensure cross compatibility

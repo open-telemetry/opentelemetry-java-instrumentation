@@ -1,14 +1,14 @@
 package server
 
-
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
 import okhttp3.MultipartBody
 import okhttp3.Request
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 /* Don't actually need AgentTestRunner, but it messes up the classloader for AgentTestRunnerTest if this runs first. */
 
@@ -312,9 +312,132 @@ class ServerTest extends AgentTestRunner {
     response.code() == 200
     response.body().string().trim() == "done"
 
-    ListWriterAssert.assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       server.distributedRequestTrace(it, 0)
     }
+
+    cleanup:
+    server.stop()
+  }
+
+  def "server ignores distributed request when header set"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          handleDistributedRequest()
+          response.send("done")
+        }
+      }
+    }
+
+    when:
+    def request = new Request.Builder()
+      .url("$server.address")
+      .header("is-dd-server", "false")
+      .get()
+      .build()
+
+    def response = runUnderTrace("parent") {
+      client.newCall(request).execute()
+    }
+
+    then:
+    response.code() == 200
+    response.body().string().trim() == "done"
+
+    assertTraces(1) {
+      trace(0, 1) {
+        basicSpan(it, 0, "parent")
+      }
+    }
+
+    cleanup:
+    server.stop()
+  }
+
+  def "server handles distributed request when header set"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          handleDistributedRequest()
+          response.send("done")
+        }
+      }
+    }
+
+    when:
+    def request = new Request.Builder()
+      .url("$server.address")
+      .header("is-dd-server", "true")
+      .get()
+      .build()
+
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 200
+    response.body().string().trim() == "done"
+
+    // parent<->child relation can't be tested because okhttp isnt traced here
+    assertTraces(1) {
+      server.distributedRequestTrace(it, 0)
+    }
+
+    cleanup:
+    server.stop()
+  }
+
+
+  def "calling send() twice is an error"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          response.send()
+          response.send()
+        }
+      }
+    }
+
+    when:
+    def request = new Request.Builder()
+      .url("$server.address")
+      .get()
+      .build()
+
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 500
+    response.message().startsWith("Server Error")
+
+    cleanup:
+    server.stop()
+  }
+
+  def "calling send() with null is an error"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          response.send(null)
+        }
+      }
+    }
+
+    when:
+    def request = new Request.Builder()
+      .url("$server.address")
+      .get()
+      .build()
+
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 500
+    response.message().startsWith("Server Error")
 
     cleanup:
     server.stop()
