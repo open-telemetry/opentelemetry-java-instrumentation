@@ -181,13 +181,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
-    if (name.startsWith("com.datastax.driver.")) {
-      if (name.startsWith("com.datastax.driver.core.Cluster$")) {
-        return false;
-      }
-      return true;
-    }
-
     if (name.startsWith("com.couchbase.client.deps.")) {
       // Couchbase library includes some packaged dependencies, unfortunately some of them are
       // instrumented by java-concurrent instrumentation
