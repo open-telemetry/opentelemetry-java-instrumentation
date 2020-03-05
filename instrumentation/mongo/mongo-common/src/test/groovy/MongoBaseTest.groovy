@@ -48,7 +48,17 @@ class MongoBaseTest extends AgentTestRunner {
         .net(new Net("localhost", port, Network.localhostIsIPv6()))
         .build()
 
-    mongodExe = STARTER.prepare(mongodConfig)
+    // using a system-wide file lock to prevent other modules that may be running in parallel
+    // from clobbering each other while downloading and extracting mongodb
+    def lockFile = new File(System.getProperty("java.io.tmpdir"), "prepare-embedded-mongo.lock")
+    def channel = new RandomAccessFile(lockFile, "rw").getChannel()
+    def lock = channel.lock()
+    try {
+      mongodExe = STARTER.prepare(mongodConfig)
+    } finally {
+      lock.release()
+      channel.close()
+    }
     mongod = mongodExe.start()
   }
 
