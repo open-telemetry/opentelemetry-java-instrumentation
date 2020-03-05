@@ -28,7 +28,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     final String name = target.getActualName();
 
     if (name.startsWith("com.beust.jcommander.")
-        || name.startsWith("com.carrotsearch.hppc.")
         || name.startsWith("com.fasterxml.classmate.")
         || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("com.github.mustachejava.")
@@ -240,6 +239,13 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.equals("org.h2.store.FileLock")
           || name.equals("org.h2.engine.DatabaseCloser")
           || name.equals("org.h2.engine.OnExitDatabaseCloser")) {
+        return false;
+      }
+      return true;
+    }
+
+    if (name.startsWith("com.carrotsearch.hppc.")) {
+      if (name.startsWith("com.carrotsearch.hppc.HashOrderMixing$")) {
         return false;
       }
       return true;
