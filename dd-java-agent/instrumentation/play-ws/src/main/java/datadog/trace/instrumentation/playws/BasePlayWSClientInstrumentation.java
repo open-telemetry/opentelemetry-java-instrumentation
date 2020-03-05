@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.playws;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
-import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.hasInterface;
+import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -33,7 +33,7 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
     // It also delegates to another AsyncHttpClient
     return nameStartsWith("play.")
         .<TypeDescription>and(
-            hasInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
+            implementsInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
                 .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient"))));
   }
 

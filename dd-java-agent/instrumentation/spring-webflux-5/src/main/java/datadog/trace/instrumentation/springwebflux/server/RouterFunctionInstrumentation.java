@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -22,6 +23,12 @@ public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrume
 
   public RouterFunctionInstrumentation() {
     super("spring-webflux-functional");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.springframework.web.reactive.function.server.ServerRequest");
   }
 
   @Override

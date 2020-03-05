@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.aws.v2;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -19,6 +20,12 @@ import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 /** AWS SDK v2 instrumentation */
 @AutoService(Instrumenter.class)
 public final class AwsClientInstrumentation extends AbstractAwsClientInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("software.amazon.awssdk.core.client.builder.SdkClientBuilder");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
