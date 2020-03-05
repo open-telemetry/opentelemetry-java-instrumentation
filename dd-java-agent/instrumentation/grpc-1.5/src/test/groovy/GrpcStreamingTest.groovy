@@ -1,3 +1,4 @@
+import datadog.opentracing.scopemanager.ContinuableScope
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.bootstrap.instrumentation.api.Tags
@@ -9,6 +10,7 @@ import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
+import io.opentracing.noop.NoopSpan
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -29,22 +31,44 @@ class GrpcStreamingTest extends AgentTestRunner {
         return new StreamObserver<Helloworld.Response>() {
           @Override
           void onNext(Helloworld.Response value) {
+
             serverReceived << value.message
 
             (1..msgCount).each {
-              observer.onNext(value)
+              if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
+                // The InProcessTransport calls the client response in process, so we have to disable async propagation.
+                def tempScope = testTracer.scopeManager().activate(NoopSpan.INSTANCE)
+                observer.onNext(value)
+                tempScope.close()
+              } else {
+                observer.onError(new IllegalStateException("not async propagating!"))
+              }
             }
           }
 
           @Override
           void onError(Throwable t) {
-            error.set(t)
-            observer.onError(t)
+            if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
+              // The InProcessTransport calls the client response in process, so we have to disable async propagation.
+              def tempScope = testTracer.scopeManager().activate(NoopSpan.INSTANCE)
+              error.set(t)
+              observer.onError(t)
+              tempScope.close()
+            } else {
+              observer.onError(new IllegalStateException("not async propagating!"))
+            }
           }
 
           @Override
           void onCompleted() {
-            observer.onCompleted()
+            if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
+              // The InProcessTransport calls the client response in process, so we have to disable async propagation.
+              def tempScope = testTracer.scopeManager().activate(NoopSpan.INSTANCE)
+              observer.onCompleted()
+              tempScope.close()
+            } else {
+              observer.onError(new IllegalStateException("not async propagating!"))
+            }
           }
         }
       }
@@ -58,17 +82,29 @@ class GrpcStreamingTest extends AgentTestRunner {
     def observer = client.conversation(new StreamObserver<Helloworld.Response>() {
       @Override
       void onNext(Helloworld.Response value) {
-        clientReceived << value.message
+        if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
+          clientReceived << value.message
+        } else {
+          error.set(new IllegalStateException("not async propagating!"))
+        }
       }
 
       @Override
       void onError(Throwable t) {
-        error.set(t)
+        if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
+          error.set(t)
+        } else {
+          error.set(new IllegalStateException("not async propagating!"))
+        }
       }
 
       @Override
       void onCompleted() {
-        TEST_WRITER.waitForTraces(1)
+        if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
+          TEST_WRITER.waitForTraces(1)
+        } else {
+          error.set(new IllegalStateException("not async propagating!"))
+        }
       }
     })
 
@@ -80,6 +116,10 @@ class GrpcStreamingTest extends AgentTestRunner {
 
     then:
     error.get() == null
+    TEST_WRITER.waitForTraces(2)
+    error.get() == null
+    serverReceived == clientRange.collect { "call $it" }
+    clientReceived == serverRange.collect { clientRange.collect { "call $it" } }.flatten().sort()
 
     assertTraces(2) {
       trace(0, clientMessageCount + 1) {
@@ -147,9 +187,6 @@ class GrpcStreamingTest extends AgentTestRunner {
         }
       }
     }
-
-    serverReceived == clientRange.collect { "call $it" }
-    clientReceived == serverRange.collect { clientRange.collect { "call $it" } }.flatten().sort()
 
     cleanup:
     channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
