@@ -39,14 +39,12 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("org.apache.lucene")
         || name.startsWith("org.apache.tartarus")
         || name.startsWith("org.json.simple")
-        || name.startsWith("org.objectweb.asm.")
         || name.startsWith("org.yaml.snakeyaml")) {
       return true;
     }
 
     if (name.startsWith("org.springframework.")) {
       if (name.startsWith("org.springframework.aop.")
-          || name.startsWith("org.springframework.asm.")
           || name.startsWith("org.springframework.cache.")
           || name.startsWith("org.springframework.dao.")
           || name.startsWith("org.springframework.ejb.")
