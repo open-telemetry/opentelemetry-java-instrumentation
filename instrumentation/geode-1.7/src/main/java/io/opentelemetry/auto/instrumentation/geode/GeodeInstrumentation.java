@@ -61,8 +61,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       if (CallDepthThreadLocalMap.incrementCallDepth(RegionAdvice.class) > 0) {
         return null;
       }
-      final Span span =
-          TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(CLIENT).startSpan();
+      final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

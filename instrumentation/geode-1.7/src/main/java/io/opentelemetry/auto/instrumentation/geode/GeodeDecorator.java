@@ -39,6 +39,6 @@ public class GeodeDecorator extends DatabaseClientDecorator<Cache> {
 
   @Override
   protected String getComponentName() {
-    return "apache-geode";
+    return "apache-geode-client";
   }
 }
