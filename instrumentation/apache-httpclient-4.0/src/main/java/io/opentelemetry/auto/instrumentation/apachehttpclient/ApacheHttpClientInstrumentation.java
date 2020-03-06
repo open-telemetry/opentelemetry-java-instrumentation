@@ -18,10 +18,10 @@ package io.opentelemetry.auto.instrumentation.apachehttpclient;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -58,8 +58,14 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("org/apache/http/client/HttpClient.class"));
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("org.apache.http.client.HttpClient")));
+    return implementsInterface(named("org.apache.http.client.HttpClient"));
   }
 
   @Override

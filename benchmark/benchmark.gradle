@@ -10,7 +10,7 @@ dependencies {
 }
 
 jmh {
-  timeUnit = 'us' // Output time unit. Available time units are: [m, s, ms, us, ns].
+  timeUnit = 'ms' // Output time unit. Available time units are: [m, s, ms, us, ns].
   benchmarkMode = ['avgt']
   timeOnIteration = '20s'
   iterations = 1 // Number of measurement iterations to do.

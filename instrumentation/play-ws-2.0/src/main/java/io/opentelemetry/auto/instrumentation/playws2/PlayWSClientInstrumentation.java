@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.playws2;
 import static io.opentelemetry.auto.instrumentation.playws2.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.playws2.PlayWSClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.playws2.PlayWSClientDecorator.TRACER;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
@@ -43,6 +44,13 @@ import play.shaded.ahc.org.asynchttpclient.Request;
 public class PlayWSClientInstrumentation extends Instrumenter.Default {
   public PlayWSClientInstrumentation() {
     super("play-ws");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(
+        classLoaderHasNoResources("play/shaded/ahc/org/asynchttpclient/AsyncHttpClient.class"));
   }
 
   @Override

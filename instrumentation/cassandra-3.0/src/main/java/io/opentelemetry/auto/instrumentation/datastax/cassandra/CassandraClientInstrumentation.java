@@ -39,6 +39,8 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // Note: Cassandra has a large driver and we instrument single class in it.
+    // The rest is ignored in AdditionalLibraryIgnoresMatcher
     return named("com.datastax.driver.core.Cluster$Manager");
   }
 
