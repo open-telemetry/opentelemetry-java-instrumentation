@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020, OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.opentelemetry.auto.instrumentation.geode;
 
 import static io.opentelemetry.auto.instrumentation.geode.GeodeDecorator.DECORATE;
@@ -11,6 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -34,6 +50,18 @@ public class GeodeInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "io.opentelemetry.auto.decorator.BaseDecorator",
+      "io.opentelemetry.auto.decorator.ClientDecorator",
+      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
+      packageName + ".GeodeDecorator",
+      packageName + ".GeodeInstrumentation$SimpleAdvice",
+      packageName + ".GeodeInstrumentation$QueryAdvice"
+    };
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>(2);
     map.put(
@@ -44,25 +72,30 @@ public class GeodeInstrumentation extends Instrumenter.Default {
                     .or(named("create"))
                     .or(named("destroy"))
                     .or(named("entrySet"))
-                    .or(
-                        named("get")
-                            .or(named("getAll"))
-                            .or(named("invalidate"))
-                            .or(nameStartsWith("put").or(nameStartsWith("remove"))))),
-        GeodeInstrumentation.class.getName() + "$RegionAdvice");
+                    .or(named("get"))
+                    .or(named("getAll"))
+                    .or(named("invalidate"))
+                    .or(nameStartsWith("keySet"))
+                    .or(nameStartsWith("put"))
+                    .or(nameStartsWith("remove"))
+                    .or(named("replace"))),
+        GeodeInstrumentation.class.getName() + "$SimpleAdvice");
+    map.put(
+        isMethod().and(named("existsValue").or(named("query")).or(named("selectValue"))),
+        GeodeInstrumentation.class.getName() + "$QueryAdvice");
     return map;
   }
 
-  public static class RegionAdvice {
-
+  public static class SimpleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
         @Advice.This final Region thiz, @Advice.Origin final Method method) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(RegionAdvice.class) > 0) {
+      if (CallDepthThreadLocalMap.incrementCallDepth(SimpleAdvice.class) > 0) {
         return null;
       }
       final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
+      span.setAttribute(Tags.DB_INSTANCE, thiz.getName());
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
@@ -79,7 +112,41 @@ public class GeodeInstrumentation extends Instrumenter.Default {
         span.end();
         spanWithScope.closeScope();
       } finally {
-        CallDepthThreadLocalMap.reset(RegionAdvice.class);
+        CallDepthThreadLocalMap.reset(SimpleAdvice.class);
+      }
+    }
+  }
+
+  public static class QueryAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static SpanWithScope onEnter(
+        @Advice.This final Region thiz,
+        @Advice.Origin final Method method,
+        @Advice.Argument(0) final String query) {
+      if (CallDepthThreadLocalMap.incrementCallDepth(QueryAdvice.class) > 0) {
+        return null;
+      }
+      final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
+      DECORATE.afterStart(span);
+      span.setAttribute(Tags.DB_INSTANCE, thiz.getName());
+      span.setAttribute(Tags.DB_STATEMENT, query);
+      return new SpanWithScope(span, TRACER.withSpan(span));
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopSpan(
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      try {
+        if (spanWithScope == null) {
+          return;
+        }
+        final Span span = spanWithScope.getSpan();
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+        span.end();
+        spanWithScope.closeScope();
+      } finally {
+        CallDepthThreadLocalMap.reset(QueryAdvice.class);
       }
     }
   }

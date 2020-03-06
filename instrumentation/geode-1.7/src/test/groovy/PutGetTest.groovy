@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020, OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -24,7 +39,7 @@ class PutGetTest extends AgentTestRunner {
 
   def "test put and get"() {
     when:
-    String cacheValue
+    def cacheValue
     runUnderTrace("someTrace") {
       region.clear()
       region.put(key, value)
@@ -33,6 +48,79 @@ class PutGetTest extends AgentTestRunner {
 
     then:
     cacheValue == value
+    assertGeodeTrace("get", null)
+
+    where:
+    key      | value
+    'Hello'  | 'World'
+    'Humpty' | 'Dumpty'
+    '1'      | 'One'
+    'One'    | '1'
+  }
+
+  def "test put and remove"() {
+    when:
+    runUnderTrace("someTrace") {
+      region.clear()
+      region.put(key, value)
+      region.remove(key)
+    }
+
+    then:
+    region.size() == 0
+    assertGeodeTrace("remove", null)
+
+    where:
+    key      | value
+    'Hello'  | 'World'
+    'Humpty' | 'Dumpty'
+    '1'      | 'One'
+    'One'    | '1'
+  }
+
+  def "test query"() {
+    when:
+    def cacheValue
+    runUnderTrace("someTrace") {
+      region.clear()
+      region.put(key, value)
+      cacheValue = region.query("SELECT * FROM /test-region")
+    }
+
+    then:
+    cacheValue.asList().size()
+    assertGeodeTrace("query", "SELECT * FROM /test-region")
+
+    where:
+    key      | value
+    'Hello'  | 'World'
+    'Humpty' | 'Dumpty'
+    '1'      | 'One'
+    'One'    | '1'
+  }
+
+  def "test existsValue"() {
+    when:
+    def exists
+    runUnderTrace("someTrace") {
+      region.clear()
+      region.put(key, value)
+      exists = region.existsValue("SELECT * FROM /test-region")
+    }
+
+    then:
+    exists
+    assertGeodeTrace("existsValue", "SELECT * FROM /test-region")
+
+    where:
+    key      | value
+    'Hello'  | 'World'
+    'Humpty' | 'Dumpty'
+    '1'      | 'One'
+    'One'    | '1'
+  }
+
+  def assertGeodeTrace(String verb, String query) {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
@@ -49,6 +137,7 @@ class PutGetTest extends AgentTestRunner {
             "$Tags.COMPONENT" "apache-geode-client"
             "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
+            "$Tags.DB_INSTANCE" "test-region"
           }
         }
         span(2) {
@@ -60,10 +149,11 @@ class PutGetTest extends AgentTestRunner {
             "$Tags.COMPONENT" "apache-geode-client"
             "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
+            "$Tags.DB_INSTANCE" "test-region"
           }
         }
         span(3) {
-          operationName "get"
+          operationName verb
           spanKind CLIENT
           errored false
           tags {
@@ -71,17 +161,14 @@ class PutGetTest extends AgentTestRunner {
             "$Tags.COMPONENT" "apache-geode-client"
             "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
+            "$Tags.DB_INSTANCE" "test-region"
+            if (query != null) {
+              "$Tags.DB_STATEMENT" query
+            }
           }
         }
       }
     }
-
-
-    where:
-    key      | value
-    'Hello'  | 'World'
-    'Humpty' | 'Dumpty'
-    '1'      | 'One'
-    'One'    | '1'
+    return true
   }
 }
