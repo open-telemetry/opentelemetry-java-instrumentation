@@ -17,7 +17,6 @@ package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
-import io.opentelemetry.auto.bootstrap.PatchLogger;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -41,11 +40,8 @@ public class ClassLoaderMatcher {
   }
 
   private static class SkipClassLoaderMatcher
-      extends ElementMatcher.Junction.AbstractBase<ClassLoader>
-      implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
-    /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-    private static final WeakMap<ClassLoader, Boolean> SKIP_CACHE = newWeakMap();
     private static final String AGENT_CLASSLOADER_NAME =
         "io.opentelemetry.auto.bootstrap.AgentClassLoader";
 
@@ -57,7 +53,7 @@ public class ClassLoaderMatcher {
         // Don't skip bootstrap loader
         return false;
       }
-      return shouldSkipClass(target) || shouldSkipInstance(target);
+      return shouldSkipClass(target);
     }
 
     private boolean shouldSkipClass(final ClassLoader loader) {
@@ -72,44 +68,6 @@ public class ClassLoaderMatcher {
           return true;
       }
       return false;
-    }
-
-    private boolean shouldSkipInstance(final ClassLoader loader) {
-      return SKIP_CACHE.computeIfAbsent(loader, this);
-    }
-
-    @Override
-    public Boolean get(final ClassLoader loader) {
-      final boolean skip = !delegatesToBootstrap(loader);
-      if (skip) {
-        log.debug(
-            "skipping classloader instance {} of type {}", loader, loader.getClass().getName());
-      }
-
-      return skip;
-    }
-
-    /**
-     * TODO: this turns out to be useless with OSGi: {@code
-     * org.eclipse.osgi.internal.loader.BundleLoader#isRequestFromVM} returns {@code true} when
-     * class loading is issued from this check and {@code false} for 'real' class loads. We should
-     * come up with some sort of hack to avoid this problem.
-     */
-    private boolean delegatesToBootstrap(final ClassLoader loader) {
-      boolean delegates = true;
-      if (!loadsExpectedClass(loader, PatchLogger.class)) {
-        log.debug("loader {} failed to delegate bootstrap agent class", loader);
-        delegates = false;
-      }
-      return delegates;
-    }
-
-    private boolean loadsExpectedClass(final ClassLoader loader, final Class<?> expectedClass) {
-      try {
-        return loader.loadClass(expectedClass.getName()) == expectedClass;
-      } catch (final ClassNotFoundException e) {
-        return false;
-      }
     }
   }
 

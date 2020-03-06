@@ -22,6 +22,7 @@ import io.opentelemetry.trace.Tracer
 import spock.lang.Unroll
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 /**
  * This class represents the standard test cases that new logging library integrations MUST
@@ -44,16 +45,12 @@ abstract class LogEventsTestBase extends AgentTestRunner {
 
   def "capture #testMethod (#capture)"() {
     setup:
-    def parentSpan = tracer.spanBuilder("test").startSpan()
-    def parentScope = tracer.withSpan(parentSpan)
-
-    def logger = createLogger("abc")
-    withConfigOverride(Config.LOGS_EVENTS_THRESHOLD, "WARN") {
-      logger."$testMethod"("xyz")
+    runUnderTrace("test") {
+      def logger = createLogger("abc")
+      withConfigOverride(Config.LOGS_EVENTS_THRESHOLD, "WARN") {
+        logger."$testMethod"("xyz")
+      }
     }
-
-    parentSpan.end()
-    parentScope.close()
 
     expect:
     assertTraces(1) {
