@@ -182,7 +182,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "$Tags.COMPONENT" "java-web-servlet"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/getQuery.jsp"
+            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"

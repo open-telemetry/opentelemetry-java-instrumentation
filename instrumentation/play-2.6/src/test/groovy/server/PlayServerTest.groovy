@@ -139,7 +139,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.HTTP_STATUS" endpoint.status
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }

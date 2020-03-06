@@ -117,12 +117,12 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
+        "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolvePath(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.PEER_PORT" Long
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         if (endpoint.query) {

@@ -109,7 +109,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
         "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.PEER_HOST_IPV4" "127.0.0.1"
         // No peer port
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         "servlet.context" "/$CONTEXT"

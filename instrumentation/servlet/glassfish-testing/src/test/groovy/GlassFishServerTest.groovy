@@ -116,7 +116,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
         "$Tags.PEER_PORT" Long
         "$Tags.HTTP_STATUS" endpoint.status
         "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
         "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }

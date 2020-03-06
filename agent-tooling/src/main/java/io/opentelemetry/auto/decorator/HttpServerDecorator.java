@@ -59,26 +59,34 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
       try {
         final URI url = url(request);
         if (url != null) {
-          final StringBuilder urlNoParams = new StringBuilder();
+          final StringBuilder urlBuilder = new StringBuilder();
           if (url.getScheme() != null) {
-            urlNoParams.append(url.getScheme());
-            urlNoParams.append("://");
+            urlBuilder.append(url.getScheme());
+            urlBuilder.append("://");
           }
           if (url.getHost() != null) {
-            urlNoParams.append(url.getHost());
+            urlBuilder.append(url.getHost());
             if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
-              urlNoParams.append(":");
-              urlNoParams.append(url.getPort());
+              urlBuilder.append(":");
+              urlBuilder.append(url.getPort());
             }
           }
           final String path = url.getPath();
           if (path.isEmpty()) {
-            urlNoParams.append("/");
+            urlBuilder.append("/");
           } else {
-            urlNoParams.append(path);
+            urlBuilder.append(path);
+          }
+          final String query = url.getQuery();
+          if (query != null) {
+            urlBuilder.append("?").append(query);
+          }
+          final String fragment = url.getFragment();
+          if (fragment != null) {
+            urlBuilder.append("#").append(fragment);
           }
 
-          span.setAttribute(Tags.HTTP_URL, urlNoParams.toString());
+          span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
             if (url.getQuery() != null) {

@@ -395,7 +395,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   URI removeFragment(URI uri) {
-    return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(),
-            uri.getQuery(), null)
+    return new URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, null)
   }
 }

@@ -126,6 +126,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     PATH_PARAM("path/123/param", 200, "123"),
     AUTH_REQUIRED("authRequired", 200, null),
 
+    private final URI uriObj
     private final String path
     final String query
     final String fragment
@@ -134,7 +135,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     final Boolean errored
 
     ServerEndpoint(String uri, int status, String body) {
-      def uriObj = URI.create(uri)
+      this.uriObj = URI.create(uri)
       this.path = uriObj.path
       this.query = uriObj.query
       this.fragment = uriObj.fragment
@@ -151,8 +152,17 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       return path
     }
 
-    URI resolve(URI address) {
+    URI resolvePath(URI address) {
       return address.resolve(path)
+    }
+
+    URI resolve(URI address) {
+      return address.resolve(uriObj)
+    }
+
+    URI resolveWithoutFragment(URI address) {
+      def uri = resolve(address)
+      return new URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, null)
     }
 
     private static final Map<String, ServerEndpoint> PATH_MAP = values().collectEntries { [it.path, it] }
@@ -163,7 +173,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   Request.Builder request(ServerEndpoint uri, String method, String body) {
-    def url = HttpUrl.get(uri.resolve(address)).newBuilder()
+    def url = HttpUrl.get(uri.resolvePath(address)).newBuilder()
       .query(uri.query)
       .fragment(uri.fragment)
       .build()
@@ -402,7 +412,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.PEER_PORT" Long
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         if (endpoint.query) {
