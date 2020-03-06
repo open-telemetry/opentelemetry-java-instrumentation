@@ -15,17 +15,24 @@
  */
 package io.opentelemetry.auto.tooling.bytebuddy.matcher
 
+import io.opentelemetry.auto.tooling.AgentTooling
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.A
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.B
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.F
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.G
 import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.description.type.TypeDescription
+import net.bytebuddy.jar.asm.Opcodes
+import spock.lang.Shared
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass
 import static net.bytebuddy.matcher.ElementMatchers.named
 
-class SafeExtendsClassMatcherTest extends AgentSpecification {
+class ExtendsClassMatcherTest extends AgentSpecification {
+  @Shared
+  def typePool =
+    AgentTooling.poolStrategy()
+      .typePool(AgentTooling.locationStrategy().classFileLocator(this.class.classLoader, null), this.class.classLoader)
 
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
@@ -40,7 +47,7 @@ class SafeExtendsClassMatcherTest extends AgentSpecification {
     F            | G    | true
 
     matcher = named(matcherClass.name)
-    argument = TypeDescription.ForLoadedType.of(type)
+    argument = typePool.describe(type.name).resolve()
   }
 
   def "test traversal exceptions"() {
@@ -55,6 +62,7 @@ class SafeExtendsClassMatcherTest extends AgentSpecification {
     then:
     !result // default to false
     noExceptionThrown()
+    1 * type.getModifiers() >> Opcodes.ACC_ABSTRACT
     1 * type.asGenericType() >> typeGeneric
     1 * type.getTypeName() >> "type-name"
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }

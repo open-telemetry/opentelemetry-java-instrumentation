@@ -15,11 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
@@ -94,22 +92,17 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     final ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
-        hasInterface(named(Future.class.getName()));
-    return not(isInterface())
-        .and(
-            new ElementMatcher<TypeDescription>() {
-              @Override
-              public boolean matches(final TypeDescription target) {
-                final boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
-                if (!whitelisted
-                    && log.isDebugEnabled()
-                    && hasFutureInterfaceMatcher.matches(target)) {
-                  log.debug("Skipping future instrumentation for {}", target.getName());
-                }
-                return whitelisted;
-              }
-            })
-        .and(hasFutureInterfaceMatcher); // Apply expensive matcher last.
+        implementsInterface(named(Future.class.getName()));
+    return new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
+      @Override
+      public boolean matches(final TypeDescription target) {
+        final boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
+        if (!whitelisted && log.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
+          log.debug("Skipping future instrumentation for {}", target.getName());
+        }
+        return whitelisted;
+      }
+    }.and(hasFutureInterfaceMatcher); // Apply expensive matcher last.
   }
 
   @Override

@@ -15,7 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v3_3;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+
 import io.opentelemetry.auto.tooling.Instrumenter;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.classic.Validatable;
 import org.hibernate.transaction.JBossTransactionManagerLookup;
 
@@ -23,6 +27,12 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
 
   public AbstractHibernateInstrumentation() {
     super("hibernate", "hibernate-core");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("org/hibernate/Session.class"));
   }
 
   @Override

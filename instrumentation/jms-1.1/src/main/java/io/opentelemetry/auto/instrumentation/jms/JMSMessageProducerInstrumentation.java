@@ -18,9 +18,9 @@ package io.opentelemetry.auto.instrumentation.jms;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.PRODUCER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -50,8 +50,14 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/jms/MessageProducer.class"));
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("javax.jms.MessageProducer")));
+    return implementsInterface(named("javax.jms.MessageProducer"));
   }
 
   @Override
