@@ -15,19 +15,26 @@
  */
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
-import static java.util.Collections.singletonMap;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.grpc.ClientInterceptor;
+import io.grpc.ManagedChannelBuilder;
+import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatchers;
 
 @AutoService(Instrumenter.class)
 public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
@@ -38,7 +45,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.grpc.internal.AbstractManagedChannelImplBuilder");
+    return extendsClass(named("io.grpc.ManagedChannelBuilder"));
   }
 
   @Override
@@ -48,6 +55,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor",
       "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCall",
       "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCallListener",
+      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
       "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.decorator.ClientDecorator",
       packageName + ".GrpcClientDecorator",
@@ -55,16 +63,28 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public Map<String, String> contextStore() {
+    return Collections.singletonMap(
+        "io.grpc.ManagedChannelBuilder", InetSocketAddress.class.getName());
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+    final Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>(2);
+    map.put(
         isMethod().and(named("build")),
         GrpcClientBuilderInstrumentation.class.getName() + "$AddInterceptorAdvice");
+    map.put(
+        isMethod().and(named("forAddress").and(ElementMatchers.takesArguments(2))),
+        GrpcClientBuilderInstrumentation.class.getName() + "$ForAddressAdvice");
+    return map;
   }
 
   public static class AddInterceptorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
+        @Advice.This final ManagedChannelBuilder thiz,
         @Advice.FieldValue("interceptors") final List<ClientInterceptor> interceptors) {
       boolean shouldRegister = true;
       for (final ClientInterceptor interceptor : interceptors) {
@@ -74,8 +94,23 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         }
       }
       if (shouldRegister) {
-        interceptors.add(0, TracingClientInterceptor.INSTANCE);
+        final ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
+            InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
+        final InetSocketAddress sockAddr = contextStore.get(thiz);
+        interceptors.add(0, new TracingClientInterceptor(sockAddr));
       }
+    }
+  }
+
+  public static class ForAddressAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static final void forAddress(
+        @Advice.Argument(0) final String address,
+        @Advice.Argument(1) final int port,
+        @Advice.Return final ManagedChannelBuilder builder) {
+      final ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
+          InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
+      contextStore.put(builder, new InetSocketAddress(address, port));
     }
   }
 }

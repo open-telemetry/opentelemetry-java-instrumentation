@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.jsp;
 
 import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -45,7 +45,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("javax.servlet.jsp.HttpJspPage")));
+    return not(isInterface()).and(hasInterface(named("javax.servlet.jsp.HttpJspPage")));
   }
 
   @Override

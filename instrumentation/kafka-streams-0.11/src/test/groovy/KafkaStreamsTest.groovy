@@ -134,8 +134,8 @@ class KafkaStreamsTest extends AgentTestRunner {
     received.value() == greeting.toLowerCase()
     received.key() == null
 
-    assertTraces(3) {
-      trace(0, 3) {
+    assertTraces(1) {
+      trace(0, 5) {
         // PRODUCER span 0
         span(0) {
           operationName "kafka.produce"
@@ -149,8 +149,23 @@ class KafkaStreamsTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-kafka"
           }
         }
-        // STREAMING span 1
+        // CONSUMER span 0
         span(1) {
+          operationName "kafka.consume"
+          spanKind CONSUMER
+          errored false
+          childOf span(0)
+          tags {
+            "$MoreTags.SERVICE_NAME" "kafka"
+            "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
+            "$MoreTags.SPAN_TYPE" "queue"
+            "$Tags.COMPONENT" "java-kafka"
+            "partition" { it >= 0 }
+            "offset" 0
+          }
+        }
+        // STREAMING span 1
+        span(2) {
           operationName "kafka.consume"
           spanKind CONSUMER
           errored false
@@ -166,11 +181,11 @@ class KafkaStreamsTest extends AgentTestRunner {
           }
         }
         // STREAMING span 0
-        span(2) {
+        span(3) {
           operationName "kafka.produce"
           spanKind PRODUCER
           errored false
-          childOf span(1)
+          childOf span(2)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PROCESSED"
@@ -178,31 +193,12 @@ class KafkaStreamsTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-kafka"
           }
         }
-      }
-      trace(1, 1) {
         // CONSUMER span 0
-        span(0) {
+        span(4) {
           operationName "kafka.consume"
           spanKind CONSUMER
           errored false
-          hasLink traces[0][0]
-          tags {
-            "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
-            "$MoreTags.SPAN_TYPE" "queue"
-            "$Tags.COMPONENT" "java-kafka"
-            "partition" { it >= 0 }
-            "offset" 0
-          }
-        }
-      }
-      trace(2, 1) {
-        // CONSUMER span 0
-        span(0) {
-          operationName "kafka.consume"
-          spanKind CONSUMER
-          errored false
-          hasLink traces[0][2]
+          childOf span(3)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
             "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PROCESSED"
@@ -228,8 +224,8 @@ class KafkaStreamsTest extends AgentTestRunner {
         return null
       }
     })
-    spanContext.traceId == TEST_WRITER.traces[0][2].traceId
-    spanContext.spanId == TEST_WRITER.traces[0][2].spanId
+    spanContext.traceId == TEST_WRITER.traces[0][3].traceId
+    spanContext.spanId == TEST_WRITER.traces[0][3].spanId
 
 
     cleanup:

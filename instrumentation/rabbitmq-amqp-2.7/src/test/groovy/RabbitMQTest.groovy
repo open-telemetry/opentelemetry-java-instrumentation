@@ -126,11 +126,11 @@ class RabbitMQTest extends AgentTestRunner {
           tags {
           }
         }
-        rabbitSpan(it, 1, "exchange.declare", false, span(0))
-        rabbitSpan(it, 2, "queue.declare", false, span(0))
-        rabbitSpan(it, 3, "queue.bind", false, span(0))
-        rabbitSpan(it, 4, "basic.publish $exchangeName -> $routingKey", false, span(0))
-        rabbitSpan(it, 5, "basic.get <generated>", true, span(4))
+        rabbitSpan(it, 1, "exchange.declare", span(0))
+        rabbitSpan(it, 2, "queue.declare", span(0))
+        rabbitSpan(it, 3, "queue.bind", span(0))
+        rabbitSpan(it, 4, "basic.publish $exchangeName -> $routingKey", span(0))
+        rabbitSpan(it, 5, "basic.get <generated>", span(0), span(4))
       }
     }
 
@@ -151,15 +151,13 @@ class RabbitMQTest extends AgentTestRunner {
     new String(response.getBody()) == "Hello, world!"
 
     and:
-    assertTraces(3) {
+    assertTraces(2) {
       trace(0, 1) {
         rabbitSpan(it, 0, "queue.declare")
       }
-      trace(1, 1) {
+      trace(1, 2) {
         rabbitSpan(it, 0, "basic.publish <default> -> <generated>")
-      }
-      trace(2, 1) {
-        rabbitSpan(it, 0, "basic.get <generated>", true, traces[1][0])
+        rabbitSpan(it, 1, "basic.get <generated>", span(0))
       }
     }
   }
@@ -205,7 +203,7 @@ class RabbitMQTest extends AgentTestRunner {
       (1..messageCount).each {
         trace(3 + it, 2) {
           rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
-          rabbitSpan(it, 1, resource, true, span(0))
+          rabbitSpan(it, 1, resource, span(0))
         }
       }
     }
@@ -252,7 +250,7 @@ class RabbitMQTest extends AgentTestRunner {
       }
       trace(4, 2) {
         rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
-        rabbitSpan(it, 1, "basic.deliver <generated>", true, span(0), error, error.message)
+        rabbitSpan(it, 1, "basic.deliver <generated>", span(0), null, error, error.message)
       }
     }
 
@@ -271,7 +269,7 @@ class RabbitMQTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 1) {
-        rabbitSpan(it, command, false, null, throwable, errorMsg)
+        rabbitSpan(it, command, null, null, throwable, errorMsg)
       }
     }
 
@@ -302,15 +300,13 @@ class RabbitMQTest extends AgentTestRunner {
     message == "foo"
 
     and:
-    assertTraces(3) {
+    assertTraces(2) {
       trace(0, 1) {
         rabbitSpan(it, "queue.declare")
       }
-      trace(1, 1) {
+      trace(1, 2) {
         rabbitSpan(it, 0, "basic.publish <default> -> some-routing-queue")
-      }
-      trace(2, 1) {
-        rabbitSpan(it, 0, "basic.get $queue.name", true, traces[1][0])
+        rabbitSpan(it, 1, "basic.get $queue.name", span(0))
       }
     }
   }
@@ -318,20 +314,20 @@ class RabbitMQTest extends AgentTestRunner {
   def rabbitSpan(
     TraceAssert trace,
     String resource,
-    Boolean distributedRootSpan = false,
     Object parentSpan = null,
+    Object linkSpan = null,
     Throwable exception = null,
     String errorMsg = null
   ) {
-    rabbitSpan(trace, 0, resource, distributedRootSpan, parentSpan, exception, errorMsg)
+    rabbitSpan(trace, 0, resource, parentSpan, linkSpan, exception, errorMsg)
   }
 
   def rabbitSpan(
     TraceAssert trace,
     int index,
     String resource,
-    Boolean distributedRootSpan = false,
-    Object parentOrLinkSpan = null,
+    Object parentSpan = null,
+    Object linkSpan = null,
     Throwable exception = null,
     String errorMsg = null
   ) {
@@ -352,14 +348,14 @@ class RabbitMQTest extends AgentTestRunner {
           spanKind CLIENT
       }
 
-      if (parentOrLinkSpan) {
-        if (trace.span(index).attributes.get("amqp.command")?.stringValue == "basic.get") {
-          hasLink((SpanData) parentOrLinkSpan)
-        } else {
-          childOf((SpanData) parentOrLinkSpan)
-        }
+      if (parentSpan) {
+        childOf((SpanData) parentSpan)
       } else {
         parent()
+      }
+
+      if (linkSpan) {
+        hasLink((SpanData) linkSpan)
       }
 
       errored exception != null

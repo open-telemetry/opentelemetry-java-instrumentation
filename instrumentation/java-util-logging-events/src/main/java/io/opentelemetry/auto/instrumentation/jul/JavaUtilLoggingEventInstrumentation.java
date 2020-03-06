@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jul;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -41,7 +41,7 @@ public class JavaUtilLoggingEventInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("java.util.logging.Logger"));
+    return extendsClass(named("java.util.logging.Logger"));
   }
 
   @Override

@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -40,7 +40,7 @@ public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface().or(isAbstract()))
-        .and(safeHasInterface(named("ratpack.error.ServerErrorHandler")));
+        .and(hasInterface(named("ratpack.error.ServerErrorHandler")));
   }
 
   @Override
