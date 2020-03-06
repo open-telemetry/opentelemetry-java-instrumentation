@@ -1,19 +1,30 @@
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.geode.cache.client.ClientCacheFactory
 import org.apache.geode.cache.client.ClientRegionShortcut
+import spock.lang.Shared
 import spock.lang.Unroll
+
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
 class PutGetTest extends AgentTestRunner {
+  @Shared
+  def cache = new ClientCacheFactory().create()
+
+  @Shared
+  def regionFactory = cache.createClientRegionFactory(ClientRegionShortcut.LOCAL)
+
+  @Shared
+  def region = regionFactory.create("test-region")
 
   def "test put and get"() {
     setup:
-    def cache = ClientCacheFactory.create()
-    def regionFactory = cache.createClientRegionFactory(ClientRegionShortcut.LOCAL)
-    def region = regionFactory.create("test-region")
+    region.clear()
 
     when:
-    region.put(key, value)
+    runUnderTrace("someTrace") {
+      region.put(key, value)
+    }
 
     then:
     region.get(key) == value
