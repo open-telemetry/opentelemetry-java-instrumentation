@@ -10,7 +10,6 @@ import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
-import io.opentracing.noop.NoopSpan
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -37,9 +36,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             (1..msgCount).each {
               if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
                 // The InProcessTransport calls the client response in process, so we have to disable async propagation.
-                def tempScope = testTracer.scopeManager().activate(NoopSpan.INSTANCE)
                 observer.onNext(value)
-                tempScope.close()
               } else {
                 observer.onError(new IllegalStateException("not async propagating!"))
               }
@@ -50,10 +47,8 @@ class GrpcStreamingTest extends AgentTestRunner {
           void onError(Throwable t) {
             if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
               // The InProcessTransport calls the client response in process, so we have to disable async propagation.
-              def tempScope = testTracer.scopeManager().activate(NoopSpan.INSTANCE)
               error.set(t)
               observer.onError(t)
-              tempScope.close()
             } else {
               observer.onError(new IllegalStateException("not async propagating!"))
             }
@@ -63,9 +58,7 @@ class GrpcStreamingTest extends AgentTestRunner {
           void onCompleted() {
             if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
               // The InProcessTransport calls the client response in process, so we have to disable async propagation.
-              def tempScope = testTracer.scopeManager().activate(NoopSpan.INSTANCE)
               observer.onCompleted()
-              tempScope.close()
             } else {
               observer.onError(new IllegalStateException("not async propagating!"))
             }
