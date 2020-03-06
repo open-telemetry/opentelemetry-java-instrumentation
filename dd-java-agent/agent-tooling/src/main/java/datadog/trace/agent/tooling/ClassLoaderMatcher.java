@@ -2,6 +2,8 @@ package datadog.trace.agent.tooling;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import datadog.trace.bootstrap.PatchLogger;
+import io.opentracing.util.GlobalTracer;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -54,7 +56,7 @@ public final class ClassLoaderMatcher {
       if (v != null) {
         return v;
       }
-      v = shouldSkipClass(cl);
+      v = shouldSkipClass(cl) || !delegatesToBootstrap(cl);
       skipCache.put(cl, v);
       return v;
     }
@@ -71,6 +73,34 @@ public final class ClassLoaderMatcher {
           return true;
       }
       return false;
+    }
+
+    /**
+     * TODO: this turns out to be useless with OSGi: {@code
+     * org.eclipse.osgi.internal.loader.BundleLoader#isRequestFromVM} returns {@code true} when
+     * class loading is issued from this check and {@code false} for 'real' class loads. We should
+     * come up with some sort of hack to avoid this problem.
+     */
+    private static boolean delegatesToBootstrap(final ClassLoader loader) {
+      boolean delegates = true;
+      if (!loadsExpectedClass(loader, GlobalTracer.class)) {
+        log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
+        delegates = false;
+      }
+      if (!loadsExpectedClass(loader, PatchLogger.class)) {
+        log.debug("loader {} failed to delegate bootstrap datadog class", loader);
+        delegates = false;
+      }
+      return delegates;
+    }
+
+    private static boolean loadsExpectedClass(
+        final ClassLoader loader, final Class<?> expectedClass) {
+      try {
+        return loader.loadClass(expectedClass.getName()) == expectedClass;
+      } catch (final ClassNotFoundException e) {
+        return false;
+      }
     }
   }
 
