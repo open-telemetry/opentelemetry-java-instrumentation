@@ -343,7 +343,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" uri.port
-        "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
+        "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "$Tags.HTTP_METHOD" method
         if (status) {
           "$Tags.HTTP_STATUS" status
@@ -392,5 +392,10 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
   boolean testConnectionFailure() {
     true
+  }
+
+  URI removeFragment(URI uri) {
+    return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(),
+            uri.getQuery(), null)
   }
 }

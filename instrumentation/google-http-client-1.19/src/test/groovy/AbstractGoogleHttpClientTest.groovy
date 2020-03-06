@@ -81,7 +81,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
             "$Tags.COMPONENT" "google-http-client"
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" Long
-            "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
+            "$Tags.HTTP_URL" "${uri}"
             "$Tags.HTTP_METHOD" method
             "$Tags.HTTP_STATUS" 500
             "$MoreTags.ERROR_MSG" "Server Error"

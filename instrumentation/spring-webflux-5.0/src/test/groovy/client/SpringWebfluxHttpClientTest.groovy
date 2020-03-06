@@ -75,7 +75,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
           "$Tags.PEER_HOSTNAME" "localhost"
           "$Tags.PEER_PORT" uri.port
           "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-          "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
+          "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
           "$Tags.HTTP_METHOD" method
           if (status) {
             "$Tags.HTTP_STATUS" status

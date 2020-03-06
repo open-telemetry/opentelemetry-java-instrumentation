@@ -104,7 +104,7 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
             "aws.service" "$service"
@@ -134,7 +134,7 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "apache-httpclient"
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
           }
@@ -210,7 +210,7 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
             "aws.service" "$service"
@@ -244,7 +244,7 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
           }
