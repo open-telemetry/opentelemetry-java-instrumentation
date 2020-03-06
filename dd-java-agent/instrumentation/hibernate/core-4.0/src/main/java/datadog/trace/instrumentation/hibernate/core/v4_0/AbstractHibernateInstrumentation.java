@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.hibernate.core.v4_0;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
-import static net.bytebuddy.matcher.ElementMatchers.not;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 
 import datadog.trace.agent.tooling.Instrumenter;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -16,7 +15,7 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/hibernate/Session.class"));
+    return hasClassesNamed("org.hibernate.Session");
   }
 
   @Override

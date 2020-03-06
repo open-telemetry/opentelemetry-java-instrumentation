@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jedis;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jedis.JedisClientDecorator.DECORATE;
@@ -34,9 +34,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasNoResources("redis/clients/jedis/commands/ProtocolCommand.class")
-        // Optimization for expensive typeMatcher.
-        .and(not(classLoaderHasNoResources("redis/clients/jedis/Protocol.class")));
+    // Avoid matching 3.x
+    return not(hasClassesNamed("redis.clients.jedis.commands.ProtocolCommand"));
   }
 
   @Override

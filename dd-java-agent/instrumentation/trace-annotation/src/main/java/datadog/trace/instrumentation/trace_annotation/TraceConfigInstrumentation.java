@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.trace_annotation;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
+import datadog.trace.api.Trace;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,13 +117,19 @@ public class TraceConfigInstrumentation implements Instrumenter {
 
     /** No-arg constructor only used by muzzle and tests. */
     public TracerClassInstrumentation() {
-      this("noop", Collections.singleton("noop"));
+      this(Trace.class.getName(), Collections.singleton("noop"));
     }
 
     public TracerClassInstrumentation(final String className, final Set<String> methodNames) {
       super("trace", "trace-config");
       this.className = className;
       this.methodNames = methodNames;
+    }
+
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed(className);
     }
 
     @Override
