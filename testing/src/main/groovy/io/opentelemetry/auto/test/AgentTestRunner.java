@@ -28,12 +28,14 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.test.asserts.ListWriterAssert;
 import io.opentelemetry.auto.tooling.AgentInstaller;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.auto.util.test.AgentSpecification;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -44,6 +46,7 @@ import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -81,8 +84,13 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
   protected static final Tracer TEST_TRACER;
 
-  protected static final Set<String> TRANSFORMED_CLASSES = Sets.newConcurrentHashSet();
-  private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
+  private static final ElementMatcher.Junction<TypeDescription> GLOBAL_LIBRARIES_IGNORES_MATCHER =
+      AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
+
+  protected static final Set<String> TRANSFORMED_CLASSES_NAMES = Sets.newConcurrentHashSet();
+  protected static final Set<TypeDescription> TRANSFORMED_CLASSES_TYPES =
+      Sets.newConcurrentHashSet();
+  private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger(0);
   private static final TestRunnerListener TEST_LISTENER = new TestRunnerListener();
 
   private static final Instrumentation INSTRUMENTATION;
@@ -146,9 +154,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
             .iterator()
             .hasNext()
         : "No instrumentation found";
-    activeTransformer = AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, TEST_LISTENER);
-
-    INSTRUMENTATION_ERROR_COUNT.set(0);
+    activeTransformer = AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
   }
 
   /**
@@ -184,6 +190,15 @@ public abstract class AgentTestRunner extends AgentSpecification {
     // Cleanup before assertion.
     assert INSTRUMENTATION_ERROR_COUNT.get() == 0
         : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
+
+    final List<TypeDescription> ignoredClassesTransformed = new ArrayList<>();
+    for (final TypeDescription type : TRANSFORMED_CLASSES_TYPES) {
+      if (GLOBAL_LIBRARIES_IGNORES_MATCHER.matches(type)) {
+        ignoredClassesTransformed.add(type);
+      }
+    }
+    assert ignoredClassesTransformed.isEmpty()
+        : "Transformed classes match global libraries ignore matcher: " + ignoredClassesTransformed;
   }
 
   public static void assertTraces(
@@ -240,7 +255,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
         final JavaModule module,
         final boolean loaded,
         final DynamicType dynamicType) {
-      TRANSFORMED_CLASSES.add(typeDescription.getActualName());
+      TRANSFORMED_CLASSES_NAMES.add(typeDescription.getActualName());
+      TRANSFORMED_CLASSES_TYPES.add(typeDescription);
     }
 
     @Override

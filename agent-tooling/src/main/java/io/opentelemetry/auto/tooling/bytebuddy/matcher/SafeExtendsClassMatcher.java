@@ -21,6 +21,7 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+// TODO: add javadoc
 class SafeExtendsClassMatcher<T extends TypeDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
@@ -42,5 +43,28 @@ class SafeExtendsClassMatcher<T extends TypeDescription>
       typeDefinition = safeGetSuperClass(typeDefinition);
     }
     return false;
+  }
+
+  @Override
+  public String toString() {
+    return "safeExtendsClass(" + matcher + ")";
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else if (getClass() != other.getClass()) {
+      return false;
+    } else {
+      return matcher.equals(((SafeExtendsClassMatcher) other).matcher);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return 17 * 31 + matcher.hashCode();
   }
 }

@@ -13,14 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.tooling.bytebuddy;
+package io.opentelemetry.auto.tooling.matcher;
 
 import java.util.regex.Pattern;
-import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@HashCodeAndEqualsPlugin.Enhance
+/**
+ * Global ignores matcher used by the agent.
+ *
+ * <p>This matcher services two main purposes:
+ * <li>
+ *
+ *     <ul>
+ *       Ignore classes that are unsafe or pointless to transform. 'System' level classes like jvm
+ *       classes or groovy classes, other tracers, debuggers, etc.
+ * </ul>
+ *
+ * <ul>
+ *   Uses {@link AdditionalLibraryIgnoresMatcher} to also ignore additional classes to minimize
+ *   number of classes we apply expensive matchers to.
+ * </ul>
+ */
 public class GlobalIgnoresMatcher<T extends TypeDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
@@ -30,6 +44,9 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
   public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher() {
     return new GlobalIgnoresMatcher<>();
   }
+
+  private final ElementMatcher<T> additionalLibraryIgnoreMatcher =
+      AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
 
   /**
    * Be very careful about the types of matchers used in this section as they are called on every
@@ -43,8 +60,6 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     if (name.startsWith("net.bytebuddy.")
         || name.startsWith("jdk.")
         || name.startsWith("org.aspectj.")
-        || name.startsWith("org.groovy.")
-        || name.startsWith("org.codehaus.groovy.macro.")
         || name.startsWith("com.intellij.rt.debugger.")
         || name.startsWith("com.p6spy.")
         || name.startsWith("com.newrelic.")
@@ -53,8 +68,19 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("com.appdynamics.")
         || name.startsWith("com.singularity.")
         || name.startsWith("com.jinspired.")
-        || name.startsWith("org.jinspired.")
-        || name.startsWith("org.springframework.cglib.")) {
+        || name.startsWith("org.jinspired.")) {
+      return true;
+    }
+
+    // groovy
+    if (name.startsWith("org.groovy.") || name.startsWith("org.apache.groovy.")) {
+      return true;
+    }
+    if (name.startsWith("org.codehaus.groovy.")) {
+      // We seem to instrument some classes in runtime
+      if (name.startsWith("org.codehaus.groovy.runtime.")) {
+        return false;
+      }
       return true;
     }
 
@@ -128,6 +154,34 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
+    if (additionalLibraryIgnoreMatcher.matches(target)) {
+      return true;
+    }
+
     return false;
+  }
+
+  @Override
+  public String toString() {
+    return "globalIgnoresMatcher(" + additionalLibraryIgnoreMatcher.toString() + ")";
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else if (getClass() != other.getClass()) {
+      return false;
+    } else {
+      return additionalLibraryIgnoreMatcher.equals(
+          ((GlobalIgnoresMatcher) other).additionalLibraryIgnoreMatcher);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return 17 * 31 + additionalLibraryIgnoreMatcher.hashCode();
   }
 }

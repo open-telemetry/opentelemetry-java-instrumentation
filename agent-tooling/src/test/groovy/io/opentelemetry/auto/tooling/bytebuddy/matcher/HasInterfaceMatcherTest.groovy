@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.tooling.bytebuddy.matcher
 
+import io.opentelemetry.auto.tooling.AgentTooling
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.A
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.B
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.E
@@ -22,11 +23,18 @@ import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.F
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.G
 import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.description.type.TypeDescription
+import net.bytebuddy.jar.asm.Opcodes
+import spock.lang.Shared
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface
 import static net.bytebuddy.matcher.ElementMatchers.named
 
-class SafeHasInterfaceMatcherTest extends AgentSpecification {
+class HasInterfaceMatcherTest extends AgentSpecification {
+  @Shared
+  def typePool =
+    AgentTooling.poolStrategy()
+      .typePool(AgentTooling.locationStrategy().classFileLocator(this.class.classLoader, null), this.class.classLoader)
 
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
@@ -39,19 +47,20 @@ class SafeHasInterfaceMatcherTest extends AgentSpecification {
     B            | A    | false
     A            | E    | true
     A            | F    | true
+    A            | G    | true
     F            | A    | false
     F            | F    | false
     F            | G    | false
 
     matcher = named(matcherClass.name)
-    argument = TypeDescription.ForLoadedType.of(type)
+    argument = typePool.describe(type.name).resolve()
   }
 
   def "test traversal exceptions"() {
     setup:
     def type = Mock(TypeDescription)
     def typeGeneric = Mock(TypeDescription.Generic)
-    def matcher = hasInterface(named(Object.name))
+    def matcher = implementsInterface(named(Object.name))
 
     when:
     def result = matcher.matches(type)
@@ -59,6 +68,7 @@ class SafeHasInterfaceMatcherTest extends AgentSpecification {
     then:
     !result // default to false
     noExceptionThrown()
+    1 * type.getModifiers() >> Opcodes.ACC_ABSTRACT
     1 * type.isInterface() >> true
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
