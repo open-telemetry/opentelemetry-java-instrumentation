@@ -35,7 +35,6 @@ class GrpcStreamingTest extends AgentTestRunner {
 
             (1..msgCount).each {
               if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
-                // The InProcessTransport calls the client response in process, so we have to disable async propagation.
                 observer.onNext(value)
               } else {
                 observer.onError(new IllegalStateException("not async propagating!"))
@@ -46,7 +45,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           @Override
           void onError(Throwable t) {
             if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
-              // The InProcessTransport calls the client response in process, so we have to disable async propagation.
               error.set(t)
               observer.onError(t)
             } else {
@@ -57,7 +55,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           @Override
           void onCompleted() {
             if ((testTracer.scopeManager().active() as ContinuableScope).isAsyncPropagating()) {
-              // The InProcessTransport calls the client response in process, so we have to disable async propagation.
               observer.onCompleted()
             } else {
               observer.onError(new IllegalStateException("not async propagating!"))

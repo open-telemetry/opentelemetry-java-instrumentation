@@ -14,6 +14,10 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * The InProcessTransport calls the client response in process, so we have to disable async
+ * propagation to allow spans to complete and be reported properly.
+ */
 @AutoService(Instrumenter.class)
 public class InProcessServerStreamInstrumentation extends Instrumenter.Default {
 
