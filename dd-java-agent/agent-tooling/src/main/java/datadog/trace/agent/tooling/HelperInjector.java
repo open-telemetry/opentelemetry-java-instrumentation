@@ -7,6 +7,7 @@ import datadog.trace.bootstrap.WeakMap;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.nio.file.Files;
 import java.security.SecureClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +34,8 @@ public class HelperInjector implements Transformer {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
       new SecureClassLoader(null) {};
 
+  private final String requestingName;
+
   private final Set<String> helperClassNames;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
@@ -48,21 +51,26 @@ public class HelperInjector implements Transformer {
    *     provided. This is important if there is interdependency between helper classes that
    *     requires them to be injected in a specific order.
    */
-  public HelperInjector(final String... helperClassNames) {
+  public HelperInjector(final String requestingName, final String... helperClassNames) {
+    this.requestingName = requestingName;
+
     this.helperClassNames = new LinkedHashSet<>(Arrays.asList(helperClassNames));
   }
 
-  public HelperInjector(final Map<String, byte[]> helperMap) {
+  public HelperInjector(final String requestingName, final Map<String, byte[]> helperMap) {
+    this.requestingName = requestingName;
+
     helperClassNames = helperMap.keySet();
     dynamicTypeMap.putAll(helperMap);
   }
 
-  public static HelperInjector forDynamicTypes(final Collection<DynamicType.Unloaded<?>> helpers) {
+  public static HelperInjector forDynamicTypes(
+      final String requestingName, final Collection<DynamicType.Unloaded<?>> helpers) {
     final Map<String, byte[]> bytes = new HashMap<>(helpers.size());
     for (final DynamicType.Unloaded<?> helper : helpers) {
       bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
     }
-    return new HelperInjector(bytes);
+    return new HelperInjector(requestingName, bytes);
   }
 
   private Map<String, byte[]> getHelperMap() throws IOException {
@@ -101,14 +109,9 @@ public class HelperInjector implements Transformer {
           final Map<String, byte[]> classnameToBytes = getHelperMap();
           final Map<String, Class<?>> classes;
           if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
-            classes =
-                ClassInjector.UsingInstrumentation.of(
-                        new File(System.getProperty("java.io.tmpdir")),
-                        ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
-                        AgentInstaller.getInstrumentation())
-                    .injectRaw(classnameToBytes);
+            classes = injectBootstrapClassLoader(classnameToBytes);
           } else {
-            classes = new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
+            classes = injectClassLoader(classLoader, classnameToBytes);
           }
 
           // All datadog helper classes are in the unnamed module
@@ -125,8 +128,9 @@ public class HelperInjector implements Transformer {
                   : classLoader.getClass().getName();
 
           log.error(
-              "Error preparing helpers for {}. Failed to inject helper classes into instance {} of type {}",
+              "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {} of type {}",
               typeDescription,
+              requestingName,
               classLoader,
               classLoaderType,
               e);
@@ -139,6 +143,31 @@ public class HelperInjector implements Transformer {
       ensureModuleCanReadHelperModules(module);
     }
     return builder;
+  }
+
+  private Map<String, Class<?>> injectBootstrapClassLoader(
+      final Map<String, byte[]> classnameToBytes) throws IOException {
+    // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
+    // If this proves expensive, we could do a per-process tempDir with
+    // a reference count -- but for now, starting simple.
+
+    // Failures to create a tempDir are propagated as IOException and handled by transform
+    File tempDir = createTempDir();
+    try {
+      return ClassInjector.UsingInstrumentation.of(
+              tempDir,
+              ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
+              AgentInstaller.getInstrumentation())
+          .injectRaw(classnameToBytes);
+    } finally {
+      // Delete fails silently
+      deleteTempDir(tempDir);
+    }
+  }
+
+  private Map<String, Class<?>> injectClassLoader(
+      final ClassLoader classLoader, final Map<String, byte[]> classnameToBytes) {
+    return new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
   }
 
   private void ensureModuleCanReadHelperModules(final JavaModule target) {
@@ -160,6 +189,20 @@ public class HelperInjector implements Transformer {
           }
         }
       }
+    }
+  }
+
+  private static final File createTempDir() throws IOException {
+    return Files.createTempDirectory("datadog-temp-jars").toFile();
+  }
+
+  private static final void deleteTempDir(final File file) {
+    // Not using Files.delete for deleting the directory because failures
+    // create Exceptions which may prove expensive.  Instead using the
+    // older File API which simply returns a boolean.
+    boolean deleted = file.delete();
+    if (!deleted) {
+      file.deleteOnExit();
     }
   }
 }
