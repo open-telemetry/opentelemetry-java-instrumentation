@@ -13,6 +13,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -64,10 +65,11 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
     return singletonMap(
         named("forward")
             .or(named("include"))
+            .and(takesArguments(2))
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        RequestDispatcherAdvice.class.getName());
+        getClass().getName() + "$RequestDispatcherAdvice");
   }
 
   public static class RequestDispatcherAdvice {

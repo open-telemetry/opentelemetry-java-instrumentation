@@ -2,7 +2,6 @@ package datadog.trace.instrumentation.servlet2;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
@@ -29,11 +28,11 @@ public class Servlet2Advice {
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
           ServletResponse response) {
-    final boolean hasActiveTrace = activeSpan() != null;
+
     final boolean hasServletTrace = request.getAttribute(DD_SPAN_ATTRIBUTE) instanceof AgentSpan;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
-    if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
-      // Tracing might already be applied by the FilterChain.  If so ignore this.
+    if (invalidRequest || hasServletTrace) {
+      // Tracing might already be applied by the FilterChain or a parent request (forward/include).
       return null;
     }
 
