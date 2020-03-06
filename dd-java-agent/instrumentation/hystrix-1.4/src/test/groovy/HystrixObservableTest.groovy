@@ -16,7 +16,7 @@ import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 @Retry
-@Timeout(5)
+@Timeout(10)
 class HystrixObservableTest extends AgentTestRunner {
   static {
     // Disable so failure testing below doesn't inadvertently change the behavior.

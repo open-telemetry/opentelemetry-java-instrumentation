@@ -28,32 +28,26 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     final String name = target.getActualName();
 
     if (name.startsWith("com.beust.jcommander.")
-        || name.startsWith("com.carrotsearch.hppc.")
-        || name.startsWith("com.couchbase.client.deps.")
         || name.startsWith("com.fasterxml.classmate.")
-        || name.startsWith("com.fasterxml.jackson.")
         || name.startsWith("com.github.mustachejava.")
         || name.startsWith("com.jayway.jsonpath.")
-        || name.startsWith("com.lightbend.lagom")
+        || name.startsWith("com.lightbend.lagom.")
         || name.startsWith("javax.el.")
         || name.startsWith("net.sf.cglib.")
-        || name.startsWith("org.apache.lucene")
-        || name.startsWith("org.apache.tartarus")
-        || name.startsWith("org.json.simple")
-        || name.startsWith("org.objectweb.asm.")
-        || name.startsWith("org.yaml.snakeyaml")) {
+        || name.startsWith("org.apache.lucene.")
+        || name.startsWith("org.apache.tartarus.")
+        || name.startsWith("org.json.simple.")
+        || name.startsWith("org.yaml.snakeyaml.")) {
       return true;
     }
 
     if (name.startsWith("org.springframework.")) {
       if (name.startsWith("org.springframework.aop.")
-          || name.startsWith("org.springframework.asm.")
           || name.startsWith("org.springframework.cache.")
           || name.startsWith("org.springframework.dao.")
           || name.startsWith("org.springframework.ejb.")
           || name.startsWith("org.springframework.expression.")
           || name.startsWith("org.springframework.format.")
-          || name.startsWith("org.springframework.instrument.")
           || name.startsWith("org.springframework.jca.")
           || name.startsWith("org.springframework.jdbc.")
           || name.startsWith("org.springframework.jms.")
@@ -64,19 +58,20 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.startsWith("org.springframework.objenesis.")
           || name.startsWith("org.springframework.orm.")
           || name.startsWith("org.springframework.remoting.")
-          || name.startsWith("org.springframework.scheduling.annotation")
           || name.startsWith("org.springframework.scripting.")
           || name.startsWith("org.springframework.stereotype.")
           || name.startsWith("org.springframework.transaction.")
           || name.startsWith("org.springframework.ui.")
-          || name.startsWith("org.springframework.util.")
           || name.startsWith("org.springframework.validation.")) {
         return true;
       }
 
       if (name.startsWith("org.springframework.data.")) {
-        if (name.equals(
-            "org.springframework.data.repository.core.support.RepositoryFactorySupport")) {
+        if (name.equals("org.springframework.data.repository.core.support.RepositoryFactorySupport")
+            || name.startsWith(
+                "org.springframework.data.convert.ClassGeneratingEntityInstantiator$")
+            || name.equals(
+                "org.springframework.data.jpa.repository.config.InspectionClassLoader")) {
           return false;
         }
         return true;
@@ -101,7 +96,12 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("org.springframework.boot.")) {
         // More runnables to deal with
         if (name.startsWith("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
-            || name.startsWith("org.springframework.boot.web.embedded.netty.NettyWebServer$")) {
+            || name.startsWith("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
+            || name.startsWith("org.springframework.boot.web.embedded.netty.NettyWebServer$")
+            || name.startsWith(
+                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")
+            || name.equals(
+                "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader")) {
           return false;
         }
         return true;
@@ -119,14 +119,25 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
       if (name.startsWith("org.springframework.context.")) {
         // More runnables to deal with
-        if (name.startsWith("org.springframework.context.support.AbstractApplicationContext$")) {
+        if (name.startsWith("org.springframework.context.support.AbstractApplicationContext$")
+            || name.equals("org.springframework.context.support.ContextTypeMatchClassLoader")) {
           return false;
         }
         return true;
       }
 
       if (name.startsWith("org.springframework.core.")) {
-        if (name.startsWith("org.springframework.core.task.")) {
+        if (name.startsWith("org.springframework.core.task.")
+            || name.equals("org.springframework.core.DecoratingClassLoader")
+            || name.equals("org.springframework.core.OverridingClassLoader")) {
+          return false;
+        }
+        return true;
+      }
+
+      if (name.startsWith("org.springframework.instrument.")) {
+        if (name.equals("org.springframework.instrument.classloading.SimpleThrowawayClassLoader")
+            || name.equals("org.springframework.instrument.classloading.ShadowingClassLoader")) {
           return false;
         }
         return true;
@@ -140,9 +151,17 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
         return true;
       }
 
+      if (name.startsWith("org.springframework.util.")) {
+        if (name.startsWith("org.springframework.util.concurrent.")) {
+          return false;
+        }
+        return true;
+      }
+
       if (name.startsWith("org.springframework.web.")) {
         if (name.startsWith("org.springframework.web.servlet.")
-            || name.startsWith("org.springframework.web.reactive.")) {
+            || name.startsWith("org.springframework.web.reactive.")
+            || name.startsWith("org.springframework.web.context.request.async.")) {
           return false;
         }
         return true;
@@ -182,8 +201,12 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
-    if (name.startsWith("com.datastax.driver.")) {
-      if (name.startsWith("com.datastax.driver.core.Cluster$")) {
+    if (name.startsWith("com.couchbase.client.deps.")) {
+      // Couchbase library includes some packaged dependencies, unfortunately some of them are
+      // instrumented by java-concurrent instrumentation
+      if (name.startsWith("com.couchbase.client.deps.io.netty.")
+          || name.startsWith("com.couchbase.client.deps.org.LatencyUtils.")
+          || name.startsWith("com.couchbase.client.deps.com.lmax.disruptor.")) {
         return false;
       }
       return true;
@@ -210,13 +233,14 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     }
     if (name.startsWith("com.google.inject.")) {
       // We instrument Runnable there
-      if (name.startsWith("com.google.inject.internal.AbstractBindingProcessor$")) {
+      if (name.startsWith("com.google.inject.internal.AbstractBindingProcessor$")
+          || name.startsWith("com.google.inject.internal.BytecodeGen$")) {
         return false;
       }
       return true;
     }
     if (name.startsWith("com.google.api.")) {
-      if (name.equals("com.google.api.client.http.HttpRequest")) {
+      if (name.startsWith("com.google.api.client.http.HttpRequest")) {
         return false;
       }
       return true;
@@ -227,8 +251,24 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.startsWith("org.h2.jdbc.")
           || name.startsWith("org.h2.jdbcx.")
           // Some runnables that get instrumented
+          || name.equals("org.h2.util.Task")
           || name.equals("org.h2.store.FileLock")
-          || name.equals("org.h2.engine.DatabaseCloser")) {
+          || name.equals("org.h2.engine.DatabaseCloser")
+          || name.equals("org.h2.engine.OnExitDatabaseCloser")) {
+        return false;
+      }
+      return true;
+    }
+
+    if (name.startsWith("com.carrotsearch.hppc.")) {
+      if (name.startsWith("com.carrotsearch.hppc.HashOrderMixing$")) {
+        return false;
+      }
+      return true;
+    }
+
+    if (name.startsWith("com.fasterxml.jackson.")) {
+      if (name.equals("com.fasterxml.jackson.module.afterburner.util.MyClassLoader")) {
         return false;
       }
       return true;

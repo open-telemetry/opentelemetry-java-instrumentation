@@ -56,6 +56,12 @@ subprojects { Project subProj ->
       annotationProcessor deps.autoservice
       implementation deps.autoservice
 
+      // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
+      testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+      // FIXME: we should enable this, but currently this fails tests for google http client
+      //testCompile project(':dd-java-agent:instrumentation:http-url-connection')
+      testCompile project(':dd-java-agent:instrumentation:classloading')
+
       testCompile project(':dd-java-agent:testing')
       testAnnotationProcessor deps.autoservice
       testImplementation deps.autoservice
