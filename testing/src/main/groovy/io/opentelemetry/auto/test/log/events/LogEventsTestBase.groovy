@@ -15,10 +15,9 @@
  */
 package io.opentelemetry.auto.test.log.events
 
-import io.opentelemetry.OpenTelemetry
+
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.trace.Tracer
 import spock.lang.Unroll
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
@@ -30,8 +29,6 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
  */
 @Unroll
 abstract class LogEventsTestBase extends AgentTestRunner {
-
-  final Tracer tracer = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.test")
 
   abstract Object createLogger(String name)
 
@@ -47,28 +44,61 @@ abstract class LogEventsTestBase extends AgentTestRunner {
     setup:
     runUnderTrace("test") {
       def logger = createLogger("abc")
-      withConfigOverride(Config.LOGS_EVENTS_THRESHOLD, "WARN") {
+      withConfigOverride(Config.EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, "WARN") {
         logger."$testMethod"("xyz")
       }
     }
 
     expect:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, capture ? 2 : 1) {
         span(0) {
           operationName "test"
-          if (capture) {
-            event(0) {
-              eventName "xyz"
-              attributes {
-                "level" testMethod.toUpperCase()
-                "loggerName" "abc"
-              }
+        }
+        if (capture) {
+          span(1) {
+            operationName "log.message"
+            tags {
+              "message" "xyz"
+              "level" testMethod.toUpperCase()
+              "loggerName" "abc"
             }
           }
-          tags {
+        }
+      }
+    }
+
+    where:
+    testMethod | capture
+    "info"     | false
+    warn()     | true
+    error()    | true
+  }
+
+  def "capture #testMethod (#capture) as span when no current span"() {
+    when:
+    def logger = createLogger("abc")
+    withConfigOverride(Config.EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, "WARN") {
+      logger."$testMethod"("xyz")
+    }
+
+    then:
+    if (capture) {
+      assertTraces(1) {
+        trace(0, 1) {
+          span(0) {
+            operationName "log.message"
+            tags {
+              "message" "xyz"
+              "level" testMethod.toUpperCase()
+              "loggerName" "abc"
+            }
           }
         }
+      }
+    } else {
+      Thread.sleep(500) // sleep a bit just to make sure no span is captured
+      assertTraces(0) {
       }
     }
 
