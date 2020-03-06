@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.commonshttpclient;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
@@ -10,7 +10,6 @@ import static datadog.trace.instrumentation.commonshttpclient.HttpHeadersInjectA
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -37,7 +36,7 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/apache/commons/httpclient/HttpClient.class"));
+    return hasClassesNamed("org.apache.commons.httpclient.HttpClient");
   }
 
   @Override
