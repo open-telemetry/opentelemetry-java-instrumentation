@@ -1,0 +1,17 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = "org.apache.geode"
+    module = "geode-core"
+    versions = "[1.7.0,)"
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.apache.geode', name: 'geode-core', version: '1.7.0'
+
+  testCompile group: 'org.apache.geode', name: 'geode-core', version: '1.7.0'
+}
