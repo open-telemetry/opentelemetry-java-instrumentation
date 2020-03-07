@@ -28,7 +28,7 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
 
-  compile project(':instrumentation:elasticsearch')
+  compile project(':instrumentation:elasticsearch:elasticsearch-common')
 
   testCompile project(':instrumentation:apache-httpclient-4.0')
   testCompile project(':instrumentation:apache-httpasyncclient-4.0')

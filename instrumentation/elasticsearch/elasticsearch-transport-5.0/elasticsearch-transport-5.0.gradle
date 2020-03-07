@@ -24,10 +24,10 @@ muzzle {
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
 
-  compile project(':instrumentation:elasticsearch')
+  compile project(':instrumentation:elasticsearch:elasticsearch-common')
 
   // Ensure no cross interference
-  testCompile project(':instrumentation:elasticsearch:rest-5.0')
+  testCompile project(':instrumentation:elasticsearch:elasticsearch-rest-5.0')
   testCompile project(':instrumentation:apache-httpasyncclient-4.0')
   testCompile project(':instrumentation:netty-4.1')
 
