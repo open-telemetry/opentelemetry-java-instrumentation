@@ -21,7 +21,6 @@ import static io.opentelemetry.auto.instrumentation.rmi.server.RmiServerDecorato
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -61,7 +60,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(extendsClass(named("java.rmi.server.RemoteServer")));
+    return extendsClass(named("java.rmi.server.RemoteServer"));
   }
 
   @Override

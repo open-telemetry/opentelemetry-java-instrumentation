@@ -15,12 +15,14 @@
  */
 package io.opentelemetry.auto.tooling.bytebuddy.matcher;
 
+import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 /**
  * This class provides some custom ByteBuddy element matchers to use when applying instrumentation
@@ -30,7 +32,13 @@ public class AgentElementMatchers {
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> extendsClass(
       final ElementMatcher<? super TypeDescription> matcher) {
-    return new SafeExtendsClassMatcher<>(new SafeErasureMatcher<>(matcher));
+    return not(isInterface()).and(new SafeExtendsClassMatcher<>(new SafeErasureMatcher<>(matcher)));
+  }
+
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> implementsInterface(
+      final ElementMatcher<? super TypeDescription> matcher) {
+    return not(isInterface())
+        .and(new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), true));
   }
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> hasInterface(
@@ -38,20 +46,12 @@ public class AgentElementMatchers {
     return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), true);
   }
 
-  /**
-   * Matches any type description that declares a super type that matches the provided matcher.
-   * Exceptions during matching process are logged and ignored.
-   *
-   * @param matcher The type to be checked for being a super type of the matched type.
-   * @param <T> The type of the matched object.
-   * @return A matcher that matches any type description that declares a super type that matches the
-   *     provided matcher.
-   * @see ElementMatchers#hasSuperType(net.bytebuddy.matcher.ElementMatcher)
-   */
   public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasSuperType(
       final ElementMatcher<? super TypeDescription> matcher) {
-    return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), false);
+    return not(isInterface())
+        .and(new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), false));
   }
+
   // TODO: add javadoc
   public static <T extends MethodDescription> ElementMatcher.Junction<T> hasSuperMethod(
       final ElementMatcher<? super MethodDescription> matcher) {

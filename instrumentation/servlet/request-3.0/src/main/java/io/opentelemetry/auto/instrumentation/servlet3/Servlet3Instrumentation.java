@@ -15,9 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet3;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -37,6 +37,18 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/servlet/http/HttpServlet.class"));
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return safeHasSuperType(
+        named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet")));
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.decorator.BaseDecorator",
@@ -46,14 +58,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
       packageName + ".HttpServletRequestExtractAdapter",
       packageName + ".TagSettingAsyncListener"
     };
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(
-            safeHasSuperType(
-                named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet"))));
   }
 
   @Override

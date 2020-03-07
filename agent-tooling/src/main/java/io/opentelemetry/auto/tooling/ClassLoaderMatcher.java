@@ -15,15 +15,16 @@
  */
 package io.opentelemetry.auto.tooling;
 
-import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
-
-import io.opentelemetry.auto.bootstrap.WeakMap;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
-public class ClassLoaderMatcher {
+public final class ClassLoaderMatcher {
   public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
+  public static final int CACHE_CONCURRENCY =
+      Math.max(8, Runtime.getRuntime().availableProcessors());
 
   /** A private constructor that must not be invoked. */
   private ClassLoaderMatcher() {
@@ -34,9 +35,9 @@ public class ClassLoaderMatcher {
     return SkipClassLoaderMatcher.INSTANCE;
   }
 
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasClasses(
-      final String... names) {
-    return new ClassLoaderHasClassMatcher(names);
+  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasNoResources(
+      final String... resources) {
+    return new ClassLoaderHasNoResourceMatcher(resources);
   }
 
   private static class SkipClassLoaderMatcher
@@ -48,15 +49,15 @@ public class ClassLoaderMatcher {
     private SkipClassLoaderMatcher() {}
 
     @Override
-    public boolean matches(final ClassLoader target) {
-      if (target == BOOTSTRAP_CLASSLOADER) {
+    public boolean matches(final ClassLoader cl) {
+      if (cl == BOOTSTRAP_CLASSLOADER) {
         // Don't skip bootstrap loader
         return false;
       }
-      return shouldSkipClass(target);
+      return shouldSkipClass(cl);
     }
 
-    private boolean shouldSkipClass(final ClassLoader loader) {
+    private static boolean shouldSkipClass(final ClassLoader loader) {
       switch (loader.getClass().getName()) {
         case "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader":
         case "sun.reflect.DelegatingClassLoader":
@@ -71,36 +72,38 @@ public class ClassLoaderMatcher {
     }
   }
 
-  public static class ClassLoaderHasClassMatcher
-      extends ElementMatcher.Junction.AbstractBase<ClassLoader>
-      implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
+  private static class ClassLoaderHasNoResourceMatcher
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+    private final Cache<ClassLoader, Boolean> cache =
+        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
 
-    private final WeakMap<ClassLoader, Boolean> cache = newWeakMap();
+    private final String[] resources;
 
-    private final String[] names;
-
-    private ClassLoaderHasClassMatcher(final String... names) {
-      this.names = names;
+    private ClassLoaderHasNoResourceMatcher(final String... resources) {
+      this.resources = resources;
     }
 
-    @Override
-    public boolean matches(final ClassLoader target) {
-      if (target != null) {
-        return cache.computeIfAbsent(target, this);
+    private boolean hasNoResources(final ClassLoader cl) {
+      for (final String resource : resources) {
+        if (cl.getResource(resource) == null) {
+          return true;
+        }
       }
-
       return false;
     }
 
     @Override
-    public Boolean get(final ClassLoader target) {
-      for (final String name : names) {
-        if (target.getResource(Utils.getResourceName(name)) == null) {
-          return false;
-        }
+    public boolean matches(final ClassLoader cl) {
+      if (cl == null) {
+        return false;
       }
-
-      return true;
+      Boolean v = cache.getIfPresent(cl);
+      if (v != null) {
+        return v;
+      }
+      v = hasNoResources(cl);
+      cache.put(cl, v);
+      return v;
     }
   }
 }

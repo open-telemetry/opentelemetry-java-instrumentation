@@ -15,10 +15,12 @@
  */
 package io.opentelemetry.auto.instrumentation.jaxrs;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
@@ -36,6 +38,12 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   public JaxRsClientInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-client");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/ws/rs/client/ClientBuilder.class"));
   }
 
   @Override

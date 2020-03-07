@@ -15,13 +15,23 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_0;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+
 import io.opentelemetry.auto.tooling.Instrumenter;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 
 public abstract class AbstractHibernateInstrumentation extends Instrumenter.Default {
 
   public AbstractHibernateInstrumentation() {
     super("hibernate", "hibernate-core");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("org/hibernate/Session.class"));
   }
 
   @Override

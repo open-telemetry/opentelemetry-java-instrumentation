@@ -16,14 +16,17 @@
 package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.skipClassLoader;
-import static io.opentelemetry.auto.tooling.bytebuddy.GlobalIgnoresMatcher.globalIgnoresMatcher;
+import static io.opentelemetry.auto.tooling.matcher.AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher;
+import static io.opentelemetry.auto.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +54,7 @@ public class AgentInstaller {
 
   public static void installBytebuddyAgent(final Instrumentation inst) {
     if (Config.get().isTraceEnabled()) {
-      installBytebuddyAgent(inst, new AgentBuilder.Listener[0]);
+      installBytebuddyAgent(inst, false, new AgentBuilder.Listener[0]);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
     }
@@ -64,7 +67,9 @@ public class AgentInstaller {
    * @return the agent's class transformer
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
-      final Instrumentation inst, final AgentBuilder.Listener... listeners) {
+      final Instrumentation inst,
+      final boolean skipAdditionalLibraryMatcher,
+      final AgentBuilder.Listener... listeners) {
 
     final ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
@@ -87,7 +92,9 @@ public class AgentInstaller {
 
     addByteBuddyRawSetting();
 
-    AgentBuilder agentBuilder =
+    FieldBackedProvider.resetContextMatchers();
+
+    AgentBuilder.Ignored ignoredAgentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -98,10 +105,22 @@ public class AgentInstaller {
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
-            .ignore(any(), skipClassLoader())
-            .or(globalIgnoresMatcher())
-            .or(matchesConfiguredExcludes());
+            .ignore(any(), skipClassLoader());
+    if (skipAdditionalLibraryMatcher) {
+      // Ignore classes matched by globalIgnoresMatcher but not matched by
+      // additionalLibraryIgnoresMatcher.
+      // Note: globalIgnoresMatcher includes additionalLibraryIgnoresMatcher internally for
+      // efficiency purposes.
+      // Note2: this is expected to be used by tests only.
+      ignoredAgentBuilder =
+          ignoredAgentBuilder.or(
+              globalIgnoresMatcher().and(not(additionalLibraryIgnoresMatcher())));
+    } else {
+      ignoredAgentBuilder = ignoredAgentBuilder.or(globalIgnoresMatcher());
+    }
+    ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
 
+    AgentBuilder agentBuilder = ignoredAgentBuilder;
     if (log.isDebugEnabled()) {
       agentBuilder =
           agentBuilder
