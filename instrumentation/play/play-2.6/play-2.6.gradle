@@ -41,8 +41,8 @@ dependencies {
   main_java8Compile group: 'com.typesafe.play', name: "play_$scalaVersion", version: playVersion
 
   testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:netty-4.0')
-  testCompile project(':instrumentation:netty-4.1')
+  testCompile project(':instrumentation:netty:netty-4.0')
+  testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:akka-http-10.0')
 
   testCompile group: 'com.typesafe.play', name: "play-java_$scalaVersion", version: playVersion
