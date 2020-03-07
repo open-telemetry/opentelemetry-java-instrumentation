@@ -29,9 +29,9 @@ dependencies {
 
   testCompile project(':instrumentation:java-concurrent')
   testCompile project(':instrumentation:servlet:request-3.0')
-  testCompile project(':instrumentation:jaxrs-2.0:jaxrs-2.0-jersey-2.0')
-  testCompile project(':instrumentation:jaxrs-2.0:jaxrs-2.0-resteasy-3.0')
-  testCompile project(':instrumentation:jaxrs-2.0:jaxrs-2.0-resteasy-3.1')
+  testCompile project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0')
+  testCompile project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0')
+  testCompile project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1')
 
   // Jersey
   // First version with DropwizardTestSupport:

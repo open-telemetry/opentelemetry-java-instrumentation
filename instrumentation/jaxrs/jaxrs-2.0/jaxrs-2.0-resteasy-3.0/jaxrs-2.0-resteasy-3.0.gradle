@@ -8,13 +8,19 @@ muzzle {
   pass {
     group = "org.jboss.resteasy"
     module = "resteasy-jaxrs"
-    versions = "[3.1.0.Final,3.5.0.Final)"
+    versions = "[3.0.0.Final,3.1.0.Final)"
+  }
+
+  pass {
+    group = "org.jboss.resteasy"
+    module = "resteasy-jaxrs"
+    versions = "[3.5.0.Final,)"
   }
 }
 
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
-  compileOnly group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.1.0.Final'
+  compileOnly group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
 
-  compile project(':instrumentation:jaxrs-2.0')
+  compile project(':instrumentation:jaxrs:jaxrs-2.0')
 }
