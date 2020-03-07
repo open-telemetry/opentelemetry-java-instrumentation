@@ -47,8 +47,8 @@ dependencies {
 
   compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
 
-  testCompile project(':instrumentation:couchbase-2.0')
-  testCompile project(path: ':instrumentation:couchbase-2.0', configuration: 'testArtifacts')
+  testCompile project(':instrumentation:couchbase:couchbase-2.0')
+  testCompile project(path: ':instrumentation:couchbase:couchbase-2.0', configuration: 'testArtifacts')
   testCompile group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
 
   testCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'
