@@ -19,12 +19,12 @@ testSets {
 dependencies {
   compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
 
-  compile project(':instrumentation:hibernate-common')
+  compile project(':instrumentation:hibernate:hibernate-common')
 
   testCompile project(':instrumentation:jdbc')
   // Added to ensure cross compatibility:
-  testCompile project(':instrumentation:hibernate-3.3')
-  testCompile project(':instrumentation:hibernate-4.0')
+  testCompile project(':instrumentation:hibernate:hibernate-3.3')
+  testCompile project(':instrumentation:hibernate:hibernate-4.0')
 
   testCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
   testCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
