@@ -6,6 +6,8 @@ ext {
   cassandraDriverTestVersions = "[3.0,4.0)"
 }
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
 
@@ -34,10 +36,6 @@ muzzle {
     extraDependency "com.google.guava:guava:27.0-jre"
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {
