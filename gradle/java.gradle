@@ -6,6 +6,7 @@ apply plugin: 'groovy'
 apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
+apply from: "$rootDir/gradle/spotbugs.gradle"
 
 def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
