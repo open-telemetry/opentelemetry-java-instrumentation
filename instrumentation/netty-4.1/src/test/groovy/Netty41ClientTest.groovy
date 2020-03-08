@@ -32,6 +32,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
@@ -91,7 +92,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
     then:
     def ex = thrown(Exception)
-    ex.cause instanceof ConnectException
+    ex.cause instanceof ConnectException || ex.cause instanceof TimeoutException
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
 
     and:
@@ -111,7 +112,8 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
               "$Tags.COMPONENT" "netty"
               "error.type" AbstractChannel.AnnotatedConnectException.name
               "error.stack" String
-              "error.msg" ~/Connection refused: localhost\/[0-9.:]+:$UNUSABLE_PORT/
+              // slightly different message on windows
+              "error.msg" ~/Connection refused:( no further information:)? localhost\/[0-9.:]+:$UNUSABLE_PORT/
             }
           }
         }

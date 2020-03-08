@@ -30,8 +30,9 @@ class WildflySmokeTest extends AbstractServerSmokeTest {
 
   @Override
   ProcessBuilder createProcessBuilder() {
+    String ext = System.getProperty("os.name").startsWith("Windows") ? ".bat" : ".sh"
     ProcessBuilder processBuilder =
-      new ProcessBuilder("${wildflyDirectory}/bin/standalone.sh")
+      new ProcessBuilder("${wildflyDirectory}/bin/standalone" + ext)
     processBuilder.directory(wildflyDirectory)
 
     // We're installing a span exporter to make sure it doesn't blow anything up, but we're not
@@ -46,13 +47,15 @@ class WildflySmokeTest extends AbstractServerSmokeTest {
   }
 
   def cleanupSpec() {
+    String ext = System.getProperty("os.name").startsWith("Windows") ? ".bat" : ".sh"
     ProcessBuilder processBuilder = new ProcessBuilder(
-      "${wildflyDirectory}/bin/jboss-cli.sh",
+      "${wildflyDirectory}/bin/jboss-cli" + ext,
       "--connect",
       "--controller=localhost:${managementPort}",
       "command=:shutdown")
     processBuilder.directory(wildflyDirectory)
     Process process = processBuilder.start()
+    process.getOutputStream().close() // otherwise .bat file waits at end with "Press any key to continue . . ."
     process.waitFor()
   }
 
