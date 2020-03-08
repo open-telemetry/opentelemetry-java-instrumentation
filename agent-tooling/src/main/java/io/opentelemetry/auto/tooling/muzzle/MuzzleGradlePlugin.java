@@ -44,12 +44,12 @@ public class MuzzleGradlePlugin implements Plugin {
 
   @Override
   public boolean matches(final TypeDescription target) {
-    if (target.isAbstract()) {
+    if (target == null || target.isAbstract()) {
       return false;
     }
     // AutoService annotation is not retained at runtime. Check for Instrumenter.Default supertype
     boolean isInstrumenter = false;
-    TypeDefinition instrumenter = null == target ? null : target.getSuperClass();
+    TypeDefinition instrumenter = target.getSuperClass();
     while (instrumenter != null) {
       if (instrumenter.equals(DefaultInstrumenterTypeDesc)) {
         isInstrumenter = true;
