@@ -228,6 +228,10 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("com.google.inject.internal.AbstractBindingProcessor$")) {
         return false;
       }
+      // We instrument Callable there
+      if (name.startsWith("com.google.inject.internal.cglib.core.internal.$LoadingCache$")) {
+        return false;
+      }
       return true;
     }
     if (name.startsWith("com.google.api.")) {
