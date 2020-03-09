@@ -13,6 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.CorrelationIdentifier;
+import datadog.trace.api.GlobalTracer;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan.Context;
@@ -81,6 +83,8 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       scope.setAsyncPropagation(true);
 
       request.setAttribute(DD_SPAN_ATTRIBUTE, span);
+      request.setAttribute(CorrelationIdentifier.getTraceIdKey(), GlobalTracer.get().getTraceId());
+      request.setAttribute(CorrelationIdentifier.getSpanIdKey(), GlobalTracer.get().getSpanId());
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       return scope;

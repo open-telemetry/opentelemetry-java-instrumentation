@@ -7,7 +7,9 @@ import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
 import static datadog.trace.instrumentation.servlet2.Servlet2Decorator.DECORATE;
 
+import datadog.trace.api.CorrelationIdentifier;
 import datadog.trace.api.DDTags;
+import datadog.trace.api.GlobalTracer;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
@@ -56,10 +58,15 @@ public class Servlet2Advice {
     DECORATE.onConnection(span, httpServletRequest);
     DECORATE.onRequest(span, httpServletRequest);
 
-    httpServletRequest.setAttribute(DD_SPAN_ATTRIBUTE, span);
-
     final AgentScope scope = activateSpan(span, true);
     scope.setAsyncPropagation(true);
+
+    httpServletRequest.setAttribute(DD_SPAN_ATTRIBUTE, span);
+    httpServletRequest.setAttribute(
+        CorrelationIdentifier.getTraceIdKey(), GlobalTracer.get().getTraceId());
+    httpServletRequest.setAttribute(
+        CorrelationIdentifier.getSpanIdKey(), GlobalTracer.get().getSpanId());
+
     return scope;
   }
 
