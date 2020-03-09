@@ -234,7 +234,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     if (name.startsWith("com.google.inject.")) {
       // We instrument Runnable there
       if (name.startsWith("com.google.inject.internal.AbstractBindingProcessor$")
-          || name.startsWith("com.google.inject.internal.BytecodeGen$")) {
+          || name.startsWith("com.google.inject.internal.BytecodeGen$")
+          || name.startsWith("com.google.inject.internal.cglib.core.internal.$LoadingCache$")) {
         return false;
       }
       return true;
