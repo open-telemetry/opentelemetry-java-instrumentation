@@ -1,7 +1,7 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compileOnly project(path: ':logback-shaded-for-instrumenting', configuration: 'shadow')
+  compileOnly group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.16'
 
-  testCompile project(path: ':logback-shaded-for-instrumenting', configuration: 'shadow')
+  testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.16'
 }

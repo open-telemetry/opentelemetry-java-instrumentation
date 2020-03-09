@@ -21,6 +21,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
@@ -29,7 +30,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import unshaded.ch.qos.logback.classic.spi.ILoggingEvent;
 
 @AutoService(Instrumenter.class)
 public class LogbackSpansInstrumentation extends Instrumenter.Default {
@@ -39,7 +39,7 @@ public class LogbackSpansInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("unshaded.ch.qos.logback.classic.Logger");
+    return named("ch.qos.logback.classic.Logger");
   }
 
   @Override
@@ -55,7 +55,7 @@ public class LogbackSpansInstrumentation extends Instrumenter.Default {
             .and(isPublic())
             .and(named("callAppenders"))
             .and(takesArguments(1))
-            .and(takesArgument(0, named("unshaded.ch.qos.logback.classic.spi.ILoggingEvent"))),
+            .and(takesArgument(0, named("ch.qos.logback.classic.spi.ILoggingEvent"))),
         LogbackSpansInstrumentation.class.getName() + "$CallAppendersAdvice");
     return transformers;
   }

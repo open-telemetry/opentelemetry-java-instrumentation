@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import ch.qos.logback.classic.LoggerContext
 import io.opentelemetry.auto.test.log.events.LogEventsTestBase
-import unshaded.ch.qos.logback.classic.LoggerContext
 
 class LogbackSpansTest extends LogEventsTestBase {
 
