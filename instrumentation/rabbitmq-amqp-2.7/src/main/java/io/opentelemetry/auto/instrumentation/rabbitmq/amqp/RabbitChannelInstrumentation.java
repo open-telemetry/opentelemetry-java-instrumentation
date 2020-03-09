@@ -51,7 +51,6 @@ import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -257,18 +256,10 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         final Map<String, Object> headers = response.getProps().getHeaders();
 
         if (headers != null) {
-          SpanContext spanContext = null;
           try {
-            spanContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+            spanBuilder.addLink(TRACER.getHttpTextFormat().extract(headers, GETTER));
           } catch (final IllegalArgumentException e) {
             // couldn't extract a context
-          }
-          if (spanContext != null) {
-            if (TRACER.getCurrentSpan().getContext().isValid()) {
-              spanBuilder.addLink(spanContext);
-            } else {
-              spanBuilder.setParent(spanContext);
-            }
           }
         }
       }

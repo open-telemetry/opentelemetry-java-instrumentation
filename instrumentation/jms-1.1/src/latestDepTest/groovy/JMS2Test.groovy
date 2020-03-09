@@ -292,18 +292,17 @@ class JMS2Test extends AgentTestRunner {
     }
   }
 
-  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentSpan, Object linkSpan = null) {
+  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentOrLinkSpan) {
     trace.span(index) {
       if (messageListener) {
         operationName "jms.onMessage"
         spanKind CONSUMER
+        childOf((SpanData) parentOrLinkSpan)
       } else {
         operationName "jms.consume"
         spanKind CLIENT
-      }
-      childOf((SpanData) parentSpan)
-      if (linkSpan) {
-        hasLink((SpanData) linkSpan)
+        parent()
+        hasLink((SpanData) parentOrLinkSpan)
       }
       errored false
 
