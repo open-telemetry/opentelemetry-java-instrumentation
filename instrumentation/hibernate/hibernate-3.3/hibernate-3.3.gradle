@@ -5,6 +5,9 @@
  * instrumentation isn't able to reference it.
  */
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 muzzle {
   pass {
     group = "org.hibernate"
@@ -13,10 +16,6 @@ muzzle {
     assertInverse = true
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {
@@ -27,12 +26,12 @@ testSets {
 dependencies {
   compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.GA'
 
-  compile project(':instrumentation:hibernate')
+  compile project(':instrumentation:hibernate:hibernate-common')
 
   testCompile project(':instrumentation:jdbc')
   // Added to ensure cross compatibility:
-  testCompile project(':instrumentation:hibernate:core-4.0')
-  testCompile project(':instrumentation:hibernate:core-4.3')
+  testCompile project(':instrumentation:hibernate:hibernate-4.0')
+  testCompile project(':instrumentation:hibernate:hibernate-4.3')
 
   testCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.SP1'
   testCompile group: 'org.hibernate', name: 'hibernate-annotations', version: '3.4.0.GA'

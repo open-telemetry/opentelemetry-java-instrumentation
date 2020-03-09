@@ -34,7 +34,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
 public class JaxRsAnnotationsDecorator extends BaseDecorator {
-  public static JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
+  public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
 

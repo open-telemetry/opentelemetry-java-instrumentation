@@ -3,6 +3,8 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+
 muzzle {
   pass {
     group = "org.elasticsearch.client"
@@ -18,8 +20,6 @@ muzzle {
     assertInverse = true
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
