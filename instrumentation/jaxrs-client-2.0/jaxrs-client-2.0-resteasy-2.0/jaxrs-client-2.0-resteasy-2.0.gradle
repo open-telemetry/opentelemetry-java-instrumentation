@@ -1,3 +1,5 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+
 muzzle {
   pass {
     group = "org.jboss.resteasy"
@@ -5,8 +7,6 @@ muzzle {
     versions = "[2.0,)"
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.0.Final'

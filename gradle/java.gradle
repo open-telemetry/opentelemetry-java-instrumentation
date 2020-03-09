@@ -6,6 +6,7 @@ apply plugin: 'groovy'
 apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
+apply from: "$rootDir/gradle/spotbugs.gradle"
 
 def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
@@ -225,7 +226,7 @@ if (project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
   }
 }
 
-if (project.parent && project.parent.hasProperty("javaExecutableVersionCache")) {
+if (project.parent && project.parent.ext.has("javaExecutableVersionCache")) {
   project.ext.javaExecutableVersionCache = project.parent.ext.javaExecutableVersionCache
 } else {
   project.ext.javaExecutableVersionCache = [:]

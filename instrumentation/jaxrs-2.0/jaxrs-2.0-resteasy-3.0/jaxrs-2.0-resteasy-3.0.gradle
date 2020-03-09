@@ -1,3 +1,5 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+
 muzzle {
   // Cant assert fails because muzzle assumes all instrumentations will fail
   // Instrumentations in jaxrs-2.0 will pass
@@ -15,7 +17,6 @@ muzzle {
     versions = "[3.5.0.Final,)"
   }
 }
-apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'

@@ -16,63 +16,16 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 Project instr_project = project
-subprojects { Project subProj ->
-  apply plugin: "net.bytebuddy.byte-buddy"
-  apply plugin: 'muzzle'
+subprojects {
+  afterEvaluate { Project subProj ->
+    if (subProj.getPlugins().hasPlugin('java')) {
+      // Make it so all instrumentation subproject tests can be run with a single command.
+      instr_project.tasks.test.dependsOn(subProj.tasks.test)
 
-  subProj.byteBuddy {
-    transformation {
-      // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
-      tasks = ['compileJava', 'compileScala', 'compileKotlin']
-      plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin$NoOp'
-    }
-  }
-
-  subProj.afterEvaluate {
-    subProj.byteBuddy {
-      transformation {
-        tasks = ['compileJava', 'compileScala', 'compileKotlin']
-        plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin'
-        classPath = project(':auto-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
+      instr_project.dependencies {
+        compile(project(subProj.getPath()))
       }
     }
-
-    String jdkCompile = null
-    if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests') != JavaVersion.VERSION_1_7) {
-      def version = JavaVersion.toVersion(project.getProperty('minJavaVersionForTests'))
-      def name = "java$version.majorVersion"
-      jdkCompile = "main_${name}Compile"
-    }
-    dependencies {
-      // Apply common dependencies for instrumentation.
-      compile(project(':auto-tooling')) {
-        // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
-        // is brought in for tests by project(:testing) below
-        exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
-      }
-      compile deps.bytebuddy
-      if (jdkCompile) {
-        "$jdkCompile"(project(':auto-tooling')) {
-          // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
-          // is brought in for tests by project(:testing) below
-          exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
-        }
-        "$jdkCompile" deps.bytebuddy
-      }
-      annotationProcessor deps.autoservice
-      implementation deps.autoservice
-
-      testCompile project(':testing')
-      testAnnotationProcessor deps.autoservice
-      testImplementation deps.autoservice
-    }
-
-    // Make it so all instrumentation subproject tests can be run with a single command.
-    instr_project.tasks.test.dependsOn(subProj.tasks.test)
-  }
-
-  instr_project.dependencies {
-    compile(project(subProj.getPath()))
   }
 }
 
