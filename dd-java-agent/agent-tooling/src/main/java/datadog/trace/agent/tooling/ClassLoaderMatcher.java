@@ -2,6 +2,8 @@ package datadog.trace.agent.tooling;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import datadog.trace.bootstrap.PatchLogger;
+import io.opentracing.util.GlobalTracer;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -36,6 +38,9 @@ public final class ClassLoaderMatcher {
   private static final class SkipClassLoaderMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
+    /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
+    private static final Cache<ClassLoader, Boolean> skipCache =
+        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
     private static final String DATADOG_CLASSLOADER_NAME =
         "datadog.trace.bootstrap.DatadogClassLoader";
 
@@ -47,7 +52,21 @@ public final class ClassLoaderMatcher {
         // Don't skip bootstrap loader
         return false;
       }
-      return shouldSkipClass(cl);
+      Boolean v = skipCache.getIfPresent(cl);
+      if (v != null) {
+        return v;
+      }
+      // when ClassloadingInstrumentation is active, checking delegatesToBootstrap() below is not
+      // required, because ClassloadingInstrumentation forces all class loaders to load all of the
+      // classes in Constants.BOOTSTRAP_PACKAGE_PREFIXES directly from the bootstrap class loader
+      //
+      // however, at this time we don't want to introduce the concept of a required instrumentation,
+      // and we don't want to introduce the concept of the tooling code depending on whether or not
+      // a particular instrumentation is active (mainly because this particular use case doesn't
+      // seem to justify introducing either of these new concepts)
+      v = shouldSkipClass(cl) || !delegatesToBootstrap(cl);
+      skipCache.put(cl, v);
+      return v;
     }
 
     private static boolean shouldSkipClass(final ClassLoader loader) {
@@ -62,6 +81,34 @@ public final class ClassLoaderMatcher {
           return true;
       }
       return false;
+    }
+
+    /**
+     * TODO: this turns out to be useless with OSGi: {@code
+     * org.eclipse.osgi.internal.loader.BundleLoader#isRequestFromVM} returns {@code true} when
+     * class loading is issued from this check and {@code false} for 'real' class loads. We should
+     * come up with some sort of hack to avoid this problem.
+     */
+    private static boolean delegatesToBootstrap(final ClassLoader loader) {
+      boolean delegates = true;
+      if (!loadsExpectedClass(loader, GlobalTracer.class)) {
+        log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
+        delegates = false;
+      }
+      if (!loadsExpectedClass(loader, PatchLogger.class)) {
+        log.debug("loader {} failed to delegate bootstrap datadog class", loader);
+        delegates = false;
+      }
+      return delegates;
+    }
+
+    private static boolean loadsExpectedClass(
+        final ClassLoader loader, final Class<?> expectedClass) {
+      try {
+        return loader.loadClass(expectedClass.getName()) == expectedClass;
+      } catch (final ClassNotFoundException e) {
+        return false;
+      }
     }
   }
 
