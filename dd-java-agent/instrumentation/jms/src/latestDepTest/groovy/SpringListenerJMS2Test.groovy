@@ -36,6 +36,14 @@ class SpringListenerJMS2Test extends AgentTestRunner {
     def template = new JmsTemplate(factory)
     template.convertAndSend("someSpringQueue", "a message")
 
+    TEST_WRITER.waitForTraces(3)
+    // Manually reorder if reported in the wrong order.
+    if (TEST_WRITER[1][0].operationName == "jms.produce") {
+      def producerTrace = TEST_WRITER[1]
+      TEST_WRITER[1] = TEST_WRITER[0]
+      TEST_WRITER[0] = producerTrace
+    }
+
     expect:
     assertTraces(3) {
       producerTrace(it, 0, "Queue someSpringQueue")
