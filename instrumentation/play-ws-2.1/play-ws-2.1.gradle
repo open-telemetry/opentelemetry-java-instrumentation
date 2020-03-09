@@ -3,8 +3,7 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
-
+apply from: "${rootDir}/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 // TODO: Uncomment when there are more releases, right now 2.1.0 is the latest release

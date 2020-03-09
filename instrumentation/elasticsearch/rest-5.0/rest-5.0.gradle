@@ -3,6 +3,9 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 muzzle {
   pass {
     group = "org.elasticsearch.client"
@@ -17,10 +20,6 @@ muzzle {
     versions = "[5.0,6.4)"
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest

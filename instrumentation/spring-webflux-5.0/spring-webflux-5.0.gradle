@@ -4,6 +4,9 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 muzzle {
   pass {
     group = "org.springframework"
@@ -12,10 +15,6 @@ muzzle {
     assertInverse = true
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {

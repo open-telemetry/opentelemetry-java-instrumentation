@@ -1,3 +1,5 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+
 muzzle {
   pass {
     group = "javax.ws.rs"
@@ -10,8 +12,6 @@ muzzle {
     versions = "[,]"
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'jsr311-api', version: '1.1.1'

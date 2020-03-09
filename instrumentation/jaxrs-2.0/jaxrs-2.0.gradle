@@ -1,3 +1,6 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 muzzle {
   fail {
     group = "javax.ws.rs"
@@ -10,10 +13,6 @@ muzzle {
     versions = "[,]"
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {
