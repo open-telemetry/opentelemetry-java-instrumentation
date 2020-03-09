@@ -1,0 +1,11 @@
+allprojects {
+  apply plugin: 'com.github.spotbugs'
+
+  spotbugs {
+    ignoreFailures = true
+    reportLevel = "high"
+    omitVisitors = ["FindDeadLocalStores"]
+    effort = "max"
+  }
+  
+}

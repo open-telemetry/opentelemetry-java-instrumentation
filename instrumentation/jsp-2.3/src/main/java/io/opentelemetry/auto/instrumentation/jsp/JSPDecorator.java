@@ -29,7 +29,7 @@ import org.apache.jasper.JspCompilationContext;
 import org.slf4j.LoggerFactory;
 
 public class JSPDecorator extends BaseDecorator {
-  public static JSPDecorator DECORATE = new JSPDecorator();
+  public static final JSPDecorator DECORATE = new JSPDecorator();
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jsp-2.3");

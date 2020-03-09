@@ -28,6 +28,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -80,7 +81,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       } else {
         // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
         // us if that changes
-        DECORATE.onStatement(span, new String(command.getRaw()));
+        DECORATE.onStatement(span, new String(command.getRaw(), StandardCharsets.UTF_8));
       }
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
