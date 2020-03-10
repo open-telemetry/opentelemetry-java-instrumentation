@@ -4,6 +4,9 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 muzzle {
   pass {
     group = "org.springframework"
@@ -13,10 +16,6 @@ muzzle {
   }
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
-
 testSets {
   latestDepTest {
     dirName = 'test'
@@ -25,17 +24,17 @@ testSets {
 
 dependencies {
   // We use helpers from this project
-  main_java8CompileOnly project(':instrumentation:reactor-core-3.1')
+  main_java8CompileOnly project(':instrumentation:reactor-3.1')
   main_java8CompileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
 
-  // We are using utils class from reactor-core instrumentation.
+  // We are using utils class from reactor instrumentation.
   // TODO: It is unclear why we need to use `compile` here (instead of 'compileOnly')
-  compile project(':instrumentation:reactor-core-3.1')
+  compile project(':instrumentation:reactor-3.1')
 
   testCompile project(':instrumentation:java-concurrent')
   testCompile project(':instrumentation:trace-annotation')
   testCompile project(':instrumentation:netty-4.1')
-  testCompile project(':instrumentation:reactor-core-3.1')
+  testCompile project(':instrumentation:reactor-3.1')
 
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'

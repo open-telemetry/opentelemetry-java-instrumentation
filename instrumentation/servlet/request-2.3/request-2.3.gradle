@@ -1,3 +1,6 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 muzzle {
   pass {
     group = "javax.servlet"
@@ -5,17 +8,13 @@ muzzle {
     versions = "[2.3, 3.0)"
     assertInverse = true
   }
-  
+
   fail {
     group = "javax.servlet"
     module = 'javax.servlet-api'
     versions = "[3.0,)"
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {

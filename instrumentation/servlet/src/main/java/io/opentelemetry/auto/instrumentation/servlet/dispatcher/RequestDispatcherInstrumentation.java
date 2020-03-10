@@ -18,9 +18,9 @@ package io.opentelemetry.auto.instrumentation.servlet.dispatcher;
 import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -47,15 +47,21 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".RequestDispatcherDecorator",
-    };
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/servlet/RequestDispatcher.class"));
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("javax.servlet.RequestDispatcher")));
+    return implementsInterface(named("javax.servlet.RequestDispatcher"));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".RequestDispatcherDecorator",
+    };
   }
 
   @Override

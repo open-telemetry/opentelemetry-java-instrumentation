@@ -52,6 +52,8 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     // HttpRequest is a final class.  Only need to instrument it exactly
+    // Note: the rest of com.google.api is ignored in AdditionalLibraryIgnoresMatcher to speed
+    // things up
     return named("com.google.api.client.http.HttpRequest");
   }
 

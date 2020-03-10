@@ -21,7 +21,7 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 
 public class HystrixDecorator extends BaseDecorator {
-  public static HystrixDecorator DECORATE = new HystrixDecorator();
+  public static final HystrixDecorator DECORATE = new HystrixDecorator();
 
   @Override
   protected String getSpanType() {

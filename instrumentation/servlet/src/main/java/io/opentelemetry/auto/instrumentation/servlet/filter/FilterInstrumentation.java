@@ -16,9 +16,9 @@
 package io.opentelemetry.auto.instrumentation.servlet.filter;
 
 import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -48,15 +48,22 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".FilterDecorator",
-    };
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    // return not(classLoaderHasNoResources("javax/servlet/Filter.class")); // Not available in 2.2
+    return not(classLoaderHasNoResources("javax/servlet/http/HttpServlet.class"));
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("javax.servlet.Filter")));
+    return implementsInterface(named("javax.servlet.Filter"));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".FilterDecorator",
+    };
   }
 
   @Override

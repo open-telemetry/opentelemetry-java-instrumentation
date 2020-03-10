@@ -16,7 +16,6 @@
 package io.opentelemetry.auto.tooling.bytebuddy.matcher;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -29,7 +28,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * @see net.bytebuddy.matcher.FailSafeMatcher
  */
 @Slf4j
-@HashCodeAndEqualsPlugin.Enhance
 class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> {
 
   /** The delegate matcher that might throw an exception. */
@@ -67,6 +65,26 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
 
   @Override
   public String toString() {
-    return "safeMatcher(try(" + matcher + ") or " + fallback + ")";
+    return "failSafe(try(" + matcher + ") or " + fallback + ")";
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else if (getClass() != other.getClass()) {
+      return false;
+    } else if (fallback != ((LoggingFailSafeMatcher) other).fallback) {
+      return false;
+    } else {
+      return matcher.equals(((LoggingFailSafeMatcher) other).matcher);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return (17 * 31 + matcher.hashCode()) * 31 + (fallback ? 1231 : 1237);
   }
 }

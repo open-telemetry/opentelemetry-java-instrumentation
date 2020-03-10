@@ -15,11 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
@@ -49,8 +47,7 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(hasInterface(named(Runnable.class.getName()).or(named(Callable.class.getName()))));
+    return implementsInterface(named(Runnable.class.getName()).or(named(Callable.class.getName())));
   }
 
   @Override

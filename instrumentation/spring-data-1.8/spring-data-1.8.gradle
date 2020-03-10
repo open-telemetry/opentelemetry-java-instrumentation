@@ -1,5 +1,8 @@
 // This file includes software developed at SignalFx
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 muzzle {
   // We have two independent covariants, so we have to test them independently.
   pass {
@@ -17,10 +20,6 @@ muzzle {
     assertInverse = true
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {

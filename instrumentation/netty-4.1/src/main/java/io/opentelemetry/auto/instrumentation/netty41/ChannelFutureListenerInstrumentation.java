@@ -15,9 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.netty41;
 
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -46,8 +46,14 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("io/netty/channel/ChannelFutureListener.class"));
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("io.netty.channel.ChannelFutureListener")));
+    return implementsInterface(named("io.netty.channel.ChannelFutureListener"));
   }
 
   @Override

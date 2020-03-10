@@ -17,12 +17,10 @@ package io.opentelemetry.auto.instrumentation.jdbc;
 
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
@@ -56,7 +54,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("javax.sql.DataSource")));
+    return implementsInterface(named("javax.sql.DataSource"));
   }
 
   @Override

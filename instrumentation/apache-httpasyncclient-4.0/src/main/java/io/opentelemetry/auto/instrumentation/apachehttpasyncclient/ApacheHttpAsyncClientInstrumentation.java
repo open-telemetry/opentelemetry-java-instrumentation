@@ -18,11 +18,13 @@ package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -53,8 +55,14 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("org/apache/http/nio/client/HttpAsyncClient.class"));
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return hasInterface(named("org.apache.http.nio.client.HttpAsyncClient"));
+    return implementsInterface(named("org.apache.http.nio.client.HttpAsyncClient"));
   }
 
   @Override

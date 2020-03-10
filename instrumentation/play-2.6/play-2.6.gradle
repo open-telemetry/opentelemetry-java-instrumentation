@@ -4,6 +4,9 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
 def scalaVersion = '2.11'
 def playVersion = '2.6.0'
 
@@ -27,10 +30,6 @@ muzzle {
     assertInverse = true
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
-
-apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {

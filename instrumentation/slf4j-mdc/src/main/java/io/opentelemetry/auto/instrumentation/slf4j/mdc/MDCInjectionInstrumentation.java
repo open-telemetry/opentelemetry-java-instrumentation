@@ -32,7 +32,7 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
 
   @Override
   protected boolean defaultEnabled() {
-    return Config.get().isLogsInjectionEnabled();
+    return Config.get().isLogInjectionEnabled();
   }
 
   @Override
