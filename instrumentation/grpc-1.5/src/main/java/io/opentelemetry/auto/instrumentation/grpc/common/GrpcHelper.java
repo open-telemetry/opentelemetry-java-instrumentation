@@ -21,7 +21,10 @@ import java.net.InetSocketAddress;
 
 public class GrpcHelper {
   public static void prepareSpan(
-      final Span span, final String methodName, final InetSocketAddress peerAddress) {
+      final Span span,
+      final String methodName,
+      final InetSocketAddress peerAddress,
+      final boolean server) {
     String serviceName =
         "(unknown)"; // Spec says it's mandatory, so populate even if we couldn't determine it.
     final int slash = methodName.indexOf('/');
@@ -35,8 +38,11 @@ public class GrpcHelper {
     span.setAttribute(MoreTags.RPC_SERVICE, serviceName);
     if (peerAddress != null) {
       span.setAttribute(MoreTags.NET_PEER_PORT, peerAddress.getPort());
-      span.setAttribute(MoreTags.NET_PEER_IP, peerAddress.getAddress().getHostAddress());
-      span.setAttribute(MoreTags.NET_PEER_NAME, peerAddress.getAddress().getHostName());
+      if (server) {
+        span.setAttribute(MoreTags.NET_PEER_IP, peerAddress.getAddress().getHostAddress());
+      } else {
+        span.setAttribute(MoreTags.NET_PEER_NAME, peerAddress.getHostName());
+      }
     } else {
       // The spec says these fields must be populated, so put some values in even if we don't have
       // an address recorded.

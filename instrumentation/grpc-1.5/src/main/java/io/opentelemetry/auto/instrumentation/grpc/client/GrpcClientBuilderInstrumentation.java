@@ -110,7 +110,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         @Advice.Return final ManagedChannelBuilder builder) {
       final ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
           InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
-      contextStore.put(builder, new InetSocketAddress(address, port));
+      contextStore.put(builder, InetSocketAddress.createUnresolved(address, port));
     }
   }
 }
