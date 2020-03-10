@@ -64,7 +64,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     final SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     final InetSocketAddress iAddr =
         addr instanceof InetSocketAddress ? (InetSocketAddress) addr : null;
-    GrpcHelper.prepareSpan(span, methodName, iAddr);
+    GrpcHelper.prepareSpan(span, methodName, iAddr, true);
 
     DECORATE.afterStart(span);
 
