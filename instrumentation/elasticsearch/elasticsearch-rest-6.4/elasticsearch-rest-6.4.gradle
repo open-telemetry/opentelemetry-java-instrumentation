@@ -31,10 +31,10 @@ dependencies {
 
   compile project(':instrumentation:elasticsearch:elasticsearch-common')
 
-  testCompile project(':instrumentation:apache-httpclient-4.0')
+  testCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   testCompile project(':instrumentation:apache-httpasyncclient-4.0')
   // Netty is used, but it adds complexity to the tests since we're using embedded ES.
-  //testCompile project(':instrumentation:netty-4.1')
+  //testCompile project(':instrumentation:netty:netty-4.1')
 
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'

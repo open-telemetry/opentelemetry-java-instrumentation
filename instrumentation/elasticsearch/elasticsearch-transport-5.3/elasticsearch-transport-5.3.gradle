@@ -34,7 +34,7 @@ dependencies {
   compile project(':instrumentation:elasticsearch:elasticsearch-common')
 
   testCompile project(':instrumentation:apache-httpasyncclient-4.0')
-  testCompile project(':instrumentation:netty-4.1')
+  testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:spring-data-1.8')
 
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'

@@ -29,7 +29,7 @@ dependencies {
   // Ensure no cross interference
   testCompile project(':instrumentation:elasticsearch:elasticsearch-rest-5.0')
   testCompile project(':instrumentation:apache-httpasyncclient-4.0')
-  testCompile project(':instrumentation:netty-4.1')
+  testCompile project(':instrumentation:netty:netty-4.1')
 
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'

@@ -112,11 +112,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
           // Couldn't extract a context
         }
         if (spanContext != null) {
-          if (TRACER.getCurrentSpan().getContext().isValid()) {
-            spanBuilder.addLink(spanContext);
-          } else {
-            spanBuilder.setParent(spanContext);
-          }
+          spanBuilder.addLink(spanContext);
         }
       }
       final Span span = spanBuilder.startSpan();
