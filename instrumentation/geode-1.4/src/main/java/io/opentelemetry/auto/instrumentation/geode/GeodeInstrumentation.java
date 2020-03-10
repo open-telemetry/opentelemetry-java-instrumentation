@@ -57,6 +57,8 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.decorator.ClientDecorator",
       "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       packageName + ".GeodeDecorator",
+      packageName + ".GeodeInstrumentation$SimpleAdvice",
+      packageName + ".GeodeInstrumentation$QueryAdvice",
     };
   }
 
