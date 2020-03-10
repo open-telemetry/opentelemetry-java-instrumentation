@@ -32,7 +32,12 @@ import net.bytebuddy.utility.JavaModule;
 public class HelperInjector implements Transformer {
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
-      new SecureClassLoader(null) {};
+      new SecureClassLoader(null) {
+        @Override
+        public String toString() {
+          return "<bootstrap>";
+        }
+      };
 
   private final String requestingName;
 
@@ -122,17 +127,11 @@ public class HelperInjector implements Transformer {
             helperModules.add(new WeakReference<>(javaModule.unwrap()));
           }
         } catch (final Exception e) {
-          final String classLoaderType =
-              classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER
-                  ? "<bootstrap>"
-                  : classLoader.getClass().getName();
-
           log.error(
-              "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {} of type {}",
+              "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
               typeDescription,
               requestingName,
               classLoader,
-              classLoaderType,
               e);
           throw new RuntimeException(e);
         }
