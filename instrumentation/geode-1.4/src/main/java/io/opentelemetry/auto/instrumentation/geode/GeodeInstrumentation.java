@@ -22,6 +22,7 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
@@ -56,8 +57,6 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.decorator.ClientDecorator",
       "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       packageName + ".GeodeDecorator",
-      packageName + ".GeodeInstrumentation$SimpleAdvice",
-      packageName + ".GeodeInstrumentation$QueryAdvice"
     };
   }
 
@@ -81,7 +80,9 @@ public class GeodeInstrumentation extends Instrumenter.Default {
                     .or(named("replace"))),
         GeodeInstrumentation.class.getName() + "$SimpleAdvice");
     map.put(
-        isMethod().and(named("existsValue").or(named("query")).or(named("selectValue"))),
+        isMethod()
+            .and(named("existsValue").or(named("query")).or(named("selectValue")))
+            .and(takesArgument(0, named("java.lang.String"))),
         GeodeInstrumentation.class.getName() + "$QueryAdvice");
     return map;
   }
@@ -102,10 +103,10 @@ public class GeodeInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
+        return;
+      }
       try {
-        if (spanWithScope == null) {
-          return;
-        }
         final Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
@@ -136,10 +137,10 @@ public class GeodeInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
+        return;
+      }
       try {
-        if (spanWithScope == null) {
-          return;
-        }
         final Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
