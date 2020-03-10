@@ -86,7 +86,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       return scope;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       if (scope == null) {

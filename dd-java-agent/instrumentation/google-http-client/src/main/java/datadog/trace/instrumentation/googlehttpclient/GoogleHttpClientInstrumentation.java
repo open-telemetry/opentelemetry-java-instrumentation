@@ -55,8 +55,6 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.HttpClientDecorator",
       packageName + ".GoogleHttpClientDecorator",
       packageName + ".RequestState",
-      getClass().getName() + "$GoogleHttpClientAdvice",
-      getClass().getName() + "$GoogleHttpClientAsyncAdvice",
       packageName + ".HeadersInjectAdapter"
     };
   }

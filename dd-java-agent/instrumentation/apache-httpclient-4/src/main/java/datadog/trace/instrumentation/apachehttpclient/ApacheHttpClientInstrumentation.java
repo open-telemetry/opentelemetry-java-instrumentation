@@ -56,14 +56,14 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$HelperMethods",
-      packageName + ".HttpHeadersInjectAdapter",
-      getClass().getName() + "$WrappingStatusSettingResponseHandler",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
       packageName + ".ApacheHttpClientDecorator",
+      packageName + ".HttpHeadersInjectAdapter",
       packageName + ".HostAndRequestAsHttpUriRequest",
+      getClass().getName() + "$HelperMethods",
+      getClass().getName() + "$WrappingStatusSettingResponseHandler",
     };
   }
 

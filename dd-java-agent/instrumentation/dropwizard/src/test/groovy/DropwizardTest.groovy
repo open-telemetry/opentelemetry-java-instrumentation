@@ -12,11 +12,13 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
+import org.eclipse.jetty.servlet.ServletHandler
+import spock.lang.Retry
+
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
-import org.eclipse.jetty.servlet.ServletHandler
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -24,6 +26,8 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+// Work around for: address already in use
+@Retry
 class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decorator> {
 
   @Override
