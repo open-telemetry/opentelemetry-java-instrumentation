@@ -50,7 +50,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
           || name.startsWith("org.springframework.format.")
           || name.startsWith("org.springframework.jca.")
           || name.startsWith("org.springframework.jdbc.")
-          || name.startsWith("org.springframework.jms.")
           || name.startsWith("org.springframework.jmx.")
           || name.startsWith("org.springframework.jndi.")
           || name.startsWith("org.springframework.lang.")
@@ -146,6 +145,13 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("org.springframework.http.")) {
         // There are some Mono implementation that get instrumented
         if (name.startsWith("org.springframework.http.server.reactive.")) {
+          return false;
+        }
+        return true;
+      }
+
+      if (name.startsWith("org.springframework.jms.")) {
+        if (name.startsWith("org.springframework.jms.listener.")) {
           return false;
         }
         return true;
