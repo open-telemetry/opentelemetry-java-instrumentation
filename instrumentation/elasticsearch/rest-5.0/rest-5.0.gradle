@@ -30,7 +30,7 @@ dependencies {
 
   compile project(':instrumentation:elasticsearch')
 
-  testCompile project(':instrumentation:apache-httpclient-4.0')
+  testCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   testCompile project(':instrumentation:apache-httpasyncclient-4.0')
 
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
