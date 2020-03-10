@@ -151,13 +151,15 @@ class RabbitMQTest extends AgentTestRunner {
     new String(response.getBody()) == "Hello, world!"
 
     and:
-    assertTraces(2) {
+    assertTraces(3) {
       trace(0, 1) {
         rabbitSpan(it, 0, "queue.declare")
       }
-      trace(1, 2) {
+      trace(1, 1) {
         rabbitSpan(it, 0, "basic.publish <default> -> <generated>")
-        rabbitSpan(it, 1, "basic.get <generated>", span(0))
+      }
+      trace(2, 1) {
+        rabbitSpan(it, 0, "basic.get <generated>", null, traces[1][0])
       }
     }
   }
@@ -300,13 +302,15 @@ class RabbitMQTest extends AgentTestRunner {
     message == "foo"
 
     and:
-    assertTraces(2) {
+    assertTraces(3) {
       trace(0, 1) {
         rabbitSpan(it, "queue.declare")
       }
-      trace(1, 2) {
+      trace(1, 1) {
         rabbitSpan(it, 0, "basic.publish <default> -> some-routing-queue")
-        rabbitSpan(it, 1, "basic.get $queue.name", span(0))
+      }
+      trace(2, 1) {
+        rabbitSpan(it, 0, "basic.get $queue.name", null, traces[1][0])
       }
     }
   }

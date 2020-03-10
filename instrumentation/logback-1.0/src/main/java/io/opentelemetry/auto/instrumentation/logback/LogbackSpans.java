@@ -15,6 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.logback;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.trace.AttributeValue;
@@ -23,9 +26,6 @@ import io.opentelemetry.trace.Tracer;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import lombok.extern.slf4j.Slf4j;
-import unshaded.ch.qos.logback.classic.Level;
-import unshaded.ch.qos.logback.classic.spi.ILoggingEvent;
-import unshaded.ch.qos.logback.classic.spi.ThrowableProxy;
 
 @Slf4j
 public class LogbackSpans {
