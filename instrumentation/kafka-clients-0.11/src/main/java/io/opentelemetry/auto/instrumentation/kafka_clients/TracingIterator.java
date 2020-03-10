@@ -70,7 +70,11 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
 
     try {
       if (next != null) {
-        final Span.Builder spanBuilder = TRACER.spanBuilder(operationName).setSpanKind(CONSUMER);
+        final boolean consumer = !TRACER.getCurrentSpan().getContext().isValid();
+        final Span.Builder spanBuilder = TRACER.spanBuilder(operationName);
+        if (consumer) {
+          spanBuilder.setSpanKind(CONSUMER);
+        }
         SpanContext spanContext = null;
         try {
           spanContext = TRACER.getHttpTextFormat().extract(next.headers(), GETTER);
@@ -78,10 +82,10 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
           // Couldn't extract a context
         }
         if (spanContext != null) {
-          if (TRACER.getCurrentSpan().getContext().isValid()) {
-            spanBuilder.addLink(spanContext);
-          } else {
+          if (consumer) {
             spanBuilder.setParent(spanContext);
+          } else {
+            spanBuilder.addLink(spanContext);
           }
         }
         final Span span = spanBuilder.startSpan();
