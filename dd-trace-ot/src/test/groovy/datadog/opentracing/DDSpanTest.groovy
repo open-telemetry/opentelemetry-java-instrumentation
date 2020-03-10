@@ -170,7 +170,7 @@ class DDSpanTest extends DDSpecification {
     span.durationNano == 1
   }
 
-  def "stacktrace captured when duration exceeds configured threshold"() {
+  def "stacktrace captured when duration exceeds average + configured threshold"() {
     setup:
     // Get the part of the stack before this test is called.
     def acceptRemaining = false
@@ -184,7 +184,7 @@ class DDSpanTest extends DDSpecification {
     def stack = "\tat " + stackTraceElements.join("\n\tat ") + "\n"
 
     def span = tracer.buildSpan("test").start()
-    span.finish(span.startTimeMicro + TimeUnit.NANOSECONDS.toMicros(Config.get().spanDurationStacktraceNanos) + 1)
+    span.finish(span.startTimeMicro + DDSpan.AVG_DURATION.get() + TimeUnit.NANOSECONDS.toMicros(Config.get().spanDurationAboveAverageStacktraceNanos) + 1)
     def actual = span.tags["slow.stack"].toString()
 
     expect:

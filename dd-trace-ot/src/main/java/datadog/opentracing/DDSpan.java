@@ -92,6 +92,21 @@ public class DDSpan implements Span, MutableSpan {
     return durationNano.get() != 0;
   }
 
+  @Override
+  public final void finish() {
+    if (startTimeNano > 0) {
+      // no external clock was used, so we can rely on nano time
+      finishAndAddToTrace(context.getTrace().getCurrentTimeNano() - startTimeNano);
+    } else {
+      finish(Clock.currentMicroTime());
+    }
+  }
+
+  @Override
+  public final void finish(final long stoptimeMicros) {
+    finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
+  }
+
   private void finishAndAddToTrace(final long durationNano) {
     // ensure a min duration of 1
     if (this.durationNano.compareAndSet(0, Math.max(1, durationNano))) {
@@ -103,13 +118,39 @@ public class DDSpan implements Span, MutableSpan {
     }
   }
 
+  // Track the average span duration per thread.
+  private static final ThreadLocal<Long> SPAN_COUNT = new ThreadLocal();
+  private static final ThreadLocal<Long> AVG_DURATION = new ThreadLocal();
+  private static final ThreadLocal<Long> AVG_REMAINDER = new ThreadLocal();
+
+  private long getOr0(final ThreadLocal<Long> threadLocal) {
+    final Long value = threadLocal.get();
+    return value == null ? 0 : value;
+  }
+
   private void addStacktraceIfThresholdExceeded() {
-    final long spanDurationStacktraceNanos = Config.get().getSpanDurationStacktraceNanos();
-    if (isError()
-        || spanDurationStacktraceNanos <= 0
-        || durationNano.get() <= spanDurationStacktraceNanos
+    final long spanDurationStacktraceNanos =
+        Config.get().getSpanDurationAboveAverageStacktraceNanos();
+    if (spanDurationStacktraceNanos <= 0
         // If this span was finished async, then the stacktrace will be less meaningful.
         || context.threadId != Thread.currentThread().getId()) {
+      return;
+    }
+
+    final long duration = durationNano.get();
+    final long count = getOr0(SPAN_COUNT) + 1;
+    long average = getOr0(AVG_DURATION);
+    long remainder = getOr0(AVG_REMAINDER);
+
+    // http://www.onemanclapping.org/2012/03/calculating-long-running-averages.html
+    average += (duration + remainder) / count;
+    remainder = (duration + remainder) % count;
+
+    SPAN_COUNT.set(count);
+    AVG_DURATION.set(average);
+    AVG_REMAINDER.set(remainder);
+
+    if (isError() || duration <= average + spanDurationStacktraceNanos) {
       return;
     }
     final StringBuilder stack = new StringBuilder();
@@ -127,21 +168,6 @@ public class DDSpan implements Span, MutableSpan {
     }
     // Prob not worth dealing with the trailing newline.
     setTag("slow.stack", stack.toString());
-  }
-
-  @Override
-  public final void finish() {
-    if (startTimeNano > 0) {
-      // no external clock was used, so we can rely on nano time
-      finishAndAddToTrace(context.getTrace().getCurrentTimeNano() - startTimeNano);
-    } else {
-      finish(Clock.currentMicroTime());
-    }
-  }
-
-  @Override
-  public final void finish(final long stoptimeMicros) {
-    finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
   }
 
   @Override

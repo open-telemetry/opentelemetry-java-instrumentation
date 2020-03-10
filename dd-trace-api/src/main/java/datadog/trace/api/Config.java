@@ -86,8 +86,8 @@ public class Config {
   public static final String SPLIT_BY_TAGS = "trace.split-by-tags";
   public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
-  public static final String SPAN_DURATION_STACKTRACE_MILLIS =
-      "trace.span.duration.stacktrace.millis";
+  public static final String SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
+      "trace.span.duration-above-average.stacktrace.millis";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
   public static final String PROPAGATION_STYLE_EXTRACT = "propagation.style.extract";
@@ -164,7 +164,7 @@ public class Config {
   private static final String DEFAULT_SPLIT_BY_TAGS = "";
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
-  private static final int DEFAULT_SPAN_DURATION_STACKTRACE_MILLIS =
+  private static final int DEFAULT_SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
       (int) TimeUnit.SECONDS.toMillis(1);
   private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
   private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
@@ -238,7 +238,7 @@ public class Config {
   @Getter private final Set<String> splitByTags;
   @Getter private final Integer scopeDepthLimit;
   @Getter private final Integer partialFlushMinSpans;
-  @Getter private final long spanDurationStacktraceNanos;
+  @Getter private final long spanDurationAboveAverageStacktraceNanos;
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final Set<PropagationStyle> propagationStylesToExtract;
   @Getter private final Set<PropagationStyle> propagationStylesToInject;
@@ -361,10 +361,11 @@ public class Config {
     partialFlushMinSpans =
         getIntegerSettingFromEnvironment(PARTIAL_FLUSH_MIN_SPANS, DEFAULT_PARTIAL_FLUSH_MIN_SPANS);
 
-    spanDurationStacktraceNanos =
+    spanDurationAboveAverageStacktraceNanos =
         TimeUnit.MILLISECONDS.toNanos(
             getIntegerSettingFromEnvironment(
-                    SPAN_DURATION_STACKTRACE_MILLIS, DEFAULT_SPAN_DURATION_STACKTRACE_MILLIS)
+                    SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS,
+                    DEFAULT_SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS)
                 .longValue());
 
     runtimeContextFieldInjection =
@@ -555,12 +556,13 @@ public class Config {
         getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);
 
     // do we care about the integer downcast here?
-    spanDurationStacktraceNanos =
+    spanDurationAboveAverageStacktraceNanos =
         TimeUnit.MILLISECONDS.toNanos(
             getPropertyIntegerValue(
                 properties,
-                SPAN_DURATION_STACKTRACE_MILLIS,
-                (int) TimeUnit.NANOSECONDS.toMillis(parent.spanDurationStacktraceNanos)));
+                SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS,
+                (int)
+                    TimeUnit.NANOSECONDS.toMillis(parent.spanDurationAboveAverageStacktraceNanos)));
 
     runtimeContextFieldInjection =
         getPropertyBooleanValue(
