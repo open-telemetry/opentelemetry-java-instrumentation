@@ -185,7 +185,9 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.equals("ch.qos.logback.core.AsyncAppenderBase$Worker")) {
         return false;
       }
-
+      if (name.equals("ch.qos.logback.classic.Logger")) {
+        return false;
+      }
       return true;
     }
 
