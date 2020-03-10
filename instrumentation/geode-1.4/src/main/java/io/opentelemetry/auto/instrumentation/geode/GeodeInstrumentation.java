@@ -57,8 +57,6 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       "io.opentelemetry.auto.decorator.ClientDecorator",
       "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       packageName + ".GeodeDecorator",
-      packageName + ".GeodeInstrumentation$SimpleAdvice",
-      packageName + ".GeodeInstrumentation$QueryAdvice",
     };
   }
 
@@ -93,7 +91,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
         @Advice.This final Region thiz, @Advice.Origin final Method method) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(SimpleAdvice.class) > 0) {
+      if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
       final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
@@ -115,7 +113,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
         span.end();
         spanWithScope.closeScope();
       } finally {
-        CallDepthThreadLocalMap.reset(SimpleAdvice.class);
+        CallDepthThreadLocalMap.reset(Region.class);
       }
     }
   }
@@ -126,7 +124,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
         @Advice.This final Region thiz,
         @Advice.Origin final Method method,
         @Advice.Argument(0) final String query) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(QueryAdvice.class) > 0) {
+      if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
       final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
@@ -149,7 +147,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
         span.end();
         spanWithScope.closeScope();
       } finally {
-        CallDepthThreadLocalMap.reset(QueryAdvice.class);
+        CallDepthThreadLocalMap.reset(Region.class);
       }
     }
   }
