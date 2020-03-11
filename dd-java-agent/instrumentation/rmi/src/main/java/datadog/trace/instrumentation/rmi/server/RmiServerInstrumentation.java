@@ -33,11 +33,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.agent.decorator.ServerDecorator",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      packageName + ".RmiServerDecorator"
-    };
+    return new String[] {packageName + ".RmiServerDecorator"};
   }
 
   @Override

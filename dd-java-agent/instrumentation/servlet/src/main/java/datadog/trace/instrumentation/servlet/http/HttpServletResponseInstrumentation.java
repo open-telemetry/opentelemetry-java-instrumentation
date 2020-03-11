@@ -46,7 +46,6 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.servlet.ServletRequestSetter",
-      "datadog.trace.agent.decorator.BaseDecorator",
       packageName + ".HttpServletResponseDecorator",
     };
   }

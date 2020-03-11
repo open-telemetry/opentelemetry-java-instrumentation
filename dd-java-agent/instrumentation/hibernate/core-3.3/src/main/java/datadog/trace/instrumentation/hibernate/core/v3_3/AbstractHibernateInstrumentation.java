@@ -24,10 +24,6 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
     return new String[] {
       "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
       "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
       "datadog.trace.instrumentation.hibernate.HibernateDecorator",
       packageName + ".AbstractHibernateInstrumentation$V3Advice",
     };

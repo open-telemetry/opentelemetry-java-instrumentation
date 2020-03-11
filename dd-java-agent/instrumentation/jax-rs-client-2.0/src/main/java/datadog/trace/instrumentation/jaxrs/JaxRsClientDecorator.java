@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jaxrs;
 
-import datadog.trace.agent.decorator.HttpClientDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import java.net.URI;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;

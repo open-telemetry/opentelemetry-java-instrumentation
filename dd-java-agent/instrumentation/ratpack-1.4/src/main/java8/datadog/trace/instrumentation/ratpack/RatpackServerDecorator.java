@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.ratpack;
 
 import com.google.common.net.HostAndPort;
-import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.handling.Context;

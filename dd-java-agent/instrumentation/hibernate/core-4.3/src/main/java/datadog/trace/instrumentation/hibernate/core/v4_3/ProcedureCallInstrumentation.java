@@ -36,10 +36,6 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
     return new String[] {
       "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
       "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
       "datadog.trace.instrumentation.hibernate.HibernateDecorator",
     };
   }

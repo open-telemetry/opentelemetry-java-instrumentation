@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jetty8;
 
-import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;

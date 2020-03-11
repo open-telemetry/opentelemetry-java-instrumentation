@@ -46,8 +46,6 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
       packageName + ".JMSDecorator",
       packageName + ".JMSDecorator$1",
       packageName + ".JMSDecorator$2",

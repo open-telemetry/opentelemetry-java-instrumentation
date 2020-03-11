@@ -1,10 +1,10 @@
 package datadog.trace.agent.test.utils
 
 import datadog.opentracing.DDSpan
-import datadog.trace.agent.decorator.BaseDecorator
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.bootstrap.instrumentation.api.AgentScope
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator
 import lombok.SneakyThrows
 
 import java.util.concurrent.Callable

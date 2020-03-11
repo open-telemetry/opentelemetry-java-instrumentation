@@ -3,6 +3,7 @@ package datadog.trace.agent.decorator
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator
 import io.opentracing.tag.Tags
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride

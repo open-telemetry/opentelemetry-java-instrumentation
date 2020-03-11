@@ -45,7 +45,6 @@ public class HystrixInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "rx.DDTracingUtil",
-      "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.instrumentation.rxjava.SpanFinishingSubscription",
       "datadog.trace.instrumentation.rxjava.TracedSubscriber",
       "datadog.trace.instrumentation.rxjava.TracedOnSubscribe",

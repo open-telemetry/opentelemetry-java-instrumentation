@@ -1,13 +1,13 @@
 package datadog.trace.agent.test.base
 
 import datadog.opentracing.DDSpan
-import datadog.trace.agent.decorator.HttpClientDecorator
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.decorator.HttpClientDecorator
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Unroll

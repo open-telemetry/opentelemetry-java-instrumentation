@@ -42,7 +42,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".JSPDecorator",
+      packageName + ".JSPDecorator",
     };
   }
 

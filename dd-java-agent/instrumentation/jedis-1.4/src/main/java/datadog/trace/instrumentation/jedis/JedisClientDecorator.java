@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jedis;
 
-import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import redis.clients.jedis.Protocol;
 
 public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Command> {

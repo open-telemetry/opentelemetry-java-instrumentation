@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet.filter;
 
-import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class FilterDecorator extends BaseDecorator {
   public static final FilterDecorator DECORATE = new FilterDecorator();

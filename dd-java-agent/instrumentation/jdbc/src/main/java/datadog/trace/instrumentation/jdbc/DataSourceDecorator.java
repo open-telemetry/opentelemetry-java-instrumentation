@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
-import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class DataSourceDecorator extends BaseDecorator {
   public static final DataSourceDecorator DECORATE = new DataSourceDecorator();

@@ -1,10 +1,10 @@
 package datadog.trace.instrumentation.lettuce;
 
-import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
+import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 

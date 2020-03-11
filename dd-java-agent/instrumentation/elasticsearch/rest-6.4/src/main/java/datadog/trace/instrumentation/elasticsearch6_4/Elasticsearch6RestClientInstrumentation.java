@@ -31,9 +31,6 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
       "datadog.trace.instrumentation.elasticsearch.ElasticsearchRestClientDecorator",
       packageName + ".RestResponseListener",
     };

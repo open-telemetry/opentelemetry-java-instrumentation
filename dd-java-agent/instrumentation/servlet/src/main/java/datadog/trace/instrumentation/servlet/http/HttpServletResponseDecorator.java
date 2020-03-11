@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet.http;
 
-import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class HttpServletResponseDecorator extends BaseDecorator {
   public static final HttpServletResponseDecorator DECORATE = new HttpServletResponseDecorator();

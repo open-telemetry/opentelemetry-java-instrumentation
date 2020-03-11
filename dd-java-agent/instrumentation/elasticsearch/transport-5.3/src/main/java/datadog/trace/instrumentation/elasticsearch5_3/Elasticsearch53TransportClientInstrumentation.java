@@ -45,9 +45,6 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
       "com.google.common.base.Joiner$1",
       "com.google.common.base.Joiner$2",
       "com.google.common.base.Joiner$MapJoiner",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
       "datadog.trace.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator",
       packageName + ".TransportActionListener",
     };

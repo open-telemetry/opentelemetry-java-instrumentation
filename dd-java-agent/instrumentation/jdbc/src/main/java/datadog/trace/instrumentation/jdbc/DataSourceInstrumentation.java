@@ -34,7 +34,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".DataSourceDecorator",
+      packageName + ".DataSourceDecorator",
     };
   }
 

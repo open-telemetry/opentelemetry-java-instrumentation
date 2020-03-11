@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.spymemcached;
 
-import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import net.spy.memcached.MemcachedConnection;
 
 public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedConnection> {

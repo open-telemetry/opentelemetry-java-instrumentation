@@ -44,11 +44,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      packageName + ".MongoClientDecorator",
-      packageName + ".TracingCommandListener"
+      packageName + ".MongoClientDecorator", packageName + ".TracingCommandListener"
     };
   }
 

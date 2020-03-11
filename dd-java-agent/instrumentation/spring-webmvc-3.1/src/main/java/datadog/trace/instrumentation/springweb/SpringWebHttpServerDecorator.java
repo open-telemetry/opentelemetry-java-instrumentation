@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.springweb;
 
-import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;

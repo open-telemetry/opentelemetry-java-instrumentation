@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.commonshttpclient;
 
-import datadog.trace.agent.decorator.HttpClientDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.httpclient.HttpMethod;

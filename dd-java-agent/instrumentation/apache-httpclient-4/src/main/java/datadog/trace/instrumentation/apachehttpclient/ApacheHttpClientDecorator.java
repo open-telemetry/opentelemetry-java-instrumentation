@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
-import datadog.trace.agent.decorator.HttpClientDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import java.net.URI;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;

@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.hibernate;
 
-import datadog.trace.agent.decorator.OrmClientDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.bootstrap.instrumentation.decorator.OrmClientDecorator;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;

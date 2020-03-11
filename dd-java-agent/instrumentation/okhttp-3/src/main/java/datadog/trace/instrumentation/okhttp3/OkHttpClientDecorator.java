@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.okhttp3;
 
-import datadog.trace.agent.decorator.HttpClientDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;

@@ -68,8 +68,6 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
       packageName + ".RabbitDecorator",
       packageName + ".RabbitDecorator$1",
       packageName + ".RabbitDecorator$2",

@@ -8,9 +8,9 @@ import javax.servlet.http.HttpServletResponse
 import static datadog.opentracing.propagation.DatadogHttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE
 
 class RequestDispatcherTest extends AgentTestRunner {
 
