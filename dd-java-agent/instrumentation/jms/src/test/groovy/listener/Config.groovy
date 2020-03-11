@@ -23,6 +23,7 @@ import org.springframework.jms.annotation.EnableJms
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory
 import org.springframework.jms.config.JmsListenerContainerFactory
 
+import javax.annotation.PreDestroy
 import javax.jms.ConnectionFactory
 
 @Configuration
@@ -47,5 +48,10 @@ class Config {
     DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory()
     factory.setConnectionFactory(connectionFactory)
     return factory
+  }
+
+  @PreDestroy
+  void destroy() {
+    broker().stop()
   }
 }
