@@ -47,7 +47,7 @@ public class InProcessServerStreamInstrumentation extends Instrumenter.Default {
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(@Advice.Enter final TraceScope scopeToReenable) {
       if (scopeToReenable != null) {
         scopeToReenable.setAsyncPropagation(true);

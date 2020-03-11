@@ -95,7 +95,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       return scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void setupCallback(
         @Advice.Enter final AgentScope scope,
         @Advice.Thrown final Throwable throwable,

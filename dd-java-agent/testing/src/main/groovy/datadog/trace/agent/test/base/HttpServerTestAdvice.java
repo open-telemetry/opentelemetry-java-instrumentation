@@ -32,7 +32,7 @@ public abstract class HttpServerTestAdvice {
       }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Enter final AgentScope scope) {
       if (scope != null) {
         scope.close();

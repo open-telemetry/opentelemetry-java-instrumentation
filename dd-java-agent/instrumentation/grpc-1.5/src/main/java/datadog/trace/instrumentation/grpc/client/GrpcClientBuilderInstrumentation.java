@@ -29,13 +29,13 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.grpc.client.GrpcInjectAdapter",
-      "datadog.trace.instrumentation.grpc.client.TracingClientInterceptor",
-      "datadog.trace.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCall",
-      "datadog.trace.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCallListener",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       packageName + ".GrpcClientDecorator",
+      packageName + ".GrpcInjectAdapter",
+      packageName + ".TracingClientInterceptor",
+      packageName + ".TracingClientInterceptor$TracingClientCall",
+      packageName + ".TracingClientInterceptor$TracingClientCallListener",
     };
   }
 
