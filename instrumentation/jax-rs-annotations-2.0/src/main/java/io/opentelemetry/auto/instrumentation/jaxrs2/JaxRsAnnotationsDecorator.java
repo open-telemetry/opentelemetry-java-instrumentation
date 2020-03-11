@@ -86,6 +86,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     span.setAttribute(Tags.COMPONENT, "jax-rs");
 
     if (!resourceName.isEmpty()) {
+      span.updateName(resourceName);
       span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     }
   }

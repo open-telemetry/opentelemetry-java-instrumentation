@@ -50,7 +50,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     return null;
   }
 
-  public String spanNameForRequest(REQUEST request) {
+  public String spanNameForRequest(final REQUEST request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }

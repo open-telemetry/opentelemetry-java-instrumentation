@@ -82,7 +82,7 @@ class RatpackOtherTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "netty.request"
+          operationName "GET /$route"
           spanKind SERVER
           parent()
           errored false
@@ -98,7 +98,7 @@ class RatpackOtherTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "ratpack.handler"
+          operationName "GET /$route"
           spanKind INTERNAL
           childOf(span(0))
           errored false

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import com.google.common.io.Files
+import io.opentelemetry.auto.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -105,7 +106,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -196,7 +197,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -257,7 +258,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 9) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -393,7 +394,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -504,7 +505,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored true
           tags {
@@ -580,7 +581,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -626,5 +627,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     cleanup:
     res.close()
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
   }
 }

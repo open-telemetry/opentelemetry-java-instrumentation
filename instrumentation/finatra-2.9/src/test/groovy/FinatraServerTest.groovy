@@ -29,6 +29,7 @@ import java.util.concurrent.TimeoutException
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
@@ -80,8 +81,8 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "finatra.request"
+  boolean testPathParam() {
+    true
   }
 
   @Override
@@ -107,7 +108,7 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path}"
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -117,7 +118,7 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolvePath(address).path}"
+        "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.PEER_PORT" Long

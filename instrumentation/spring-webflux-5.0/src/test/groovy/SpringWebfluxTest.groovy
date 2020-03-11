@@ -67,7 +67,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "netty.request"
+          operationName "GET $urlPathWithVariables"
           spanKind SERVER
           parent()
           tags {
@@ -136,7 +136,7 @@ class SpringWebfluxTest extends AgentTestRunner {
       println TEST_WRITER
       trace(0, 3) {
         span(0) {
-          operationName "netty.request"
+          operationName "GET $urlPathWithVariables"
           spanKind SERVER
           parent()
           tags {
@@ -209,7 +209,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "netty.request"
+          operationName "GET /**"
           spanKind SERVER
           parent()
           tags {
@@ -255,7 +255,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "netty.request"
+          operationName "POST /echo"
           spanKind SERVER
           parent()
           tags {
@@ -305,7 +305,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "netty.request"
+          operationName "GET $urlPathWithVariables"
           spanKind SERVER
           errored true
           parent()
@@ -374,7 +374,7 @@ class SpringWebfluxTest extends AgentTestRunner {
       // TODO: why order of spans is different in these traces?
       trace(0, 2) {
         span(0) {
-          operationName "netty.request"
+          operationName "GET /double-greet-redirect"
           spanKind SERVER
           parent()
           tags {
@@ -405,7 +405,7 @@ class SpringWebfluxTest extends AgentTestRunner {
       }
       trace(1, 2) {
         span(0) {
-          operationName "netty.request"
+          operationName "GET /double-greet"
           spanKind SERVER
           parent()
           tags {
@@ -451,7 +451,7 @@ class SpringWebfluxTest extends AgentTestRunner {
       responses.eachWithIndex { def response, int i ->
         trace(i, 2) {
           span(0) {
-            operationName "netty.request"
+            operationName "GET $urlPathWithVariables"
             spanKind SERVER
             parent()
             tags {

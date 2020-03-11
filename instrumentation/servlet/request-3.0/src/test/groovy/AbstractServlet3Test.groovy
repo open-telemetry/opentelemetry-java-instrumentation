@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -41,11 +42,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   @Override
   Servlet3Decorator decorator() {
     return Servlet3Decorator.DECORATE
-  }
-
-  @Override
-  String expectedOperationName() {
-    return "servlet.request"
   }
 
   // FIXME: Add authentication tests back in...
@@ -85,7 +81,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def hasDispatchSpan = hasDispatchSpan(endpoint)
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {

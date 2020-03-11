@@ -80,6 +80,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
           request.attrs().get(Router.Attrs.HANDLER_DEF.underlying());
       if (!defOption.isEmpty()) {
         final String path = defOption.get().path();
+        span.updateName(request.method() + " " + path);
         span.setAttribute(MoreTags.RESOURCE_NAME, request.method() + " " + path);
       }
     }

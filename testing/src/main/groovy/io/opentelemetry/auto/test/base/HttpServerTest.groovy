@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -85,7 +86,9 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   abstract DECORATOR decorator()
 
-  abstract String expectedOperationName()
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
+  }
 
   boolean hasHandlerSpan() {
     false
@@ -105,6 +108,10 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   boolean testNotFound() {
     true
+  }
+
+  boolean testPathParam() {
+    false
   }
 
   boolean testExceptionBody() {
@@ -325,6 +332,24 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     body = null
   }
 
+  def "test path param"() {
+    setup:
+    assumeTrue(testPathParam())
+    def request = request(PATH_PARAM, method, body).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == PATH_PARAM.status
+    response.body().string() == PATH_PARAM.body
+
+    and:
+    assertTheTraces(1, null, null, method, PATH_PARAM)
+
+    where:
+    method = "GET"
+    body = null
+  }
+
   //FIXME: add tests for POST with large/chunked data
 
   void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null) {
@@ -398,7 +423,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {

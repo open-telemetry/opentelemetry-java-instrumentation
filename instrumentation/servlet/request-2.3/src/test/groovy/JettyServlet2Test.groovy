@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -83,11 +84,6 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "servlet.request"
-  }
-
-  @Override
   boolean testNotFound() {
     false
   }
@@ -95,7 +91,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {

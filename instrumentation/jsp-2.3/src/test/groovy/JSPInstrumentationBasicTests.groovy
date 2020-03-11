@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import com.google.common.io.Files
+import io.opentelemetry.auto.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -106,7 +107,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -174,7 +175,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -239,7 +240,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("POST")
           spanKind SERVER
           errored false
           tags {
@@ -301,7 +302,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored true
           tags {
@@ -382,7 +383,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -443,7 +444,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -552,7 +553,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored true
           tags {
@@ -610,7 +611,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           // serviceName jspWebappContext
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           // FIXME: this is not a great resource name for serving static content.
           // resourceName "GET /$jspWebappContext/$staticFile"
@@ -636,5 +637,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
 
     where:
     staticFile = "common/hello.html"
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
   }
 }

@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
   public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.span";
+  public static final String DEFAULT_SPAN_NAME = "HTTP request";
 
   // Source: https://www.regextester.com/22
   private static final Pattern VALID_IPV4_ADDRESS =
@@ -48,6 +49,14 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   @Override
   protected String getSpanType() {
     return SpanTypes.HTTP_SERVER;
+  }
+
+  public String spanNameForRequest(final REQUEST request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    final String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 
   public Span onRequest(final Span span, final REQUEST request) {

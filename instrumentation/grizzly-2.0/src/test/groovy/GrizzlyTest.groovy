@@ -56,11 +56,6 @@ class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
     return GrizzlyDecorator.DECORATE
   }
 
-  @Override
-  String expectedOperationName() {
-    return "grizzly.request"
-  }
-
   static class SimpleExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Override

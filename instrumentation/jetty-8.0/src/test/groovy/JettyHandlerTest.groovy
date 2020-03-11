@@ -78,11 +78,6 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "jetty.request"
-  }
-
-  @Override
   boolean testExceptionBody() {
     false
   }
@@ -134,7 +129,7 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def handlerName = handler().class.name
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName "$method $handlerName"
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {

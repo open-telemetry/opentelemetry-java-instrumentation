@@ -86,11 +86,6 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "akka-http.request"
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }
@@ -126,7 +121,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
 
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {

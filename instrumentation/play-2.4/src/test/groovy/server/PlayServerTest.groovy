@@ -81,11 +81,6 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "netty.request"
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }

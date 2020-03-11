@@ -30,6 +30,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
+import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.auto.config.Config;
@@ -85,15 +86,16 @@ public class FinatraInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
         @Advice.Argument(0) final Request request,
-        @Advice.FieldValue("path") final String path,
+        @Advice.FieldValue("routeInfo") final RouteInfo routeInfo,
         @Advice.FieldValue("clazz") final Class clazz,
         @Advice.Origin final Method method) {
 
       // Update the parent "netty.request"
       final Span parent = TRACER.getCurrentSpan();
-      parent.setAttribute(MoreTags.RESOURCE_NAME, request.method().name() + " " + path);
+      final String resourceName = request.method().name() + " " + routeInfo.path();
+      parent.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       parent.setAttribute(Tags.COMPONENT, "finatra");
-      parent.updateName("finatra.request");
+      parent.updateName(resourceName);
 
       final Span span = TRACER.spanBuilder("finatra.controller").startSpan();
       DECORATE.afterStart(span);
