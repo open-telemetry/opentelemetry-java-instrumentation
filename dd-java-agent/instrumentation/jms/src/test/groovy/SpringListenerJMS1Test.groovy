@@ -35,7 +35,7 @@ class SpringListenerJMS1Test extends AgentTestRunner {
     def context = new AnnotationConfigApplicationContext(Config)
     def factory = context.getBean(ConnectionFactory)
     def template = new JmsTemplate(factory)
-    template.convertAndSend("someSpringQueue", "a message")
+    template.convertAndSend("SpringListenerJMS1", "a message")
 
     TEST_WRITER.waitForTraces(3)
     // Manually reorder if reported in the wrong order.
@@ -47,9 +47,9 @@ class SpringListenerJMS1Test extends AgentTestRunner {
 
     expect:
     assertTraces(3) {
-      producerTrace(it, 0, "Queue someSpringQueue")
-      consumerTrace(it, 1, "Queue someSpringQueue", false, ActiveMQMessageConsumer)
-      consumerTrace(it, 2, "Queue someSpringQueue", true, MessagingMessageListenerAdapter)
+      producerTrace(it, 0, "Queue SpringListenerJMS1")
+      consumerTrace(it, 1, "Queue SpringListenerJMS1", false, ActiveMQMessageConsumer)
+      consumerTrace(it, 2, "Queue SpringListenerJMS1", true, MessagingMessageListenerAdapter)
     }
 
     cleanup:

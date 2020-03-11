@@ -25,6 +25,7 @@ import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
 import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
+import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
@@ -33,12 +34,15 @@ import org.springframework.jms.annotation.EnableJms
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory
 import org.springframework.jms.config.JmsListenerContainerFactory
 
+import javax.annotation.PreDestroy
 import javax.jms.ConnectionFactory
 
 @Configuration
 @ComponentScan
 @EnableJms
 class Config {
+
+  private HornetQServer server
 
   @Bean
   ConnectionFactory connectionFactory() {
@@ -56,12 +60,13 @@ class Config {
     config.setAcceptorConfigurations([new TransportConfiguration(NettyAcceptorFactory.name),
                                       new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
 
-    HornetQServers.newHornetQServer(config).start()
+    server = HornetQServers.newHornetQServer(config)
+    server.start()
 
     def serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(InVMConnectorFactory.name))
     def sf = serverLocator.createSessionFactory()
     def clientSession = sf.createSession(false, false, false)
-    clientSession.createQueue("jms.queue.someSpringQueue", "jms.queue.someSpringQueue", true)
+    clientSession.createQueue("jms.queue.SpringListenerJMS2", "jms.queue.SpringListenerJMS2", true)
     clientSession.close()
     sf.close()
     serverLocator.close()
@@ -75,5 +80,10 @@ class Config {
     DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory()
     factory.setConnectionFactory(connectionFactory)
     return factory
+  }
+
+  @PreDestroy
+  void destroy() {
+    server.stop()
   }
 }

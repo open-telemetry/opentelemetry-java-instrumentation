@@ -55,8 +55,8 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     }
 
     where:
-    destination                            | jmsResourceName
-    session.createQueue("someSpringQueue") | "Queue someSpringQueue"
+    destination                               | jmsResourceName
+    session.createQueue("SpringTemplateJMS1") | "Queue SpringTemplateJMS1"
   }
 
   def "send and receive message generates spans"() {
@@ -99,7 +99,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     }
 
     where:
-    destination                            | jmsResourceName
-    session.createQueue("someSpringQueue") | "Queue someSpringQueue"
+    destination                               | jmsResourceName
+    session.createQueue("SpringTemplateJMS1") | "Queue SpringTemplateJMS1"
   }
 }
