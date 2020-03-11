@@ -3,7 +3,7 @@ package datadog.trace.bootstrap.instrumentation.decorator
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan
-import io.opentracing.tag.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
@@ -22,9 +22,9 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     if (serviceName != null) {
       1 * span.setTag(DDTags.SERVICE_NAME, serviceName)
     }
-    1 * span.setTag(Tags.COMPONENT.key, "test-component")
-    1 * span.setTag(Tags.SPAN_KIND.key, "client")
-    1 * span.setTag(Tags.DB_TYPE.key, "test-db")
+    1 * span.setTag(Tags.COMPONENT, "test-component")
+    1 * span.setTag(Tags.SPAN_KIND, "client")
+    1 * span.setTag(Tags.DB_TYPE, "test-db")
     1 * span.setTag(DDTags.SPAN_TYPE, "test-type")
     1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
     0 * _
@@ -44,8 +44,8 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (session) {
-      1 * span.setTag(Tags.DB_USER.key, session.user)
-      1 * span.setTag(Tags.DB_INSTANCE.key, session.instance)
+      1 * span.setTag(Tags.DB_USER, session.user)
+      1 * span.setTag(Tags.DB_INSTANCE, session.instance)
       if (renameService && session.instance) {
         1 * span.setTag(DDTags.SERVICE_NAME, session.instance)
       }
@@ -68,7 +68,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.onStatement(span, statement)
 
     then:
-    1 * span.setTag(Tags.DB_STATEMENT.key, statement)
+    1 * span.setTag(Tags.DB_STATEMENT, statement)
     0 * _
 
     where:

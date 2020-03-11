@@ -4,7 +4,7 @@ import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.bootstrap.instrumentation.api.Tags;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      span.setTag(Tags.HTTP_METHOD.getKey(), method(request));
+      span.setTag(Tags.HTTP_METHOD, method(request));
 
       // Copy of HttpServerDecorator url handling
       try {
@@ -60,7 +60,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
             urlNoParams.append(path);
           }
 
-          span.setTag(Tags.HTTP_URL.getKey(), urlNoParams.toString());
+          span.setTag(Tags.HTTP_URL, urlNoParams.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
             span.setTag(DDTags.HTTP_QUERY, url.getQuery());
@@ -71,11 +71,11 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
         log.debug("Error tagging url", e);
       }
 
-      span.setTag(Tags.PEER_HOSTNAME.getKey(), hostname(request));
+      span.setTag(Tags.PEER_HOSTNAME, hostname(request));
       final Integer port = port(request);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setTag(Tags.PEER_PORT.getKey(), port);
+        span.setTag(Tags.PEER_PORT, port);
       }
 
       if (Config.get().isHttpClientSplitByDomain()) {
@@ -90,7 +90,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     if (response != null) {
       final Integer status = status(response);
       if (status != null) {
-        span.setTag(Tags.HTTP_STATUS.getKey(), status);
+        span.setTag(Tags.HTTP_STATUS, status);
 
         if (Config.get().getHttpClientErrorStatuses().contains(status)) {
           span.setError(true);

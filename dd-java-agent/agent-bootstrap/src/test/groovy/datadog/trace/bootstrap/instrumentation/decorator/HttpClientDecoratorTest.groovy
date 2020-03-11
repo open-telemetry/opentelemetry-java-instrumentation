@@ -3,7 +3,7 @@ package datadog.trace.bootstrap.instrumentation.decorator
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan
-import io.opentracing.tag.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
@@ -26,10 +26,10 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (req) {
-      1 * span.setTag(Tags.HTTP_METHOD.key, req.method)
-      1 * span.setTag(Tags.HTTP_URL.key, "$req.url")
-      1 * span.setTag(Tags.PEER_HOSTNAME.key, req.host)
-      1 * span.setTag(Tags.PEER_PORT.key, req.port)
+      1 * span.setTag(Tags.HTTP_METHOD, req.method)
+      1 * span.setTag(Tags.HTTP_URL, "$req.url")
+      1 * span.setTag(Tags.PEER_HOSTNAME, req.host)
+      1 * span.setTag(Tags.PEER_PORT, req.port)
       if (renameService) {
         1 * span.setTag(DDTags.SERVICE_NAME, req.host)
       }
@@ -55,14 +55,14 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (expectedUrl) {
-      1 * span.setTag(Tags.HTTP_URL.key, expectedUrl)
+      1 * span.setTag(Tags.HTTP_URL, expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
       1 * span.setTag(DDTags.HTTP_QUERY, expectedQuery)
       1 * span.setTag(DDTags.HTTP_FRAGMENT, expectedFragment)
     }
-    1 * span.setTag(Tags.HTTP_METHOD.key, null)
-    1 * span.setTag(Tags.PEER_HOSTNAME.key, null)
+    1 * span.setTag(Tags.HTTP_METHOD, null)
+    1 * span.setTag(Tags.PEER_HOSTNAME, null)
     0 * _
 
     where:
@@ -94,7 +94,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (status) {
-      1 * span.setTag(Tags.HTTP_STATUS.key, status)
+      1 * span.setTag(Tags.HTTP_STATUS, status)
     }
     if (error) {
       1 * span.setError(true)
