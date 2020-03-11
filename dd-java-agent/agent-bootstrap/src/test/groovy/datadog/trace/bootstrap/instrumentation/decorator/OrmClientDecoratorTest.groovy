@@ -1,7 +1,6 @@
-package datadog.trace.agent.decorator
+package datadog.trace.bootstrap.instrumentation.decorator
 
 import datadog.trace.api.DDTags
-import datadog.trace.bootstrap.instrumentation.decorator.OrmClientDecorator
 
 class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
 
