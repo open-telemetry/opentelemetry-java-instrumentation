@@ -36,7 +36,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/** Instrument {@link Runnable} and {@Callable} */
+/** Instrument {@link Runnable} and {@link Callable} */
 @Slf4j
 @AutoService(Instrumenter.class)
 public final class RunnableCallableInstrumentation extends Instrumenter.Default {
