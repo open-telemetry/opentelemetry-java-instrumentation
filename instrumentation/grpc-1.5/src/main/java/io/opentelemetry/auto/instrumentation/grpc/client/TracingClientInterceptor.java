@@ -55,7 +55,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     final Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
-      GrpcHelper.prepareSpan(span, methodName, peerAddress);
+      GrpcHelper.prepareSpan(span, methodName, peerAddress, false);
 
       final ClientCall<ReqT, RespT> result;
       try {
