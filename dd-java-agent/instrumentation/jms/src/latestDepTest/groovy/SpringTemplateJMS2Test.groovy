@@ -10,6 +10,7 @@ import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
 import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
+import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.jms.core.JmsTemplate
@@ -23,6 +24,8 @@ import static JMS2Test.consumerTrace
 import static JMS2Test.producerTrace
 
 class SpringTemplateJMS2Test extends AgentTestRunner {
+  @Shared
+  HornetQServer server
   @Shared
   String messageText = "a message"
   @Shared
@@ -45,12 +48,13 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     config.setAcceptorConfigurations([new TransportConfiguration(NettyAcceptorFactory.name),
                                       new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
 
-    HornetQServers.newHornetQServer(config).start()
+    server = HornetQServers.newHornetQServer(config)
+    server.start()
 
     def serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(InVMConnectorFactory.name))
     def sf = serverLocator.createSessionFactory()
     def clientSession = sf.createSession(false, false, false)
-    clientSession.createQueue("jms.queue.someSpringQueue", "jms.queue.someSpringQueue", true)
+    clientSession.createQueue("jms.queue.SpringTemplateJMS2", "jms.queue.SpringTemplateJMS2", true)
     clientSession.close()
     sf.close()
     serverLocator.close()
@@ -67,6 +71,10 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     template.receiveTimeout = TimeUnit.SECONDS.toMillis(10)
   }
 
+  def cleanupSpec() {
+    server.stop()
+  }
+
   def "sending a message to #jmsResourceName generates spans"() {
     setup:
     template.convertAndSend(destination, messageText)
@@ -80,8 +88,8 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     }
 
     where:
-    destination                            | jmsResourceName
-    session.createQueue("someSpringQueue") | "Queue someSpringQueue"
+    destination                               | jmsResourceName
+    session.createQueue("SpringTemplateJMS2") | "Queue SpringTemplateJMS2"
   }
 
   def "send and receive message generates spans"() {
@@ -118,7 +126,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     }
 
     where:
-    destination                            | jmsResourceName
-    session.createQueue("someSpringQueue") | "Queue someSpringQueue"
+    destination                               | jmsResourceName
+    session.createQueue("SpringTemplateJMS2") | "Queue SpringTemplateJMS2"
   }
 }
