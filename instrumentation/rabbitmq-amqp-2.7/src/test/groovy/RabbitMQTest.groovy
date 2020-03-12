@@ -364,9 +364,9 @@ class RabbitMQTest extends AgentTestRunner {
         "$MoreTags.SERVICE_NAME" "rabbitmq"
         "$MoreTags.RESOURCE_NAME" resource
         "$Tags.COMPONENT" "rabbitmq-amqp"
-        "$Tags.PEER_HOSTNAME" { it == null || it instanceof String }
-        "$Tags.PEER_HOST_IPV4" { "127.0.0.1" }
-        "$Tags.PEER_PORT" { it == null || it instanceof Long }
+        "$MoreTags.NET_PEER_NAME" { it == null || it instanceof String }
+        "$MoreTags.NET_PEER_IP" { "127.0.0.1" }
+        "$MoreTags.NET_PEER_PORT" { it == null || it instanceof Long }
 
         switch (tag("amqp.command")?.stringValue) {
           case "basic.publish":

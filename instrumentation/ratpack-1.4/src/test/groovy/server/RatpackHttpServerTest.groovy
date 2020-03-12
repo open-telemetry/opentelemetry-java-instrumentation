@@ -137,8 +137,8 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Long
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Long
@@ -167,8 +167,8 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_PORT" Long
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" Long
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status

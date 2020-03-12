@@ -64,8 +64,8 @@ class UrlConnectionTest extends AgentTestRunner {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" UNUSABLE_PORT
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "$url/"
             "$Tags.HTTP_METHOD" "GET"
             errorTags ConnectException, String
@@ -115,7 +115,7 @@ class UrlConnectionTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" UrlInstrumentation.COMPONENT
-            "$Tags.PEER_PORT" 80
+            "$MoreTags.NET_PEER_PORT" 80
             // FIXME: These tags really make no sense for non-http connections, why do we set them?
             "$Tags.HTTP_URL" "$url"
             errorTags IllegalArgumentException, String

@@ -44,8 +44,8 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     if (req) {
       1 * span.setAttribute(Tags.HTTP_METHOD, req.method)
       1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
-      1 * span.setAttribute(Tags.PEER_HOSTNAME, req.host)
-      1 * span.setAttribute(Tags.PEER_PORT, req.port)
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.host)
+      1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.port)
       if (renameService) {
         1 * span.setAttribute(MoreTags.SERVICE_NAME, req.host)
       }

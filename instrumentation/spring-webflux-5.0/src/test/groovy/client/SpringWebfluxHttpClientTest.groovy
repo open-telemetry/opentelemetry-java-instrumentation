@@ -72,9 +72,9 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
           "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
           "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
           "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.getComponentName()
-          "$Tags.PEER_HOSTNAME" "localhost"
-          "$Tags.PEER_PORT" uri.port
-          "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+          "$MoreTags.NET_PEER_NAME" "localhost"
+          "$MoreTags.NET_PEER_PORT" uri.port
+          "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
           "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
           "$Tags.HTTP_METHOD" method
           if (status) {

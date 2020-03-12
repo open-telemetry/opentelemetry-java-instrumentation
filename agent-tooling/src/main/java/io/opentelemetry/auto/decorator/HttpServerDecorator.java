@@ -31,11 +31,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.span";
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
 
-  // Source: https://www.regextester.com/22
-  private static final Pattern VALID_IPV4_ADDRESS =
-      Pattern.compile(
-          "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
-
   protected abstract String method(REQUEST request);
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
@@ -119,16 +114,12 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     if (connection != null) {
       final String ip = peerHostIP(connection);
       if (ip != null) {
-        if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {
-          span.setAttribute(Tags.PEER_HOST_IPV4, ip);
-        } else if (ip.contains(":")) {
-          span.setAttribute(Tags.PEER_HOST_IPV6, ip);
-        }
+        span.setAttribute(MoreTags.NET_PEER_IP, ip);
       }
       final Integer port = peerPort(connection);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setAttribute(Tags.PEER_PORT, port);
+        span.setAttribute(MoreTags.NET_PEER_PORT, port);
       }
     }
     return span;

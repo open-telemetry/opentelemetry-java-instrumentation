@@ -103,7 +103,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+        "$MoreTags.NET_PEER_IP" "127.0.0.1"
         // No peer port
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method

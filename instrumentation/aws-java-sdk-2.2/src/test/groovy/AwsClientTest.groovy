@@ -102,8 +102,8 @@ class AwsClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -132,8 +132,8 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -208,8 +208,8 @@ class AwsClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -241,9 +241,9 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "netty-client"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -325,8 +325,8 @@ class AwsClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "S3.GetObject"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
             "$Tags.HTTP_METHOD" "GET"
             "aws.service" "S3"
@@ -345,8 +345,8 @@ class AwsClientTest extends AgentTestRunner {
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
-              "$Tags.PEER_HOSTNAME" "localhost"
-              "$Tags.PEER_PORT" server.address.port
+              "$MoreTags.NET_PEER_NAME" "localhost"
+              "$MoreTags.NET_PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
               "$Tags.HTTP_METHOD" "GET"
               errorTags SocketTimeoutException, "Read timed out"

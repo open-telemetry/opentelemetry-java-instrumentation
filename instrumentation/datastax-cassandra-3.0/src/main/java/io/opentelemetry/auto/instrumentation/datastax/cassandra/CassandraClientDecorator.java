@@ -19,6 +19,7 @@ import com.datastax.driver.core.Host;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
@@ -59,8 +60,7 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public Span onResponse(final Span span, final ResultSet result) {
     if (result != null) {
       final Host host = result.getExecutionInfo().getQueriedHost();
-      span.setAttribute(Tags.PEER_PORT, host.getSocketAddress().getPort());
-      onPeerConnection(span, host.getSocketAddress().getAddress());
+      onPeerConnection(span, host.getSocketAddress());
     }
     return span;
   }

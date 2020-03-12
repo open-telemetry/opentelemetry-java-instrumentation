@@ -143,8 +143,8 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -216,8 +216,8 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" UNUSABLE_PORT
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
             "$Tags.HTTP_METHOD" "$method"
             errorTags HttpHostConnectException, ~/Connection refused/
@@ -324,8 +324,8 @@ class AWSClientTest extends AgentTestRunner {
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
-              "$Tags.PEER_HOSTNAME" "localhost"
-              "$Tags.PEER_PORT" server.address.port
+              "$MoreTags.NET_PEER_NAME" "localhost"
+              "$MoreTags.NET_PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/someBucket/someKey"
               "$Tags.HTTP_METHOD" "GET"
               try {

@@ -69,8 +69,8 @@ public abstract class BaseDecorator {
     if (remoteConnection != null) {
       onPeerConnection(span, remoteConnection.getAddress());
 
-      span.setAttribute(Tags.PEER_HOSTNAME, remoteConnection.getHostName());
-      span.setAttribute(Tags.PEER_PORT, remoteConnection.getPort());
+      span.setAttribute(MoreTags.NET_PEER_NAME, remoteConnection.getHostName());
+      span.setAttribute(MoreTags.NET_PEER_PORT, remoteConnection.getPort());
     }
     return span;
   }
@@ -78,12 +78,8 @@ public abstract class BaseDecorator {
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
     if (remoteAddress != null) {
-      span.setAttribute(Tags.PEER_HOSTNAME, remoteAddress.getHostName());
-      if (remoteAddress instanceof Inet4Address) {
-        span.setAttribute(Tags.PEER_HOST_IPV4, remoteAddress.getHostAddress());
-      } else if (remoteAddress instanceof Inet6Address) {
-        span.setAttribute(Tags.PEER_HOST_IPV6, remoteAddress.getHostAddress());
-      }
+      span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
+      span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
     }
     return span;
   }

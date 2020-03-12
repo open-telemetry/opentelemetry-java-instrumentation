@@ -96,10 +96,10 @@ public class UrlInstrumentation extends Instrumenter.Default {
 
         try (final Scope scope = TRACER.withSpan(span)) {
           span.setAttribute(Tags.HTTP_URL, url.toString());
-          span.setAttribute(Tags.PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
+          span.setAttribute(MoreTags.NET_PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
           final String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            span.setAttribute(Tags.PEER_HOSTNAME, host);
+            span.setAttribute(MoreTags.NET_PEER_NAME, host);
             if (Config.get().isHttpClientSplitByDomain()) {
               span.setAttribute(MoreTags.SERVICE_NAME, host);
             }

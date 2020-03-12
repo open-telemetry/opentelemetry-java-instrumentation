@@ -300,7 +300,7 @@ class TwilioClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
@@ -402,7 +402,7 @@ class TwilioClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
@@ -415,7 +415,7 @@ class TwilioClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
@@ -540,7 +540,7 @@ class TwilioClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
@@ -553,7 +553,7 @@ class TwilioClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long

@@ -46,17 +46,12 @@ class BaseDecoratorTest extends AgentSpecification {
 
     then:
     if (connection.getAddress()) {
-      2 * span.setAttribute(Tags.PEER_HOSTNAME, connection.hostName)
+      2 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
+      1 * span.setAttribute(MoreTags.NET_PEER_IP, connection.address.hostAddress)
     } else {
-      1 * span.setAttribute(Tags.PEER_HOSTNAME, connection.hostName)
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
     }
-    1 * span.setAttribute(Tags.PEER_PORT, connection.port)
-    if (connection.address instanceof Inet4Address) {
-      1 * span.setAttribute(Tags.PEER_HOST_IPV4, connection.address.hostAddress)
-    }
-    if (connection.address instanceof Inet6Address) {
-      1 * span.setAttribute(Tags.PEER_HOST_IPV6, connection.address.hostAddress)
-    }
+    1 * span.setAttribute(MoreTags.NET_PEER_PORT, connection.port)
     0 * _
 
     where:

@@ -64,8 +64,8 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   @Override
   public Span onConnection(final Span span, final RedisURI connection) {
     if (connection != null) {
-      span.setAttribute(Tags.PEER_HOSTNAME, connection.getHost());
-      span.setAttribute(Tags.PEER_PORT, connection.getPort());
+      span.setAttribute(MoreTags.NET_PEER_NAME, connection.getHost());
+      span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
 
       span.setAttribute("db.redis.dbIndex", connection.getDatabase());
       span.setAttribute(

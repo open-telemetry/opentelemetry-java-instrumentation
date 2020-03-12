@@ -90,8 +90,8 @@ class RatpackOtherTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "${app.address.resolve(path)}"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -106,8 +106,8 @@ class RatpackOtherTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "ratpack"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "${app.address.resolve(path)}"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200

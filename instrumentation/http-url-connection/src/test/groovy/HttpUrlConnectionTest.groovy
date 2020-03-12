@@ -112,8 +112,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -129,8 +129,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -194,8 +194,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -211,8 +211,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -261,8 +261,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -327,8 +327,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "POST $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" STATUS

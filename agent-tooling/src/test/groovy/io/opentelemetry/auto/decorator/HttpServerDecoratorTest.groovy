@@ -103,11 +103,11 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (conn) {
-      1 * span.setAttribute(Tags.PEER_PORT, 555)
+      1 * span.setAttribute(MoreTags.NET_PEER_PORT, 555)
       if (ipv4) {
-        1 * span.setAttribute(Tags.PEER_HOST_IPV4, "10.0.0.1")
+        1 * span.setAttribute(MoreTags.NET_PEER_IP, "10.0.0.1")
       } else if (ipv4 != null) {
-        1 * span.setAttribute(Tags.PEER_HOST_IPV6, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
+        1 * span.setAttribute(MoreTags.NET_PEER_IP, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
       }
     }
     0 * _

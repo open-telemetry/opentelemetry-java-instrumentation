@@ -74,8 +74,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -143,8 +143,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -216,8 +216,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /**"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 404
@@ -262,8 +262,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "POST /echo"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" 202
@@ -313,8 +313,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
@@ -381,8 +381,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /double-greet-redirect"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 307
@@ -412,8 +412,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /double-greet"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" finalUrl
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -458,8 +458,8 @@ class SpringWebfluxTest extends AgentTestRunner {
               "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
               "$Tags.COMPONENT" "netty"
-              "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-              "$Tags.PEER_PORT" Long
+              "$MoreTags.NET_PEER_IP" "127.0.0.1"
+              "$MoreTags.NET_PEER_PORT" Long
               "$Tags.HTTP_URL" url
               "$Tags.HTTP_METHOD" "GET"
               "$Tags.HTTP_STATUS" 200

@@ -41,8 +41,8 @@ class CouchbaseSpanUtil {
         "$Tags.COMPONENT" "couchbase-client"
 
         // Because of caching, not all requests hit the server so these tags may be absent
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" || it == null }
-        "$Tags.PEER_PORT" { it == null || Number }
+        "$MoreTags.NET_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == null }
+        "$MoreTags.NET_PEER_PORT" { it == null || Number }
 
         "$Tags.DB_TYPE" "couchbase"
         if (bucketName != null) {

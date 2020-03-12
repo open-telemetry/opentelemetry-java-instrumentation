@@ -114,7 +114,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
       final String hostname = hostname(request);
       if (hostname != null) {
-        span.setAttribute(Tags.PEER_HOSTNAME, hostname);
+        span.setAttribute(MoreTags.NET_PEER_NAME, hostname);
 
         if (Config.get().isHttpClientSplitByDomain()) {
           span.setAttribute(MoreTags.SERVICE_NAME, hostname);
@@ -123,7 +123,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       final Integer port = port(request);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setAttribute(Tags.PEER_PORT, port);
+        span.setAttribute(MoreTags.NET_PEER_PORT, port);
       }
     }
     return span;

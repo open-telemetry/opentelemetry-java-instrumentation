@@ -70,8 +70,8 @@ class SparkJavaBasedTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GET /param/:param"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jetty-handler"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/param/asdf1234"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200

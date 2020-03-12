@@ -113,8 +113,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -181,8 +181,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -246,8 +246,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/post.jsp"
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" 200
@@ -308,8 +308,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
@@ -389,8 +389,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -450,8 +450,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -559,8 +559,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
@@ -619,8 +619,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$staticFile"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200

@@ -108,8 +108,8 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" httpPort
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" httpPort
             "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.DB_TYPE" "elasticsearch"
