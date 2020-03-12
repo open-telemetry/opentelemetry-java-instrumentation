@@ -133,11 +133,4 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
     }
     return matcher.and(hasExecutorInterfaceMatcher); // Apply expensive matcher last.
   }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AbstractExecutorInstrumentation.class.getPackage().getName() + ".ExecutorInstrumentationUtils"
-    };
-  }
 }

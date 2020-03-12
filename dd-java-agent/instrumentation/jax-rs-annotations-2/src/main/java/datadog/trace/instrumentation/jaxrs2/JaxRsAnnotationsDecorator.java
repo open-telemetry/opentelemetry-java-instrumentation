@@ -2,13 +2,13 @@ package datadog.trace.instrumentation.jaxrs2;
 
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
-import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.agent.tooling.ClassHierarchyIterable;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;

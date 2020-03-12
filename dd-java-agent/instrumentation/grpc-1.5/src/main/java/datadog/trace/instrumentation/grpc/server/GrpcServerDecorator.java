@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.grpc.server;
 
-import datadog.trace.agent.decorator.ServerDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.ServerDecorator;
 import io.grpc.Status;
 
 public class GrpcServerDecorator extends ServerDecorator {

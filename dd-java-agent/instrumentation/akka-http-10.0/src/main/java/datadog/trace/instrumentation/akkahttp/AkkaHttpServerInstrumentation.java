@@ -51,9 +51,6 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$1",
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$2",
       packageName + ".AkkaHttpServerHeaders",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ServerDecorator",
-      "datadog.trace.agent.decorator.HttpServerDecorator",
       packageName + ".AkkaHttpServerDecorator",
     };
   }

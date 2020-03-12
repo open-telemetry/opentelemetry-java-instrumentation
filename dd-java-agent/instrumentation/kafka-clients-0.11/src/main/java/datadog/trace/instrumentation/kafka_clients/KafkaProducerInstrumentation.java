@@ -41,8 +41,6 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
       packageName + ".KafkaDecorator",
       packageName + ".KafkaDecorator$1",
       packageName + ".KafkaDecorator$2",

@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.grizzly;
 
-import datadog.trace.agent.decorator.HttpServerDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.http.server.Request;

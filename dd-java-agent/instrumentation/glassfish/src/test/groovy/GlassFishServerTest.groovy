@@ -20,7 +20,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCES
  * OSGi setup that required {@link datadog.trace.instrumentation.glassfish.GlassFishInstrumentation}.
  */
 // TODO: Figure out a better way to test with OSGi included.
-class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
+class GlassFishServerTest extends HttpServerTest<GlassFish> {
 
 //  static {
 //    System.setProperty("dd.integration.grizzly.enabled", "true")
@@ -67,8 +67,8 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
   }
 
   @Override
-  Servlet3Decorator decorator() {
-    return Servlet3Decorator.DECORATE
+  String component() {
+    return Servlet3Decorator.DECORATE.component()
   }
 
   @Override
@@ -101,7 +101,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" component
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Integer

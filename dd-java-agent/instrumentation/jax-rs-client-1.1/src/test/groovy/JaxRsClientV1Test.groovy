@@ -6,7 +6,7 @@ import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.jaxrs.v1.JaxRsClientV1Decorator
 import spock.lang.Shared
 
-class JaxRsClientV1Test extends HttpClientTest<JaxRsClientV1Decorator> {
+class JaxRsClientV1Test extends HttpClientTest {
 
   @Shared
   Client client = Client.create()
@@ -29,8 +29,8 @@ class JaxRsClientV1Test extends HttpClientTest<JaxRsClientV1Decorator> {
   }
 
   @Override
-  JaxRsClientV1Decorator decorator() {
-    return JaxRsClientV1Decorator.DECORATE
+  String component() {
+    return JaxRsClientV1Decorator.DECORATE.component()
   }
 
   @Override

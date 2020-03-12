@@ -2,11 +2,11 @@ package datadog.trace.instrumentation.rabbitmq.amqp;
 
 import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
-import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
+import datadog.trace.bootstrap.instrumentation.decorator.ClientDecorator;
 
 public class RabbitDecorator extends ClientDecorator {
 

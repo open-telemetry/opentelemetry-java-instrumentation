@@ -49,7 +49,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".FilterDecorator",
+      packageName + ".FilterDecorator",
     };
   }
 

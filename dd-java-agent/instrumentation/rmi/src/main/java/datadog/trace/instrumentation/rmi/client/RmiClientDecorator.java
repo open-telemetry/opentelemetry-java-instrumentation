@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rmi.client;
 
-import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.bootstrap.instrumentation.decorator.ClientDecorator;
 
 public class RmiClientDecorator extends ClientDecorator {
   public static final RmiClientDecorator DECORATE = new RmiClientDecorator();

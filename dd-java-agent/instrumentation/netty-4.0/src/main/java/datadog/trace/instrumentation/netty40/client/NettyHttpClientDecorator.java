@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.netty40.client;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import datadog.trace.agent.decorator.HttpClientDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import java.net.URI;

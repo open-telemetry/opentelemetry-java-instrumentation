@@ -37,9 +37,6 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.HttpClientDecorator",
       packageName + ".SpringWebfluxHttpClientDecorator",
       packageName + ".HttpHeadersInjectAdapter",
       packageName + ".TracingClientResponseSubscriber",

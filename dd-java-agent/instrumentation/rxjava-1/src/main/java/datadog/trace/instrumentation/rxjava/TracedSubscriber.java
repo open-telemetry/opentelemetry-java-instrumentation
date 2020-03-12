@@ -2,9 +2,9 @@ package datadog.trace.instrumentation.rxjava;
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 
-import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 

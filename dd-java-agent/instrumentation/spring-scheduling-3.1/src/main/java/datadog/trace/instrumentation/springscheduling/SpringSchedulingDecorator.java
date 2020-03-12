@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.springscheduling;
 
-import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 

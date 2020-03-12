@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet.dispatcher;
 
-import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class RequestDispatcherDecorator extends BaseDecorator {
   public static final RequestDispatcherDecorator DECORATE = new RequestDispatcherDecorator();

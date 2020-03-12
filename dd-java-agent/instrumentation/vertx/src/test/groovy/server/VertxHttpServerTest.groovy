@@ -19,7 +19,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator> {
+class VertxHttpServerTest extends HttpServerTest<Vertx> {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
 
   @Override
@@ -53,8 +53,8 @@ class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator
   }
 
   @Override
-  NettyHttpServerDecorator decorator() {
-    return NettyHttpServerDecorator.DECORATE
+  String component() {
+    return NettyHttpServerDecorator.DECORATE.component()
   }
 
   @Override

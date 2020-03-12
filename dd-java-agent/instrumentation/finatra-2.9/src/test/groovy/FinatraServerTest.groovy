@@ -15,7 +15,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
+class FinatraServerTest extends HttpServerTest<HttpServer> {
   private static final Duration TIMEOUT = Duration.fromSeconds(5)
   private static final long STARTUP_TIMEOUT = 20 * 1000
 
@@ -57,8 +57,8 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
   }
 
   @Override
-  FinatraDecorator decorator() {
-    return FinatraDecorator.DECORATE
+  String component() {
+    return FinatraDecorator.DECORATE.component()
   }
 
   @Override

@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.couchbase.client;
 
-import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 
 class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();

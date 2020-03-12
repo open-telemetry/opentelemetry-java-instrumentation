@@ -7,7 +7,7 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class ApacheHttpAsyncClientTest extends HttpClientTest<ApacheHttpAsyncClientDecorator> {
+class ApacheHttpAsyncClientTest extends HttpClientTest {
 
   @AutoCleanup
   @Shared
@@ -46,8 +46,8 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<ApacheHttpAsyncClientDeco
   }
 
   @Override
-  ApacheHttpAsyncClientDecorator decorator() {
-    return ApacheHttpAsyncClientDecorator.DECORATE
+  String component() {
+    return ApacheHttpAsyncClientDecorator.DECORATE.component()
   }
 
   @Override

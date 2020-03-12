@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.aws.v0;
 
-import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class OnErrorDecorator extends BaseDecorator {
   public static final OnErrorDecorator DECORATE = new OnErrorDecorator();

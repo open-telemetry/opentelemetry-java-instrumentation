@@ -50,10 +50,7 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        "datadog.trace.agent.decorator.BaseDecorator",
-        "datadog.trace.agent.decorator.ClientDecorator",
-        packageName + ".KafkaStreamsDecorator",
-        packageName + ".TextMapExtractAdapter"
+        packageName + ".KafkaStreamsDecorator", packageName + ".TextMapExtractAdapter"
       };
     }
 
@@ -101,10 +98,7 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        "datadog.trace.agent.decorator.BaseDecorator",
-        "datadog.trace.agent.decorator.ClientDecorator",
-        packageName + ".KafkaStreamsDecorator",
-        packageName + ".TextMapExtractAdapter"
+        packageName + ".KafkaStreamsDecorator", packageName + ".TextMapExtractAdapter"
       };
     }
 

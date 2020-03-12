@@ -1,14 +1,15 @@
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.instrumentation.grizzly.GrizzlyDecorator
+import org.glassfish.grizzly.http.server.HttpServer
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
+import org.glassfish.jersey.server.ResourceConfig
+
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import org.glassfish.grizzly.http.server.HttpServer
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
-import org.glassfish.jersey.server.ResourceConfig
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -16,7 +17,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
+class GrizzlyTest extends HttpServerTest<HttpServer> {
 
   static {
     System.setProperty("dd.integration.grizzly.enabled", "true")
@@ -36,8 +37,8 @@ class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
   }
 
   @Override
-  GrizzlyDecorator decorator() {
-    return GrizzlyDecorator.DECORATE
+  String component() {
+    return GrizzlyDecorator.DECORATE.component()
   }
 
   @Override

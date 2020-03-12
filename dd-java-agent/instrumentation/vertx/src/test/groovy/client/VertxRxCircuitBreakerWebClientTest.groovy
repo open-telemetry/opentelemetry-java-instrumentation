@@ -14,7 +14,7 @@ import spock.lang.Timeout
 import java.util.concurrent.CompletableFuture
 
 @Timeout(10)
-class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<NettyHttpClientDecorator> {
+class VertxRxCircuitBreakerWebClientTest extends HttpClientTest {
 
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
@@ -51,8 +51,8 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<NettyHttpClientD
   }
 
   @Override
-  NettyHttpClientDecorator decorator() {
-    return NettyHttpClientDecorator.DECORATE
+  String component() {
+    return NettyHttpClientDecorator.DECORATE.component()
   }
 
   @Override

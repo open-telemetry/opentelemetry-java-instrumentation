@@ -51,9 +51,6 @@ public abstract class BasePlayWSClientInstrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.HttpClientDecorator",
       "datadog.trace.instrumentation.playws.PlayWSClientDecorator",
       "datadog.trace.instrumentation.playws.HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper",

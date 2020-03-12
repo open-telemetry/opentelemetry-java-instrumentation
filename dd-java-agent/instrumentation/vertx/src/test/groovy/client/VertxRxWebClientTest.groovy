@@ -10,7 +10,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(10)
-class VertxRxWebClientTest extends HttpClientTest<NettyHttpClientDecorator> {
+class VertxRxWebClientTest extends HttpClientTest {
 
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
@@ -30,8 +30,8 @@ class VertxRxWebClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   }
 
   @Override
-  NettyHttpClientDecorator decorator() {
-    return NettyHttpClientDecorator.DECORATE
+  String component() {
+    return NettyHttpClientDecorator.DECORATE.component()
   }
 
   @Override

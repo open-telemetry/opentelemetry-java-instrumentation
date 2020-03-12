@@ -1,38 +1,33 @@
-package datadog.trace.agent.decorator
+package datadog.trace.bootstrap.instrumentation.decorator
 
+import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan
 import io.opentracing.tag.Tags
 
-class ClientDecoratorTest extends BaseDecoratorTest {
+class ServerDecoratorTest extends BaseDecoratorTest {
 
   def span = Mock(AgentSpan)
 
   def "test afterStart"() {
-    setup:
-    def decorator = newDecorator((String) serviceName)
-
+    def decorator = newDecorator()
     when:
     decorator.afterStart(span)
 
     then:
-    if (serviceName != null) {
-      1 * span.setTag(DDTags.SERVICE_NAME, serviceName)
-    }
+    1 * span.setTag(Config.LANGUAGE_TAG_KEY, Config.LANGUAGE_TAG_VALUE)
     1 * span.setTag(Tags.COMPONENT.key, "test-component")
-    1 * span.setTag(Tags.SPAN_KIND.key, "client")
+    1 * span.setTag(Tags.SPAN_KIND.key, "server")
     1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
-    1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
-    _ * span.setTag(_, _) // Want to allow other calls from child implementations.
+    if (decorator.traceAnalyticsEnabled) {
+      1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
+    }
     0 * _
-
-    where:
-    serviceName << ["test-service", "other-service", null]
   }
 
   def "test beforeFinish"() {
     when:
-    newDecorator("test-service").beforeFinish(span)
+    newDecorator().beforeFinish(span)
 
     then:
     0 * _
@@ -40,19 +35,10 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   @Override
   def newDecorator() {
-    return newDecorator("test-service")
-  }
-
-  def newDecorator(String serviceName) {
-    return new ClientDecorator() {
+    return new ServerDecorator() {
       @Override
       protected String[] instrumentationNames() {
         return ["test1", "test2"]
-      }
-
-      @Override
-      protected String service() {
-        return serviceName
       }
 
       @Override

@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.elasticsearch;
 
-import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
+import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {

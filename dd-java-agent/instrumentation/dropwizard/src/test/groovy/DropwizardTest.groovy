@@ -5,7 +5,6 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
-import datadog.trace.instrumentation.servlet3.Servlet3Decorator
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Bootstrap
@@ -28,7 +27,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCES
 
 // Work around for: address already in use
 @Retry
-class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decorator> {
+class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
 
   @Override
   DropwizardTestSupport startServer(int port) {
@@ -53,13 +52,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   }
 
   @Override
-  Servlet3Decorator decorator() {
-    return new Servlet3Decorator() {
-      @Override
-      protected String component() {
-        return "jax-rs"
-      }
-    }
+  String component() {
+    return "jax-rs"
   }
 
   @Override
@@ -115,7 +109,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
         parent()
       }
       tags {
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" component
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Integer

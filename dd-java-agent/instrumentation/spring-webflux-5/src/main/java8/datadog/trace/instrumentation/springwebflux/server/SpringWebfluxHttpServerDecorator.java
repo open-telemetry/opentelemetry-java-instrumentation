@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
-import datadog.trace.agent.decorator.ServerDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.bootstrap.instrumentation.decorator.ServerDecorator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

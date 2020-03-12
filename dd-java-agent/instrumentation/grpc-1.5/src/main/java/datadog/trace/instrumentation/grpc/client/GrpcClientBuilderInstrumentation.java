@@ -29,8 +29,6 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
       packageName + ".GrpcClientDecorator",
       packageName + ".GrpcInjectAdapter",
       packageName + ".TracingClientInterceptor",

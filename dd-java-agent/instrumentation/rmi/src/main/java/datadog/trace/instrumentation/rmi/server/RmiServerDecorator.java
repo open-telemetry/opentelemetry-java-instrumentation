@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.rmi.server;
 
-import datadog.trace.agent.decorator.ServerDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.bootstrap.instrumentation.decorator.ServerDecorator;
 
 public class RmiServerDecorator extends ServerDecorator {
   public static final RmiServerDecorator DECORATE = new RmiServerDecorator();

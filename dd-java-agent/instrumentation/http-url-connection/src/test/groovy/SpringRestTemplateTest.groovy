@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 
-class SpringRestTemplateTest extends HttpClientTest<HttpUrlConnectionDecorator> {
+class SpringRestTemplateTest extends HttpClientTest {
 
   @Shared
   RestTemplate restTemplate = new RestTemplate()
@@ -23,8 +23,8 @@ class SpringRestTemplateTest extends HttpClientTest<HttpUrlConnectionDecorator> 
   }
 
   @Override
-  HttpUrlConnectionDecorator decorator() {
-    return HttpUrlConnectionDecorator.DECORATE
+  String component() {
+    return HttpUrlConnectionDecorator.DECORATE.component()
   }
 
   @Override

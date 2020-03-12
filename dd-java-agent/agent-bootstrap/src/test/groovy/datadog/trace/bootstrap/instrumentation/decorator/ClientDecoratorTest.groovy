@@ -1,33 +1,38 @@
-package datadog.trace.agent.decorator
+package datadog.trace.bootstrap.instrumentation.decorator
 
-import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan
 import io.opentracing.tag.Tags
 
-class ServerDecoratorTest extends BaseDecoratorTest {
+class ClientDecoratorTest extends BaseDecoratorTest {
 
   def span = Mock(AgentSpan)
 
   def "test afterStart"() {
-    def decorator = newDecorator()
+    setup:
+    def decorator = newDecorator((String) serviceName)
+
     when:
     decorator.afterStart(span)
 
     then:
-    1 * span.setTag(Config.LANGUAGE_TAG_KEY, Config.LANGUAGE_TAG_VALUE)
-    1 * span.setTag(Tags.COMPONENT.key, "test-component")
-    1 * span.setTag(Tags.SPAN_KIND.key, "server")
-    1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
-    if (decorator.traceAnalyticsEnabled) {
-      1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
+    if (serviceName != null) {
+      1 * span.setTag(DDTags.SERVICE_NAME, serviceName)
     }
+    1 * span.setTag(Tags.COMPONENT.key, "test-component")
+    1 * span.setTag(Tags.SPAN_KIND.key, "client")
+    1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
+    1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
+    _ * span.setTag(_, _) // Want to allow other calls from child implementations.
     0 * _
+
+    where:
+    serviceName << ["test-service", "other-service", null]
   }
 
   def "test beforeFinish"() {
     when:
-    newDecorator().beforeFinish(span)
+    newDecorator("test-service").beforeFinish(span)
 
     then:
     0 * _
@@ -35,10 +40,19 @@ class ServerDecoratorTest extends BaseDecoratorTest {
 
   @Override
   def newDecorator() {
-    return new ServerDecorator() {
+    return newDecorator("test-service")
+  }
+
+  def newDecorator(String serviceName) {
+    return new ClientDecorator() {
       @Override
       protected String[] instrumentationNames() {
         return ["test1", "test2"]
+      }
+
+      @Override
+      protected String service() {
+        return serviceName
       }
 
       @Override

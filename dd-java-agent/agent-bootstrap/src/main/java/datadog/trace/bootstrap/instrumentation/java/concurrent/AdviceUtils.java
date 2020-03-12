@@ -1,7 +1,6 @@
-package datadog.trace.instrumentation.java.concurrent;
+package datadog.trace.bootstrap.instrumentation.java.concurrent;
 
 import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
 import lombok.extern.slf4j.Slf4j;
 

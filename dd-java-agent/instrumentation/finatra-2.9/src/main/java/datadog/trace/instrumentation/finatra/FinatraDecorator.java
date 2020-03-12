@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.finatra;
 
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
-import datadog.trace.agent.decorator.HttpServerDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 

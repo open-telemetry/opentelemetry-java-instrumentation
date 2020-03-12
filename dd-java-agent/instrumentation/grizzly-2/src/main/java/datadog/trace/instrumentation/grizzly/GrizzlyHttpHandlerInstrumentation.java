@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.grizzly;
 
-import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
 import static datadog.trace.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
@@ -46,9 +46,6 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ServerDecorator",
-      "datadog.trace.agent.decorator.HttpServerDecorator",
       packageName + ".GrizzlyDecorator",
       packageName + ".GrizzlyRequestExtractAdapter",
       getClass().getName() + "$SpanClosingListener"

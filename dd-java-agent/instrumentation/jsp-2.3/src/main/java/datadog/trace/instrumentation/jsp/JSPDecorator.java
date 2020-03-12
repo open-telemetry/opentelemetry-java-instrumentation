@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.jsp;
 
-import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;

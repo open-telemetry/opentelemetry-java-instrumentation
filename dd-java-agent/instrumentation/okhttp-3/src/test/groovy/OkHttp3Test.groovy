@@ -7,7 +7,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.internal.http.HttpMethod
 
-class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
+class OkHttp3Test extends HttpClientTest {
 
   def client = new OkHttpClient()
 
@@ -25,8 +25,8 @@ class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
 
 
   @Override
-  OkHttpClientDecorator decorator() {
-    return OkHttpClientDecorator.DECORATE
+  String component() {
+    return OkHttpClientDecorator.DECORATE.component()
   }
 
   @Override

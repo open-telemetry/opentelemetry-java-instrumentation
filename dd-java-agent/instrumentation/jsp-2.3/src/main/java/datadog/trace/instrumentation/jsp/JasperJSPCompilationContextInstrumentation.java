@@ -34,7 +34,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".JSPDecorator",
+      packageName + ".JSPDecorator",
     };
   }
 

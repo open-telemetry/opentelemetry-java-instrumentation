@@ -31,9 +31,6 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
       packageName + ".LettuceClientDecorator",
       packageName + ".LettuceInstrumentationUtil",
       packageName + ".LettuceAsyncBiFunction"

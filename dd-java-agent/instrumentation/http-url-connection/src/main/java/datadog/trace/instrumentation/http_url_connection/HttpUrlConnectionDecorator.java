@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.http_url_connection;
 
-import datadog.trace.agent.decorator.HttpClientDecorator;
+import datadog.trace.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;

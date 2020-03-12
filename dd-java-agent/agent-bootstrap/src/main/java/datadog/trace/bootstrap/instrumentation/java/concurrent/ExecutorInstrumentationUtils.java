@@ -1,12 +1,9 @@
-package datadog.trace.instrumentation.java.concurrent;
+package datadog.trace.bootstrap.instrumentation.java.concurrent;
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.WeakMap;
-import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
-import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
-import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;

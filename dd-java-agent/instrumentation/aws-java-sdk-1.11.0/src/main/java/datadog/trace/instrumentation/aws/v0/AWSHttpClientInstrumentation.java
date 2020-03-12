@@ -40,9 +40,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      packageName + ".OnErrorDecorator",
-      packageName + ".RequestMeta",
+      packageName + ".OnErrorDecorator", packageName + ".RequestMeta",
     };
   }
 

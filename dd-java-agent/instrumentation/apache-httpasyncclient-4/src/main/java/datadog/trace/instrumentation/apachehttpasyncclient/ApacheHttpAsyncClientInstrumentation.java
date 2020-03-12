@@ -56,9 +56,6 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       packageName + ".HttpHeadersInjectAdapter",
       getClass().getName() + "$DelegatingRequestProducer",
       getClass().getName() + "$TraceContinuedFutureCallback",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.HttpClientDecorator",
       packageName + ".ApacheHttpAsyncClientDecorator"
     };
   }

@@ -50,7 +50,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".HttpServletDecorator",
+      packageName + ".HttpServletDecorator",
     };
   }
 

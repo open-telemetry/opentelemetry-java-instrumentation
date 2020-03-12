@@ -33,9 +33,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      packageName + ".SpringSchedulingDecorator",
-      getClass().getName() + "$RunnableWrapper",
+      packageName + ".SpringSchedulingDecorator", getClass().getName() + "$RunnableWrapper",
     };
   }
 

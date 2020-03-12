@@ -9,7 +9,7 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClient
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 import spock.lang.Shared
 
-abstract class PlayWSClientTestBase extends HttpClientTest<PlayWSClientDecorator> {
+abstract class PlayWSClientTestBase extends HttpClientTest {
   @Shared
   ActorSystem system
 
@@ -40,8 +40,8 @@ abstract class PlayWSClientTestBase extends HttpClientTest<PlayWSClientDecorator
   }
 
   @Override
-  PlayWSClientDecorator decorator() {
-    return PlayWSClientDecorator.DECORATE
+  String component() {
+    return PlayWSClientDecorator.DECORATE.component()
   }
 
   String expectedOperationName() {
