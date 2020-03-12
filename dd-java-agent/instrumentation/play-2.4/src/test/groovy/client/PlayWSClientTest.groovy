@@ -9,7 +9,7 @@ import spock.lang.Subject
 
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.
-class PlayWSClientTest extends HttpClientTest<NettyHttpClientDecorator> {
+class PlayWSClientTest extends HttpClientTest {
   @Subject
   @Shared
   @AutoCleanup
@@ -32,8 +32,8 @@ class PlayWSClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   }
 
   @Override
-  NettyHttpClientDecorator decorator() {
-    return NettyHttpClientDecorator.DECORATE
+  String component() {
+    return NettyHttpClientDecorator.DECORATE.component()
   }
 
   @Override

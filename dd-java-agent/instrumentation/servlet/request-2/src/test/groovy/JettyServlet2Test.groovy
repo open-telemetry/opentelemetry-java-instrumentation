@@ -17,7 +17,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
+class JettyServlet2Test extends HttpServerTest<Server> {
 
   private static final CONTEXT = "ctx"
 
@@ -62,8 +62,8 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
   }
 
   @Override
-  Servlet2Decorator decorator() {
-    return Servlet2Decorator.DECORATE
+  String component() {
+    return Servlet2Decorator.DECORATE.component()
   }
 
   @Override
@@ -96,7 +96,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" component
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" "127.0.0.1"
         // No peer port

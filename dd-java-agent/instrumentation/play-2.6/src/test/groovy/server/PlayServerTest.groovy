@@ -5,8 +5,8 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
 import datadog.trace.bootstrap.instrumentation.api.Tags
+import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
 import datadog.trace.instrumentation.play26.PlayHttpServerDecorator
 import play.BuiltInComponents
 import play.Mode
@@ -22,7 +22,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
+class PlayServerTest extends HttpServerTest<Server> {
   @Override
   Server startServer(int port) {
     return Server.forRouter(Mode.TEST, port) { BuiltInComponents components ->
@@ -62,8 +62,8 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   }
 
   @Override
-  AkkaHttpServerDecorator decorator() {
-    return AkkaHttpServerDecorator.DECORATE
+  String component() {
+    return AkkaHttpServerDecorator.DECORATE.component()
   }
 
   @Override
@@ -129,7 +129,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" component
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.HTTP_STATUS" endpoint.status
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"

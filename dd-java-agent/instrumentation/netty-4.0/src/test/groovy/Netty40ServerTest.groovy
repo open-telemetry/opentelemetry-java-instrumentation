@@ -32,7 +32,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
-class Netty40ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDecorator> {
+class Netty40ServerTest extends HttpServerTest<EventLoopGroup> {
 
   @Override
   EventLoopGroup startServer(int port) {
@@ -105,8 +105,8 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDe
   }
 
   @Override
-  NettyHttpServerDecorator decorator() {
-    NettyHttpServerDecorator.DECORATE
+  String component() {
+    NettyHttpServerDecorator.DECORATE.component()
   }
 
   @Override

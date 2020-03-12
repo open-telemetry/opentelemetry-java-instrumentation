@@ -6,7 +6,7 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.message.BasicHeader
 import spock.lang.Shared
 
-class ApacheHttpClientResponseHandlerTest extends HttpClientTest<ApacheHttpClientDecorator> {
+class ApacheHttpClientResponseHandlerTest extends HttpClientTest {
 
   @Shared
   def client = new DefaultHttpClient()
@@ -35,7 +35,7 @@ class ApacheHttpClientResponseHandlerTest extends HttpClientTest<ApacheHttpClien
   }
 
   @Override
-  ApacheHttpClientDecorator decorator() {
-    return ApacheHttpClientDecorator.DECORATE
+  String component() {
+    return ApacheHttpClientDecorator.DECORATE.component()
   }
 }

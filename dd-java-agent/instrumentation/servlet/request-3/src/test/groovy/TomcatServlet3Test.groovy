@@ -407,7 +407,7 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
           errored endpoint.errored
           // we can't reliably assert parent or child relationship here since both are tested.
           tags {
-            "$Tags.COMPONENT" serverDecorator.component()
+            "$Tags.COMPONENT" component
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
             "$Tags.PEER_PORT" Integer

@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 
-class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpUrlConnectionDecorator> {
+class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -18,8 +18,8 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpUrlConnec
   }
 
   @Override
-  HttpUrlConnectionDecorator decorator() {
-    return HttpUrlConnectionDecorator.DECORATE
+  String component() {
+    return HttpUrlConnectionDecorator.DECORATE.component()
   }
 
   @Override

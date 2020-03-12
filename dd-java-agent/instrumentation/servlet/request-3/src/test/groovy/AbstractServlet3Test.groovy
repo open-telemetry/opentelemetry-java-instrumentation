@@ -16,15 +16,15 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER, Servlet3Decorator> {
+abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER> {
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port/$context/")
   }
 
   @Override
-  Servlet3Decorator decorator() {
-    return Servlet3Decorator.DECORATE
+  String component() {
+    return Servlet3Decorator.DECORATE.component()
   }
 
   @Override
@@ -85,7 +85,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         parent()
       }
       tags {
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" component
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.PEER_PORT" Integer

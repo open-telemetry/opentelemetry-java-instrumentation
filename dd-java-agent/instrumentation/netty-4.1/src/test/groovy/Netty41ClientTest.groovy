@@ -27,7 +27,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
 @Retry
-class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
+class Netty41ClientTest extends HttpClientTest {
 
   @Shared
   def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.SECONDS.toMillis(10).toInteger())
@@ -51,8 +51,8 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   }
 
   @Override
-  NettyHttpClientDecorator decorator() {
-    return NettyHttpClientDecorator.DECORATE
+  String component() {
+    return NettyHttpClientDecorator.DECORATE.component()
   }
 
   @Override

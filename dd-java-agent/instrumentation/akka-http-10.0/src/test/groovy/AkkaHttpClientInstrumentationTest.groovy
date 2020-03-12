@@ -6,11 +6,11 @@ import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator
 import datadog.trace.bootstrap.instrumentation.api.Tags
+import datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator
 import spock.lang.Shared
 
-class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {
+class AkkaHttpClientInstrumentationTest extends HttpClientTest {
 
   @Shared
   ActorSystem system = ActorSystem.create()
@@ -42,8 +42,8 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
   }
 
   @Override
-  AkkaHttpClientDecorator decorator() {
-    return AkkaHttpClientDecorator.DECORATE
+  String component() {
+    return AkkaHttpClientDecorator.DECORATE.component()
   }
 
   @Override

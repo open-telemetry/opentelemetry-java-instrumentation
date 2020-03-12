@@ -8,7 +8,7 @@ import ratpack.test.exec.ExecHarness
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class RatpackHttpClientTest extends HttpClientTest<NettyHttpClientDecorator> {
+class RatpackHttpClientTest extends HttpClientTest {
 
   @AutoCleanup
   @Shared
@@ -37,8 +37,8 @@ class RatpackHttpClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   }
 
   @Override
-  NettyHttpClientDecorator decorator() {
-    return NettyHttpClientDecorator.DECORATE
+  String component() {
+    return NettyHttpClientDecorator.DECORATE.component()
   }
 
   @Override

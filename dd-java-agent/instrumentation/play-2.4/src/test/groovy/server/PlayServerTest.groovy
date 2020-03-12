@@ -20,7 +20,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
+class PlayServerTest extends HttpServerTest<Server> {
   @Override
   Server startServer(int port) {
     def router =
@@ -60,8 +60,8 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
   }
 
   @Override
-  NettyHttpServerDecorator decorator() {
-    return NettyHttpServerDecorator.DECORATE
+  String component() {
+    return NettyHttpServerDecorator.DECORATE.component()
   }
 
   @Override

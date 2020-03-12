@@ -9,7 +9,6 @@ import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
-import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import okhttp3.HttpUrl
@@ -36,7 +35,7 @@ import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan
 import static org.junit.Assume.assumeTrue
 
 @Unroll
-abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> extends AgentTestRunner {
+abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   @Shared
   SERVER server
@@ -52,7 +51,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   @Shared
-  DECORATOR serverDecorator = decorator()
+  String component = component()
 
   def setupSpec() {
     server = startServer(port)
@@ -73,7 +72,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   abstract void stopServer(SERVER server)
 
-  abstract DECORATOR decorator()
+  abstract String component()
 
   String expectedServiceName() {
     "unnamed-java-app"
@@ -524,7 +523,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         parent()
       }
       tags {
-        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.COMPONENT" component
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_PORT" Integer
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional

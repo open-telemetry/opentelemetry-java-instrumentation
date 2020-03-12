@@ -19,7 +19,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerDecorator> {
+class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
 
   @Override
   EmbeddedApp startServer(int bindPort) {
@@ -87,8 +87,8 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   }
 
   @Override
-  NettyHttpServerDecorator decorator() {
-    return NettyHttpServerDecorator.DECORATE
+  String component() {
+    return NettyHttpServerDecorator.DECORATE.component()
   }
 
   @Override

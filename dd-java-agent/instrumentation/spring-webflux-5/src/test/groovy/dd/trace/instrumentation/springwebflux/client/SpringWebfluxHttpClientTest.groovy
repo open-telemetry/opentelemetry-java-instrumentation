@@ -14,7 +14,7 @@ import spock.lang.Shared
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan
 
-class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClientDecorator> {
+class SpringWebfluxHttpClientTest extends HttpClientTest {
 
   @Shared
   def client = WebClient.builder().build()
@@ -39,8 +39,8 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
   }
 
   @Override
-  SpringWebfluxHttpClientDecorator decorator() {
-    return SpringWebfluxHttpClientDecorator.DECORATE
+  String component() {
+    return SpringWebfluxHttpClientDecorator.DECORATE.component()
   }
 
 

@@ -12,7 +12,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
-class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
+class HttpUrlConnectionTest extends HttpClientTest {
 
   static final RESPONSE = "Hello."
   static final STATUS = 200
@@ -38,8 +38,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
   }
 
   @Override
-  HttpUrlConnectionDecorator decorator() {
-    return HttpUrlConnectionDecorator.DECORATE
+  String component() {
+    return HttpUrlConnectionDecorator.DECORATE.component()
   }
 
   @Override

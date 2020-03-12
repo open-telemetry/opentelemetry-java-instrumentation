@@ -11,7 +11,7 @@ import org.apache.commons.httpclient.methods.PutMethod
 import org.apache.commons.httpclient.methods.TraceMethod
 import spock.lang.Shared
 
-class CommonsHttpClientTest extends HttpClientTest<CommonsHttpClientDecorator> {
+class CommonsHttpClientTest extends HttpClientTest {
   @Shared
   HttpClient client = new HttpClient()
 
@@ -57,8 +57,8 @@ class CommonsHttpClientTest extends HttpClientTest<CommonsHttpClientDecorator> {
   }
 
   @Override
-  CommonsHttpClientDecorator decorator() {
-    return CommonsHttpClientDecorator.DECORATE
+  String component() {
+    return CommonsHttpClientDecorator.DECORATE.component()
   }
 
   @Override

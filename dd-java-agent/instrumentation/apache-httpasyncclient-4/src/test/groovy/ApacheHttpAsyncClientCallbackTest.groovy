@@ -9,7 +9,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
 
-class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncClientDecorator> {
+class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {
 
   @AutoCleanup
   @Shared
@@ -51,8 +51,8 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncCl
   }
 
   @Override
-  ApacheHttpAsyncClientDecorator decorator() {
-    return ApacheHttpAsyncClientDecorator.DECORATE
+  String component() {
+    return ApacheHttpAsyncClientDecorator.DECORATE.component()
   }
 
   @Override
