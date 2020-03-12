@@ -4,8 +4,6 @@ import io.opentelemetry.auto.typed.server.http.HttpServerTypedTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 
-import javax.annotation.Nullable;
-
 public class SampleHttpServerTypedTracer
     extends HttpServerTypedTracer<SampleHttpServerTypedSpan, String, String> {
   @Override
@@ -31,7 +29,6 @@ public class SampleHttpServerTypedTracer
   @Override
   protected HttpTextFormat.Getter<String> getGetter() {
     return new HttpTextFormat.Getter<String>() {
-      @Nullable
       @Override
       public String get(String carrier, String key) {
         return null;
