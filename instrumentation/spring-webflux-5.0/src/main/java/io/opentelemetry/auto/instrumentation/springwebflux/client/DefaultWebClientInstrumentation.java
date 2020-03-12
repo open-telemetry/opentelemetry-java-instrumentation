@@ -15,11 +15,13 @@
  */
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -37,6 +39,20 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(
+        classLoaderHasNoResources(
+            "org/springframework/web/reactive/function/client/ExchangeFunction.class"));
+  }
+
+  @Override
+  public ElementMatcher<? super TypeDescription> typeMatcher() {
+    return implementsInterface(
+        named("org.springframework.web.reactive.function.client.ExchangeFunction"));
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.decorator.BaseDecorator",
@@ -48,12 +64,6 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
       packageName + ".TracingClientResponseSubscriber$1",
       packageName + ".TracingClientResponseMono",
     };
-  }
-
-  @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return safeHasInterface(
-        named("org.springframework.web.reactive.function.client.ExchangeFunction"));
   }
 
   @Override

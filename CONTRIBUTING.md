@@ -1,4 +1,4 @@
-### Contributing
+## Contributing
 
 Pull requests for bug fixes are welcome, but before submitting new features or changes to current functionality [open an issue](https://github.com/open-telemetry/opentelemetry-auto-instr-java/issues/new)
 and discuss your ideas or propose the changes you wish to make. After a resolution is reached a PR can be submitted for review.
@@ -15,7 +15,14 @@ Java files must be formatted using [google-java-format](https://github.com/googl
 
 Other source files (Groovy, Scala, etc) should ideally be formatted by Intellij Idea's default formatting, but are not enforced.
 
-### Intellij Idea
+### Intellij IDEA
+
+Compiler settings:
+* OpenJDK 11 must be installed to build the entire project.  Under `SDKs` it must have the name `11`.
+* Under `Build, Execution, Deployment > Compiler > Java Compiler` disable `Use '--release' option for cross-compilation`
+
+Required plugins:
+* [Lombok](https://plugins.jetbrains.com/plugin/6317-lombok-plugin)
 
 Suggested plugins and settings:
 
@@ -25,6 +32,5 @@ Suggested plugins and settings:
   * With java use the following import layout (groovy should still use the default) to ensure consistency with google-java-format:
     ![import layout](https://user-images.githubusercontent.com/734411/43430811-28442636-94ae-11e8-86f1-f270ddcba023.png)
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format)
-* [Lombok](https://plugins.jetbrains.com/plugin/6317-lombok-plugin)
 * [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
   ![Recommended Settings](https://user-images.githubusercontent.com/734411/43430944-db84bf8a-94ae-11e8-8cec-0daa064937c4.png)

@@ -15,12 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -42,7 +41,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasInterface(named("java.sql.Connection")));
+    return implementsInterface(named("java.sql.Connection"));
   }
 
   @Override
@@ -58,7 +57,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a sub type of PreparedStatement
-            .and(returns(safeHasInterface(named("java.sql.PreparedStatement")))),
+            .and(returns(hasInterface(named("java.sql.PreparedStatement")))),
         ConnectionInstrumentation.class.getName() + "$ConnectionPrepareAdvice");
   }
 

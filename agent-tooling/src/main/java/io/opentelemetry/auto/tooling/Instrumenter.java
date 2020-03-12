@@ -15,13 +15,14 @@
  */
 package io.opentelemetry.auto.tooling;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.failSafe;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
 import io.opentelemetry.auto.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.auto.tooling.context.NoopContextProvider;
@@ -36,9 +37,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatcher.Junction;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -58,6 +61,12 @@ public interface Instrumenter {
 
   @Slf4j
   abstract class Default implements Instrumenter {
+
+    // Added here instead of AgentInstaller's ignores because it's relatively
+    // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
+    public static final Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
+        not(isAnnotatedWith(named("javax.decorator.Decorator")));
+
     private final SortedSet<String> instrumentationNames;
     private final String instrumentationPrimaryName;
     private final InstrumentationContextProvider contextProvider;
@@ -96,9 +105,7 @@ public interface Instrumenter {
                       classLoaderMatcher(),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))
-              // Added here instead of AgentInstaller's ignores because it's relatively
-              // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
-              .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
+              .and(NOT_DECORATOR_MATCHER)
               .and(new MuzzleMatcher())
               .and(new PostMatchHook())
               .transform(AgentTransformers.defaultTransformers());
@@ -146,10 +153,11 @@ public interface Instrumenter {
          */
         final ReferenceMatcher muzzle = getInstrumentationMuzzle();
         if (null != muzzle) {
-          final List<Reference.Mismatch> mismatches =
-              muzzle.getMismatchedReferenceSources(classLoader);
-          if (mismatches.size() > 0) {
+          final boolean isMatch = muzzle.matches(classLoader);
+          if (!isMatch) {
             if (log.isDebugEnabled()) {
+              final List<Reference.Mismatch> mismatches =
+                  muzzle.getMismatchedReferenceSources(classLoader);
               log.debug(
                   "Instrumentation muzzled: {} -- {} on {}",
                   instrumentationNames,
@@ -166,7 +174,7 @@ public interface Instrumenter {
                 Instrumenter.Default.this.getClass().getName(),
                 classLoader);
           }
-          return mismatches.size() == 0;
+          return isMatch;
         }
         return true;
       }
@@ -230,11 +238,13 @@ public interface Instrumenter {
     public abstract Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
 
     /**
-     * A map of {class-name -> context-class-name}. Keys (and their subclasses) will be associated
-     * with a context of the value.
+     * Context stores to define for this instrumentation.
+     *
+     * <p>A map of {class-name -> context-class-name}. Keys (and their subclasses) will be
+     * associated with a context of the value.
      */
     public Map<String, String> contextStore() {
-      return Collections.EMPTY_MAP;
+      return Collections.emptyMap();
     }
 
     protected boolean defaultEnabled() {

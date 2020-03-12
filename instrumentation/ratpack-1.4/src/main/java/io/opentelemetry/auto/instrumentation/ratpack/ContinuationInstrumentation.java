@@ -15,10 +15,12 @@
  */
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -39,9 +41,15 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("ratpack/exec/internal/Continuation.class"));
+  }
+
+  @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return nameStartsWith("ratpack.exec.")
-        .<TypeDescription>and(safeHasInterface(named("ratpack.exec.internal.Continuation")));
+        .<TypeDescription>and(implementsInterface(named("ratpack.exec.internal.Continuation")));
   }
 
   @Override

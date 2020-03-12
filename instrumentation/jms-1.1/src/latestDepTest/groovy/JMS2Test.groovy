@@ -261,12 +261,13 @@ class JMS2Test extends AgentTestRunner {
     trace.span(index) {
       if (messageListener) {
         operationName "jms.onMessage"
-        childOf((SpanData) parentOrLinkSpan)
         spanKind CONSUMER
+        childOf((SpanData) parentOrLinkSpan)
       } else {
         operationName "jms.consume"
-        hasLink((SpanData) parentOrLinkSpan)
         spanKind CLIENT
+        parent()
+        hasLink((SpanData) parentOrLinkSpan)
       }
       errored false
 

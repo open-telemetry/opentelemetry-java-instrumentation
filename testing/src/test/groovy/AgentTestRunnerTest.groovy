@@ -96,7 +96,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
     }
 
     then:
-    !TRANSFORMED_CLASSES.contains(subject.class.name)
+    !TRANSFORMED_CLASSES_NAMES.contains(subject.class.name)
     assertTraces(1) {
       trace(0, 1) {
         span(0) {

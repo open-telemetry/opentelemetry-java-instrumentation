@@ -1,0 +1,25 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = "commons-httpclient"
+    module = "commons-httpclient"
+    versions = "[3.0,4.0)"
+    assertInverse = true
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'commons-httpclient', name: 'commons-httpclient', version: '3.0'
+
+  testCompile group: 'commons-httpclient', name: 'commons-httpclient', version: '3.0'
+
+  latestDepTestCompile group: 'commons-httpclient', name: 'commons-httpclient', version: '+'
+}

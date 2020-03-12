@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Agent start up logic.
  *
- * <p>This class is loaded and called by {@code io.opentelemetry.auto.AgentBootstrap}
+ * <p>This class is loaded and called by {@code io.opentelemetry.auto.bootstrap.AgentBootstrap}
  *
  * <p>The intention is for this class to be loaded by bootstrap classloader to make sure we have
  * unimpeded access to the rest of agent parts.

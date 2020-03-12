@@ -15,12 +15,9 @@
  */
 package io.opentelemetry.auto.tooling.context;
 
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.FieldBackedContextStoreAppliedMarker;
@@ -29,6 +26,7 @@ import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.HelperInjector;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.auto.tooling.Instrumenter.Default;
 import io.opentelemetry.auto.tooling.Utils;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
@@ -36,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -142,8 +141,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   @Override
   public AgentBuilder.Identified.Extendable instrumentationTransformer(
       AgentBuilder.Identified.Extendable builder) {
-    if (instrumenter.contextStore().size() > 0) {
-      /**
+    if (!instrumenter.contextStore().isEmpty()) {
+      /*
        * Install transformer that rewrites accesses to context store with specialized bytecode that
        * invokes appropriate storage implementation.
        */
@@ -319,14 +318,14 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private AgentBuilder.Identified.Extendable injectHelpersIntoBootstrapClassloader(
       AgentBuilder.Identified.Extendable builder) {
-    /**
+    /*
      * We inject into bootstrap classloader because field accessor interfaces are needed by context
      * store implementations. Unfortunately this forces us to remove stored type checking because
      * actual classes may not be available at this point.
      */
     builder = builder.transform(fieldAccessorInterfacesInjector);
 
-    /**
+    /*
      * We inject context store implementation into bootstrap classloader because same implementation
      * may be used by different instrumentations and it has to use same static map in case of
      * fallback to map-backed storage.
@@ -357,38 +356,69 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     };
   }
 
+  /*
+  Set of pairs (context holder, context class) for which we have matchers installed.
+  We use this to make sure we do not install matchers repeatedly for cases when same
+  context class is used by multiple instrumentations.
+   */
+  private static final Set<Map.Entry<String, String>> INSTALLED_CONTEXT_MATCHERS = new HashSet<>();
+
+  /** Clear set that prevents multiple matchers for same context class */
+  public static void resetContextMatchers() {
+    synchronized (INSTALLED_CONTEXT_MATCHERS) {
+      INSTALLED_CONTEXT_MATCHERS.clear();
+    }
+  }
+
   @Override
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
       AgentBuilder.Identified.Extendable builder) {
 
     if (fieldInjectionEnabled) {
       for (final Map.Entry<String, String> entry : instrumenter.contextStore().entrySet()) {
-        /**
+        /*
          * For each context store defined in a current instrumentation we create an agent builder
          * that injects necessary fields.
+         * Note: this synchronization should not have any impact on performance
+         * since this is done when agent builder is being made, it doesn't affect actual
+         * class transformation.
          */
-        builder =
-            builder
-                .type(
-                    not(isInterface()).and(safeHasSuperType(named(entry.getKey()))),
-                    instrumenter.classLoaderMatcher())
-                .and(safeToInjectFieldsMatcher())
-                // Added here instead of AgentInstaller's ignores because it's relatively
-                // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
-                .and(not(isAnnotatedWith(named("javax.decorator.Decorator"))))
-                .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
+        synchronized (INSTALLED_CONTEXT_MATCHERS) {
+          // FIXME: This makes an assumption that class loader matchers for instrumenters that use
+          // same context classes should be the same - which seems reasonable, but is not checked.
+          // Addressing this properly requires some notion of 'compound intrumenters' which we
+          // currently do not have.
+          if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
+            log.debug("Skipping builder for {} {}", instrumenter.getClass().getName(), entry);
+            continue;
+          }
 
-        /**
-         * We inject helpers here as well as when instrumentation is applied to ensure that helpers
-         * are present even if instrumented classes are not loaded, but classes with state fields
-         * added are loaded (e.g. sun.net.www.protocol.https.HttpsURLConnectionImpl).
-         */
-        builder = injectHelpersIntoBootstrapClassloader(builder);
+          log.debug("Making builder for {} {}", instrumenter.getClass().getName(), entry);
+          INSTALLED_CONTEXT_MATCHERS.add(entry);
 
-        builder =
-            builder.transform(
-                getTransformerForASMVisitor(
-                    getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
+          /*
+           * For each context store defined in a current instrumentation we create an agent builder
+           * that injects necessary fields.
+           */
+          builder =
+              builder
+                  .type(safeHasSuperType(named(entry.getKey())), instrumenter.classLoaderMatcher())
+                  .and(safeToInjectFieldsMatcher())
+                  .and(Default.NOT_DECORATOR_MATCHER)
+                  .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
+
+          /*
+           * We inject helpers here as well as when instrumentation is applied to ensure that
+           * helpers are present even if instrumented classes are not loaded, but classes with state
+           * fields added are loaded (e.g. sun.net.www.protocol.https.HttpsURLConnectionImpl).
+           */
+          builder = injectHelpersIntoBootstrapClassloader(builder);
+
+          builder =
+              builder.transform(
+                  getTransformerForASMVisitor(
+                      getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
+        }
       }
     }
     return builder;
@@ -403,7 +433,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           final JavaModule module,
           final Class<?> classBeingRedefined,
           final ProtectionDomain protectionDomain) {
-        /**
+        /*
          * The idea here is that we can add fields if class is just being loaded
          * (classBeingRedefined == null) and we have to add same fields again if class we added
          * fields before is being transformed again. Note: here we assume that Class#getInterfaces()

@@ -67,7 +67,7 @@ class TestServlet3 {
       def context = req.startAsync()
       context.start {
         try {
-          phaser.arrive()
+          phaser.arriveAndAwaitAdvance()
           HttpServerTest.controller(endpoint) {
             resp.contentType = "text/plain"
             switch (endpoint) {

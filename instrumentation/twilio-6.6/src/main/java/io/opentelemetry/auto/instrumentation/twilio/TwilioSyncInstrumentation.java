@@ -17,7 +17,8 @@ package io.opentelemetry.auto.instrumentation.twilio;
 
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeExtendsClass;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -45,12 +46,18 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
     super("twilio-sdk");
   }
 
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("com/twilio/Twilio.class"));
+  }
+
   /** Match any child class of the base Twilio service classes. */
   @Override
   public net.bytebuddy.matcher.ElementMatcher<
           ? super net.bytebuddy.description.type.TypeDescription>
       typeMatcher() {
-    return safeExtendsClass(
+    return extendsClass(
         named("com.twilio.base.Creator")
             .or(named("com.twilio.base.Deleter"))
             .or(named("com.twilio.base.Fetcher"))

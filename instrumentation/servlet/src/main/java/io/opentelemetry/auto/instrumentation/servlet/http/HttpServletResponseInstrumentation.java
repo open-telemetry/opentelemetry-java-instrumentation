@@ -17,9 +17,9 @@ package io.opentelemetry.auto.instrumentation.servlet.http;
 
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ByteBuddyElementMatchers.safeHasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -44,17 +44,22 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/servlet/http/HttpServletResponse.class"));
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return implementsInterface(named("javax.servlet.http.HttpServletResponse"));
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.decorator.BaseDecorator",
       packageName + ".HttpServletResponseDecorator",
     };
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(safeHasInterface(named("javax.servlet.http.HttpServletResponse")));
   }
 
   @Override
