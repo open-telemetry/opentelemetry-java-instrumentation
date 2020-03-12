@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.ExecutorInstrumentationUtils;
+import datadog.trace.bootstrap.instrumentation.java.concurrent.GenericRunnable;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -34,13 +35,6 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("java.util.concurrent.ThreadPoolExecutor");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      ThreadPoolExecutorInstrumentation.class.getName() + "$GenericRunnable",
-    };
   }
 
   @Override
@@ -72,11 +66,5 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
         }
       }
     }
-  }
-
-  public static class GenericRunnable implements Runnable {
-
-    @Override
-    public void run() {}
   }
 }
