@@ -1,10 +1,10 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+
 muzzle {
   pass {
     coreJdk()
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
 
 task "rmic", dependsOn: testClasses {
   def clazz = 'rmi.app.ServerLegacy'

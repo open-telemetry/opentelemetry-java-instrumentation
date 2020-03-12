@@ -1,4 +1,4 @@
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/instrumentation.gradle"
 
 //apply plugin: 'org.unbroken-dome.test-sets'
 //
@@ -10,7 +10,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:jax-rs-annotations-2.0')
+  testCompile project(':instrumentation:jaxrs:jaxrs-2.0')
   testCompile project(':instrumentation:servlet:request-3.0')
 
   // First version with DropwizardTestSupport:

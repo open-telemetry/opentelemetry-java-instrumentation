@@ -1,0 +1,22 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = 'org.jboss.logmanager'
+    module = 'jboss-logmanager'
+    versions = '(,)'
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  testCompile 'org.jboss.logmanager:jboss-logmanager:1.0.0.GA'
+
+  latestDepTestCompile 'org.jboss.logmanager:jboss-logmanager:+'
+}

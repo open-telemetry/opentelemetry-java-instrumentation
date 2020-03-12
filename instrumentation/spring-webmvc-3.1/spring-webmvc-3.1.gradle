@@ -1,3 +1,5 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+
 muzzle {
   fail {
     group = 'org.springframework'
@@ -34,8 +36,6 @@ muzzle {
     extraDependency "javax.servlet:javax.servlet-api:3.0.1"
   }
 }
-
-apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '3.1.0.RELEASE'

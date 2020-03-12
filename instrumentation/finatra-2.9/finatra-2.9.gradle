@@ -3,9 +3,8 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/instrumentation.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
-
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
@@ -33,7 +32,7 @@ muzzle {
 dependencies {
   compileOnly group: 'com.twitter', name: 'finatra-http_2.11', version: '2.9.0'
 
-  testCompile project(':instrumentation:netty-4.1')
+  testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:java-concurrent')
 
   testCompile group: 'com.twitter', name: 'finatra-http_2.11', version: '19.12.0'
@@ -44,7 +43,7 @@ dependencies {
   // Required for older versions of finatra on JDKs >= 11
   testCompile group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
 
-  latestDepTestCompile project(':instrumentation:netty-4.1')
+  latestDepTestCompile project(':instrumentation:netty:netty-4.1')
   latestDepTestCompile project(':instrumentation:java-concurrent')
   latestDepTestCompile group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
 }

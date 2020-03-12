@@ -40,6 +40,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class TwilioClientTest extends AgentTestRunner {
@@ -127,16 +128,13 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes()), 200)
 
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
-
-    Message message = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(twilioRestClient)
-    testSpan.end()
-    testScope.close()
+    Message message = runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(twilioRestClient)
+    }
 
     expect:
 
@@ -176,19 +174,15 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes()), 200)
 
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
+    Call call = runUnderTrace("test") {
+      Call.creator(
+        new PhoneNumber("+15558881234"),  // To number
+        new PhoneNumber("+15559994321"),  // From number
 
-    Call call = Call.creator(
-      new PhoneNumber("+15558881234"),  // To number
-      new PhoneNumber("+15559994321"),  // From number
-
-      // Read TwiML at this URL when a call connects (hold music)
-      new URI("http://twimlets.com/holdmusic?Bucket=com.twilio.music.ambient")
-    ).create(twilioRestClient)
-
-    testSpan.end()
-    testScope.close()
+        // Read TwiML at this URL when a call connects (hold music)
+        new URI("http://twimlets.com/holdmusic?Bucket=com.twilio.music.ambient")
+      ).create(twilioRestClient)
+    }
 
     expect:
 
@@ -252,18 +246,13 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
-
-    Message message = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(realTwilioRestClient)
-
-    testSpan.end()
-    testScope.close()
+    Message message = runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(realTwilioRestClient)
+    }
 
     expect:
 
@@ -356,16 +345,13 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
-
-    Message message = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(realTwilioRestClient)
-    testSpan.end()
-    testScope.close()
+    Message message = runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(realTwilioRestClient)
+    }
 
     expect:
 
@@ -471,23 +457,20 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
+    Message message = runUnderTrace("test") {
 
-    ListenableFuture<Message> future = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).createAsync(realTwilioRestClient)
+      ListenableFuture<Message> future = Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).createAsync(realTwilioRestClient)
 
-    Message message
-    try {
-      message = future.get(10, TimeUnit.SECONDS)
-    } finally {
-      // Give the future callback a chance to run
-      Thread.sleep(1000)
-      testSpan.end()
-      testScope.close()
+      try {
+        return future.get(10, TimeUnit.SECONDS)
+      } finally {
+        // Give the future callback a chance to run
+        Thread.sleep(1000)
+      }
     }
 
     expect:
@@ -664,23 +647,20 @@ class TwilioClientTest extends AgentTestRunner {
 
     when:
 
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
+    Message message = runUnderTrace("test") {
 
-    ListenableFuture<Message> future = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).createAsync(twilioRestClient)
+      ListenableFuture<Message> future = Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).createAsync(twilioRestClient)
 
-    Message message
-    try {
-      message = future.get(10, TimeUnit.SECONDS)
-    } finally {
-      // Give the future callback a chance to run
-      Thread.sleep(1000)
-      testSpan.end()
-      testScope.close()
+      try {
+        return future.get(10, TimeUnit.SECONDS)
+      } finally {
+        // Give the future callback a chance to run
+        Thread.sleep(1000)
+      }
     }
 
     then:

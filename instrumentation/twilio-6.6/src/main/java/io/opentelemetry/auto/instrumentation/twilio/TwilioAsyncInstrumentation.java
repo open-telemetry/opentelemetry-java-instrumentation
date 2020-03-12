@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.twilio;
 
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
@@ -47,6 +48,12 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
   public TwilioAsyncInstrumentation() {
     super("twilio-sdk");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("com/twilio/Twilio.class"));
   }
 
   /** Match any child class of the base Twilio service classes. */

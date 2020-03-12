@@ -17,9 +17,9 @@ package io.opentelemetry.auto.instrumentation.finatra;
 
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.TRACER;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -66,10 +66,16 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("com/twitter/finatra/http/internal/routing/Route.class"));
+  }
+
+  @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return nameStartsWith("com.twitter.finatra.")
-        .and(not(isInterface()))
-        .and(extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
+        .<TypeDescription>and(
+            extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
   }
 
   @Override

@@ -18,9 +18,9 @@ package io.opentelemetry.auto.instrumentation.jms;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -50,8 +50,14 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return not(classLoaderHasNoResources("javax/jms/MessageConsumer.class"));
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(hasInterface(named("javax.jms.MessageConsumer")));
+    return implementsInterface(named("javax.jms.MessageConsumer"));
   }
 
   @Override
@@ -106,11 +112,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
           // Couldn't extract a context
         }
         if (spanContext != null) {
-          if (TRACER.getCurrentSpan().getContext().isValid()) {
-            spanBuilder.addLink(spanContext);
-          } else {
-            spanBuilder.setParent(spanContext);
-          }
+          spanBuilder.addLink(spanContext);
         }
       }
       final Span span = spanBuilder.startSpan();

@@ -27,6 +27,8 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+
 /**
  * Test executor instrumentation for Akka specific classes.
  * This is to large extent a copy of ExecutorInstrumentationTest.
@@ -54,9 +56,7 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
     new Runnable() {
       @Override
       void run() {
-        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
-        def parentScope = TEST_TRACER.withSpan(parentSpan)
-        try {
+        runUnderTrace("parent") {
           // this child will have a span
           def child1 = new AkkaAsyncChild()
           // this child won't
@@ -65,9 +65,6 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
           m(pool, child2)
           child1.waitForCompletion()
           child2.waitForCompletion()
-        } finally {
-          parentSpan.end()
-          parentScope.close()
         }
       }
     }.run()
@@ -111,9 +108,7 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
     new Runnable() {
       @Override
       void run() {
-        def parentSpan = TEST_TRACER.spanBuilder("parent").startSpan()
-        def parentScope = TEST_TRACER.withSpan(parentSpan)
-        try {
+        runUnderTrace("parent") {
           try {
             for (int i = 0; i < 20; ++i) {
               // Our current instrumentation instrumentation does not behave very well
@@ -140,9 +135,6 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
           for (AkkaAsyncChild child : children) {
             child.unblock()
           }
-        } finally {
-          parentSpan.end()
-          parentScope.close()
         }
       }
     }.run()

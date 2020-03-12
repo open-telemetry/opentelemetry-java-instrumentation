@@ -21,7 +21,7 @@ import lombok.Data;
 @Data
 @Builder(builderClassName = "Builder", toBuilder = true)
 public class DBInfo {
-  public static DBInfo DEFAULT = new Builder().type("database").build();
+  public static final DBInfo DEFAULT = new Builder().type("database").build();
   private final String type;
   private final String subtype;
   private final String url;
