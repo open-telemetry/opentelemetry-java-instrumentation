@@ -151,7 +151,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     public Span start(final HttpURLConnection connection) {
       span =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(connection)).setSpanKind(CLIENT).startSpan();
+          TRACER
+              .spanBuilder(DECORATE.spanNameForRequest(connection))
+              .setSpanKind(CLIENT)
+              .startSpan();
       try (final Scope scope = TRACER.withSpan(span)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, connection);

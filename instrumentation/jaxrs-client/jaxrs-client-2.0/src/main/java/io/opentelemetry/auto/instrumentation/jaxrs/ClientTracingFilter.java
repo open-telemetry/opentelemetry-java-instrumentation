@@ -38,7 +38,10 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   @Override
   public void filter(final ClientRequestContext requestContext) {
     final Span span =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(requestContext)).setSpanKind(CLIENT).startSpan();
+        TRACER
+            .spanBuilder(DECORATE.spanNameForRequest(requestContext))
+            .setSpanKind(CLIENT)
+            .startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, requestContext);

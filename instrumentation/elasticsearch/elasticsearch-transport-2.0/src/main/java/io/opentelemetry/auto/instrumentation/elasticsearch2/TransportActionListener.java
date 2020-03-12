@@ -19,7 +19,6 @@ import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchT
 
 import com.google.common.base.Joiner;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;

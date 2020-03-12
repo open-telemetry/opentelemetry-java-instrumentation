@@ -23,7 +23,6 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

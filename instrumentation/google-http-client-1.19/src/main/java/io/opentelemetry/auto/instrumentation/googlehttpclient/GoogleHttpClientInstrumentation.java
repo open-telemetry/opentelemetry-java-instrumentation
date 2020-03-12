@@ -105,7 +105,11 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
       if (state == null) {
         state =
-            new RequestState(TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan());
+            new RequestState(
+                TRACER
+                    .spanBuilder(DECORATE.spanNameForRequest(request))
+                    .setSpanKind(CLIENT)
+                    .startSpan());
         contextStore.put(request, state);
       }
 
