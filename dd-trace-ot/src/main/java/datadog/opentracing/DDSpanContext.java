@@ -70,7 +70,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   // Additional Metadata
   private final String threadName = Thread.currentThread().getName();
-  private final long threadId = Thread.currentThread().getId();
+  // Visible for use in DDSpan
+  final long threadId = Thread.currentThread().getId();
 
   private final Map<String, String> serviceNameMappings;
 
