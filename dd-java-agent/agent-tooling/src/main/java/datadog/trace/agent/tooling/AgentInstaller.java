@@ -1,13 +1,11 @@
 package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.skipClassLoader;
-import static datadog.trace.agent.tooling.bytebuddy.matcher.AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.api.Config;
@@ -72,18 +70,10 @@ public class AgentInstaller {
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader());
-    if (skipAdditionalLibraryMatcher) {
-      // Ignore classes matched by globalIgnoresMatcher but not matched by
-      // additionalLibraryIgnoresMatcher.
-      // Note: globalIgnoresMatcher includes additionalLibraryIgnoresMatcher internally for
-      // efficiency purposes.
-      // Note2: this is expected to be used by tests only.
-      ignoredAgentBuilder =
-          ignoredAgentBuilder.or(
-              globalIgnoresMatcher().and(not(additionalLibraryIgnoresMatcher())));
-    } else {
-      ignoredAgentBuilder = ignoredAgentBuilder.or(globalIgnoresMatcher());
-    }
+
+    ignoredAgentBuilder =
+        ignoredAgentBuilder.or(globalIgnoresMatcher(skipAdditionalLibraryMatcher));
+
     ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
 
     AgentBuilder agentBuilder = ignoredAgentBuilder;
