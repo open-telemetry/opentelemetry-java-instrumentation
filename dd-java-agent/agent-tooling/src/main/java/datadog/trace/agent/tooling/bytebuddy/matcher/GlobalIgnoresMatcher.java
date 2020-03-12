@@ -156,8 +156,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     }
 
     if (!skipAdditionalLibraryMatcher && additionalLibraryIgnoreMatcher.matches(target)) {
-        return true;
-      }
+      return true;
     }
 
     return false;
