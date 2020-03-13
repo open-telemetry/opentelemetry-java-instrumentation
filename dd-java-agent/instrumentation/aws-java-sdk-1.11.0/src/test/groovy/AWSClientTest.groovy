@@ -146,6 +146,8 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
+            "$Tags.PEER_PORT" server.address.port
+            "$Tags.PEER_HOSTNAME" "localhost"
             "aws.service" { it.contains(service) }
             "aws.endpoint" "$server.address"
             "aws.operation" "${operation}Request"
@@ -240,6 +242,8 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" 61
             "aws.service" { it.contains(service) }
             "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
             "aws.operation" "${operation}Request"
@@ -306,6 +310,7 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD" "HEAD"
+            "$Tags.PEER_HOSTNAME" "s3.amazonaws.com"
             "aws.service" "Amazon S3"
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.operation" "HeadBucketRequest"
@@ -352,6 +357,8 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "GET"
+            "$Tags.PEER_PORT" server.address.port
+            "$Tags.PEER_HOSTNAME" "localhost"
             "aws.service" "Amazon S3"
             "aws.endpoint" "$server.address"
             "aws.operation" "GetObjectRequest"

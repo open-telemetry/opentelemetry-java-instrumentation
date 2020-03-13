@@ -12,6 +12,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
 public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequest, HttpContext> {
+
   public static final ApacheHttpAsyncClientDecorator DECORATE =
       new ApacheHttpAsyncClientDecorator();
 
@@ -47,34 +48,6 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
     } else {
       final RequestLine requestLine = request.getRequestLine();
       return requestLine == null ? null : new URI(requestLine.getUri());
-    }
-  }
-
-  @Override
-  protected String hostname(final HttpRequest request) {
-    try {
-      final URI uri = url(request);
-      if (uri != null) {
-        return uri.getHost();
-      } else {
-        return null;
-      }
-    } catch (final URISyntaxException e) {
-      return null;
-    }
-  }
-
-  @Override
-  protected Integer port(final HttpRequest request) {
-    try {
-      final URI uri = url(request);
-      if (uri != null) {
-        return uri.getPort();
-      } else {
-        return null;
-      }
-    } catch (final URISyntaxException e) {
-      return null;
     }
   }
 
