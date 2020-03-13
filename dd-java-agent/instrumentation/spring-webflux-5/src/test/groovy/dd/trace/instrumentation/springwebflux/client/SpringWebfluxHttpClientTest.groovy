@@ -11,9 +11,11 @@ import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan
 
+@Timeout(5)
 class SpringWebfluxHttpClientTest extends HttpClientTest {
 
   @Shared
@@ -90,6 +92,11 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
   }
 
   boolean testConnectionFailure() {
+    false
+  }
+
+  boolean testRemoteConnection() {
+    // FIXME: figure out how to configure timeouts.
     false
   }
 }

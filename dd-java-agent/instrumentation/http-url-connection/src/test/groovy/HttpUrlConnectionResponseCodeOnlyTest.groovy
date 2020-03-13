@@ -1,6 +1,8 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import spock.lang.Timeout
 
+@Timeout(5)
 class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
 
   @Override
@@ -8,6 +10,8 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
     HttpURLConnection connection = uri.toURL().openConnection()
     try {
       connection.setRequestMethod(method)
+      connection.connectTimeout = 2000
+      connection.readTimeout = 2000
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       return connection.getResponseCode()

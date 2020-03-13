@@ -6,10 +6,18 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.internal.http.HttpMethod
+import spock.lang.Timeout
 
+import java.util.concurrent.TimeUnit
+
+@Timeout(5)
 class OkHttp3Test extends HttpClientTest {
 
-  def client = new OkHttpClient()
+  def client = new OkHttpClient.Builder()
+    .connectTimeout(2, TimeUnit.SECONDS)
+    .readTimeout(2, TimeUnit.SECONDS)
+    .writeTimeout(2, TimeUnit.SECONDS)
+    .build()
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {

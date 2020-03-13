@@ -7,6 +7,7 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import org.asynchttpclient.Response
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -16,6 +17,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
+@Timeout(5)
 class Netty40ClientTest extends HttpClientTest {
 
   @Shared
@@ -58,6 +60,11 @@ class Netty40ClientTest extends HttpClientTest {
   @Override
   boolean testConnectionFailure() {
     false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
   }
 
   def "connection error (unopened port)"() {

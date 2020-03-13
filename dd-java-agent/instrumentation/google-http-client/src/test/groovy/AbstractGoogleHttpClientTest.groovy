@@ -23,6 +23,8 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
     GenericUrl genericUrl = new GenericUrl(uri)
 
     HttpRequest request = requestFactory.buildRequest(method, genericUrl, null)
+    request.connectTimeout = 2000
+    request.readTimeout = 2000
     request.getHeaders().putAll(headers)
     request.setThrowExceptionOnExecuteError(throwExceptionOnError)
 

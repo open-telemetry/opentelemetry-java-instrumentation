@@ -10,10 +10,17 @@ import org.apache.commons.httpclient.methods.PostMethod
 import org.apache.commons.httpclient.methods.PutMethod
 import org.apache.commons.httpclient.methods.TraceMethod
 import spock.lang.Shared
+import spock.lang.Timeout
 
+@Timeout(5)
 class CommonsHttpClientTest extends HttpClientTest {
   @Shared
   HttpClient client = new HttpClient()
+
+  def setupSpec() {
+    client.setConnectionTimeout(2000)
+    client.setTimeout(2000)
+  }
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {

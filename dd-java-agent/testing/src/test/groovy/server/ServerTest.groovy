@@ -18,12 +18,12 @@ class ServerTest extends AgentTestRunner {
 
   def "test server lifecycle"() {
     setup:
-    def server = httpServer(startAutomatically) {
+    def server = httpServer {
       handlers {}
     }
 
     expect:
-    server.internalServer.isRunning() == startAutomatically
+    server.internalServer.isRunning()
 
     when:
     server.start()
@@ -51,9 +51,6 @@ class ServerTest extends AgentTestRunner {
 
     cleanup:
     server.stop()
-
-    where:
-    startAutomatically << [true, false]
   }
 
   def "server 404's with no handlers"() {

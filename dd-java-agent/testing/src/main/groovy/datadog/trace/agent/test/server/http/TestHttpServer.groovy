@@ -22,17 +22,14 @@ import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan
 
 class TestHttpServer implements AutoCloseable {
 
-  static TestHttpServer httpServer(boolean start = true,
-                                   @DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  static TestHttpServer httpServer(@DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
 
     def server = new TestHttpServer()
     def clone = (Closure) spec.clone()
     clone.delegate = server
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(server)
-    if (start) {
-      server.start()
-    }
+    server.start()
     return server
   }
 
