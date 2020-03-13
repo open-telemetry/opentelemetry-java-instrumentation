@@ -1,6 +1,9 @@
+import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.Request
+import com.amazonaws.SDKGlobalConfiguration
+import com.amazonaws.SdkClientException
 import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.AnonymousAWSCredentials
