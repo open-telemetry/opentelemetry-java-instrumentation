@@ -38,17 +38,10 @@ class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
     return response.code()
   }
 
-
   @Override
   OkHttpClientDecorator decorator() {
     return OkHttpClientDecorator.DECORATE
   }
-
-  @Override
-  String expectedOperationName() {
-    return "okhttp.request"
-  }
-
 
   boolean testRedirects() {
     false

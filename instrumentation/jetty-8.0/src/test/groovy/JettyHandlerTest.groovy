@@ -78,11 +78,6 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "jetty.request"
-  }
-
-  @Override
   boolean testExceptionBody() {
     false
   }
@@ -134,7 +129,7 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def handlerName = handler().class.name
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName "$method $handlerName"
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -147,9 +142,9 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
         "$MoreTags.RESOURCE_NAME" "$method $handlerName"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Long
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" Long
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         "span.origin.type" handlerName

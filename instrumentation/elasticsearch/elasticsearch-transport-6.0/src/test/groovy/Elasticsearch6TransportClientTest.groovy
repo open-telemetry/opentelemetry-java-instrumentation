@@ -110,9 +110,9 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" tcpPort
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
@@ -213,9 +213,9 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "CreateIndexAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" tcpPort
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
@@ -232,9 +232,9 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" tcpPort
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
@@ -269,9 +269,9 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" tcpPort
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
@@ -294,9 +294,9 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" tcpPort
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"

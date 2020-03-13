@@ -30,6 +30,7 @@ import ratpack.test.embed.EmbeddedApp
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -83,6 +84,13 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
             }
           }
         }
+        prefix("path/:id/param") {
+          all {
+            controller(PATH_PARAM) {
+              context.response.status(PATH_PARAM.status).send(pathTokens.id)
+            }
+          }
+        }
       }
     }
     ratpack.server.start()
@@ -109,28 +117,28 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   }
 
   @Override
-  String expectedOperationName() {
-    "netty.request"
+  boolean hasHandlerSpan() {
+    true
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean testPathParam() {
     true
   }
 
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "ratpack.handler"
+      operationName endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
       spanKind INTERNAL
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
+        "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Long
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Long
@@ -146,7 +154,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
 
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -156,12 +164,12 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
+        "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_PORT" Long
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$MoreTags.NET_PEER_PORT" Long
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         if (endpoint.query) {

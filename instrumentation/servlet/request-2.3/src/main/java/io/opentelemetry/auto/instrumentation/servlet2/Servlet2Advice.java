@@ -63,10 +63,11 @@ public class Servlet2Advice {
       response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
     }
 
-    final Span.Builder builder = TRACER.spanBuilder("servlet.request").setSpanKind(SERVER);
+    final Span.Builder builder =
+        TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
     try {
       final SpanContext extractedContext =
-          TRACER.getHttpTextFormat().extract((HttpServletRequest) request, GETTER);
+          TRACER.getHttpTextFormat().extract(httpServletRequest, GETTER);
       builder.setParent(extractedContext);
     } catch (final IllegalArgumentException e) {
       // Couldn't extract a context. We should treat this as a root span. '

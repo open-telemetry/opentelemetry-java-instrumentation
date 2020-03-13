@@ -123,9 +123,4 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDe
   NettyHttpServerDecorator decorator() {
     NettyHttpServerDecorator.DECORATE
   }
-
-  @Override
-  String expectedOperationName() {
-    "netty.request"
-  }
 }

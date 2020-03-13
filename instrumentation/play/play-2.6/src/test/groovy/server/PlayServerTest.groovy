@@ -86,11 +86,6 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "akka-http.request"
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }
@@ -110,7 +105,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Long
@@ -126,7 +121,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
 
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -139,7 +134,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
         "$Tags.HTTP_STATUS" endpoint.status
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }

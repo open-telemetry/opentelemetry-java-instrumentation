@@ -333,17 +333,17 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       } else {
         childOf((SpanData) parentSpan)
       }
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind CLIENT
       errored exception != null
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
         "$Tags.COMPONENT" clientDecorator.getComponentName()
-        "$Tags.PEER_HOSTNAME" "localhost"
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" uri.port
-        "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
+        "$MoreTags.NET_PEER_NAME" "localhost"
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" uri.port
+        "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "$Tags.HTTP_METHOD" method
         if (status) {
           "$Tags.HTTP_STATUS" status
@@ -374,8 +374,8 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     }
   }
 
-  String expectedOperationName() {
-    return "http.request"
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 
   int extraClientSpans() {
@@ -392,5 +392,9 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
   boolean testConnectionFailure() {
     true
+  }
+
+  URI removeFragment(URI uri) {
+    return new URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, null)
   }
 }

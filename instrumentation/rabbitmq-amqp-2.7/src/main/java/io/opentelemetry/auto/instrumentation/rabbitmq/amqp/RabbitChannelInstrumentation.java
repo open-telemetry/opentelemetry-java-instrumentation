@@ -47,7 +47,6 @@ import com.rabbitmq.client.MessageProperties;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -149,7 +148,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       }
       final Span span = spanBuilder.startSpan();
       span.setAttribute(MoreTags.RESOURCE_NAME, method);
-      span.setAttribute(Tags.PEER_PORT, connection.getPort());
+      span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       CURRENT_RABBIT_SPAN.set(span);
@@ -270,7 +269,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (response != null) {
         span.setAttribute("message.size", response.getBody().length);
       }
-      span.setAttribute(Tags.PEER_PORT, connection.getPort());
+      span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
       try (final Scope scope = TRACER.withSpan(span)) {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onGet(span, queue);

@@ -140,8 +140,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "CONNECT:" + dbAddr
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.PEER_HOSTNAME" HOST
-            "$Tags.PEER_PORT" port
+            "$MoreTags.NET_PEER_NAME" HOST
+            "$MoreTags.NET_PEER_PORT" port
             "$Tags.DB_TYPE" "redis"
             "db.redis.dbIndex" 0
           }
@@ -177,8 +177,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "CONNECT:" + dbAddrNonExistent
             "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
-            "$Tags.PEER_HOSTNAME" HOST
-            "$Tags.PEER_PORT" incorrectPort
+            "$MoreTags.NET_PEER_NAME" HOST
+            "$MoreTags.NET_PEER_PORT" incorrectPort
             "$Tags.DB_TYPE" "redis"
             "db.redis.dbIndex" 0
             errorTags CompletionException, String

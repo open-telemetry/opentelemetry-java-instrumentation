@@ -36,7 +36,11 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(final Chain chain) throws IOException {
-    final Span span = TRACER.spanBuilder("okhttp.request").setSpanKind(CLIENT).startSpan();
+    final Span span =
+        TRACER
+            .spanBuilder(DECORATE.spanNameForRequest(chain.request()))
+            .setSpanKind(CLIENT)
+            .startSpan();
 
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);

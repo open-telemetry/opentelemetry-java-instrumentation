@@ -81,11 +81,6 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "netty.request"
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }
@@ -105,7 +100,7 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Long

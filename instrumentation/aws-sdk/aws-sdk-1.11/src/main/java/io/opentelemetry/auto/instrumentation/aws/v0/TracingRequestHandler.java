@@ -47,7 +47,8 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    final Span span = TRACER.spanBuilder("aws.http").setSpanKind(CLIENT).startSpan();
+    final Span span =
+        TRACER.spanBuilder(decorate.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
     decorate.afterStart(span);
     decorate.onRequest(span, request);
     request.addHandlerContext(

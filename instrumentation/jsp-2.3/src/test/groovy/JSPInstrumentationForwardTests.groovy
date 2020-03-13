@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import com.google.common.io.Files
+import io.opentelemetry.auto.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -105,14 +106,14 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$forwardFromFileName"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -196,14 +197,14 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToHtml.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -257,14 +258,14 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 9) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -393,14 +394,14 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToJspForward.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
@@ -504,14 +505,14 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToCompileError.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
@@ -580,14 +581,14 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName "servlet.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
-            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-            "$Tags.PEER_PORT" Long
+            "$MoreTags.NET_PEER_IP" "127.0.0.1"
+            "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToNonExistent.jsp"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 404
@@ -626,5 +627,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     cleanup:
     res.close()
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
   }
 }

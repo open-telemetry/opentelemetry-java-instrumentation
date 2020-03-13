@@ -45,7 +45,8 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
     final Context context = subscriber.currentContext();
     final Span parentSpan = context.<Span>getOrEmpty(Span.class).orElseGet(TRACER::getCurrentSpan);
 
-    final Span.Builder builder = TRACER.spanBuilder("http.request").setSpanKind(CLIENT);
+    final Span.Builder builder =
+        TRACER.spanBuilder(DECORATE.spanNameForRequest(clientRequest)).setSpanKind(CLIENT);
     if (parentSpan != null) {
       builder.setParent(parentSpan);
     } else {

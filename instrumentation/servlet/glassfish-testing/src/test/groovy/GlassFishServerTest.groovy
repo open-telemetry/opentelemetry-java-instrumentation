@@ -88,11 +88,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "servlet.request"
-  }
-
-  @Override
   boolean redirectHasBody() {
     true
   }
@@ -100,7 +95,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -112,11 +107,11 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Long
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_STATUS" endpoint.status
         "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
         "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }

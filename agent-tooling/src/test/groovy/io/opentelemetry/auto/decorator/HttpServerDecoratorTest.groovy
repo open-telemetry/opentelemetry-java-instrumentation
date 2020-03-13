@@ -44,7 +44,7 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     where:
     req                                                                    | url
     null                                                                   | _
-    [method: "test-method", url: URI.create("http://test-url?some=query")] | "http://test-url/"
+    [method: "test-method", url: URI.create("http://test-url?some=query")] | "http://test-url/?some=query"
     [method: "test-method", url: URI.create("http://a:80/")]               | "http://a/"
     [method: "test-method", url: URI.create("https://10.0.0.1:443")]       | "https://10.0.0.1/"
     [method: "test-method", url: URI.create("https://localhost:0/1/")]     | "https://localhost/1/"
@@ -76,20 +76,20 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     0 * _
 
     where:
-    tagQueryString | url                                                    | expectedUrl           | expectedQuery       | expectedFragment
-    false          | null                                                   | null                  | null                | null
-    false          | ""                                                     | "/"                   | ""                  | null
-    false          | "/path?query"                                          | "/path"               | ""                  | null
-    false          | "https://host:0"                                       | "https://host/"       | ""                  | null
-    false          | "https://host/path"                                    | "https://host/path"   | ""                  | null
-    false          | "http://host:99/path?query#fragment"                   | "http://host:99/path" | ""                  | null
-    true           | null                                                   | null                  | null                | null
-    true           | ""                                                     | "/"                   | null                | null
-    true           | "/path?encoded+%28query%29%3F?"                        | "/path"               | "encoded+(query)??" | null
-    true           | "https://host:0"                                       | "https://host/"       | null                | null
-    true           | "https://host/path"                                    | "https://host/path"   | null                | null
-    true           | "http://host:99/path?query#enc+%28fragment%29%3F"      | "http://host:99/path" | "query"             | "enc+(fragment)?"
-    true           | "http://host:99/path?query#enc+%28fragment%29%3F?tail" | "http://host:99/path" | "query"             | "enc+(fragment)??tail"
+    tagQueryString | url                                                    | expectedUrl                                      | expectedQuery       | expectedFragment
+    false          | null                                                   | null                                             | null                | null
+    false          | ""                                                     | "/"                                              | ""                  | null
+    false          | "/path?query"                                          | "/path?query"                                    | ""                  | null
+    false          | "https://host:0"                                       | "https://host/"                                  | ""                  | null
+    false          | "https://host/path"                                    | "https://host/path"                              | ""                  | null
+    false          | "http://host:99/path?query#fragment"                   | "http://host:99/path?query#fragment"             | ""                  | null
+    true           | null                                                   | null                                             | null                | null
+    true           | ""                                                     | "/"                                              | null                | null
+    true           | "/path?encoded+%28query%29%3F?"                        | "/path?encoded+(query)??"                        | "encoded+(query)??" | null
+    true           | "https://host:0"                                       | "https://host/"                                  | null                | null
+    true           | "https://host/path"                                    | "https://host/path"                              | null                | null
+    true           | "http://host:99/path?query#enc+%28fragment%29%3F"      | "http://host:99/path?query#enc+(fragment)?"      | "query"             | "enc+(fragment)?"
+    true           | "http://host:99/path?query#enc+%28fragment%29%3F?tail" | "http://host:99/path?query#enc+(fragment)??tail" | "query"             | "enc+(fragment)??tail"
 
     req = [url: url == null ? null : new URI(url)]
   }
@@ -103,11 +103,11 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (conn) {
-      1 * span.setAttribute(Tags.PEER_PORT, 555)
+      1 * span.setAttribute(MoreTags.NET_PEER_PORT, 555)
       if (ipv4) {
-        1 * span.setAttribute(Tags.PEER_HOST_IPV4, "10.0.0.1")
+        1 * span.setAttribute(MoreTags.NET_PEER_IP, "10.0.0.1")
       } else if (ipv4 != null) {
-        1 * span.setAttribute(Tags.PEER_HOST_IPV6, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
+        1 * span.setAttribute(MoreTags.NET_PEER_IP, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
       }
     }
     0 * _

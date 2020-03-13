@@ -43,11 +43,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     return Servlet3Decorator.DECORATE
   }
 
-  @Override
-  String expectedOperationName() {
-    return "servlet.request"
-  }
-
   // FIXME: Add authentication tests back in...
 //  @Shared
 //  protected String user = "user"
@@ -85,7 +80,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def hasDispatchSpan = hasDispatchSpan(endpoint)
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
@@ -97,9 +92,9 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Long
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" Long
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         "servlet.context" "/$context"

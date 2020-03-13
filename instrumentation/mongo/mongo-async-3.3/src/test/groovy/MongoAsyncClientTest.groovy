@@ -302,9 +302,9 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "$MoreTags.RESOURCE_NAME" statementEval
         "$MoreTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
-        "$Tags.PEER_HOSTNAME" "localhost"
-        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-        "$Tags.PEER_PORT" port
+        "$MoreTags.NET_PEER_NAME" "localhost"
+        "$MoreTags.NET_PEER_IP" "127.0.0.1"
+        "$MoreTags.NET_PEER_PORT" port
         "$Tags.DB_STATEMENT" statementEval
         "$Tags.DB_TYPE" "mongo"
         "$Tags.DB_INSTANCE" instance

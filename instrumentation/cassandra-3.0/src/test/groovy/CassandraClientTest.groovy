@@ -136,9 +136,9 @@ class CassandraClientTest extends AgentTestRunner {
         "$MoreTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
         "$MoreTags.SPAN_TYPE" SpanTypes.CASSANDRA
         "$Tags.COMPONENT" "java-cassandra"
-        "$Tags.PEER_HOSTNAME" "localhost"
-        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-        "$Tags.PEER_PORT" EmbeddedCassandraServerHelper.getNativeTransportPort()
+        "$MoreTags.NET_PEER_NAME" "localhost"
+        "$MoreTags.NET_PEER_IP" "127.0.0.1"
+        "$MoreTags.NET_PEER_PORT" EmbeddedCassandraServerHelper.getNativeTransportPort()
         "$Tags.DB_TYPE" "cassandra"
         "$Tags.DB_INSTANCE" keyspace
         "$Tags.DB_STATEMENT" statement

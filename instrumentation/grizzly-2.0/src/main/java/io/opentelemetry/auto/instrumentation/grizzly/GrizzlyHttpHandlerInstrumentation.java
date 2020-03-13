@@ -85,7 +85,8 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("grizzly.request").setSpanKind(SERVER);
+      final Span.Builder spanBuilder =
+          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
         spanBuilder.setParent(extractedContext);

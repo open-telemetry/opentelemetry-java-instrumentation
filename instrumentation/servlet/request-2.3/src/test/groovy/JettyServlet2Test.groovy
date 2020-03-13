@@ -83,11 +83,6 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "servlet.request"
-  }
-
-  @Override
   boolean testNotFound() {
     false
   }
@@ -95,7 +90,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -107,9 +102,9 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+        "$MoreTags.NET_PEER_IP" "127.0.0.1"
         // No peer port
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         "servlet.context" "/$CONTEXT"

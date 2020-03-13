@@ -29,6 +29,7 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.web.servlet.view.RedirectView
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
@@ -56,11 +57,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   }
 
   @Override
-  String expectedOperationName() {
-    return "servlet.request"
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }
@@ -75,6 +71,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
     // FIXME: the instrumentation adds an extra controller span which is not consistent.
     // Fix tests or remove extra span.
     false
+  }
+
+  @Override
+  boolean testPathParam() {
+    true
   }
 
   @Override
@@ -112,7 +113,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -122,12 +123,12 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" "$method ${endpoint.resolve(address).path}"
+        "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.PEER_PORT" Long
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$MoreTags.NET_PEER_PORT" Long
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         "span.origin.type" ApplicationFilterChain.name

@@ -23,7 +23,6 @@ import spock.lang.Ignore
 import spock.lang.Requires
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -104,7 +103,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -113,15 +112,15 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
           }
         }
         span(2) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -130,8 +129,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -186,7 +185,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -195,15 +194,15 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
           }
         }
         span(2) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -212,8 +211,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -253,7 +252,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -262,8 +261,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
@@ -319,7 +318,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("POST")
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -328,8 +327,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
             "$MoreTags.RESOURCE_NAME" "POST $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" STATUS

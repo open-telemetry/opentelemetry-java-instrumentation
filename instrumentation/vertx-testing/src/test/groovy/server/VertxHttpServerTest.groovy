@@ -72,11 +72,6 @@ class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator
   }
 
   @Override
-  String expectedOperationName() {
-    "netty.request"
-  }
-
-  @Override
   boolean testExceptionBody() {
     false
   }

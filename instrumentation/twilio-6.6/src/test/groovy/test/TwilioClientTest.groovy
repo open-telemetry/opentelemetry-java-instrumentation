@@ -25,6 +25,7 @@ import com.twilio.http.TwilioRestClient
 import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -282,13 +283,13 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "http.request"
+          operationName expectedOperationName("POST")
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
@@ -381,26 +382,26 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "http.request"
+          operationName expectedOperationName("POST")
           spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
           }
         }
         span(3) {
-          operationName "http.request"
+          operationName expectedOperationName("POST")
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
@@ -516,26 +517,26 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(3) {
-          operationName "http.request"
+          operationName expectedOperationName("POST")
           spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
           }
         }
         span(4) {
-          operationName "http.request"
+          operationName expectedOperationName("POST")
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" String
+            "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
             "$Tags.HTTP_STATUS" Long
@@ -794,4 +795,7 @@ class TwilioClientTest extends AgentTestRunner {
     Twilio.setRestClient(null)
   }
 
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
+  }
 }

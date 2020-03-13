@@ -67,7 +67,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "test"
+          operationName name
           parent()
           tags {
             "$MoreTags.RESOURCE_NAME" name
