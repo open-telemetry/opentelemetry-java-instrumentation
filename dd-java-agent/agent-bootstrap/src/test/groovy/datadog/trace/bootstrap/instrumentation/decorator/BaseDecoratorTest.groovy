@@ -4,8 +4,8 @@ import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.AgentScope
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.tag.Tags
 import spock.lang.Shared
 import spock.lang.Timeout
 
@@ -24,7 +24,7 @@ class BaseDecoratorTest extends DDSpecification {
 
     then:
     1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
-    1 * span.setTag(Tags.COMPONENT.key, "test-component")
+    1 * span.setTag(Tags.COMPONENT, "test-component")
     _ * span.setTag(_, _) // Want to allow other calls from child implementations.
     0 * _
   }
@@ -35,16 +35,16 @@ class BaseDecoratorTest extends DDSpecification {
 
     then:
     if (connection.getAddress()) {
-      2 * span.setTag(Tags.PEER_HOSTNAME.key, connection.hostName)
+      2 * span.setTag(Tags.PEER_HOSTNAME, connection.hostName)
     } else {
-      1 * span.setTag(Tags.PEER_HOSTNAME.key, connection.hostName)
+      1 * span.setTag(Tags.PEER_HOSTNAME, connection.hostName)
     }
-    1 * span.setTag(Tags.PEER_PORT.key, connection.port)
+    1 * span.setTag(Tags.PEER_PORT, connection.port)
     if (connection.address instanceof Inet4Address) {
-      1 * span.setTag(Tags.PEER_HOST_IPV4.key, connection.address.hostAddress)
+      1 * span.setTag(Tags.PEER_HOST_IPV4, connection.address.hostAddress)
     }
     if (connection.address instanceof Inet6Address) {
-      1 * span.setTag(Tags.PEER_HOST_IPV6.key, connection.address.hostAddress)
+      1 * span.setTag(Tags.PEER_HOST_IPV6, connection.address.hostAddress)
     }
     0 * _
 
