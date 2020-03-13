@@ -226,9 +226,9 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "local"
-            "$Tags.PEER_HOST_IPV4" "0.0.0.0"
-            "$Tags.PEER_PORT" 0
+            "$MoreTags.NET_PEER_NAME" "local"
+            "$MoreTags.NET_PEER_IP" "0.0.0.0"
+            "$MoreTags.NET_PEER_PORT" 0
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
@@ -264,9 +264,9 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "local"
-            "$Tags.PEER_HOST_IPV4" "0.0.0.0"
-            "$Tags.PEER_PORT" 0
+            "$MoreTags.NET_PEER_NAME" "local"
+            "$MoreTags.NET_PEER_IP" "0.0.0.0"
+            "$MoreTags.NET_PEER_PORT" 0
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
@@ -284,9 +284,9 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
             "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "local"
-            "$Tags.PEER_HOST_IPV4" "0.0.0.0"
-            "$Tags.PEER_PORT" 0
+            "$MoreTags.NET_PEER_NAME" "local"
+            "$MoreTags.NET_PEER_IP" "0.0.0.0"
+            "$MoreTags.NET_PEER_PORT" 0
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"

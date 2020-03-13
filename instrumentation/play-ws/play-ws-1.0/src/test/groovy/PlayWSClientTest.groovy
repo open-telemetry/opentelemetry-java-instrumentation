@@ -78,10 +78,6 @@ class PlayWSClientTest extends HttpClientTest<PlayWSClientDecorator> {
     return PlayWSClientDecorator.DECORATE
   }
 
-  String expectedOperationName() {
-    return "play-ws.request"
-  }
-
   @Override
   boolean testCircularRedirects() {
     return false

@@ -71,11 +71,6 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<NettyHttpClientD
   }
 
   @Override
-  String expectedOperationName() {
-    return "netty.client.request"
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }

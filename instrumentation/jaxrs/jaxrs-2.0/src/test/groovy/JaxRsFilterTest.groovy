@@ -74,7 +74,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "test.span"
+          operationName parentResourceName != null ? parentResourceName : "test.span"
           tags {
             "$MoreTags.RESOURCE_NAME" parentResourceName
             "$Tags.COMPONENT" "jax-rs"

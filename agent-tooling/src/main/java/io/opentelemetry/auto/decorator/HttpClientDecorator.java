@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecorator {
 
+  public static final String DEFAULT_SPAN_NAME = "HTTP request";
+
   protected abstract String method(REQUEST request);
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
@@ -48,6 +50,14 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     return null;
   }
 
+  public String spanNameForRequest(final REQUEST request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    final String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
+  }
+
   public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
@@ -60,33 +70,39 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       try {
         final URI url = url(request);
         if (url != null) {
-          final StringBuilder urlNoParams = new StringBuilder();
+          final StringBuilder urlBuilder = new StringBuilder();
           if (url.getScheme() != null) {
-            urlNoParams.append(url.getScheme());
-            urlNoParams.append("://");
+            urlBuilder.append(url.getScheme());
+            urlBuilder.append("://");
           }
           if (url.getHost() != null) {
-            urlNoParams.append(url.getHost());
+            urlBuilder.append(url.getHost());
             if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
-              urlNoParams.append(":");
-              urlNoParams.append(url.getPort());
+              urlBuilder.append(":");
+              urlBuilder.append(url.getPort());
             }
           }
           final String path = url.getPath();
           if (path.isEmpty()) {
-            urlNoParams.append("/");
+            urlBuilder.append("/");
           } else {
-            urlNoParams.append(path);
+            urlBuilder.append(path);
+          }
+          final String query = url.getQuery();
+          if (query != null) {
+            urlBuilder.append("?").append(query);
+          }
+          final String fragment = url.getFragment();
+          if (fragment != null) {
+            urlBuilder.append("#").append(fragment);
           }
 
-          span.setAttribute(Tags.HTTP_URL, urlNoParams.toString());
+          span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
-            final String query = url.getQuery();
             if (query != null) {
               span.setAttribute(MoreTags.HTTP_QUERY, query);
             }
-            final String fragment = url.getFragment();
             if (fragment != null) {
               span.setAttribute(MoreTags.HTTP_FRAGMENT, fragment);
             }
@@ -98,7 +114,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
       final String hostname = hostname(request);
       if (hostname != null) {
-        span.setAttribute(Tags.PEER_HOSTNAME, hostname);
+        span.setAttribute(MoreTags.NET_PEER_NAME, hostname);
 
         if (Config.get().isHttpClientSplitByDomain()) {
           span.setAttribute(MoreTags.SERVICE_NAME, hostname);
@@ -107,7 +123,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       final Integer port = port(request);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setAttribute(Tags.PEER_PORT, port);
+        span.setAttribute(MoreTags.NET_PEER_PORT, port);
       }
     }
     return span;

@@ -15,13 +15,13 @@
  */
 import io.opentelemetry.auto.bootstrap.AgentClassLoader
 import io.opentelemetry.auto.config.Config
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 
-import static io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -56,7 +56,7 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName OPERATION_NAME
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           errored true
@@ -64,8 +64,8 @@ class UrlConnectionTest extends AgentTestRunner {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" UNUSABLE_PORT
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "$url/"
             "$Tags.HTTP_METHOD" "GET"
             errorTags ConnectException, String
@@ -115,7 +115,7 @@ class UrlConnectionTest extends AgentTestRunner {
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" UrlInstrumentation.COMPONENT
-            "$Tags.PEER_PORT" 80
+            "$MoreTags.NET_PEER_PORT" 80
             // FIXME: These tags really make no sense for non-http connections, why do we set them?
             "$Tags.HTTP_URL" "$url"
             errorTags IllegalArgumentException, String
@@ -154,5 +154,9 @@ class UrlConnectionTest extends AgentTestRunner {
         }
       }
     }
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 }

@@ -17,6 +17,7 @@ import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
+import io.opentelemetry.auto.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -76,7 +77,7 @@ class LagomTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "akka-http.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored false
           tags {
@@ -113,7 +114,7 @@ class LagomTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "akka-http.request"
+          operationName expectedOperationName("GET")
           spanKind SERVER
           errored true
           tags {
@@ -126,5 +127,9 @@ class LagomTest extends AgentTestRunner {
         }
       }
     }
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
   }
 }

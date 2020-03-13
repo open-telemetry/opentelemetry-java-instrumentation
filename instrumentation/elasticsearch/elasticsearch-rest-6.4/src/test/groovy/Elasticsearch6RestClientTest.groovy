@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import groovy.json.JsonSlurper
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -103,15 +104,15 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" httpPort
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" httpPort
             "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.DB_TYPE" "elasticsearch"
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
           tags {
@@ -124,5 +125,9 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
         }
       }
     }
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 }

@@ -19,6 +19,7 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
@@ -59,11 +60,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
   }
 
   @Override
-  String expectedOperationName() {
-    return "akka-http.request"
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }
@@ -79,7 +75,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
       trace(0, 1) {
         span(0) {
           parent()
-          operationName "akka-http.request"
+          operationName HttpClientDecorator.DEFAULT_SPAN_NAME
           spanKind CLIENT
           errored true
           tags {

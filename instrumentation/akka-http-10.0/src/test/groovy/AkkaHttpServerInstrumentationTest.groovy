@@ -33,11 +33,6 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
   }
 
   @Override
-  String expectedOperationName() {
-    return "akka-http.request"
-  }
-
-  @Override
   boolean testExceptionBody() {
     false
   }
@@ -55,7 +50,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
 
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName()
+      operationName expectedOperationName(method)
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -67,7 +62,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         if (endpoint.errored) {

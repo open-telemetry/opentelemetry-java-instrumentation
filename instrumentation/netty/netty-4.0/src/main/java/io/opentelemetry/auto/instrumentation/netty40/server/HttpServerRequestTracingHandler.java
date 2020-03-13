@@ -47,7 +47,8 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     final HttpRequest request = (HttpRequest) msg;
 
-    final Span.Builder spanBuilder = TRACER.spanBuilder("netty.request").setSpanKind(SERVER);
+    final Span.Builder spanBuilder =
+        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
     try {
       final SpanContext extractedContext =
           TRACER.getHttpTextFormat().extract(request.headers(), GETTER);

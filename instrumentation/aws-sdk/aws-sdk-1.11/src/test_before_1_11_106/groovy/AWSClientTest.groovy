@@ -30,6 +30,7 @@ import com.amazonaws.services.rds.AmazonRDSClient
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
+import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -113,7 +114,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           parent()
@@ -135,15 +136,15 @@ class AWSClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
           childOf(span(0))
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -186,7 +187,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored true
           parent()
@@ -208,15 +209,15 @@ class AWSClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName expectedOperationName(method)
           spanKind CLIENT
           errored true
           childOf(span(0))
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" UNUSABLE_PORT
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
             "$Tags.HTTP_METHOD" "$method"
             errorTags HttpHostConnectException, ~/Connection refused/
@@ -249,7 +250,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           errored true
           parent()
@@ -295,7 +296,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "aws.http"
+          operationName expectedOperationName("GET")
           spanKind CLIENT
           errored true
           parent()
@@ -316,15 +317,15 @@ class AWSClientTest extends AgentTestRunner {
         }
         (1..4).each {
           span(it) {
-            operationName "http.request"
+            operationName expectedOperationName("GET")
             spanKind CLIENT
             errored true
             childOf(span(0))
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
-              "$Tags.PEER_HOSTNAME" "localhost"
-              "$Tags.PEER_PORT" server.address.port
+              "$MoreTags.NET_PEER_NAME" "localhost"
+              "$MoreTags.NET_PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/someBucket/someKey"
               "$Tags.HTTP_METHOD" "GET"
               try {
@@ -340,5 +341,9 @@ class AWSClientTest extends AgentTestRunner {
 
     cleanup:
     server.close()
+  }
+
+  String expectedOperationName(String method) {
+    return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
 }

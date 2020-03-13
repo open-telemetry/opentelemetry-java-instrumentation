@@ -138,8 +138,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   public static class HttpUrlState {
 
-    public static final String OPERATION_NAME = "http.request";
-
     public static final ContextStore.Factory<HttpUrlState> FACTORY =
         new ContextStore.Factory<HttpUrlState>() {
           @Override
@@ -152,7 +150,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     private volatile boolean finished = false;
 
     public Span start(final HttpURLConnection connection) {
-      span = TRACER.spanBuilder(OPERATION_NAME).setSpanKind(CLIENT).startSpan();
+      span =
+          TRACER
+              .spanBuilder(DECORATE.spanNameForRequest(connection))
+              .setSpanKind(CLIENT)
+              .startSpan();
       try (final Scope scope = TRACER.withSpan(span)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, connection);

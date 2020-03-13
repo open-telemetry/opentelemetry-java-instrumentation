@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 
+import static io.opentelemetry.auto.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
@@ -100,7 +101,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       final Span parentSpan = TRACER.getCurrentSpan();
-      final Span clientSpan = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
+      final Span clientSpan = TRACER.spanBuilder(DEFAULT_SPAN_NAME).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(clientSpan);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
@@ -140,6 +141,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       final HttpRequest request = delegate.generateRequest();
+      span.updateName(DECORATE.spanNameForRequest(request));
       DECORATE.onRequest(span, request);
 
       TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);

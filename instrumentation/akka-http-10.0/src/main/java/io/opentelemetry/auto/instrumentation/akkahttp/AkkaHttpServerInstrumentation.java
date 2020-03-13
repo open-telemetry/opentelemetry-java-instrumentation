@@ -111,7 +111,8 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
   public static class WrapperHelper {
     public static SpanWithScope createSpan(final HttpRequest request) {
-      final Span.Builder spanBuilder = TRACER.spanBuilder("akka-http.request").setSpanKind(SERVER);
+      final Span.Builder spanBuilder =
+          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
         spanBuilder.setParent(extractedContext);

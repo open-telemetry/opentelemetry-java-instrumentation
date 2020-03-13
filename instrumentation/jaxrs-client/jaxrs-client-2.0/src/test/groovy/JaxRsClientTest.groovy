@@ -48,11 +48,6 @@ abstract class JaxRsClientTest extends HttpClientTest<JaxRsClientDecorator> {
     return JaxRsClientDecorator.DECORATE
   }
 
-  @Override
-  String expectedOperationName() {
-    return "jax-rs.client.call"
-  }
-
   abstract ClientBuilder builder()
 }
 

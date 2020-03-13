@@ -42,7 +42,8 @@ public class JettyHandlerAdvice {
       return null;
     }
 
-    final Span.Builder spanBuilder = TRACER.spanBuilder("jetty.request").setSpanKind(SERVER);
+    final String resourceName = req.getMethod() + " " + source.getClass().getName();
+    final Span.Builder spanBuilder = TRACER.spanBuilder(resourceName).setSpanKind(SERVER);
     try {
       final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER);
       spanBuilder.setParent(extractedContext);
@@ -56,7 +57,6 @@ public class JettyHandlerAdvice {
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
     DECORATE.onRequest(span, req);
-    final String resourceName = req.getMethod() + " " + source.getClass().getName();
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
     req.setAttribute(SPAN_ATTRIBUTE, span);

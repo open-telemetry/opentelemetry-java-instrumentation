@@ -105,7 +105,11 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
       if (state == null) {
         state =
-            new RequestState(TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan());
+            new RequestState(
+                TRACER
+                    .spanBuilder(DECORATE.spanNameForRequest(request))
+                    .setSpanKind(CLIENT)
+                    .startSpan());
         contextStore.put(request, state);
       }
 
@@ -153,7 +157,8 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final HttpRequest request) {
-      final Span span = TRACER.spanBuilder("http.request").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
 
       final ContextStore<HttpRequest, RequestState> contextStore =
           InstrumentationContext.get(HttpRequest.class, RequestState.class);

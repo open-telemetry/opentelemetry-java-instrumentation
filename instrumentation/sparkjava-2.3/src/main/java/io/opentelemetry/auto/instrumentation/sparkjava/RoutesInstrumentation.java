@@ -83,6 +83,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
       final Span span = TracerHolder.TRACER.getCurrentSpan();
       if (span != null && routeMatch != null) {
         final String resourceName = method.name().toUpperCase() + " " + routeMatch.getMatchUri();
+        span.updateName(resourceName);
         span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       }
     }

@@ -23,17 +23,12 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
   public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.span";
-
-  // Source: https://www.regextester.com/22
-  private static final Pattern VALID_IPV4_ADDRESS =
-      Pattern.compile(
-          "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
+  public static final String DEFAULT_SPAN_NAME = "HTTP request";
 
   protected abstract String method(REQUEST request);
 
@@ -50,6 +45,14 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     return SpanTypes.HTTP_SERVER;
   }
 
+  public String spanNameForRequest(final REQUEST request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    final String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
+  }
+
   public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
@@ -59,26 +62,34 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
       try {
         final URI url = url(request);
         if (url != null) {
-          final StringBuilder urlNoParams = new StringBuilder();
+          final StringBuilder urlBuilder = new StringBuilder();
           if (url.getScheme() != null) {
-            urlNoParams.append(url.getScheme());
-            urlNoParams.append("://");
+            urlBuilder.append(url.getScheme());
+            urlBuilder.append("://");
           }
           if (url.getHost() != null) {
-            urlNoParams.append(url.getHost());
+            urlBuilder.append(url.getHost());
             if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
-              urlNoParams.append(":");
-              urlNoParams.append(url.getPort());
+              urlBuilder.append(":");
+              urlBuilder.append(url.getPort());
             }
           }
           final String path = url.getPath();
           if (path.isEmpty()) {
-            urlNoParams.append("/");
+            urlBuilder.append("/");
           } else {
-            urlNoParams.append(path);
+            urlBuilder.append(path);
+          }
+          final String query = url.getQuery();
+          if (query != null) {
+            urlBuilder.append("?").append(query);
+          }
+          final String fragment = url.getFragment();
+          if (fragment != null) {
+            urlBuilder.append("#").append(fragment);
           }
 
-          span.setAttribute(Tags.HTTP_URL, urlNoParams.toString());
+          span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
             if (url.getQuery() != null) {
@@ -102,16 +113,12 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     if (connection != null) {
       final String ip = peerHostIP(connection);
       if (ip != null) {
-        if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {
-          span.setAttribute(Tags.PEER_HOST_IPV4, ip);
-        } else if (ip.contains(":")) {
-          span.setAttribute(Tags.PEER_HOST_IPV6, ip);
-        }
+        span.setAttribute(MoreTags.NET_PEER_IP, ip);
       }
       final Integer port = peerPort(connection);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setAttribute(Tags.PEER_PORT, port);
+        span.setAttribute(MoreTags.NET_PEER_PORT, port);
       }
     }
     return span;

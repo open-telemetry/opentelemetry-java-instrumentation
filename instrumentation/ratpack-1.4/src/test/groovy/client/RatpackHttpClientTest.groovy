@@ -57,11 +57,6 @@ class RatpackHttpClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   }
 
   @Override
-  String expectedOperationName() {
-    return "netty.client.request"
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }

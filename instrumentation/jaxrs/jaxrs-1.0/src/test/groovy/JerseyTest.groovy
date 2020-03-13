@@ -46,7 +46,7 @@ class JerseyTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "test.span"
+          operationName expectedResourceName
           tags {
             "$MoreTags.RESOURCE_NAME" expectedResourceName
             "$Tags.COMPONENT" "jax-rs"

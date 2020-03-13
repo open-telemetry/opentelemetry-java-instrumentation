@@ -48,11 +48,6 @@ class JaxRsClientV1Test extends HttpClientTest<JaxRsClientV1Decorator> {
     return JaxRsClientV1Decorator.DECORATE
   }
 
-  @Override
-  String expectedOperationName() {
-    return "jax-rs.client.call"
-  }
-
   boolean testCircularRedirects() {
     false
   }

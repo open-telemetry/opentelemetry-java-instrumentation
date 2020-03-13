@@ -20,6 +20,7 @@ import io.dropwizard.setup.Environment
 
 import javax.ws.rs.GET
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
@@ -28,6 +29,7 @@ import java.util.concurrent.Executors
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -103,6 +105,16 @@ class DropwizardAsyncTest extends DropwizardTest {
           def ex = new Exception(EXCEPTION.body)
           asyncResponse.resume(ex)
           throw ex
+        }
+      }
+    }
+
+    @GET
+    @Path("path/{id}/param")
+    Response path_param(@PathParam("id") int param, @Suspended final AsyncResponse asyncResponse) {
+      executor.execute {
+        controller(PATH_PARAM) {
+          asyncResponse.resume(Response.status(PATH_PARAM.status).entity(param.toString()).build())
         }
       }
     }

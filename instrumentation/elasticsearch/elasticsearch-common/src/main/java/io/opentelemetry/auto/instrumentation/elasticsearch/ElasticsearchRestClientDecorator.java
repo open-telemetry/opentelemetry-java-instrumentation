@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.elasticsearch;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
@@ -67,8 +68,8 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
 
   public Span onResponse(final Span span, final Response response) {
     if (response != null && response.getHost() != null) {
-      span.setAttribute(Tags.PEER_HOSTNAME, response.getHost().getHostName());
-      span.setAttribute(Tags.PEER_PORT, response.getHost().getPort());
+      span.setAttribute(MoreTags.NET_PEER_NAME, response.getHost().getHostName());
+      span.setAttribute(MoreTags.NET_PEER_PORT, response.getHost().getPort());
     }
     return span;
   }

@@ -20,8 +20,7 @@ import spock.lang.Shared
 
 class PlaySmokeTest extends AbstractServerSmokeTest {
 
-  static final PLAY_SPAN = 'LOGGED_SPAN play.request'
-  static final AKKA_SPAN = 'LOGGED_SPAN akka-http.request'
+  static final HTTP_REQUEST_SPAN = 'LOGGED_SPAN GET /welcome'
 
   @Shared
   File playDirectory = new File("${buildDirectory}/stage/playBinary")
@@ -44,8 +43,7 @@ class PlaySmokeTest extends AbstractServerSmokeTest {
   def "welcome endpoint #n th time"() {
     setup:
     def spanCounter = new SpanCounter(logfile, [
-      (PLAY_SPAN): 1,
-      (AKKA_SPAN): 1,
+      (HTTP_REQUEST_SPAN): 2,
     ], 10000)
     String url = "http://localhost:$httpPort/welcome?id=$n"
     def request = new Request.Builder().url(url).get().build()
@@ -58,8 +56,8 @@ class PlaySmokeTest extends AbstractServerSmokeTest {
     def responseBodyStr = response.body().string()
     responseBodyStr == "Welcome $n."
     response.code() == 200
-    spans[PLAY_SPAN] == 1
-    spans[AKKA_SPAN] == 1
+    // A 'play-action' span and an 'akka-http-server' span
+    spans[HTTP_REQUEST_SPAN] == 2
 
     where:
     n << (1..200)
