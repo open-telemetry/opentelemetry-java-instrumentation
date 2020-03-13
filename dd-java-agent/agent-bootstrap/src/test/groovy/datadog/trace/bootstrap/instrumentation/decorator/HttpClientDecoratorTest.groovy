@@ -11,7 +11,7 @@ import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   @Shared
-  def testUrl = new URI("http://myhost/somepath")
+  def testUrl = new URI("http://myhost:123/somepath")
 
   def span = Mock(AgentSpan)
 
@@ -28,10 +28,10 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     if (req) {
       1 * span.setTag(Tags.HTTP_METHOD, req.method)
       1 * span.setTag(Tags.HTTP_URL, "$req.url")
-      1 * span.setTag(Tags.PEER_HOSTNAME, req.host)
-      1 * span.setTag(Tags.PEER_PORT, req.port)
+      1 * span.setTag(Tags.PEER_HOSTNAME, req.url.host)
+      1 * span.setTag(Tags.PEER_PORT, req.url.port)
       if (renameService) {
-        1 * span.setTag(DDTags.SERVICE_NAME, req.host)
+        1 * span.setTag(DDTags.SERVICE_NAME, req.url.host)
       }
     }
     0 * _
@@ -40,8 +40,8 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     renameService | req
     false         | null
     true          | null
-    false         | [method: "test-method", url: testUrl, host: "test-host", port: 555]
-    true          | [method: "test-method", url: testUrl, host: "test-host", port: 555]
+    false         | [method: "test-method", url: testUrl]
+    true          | [method: "test-method", url: testUrl]
   }
 
   def "test url handling for #url"() {
@@ -62,23 +62,28 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setTag(DDTags.HTTP_FRAGMENT, expectedFragment)
     }
     1 * span.setTag(Tags.HTTP_METHOD, null)
-    1 * span.setTag(Tags.PEER_HOSTNAME, null)
+    if (hostname) {
+      1 * span.setTag(Tags.PEER_HOSTNAME, hostname)
+    }
+    if (port) {
+      1 * span.setTag(Tags.PEER_PORT, port)
+    }
     0 * _
 
     where:
-    tagQueryString | url                                                   | expectedUrl           | expectedQuery      | expectedFragment
-    false          | null                                                  | null                  | null               | null
-    false          | ""                                                    | "/"                   | ""                 | null
-    false          | "/path?query"                                         | "/path"               | ""                 | null
-    false          | "https://host:0"                                      | "https://host/"       | ""                 | null
-    false          | "https://host/path"                                   | "https://host/path"   | ""                 | null
-    false          | "http://host:99/path?query#fragment"                  | "http://host:99/path" | ""                 | null
-    true           | null                                                  | null                  | null               | null
-    true           | ""                                                    | "/"                   | null               | null
-    true           | "/path?encoded+%28query%29%3F"                        | "/path"               | "encoded+(query)?" | null
-    true           | "https://host:0"                                      | "https://host/"       | null               | null
-    true           | "https://host/path"                                   | "https://host/path"   | null               | null
-    true           | "http://host:99/path?query#encoded+%28fragment%29%3F" | "http://host:99/path" | "query"            | "encoded+(fragment)?"
+    tagQueryString | url                                                   | expectedUrl           | expectedQuery      | expectedFragment      | hostname | port
+    false          | null                                                  | null                  | null               | null                  | null     | null
+    false          | ""                                                    | "/"                   | ""                 | null                  | null     | null
+    false          | "/path?query"                                         | "/path"               | ""                 | null                  | null     | null
+    false          | "https://host:0"                                      | "https://host/"       | ""                 | null                  | "host"   | null
+    false          | "https://host/path"                                   | "https://host/path"   | ""                 | null                  | "host"   | null
+    false          | "http://host:99/path?query#fragment"                  | "http://host:99/path" | ""                 | null                  | "host"   | 99
+    true           | null                                                  | null                  | null               | null                  | null     | null
+    true           | ""                                                    | "/"                   | null               | null                  | null     | null
+    true           | "/path?encoded+%28query%29%3F"                        | "/path"               | "encoded+(query)?" | null                  | null     | null
+    true           | "https://host:0"                                      | "https://host/"       | null               | null                  | "host"   | null
+    true           | "https://host/path"                                   | "https://host/path"   | null               | null                  | "host"   | null
+    true           | "http://host:99/path?query#encoded+%28fragment%29%3F" | "http://host:99/path" | "query"            | "encoded+(fragment)?" | "host"   | 99
 
     req = [url: url == null ? null : new URI(url)]
   }
@@ -158,16 +163,6 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected URI url(Map m) {
         return m.url
-      }
-
-      @Override
-      protected String hostname(Map m) {
-        return m.host
-      }
-
-      @Override
-      protected Integer port(Map m) {
-        return m.port
       }
 
       @Override

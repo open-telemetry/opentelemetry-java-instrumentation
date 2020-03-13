@@ -34,16 +34,6 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String hostname(final Request httpRequest) {
-    return httpRequest.url().host();
-  }
-
-  @Override
-  protected Integer port(final Request httpRequest) {
-    return httpRequest.url().port();
-  }
-
-  @Override
   protected Integer status(final Response httpResponse) {
     return httpResponse.code();
   }
