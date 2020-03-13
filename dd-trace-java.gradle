@@ -10,7 +10,7 @@ plugins {
   // files in 'workspace' build directory in CI
   id 'com.github.sherter.google-java-format' version '0.8' apply false
   id 'com.dorongold.task-tree' version '1.5'
-  id 'pl.allegro.tech.build.axion-release' version '1.9.3'
+  id 'pl.allegro.tech.build.axion-release' version '1.10.3'
 }
 
 def isCI = System.getenv("CI") != null
