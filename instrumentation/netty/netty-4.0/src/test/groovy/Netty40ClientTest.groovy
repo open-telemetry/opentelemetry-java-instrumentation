@@ -103,7 +103,10 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
               } catch (ClassNotFoundException e) {
                 // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
               }
-              errorTags errorClass, "Connection refused: /127.0.0.1:$UNUSABLE_PORT"
+              "error.type" errorClass.name
+              "error.stack" String
+              // slightly different message on windows
+              "error.msg" ~/Connection refused:( no further information:)? \/127.0.0.1:$UNUSABLE_PORT/
             }
           }
         }
