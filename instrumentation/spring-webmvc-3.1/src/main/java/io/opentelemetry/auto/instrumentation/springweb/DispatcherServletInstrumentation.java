@@ -52,9 +52,6 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".SpringWebHttpServerDecorator",
       packageName + ".SpringWebHttpServerDecorator$1",
     };

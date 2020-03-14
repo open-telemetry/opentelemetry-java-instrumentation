@@ -16,7 +16,7 @@
 import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 
-class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpUrlConnectionDecorator> {
+class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -33,8 +33,8 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpUrlConnec
   }
 
   @Override
-  HttpUrlConnectionDecorator decorator() {
-    return HttpUrlConnectionDecorator.DECORATE
+  String component() {
+    return HttpUrlConnectionDecorator.DECORATE.getComponentName()
   }
 
   @Override

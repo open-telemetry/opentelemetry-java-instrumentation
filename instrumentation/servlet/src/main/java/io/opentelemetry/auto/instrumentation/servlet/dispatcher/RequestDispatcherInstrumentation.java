@@ -15,16 +15,16 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.dispatcher;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
@@ -49,7 +49,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/servlet/RequestDispatcher.class"));
+    return hasClassesNamed("javax.servlet.RequestDispatcher");
   }
 
   @Override
@@ -60,7 +60,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".RequestDispatcherDecorator",
+      packageName + ".RequestDispatcherDecorator",
     };
   }
 
@@ -74,10 +74,11 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
     return singletonMap(
         named("forward")
             .or(named("include"))
+            .and(takesArguments(2))
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        RequestDispatcherAdvice.class.getName());
+        getClass().getName() + "$RequestDispatcherAdvice");
   }
 
   public static class RequestDispatcherAdvice {

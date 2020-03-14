@@ -13,11 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
-import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -31,7 +26,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCE
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
@@ -225,30 +219,5 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port/$context/dispatch/")
-  }
-
-  boolean hasDispatchSpan(ServerEndpoint endpoint) {
-    true
-  }
-
-  @Override
-  void dispatchSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      operationName "servlet.dispatch"
-      spanKind INTERNAL
-      childOf((SpanData) parent)
-      errored endpoint.errored
-      tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$MoreTags.RESOURCE_NAME" endpoint.path
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.HTTP_STATUS" endpoint.status
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
-      }
-    }
   }
 }

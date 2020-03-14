@@ -180,15 +180,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     result.index == indexName
 
     and:
-    assertTraces(5) {
-      sortTraces {
-        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (traces[2][0].attributes[MoreTags.RESOURCE_NAME].stringValue == "IndexAction") {
-          def tmp = traces[2]
-          traces[2] = traces[3]
-          traces[3] = tmp
-        }
-      }
+    assertTraces(4) {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
@@ -224,22 +216,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           }
         }
       }
-      trace(2, 1) {
-        span(0) {
-          operationName "elasticsearch.query"
-          spanKind CLIENT
-          tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
-          }
-        }
-      }
-      trace(3, 1) {
+      trace(2, 2) {
         span(0) {
           operationName "elasticsearch.query"
           spanKind CLIENT
@@ -260,8 +237,22 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
             "elasticsearch.shard.replication.failed" 0
           }
         }
+        span(1) {
+          operationName "elasticsearch.query"
+          spanKind CLIENT
+          childOf span(0)
+          tags {
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "PutMappingAction"
+            "elasticsearch.request" "PutMappingRequest"
+          }
+        }
       }
-      trace(4, 1) {
+      trace(3, 1) {
         span(0) {
           operationName "elasticsearch.query"
           spanKind CLIENT

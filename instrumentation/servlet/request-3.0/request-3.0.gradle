@@ -27,7 +27,6 @@ dependencies {
   testCompile(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
-  testCompile project(':instrumentation:java-concurrent')
   testCompile project(':instrumentation:jetty-8.0') // See if there's any conflicts.
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.2.0.v20160908'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.2.0.v20160908'

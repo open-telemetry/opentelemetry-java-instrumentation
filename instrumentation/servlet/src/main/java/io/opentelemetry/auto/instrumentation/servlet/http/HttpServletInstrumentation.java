@@ -17,14 +17,13 @@ package io.opentelemetry.auto.instrumentation.servlet.http;
 
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -53,7 +52,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/servlet/http/HttpServlet.class"));
+    return hasClassesNamed("javax.servlet.http.HttpServlet");
   }
 
   @Override
@@ -64,7 +63,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".HttpServletDecorator",
+      packageName + ".HttpServletDecorator",
     };
   }
 
@@ -80,7 +79,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isProtected().or(isPublic())),
-        HttpServletAdvice.class.getName());
+        getClass().getName() + "$HttpServletAdvice");
   }
 
   public static class HttpServletAdvice {

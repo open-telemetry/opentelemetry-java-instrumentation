@@ -18,13 +18,12 @@ package io.opentelemetry.auto.instrumentation.jms;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -50,7 +49,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/jms/MessageListener.class"));
+    return hasClassesNamed("javax.jms.MessageListener");
   }
 
   @Override
@@ -61,8 +60,6 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
       packageName + ".JMSDecorator",
       packageName + ".JMSDecorator$1",
       packageName + ".JMSDecorator$2",

@@ -19,11 +19,8 @@ import java.util.concurrent.ThreadFactory;
 
 /** A {@link ThreadFactory} implementation that starts all {@link Thread} as daemons. */
 public final class DaemonThreadFactory implements ThreadFactory {
-  public static final DaemonThreadFactory TRACE_PROCESSOR =
-      new DaemonThreadFactory("dd-trace-processor");
-  public static final DaemonThreadFactory TRACE_WRITER = new DaemonThreadFactory("dd-trace-writer");
   public static final DaemonThreadFactory TASK_SCHEDULER =
-      new DaemonThreadFactory("dd-task-scheduler");
+      new DaemonThreadFactory("agent-task-scheduler");
 
   private final String threadName;
 

@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.reactor.core;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -43,7 +43,7 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("reactor/core/publisher/Mono.class"));
+    return hasClassesNamed("reactor.core.publisher.Mono");
   }
 
   @Override
@@ -59,7 +59,6 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".ReactorCoreAdviceUtils",
       packageName + ".ReactorCoreAdviceUtils$TracingSubscriber",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
       packageName + ".ReactorCoreDecorator"
     };
   }

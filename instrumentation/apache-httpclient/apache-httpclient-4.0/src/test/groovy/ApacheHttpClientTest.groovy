@@ -24,13 +24,13 @@ import org.apache.http.message.BasicHttpRequest
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
 
-abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<ApacheHttpClientDecorator> {
+abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest {
   @Shared
   def client = new DefaultHttpClient()
 
   @Override
-  ApacheHttpClientDecorator decorator() {
-    return ApacheHttpClientDecorator.DECORATE
+  String component() {
+    return ApacheHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

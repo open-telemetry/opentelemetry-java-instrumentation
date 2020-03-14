@@ -54,8 +54,6 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
       packageName + ".SpringDataDecorator",
       getClass().getName() + "$RepositoryInterceptor",
       getClass().getName() + "$InterceptingRepositoryProxyPostProcessor",

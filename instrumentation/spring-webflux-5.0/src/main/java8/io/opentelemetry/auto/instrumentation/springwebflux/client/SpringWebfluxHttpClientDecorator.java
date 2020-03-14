@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;

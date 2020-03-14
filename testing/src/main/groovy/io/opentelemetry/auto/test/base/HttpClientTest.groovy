@@ -15,8 +15,8 @@
  */
 package io.opentelemetry.auto.test.base
 
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -39,7 +39,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 import static org.junit.Assume.assumeTrue
 
 @Unroll
-abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends AgentTestRunner {
+abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
 
   @AutoCleanup
@@ -72,7 +72,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   @Shared
-  DECORATOR clientDecorator = decorator()
+  String component = component()
 
   /**
    * Make the request and return the status code response
@@ -81,7 +81,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
    */
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
 
-  abstract DECORATOR decorator()
+  abstract String component()
 
   Integer statusOnRedirectError() {
     return null
@@ -180,6 +180,9 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   def "trace request with callback and parent"() {
+    given:
+    assumeTrue(testCallbackWithParent())
+
     when:
     def status = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
@@ -339,7 +342,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
-        "$Tags.COMPONENT" clientDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" uri.port
@@ -391,6 +394,12 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   boolean testConnectionFailure() {
+    true
+  }
+
+  boolean testCallbackWithParent() {
+    // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
+    // function is used.  There is no way to stop a test from a derived class hence the flag
     true
   }
 

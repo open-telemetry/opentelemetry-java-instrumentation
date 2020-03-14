@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.jedis;
 
 import static io.opentelemetry.auto.instrumentation.jedis.JedisClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jedis.JedisClientDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -46,9 +46,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasNoResources("redis/clients/jedis/commands/ProtocolCommand.class")
-        // Optimization for expensive typeMatcher.
-        .and(not(classLoaderHasNoResources("redis/clients/jedis/Protocol.class")));
+    // Avoid matching 3.x
+    return not(hasClassesNamed("redis.clients.jedis.commands.ProtocolCommand"));
   }
 
   @Override
@@ -59,9 +58,6 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       packageName + ".JedisClientDecorator",
     };
   }

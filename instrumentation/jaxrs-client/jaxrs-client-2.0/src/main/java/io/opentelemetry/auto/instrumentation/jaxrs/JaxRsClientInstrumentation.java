@@ -15,12 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.jaxrs;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
@@ -43,7 +42,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/ws/rs/client/ClientBuilder.class"));
+    return hasClassesNamed("javax.ws.rs.client.ClientBuilder");
   }
 
   @Override
@@ -54,9 +53,6 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".JaxRsClientDecorator",
       packageName + ".ClientTracingFeature",
       packageName + ".ClientTracingFilter",

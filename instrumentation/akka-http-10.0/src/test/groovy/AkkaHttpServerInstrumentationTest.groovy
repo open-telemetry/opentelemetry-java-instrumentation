@@ -25,11 +25,11 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCE
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, AkkaHttpServerDecorator> {
+abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> {
 
   @Override
-  AkkaHttpServerDecorator decorator() {
-    return AkkaHttpServerDecorator.DECORATE
+  String component() {
+    return AkkaHttpServerDecorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -61,7 +61,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
@@ -78,6 +78,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
   }
 }
 
+@Retry
 class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {
   @Override
   def startServer(int port) {
@@ -90,7 +91,7 @@ class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentatio
   }
 }
 
-@Retry(mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
+@Retry
 class AkkaHttpServerInstrumentationTestAsync extends AkkaHttpServerInstrumentationTest {
   @Override
   def startServer(int port) {

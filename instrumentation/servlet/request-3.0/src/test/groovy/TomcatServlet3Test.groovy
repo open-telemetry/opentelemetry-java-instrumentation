@@ -14,32 +14,35 @@
  * limitations under the License.
  */
 import com.google.common.io.Files
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
-import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import org.apache.catalina.AccessLog
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
 import org.apache.catalina.connector.Response
 import org.apache.catalina.core.StandardHost
 import org.apache.catalina.startup.Tomcat
 import org.apache.catalina.valves.ErrorReportValve
+import org.apache.catalina.valves.ValveBase
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
+import spock.lang.Shared
+import spock.lang.Unroll
 
 import javax.servlet.Servlet
+import javax.servlet.ServletException
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 
+@Unroll
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
+
+  @Shared
+  def accessLogValue = new TestAccessLogValve()
 
   @Override
   Tomcat startServer(int port) {
@@ -70,10 +73,15 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     setupServlets(servletContext)
 
     (tomcatServer.host as StandardHost).errorReportValveClass = ErrorHandlerValve.name
+    (tomcatServer.host as StandardHost).getPipeline().addValve(accessLogValue)
 
     tomcatServer.start()
 
     return tomcatServer
+  }
+
+  def setup() {
+    accessLogValue.loggedIds.clear()
   }
 
   @Override
@@ -92,6 +100,74 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     String name = UUID.randomUUID()
     Tomcat.addServlet(servletContext, name, servlet.newInstance())
     servletContext.addServletMappingDecoded(path, name)
+  }
+
+
+  def "access log has ids for #count requests"() {
+    given:
+    def request = request(SUCCESS, method, body).build()
+
+    when:
+    List<okhttp3.Response> responses = (1..count).collect {
+      return client.newCall(request).execute()
+    }
+
+    then:
+    responses.each { response ->
+      assert response.code() == SUCCESS.status
+      assert response.body().string() == SUCCESS.body
+    }
+
+    and:
+    assertTraces(count * 2) {
+      (0..count - 1).each {
+        trace(it * 2, 1) {
+          basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
+        }
+        trace(it * 2 + 1, 2) {
+          serverSpan(it, 0)
+          controllerSpan(it, 1, span(0))
+        }
+
+        def (String traceId, String spanId) = accessLogValue.loggedIds[it]
+        assert traces[it * 2 + 1][0].traceId.toLowerBase16() == traceId
+        assert traces[it * 2 + 1][0].spanId.toLowerBase16() == spanId
+      }
+    }
+
+    where:
+    method = "GET"
+    body = null
+    count << [1, 4] // make multiple requests.
+  }
+
+  def "access log has ids for error request"() {
+    setup:
+    def request = request(ERROR, method, body).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == ERROR.status
+    response.body().string() == ERROR.body
+
+    and:
+    assertTraces(2) {
+      trace(0, 1) {
+        basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
+      }
+      trace(1, 2) {
+        serverSpan(it, 0, null, null, method, ERROR)
+        controllerSpan(it, 1, span(0))
+      }
+
+      def (String traceId, String spanId) = accessLogValue.loggedIds[0]
+      assert traces[1][0].traceId.toLowerBase16() == traceId
+      assert traces[1][0].spanId.toLowerBase16() == spanId
+    }
+
+    where:
+    method = "GET"
+    body = null
   }
 
   // FIXME: Add authentication tests back in...
@@ -139,6 +215,33 @@ class ErrorHandlerValve extends ErrorReportValve {
     } catch (IOException e) {
       e.printStackTrace()
     }
+  }
+}
+
+class TestAccessLogValve extends ValveBase implements AccessLog {
+  List<Tuple2<String, String>> loggedIds = []
+
+  TestAccessLogValve() {
+    super(true)
+  }
+
+  void log(Request request, Response response, long time) {
+    loggedIds.add(new Tuple2(request.getAttribute("traceId"),
+      request.getAttribute("spanId")))
+  }
+
+  @Override
+  void setRequestAttributesEnabled(boolean requestAttributesEnabled) {
+  }
+
+  @Override
+  boolean getRequestAttributesEnabled() {
+    return false
+  }
+
+  @Override
+  void invoke(Request request, Response response) throws IOException, ServletException {
+    getNext().invoke(request, response)
   }
 }
 
@@ -265,31 +368,5 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port/$context/dispatch/")
-  }
-
-  boolean hasDispatchSpan(ServerEndpoint endpoint) {
-    // Tomcat won't "dispatch" an unregistered url
-    endpoint != NOT_FOUND
-  }
-
-  @Override
-  void dispatchSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      operationName "servlet.dispatch"
-      spanKind INTERNAL
-      childOf((SpanData) parent)
-      errored endpoint.errored
-      tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$MoreTags.RESOURCE_NAME" endpoint.path
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
-        "$Tags.HTTP_STATUS" endpoint.status
-        if (endpoint.errored) {
-          "error.msg" { it == null || it == EXCEPTION.body }
-          "error.type" { it == null || it == Exception.name }
-          "error.stack" { it == null || it instanceof String }
-        }
-      }
-    }
   }
 }

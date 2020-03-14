@@ -17,11 +17,10 @@ package io.opentelemetry.auto.instrumentation.servlet.http;
 
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
@@ -46,7 +45,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/servlet/http/HttpServletResponse.class"));
+    return hasClassesNamed("javax.servlet.http.HttpServletResponse");
   }
 
   @Override
@@ -57,7 +56,6 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
       packageName + ".HttpServletResponseDecorator",
     };
   }

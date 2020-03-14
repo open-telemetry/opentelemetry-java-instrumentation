@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -27,6 +28,7 @@ import akka.dispatch.forkjoin.ForkJoinTask;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -57,15 +59,14 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
   }
 
   @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named(TASK_CLASS_NAME));
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed(TASK_CLASS_NAME);
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AdviceUtils.class.getName(),
-    };
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return extendsClass(named(TASK_CLASS_NAME));
   }
 
   @Override

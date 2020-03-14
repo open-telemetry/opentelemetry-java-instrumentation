@@ -51,11 +51,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      packageName + ".RmiServerDecorator"
-    };
+    return new String[] {packageName + ".RmiServerDecorator"};
   }
 
   @Override

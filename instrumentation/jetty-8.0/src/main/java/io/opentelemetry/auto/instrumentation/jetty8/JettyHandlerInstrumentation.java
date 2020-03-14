@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jetty8;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -45,7 +45,7 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/eclipse/jetty/server/Handler.class"));
+    return hasClassesNamed("org.eclipse.jetty.server.Handler");
   }
 
   @Override
@@ -57,9 +57,6 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".JettyDecorator",
       packageName + ".HttpServletRequestExtractAdapter",
       packageName + ".TagSettingAsyncListener"

@@ -15,8 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.playws21;
 
-import static io.opentelemetry.auto.instrumentation.playws21.PlayWSClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.playws21.PlayWSClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.TRACER;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;

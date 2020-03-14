@@ -16,12 +16,11 @@
 package io.opentelemetry.auto.instrumentation.jaxrs2;
 
 import static io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -52,7 +51,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/ws/rs/container/AsyncResponse.class"));
+    return hasClassesNamed("javax.ws.rs.container.AsyncResponse");
   }
 
   @Override
@@ -63,7 +62,6 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
       packageName + ".JaxRsAnnotationsDecorator",

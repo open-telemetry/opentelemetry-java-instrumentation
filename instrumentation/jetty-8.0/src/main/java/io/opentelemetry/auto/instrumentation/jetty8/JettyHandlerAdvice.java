@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jetty8;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.jetty8.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator.TRACER;
@@ -60,6 +60,8 @@ public class JettyHandlerAdvice {
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
     req.setAttribute(SPAN_ATTRIBUTE, span);
+    req.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
+    req.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
     return new SpanWithScope(span, TRACER.withSpan(span));
   }
 

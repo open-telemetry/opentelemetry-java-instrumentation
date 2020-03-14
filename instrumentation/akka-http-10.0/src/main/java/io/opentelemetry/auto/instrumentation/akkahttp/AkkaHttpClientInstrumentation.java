@@ -59,9 +59,6 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
       AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".AkkaHttpClientDecorator",
     };
   }

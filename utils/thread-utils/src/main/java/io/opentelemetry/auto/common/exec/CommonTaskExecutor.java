@@ -81,7 +81,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
     private final ScheduledExecutorService executorService;
 
     private ShutdownCallback(final ScheduledExecutorService executorService) {
-      super("dd-exec-shutdown-hook");
+      super("agent-exec-shutdown-hook");
       this.executorService = executorService;
     }
 

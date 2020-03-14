@@ -17,13 +17,12 @@ package io.opentelemetry.auto.instrumentation.finatra;
 
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -57,18 +56,14 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
-      packageName + ".FinatraDecorator",
-      FinatraInstrumentation.class.getName() + "$Listener"
+      packageName + ".FinatraDecorator", FinatraInstrumentation.class.getName() + "$Listener"
     };
   }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("com/twitter/finatra/http/internal/routing/Route.class"));
+    return hasClassesNamed("com.twitter.finatra.http.internal.routing.Route");
   }
 
   @Override
@@ -110,7 +105,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void setupCallback(
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,

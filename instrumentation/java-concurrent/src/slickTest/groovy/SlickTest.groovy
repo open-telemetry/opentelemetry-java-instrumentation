@@ -27,7 +27,8 @@ class SlickTest extends AgentTestRunner {
 
   def "Basic statement generates spans"() {
     setup:
-    def result = database.runQuery(SlickUtils.TestQuery())
+    def future = database.startQuery(SlickUtils.TestQuery())
+    def result = database.getResults(future)
 
     expect:
     result == SlickUtils.TestValue()
@@ -59,6 +60,31 @@ class SlickTest extends AgentTestRunner {
           }
         }
       }
+    }
+  }
+
+  def "Concurrent requests do not throw exception"() {
+    setup:
+    def sleepFuture = database.startQuery(SlickUtils.SleepQuery())
+
+    def future = database.startQuery(SlickUtils.TestQuery())
+    def result = database.getResults(future)
+
+    database.getResults(sleepFuture)
+
+    expect:
+    result == SlickUtils.TestValue()
+
+    // Expect two traces because two queries have been run
+    assertTraces(2) {
+      trace(0, 2, {
+        span(0) {}
+        span(1) { spanKind CLIENT }
+      })
+      trace(1, 2, {
+        span(0) {}
+        span(1) { spanKind CLIENT }
+      })
     }
   }
 }

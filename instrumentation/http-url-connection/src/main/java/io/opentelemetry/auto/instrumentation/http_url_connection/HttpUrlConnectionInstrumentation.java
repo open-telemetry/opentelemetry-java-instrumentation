@@ -61,9 +61,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".HttpUrlConnectionDecorator",
       packageName + ".HeadersInjectAdapter",
       HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState",

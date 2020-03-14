@@ -17,7 +17,7 @@ import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
-import io.opentelemetry.auto.decorator.HttpServerDecorator
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags

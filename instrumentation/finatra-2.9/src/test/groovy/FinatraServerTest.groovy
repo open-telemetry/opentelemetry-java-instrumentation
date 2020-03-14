@@ -34,7 +34,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
+class FinatraServerTest extends HttpServerTest<HttpServer> {
   private static final Duration TIMEOUT = Duration.fromSeconds(5)
   private static final long STARTUP_TIMEOUT = 40 * 1000
 
@@ -76,8 +76,8 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
   }
 
   @Override
-  FinatraDecorator decorator() {
-    return FinatraDecorator.DECORATE
+  String component() {
+    return FinatraDecorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -120,7 +120,7 @@ class FinatraServerTest extends HttpServerTest<HttpServer, FinatraDecorator> {
       tags {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

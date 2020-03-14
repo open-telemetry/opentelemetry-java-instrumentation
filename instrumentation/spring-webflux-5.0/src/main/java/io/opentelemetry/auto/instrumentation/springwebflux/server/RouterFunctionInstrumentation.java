@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -37,6 +38,12 @@ public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrume
 
   public RouterFunctionInstrumentation() {
     super("spring-webflux-functional");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("org.springframework.web.reactive.function.server.ServerRequest");
   }
 
   @Override

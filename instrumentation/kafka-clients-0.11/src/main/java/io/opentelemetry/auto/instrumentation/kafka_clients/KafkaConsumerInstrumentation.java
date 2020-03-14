@@ -50,8 +50,6 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
       packageName + ".KafkaDecorator",
       packageName + ".KafkaDecorator$1",
       packageName + ".KafkaDecorator$2",

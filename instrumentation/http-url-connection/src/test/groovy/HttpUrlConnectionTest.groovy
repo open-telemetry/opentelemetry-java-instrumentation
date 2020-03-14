@@ -27,7 +27,7 @@ import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
+class HttpUrlConnectionTest extends HttpClientTest {
 
   static final RESPONSE = "Hello."
   static final STATUS = 200
@@ -53,8 +53,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
   }
 
   @Override
-  HttpUrlConnectionDecorator decorator() {
-    return HttpUrlConnectionDecorator.DECORATE
+  String component() {
+    return HttpUrlConnectionDecorator.DECORATE.getComponentName()
   }
 
   @Override

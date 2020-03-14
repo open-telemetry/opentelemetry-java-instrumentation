@@ -15,17 +15,16 @@
  */
 package io.opentelemetry.auto.instrumentation.springweb;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -50,7 +49,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/springframework/web/servlet/HandlerAdapter.class"));
+    return hasClassesNamed("org.springframework.web.servlet.HandlerAdapter");
   }
 
   @Override
@@ -61,9 +60,6 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".SpringWebHttpServerDecorator",
       packageName + ".SpringWebHttpServerDecorator$1",
     };

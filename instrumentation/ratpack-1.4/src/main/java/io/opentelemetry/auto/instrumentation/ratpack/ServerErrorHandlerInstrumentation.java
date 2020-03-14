@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -40,7 +40,7 @@ public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("ratpack/error/ServerErrorHandler.class"));
+    return hasClassesNamed("ratpack.error.ServerErrorHandler");
   }
 
   @Override
@@ -51,9 +51,6 @@ public class ServerErrorHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".RatpackServerDecorator",
     };
   }

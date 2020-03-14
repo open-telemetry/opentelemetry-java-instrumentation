@@ -17,8 +17,8 @@ import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.trace.Tracer
 import slick.jdbc.H2Profile.api._
 
-import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 class SlickUtils {
   val TRACER: Tracer = OpenTelemetry.getTracerFactory.get("io.opentelemetry.auto")
@@ -35,18 +35,20 @@ class SlickUtils {
   )
   Await.result(database.run(sqlu"""CREATE ALIAS IF NOT EXISTS SLEEP FOR "java.lang.Thread.sleep(long)""""), Duration.Inf)
 
-  def runQuery(query: String): Int = {
+  def startQuery(query: String): Future[Vector[Int]] = {
     val span = TRACER.spanBuilder("run query").startSpan()
     val scope = TRACER.withSpan(span)
     try {
-      val future = database.run(sql"#$query".as[Int])
-      Await.result(future, Duration.Inf).head
+      return database.run(sql"#$query".as[Int])
     } finally {
       span.end()
       scope.close()
     }
   }
 
+  def getResults(future: Future[Vector[Int]]): Int = {
+    Await.result(future, Duration.Inf).head
+  }
 }
 
 object SlickUtils {

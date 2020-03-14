@@ -83,13 +83,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    def excludes = {
-      // sometimes PutMappingAction is present and sometimes it is not
-      // (only seems to happen with Elasticsearch 2.x, later versions seem to always have PutMappingAction)
-      it[0].attributes[MoreTags.RESOURCE_NAME].stringValue == "PutMappingAction"
-    }
-    assertTracesWithFilter(2, excludes) {
-      trace(0, 1) {
+    assertTraces(2) {
+      trace(0, 2) {
         span(0) {
           operationName "elasticsearch.query"
           spanKind CLIENT
@@ -106,6 +101,21 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" "doc"
+          }
+        }
+        span(1) {
+          operationName "elasticsearch.query"
+          spanKind CLIENT
+          childOf span(0)
+          tags {
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "PutMappingAction"
+            "elasticsearch.request" "PutMappingRequest"
+            "elasticsearch.request.indices" indexName
           }
         }
       }

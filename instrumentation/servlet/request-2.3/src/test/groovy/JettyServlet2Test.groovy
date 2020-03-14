@@ -33,7 +33,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
+class JettyServlet2Test extends HttpServerTest<Server> {
 
   private static final CONTEXT = "ctx"
 
@@ -78,8 +78,8 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
   }
 
   @Override
-  Servlet2Decorator decorator() {
-    return Servlet2Decorator.DECORATE
+  String component() {
+    return Servlet2Decorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -101,7 +101,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" "127.0.0.1"
         // No peer port
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
