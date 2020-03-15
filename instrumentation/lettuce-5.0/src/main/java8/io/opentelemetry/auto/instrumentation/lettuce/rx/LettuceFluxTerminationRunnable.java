@@ -99,10 +99,10 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
 
     @Override
     public void accept(final Subscription subscription) {
-      final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder(DECORATE.spanNameForCommand(command)).setSpanKind(CLIENT).startSpan();
       owner.span = span;
       DECORATE.afterStart(span);
-      DECORATE.onCommand(span, command);
       if (finishSpanOnClose) {
         DECORATE.beforeFinish(span);
         span.end();

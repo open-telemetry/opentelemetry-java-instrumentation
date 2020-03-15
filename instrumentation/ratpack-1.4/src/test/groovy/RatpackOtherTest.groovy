@@ -87,7 +87,6 @@ class RatpackOtherTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -103,7 +102,6 @@ class RatpackOtherTest extends AgentTestRunner {
           childOf(span(0))
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "ratpack"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"

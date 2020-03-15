@@ -20,7 +20,6 @@ import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -55,16 +54,13 @@ public class TwilioClientDecorator extends ClientDecorator {
   }
 
   /** Decorate trace based on service execution metadata. */
-  public Span onServiceExecution(
-      final Span span, final Object serviceExecutor, final String methodName) {
+  public String spanNameOnServiceExecution(final Object serviceExecutor, final String methodName) {
 
     // Drop common package prefix (com.twilio.rest)
     final String simpleClassName =
         serviceExecutor.getClass().getCanonicalName().replaceFirst("^com\\.twilio\\.rest\\.", "");
 
-    span.setAttribute(MoreTags.RESOURCE_NAME, String.format("%s.%s", simpleClassName, methodName));
-
-    return span;
+    return String.format("%s/%s", simpleClassName, methodName);
   }
 
   /** Annotate the span with the results of the operation. */

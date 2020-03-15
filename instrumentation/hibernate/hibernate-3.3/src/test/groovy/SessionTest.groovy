@@ -58,7 +58,7 @@ class SessionTest extends AbstractHibernateTest {
       for (int i = 0; i < sessionImplementations.size(); i++) {
         trace(i, 4) {
           span(0) {
-            operationName "hibernate.session"
+            operationName "hibernate/session"
             spanKind INTERNAL
             parent()
             tags {
@@ -68,33 +68,32 @@ class SessionTest extends AbstractHibernateTest {
             }
           }
           span(1) {
-            operationName "hibernate.$methodName"
+            operationName "hibernate/$methodName/$resource"
             spanKind INTERNAL
             childOf span(0)
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
-              "$MoreTags.RESOURCE_NAME" resource
               "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
             }
           }
           span(2) {
+            operationName ~/^select /
             spanKind CLIENT
             childOf span(1)
             tags {
               "$MoreTags.SERVICE_NAME" "h2"
-              "$MoreTags.RESOURCE_NAME" String
               "$MoreTags.SPAN_TYPE" "sql"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" "h2"
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
-              "$Tags.DB_STATEMENT" String
+              "$Tags.DB_STATEMENT" ~/^select /
               "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             }
           }
           span(3) {
-            operationName "hibernate.transaction.commit"
+            operationName "hibernate/transaction/commit"
             spanKind INTERNAL
             childOf span(0)
             tags {
@@ -140,7 +139,7 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -150,18 +149,17 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.$methodName"
+          operationName "hibernate/$methodName/$resource"
           spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" resource
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -175,7 +173,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(2)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -226,7 +223,7 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -236,22 +233,21 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.$methodName"
+          operationName "hibernate/$methodName/$resource"
           spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" resource
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
+          operationName ~/^select /
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -262,7 +258,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -276,7 +272,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(3)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -324,7 +319,7 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -334,7 +329,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.replicate"
+          operationName "hibernate/replicate"
           spanKind INTERNAL
           childOf span(0)
           errored(true)
@@ -346,7 +341,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -380,7 +375,7 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -390,18 +385,17 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.$methodName"
+          operationName "hibernate/$methodName/$resource"
           spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" resource
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -415,7 +409,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(2)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -473,7 +466,7 @@ class SessionTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -483,12 +476,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.query.list"
+          operationName "hibernate/query/list/$resource"
           spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "$resource"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.DB_STATEMENT" String
@@ -499,7 +491,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -510,7 +501,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -560,7 +551,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -570,29 +561,27 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          operationName "hibernate.save"
+          operationName "hibernate/save/Value"
           spanKind INTERNAL
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "Value"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(3) {
-          operationName "hibernate.delete"
+          operationName "hibernate/delete/Value"
           spanKind INTERNAL
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "Value"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(4) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(1)
           tags {
@@ -602,11 +591,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(5) {
+          operationName ~/^insert /
           spanKind CLIENT
           childOf span(4)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^insert /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -617,11 +606,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(6) {
+          operationName ~/^delete /
           spanKind CLIENT
           childOf span(4)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^delete /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -632,7 +621,7 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(7) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -642,18 +631,17 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(8) {
-          operationName "hibernate.insert"
+          operationName "hibernate/insert/Value"
           spanKind INTERNAL
           childOf span(7)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "Value"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(9) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -663,12 +651,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(10) {
-          operationName "hibernate.save"
+          operationName "hibernate/save/Value"
           spanKind INTERNAL
           childOf span(9)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "Value"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }

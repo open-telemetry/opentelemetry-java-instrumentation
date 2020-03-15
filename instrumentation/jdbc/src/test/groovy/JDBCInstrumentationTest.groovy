@@ -193,13 +193,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" driver
@@ -253,13 +252,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
@@ -305,13 +303,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
@@ -357,13 +354,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
@@ -409,13 +405,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" driver
@@ -464,13 +459,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
@@ -531,13 +525,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             if (prepareStatement) {
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
@@ -595,19 +588,17 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
 
         span(1) {
-          operationName "database.connection"
+          operationName "${datasource.class.simpleName}/getConnection"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "${datasource.class.simpleName}.getConnection"
             "$Tags.COMPONENT" "java-jdbc-connection"
           }
         }
         if (recursive) {
           span(2) {
-            operationName "database.connection"
+            operationName "${datasource.class.simpleName}/getConnection"
             childOf span(1)
             tags {
-              "$MoreTags.RESOURCE_NAME" "${datasource.class.simpleName}.getConnection"
               "$Tags.COMPONENT" "java-jdbc-connection"
             }
           }
@@ -646,13 +637,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" database
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" database
@@ -711,12 +701,11 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     assertTraces(5) {
       trace(0, 1) {
         span(0) {
-          operationName "database.query"
+          operationName query
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" dbType
-            "$MoreTags.RESOURCE_NAME" query
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" dbType
@@ -730,12 +719,11 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       for (int i = 1; i < numQueries; ++i) {
         trace(i, 1) {
           span(0) {
-            operationName "database.query"
+            operationName query
             spanKind CLIENT
             errored false
             tags {
               "$MoreTags.SERVICE_NAME" dbType
-              "$MoreTags.RESOURCE_NAME" query
               "$MoreTags.SPAN_TYPE" SpanTypes.SQL
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" dbType

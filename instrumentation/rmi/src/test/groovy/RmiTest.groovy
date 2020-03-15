@@ -56,21 +56,19 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "rmi.invoke"
+          operationName "Greeter/hello"
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
         }
         span(2) {
-          operationName "rmi.request"
+          operationName "Server/hello"
           spanKind SERVER
           tags {
-            "$MoreTags.RESOURCE_NAME" "Server.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
@@ -117,14 +115,13 @@ class RmiTest extends AgentTestRunner {
     def thrownException = thrown(RuntimeException)
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent", null, null, thrownException)
+        basicSpan(it, 0, "parent", null, thrownException)
         span(1) {
-          operationName "rmi.invoke"
+          operationName "Greeter/exceptional"
           spanKind CLIENT
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "Greeter.exceptional"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
@@ -132,11 +129,10 @@ class RmiTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "rmi.request"
+          operationName "Server/exceptional"
           spanKind SERVER
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "Server.exceptional"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
@@ -167,11 +163,10 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "rmi.invoke"
+          operationName "Greeter/hello"
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
@@ -179,10 +174,9 @@ class RmiTest extends AgentTestRunner {
         }
         span(2) {
           childOf span(1)
-          operationName "rmi.request"
+          operationName "ServerLegacy/hello"
           spanKind SERVER
           tags {
-            "$MoreTags.RESOURCE_NAME" "ServerLegacy.hello"
             "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName

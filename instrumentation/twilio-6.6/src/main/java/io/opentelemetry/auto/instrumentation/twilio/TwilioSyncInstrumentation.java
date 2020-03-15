@@ -114,9 +114,12 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("twilio.sdk").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(DECORATE.spanNameOnServiceExecution(that, methodName))
+              .setSpanKind(CLIENT)
+              .startSpan();
       DECORATE.afterStart(span);
-      DECORATE.onServiceExecution(span, that, methodName);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

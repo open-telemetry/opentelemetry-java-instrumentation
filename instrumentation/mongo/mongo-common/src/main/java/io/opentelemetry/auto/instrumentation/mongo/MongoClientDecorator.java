@@ -22,9 +22,7 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
-import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.util.Arrays;
 import java.util.List;
@@ -89,14 +87,10 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
     return event.getDatabaseName();
   }
 
-  public Span onStatement(final Span span, final BsonDocument statement) {
-
+  public String statement(final BsonDocument statement) {
     // scrub the Mongo command so that parameters are removed from the string
     final BsonDocument scrubbed = scrub(statement);
-    final String mongoCmd = scrubbed.toString();
-
-    span.setAttribute(MoreTags.RESOURCE_NAME, mongoCmd);
-    return onStatement(span, mongoCmd);
+    return scrubbed.toString();
   }
 
   /**

@@ -142,23 +142,24 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
         @Advice.This final SharedSessionContract session,
-        @Advice.Origin("#m") final String name,
+        @Advice.Origin("#m") final String methodName,
         @Advice.Argument(0) final Object entity) {
 
-      final boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
+      final boolean startSpan = !SCOPE_ONLY_METHODS.contains(methodName);
       final ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
       return SessionMethodUtils.startScopeFrom(
-          contextStore, session, "hibernate." + name, entity, startSpan);
+          contextStore, session, "hibernate/" + methodName, entity, startSpan);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned,
+        @Advice.Origin("#m") final String methodName) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, returned);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, "hibernate/" + methodName, returned);
     }
   }
 

@@ -102,7 +102,11 @@ public abstract class BaseDecorator {
    * @return
    */
   public String spanNameForMethod(final Method method) {
-    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
+    return spanNameForClass(method.getDeclaringClass()) + "/" + method.getName();
+  }
+
+  public String spanNameForClass(final Class clazz, final String methodName) {
+    return spanNameForClass(clazz) + "/" + methodName;
   }
 
   /**

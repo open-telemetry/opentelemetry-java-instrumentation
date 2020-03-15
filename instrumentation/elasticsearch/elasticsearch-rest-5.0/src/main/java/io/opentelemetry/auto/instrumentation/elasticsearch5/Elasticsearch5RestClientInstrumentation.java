@@ -76,7 +76,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
       final Span span =
-          TRACER.spanBuilder("elasticsearch.rest.query").setSpanKind(CLIENT).startSpan();
+          TRACER.spanBuilder("Elasticsearch/RestQuery").setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, method, endpoint);
 

@@ -17,9 +17,7 @@ package io.opentelemetry.auto.instrumentation.jms;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
-import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import javax.jms.Destination;
@@ -59,21 +57,20 @@ public abstract class JMSDecorator extends ClientDecorator {
     return "jms";
   }
 
-  public void onConsume(final Span span, final Message message) {
-    span.setAttribute(MoreTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
+  public String spanNameForReceive(final Message message) {
+    return "jms/receive/" + toResourceName(message, null);
   }
 
-  public void onReceive(final Span span, final Method method) {
-    span.setAttribute(MoreTags.RESOURCE_NAME, "JMS " + method.getName());
+  public String spanNameForReceive(final Method method) {
+    return "jms/" + method.getName();
   }
 
-  public void onReceive(final Span span, final Message message) {
-    span.setAttribute(MoreTags.RESOURCE_NAME, "Received from " + toResourceName(message, null));
+  public String spanNameForConsumer(final Message message) {
+    return "jms/consume/" + toResourceName(message, null);
   }
 
-  public void onProduce(final Span span, final Message message, final Destination destination) {
-    span.setAttribute(
-        MoreTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination));
+  public String spanNameForProducer(final Message message, final Destination destination) {
+    return "jms/produce/" + toResourceName(message, destination);
   }
 
   private static final String TIBCO_TMP_PREFIX = "$TMP$";

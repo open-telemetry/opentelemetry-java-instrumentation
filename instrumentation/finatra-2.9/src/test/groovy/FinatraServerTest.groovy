@@ -89,12 +89,11 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def errorEndpoint = endpoint == EXCEPTION || endpoint == ERROR
     trace.span(index) {
-      operationName "finatra.controller"
+      operationName "FinatraController"
       spanKind INTERNAL
       errored errorEndpoint
       childOf(parent as SpanData)
       tags {
-        "$MoreTags.RESOURCE_NAME" "FinatraController"
         "$MoreTags.SPAN_TYPE" "web"
         "$Tags.COMPONENT" FinatraDecorator.DECORATE.getComponentName()
 
@@ -104,7 +103,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
     }
   }
 
-  // need to override in order to add RESOURCE_NAME
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
@@ -118,7 +116,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long

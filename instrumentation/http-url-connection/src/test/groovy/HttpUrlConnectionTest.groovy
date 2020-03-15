@@ -109,7 +109,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -126,7 +125,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -191,7 +189,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -208,7 +205,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -258,7 +254,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -324,7 +319,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "POST $url.path"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"

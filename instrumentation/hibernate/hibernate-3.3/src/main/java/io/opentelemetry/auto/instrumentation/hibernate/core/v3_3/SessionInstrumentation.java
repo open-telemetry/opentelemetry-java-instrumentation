@@ -153,20 +153,20 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
         @Advice.This final Object session,
-        @Advice.Origin("#m") final String name,
+        @Advice.Origin("#m") final String methodName,
         @Advice.Argument(0) final Object entity) {
 
-      final boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
+      final boolean startSpan = !SCOPE_ONLY_METHODS.contains(methodName);
       if (session instanceof Session) {
         final ContextStore<Session, Span> contextStore =
             InstrumentationContext.get(Session.class, Span.class);
         return SessionMethodUtils.startScopeFrom(
-            contextStore, (Session) session, "hibernate." + name, entity, startSpan);
+            contextStore, (Session) session, "hibernate/" + methodName, entity, startSpan);
       } else if (session instanceof StatelessSession) {
         final ContextStore<StatelessSession, Span> contextStore =
             InstrumentationContext.get(StatelessSession.class, Span.class);
         return SessionMethodUtils.startScopeFrom(
-            contextStore, (StatelessSession) session, "hibernate." + name, entity, startSpan);
+            contextStore, (StatelessSession) session, "hibernate/" + methodName, entity, startSpan);
       }
       return null;
     }
@@ -175,9 +175,10 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void endMethod(
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned,
+        @Advice.Origin("#m") final String methodName) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, returned);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, "hibernate/" + methodName, returned);
     }
   }
 

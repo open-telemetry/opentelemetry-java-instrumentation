@@ -134,7 +134,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.getComponentName()
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
@@ -164,7 +163,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long

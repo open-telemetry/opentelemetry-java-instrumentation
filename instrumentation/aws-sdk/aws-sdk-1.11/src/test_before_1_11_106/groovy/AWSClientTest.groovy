@@ -114,13 +114,12 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName expectedOperationName(method)
+          operationName "$service/$operation"
           spanKind CLIENT
           errored false
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
@@ -187,13 +186,12 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName expectedOperationName(method)
+          operationName "$service/$operation"
           spanKind CLIENT
           errored true
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
@@ -250,13 +248,12 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName expectedOperationName("GET")
+          operationName "S3/GetObject"
           spanKind CLIENT
           errored true
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.RESOURCE_NAME" "S3.GetObject"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
@@ -296,13 +293,12 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName expectedOperationName("GET")
+          operationName "S3/GetObject"
           spanKind CLIENT
           errored true
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.RESOURCE_NAME" "S3.GetObject"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"

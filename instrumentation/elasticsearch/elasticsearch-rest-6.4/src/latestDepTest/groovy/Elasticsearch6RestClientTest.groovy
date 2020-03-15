@@ -101,7 +101,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "elasticsearch.rest.query"
+          operationName "Elasticsearch/RestQuery"
           spanKind CLIENT
           parent()
           tags {

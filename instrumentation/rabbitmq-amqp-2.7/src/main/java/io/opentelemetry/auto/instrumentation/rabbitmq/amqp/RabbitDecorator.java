@@ -68,7 +68,7 @@ public class RabbitDecorator extends ClientDecorator {
         routingKey == null || routingKey.isEmpty()
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
-    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
+    span.updateName("amqp/basic.publish/" + exchangeName + " -> " + routing);
     span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
     span.setAttribute("amqp.command", "basic.publish");
     if (exchange != null && !exchange.isEmpty()) {
@@ -79,22 +79,27 @@ public class RabbitDecorator extends ClientDecorator {
     }
   }
 
-  public void onGet(final Span span, final String queue) {
+  public String spanNameOnGet(final String queue) {
     final String queueName = queue.startsWith("amq.gen-") ? "<generated>" : queue;
-    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.get " + queueName);
+    return "amqp/basic.get/" + queueName;
+  }
 
+  public void onGet(final Span span, final String queue) {
     span.setAttribute("amqp.command", "basic.get");
     span.setAttribute("amqp.queue", queue);
   }
 
-  public void onDeliver(final Span span, final String queue, final Envelope envelope) {
-    String queueName = queue;
+  public String spanNameOnDeliver(final String queue) {
     if (queue == null || queue.isEmpty()) {
-      queueName = "<default>";
+      return "amqp/basic.deliver/<default>";
     } else if (queue.startsWith("amq.gen-")) {
-      queueName = "<generated>";
+      return "amqp/basic.deliver/<generated>";
+    } else {
+      return "amqp/basic.deliver/" + queue;
     }
-    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.deliver " + queueName);
+  }
+
+  public void onDeliver(final Span span, final Envelope envelope) {
     span.setAttribute("amqp.command", "basic.deliver");
 
     if (envelope != null) {
@@ -113,8 +118,7 @@ public class RabbitDecorator extends ClientDecorator {
     final String name = command.getMethod().protocolMethodName();
 
     if (!name.equals("basic.publish")) {
-      // Don't overwrite the name already set.
-      span.setAttribute(MoreTags.RESOURCE_NAME, name);
+      span.updateName("amqp/" + name);
     }
     span.setAttribute("amqp.command", name);
   }

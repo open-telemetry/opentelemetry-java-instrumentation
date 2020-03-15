@@ -17,8 +17,6 @@ package io.opentelemetry.auto.instrumentation.springscheduling;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
@@ -42,19 +40,14 @@ public class SpringSchedulingDecorator extends BaseDecorator {
     return "spring-scheduling";
   }
 
-  public Span onRun(final Span span, final Runnable runnable) {
-    if (runnable != null) {
-      String resourceName = "";
-      if (runnable instanceof ScheduledMethodRunnable) {
-        final ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
-        resourceName = spanNameForMethod(scheduledMethodRunnable.getMethod());
-      } else {
-        final String className = spanNameForClass(runnable.getClass());
-        final String methodName = "run";
-        resourceName = className + "." + methodName;
-      }
-      span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+  public String spanNameOnRun(final Runnable runnable) {
+    if (runnable instanceof ScheduledMethodRunnable) {
+      final ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
+      return spanNameForMethod(scheduledMethodRunnable.getMethod());
+    } else {
+      final String className = spanNameForClass(runnable.getClass());
+      final String methodName = "run";
+      return className + "." + methodName;
     }
-    return span;
   }
 }

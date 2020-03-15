@@ -45,7 +45,7 @@ public class DispatcherHandlerAdvice {
     }
 
     final Span span =
-        TRACER.spanBuilder("DispatcherHandler.handle").setSpanKind(SERVER).startSpan();
+        TRACER.spanBuilder("DispatcherHandler/handle").setSpanKind(SERVER).startSpan();
     DECORATE.afterStart(span);
     exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, span);
 

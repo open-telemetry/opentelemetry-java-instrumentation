@@ -642,16 +642,15 @@ class SpymemcachedTest extends AgentTestRunner {
         childOf(trace.span(0))
       }
 
-      operationName CompletionListener.OPERATION_NAME
+      operationName "memcached/" + operation
       spanKind CLIENT
       errored(error != null && error != "canceled")
 
       tags {
-        "$MoreTags.SERVICE_NAME" CompletionListener.SERVICE_NAME
-        "$MoreTags.RESOURCE_NAME" operation
+        "$MoreTags.SERVICE_NAME" "memcached"
         "$MoreTags.SPAN_TYPE" SpanTypes.MEMCACHED
-        "$Tags.COMPONENT" CompletionListener.COMPONENT_NAME
-        "$Tags.DB_TYPE" CompletionListener.DB_TYPE
+        "$Tags.COMPONENT" "java-spymemcached"
+        "$Tags.DB_TYPE" "memcached"
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

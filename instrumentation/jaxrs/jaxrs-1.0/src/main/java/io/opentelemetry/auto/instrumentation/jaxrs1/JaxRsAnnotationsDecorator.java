@@ -61,10 +61,9 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     final boolean isRootScope = !parent.getContext().isValid();
     if (isRootScope && !resourceName.isEmpty()) {
-      span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+      span.updateName(resourceName);
     } else {
-      span.setAttribute(
-          MoreTags.RESOURCE_NAME, DECORATE.spanNameForClass(target) + "." + method.getName());
+      span.updateName(DECORATE.spanNameForClass(target) + "/" + method.getName());
     }
   }
 
@@ -76,7 +75,6 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
     if (!resourceName.isEmpty()) {
       span.updateName(resourceName);
-      span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     }
   }
 

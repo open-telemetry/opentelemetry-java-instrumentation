@@ -48,16 +48,14 @@ class JerseyTest extends AgentTestRunner {
         span(0) {
           operationName expectedResourceName
           tags {
-            "$MoreTags.RESOURCE_NAME" expectedResourceName
             "$Tags.COMPONENT" "jax-rs"
           }
         }
 
         span(1) {
           childOf span(0)
-          operationName "jax-rs.request"
+          operationName expectedSpanName
           tags {
-            "$MoreTags.RESOURCE_NAME" controllerName
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
           }
@@ -66,9 +64,9 @@ class JerseyTest extends AgentTestRunner {
     }
 
     where:
-    resource           | expectedResourceName       | controllerName | expectedResponse
-    "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
-    "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
-    "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
+    resource           | expectedResourceName       | expectedSpanName | expectedResponse
+    "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1/hello"    | "Test1 bob!"
+    "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2/hello"    | "Test2 bob!"
+    "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3/hello"    | "Test3 bob!"
   }
 }

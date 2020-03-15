@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.kafka_clients;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -54,24 +53,35 @@ public abstract class KafkaDecorator extends ClientDecorator {
     return "java-kafka";
   }
 
-  public void onConsume(final Span span, final ConsumerRecord record) {
-    if (record != null) {
-      final String topic = record.topic() == null ? "kafka" : record.topic();
-      span.setAttribute(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
-      span.setAttribute("partition", record.partition());
-      span.setAttribute("offset", record.offset());
+  public String spanNameOnConsume(final ConsumerRecord record) {
+    final String topic = record.topic();
+    if (topic != null) {
+      return "kafka/consume/" + topic;
+    } else {
+      return "kafka/consume";
     }
+  }
+
+  public String spanNameOnProduce(final ProducerRecord record) {
+    if (record != null) {
+      final String topic = record.topic();
+      if (topic != null) {
+        return "kafka/produce/" + topic;
+      }
+    }
+    return "kafka/produce";
+  }
+
+  public void onConsume(final Span span, final ConsumerRecord record) {
+    span.setAttribute("partition", record.partition());
+    span.setAttribute("offset", record.offset());
   }
 
   public void onProduce(final Span span, final ProducerRecord record) {
     if (record != null) {
-
-      final String topic = record.topic() == null ? "kafka" : record.topic();
       if (record.partition() != null) {
         span.setAttribute("kafka.partition", record.partition());
       }
-
-      span.setAttribute(MoreTags.RESOURCE_NAME, "Produce Topic " + topic);
     }
   }
 }

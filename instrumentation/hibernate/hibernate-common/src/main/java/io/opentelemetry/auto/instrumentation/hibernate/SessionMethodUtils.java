@@ -51,9 +51,12 @@ public class SessionMethodUtils {
     }
 
     if (createSpan) {
-      final Span span = TRACER.spanBuilder(operationName).setParent(sessionSpan).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(DECORATOR.spanNameForOperation(operationName, entity))
+              .setParent(sessionSpan)
+              .startSpan();
       DECORATOR.afterStart(span);
-      DECORATOR.onOperation(span, entity);
       return new SpanWithScope(span, TRACER.withSpan(span));
     } else {
       return new SpanWithScope(null, TRACER.withSpan(sessionSpan));
@@ -62,7 +65,10 @@ public class SessionMethodUtils {
 
   // Closes a Scope/Span, adding an error tag if the given Throwable is not null.
   public static void closeScope(
-      final SpanWithScope spanWithScope, final Throwable throwable, final Object entity) {
+      final SpanWithScope spanWithScope,
+      final Throwable throwable,
+      final String operationName,
+      final Object entity) {
 
     if (spanWithScope == null) {
       // This method call was re-entrant. Do nothing, since it is being traced by the parent/first
@@ -74,8 +80,11 @@ public class SessionMethodUtils {
     final Span span = spanWithScope.getSpan();
     if (span != null) {
       DECORATOR.onError(span, throwable);
-      if (entity != null) {
-        DECORATOR.onOperation(span, entity);
+      if (operationName != null && entity != null) {
+        final String entityName = DECORATOR.entityName(entity);
+        if (entityName != null) {
+          span.updateName(operationName + "/" + entityName);
+        }
       }
       DECORATOR.beforeFinish(span);
       span.end();

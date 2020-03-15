@@ -116,7 +116,7 @@ class BaseDecoratorTest extends AgentSpecification {
     def result = decorator.spanNameForMethod(method)
 
     then:
-    result == "${name}.run"
+    result == "${name}/run"
 
     where:
     target                         | name

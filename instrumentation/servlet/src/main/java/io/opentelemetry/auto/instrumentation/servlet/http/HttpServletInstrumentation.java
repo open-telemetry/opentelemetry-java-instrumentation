@@ -27,7 +27,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -92,11 +91,9 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("servlet." + method.getName()).startSpan();
-      DECORATE.afterStart(span);
-
       // Here we use the Method instead of "this.class.name" to distinguish calls to "super".
-      span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
+      final Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
+      DECORATE.afterStart(span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

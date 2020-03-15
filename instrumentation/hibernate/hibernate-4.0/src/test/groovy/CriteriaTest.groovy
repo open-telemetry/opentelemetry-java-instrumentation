@@ -41,7 +41,7 @@ class CriteriaTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -51,7 +51,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.criteria.$methodName"
+          operationName "hibernate/criteria/$methodName"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -61,11 +61,11 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(2) {
+          operationName ~/^select /
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -76,7 +76,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(0)
           tags {

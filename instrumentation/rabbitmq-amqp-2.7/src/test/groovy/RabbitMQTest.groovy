@@ -126,11 +126,11 @@ class RabbitMQTest extends AgentTestRunner {
           tags {
           }
         }
-        rabbitSpan(it, 1, "exchange.declare", span(0))
-        rabbitSpan(it, 2, "queue.declare", span(0))
-        rabbitSpan(it, 3, "queue.bind", span(0))
-        rabbitSpan(it, 4, "basic.publish $exchangeName -> $routingKey", span(0))
-        rabbitSpan(it, 5, "basic.get <generated>", span(0), span(4))
+        rabbitSpan(it, 1, "amqp/exchange.declare", span(0))
+        rabbitSpan(it, 2, "amqp/queue.declare", span(0))
+        rabbitSpan(it, 3, "amqp/queue.bind", span(0))
+        rabbitSpan(it, 4, "amqp/basic.publish/$exchangeName -> $routingKey", span(0))
+        rabbitSpan(it, 5, "amqp/basic.get/<generated>", span(0), span(4))
       }
     }
 
@@ -153,13 +153,13 @@ class RabbitMQTest extends AgentTestRunner {
     and:
     assertTraces(3) {
       trace(0, 1) {
-        rabbitSpan(it, 0, "queue.declare")
+        rabbitSpan(it, 0, "amqp/queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, 0, "basic.publish <default> -> <generated>")
+        rabbitSpan(it, 0, "amqp/basic.publish/<default> -> <generated>")
       }
       trace(2, 1) {
-        rabbitSpan(it, 0, "basic.get <generated>", null, traces[1][0])
+        rabbitSpan(it, 0, "amqp/basic.get/<generated>", null, traces[1][0])
       }
     }
   }
@@ -186,25 +186,25 @@ class RabbitMQTest extends AgentTestRunner {
     (1..messageCount).each {
       channel.basicPublish(exchangeName, "", null, "msg $it".getBytes())
     }
-    def resource = messageCount % 2 == 0 ? "basic.deliver <generated>" : "basic.deliver $queueName"
+    def resource = messageCount % 2 == 0 ? "amqp/basic.deliver/<generated>" : "amqp/basic.deliver/$queueName"
 
     expect:
     assertTraces(4 + messageCount) {
       trace(0, 1) {
-        rabbitSpan(it, "exchange.declare")
+        rabbitSpan(it, "amqp/exchange.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, "queue.declare")
+        rabbitSpan(it, "amqp/queue.declare")
       }
       trace(2, 1) {
-        rabbitSpan(it, "queue.bind")
+        rabbitSpan(it, "amqp/queue.bind")
       }
       trace(3, 1) {
-        rabbitSpan(it, "basic.consume")
+        rabbitSpan(it, "amqp/basic.consume")
       }
       (1..messageCount).each {
         trace(3 + it, 2) {
-          rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
+          rabbitSpan(it, 0, "amqp/basic.publish/$exchangeName -> <all>")
           rabbitSpan(it, 1, resource, span(0))
         }
       }
@@ -239,20 +239,20 @@ class RabbitMQTest extends AgentTestRunner {
     expect:
     assertTraces(5) {
       trace(0, 1) {
-        rabbitSpan(it, "exchange.declare")
+        rabbitSpan(it, "amqp/exchange.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, "queue.declare")
+        rabbitSpan(it, "amqp/queue.declare")
       }
       trace(2, 1) {
-        rabbitSpan(it, "queue.bind")
+        rabbitSpan(it, "amqp/queue.bind")
       }
       trace(3, 1) {
-        rabbitSpan(it, "basic.consume")
+        rabbitSpan(it, "amqp/basic.consume")
       }
       trace(4, 2) {
-        rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
-        rabbitSpan(it, 1, "basic.deliver <generated>", span(0), null, error, error.message)
+        rabbitSpan(it, 0, "amqp/basic.publish/$exchangeName -> <all>")
+        rabbitSpan(it, 1, "amqp/basic.deliver/<generated>", span(0), null, error, error.message)
       }
     }
 
@@ -276,14 +276,14 @@ class RabbitMQTest extends AgentTestRunner {
     }
 
     where:
-    command                 | exception             | errorMsg                                           | closure
-    "exchange.declare"      | IOException           | null                                               | {
+    command                      | exception             | errorMsg                                           | closure
+    "amqp/exchange.declare"      | IOException           | null                                               | {
       it.exchangeDeclare("some-exchange", "invalid-type", true)
     }
-    "Channel.basicConsume"  | IllegalStateException | "Invalid configuration: 'queue' must be non-null." | {
+    "amqp/Channel.basicConsume"  | IllegalStateException | "Invalid configuration: 'queue' must be non-null." | {
       it.basicConsume(null, null)
     }
-    "basic.get <generated>" | IOException           | null                                               | {
+    "amqp/basic.get/<generated>" | IOException           | null                                               | {
       it.basicGet("amq.gen-invalid-channel", true)
     }
   }
@@ -304,13 +304,13 @@ class RabbitMQTest extends AgentTestRunner {
     and:
     assertTraces(3) {
       trace(0, 1) {
-        rabbitSpan(it, "queue.declare")
+        rabbitSpan(it, "amqp/queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, 0, "basic.publish <default> -> some-routing-queue")
+        rabbitSpan(it, 0, "amqp/basic.publish/<default> -> some-routing-queue")
       }
       trace(2, 1) {
-        rabbitSpan(it, 0, "basic.get $queue.name", null, traces[1][0])
+        rabbitSpan(it, 0, "amqp/basic.get/$queue.name", null, traces[1][0])
       }
     }
   }
@@ -336,7 +336,7 @@ class RabbitMQTest extends AgentTestRunner {
     String errorMsg = null
   ) {
     trace.span(index) {
-      operationName "amqp.command"
+      operationName resource
 
       switch (trace.span(index).attributes.get("amqp.command")?.stringValue) {
         case "basic.publish":
@@ -366,7 +366,6 @@ class RabbitMQTest extends AgentTestRunner {
 
       tags {
         "$MoreTags.SERVICE_NAME" "rabbitmq"
-        "$MoreTags.RESOURCE_NAME" resource
         "$Tags.COMPONENT" "rabbitmq-amqp"
         "$MoreTags.NET_PEER_NAME" { it == null || it instanceof String }
         "$MoreTags.NET_PEER_IP" { "127.0.0.1" }
@@ -398,7 +397,7 @@ class RabbitMQTest extends AgentTestRunner {
             break
           default:
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CLIENT
-            "amqp.command" { it == null || it == resource }
+            "amqp.command" { it == null || it == resource.substring(5) }
         }
         if (exception) {
           errorTags(exception.class, errorMsg)

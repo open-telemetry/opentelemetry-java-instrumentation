@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.couchbase.client;
 import static io.opentelemetry.auto.instrumentation.couchbase.client.CouchbaseClientDecorator.DECORATE;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentelemetry.trace.Span;
@@ -49,7 +48,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   protected void afterStart(final Span span) {
     super.afterStart(span);
 
-    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+    span.updateName(resourceName);
 
     if (bucket != null) {
       span.setAttribute(Tags.DB_INSTANCE, bucket);

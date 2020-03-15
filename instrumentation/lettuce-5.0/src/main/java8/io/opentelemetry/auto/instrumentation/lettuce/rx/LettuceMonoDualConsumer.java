@@ -40,9 +40,8 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
 
   @Override
   public void accept(final R r) {
-    span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
+    span = TRACER.spanBuilder(DECORATE.spanNameForCommand(command)).setSpanKind(CLIENT).startSpan();
     DECORATE.afterStart(span);
-    DECORATE.onCommand(span, command);
     if (finishSpanOnClose) {
       span.end();
     }

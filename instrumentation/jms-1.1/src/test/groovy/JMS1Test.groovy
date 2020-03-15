@@ -145,12 +145,11 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.consume"
+          operationName "jms/receiveNoWait"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.RESOURCE_NAME" "JMS receiveNoWait"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -181,12 +180,11 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.consume"
+          operationName "jms/receive"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.RESOURCE_NAME" "JMS receive"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -232,12 +230,11 @@ class JMS1Test extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           parent()
-          operationName "jms.consume"
+          operationName "jms/receive/$jmsResourceName"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.RESOURCE_NAME" "Consumed from $jmsResourceName"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -260,13 +257,12 @@ class JMS1Test extends AgentTestRunner {
 
   static producerSpan(TraceAssert trace, int index, String jmsResourceName) {
     trace.span(index) {
-      operationName "jms.produce"
+      operationName "jms/produce/$jmsResourceName"
       spanKind PRODUCER
       errored false
       parent()
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.RESOURCE_NAME" "Produced for $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" ActiveMQMessageProducer.name
@@ -277,11 +273,11 @@ class JMS1Test extends AgentTestRunner {
   static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
     trace.span(index) {
       if (messageListener) {
-        operationName "jms.onMessage"
+        operationName "jms/consume/$jmsResourceName"
         spanKind CONSUMER
         childOf((SpanData) parentOrLinkedSpan)
       } else {
-        operationName "jms.consume"
+        operationName "jms/receive/$jmsResourceName"
         spanKind CLIENT
         parent()
         hasLink((SpanData) parentOrLinkedSpan)
@@ -289,7 +285,6 @@ class JMS1Test extends AgentTestRunner {
       errored false
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" origin.name

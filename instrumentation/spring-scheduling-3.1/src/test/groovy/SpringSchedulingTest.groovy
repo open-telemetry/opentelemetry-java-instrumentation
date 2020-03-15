@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -32,11 +31,10 @@ class SpringSchedulingTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "scheduled.call"
+          operationName "TriggerTask/run"
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "TriggerTask.run"
             "$Tags.COMPONENT" "spring-scheduling"
           }
         }
@@ -56,11 +54,10 @@ class SpringSchedulingTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "scheduled.call"
+          operationName "IntervalTask/run"
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "IntervalTask.run"
             "$Tags.COMPONENT" "spring-scheduling"
           }
         }

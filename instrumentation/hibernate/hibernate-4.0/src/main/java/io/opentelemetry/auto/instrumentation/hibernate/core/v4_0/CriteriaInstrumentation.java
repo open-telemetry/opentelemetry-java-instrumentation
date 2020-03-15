@@ -59,22 +59,24 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
-        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
+        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String methodName) {
 
       final ContextStore<Criteria, Span> contextStore =
           InstrumentationContext.get(Criteria.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, criteria, "hibernate.criteria." + name, null, true);
+          contextStore, criteria, "hibernate/criteria/" + methodName, null, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity,
+        @Advice.Origin("#m") final String methodName) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, entity);
+      SessionMethodUtils.closeScope(
+          spanWithScope, throwable, "hibernate/criteria/" + methodName, entity);
     }
   }
 }

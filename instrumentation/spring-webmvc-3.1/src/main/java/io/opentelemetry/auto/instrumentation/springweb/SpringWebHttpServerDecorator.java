@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.springweb;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -94,13 +93,12 @@ public class SpringWebHttpServerDecorator
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
         span.updateName(resourceName);
-        span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       }
     }
     return span;
   }
 
-  public void onHandle(final Span span, final Object handler) {
+  public String spanNameOnHandle(final Object handler) {
     final Class<?> clazz;
     final String methodName;
 
@@ -127,15 +125,18 @@ public class SpringWebHttpServerDecorator
       methodName = "<annotation>";
     }
 
-    final String resourceName = DECORATE.spanNameForClass(clazz) + "." + methodName;
-    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+    return DECORATE.spanNameForClass(clazz) + "/" + methodName;
+  }
+
+  public String spanNameOnRender(final ModelAndView mv) {
+    final String viewName = mv.getViewName();
+    return viewName == null ? "render" : "render/" + viewName;
   }
 
   public Span onRender(final Span span, final ModelAndView mv) {
     final String viewName = mv.getViewName();
     if (viewName != null) {
       span.setAttribute("view.name", viewName);
-      span.setAttribute(MoreTags.RESOURCE_NAME, viewName);
     }
     if (mv.getView() != null) {
       span.setAttribute("view.type", mv.getView().getClass().getName());

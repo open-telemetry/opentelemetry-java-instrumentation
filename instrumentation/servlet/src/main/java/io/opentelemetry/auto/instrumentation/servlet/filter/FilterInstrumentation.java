@@ -24,7 +24,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -84,11 +83,10 @@ public final class FilterInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("servlet.filter").startSpan();
-      FilterDecorator.DECORATE.afterStart(span);
-
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
-      span.setAttribute(MoreTags.RESOURCE_NAME, filter.getClass().getSimpleName() + ".doFilter");
+      final Span span =
+          TRACER.spanBuilder(filter.getClass().getSimpleName() + "/doFilter").startSpan();
+      FilterDecorator.DECORATE.afterStart(span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

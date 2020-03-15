@@ -71,7 +71,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -84,10 +83,10 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
           } else {
             // Annotation API
-            operationName TestController.getSimpleName() + "." + annotatedMethod
+            operationName TestController.getSimpleName() + "/" + annotatedMethod
           }
           spanKind SERVER
           childOf(span(0))
@@ -140,7 +139,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -153,10 +151,10 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
           } else {
             // Annotation API
-            operationName TestController.getSimpleName() + "." + annotatedMethod
+            operationName TestController.getSimpleName() + "/" + annotatedMethod
           }
           spanKind SERVER
           childOf(span(0))
@@ -213,7 +211,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /**"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -224,7 +221,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "ResourceWebHandler.handle"
+          operationName "ResourceWebHandler/handle"
           spanKind SERVER
           childOf(span(0))
           errored true
@@ -259,7 +256,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "POST /echo"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -270,7 +266,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName EchoHandlerFunction.getSimpleName() + ".handle"
+          operationName EchoHandlerFunction.getSimpleName() + "/handle"
           spanKind SERVER
           childOf(span(0))
           tags {
@@ -310,7 +306,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -323,10 +318,10 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
           } else {
             // Annotation API
-            operationName TestController.getSimpleName() + "." + annotatedMethod
+            operationName TestController.getSimpleName() + "/" + annotatedMethod
           }
           spanKind SERVER
           childOf(span(0))
@@ -378,7 +373,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /double-greet-redirect"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -389,7 +383,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "RedirectComponent.lambda"
+          operationName "RedirectComponent/lambda"
           spanKind SERVER
           childOf(span(0))
           tags {
@@ -409,7 +403,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /double-greet"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -420,7 +413,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationNameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", ".handle")
+          operationNameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", "/handle")
           spanKind SERVER
           childOf(span(0))
           tags {
@@ -455,7 +448,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             spanKind SERVER
             parent()
             tags {
-              "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
               "$Tags.COMPONENT" "netty"
               "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -468,10 +460,10 @@ class SpringWebfluxTest extends AgentTestRunner {
           span(1) {
             if (annotatedMethod == null) {
               // Functional API
-              operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+              operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
             } else {
               // Annotation API
-              operationName TestController.getSimpleName() + "." + annotatedMethod
+              operationName TestController.getSimpleName() + "/" + annotatedMethod
             }
             spanKind SERVER
             childOf(span(0))

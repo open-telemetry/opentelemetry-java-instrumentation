@@ -45,9 +45,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "jax-rs.request"
+          operationName "POST /a"
           tags {
-            "$MoreTags.RESOURCE_NAME" "POST /a"
             "$MoreTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
           }
@@ -70,15 +69,13 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           operationName name
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" name
             "$Tags.COMPONENT" "jax-rs"
           }
         }
         span(1) {
-          operationName "jax-rs.request"
+          operationName "${className}/call"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "${className}.call"
             "$MoreTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
           }

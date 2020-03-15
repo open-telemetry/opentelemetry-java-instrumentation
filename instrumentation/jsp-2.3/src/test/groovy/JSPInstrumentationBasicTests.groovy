@@ -125,10 +125,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.compile"
+          operationName "Compile /$jspFileName"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
@@ -137,10 +136,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "jsp.render"
+          operationName "Render /$jspFileName"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -193,10 +191,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.compile"
+          operationName "Compile /getQuery.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/getQuery.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
@@ -205,10 +202,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "jsp.render"
+          operationName "Render /getQuery.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/getQuery.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -258,10 +254,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.compile"
+          operationName "Compile /post.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/post.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
@@ -270,10 +265,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "jsp.render"
+          operationName "Render /post.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/post.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -327,10 +321,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.compile"
+          operationName "Compile /$jspFileName"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
@@ -339,10 +332,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "jsp.render"
+          operationName "Render /$jspFileName"
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -401,10 +393,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.compile"
+          operationName "Compile /includes/includeHtml.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
@@ -413,10 +404,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "jsp.render"
+          operationName "Render /includes/includeHtml.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/includes/includeHtml.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -462,10 +452,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.compile"
+          operationName "Compile /includes/includeMulti.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
@@ -474,10 +463,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          operationName "jsp.render"
+          operationName "Render /includes/includeMulti.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/includes/includeMulti.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -486,10 +474,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
-          operationName "jsp.compile"
+          operationName "Compile /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -498,10 +485,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(4) {
           childOf span(2)
-          operationName "jsp.render"
+          operationName "Render /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -510,10 +496,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(5) {
           childOf span(2)
-          operationName "jsp.compile"
+          operationName "Compile /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -522,10 +507,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(6) {
           childOf span(2)
-          operationName "jsp.render"
+          operationName "Render /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "/common/javaLoopH2.jsp"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -572,10 +556,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "jsp.compile"
+          operationName "Compile /$jspFileName"
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "/$jspFileName"
             "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"

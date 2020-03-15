@@ -60,6 +60,18 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
     return null;
   }
 
+  public String spanNameForConnection(final RedisURI connection) {
+    if (connection == null) {
+      return "redis/CONNECT";
+    }
+    return "redis/CONNECT/"
+        + connection.getHost()
+        + ":"
+        + connection.getPort()
+        + "/"
+        + connection.getDatabase();
+  }
+
   @Override
   public Span onConnection(final Span span, final RedisURI connection) {
     if (connection != null) {
@@ -67,22 +79,12 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
       span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
 
       span.setAttribute("db.redis.dbIndex", connection.getDatabase());
-      span.setAttribute(
-          MoreTags.RESOURCE_NAME,
-          "CONNECT:"
-              + connection.getHost()
-              + ":"
-              + connection.getPort()
-              + "/"
-              + connection.getDatabase());
     }
     return super.onConnection(span, connection);
   }
 
-  public Span onCommand(final Span span, final RedisCommand command) {
+  public String spanNameForCommand(final RedisCommand command) {
     final String commandName = LettuceInstrumentationUtil.getCommandName(command);
-    span.setAttribute(
-        MoreTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
-    return span;
+    return "redis/" + LettuceInstrumentationUtil.getCommandResourceName(commandName);
   }
 }

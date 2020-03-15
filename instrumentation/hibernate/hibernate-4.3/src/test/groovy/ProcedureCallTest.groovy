@@ -84,7 +84,7 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -94,22 +94,21 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "hibernate.procedure.getOutputs"
+          operationName "hibernate/procedure/getOutputs/TEST_PROC"
           spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "TEST_PROC"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
+          operationName "{call TEST_PROC()}"
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.RESOURCE_NAME" "{call TEST_PROC()}"
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
@@ -121,7 +120,7 @@ class ProcedureCallTest extends AgentTestRunner {
         }
         span(3) {
           spanKind INTERNAL
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
@@ -155,7 +154,7 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "hibernate/session"
           spanKind INTERNAL
           parent()
           tags {
@@ -165,20 +164,19 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "hibernate.procedure.getOutputs"
+          operationName "hibernate/procedure/getOutputs/TEST_PROC"
           spanKind INTERNAL
           childOf span(0)
           errored(true)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "TEST_PROC"
             "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             errorTags(SQLGrammarException, "could not prepare statement")
           }
         }
         span(2) {
-          operationName "hibernate.transaction.commit"
+          operationName "hibernate/transaction/commit"
           spanKind INTERNAL
           childOf span(0)
           tags {

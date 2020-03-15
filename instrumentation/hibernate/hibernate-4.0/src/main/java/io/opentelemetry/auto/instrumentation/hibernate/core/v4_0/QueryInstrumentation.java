@@ -66,7 +66,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(
-        @Advice.This final Query query, @Advice.Origin("#m") final String name) {
+        @Advice.This final Query query, @Advice.Origin("#m") final String methodName) {
 
       final ContextStore<Query, Span> contextStore =
           InstrumentationContext.get(Query.class, Span.class);
@@ -74,7 +74,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
       // Note: We don't know what the entity is until the method is returning.
       final SpanWithScope spanWithScope =
           SessionMethodUtils.startScopeFrom(
-              contextStore, query, "hibernate.query." + name, null, true);
+              contextStore, query, "hibernate/query/" + methodName, null, true);
       if (spanWithScope != null) {
         DECORATOR.onStatement(spanWithScope.getSpan(), query.getQueryString());
       }
@@ -86,7 +86,8 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
         @Advice.This final Query query,
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned,
+        @Advice.Origin("#m") final String methodName) {
 
       Object entity = returned;
       if (returned == null || query instanceof SQLQuery) {
@@ -95,7 +96,8 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
         entity = query.getQueryString();
       }
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, entity);
+      SessionMethodUtils.closeScope(
+          spanWithScope, throwable, "hibernate/query/" + methodName, entity);
     }
   }
 }

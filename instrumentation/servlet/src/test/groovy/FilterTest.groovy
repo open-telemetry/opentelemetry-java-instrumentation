@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -54,10 +53,9 @@ class FilterTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "servlet.filter"
+          operationName "${filter.class.simpleName}/doFilter"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "${filter.class.simpleName}.doFilter"
             "$Tags.COMPONENT" "java-web-servlet-filter"
           }
         }
@@ -89,13 +87,12 @@ class FilterTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, null, ex)
+        basicSpan(it, 0, "parent", null, ex)
         span(1) {
-          operationName "servlet.filter"
+          operationName "${filter.class.simpleName}/doFilter"
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "${filter.class.simpleName}.doFilter"
             "$Tags.COMPONENT" "java-web-servlet-filter"
             errorTags(ex.class, ex.message)
           }

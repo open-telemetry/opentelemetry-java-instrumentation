@@ -100,11 +100,10 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/ClusterHealthAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
@@ -133,10 +132,9 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/ClusterStatsAction"
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "ClusterStatsAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
@@ -163,12 +161,11 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/GetAction"
           spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
@@ -228,7 +225,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
     assertTraces(6) {
       sortTraces {
         // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (traces[3][0].attributes[MoreTags.RESOURCE_NAME].stringValue == "IndexAction") {
+        if (traces[3][0].name == "Elasticsearch/IndexAction") {
           def tmp = traces[3]
           traces[3] = traces[4]
           traces[4] = tmp
@@ -236,11 +233,10 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
       }
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/CreateIndexAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "CreateIndexAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
@@ -255,11 +251,10 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/ClusterHealthAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
@@ -273,11 +268,10 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/GetAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
@@ -295,11 +289,10 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
       }
       trace(3, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/PutMappingAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
@@ -311,11 +304,10 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
       }
       trace(4, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/IndexAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
@@ -331,11 +323,10 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
       }
       trace(5, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "Elasticsearch/GetAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"

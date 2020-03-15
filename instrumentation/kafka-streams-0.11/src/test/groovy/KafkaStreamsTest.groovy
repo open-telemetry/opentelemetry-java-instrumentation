@@ -138,26 +138,24 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(0, 5) {
         // PRODUCER span 0
         span(0) {
-          operationName "kafka.produce"
+          operationName "kafka/produce/$STREAM_PENDING"
           spanKind PRODUCER
           errored false
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
           }
         }
         // CONSUMER span 0
         span(1) {
-          operationName "kafka.consume"
+          operationName "kafka/consume/$STREAM_PENDING"
           spanKind CONSUMER
           errored false
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
@@ -166,13 +164,12 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 1
         span(2) {
-          operationName "kafka.consume"
+          operationName "kafka/consume/$STREAM_PENDING"
           spanKind CONSUMER
           errored false
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PENDING"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
@@ -182,26 +179,24 @@ class KafkaStreamsTest extends AgentTestRunner {
         }
         // STREAMING span 0
         span(3) {
-          operationName "kafka.produce"
+          operationName "kafka/produce/$STREAM_PROCESSED"
           spanKind PRODUCER
           errored false
           childOf span(2)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Produce Topic $STREAM_PROCESSED"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
           }
         }
         // CONSUMER span 0
         span(4) {
-          operationName "kafka.consume"
+          operationName "kafka/consume/$STREAM_PROCESSED"
           spanKind CONSUMER
           errored false
           childOf span(3)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Consume Topic $STREAM_PROCESSED"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }

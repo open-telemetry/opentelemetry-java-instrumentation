@@ -109,18 +109,23 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     return super.onConnection(span, dbInfo);
   }
 
+  public String spanNameOnStatement(final String statement) {
+    return statement == null ? DB_QUERY : statement;
+  }
+
+  public String spanNameOnPreparedStatement(final PreparedStatement statement) {
+    final String sql = JDBCMaps.preparedStatements.get(statement);
+    return sql == null ? DB_QUERY : sql;
+  }
+
   @Override
   public Span onStatement(final Span span, final String statement) {
-    final String resourceName = statement == null ? DB_QUERY : statement;
-    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     span.setAttribute(Tags.COMPONENT, "java-jdbc-statement");
     return super.onStatement(span, statement);
   }
 
   public Span onPreparedStatement(final Span span, final PreparedStatement statement) {
     final String sql = JDBCMaps.preparedStatements.get(statement);
-    final String resourceName = sql == null ? DB_QUERY : sql;
-    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     span.setAttribute(Tags.COMPONENT, "java-jdbc-prepared_statement");
     return super.onStatement(span, sql);
   }

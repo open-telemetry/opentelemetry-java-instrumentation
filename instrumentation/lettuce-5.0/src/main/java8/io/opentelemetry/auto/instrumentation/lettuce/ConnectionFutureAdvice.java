@@ -29,7 +29,11 @@ public class ConnectionFutureAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(1) final RedisURI redisURI) {
-    final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
+    final Span span =
+        TRACER
+            .spanBuilder(DECORATE.spanNameForConnection(redisURI))
+            .setSpanKind(CLIENT)
+            .startSpan();
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, redisURI);
     return new SpanWithScope(span, TRACER.withSpan(span));

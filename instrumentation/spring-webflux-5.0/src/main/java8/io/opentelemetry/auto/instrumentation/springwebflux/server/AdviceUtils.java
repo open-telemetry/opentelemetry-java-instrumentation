@@ -38,9 +38,9 @@ public class AdviceUtils {
     final int lambdaIdx = className.indexOf("$$Lambda$");
 
     if (lambdaIdx > -1) {
-      operationName = className.substring(0, lambdaIdx) + ".lambda";
+      operationName = className.substring(0, lambdaIdx) + "/lambda";
     } else {
-      operationName = className + ".handle";
+      operationName = className + "/handle";
     }
     return operationName;
   }

@@ -118,9 +118,8 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
         return methodInvocation.proceed();
       }
 
-      final Span span = TRACER.spanBuilder("repository.operation").startSpan();
+      final Span span = TRACER.spanBuilder(DECORATOR.spanNameForMethod(invokedMethod)).startSpan();
       DECORATOR.afterStart(span);
-      DECORATOR.onOperation(span, invokedMethod);
 
       final Scope scope = TRACER.withSpan(span);
 

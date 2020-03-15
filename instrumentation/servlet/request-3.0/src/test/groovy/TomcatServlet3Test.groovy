@@ -122,7 +122,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     assertTraces(count * 2) {
       (0..count - 1).each {
         trace(it * 2, 1) {
-          basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
+          basicSpan(it, 0, "TEST_SPAN")
         }
         trace(it * 2 + 1, 2) {
           serverSpan(it, 0)
@@ -153,7 +153,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     and:
     assertTraces(2) {
       trace(0, 1) {
-        basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
+        basicSpan(it, 0, "TEST_SPAN")
       }
       trace(1, 2) {
         serverSpan(it, 0, null, null, method, ERROR)

@@ -81,7 +81,8 @@ public class TracedDelegatingConsumer implements Consumer {
     Scope scope = null;
     try {
       final Map<String, Object> headers = properties.getHeaders();
-      final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command").setSpanKind(CONSUMER);
+      final Span.Builder spanBuilder =
+          TRACER.spanBuilder(CONSUMER_DECORATE.spanNameOnDeliver(queue)).setSpanKind(CONSUMER);
       SpanContext extractedContext = null;
       if (headers != null) {
         try {
@@ -101,7 +102,7 @@ public class TracedDelegatingConsumer implements Consumer {
       span.setAttribute("message.size", body == null ? 0 : body.length);
       span.setAttribute("span.origin.type", delegate.getClass().getName());
       CONSUMER_DECORATE.afterStart(span);
-      CONSUMER_DECORATE.onDeliver(span, queue, envelope);
+      CONSUMER_DECORATE.onDeliver(span, envelope);
 
       scope = TRACER.withSpan(span);
 
