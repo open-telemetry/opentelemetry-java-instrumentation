@@ -14,9 +14,9 @@ import java.util.concurrent.TimeUnit
 class OkHttp3Test extends HttpClientTest {
 
   def client = new OkHttpClient.Builder()
-    .connectTimeout(2, TimeUnit.SECONDS)
-    .readTimeout(2, TimeUnit.SECONDS)
-    .writeTimeout(2, TimeUnit.SECONDS)
+    .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    .readTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    .writeTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
     .build()
 
   @Override

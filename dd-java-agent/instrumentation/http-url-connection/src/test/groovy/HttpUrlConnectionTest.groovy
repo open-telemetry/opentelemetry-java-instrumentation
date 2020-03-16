@@ -27,8 +27,8 @@ class HttpUrlConnectionTest extends HttpClientTest {
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
-      connection.connectTimeout = 2000
-      connection.readTimeout = 2000
+      connection.connectTimeout = CONNECT_TIMEOUT_MS
+      connection.readTimeout = READ_TIMEOUT_MS
       def parentSpan = activeScope()
       def stream = connection.inputStream
       assert activeScope() == parentSpan

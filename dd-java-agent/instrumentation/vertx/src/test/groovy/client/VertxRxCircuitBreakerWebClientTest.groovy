@@ -20,7 +20,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest {
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
   @Shared
-  def clientOptions = new WebClientOptions().setConnectTimeout(2000).setIdleTimeout(2000)
+  def clientOptions = new WebClientOptions().setConnectTimeout(CONNECT_TIMEOUT_MS).setIdleTimeout(READ_TIMEOUT_MS)
   @Shared
   WebClient client = WebClient.create(vertx, clientOptions)
   @Shared

@@ -18,8 +18,8 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   def setupSpec() {
     HttpParams httpParams = client.getParams()
-    HttpConnectionParams.setConnectionTimeout(httpParams, 2000)
-    HttpConnectionParams.setSoTimeout(httpParams, 2000)
+    HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
+    HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
   }
 
   @Override

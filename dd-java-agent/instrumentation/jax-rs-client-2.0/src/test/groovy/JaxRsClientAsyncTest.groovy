@@ -61,8 +61,8 @@ class JerseyClientAsyncTest extends JaxRsClientAsyncTest {
   @Override
   ClientBuilder builder() {
     ClientConfig config = new ClientConfig()
-    config.property(ClientProperties.CONNECT_TIMEOUT, 2000)
-    config.property(ClientProperties.READ_TIMEOUT, 2000)
+    config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MS)
+    config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MS)
     return new JerseyClientBuilder().withConfig(config)
   }
 
@@ -77,8 +77,8 @@ class ResteasyClientAsyncTest extends JaxRsClientAsyncTest {
   @Override
   ClientBuilder builder() {
     return new ResteasyClientBuilder()
-      .establishConnectionTimeout(2, TimeUnit.SECONDS)
-      .socketTimeout(2, TimeUnit.SECONDS)
+      .establishConnectionTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .socketTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
   boolean testRedirects() {

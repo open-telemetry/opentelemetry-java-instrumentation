@@ -18,8 +18,8 @@ class CommonsHttpClientTest extends HttpClientTest {
   HttpClient client = new HttpClient()
 
   def setupSpec() {
-    client.setConnectionTimeout(2000)
-    client.setTimeout(2000)
+    client.setConnectionTimeout(CONNECT_TIMEOUT_MS)
+    client.setTimeout(READ_TIMEOUT_MS)
   }
 
   @Override

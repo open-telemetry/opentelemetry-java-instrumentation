@@ -18,7 +18,7 @@ class VertxHttpClientTest extends HttpClientTest {
   @Shared
   def vertx = Vertx.vertx(new VertxOptions())
   @Shared
-  def clientOptions = new HttpClientOptions().setConnectTimeout(2000).setIdleTimeout(2000)
+  def clientOptions = new HttpClientOptions().setConnectTimeout(CONNECT_TIMEOUT_MS).setIdleTimeout(READ_TIMEOUT_MS)
   @Shared
   def httpClient = vertx.createHttpClient(clientOptions)
 

@@ -51,8 +51,8 @@ class JerseyClientTest extends JaxRsClientTest {
   @Override
   ClientBuilder builder() {
     ClientConfig config = new ClientConfig()
-    config.property(ClientProperties.CONNECT_TIMEOUT, 2000)
-    config.property(ClientProperties.READ_TIMEOUT, 2000)
+    config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MS)
+    config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MS)
     return new JerseyClientBuilder().withConfig(config)
   }
 
@@ -67,8 +67,8 @@ class ResteasyClientTest extends JaxRsClientTest {
   @Override
   ClientBuilder builder() {
     return new ResteasyClientBuilder()
-      .establishConnectionTimeout(2, TimeUnit.SECONDS)
-      .socketTimeout(2, TimeUnit.SECONDS)
+      .establishConnectionTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .socketTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
   boolean testRedirects() {
@@ -82,8 +82,8 @@ class CxfClientTest extends JaxRsClientTest {
   @Override
   ClientBuilder builder() {
     return new ClientBuilderImpl()
-//      .property(ClientImpl.HTTP_CONNECTION_TIMEOUT_PROP, 2000L)
-//      .property(ClientImpl.HTTP_RECEIVE_TIMEOUT_PROP, 2000L)
+//      .property(ClientImpl.HTTP_CONNECTION_TIMEOUT_PROP, (long) CONNECT_TIMEOUT_MS)
+//      .property(ClientImpl.HTTP_RECEIVE_TIMEOUT_PROP, (long) READ_TIMEOUT_MS)
   }
 
   boolean testRedirects() {

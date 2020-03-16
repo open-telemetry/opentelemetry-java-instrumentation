@@ -23,6 +23,8 @@ import static org.junit.Assume.assumeTrue
 @Unroll
 abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
+  protected static final CONNECT_TIMEOUT_MS = 1000
+  protected static final READ_TIMEOUT_MS = 2000
 
   @AutoCleanup
   @Shared
