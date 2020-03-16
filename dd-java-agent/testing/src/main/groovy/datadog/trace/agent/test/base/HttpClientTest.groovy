@@ -8,6 +8,7 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
 import spock.lang.AutoCleanup
+import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -362,6 +363,8 @@ abstract class HttpClientTest extends AgentTestRunner {
     method = "HEAD"
   }
 
+  // IBM JVM has different protocol support for TLS
+  @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
   def "test https request"() {
     given:
     assumeTrue(testRemoteConnection())

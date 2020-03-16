@@ -44,13 +44,13 @@ class ServerTest extends AgentTestRunner {
     server.internalServer.isRunning()
 
     when:
-    server.stop()
+    server.close()
 
     then:
     !server.internalServer.isRunning()
 
     cleanup:
-    server.stop()
+    server.close()
   }
 
   def "server 404's with no handlers"() {

@@ -16,9 +16,9 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
-    .setSocketTimeout(1000)
-    .setConnectTimeout(1000)
-    .setConnectionRequestTimeout(1000).build()
+    .setConnectTimeout(CONNECT_TIMEOUT_MS)
+    .setSocketTimeout(READ_TIMEOUT_MS)
+    .build()
 
   @AutoCleanup
   @Shared
@@ -67,5 +67,10 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    false // otherwise SocketTimeoutException for https requests
   }
 }
