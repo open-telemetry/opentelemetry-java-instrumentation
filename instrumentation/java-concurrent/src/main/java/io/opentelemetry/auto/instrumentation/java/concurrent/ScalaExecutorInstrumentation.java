@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.java.concurrent;
 
-import static io.opentelemetry.auto.instrumentation.java.concurrent.AdviceUtils.TRACER;
+import static io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,6 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -42,13 +43,6 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
   public ScalaExecutorInstrumentation() {
     super(EXEC_NAME + ".scala_fork_join");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AdviceUtils.class.getName(), packageName + ".ExecutorInstrumentationUtils",
-    };
   }
 
   @Override

@@ -26,8 +26,6 @@ public abstract class AbstractWebfluxInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
       packageName + ".SpringWebfluxHttpServerDecorator",
       // Some code comes from reactor's instrumentation's helper
       "io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreDecorator",

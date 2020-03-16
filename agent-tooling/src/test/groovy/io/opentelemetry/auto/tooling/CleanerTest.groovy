@@ -18,6 +18,7 @@ package io.opentelemetry.auto.tooling
 import io.opentelemetry.auto.common.exec.CommonTaskExecutor
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
+import spock.lang.Retry
 import spock.lang.Subject
 
 import java.lang.ref.WeakReference
@@ -26,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
+@Retry
 class CleanerTest extends AgentSpecification {
 
   @Subject

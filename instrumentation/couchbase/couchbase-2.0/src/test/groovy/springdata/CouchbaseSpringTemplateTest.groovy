@@ -29,7 +29,7 @@ import util.AbstractCouchbaseTest
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
-@Retry(count = 5, delay = 1)
+@Retry(count = 10, delay = 5)
 @Unroll
 class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 

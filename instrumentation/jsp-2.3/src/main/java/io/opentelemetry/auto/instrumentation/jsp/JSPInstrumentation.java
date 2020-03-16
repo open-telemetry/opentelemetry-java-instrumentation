@@ -17,12 +17,11 @@ package io.opentelemetry.auto.instrumentation.jsp;
 
 import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -46,7 +45,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/servlet/jsp/HttpJspPage.class"));
+    return hasClassesNamed("javax.servlet.jsp.HttpJspPage");
   }
 
   @Override
@@ -57,7 +56,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".JSPDecorator",
+      packageName + ".JSPDecorator",
     };
   }
 

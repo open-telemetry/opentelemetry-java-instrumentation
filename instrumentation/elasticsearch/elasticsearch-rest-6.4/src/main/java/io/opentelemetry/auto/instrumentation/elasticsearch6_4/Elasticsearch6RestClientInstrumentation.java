@@ -46,9 +46,6 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       "io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator",
       packageName + ".RestResponseListener",
     };

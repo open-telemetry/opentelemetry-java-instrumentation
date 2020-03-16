@@ -22,28 +22,28 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.internal.http.HttpMethod
 
-class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
+class OkHttp3Test extends HttpClientTest {
 
-  def client = new OkHttpClient()
+    def client = new OkHttpClient()
 
-  @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
-    def request = new Request.Builder()
-      .url(uri.toURL())
-      .method(method, body)
-      .headers(Headers.of(headers)).build()
-    def response = client.newCall(request).execute()
-    callback?.call()
-    return response.code()
-  }
+    @Override
+    int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+        def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
+        def request = new Request.Builder()
+                .url(uri.toURL())
+                .method(method, body)
+                .headers(Headers.of(headers)).build()
+        def response = client.newCall(request).execute()
+        callback?.call()
+        return response.code()
+    }
 
-  @Override
-  OkHttpClientDecorator decorator() {
-    return OkHttpClientDecorator.DECORATE
-  }
+    @Override
+    String component() {
+        return OkHttpClientDecorator.DECORATE.getComponentName()
+    }
 
-  boolean testRedirects() {
-    false
-  }
+    boolean testRedirects() {
+        false
+    }
 }

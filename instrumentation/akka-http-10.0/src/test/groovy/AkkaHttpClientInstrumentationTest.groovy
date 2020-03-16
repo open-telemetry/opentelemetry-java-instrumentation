@@ -19,7 +19,7 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
-import io.opentelemetry.auto.decorator.HttpClientDecorator
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
@@ -29,7 +29,7 @@ import spock.lang.Shared
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {
+class AkkaHttpClientInstrumentationTest extends HttpClientTest {
 
   @Shared
   ActorSystem system = ActorSystem.create()
@@ -55,8 +55,8 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
   }
 
   @Override
-  AkkaHttpClientDecorator decorator() {
-    return AkkaHttpClientDecorator.DECORATE
+  String component() {
+    return AkkaHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

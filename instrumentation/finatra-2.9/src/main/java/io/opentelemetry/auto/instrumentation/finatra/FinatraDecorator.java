@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.finatra;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;

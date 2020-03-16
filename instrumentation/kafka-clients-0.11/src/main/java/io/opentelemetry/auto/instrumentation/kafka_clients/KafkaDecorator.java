@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.kafka_clients;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.ClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;

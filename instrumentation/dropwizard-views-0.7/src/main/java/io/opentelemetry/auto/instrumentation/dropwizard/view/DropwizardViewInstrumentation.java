@@ -15,19 +15,18 @@
  */
 package io.opentelemetry.auto.instrumentation.dropwizard.view;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.dropwizard.views.View;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
@@ -51,7 +50,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("io/dropwizard/views/ViewRenderer.class"));
+    return hasClassesNamed("io.dropwizard.views.ViewRenderer");
   }
 
   @Override
@@ -61,9 +60,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", getClass().getName() + "$RenderAdvice"
-    };
+    return new String[] {getClass().getName() + "$RenderAdvice"};
   }
 
   @Override

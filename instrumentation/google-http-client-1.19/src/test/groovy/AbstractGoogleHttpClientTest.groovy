@@ -26,7 +26,7 @@ import spock.lang.Shared
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpClientDecorator> {
+abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
 
   @Shared
   def requestFactory = new NetHttpTransport().createRequestFactory()
@@ -52,8 +52,8 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
   abstract HttpResponse executeRequest(HttpRequest request)
 
   @Override
-  GoogleHttpClientDecorator decorator() {
-    return GoogleHttpClientDecorator.DECORATE
+  String component() {
+    return GoogleHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

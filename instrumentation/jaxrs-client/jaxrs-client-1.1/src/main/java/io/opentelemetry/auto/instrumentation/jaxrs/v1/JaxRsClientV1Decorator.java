@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.jaxrs.v1;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 

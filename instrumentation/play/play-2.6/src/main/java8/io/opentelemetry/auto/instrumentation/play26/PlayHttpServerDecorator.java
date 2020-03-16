@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.play26;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;

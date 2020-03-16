@@ -15,17 +15,16 @@
  */
 package io.opentelemetry.auto.instrumentation.apachehttpasyncclient;
 
-import static io.opentelemetry.auto.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -58,7 +57,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/apache/http/nio/client/HttpAsyncClient.class"));
+    return hasClassesNamed("org.apache.http.nio.client.HttpAsyncClient");
   }
 
   @Override
@@ -72,9 +71,6 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       packageName + ".HttpHeadersInjectAdapter",
       getClass().getName() + "$DelegatingRequestProducer",
       getClass().getName() + "$TraceContinuedFutureCallback",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".ApacheHttpAsyncClientDecorator"
     };
   }

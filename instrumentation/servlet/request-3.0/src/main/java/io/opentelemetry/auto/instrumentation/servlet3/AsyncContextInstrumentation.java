@@ -15,15 +15,14 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet3;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
@@ -47,7 +46,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("javax/servlet/AsyncContext.class"));
+    return hasClassesNamed("javax.servlet.AsyncContext");
   }
 
   @Override
@@ -57,12 +56,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
-      packageName + ".Servlet3Decorator"
-    };
+    return new String[] {packageName + ".Servlet3Decorator"};
   }
 
   @Override
@@ -87,20 +81,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
         return false;
       }
 
-      final String path;
-      if (args.length == 1 && args[0] instanceof String) {
-        path = (String) args[0];
-      } else if (args.length == 2 && args[1] instanceof String) {
-        path = (String) args[1];
-      } else {
-        path = "true";
-      }
-
       final ServletRequest request = context.getRequest();
-
-      // this tells the dispatched servlet that it is already part of an existing servlet request,
-      // so that it will only capture an INTERNAL span to represent the dispatch work
-      request.setAttribute("io.opentelemetry.auto.servlet.dispatch", path);
 
       final Span currentSpan = TRACER.getCurrentSpan();
       if (currentSpan.getContext().isValid()) {

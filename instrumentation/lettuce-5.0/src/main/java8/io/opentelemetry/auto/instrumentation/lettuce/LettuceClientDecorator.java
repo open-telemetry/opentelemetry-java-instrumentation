@@ -18,10 +18,9 @@ package io.opentelemetry.auto.instrumentation.lettuce;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 

@@ -31,7 +31,6 @@ dependencies {
   // TODO: It is unclear why we need to use `compile` here (instead of 'compileOnly')
   compile project(':instrumentation:reactor-3.1')
 
-  testCompile project(':instrumentation:java-concurrent')
   testCompile project(':instrumentation:trace-annotation')
   testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:reactor-3.1')

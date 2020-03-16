@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.ratpack;
 
 import com.google.common.net.HostAndPort;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;

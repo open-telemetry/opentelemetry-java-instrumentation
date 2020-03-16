@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.ToString;
@@ -68,6 +69,8 @@ public class Config {
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
   public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
+  public static final String SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
+      "trace.span.duration-above-average.stacktrace.millis";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
@@ -89,6 +92,8 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
+  private static final int DEFAULT_SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
+      (int) TimeUnit.SECONDS.toMillis(1);
 
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
   public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
@@ -112,6 +117,7 @@ public class Config {
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final boolean dbClientSplitByInstance;
   @Getter private final Integer scopeDepthLimit;
+  @Getter private final long spanDurationAboveAverageStacktraceNanos;
   @Getter private final boolean runtimeContextFieldInjection;
 
   @Getter private final boolean logInjectionEnabled;
@@ -182,6 +188,13 @@ public class Config {
     scopeDepthLimit =
         getIntegerSettingFromEnvironment(SCOPE_DEPTH_LIMIT, DEFAULT_SCOPE_DEPTH_LIMIT);
 
+    spanDurationAboveAverageStacktraceNanos =
+        TimeUnit.MILLISECONDS.toNanos(
+            getIntegerSettingFromEnvironment(
+                    SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS,
+                    DEFAULT_SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS)
+                .longValue());
+
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
@@ -243,6 +256,15 @@ public class Config {
 
     scopeDepthLimit =
         getPropertyIntegerValue(properties, SCOPE_DEPTH_LIMIT, parent.scopeDepthLimit);
+
+    // do we care about the integer downcast here?
+    spanDurationAboveAverageStacktraceNanos =
+        TimeUnit.MILLISECONDS.toNanos(
+            getPropertyIntegerValue(
+                properties,
+                SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS,
+                (int)
+                    TimeUnit.NANOSECONDS.toMillis(parent.spanDurationAboveAverageStacktraceNanos)));
 
     runtimeContextFieldInjection =
         getPropertyBooleanValue(

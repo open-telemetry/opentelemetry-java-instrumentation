@@ -48,7 +48,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".DataSourceDecorator",
+      packageName + ".DataSourceDecorator",
     };
   }
 

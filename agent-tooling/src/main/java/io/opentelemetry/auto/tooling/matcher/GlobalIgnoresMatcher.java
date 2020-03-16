@@ -41,12 +41,18 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
   private static final Pattern COM_MCHANGE_PROXY =
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
-  public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher() {
-    return new GlobalIgnoresMatcher<>();
+  public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher(
+      final boolean skipAdditionalLibraryMatcher) {
+    return new GlobalIgnoresMatcher<>(skipAdditionalLibraryMatcher);
   }
 
   private final ElementMatcher<T> additionalLibraryIgnoreMatcher =
       AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
+  private final boolean skipAdditionalLibraryMatcher;
+
+  private GlobalIgnoresMatcher(final boolean skipAdditionalLibraryMatcher) {
+    this.skipAdditionalLibraryMatcher = skipAdditionalLibraryMatcher;
+  }
 
   /**
    * Be very careful about the types of matchers used in this section as they are called on every
@@ -146,7 +152,8 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.contains("CGLIB$$")
         || name.contains("javassist")
         || name.contains(".asm.")
-        || name.contains("$__sisu")) {
+        || name.contains("$__sisu")
+        || name.startsWith("org.springframework.core.$Proxy")) {
       return true;
     }
 
@@ -154,7 +161,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
-    if (additionalLibraryIgnoreMatcher.matches(target)) {
+    if (!skipAdditionalLibraryMatcher && additionalLibraryIgnoreMatcher.matches(target)) {
       return true;
     }
 

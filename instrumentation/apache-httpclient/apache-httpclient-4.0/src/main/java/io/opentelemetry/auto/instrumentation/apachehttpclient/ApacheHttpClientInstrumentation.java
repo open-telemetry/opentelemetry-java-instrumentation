@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.apachehttpclient;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.ApacheHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -60,7 +60,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/apache/http/client/HttpClient.class"));
+    return hasClassesNamed("org.apache.http.client.HttpClient");
   }
 
   @Override
@@ -71,14 +71,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$HelperMethods",
-      packageName + ".HttpHeadersInjectAdapter",
-      getClass().getName() + "$WrappingStatusSettingResponseHandler",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".ApacheHttpClientDecorator",
+      packageName + ".HttpHeadersInjectAdapter",
       packageName + ".HostAndRequestAsHttpUriRequest",
+      getClass().getName() + "$HelperMethods",
+      getClass().getName() + "$WrappingStatusSettingResponseHandler",
     };
   }
 

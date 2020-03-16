@@ -9,7 +9,6 @@ apply from: "${rootDir}/gradle/instrumentation.gradle"
 //}
 
 dependencies {
-  testCompile project(':instrumentation:java-concurrent')
   testCompile project(':instrumentation:jaxrs:jaxrs-2.0')
   testCompile project(':instrumentation:servlet:request-3.0')
 

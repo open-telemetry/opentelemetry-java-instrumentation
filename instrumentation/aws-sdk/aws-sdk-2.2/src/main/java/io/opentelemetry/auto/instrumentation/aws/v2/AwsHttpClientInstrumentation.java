@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
 import static io.opentelemetry.auto.instrumentation.aws.v2.TracingExecutionInterceptor.ScopeHolder.CURRENT;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -39,6 +40,13 @@ import software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRe
  */
 @AutoService(Instrumenter.class)
 public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed(
+        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

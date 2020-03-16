@@ -333,6 +333,60 @@ class ServerTest extends AgentTestRunner {
     server.stop()
   }
 
+
+  def "calling send() twice is an error"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          response.send()
+          response.send()
+        }
+      }
+    }
+
+    when:
+    def request = new Request.Builder()
+      .url("$server.address")
+      .get()
+      .build()
+
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 500
+    response.message().startsWith("Server Error")
+
+    cleanup:
+    server.stop()
+  }
+
+  def "calling send() with null is an error"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          response.send(null)
+        }
+      }
+    }
+
+    when:
+    def request = new Request.Builder()
+      .url("$server.address")
+      .get()
+      .build()
+
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 500
+    response.message().startsWith("Server Error")
+
+    cleanup:
+    server.stop()
+  }
+
   def body() {
     return new MultipartBody.Builder().addFormDataPart("key", "value").build()
   }

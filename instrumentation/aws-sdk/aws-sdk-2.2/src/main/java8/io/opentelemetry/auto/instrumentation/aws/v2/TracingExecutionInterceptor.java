@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
-import static io.opentelemetry.auto.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator.DEFAULT_SPAN_NAME;
 import static io.opentelemetry.auto.instrumentation.aws.v2.AwsSdkClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.aws.v2.AwsSdkClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;

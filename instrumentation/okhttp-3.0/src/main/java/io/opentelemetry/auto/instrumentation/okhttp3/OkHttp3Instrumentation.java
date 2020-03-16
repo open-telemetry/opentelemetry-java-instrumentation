@@ -45,9 +45,6 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".RequestBuilderInjectAdapter",
       packageName + ".OkHttpClientDecorator",
       packageName + ".TracingInterceptor",

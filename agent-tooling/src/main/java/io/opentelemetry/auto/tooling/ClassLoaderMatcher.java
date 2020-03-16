@@ -17,12 +17,14 @@ package io.opentelemetry.auto.tooling;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import io.opentelemetry.auto.bootstrap.PatchLogger;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 public final class ClassLoaderMatcher {
   public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
+  public static final int CACHE_MAX_SIZE = 25; // limit number of cached responses for each matcher.
   public static final int CACHE_CONCURRENCY =
       Math.max(8, Runtime.getRuntime().availableProcessors());
 
@@ -35,14 +37,24 @@ public final class ClassLoaderMatcher {
     return SkipClassLoaderMatcher.INSTANCE;
   }
 
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasNoResources(
-      final String... resources) {
-    return new ClassLoaderHasNoResourceMatcher(resources);
+  /**
+   * NOTICE: Does not match the bootstrap classpath. Don't use with classes expected to be on the
+   * bootstrap.
+   *
+   * @param classNames list of names to match. returns true if empty.
+   * @return true if class is available as a resource and not the bootstrap classloader.
+   */
+  public static ElementMatcher.Junction.AbstractBase<ClassLoader> hasClassesNamed(
+      final String... classNames) {
+    return new ClassLoaderHasClassesNamedMatcher(classNames);
   }
 
   private static class SkipClassLoaderMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
+    /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
+    private static final Cache<ClassLoader, Boolean> skipCache =
+        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
     private static final String AGENT_CLASSLOADER_NAME =
         "io.opentelemetry.auto.bootstrap.AgentClassLoader";
 
@@ -54,7 +66,21 @@ public final class ClassLoaderMatcher {
         // Don't skip bootstrap loader
         return false;
       }
-      return shouldSkipClass(cl);
+      Boolean v = skipCache.getIfPresent(cl);
+      if (v != null) {
+        return v;
+      }
+      // when ClassloadingInstrumentation is active, checking delegatesToBootstrap() below is not
+      // required, because ClassloadingInstrumentation forces all class loaders to load all of the
+      // classes in Constants.BOOTSTRAP_PACKAGE_PREFIXES directly from the bootstrap class loader
+      //
+      // however, at this time we don't want to introduce the concept of a required instrumentation,
+      // and we don't want to introduce the concept of the tooling code depending on whether or not
+      // a particular instrumentation is active (mainly because this particular use case doesn't
+      // seem to justify introducing either of these new concepts)
+      v = shouldSkipClass(cl) || !delegatesToBootstrap(cl);
+      skipCache.put(cl, v);
+      return v;
     }
 
     private static boolean shouldSkipClass(final ClassLoader loader) {
@@ -70,40 +96,73 @@ public final class ClassLoaderMatcher {
       }
       return false;
     }
+
+    /**
+     * TODO: this turns out to be useless with OSGi: {@code
+     * org.eclipse.osgi.internal.loader.BundleLoader#isRequestFromVM} returns {@code true} when
+     * class loading is issued from this check and {@code false} for 'real' class loads. We should
+     * come up with some sort of hack to avoid this problem.
+     */
+    private static boolean delegatesToBootstrap(final ClassLoader loader) {
+      boolean delegates = true;
+      if (!loadsExpectedClass(loader, PatchLogger.class)) {
+        log.debug("loader {} failed to delegate bootstrap agent class", loader);
+        delegates = false;
+      }
+      return delegates;
+    }
+
+    private static boolean loadsExpectedClass(
+        final ClassLoader loader, final Class<?> expectedClass) {
+      try {
+        return loader.loadClass(expectedClass.getName()) == expectedClass;
+      } catch (final ClassNotFoundException e) {
+        return false;
+      }
+    }
   }
 
-  private static class ClassLoaderHasNoResourceMatcher
+  private static class ClassLoaderHasClassesNamedMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+
     private final Cache<ClassLoader, Boolean> cache =
-        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
+        CacheBuilder.newBuilder()
+            .weakKeys()
+            .maximumSize(CACHE_MAX_SIZE)
+            .concurrencyLevel(CACHE_CONCURRENCY)
+            .build();
 
     private final String[] resources;
 
-    private ClassLoaderHasNoResourceMatcher(final String... resources) {
-      this.resources = resources;
+    private ClassLoaderHasClassesNamedMatcher(final String... classNames) {
+      resources = classNames;
+      for (int i = 0; i < resources.length; i++) {
+        resources[i] = resources[i].replace(".", "/") + ".class";
+      }
     }
 
-    private boolean hasNoResources(final ClassLoader cl) {
+    private boolean hasResources(final ClassLoader cl) {
       for (final String resource : resources) {
         if (cl.getResource(resource) == null) {
-          return true;
+          return false;
         }
       }
-      return false;
+      return true;
     }
 
     @Override
     public boolean matches(final ClassLoader cl) {
-      if (cl == null) {
+      if (cl == BOOTSTRAP_CLASSLOADER) {
+        // Can't match the bootstrap classloader.
         return false;
       }
-      Boolean v = cache.getIfPresent(cl);
-      if (v != null) {
-        return v;
+      final Boolean cached;
+      if ((cached = cache.getIfPresent(cl)) != null) {
+        return cached;
       }
-      v = hasNoResources(cl);
-      cache.put(cl, v);
-      return v;
+      final boolean value = hasResources(cl);
+      cache.put(cl, value);
+      return value;
     }
   }
 }

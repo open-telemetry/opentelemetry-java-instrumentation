@@ -60,9 +60,6 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       "io.opentelemetry.auto.instrumentation.mongo.MongoClientDecorator",
       "io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener"
     };

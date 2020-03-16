@@ -23,12 +23,12 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
-import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.SpanData
 import org.eclipse.jetty.servlet.ServletHandler
+import spock.lang.Retry
 
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -45,7 +45,9 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decorator> {
+// Work around for: address already in use
+@Retry
+class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
 
   @Override
   DropwizardTestSupport startServer(int port) {
@@ -72,13 +74,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   }
 
   @Override
-  Servlet3Decorator decorator() {
-    return new Servlet3Decorator() {
-      @Override
-      protected String getComponentName() {
-        return "jax-rs"
-      }
-    }
+  String component() {
+    return "jax-rs"
   }
 
   @Override
@@ -121,7 +118,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName  "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
+      operationName "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -133,7 +130,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       tags {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

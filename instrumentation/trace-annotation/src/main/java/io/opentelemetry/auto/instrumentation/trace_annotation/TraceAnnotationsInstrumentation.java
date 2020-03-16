@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.trace_annotation;
 
 import static io.opentelemetry.auto.instrumentation.trace_annotation.TraceConfigInstrumentation.PACKAGE_CLASS_NAME_REGEX;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -100,6 +101,23 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    ElementMatcher.Junction<ClassLoader> matcher = null;
+    for (final String name : additionalTraceAnnotations) {
+      if (matcher == null) {
+        matcher = hasClassesNamed(name);
+      } else {
+        matcher = matcher.or(hasClassesNamed(name));
+      }
+    }
+    if (matcher == null) {
+      return none();
+    }
+    return matcher;
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(declaresMethod(isAnnotatedWith(methodTraceMatcher)));
   }
@@ -107,7 +125,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".TraceDecorator",
+      packageName + ".TraceDecorator",
     };
   }
 

@@ -59,9 +59,6 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.D
       "com.google.common.base.Joiner$1",
       "com.google.common.base.Joiner$2",
       "com.google.common.base.Joiner$MapJoiner",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       "io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator",
       packageName + ".TransportActionListener",
     };

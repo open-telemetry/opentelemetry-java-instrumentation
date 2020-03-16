@@ -51,14 +51,12 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.grpc.client.GrpcInjectAdapter",
-      "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor",
-      "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCall",
-      "io.opentelemetry.auto.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCallListener",
-      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
       packageName + ".GrpcClientDecorator",
+      packageName + ".GrpcInjectAdapter",
+      packageName + ".TracingClientInterceptor",
+      packageName + ".TracingClientInterceptor$TracingClientCall",
+      packageName + ".TracingClientInterceptor$TracingClientCallListener",
+      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
     };
   }
 

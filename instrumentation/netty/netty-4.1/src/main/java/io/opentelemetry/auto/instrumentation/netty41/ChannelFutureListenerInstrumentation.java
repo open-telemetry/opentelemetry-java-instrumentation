@@ -15,12 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.netty41;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -48,7 +47,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("io/netty/channel/ChannelFutureListener.class"));
+    return hasClassesNamed("io.netty.channel.ChannelFutureListener");
   }
 
   @Override
@@ -61,18 +60,13 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".AttributeKeys",
       packageName + ".AttributeKeys$1",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
       // client helpers
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".client.NettyHttpClientDecorator",
       packageName + ".client.NettyResponseInjectAdapter",
       packageName + ".client.HttpClientRequestTracingHandler",
       packageName + ".client.HttpClientResponseTracingHandler",
       packageName + ".client.HttpClientTracingHandler",
       // server helpers
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".server.NettyHttpServerDecorator",
       packageName + ".server.NettyRequestExtractAdapter",
       packageName + ".server.HttpServerRequestTracingHandler",

@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import java.util.concurrent.CountDownLatch
 
-abstract class JaxRsClientAsyncTest extends HttpClientTest<JaxRsClientDecorator> {
+abstract class JaxRsClientAsyncTest extends HttpClientTest {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -60,8 +60,8 @@ abstract class JaxRsClientAsyncTest extends HttpClientTest<JaxRsClientDecorator>
   }
 
   @Override
-  JaxRsClientDecorator decorator() {
-    return JaxRsClientDecorator.DECORATE
+  String component() {
+    return JaxRsClientDecorator.DECORATE.getComponentName()
   }
 
   abstract ClientBuilder builder()

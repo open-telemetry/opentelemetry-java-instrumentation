@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet2;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet2.Servlet2Decorator.TRACER;
@@ -44,12 +44,10 @@ public class Servlet2Advice {
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
           ServletResponse response) {
-    final Span current = TRACER.getCurrentSpan();
-    final boolean hasActiveTrace = current.getContext().isValid();
     final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
-    if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
-      // Tracing might already be applied by the FilterChain.  If so ignore this.
+    if (invalidRequest || hasServletTrace) {
+      // Tracing might already be applied by the FilterChain or a parent request (forward/include).
       return null;
     }
 
@@ -82,6 +80,8 @@ public class Servlet2Advice {
     DECORATE.onRequest(span, httpServletRequest);
 
     httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
+    httpServletRequest.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
+    httpServletRequest.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
 
     return new SpanWithScope(span, TRACER.withSpan(span));
   }

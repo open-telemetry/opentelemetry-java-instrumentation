@@ -37,7 +37,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerDecorator> {
+class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
 
   @Override
   EmbeddedApp startServer(int bindPort) {
@@ -112,8 +112,8 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   }
 
   @Override
-  NettyHttpServerDecorator decorator() {
-    return NettyHttpServerDecorator.DECORATE
+  String component() {
+    return NettyHttpServerDecorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -166,7 +166,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
       tags {
         "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

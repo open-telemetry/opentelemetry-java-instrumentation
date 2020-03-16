@@ -126,8 +126,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    assertTraces(2) {
-      trace(0, 3) {
+    assertTraces(1) {
+      trace(0, 4) {
         sortSpans {
           sort(spans)
         }
@@ -163,6 +163,20 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(2) {
           operationName "elasticsearch.query"
           spanKind CLIENT
+          childOf span(1)
+          tags {
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "PutMappingAction"
+            "elasticsearch.request" "PutMappingRequest"
+          }
+        }
+        span(3) {
+          operationName "elasticsearch.query"
+          spanKind CLIENT
           childOf(span(0))
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
@@ -176,21 +190,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.shard.broadcast.failed" 0
             "elasticsearch.shard.broadcast.successful" 5
             "elasticsearch.shard.broadcast.total" 10
-          }
-        }
-      }
-      trace(1, 1) {
-        span(0) {
-          operationName "elasticsearch.query"
-          spanKind CLIENT
-          tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
           }
         }
       }

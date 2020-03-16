@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.datastax.cassandra;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 

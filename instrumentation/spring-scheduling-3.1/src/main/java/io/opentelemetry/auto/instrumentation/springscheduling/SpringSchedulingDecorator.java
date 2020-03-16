@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.springscheduling;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;

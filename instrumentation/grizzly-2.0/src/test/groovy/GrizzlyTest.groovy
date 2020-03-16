@@ -32,7 +32,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUER
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
+class GrizzlyTest extends HttpServerTest<HttpServer> {
 
   static {
     System.setProperty("ota.integration.grizzly.enabled", "true")
@@ -52,8 +52,8 @@ class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
   }
 
   @Override
-  GrizzlyDecorator decorator() {
-    return GrizzlyDecorator.DECORATE
+  String component() {
+    return GrizzlyDecorator.DECORATE.getComponentName()
   }
 
   static class SimpleExceptionMapper implements ExceptionMapper<Throwable> {

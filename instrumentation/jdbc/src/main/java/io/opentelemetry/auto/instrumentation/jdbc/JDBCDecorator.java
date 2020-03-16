@@ -16,7 +16,9 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;

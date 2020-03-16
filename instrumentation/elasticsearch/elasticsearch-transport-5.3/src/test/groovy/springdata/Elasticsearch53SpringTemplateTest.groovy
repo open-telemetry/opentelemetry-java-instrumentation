@@ -164,18 +164,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     template.queryForList(query, Doc) == [new Doc()]
 
     and:
-    def excludes = {
-      trace -> IGNORED_ACTIONS.contains(trace[0].attributes[MoreTags.RESOURCE_NAME].stringValue)
-    }
-    assertTracesWithFilter(7, excludes) {
-      sortTraces {
-        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (traces[3][0].attributes[MoreTags.RESOURCE_NAME].stringValue == "IndexAction") {
-          def tmp = traces[3]
-          traces[3] = traces[4]
-          traces[4] = tmp
-        }
-      }
+    assertTraces(6) {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
@@ -224,22 +213,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           }
         }
       }
-      trace(3, 1) {
-        span(0) {
-          operationName "elasticsearch.query"
-          spanKind CLIENT
-          tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
-            "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
-          }
-        }
-      }
-      trace(4, 1) {
+      trace(3, 2) {
         span(0) {
           operationName "elasticsearch.query"
           spanKind CLIENT
@@ -260,8 +234,22 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
             "elasticsearch.shard.replication.total" 2
           }
         }
+        span(1) {
+          operationName "elasticsearch.query"
+          spanKind CLIENT
+          childOf span(0)
+          tags {
+            "$MoreTags.SERVICE_NAME" "elasticsearch"
+            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
+            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "elasticsearch.action" "PutMappingAction"
+            "elasticsearch.request" "PutMappingRequest"
+          }
+        }
       }
-      trace(5, 1) {
+      trace(4, 1) {
         span(0) {
           operationName "elasticsearch.query"
           spanKind CLIENT
@@ -280,7 +268,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           }
         }
       }
-      trace(6, 1) {
+      trace(5, 1) {
         span(0) {
           operationName "elasticsearch.query"
           spanKind CLIENT
@@ -324,7 +312,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       .withId("b")
       .build())
     template.refresh(indexName)
-    TEST_WRITER.waitForTraces(6)
+    TEST_WRITER.waitForTraces(5)
     TEST_WRITER.clear()
 
     and:

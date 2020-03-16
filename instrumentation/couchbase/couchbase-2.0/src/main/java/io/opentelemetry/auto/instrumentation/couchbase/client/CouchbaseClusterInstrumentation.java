@@ -51,9 +51,6 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "rx.__OpenTelemetryTracingUtil",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       "io.opentelemetry.auto.instrumentation.rxjava.SpanFinishingSubscription",
       "io.opentelemetry.auto.instrumentation.rxjava.TracedSubscriber",
       "io.opentelemetry.auto.instrumentation.rxjava.TracedOnSubscribe",
@@ -76,7 +73,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       return CallDepthThreadLocalMap.incrementCallDepth(CouchbaseCluster.class);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void subscribeResult(
         @Advice.Enter final int callDepth,
         @Advice.Origin final Method method,

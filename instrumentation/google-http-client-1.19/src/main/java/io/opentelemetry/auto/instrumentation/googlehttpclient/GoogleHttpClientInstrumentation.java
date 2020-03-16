@@ -65,13 +65,8 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
       packageName + ".GoogleHttpClientDecorator",
       packageName + ".RequestState",
-      getClass().getName() + "$GoogleHttpClientAdvice",
-      getClass().getName() + "$GoogleHttpClientAsyncAdvice",
       packageName + ".HeadersInjectAdapter"
     };
   }
