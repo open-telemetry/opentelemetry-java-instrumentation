@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.http_url_connection;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.HttpURLConnection;
 import java.net.URI;

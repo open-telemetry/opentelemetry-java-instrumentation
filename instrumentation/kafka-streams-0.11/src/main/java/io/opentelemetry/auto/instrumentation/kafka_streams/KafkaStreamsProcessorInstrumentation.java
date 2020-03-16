@@ -73,8 +73,6 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        "io.opentelemetry.auto.decorator.BaseDecorator",
-        "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
         packageName + ".TextMapExtractAdapter",
         KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"
@@ -138,8 +136,6 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        "io.opentelemetry.auto.decorator.BaseDecorator",
-        "io.opentelemetry.auto.decorator.ClientDecorator",
         packageName + ".KafkaStreamsDecorator",
         packageName + ".TextMapExtractAdapter",
         KafkaStreamsProcessorInstrumentation.class.getName() + "$SpanScopeHolder"

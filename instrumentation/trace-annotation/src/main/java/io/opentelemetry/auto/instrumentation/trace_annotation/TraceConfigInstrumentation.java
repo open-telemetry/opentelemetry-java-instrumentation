@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.trace_annotation;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -130,13 +131,19 @@ public class TraceConfigInstrumentation implements Instrumenter {
 
     /** No-arg constructor only used by muzzle and tests. */
     public TracerClassInstrumentation() {
-      this("noop", Collections.singleton("noop"));
+      this("io.opentracing.contrib.dropwizard.Trace", Collections.singleton("noop"));
     }
 
     public TracerClassInstrumentation(final String className, final Set<String> methodNames) {
       super("trace", "trace-config");
       this.className = className;
       this.methodNames = methodNames;
+    }
+
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
+      // Optimization for expensive typeMatcher.
+      return hasClassesNamed(className);
     }
 
     @Override
@@ -147,7 +154,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".TraceDecorator",
+        packageName + ".TraceDecorator",
       };
     }
 

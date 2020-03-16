@@ -57,11 +57,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$WrappedFuture",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
-      JaxRsClientDecorator.class.getName(),
+      getClass().getName() + "$WrappedFuture", JaxRsClientDecorator.class.getName(),
     };
   }
 

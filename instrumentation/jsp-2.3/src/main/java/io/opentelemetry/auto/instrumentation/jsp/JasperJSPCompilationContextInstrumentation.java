@@ -48,7 +48,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator", packageName + ".JSPDecorator",
+      packageName + ".JSPDecorator",
     };
   }
 

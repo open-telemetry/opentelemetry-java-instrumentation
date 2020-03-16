@@ -19,6 +19,7 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import org.springframework.jms.core.JmsTemplate
+import spock.lang.Retry
 import spock.lang.Shared
 
 import javax.jms.Connection
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit
 import static JMS1Test.consumerSpan
 import static JMS1Test.producerSpan
 
+@Retry
 class SpringTemplateJMS1Test extends AgentTestRunner {
   @Shared
   EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
@@ -73,8 +75,8 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     }
 
     where:
-    destination                            | jmsResourceName
-    session.createQueue("someSpringQueue") | "Queue someSpringQueue"
+    destination                               | jmsResourceName
+    session.createQueue("SpringTemplateJMS1") | "Queue SpringTemplateJMS1"
   }
 
   def "send and receive message generates spans"() {
@@ -114,7 +116,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     }
 
     where:
-    destination                            | jmsResourceName
-    session.createQueue("someSpringQueue") | "Queue someSpringQueue"
+    destination                               | jmsResourceName
+    session.createQueue("SpringTemplateJMS1") | "Queue SpringTemplateJMS1"
   }
 }

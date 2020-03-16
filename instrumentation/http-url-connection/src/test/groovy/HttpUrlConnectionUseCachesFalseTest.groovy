@@ -16,7 +16,7 @@
 import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 
-class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnectionDecorator> {
+class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -39,8 +39,8 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnecti
   }
 
   @Override
-  HttpUrlConnectionDecorator decorator() {
-    return HttpUrlConnectionDecorator.DECORATE
+  String component() {
+    return HttpUrlConnectionDecorator.DECORATE.getComponentName()
   }
 
   @Override

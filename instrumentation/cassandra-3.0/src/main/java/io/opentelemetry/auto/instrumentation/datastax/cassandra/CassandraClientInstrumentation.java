@@ -47,9 +47,6 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
       packageName + ".CassandraClientDecorator",
       packageName + ".TracingSession",
       packageName + ".TracingSession$1",

@@ -15,74 +15,22 @@
  */
 package io.opentelemetry.auto.instrumentation.playws1;
 
-import static io.opentelemetry.auto.instrumentation.playws1.HeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.playws1.PlayWSClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.playws1.PlayWSClientDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
-import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
+import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.instrumentation.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.Request;
+import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 
 @AutoService(Instrumenter.class)
-public class PlayWSClientInstrumentation extends Instrumenter.Default {
-  public PlayWSClientInstrumentation() {
-    super("play-ws");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Optimization for expensive typeMatcher.
-    return not(
-        classLoaderHasNoResources("play/shaded/ahc/org/asynchttpclient/AsyncHttpClient.class"));
-  }
-
-  @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    // CachingAsyncHttpClient rejects overrides to AsyncHandler
-    // It also delegates to another AsyncHttpClient
-    return implementsInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
-        .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient")));
-  }
-
-  @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        isMethod()
-            .and(named("execute"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("play.shaded.ahc.org.asynchttpclient.Request")))
-            .and(takesArgument(1, named("play.shaded.ahc.org.asynchttpclient.AsyncHandler"))),
-        PlayWSClientInstrumentation.class.getName() + "$ClientAdvice");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.HttpClientDecorator",
-      packageName + ".PlayWSClientDecorator",
-      packageName + ".HeadersInjectAdapter",
-      packageName + ".AsyncHandlerWrapper"
-    };
-  }
-
+public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation {
   public static class ClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Span methodEnter(
@@ -96,7 +44,11 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
       DECORATE.onRequest(span, request);
       TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
 
-      asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
+      if (asyncHandler instanceof StreamedAsyncHandler) {
+        asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);
+      } else {
+        asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
+      }
 
       return span;
     }

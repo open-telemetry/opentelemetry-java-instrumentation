@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import groovy.json.JsonSlurper
-import io.opentelemetry.auto.decorator.HttpClientDecorator
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags

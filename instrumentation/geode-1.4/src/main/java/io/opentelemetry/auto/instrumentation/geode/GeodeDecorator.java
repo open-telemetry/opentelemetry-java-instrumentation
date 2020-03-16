@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.geode;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import org.apache.geode.cache.Region;

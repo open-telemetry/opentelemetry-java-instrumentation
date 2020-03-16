@@ -36,13 +36,6 @@ public final class NonStandardExecutorInstrumentation extends AbstractExecutorIn
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AdviceUtils.class.getName(), packageName + ".ExecutorInstrumentationUtils",
-    };
-  }
-
-  @Override
   public Map<String, String> contextStore() {
     return singletonMap(Runnable.class.getName(), State.class.getName());
   }

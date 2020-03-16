@@ -50,11 +50,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      packageName + ".RmiClientDecorator"
-    };
+    return new String[] {packageName + ".RmiClientDecorator"};
   }
 
   @Override

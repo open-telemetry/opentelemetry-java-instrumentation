@@ -33,8 +33,6 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -55,23 +53,9 @@ public final class StatementInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    final List<String> helpers = new ArrayList<>(JDBCConnectionUrlParser.values().length + 9);
-
-    helpers.add(packageName + ".DBInfo");
-    helpers.add(packageName + ".DBInfo$Builder");
-    helpers.add(packageName + ".JDBCUtils");
-    helpers.add(packageName + ".JDBCMaps");
-    helpers.add(packageName + ".JDBCConnectionUrlParser");
-
-    helpers.add("io.opentelemetry.auto.decorator.BaseDecorator");
-    helpers.add("io.opentelemetry.auto.decorator.ClientDecorator");
-    helpers.add("io.opentelemetry.auto.decorator.DatabaseClientDecorator");
-    helpers.add(packageName + ".JDBCDecorator");
-
-    for (final JDBCConnectionUrlParser parser : JDBCConnectionUrlParser.values()) {
-      helpers.add(parser.getClass().getName());
-    }
-    return helpers.toArray(new String[0]);
+    return new String[] {
+      packageName + ".JDBCMaps", packageName + ".JDBCUtils", packageName + ".JDBCDecorator",
+    };
   }
 
   @Override

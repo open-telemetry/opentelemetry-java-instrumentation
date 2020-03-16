@@ -47,9 +47,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      packageName + ".SpringSchedulingDecorator",
-      getClass().getName() + "$RunnableWrapper",
+      packageName + ".SpringSchedulingDecorator", getClass().getName() + "$RunnableWrapper",
     };
   }
 

@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.grizzly;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
@@ -58,9 +58,6 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".GrizzlyDecorator",
       packageName + ".GrizzlyRequestExtractAdapter",
       getClass().getName() + "$SpanClosingListener"
@@ -100,12 +97,14 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       DECORATE.onRequest(span, request);
 
       request.setAttribute(SPAN_ATTRIBUTE, span);
+      request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
+      request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       if (spanWithScope == null) {

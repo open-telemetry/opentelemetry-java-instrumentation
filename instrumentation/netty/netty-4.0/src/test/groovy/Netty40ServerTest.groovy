@@ -47,7 +47,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUER
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class Netty40ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDecorator> {
+class Netty40ServerTest extends HttpServerTest<EventLoopGroup> {
 
   @Override
   EventLoopGroup startServer(int port) {
@@ -120,7 +120,7 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDe
   }
 
   @Override
-  NettyHttpServerDecorator decorator() {
-    NettyHttpServerDecorator.DECORATE
+  String component() {
+    NettyHttpServerDecorator.DECORATE.getComponentName()
   }
 }

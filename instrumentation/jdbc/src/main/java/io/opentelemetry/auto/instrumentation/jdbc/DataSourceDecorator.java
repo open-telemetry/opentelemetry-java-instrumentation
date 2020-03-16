@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Tracer;
 
 public class DataSourceDecorator extends BaseDecorator {

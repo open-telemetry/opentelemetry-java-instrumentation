@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet3;
 
-import static io.opentelemetry.auto.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator.TRACER;
@@ -48,26 +48,9 @@ public class Servlet3Advice {
     }
     final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
     if (spanAttr instanceof Span) {
-      // inside of an existing servlet span already
+      // inside of an existing servlet span already, possibly a dispatched servlet/filter
 
       final Span span = (Span) spanAttr;
-      final Object dispatch = request.getAttribute("io.opentelemetry.auto.servlet.dispatch");
-
-      if (dispatch instanceof String) {
-        // inside of a dispatched servlet/filter
-
-        // remove the dispatch attribute so that it won't trigger any additional dispatch spans
-        // beyond this one
-        request.removeAttribute("io.opentelemetry.auto.servlet.dispatch");
-
-        // start an INTERNAL span to group the dispatched work under
-        final Span dispatchSpan =
-            TRACER.spanBuilder("servlet.dispatch").setParent(span).startSpan();
-        DECORATE.afterStart(dispatchSpan);
-        dispatchSpan.setAttribute(MoreTags.RESOURCE_NAME, (String) dispatch);
-        return new SpanWithScope(dispatchSpan, TRACER.withSpan(dispatchSpan));
-      }
-
       final boolean spanContextWasLost =
           !TRACER.getCurrentSpan().getContext().getTraceId().equals(span.getContext().getTraceId());
       if (spanContextWasLost) {
@@ -85,6 +68,11 @@ public class Servlet3Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    // For use by HttpServletResponseInstrumentation:
+    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+        .put((HttpServletResponse) response, httpServletRequest);
+
     final Span.Builder builder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
     try {
@@ -95,11 +83,7 @@ public class Servlet3Advice {
       // Couldn't extract a context. We should treat this as a root span. '
       builder.setNoParent();
     }
-    // For use by HttpServletResponseInstrumentation:
-    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
-        .put((HttpServletResponse) response, httpServletRequest);
     final Span span = builder.startSpan();
-
     span.setAttribute("span.origin.type", servlet.getClass().getName());
 
     DECORATE.afterStart(span);
@@ -107,6 +91,8 @@ public class Servlet3Advice {
     DECORATE.onRequest(span, httpServletRequest);
 
     httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
+    httpServletRequest.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
+    httpServletRequest.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
 
     return new SpanWithScope(span, TRACER.withSpan(span));
   }

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.jdbc.DBInfo
+import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo
 import io.opentelemetry.auto.util.test.AgentSpecification
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.instrumentation.jdbc.JDBCConnectionUrlParser.parse
+import static io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser.parse
 
 class JDBCConnectionUrlParserTest extends AgentSpecification {
 

@@ -1,5 +1,13 @@
 apply from: "${rootDir}/gradle/instrumentation.gradle"
 
+muzzle {
+  pass {
+    group = "io.opentracing.contrib.dropwizard"
+    module = "dropwizard-opentracing"
+    versions = "(,)"
+  }
+}
+
 dependencies {
   testCompile group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '+'
   testCompile group: 'io.opentracing.contrib.dropwizard', name: 'dropwizard-opentracing', version: '0.2.2'

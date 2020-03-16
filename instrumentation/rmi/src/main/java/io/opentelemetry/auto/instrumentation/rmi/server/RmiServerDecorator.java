@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.rmi.server;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.ServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ServerDecorator;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 

@@ -15,12 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_3;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
@@ -52,10 +51,6 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
-      "io.opentelemetry.auto.decorator.OrmClientDecorator",
       "io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator",
     };
   }
@@ -63,7 +58,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/hibernate/Session.class"));
+    return hasClassesNamed("org.hibernate.Session");
   }
 
   @Override

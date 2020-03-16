@@ -24,7 +24,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.CountDownLatch
 
-class ApacheHttpAsyncClientTest extends HttpClientTest<ApacheHttpAsyncClientDecorator> {
+class ApacheHttpAsyncClientTest extends HttpClientTest {
 
   @AutoCleanup
   @Shared
@@ -72,8 +72,8 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<ApacheHttpAsyncClientDeco
   }
 
   @Override
-  ApacheHttpAsyncClientDecorator decorator() {
-    return ApacheHttpAsyncClientDecorator.DECORATE
+  String component() {
+    return ApacheHttpAsyncClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.aws.v2;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -34,6 +35,12 @@ import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 /** AWS SDK v2 instrumentation */
 @AutoService(Instrumenter.class)
 public final class AwsClientInstrumentation extends AbstractAwsClientInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("software.amazon.awssdk.core.client.builder.SdkClientBuilder");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

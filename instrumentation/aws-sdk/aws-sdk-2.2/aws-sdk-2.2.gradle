@@ -25,8 +25,6 @@ dependencies {
   testCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   // Also include netty instrumentation because it is used by aws async client
   testCompile project(':instrumentation:netty:netty-4.1')
-  // Needed by netty async instrumentation
-  testCompile project(':instrumentation:java-concurrent')
   testCompile group: 'software.amazon.awssdk', name: 'apache-client', version: '2.2.0'
   testCompile group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
   testCompile group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
@@ -37,7 +35,6 @@ dependencies {
 
   latestDepTestCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   latestDepTestCompile project(':instrumentation:netty:netty-4.1')
-  latestDepTestCompile project(':instrumentation:java-concurrent')
 
   latestDepTestCompile group: 'software.amazon.awssdk', name: 'apache-client', version: '+'
   latestDepTestCompile group: 'software.amazon.awssdk', name: 's3', version: '+'

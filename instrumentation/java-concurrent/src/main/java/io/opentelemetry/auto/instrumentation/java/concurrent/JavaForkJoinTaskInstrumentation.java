@@ -25,6 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils;
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -57,13 +58,6 @@ public final class JavaForkJoinTaskInstrumentation extends Instrumenter.Default 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named(ForkJoinTask.class.getName()));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      AdviceUtils.class.getName(),
-    };
   }
 
   @Override

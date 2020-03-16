@@ -41,7 +41,7 @@ import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 @Retry(mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
-class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
+class PlayServerTest extends HttpServerTest<Server> {
   @Override
   Server startServer(int port) {
     return Server.forRouter(Mode.TEST, port) { BuiltInComponents components ->
@@ -81,8 +81,8 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   }
 
   @Override
-  AkkaHttpServerDecorator decorator() {
-    return AkkaHttpServerDecorator.DECORATE
+  String component() {
+    return AkkaHttpServerDecorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -132,7 +132,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$Tags.HTTP_STATUS" endpoint.status
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method

@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.okhttp3;
 
-import io.opentelemetry.auto.decorator.HttpClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;

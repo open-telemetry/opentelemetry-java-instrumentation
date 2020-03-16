@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.jaxrs1;
 
 import static io.opentelemetry.auto.instrumentation.jaxrs1.JaxRsAnnotationsDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrs1.JaxRsAnnotationsDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -50,9 +50,9 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   // this is required to make sure instrumentation won't apply to jax-rs 2
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasNoResources("javax/ws/rs/container/AsyncResponse.class")
+    return not(hasClassesNamed("javax.ws.rs.container.AsyncResponse"))
         // Optimization for expensive typeMatcher.
-        .and(not(classLoaderHasNoResources("javax/ws/rs/Path.class")));
+        .and(hasClassesNamed("javax.ws.rs.Path"));
   }
 
   @Override
@@ -65,7 +65,6 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable",
       "io.opentelemetry.auto.tooling.ClassHierarchyIterable$ClassIterator",
       packageName + ".JaxRsAnnotationsDecorator",

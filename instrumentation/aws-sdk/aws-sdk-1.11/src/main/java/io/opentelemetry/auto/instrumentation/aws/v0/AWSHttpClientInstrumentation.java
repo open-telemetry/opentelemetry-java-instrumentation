@@ -56,9 +56,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      packageName + ".OnErrorDecorator",
-      packageName + ".RequestMeta",
+      packageName + ".OnErrorDecorator", packageName + ".RequestMeta",
     };
   }
 

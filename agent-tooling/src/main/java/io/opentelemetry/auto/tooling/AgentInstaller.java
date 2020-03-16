@@ -16,13 +16,11 @@
 package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.skipClassLoader;
-import static io.opentelemetry.auto.tooling.matcher.AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher;
 import static io.opentelemetry.auto.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
@@ -106,18 +104,10 @@ public class AgentInstaller {
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader());
-    if (skipAdditionalLibraryMatcher) {
-      // Ignore classes matched by globalIgnoresMatcher but not matched by
-      // additionalLibraryIgnoresMatcher.
-      // Note: globalIgnoresMatcher includes additionalLibraryIgnoresMatcher internally for
-      // efficiency purposes.
-      // Note2: this is expected to be used by tests only.
-      ignoredAgentBuilder =
-          ignoredAgentBuilder.or(
-              globalIgnoresMatcher().and(not(additionalLibraryIgnoresMatcher())));
-    } else {
-      ignoredAgentBuilder = ignoredAgentBuilder.or(globalIgnoresMatcher());
-    }
+
+    ignoredAgentBuilder =
+        ignoredAgentBuilder.or(globalIgnoresMatcher(skipAdditionalLibraryMatcher));
+
     ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
 
     AgentBuilder agentBuilder = ignoredAgentBuilder;

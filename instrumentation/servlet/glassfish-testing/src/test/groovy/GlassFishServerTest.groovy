@@ -36,7 +36,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
  * OSGi setup that requires {@link io.opentelemetry.auto.instrumentation.classloader.ClassloadingInstrumentation}.
  */
 // TODO: Figure out a better way to test with OSGi included.
-class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
+class GlassFishServerTest extends HttpServerTest<GlassFish> {
 
 //  static {
 //    System.setProperty("ota.integration.grizzly.enabled", "true")
@@ -83,8 +83,8 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
   }
 
   @Override
-  Servlet3Decorator decorator() {
-    return Servlet3Decorator.DECORATE
+  String component() {
+    return Servlet3Decorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -106,7 +106,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_STATUS" endpoint.status

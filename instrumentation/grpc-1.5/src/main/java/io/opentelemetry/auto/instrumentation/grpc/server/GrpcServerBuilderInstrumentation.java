@@ -44,14 +44,12 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor",
-      "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCall",
-      "io.opentelemetry.auto.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCallListener",
-      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
       packageName + ".GrpcServerDecorator",
-      packageName + ".GrpcExtractAdapter"
+      packageName + ".GrpcExtractAdapter",
+      packageName + ".TracingServerInterceptor",
+      packageName + ".TracingServerInterceptor$TracingServerCall",
+      packageName + ".TracingServerInterceptor$TracingServerCallListener",
+      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
     };
   }
 

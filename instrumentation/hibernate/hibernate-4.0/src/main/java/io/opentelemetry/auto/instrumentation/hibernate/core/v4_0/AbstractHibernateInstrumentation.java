@@ -15,8 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_0;
 
-import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.classLoaderHasNoResources;
-import static net.bytebuddy.matcher.ElementMatchers.not;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -31,17 +30,13 @@ public abstract class AbstractHibernateInstrumentation extends Instrumenter.Defa
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return not(classLoaderHasNoResources("org/hibernate/Session.class"));
+    return hasClassesNamed("org.hibernate.Session");
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
       "io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ClientDecorator",
-      "io.opentelemetry.auto.decorator.DatabaseClientDecorator",
-      "io.opentelemetry.auto.decorator.OrmClientDecorator",
       "io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator",
       packageName + ".AbstractHibernateInstrumentation$V4Advice",
     };

@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;

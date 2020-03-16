@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.aws.v0;
 
-import io.opentelemetry.auto.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class OnErrorDecorator extends BaseDecorator {
   public static final OnErrorDecorator DECORATE = new OnErrorDecorator();

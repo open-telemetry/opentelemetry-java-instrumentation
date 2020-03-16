@@ -21,7 +21,6 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.Span
 import okhttp3.Request
-import org.apache.catalina.core.ApplicationFilterChain
 
 import javax.servlet.Servlet
 
@@ -32,15 +31,15 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUER
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER, Servlet3Decorator> {
+abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER> {
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port/$context/")
   }
 
   @Override
-  Servlet3Decorator decorator() {
-    return Servlet3Decorator.DECORATE
+  String component() {
+    return Servlet3Decorator.DECORATE.getComponentName()
   }
 
   // FIXME: Add authentication tests back in...
@@ -78,7 +77,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    def hasDispatchSpan = hasDispatchSpan(endpoint)
     trace.span(index) {
       operationName expectedOperationName(method)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
@@ -91,7 +89,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
@@ -99,11 +97,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         "$Tags.HTTP_STATUS" endpoint.status
         "servlet.context" "/$context"
         "servlet.path" { it == endpoint.path || it == "/dispatch$endpoint.path" }
-        if (hasDispatchSpan) {
-          "span.origin.type" String
-        } else {
-          "span.origin.type" { it == servlet.name || it == ApplicationFilterChain.name }
-        }
+        "span.origin.type" String
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }

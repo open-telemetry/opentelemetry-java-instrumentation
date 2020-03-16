@@ -49,6 +49,7 @@ class GrpcStreamingTest extends AgentTestRunner {
         return new StreamObserver<Helloworld.Response>() {
           @Override
           void onNext(Helloworld.Response value) {
+
             serverReceived << value.message
 
             (1..msgCount).each {
@@ -107,6 +108,10 @@ class GrpcStreamingTest extends AgentTestRunner {
 
     then:
     error.get() == null
+    TEST_WRITER.waitForTraces(1)
+    error.get() == null
+    serverReceived == clientRange.collect { "call $it" }
+    clientReceived == serverRange.collect { clientRange.collect { "call $it" } }.flatten().sort()
 
     assertTraces(1) {
       trace(0, 2) {
@@ -160,9 +165,6 @@ class GrpcStreamingTest extends AgentTestRunner {
         }
       }
     }
-
-    serverReceived == clientRange.collect { "call $it" }
-    clientReceived == serverRange.collect { clientRange.collect { "call $it" } }.flatten().sort()
 
     cleanup:
     channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)

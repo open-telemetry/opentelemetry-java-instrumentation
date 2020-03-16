@@ -33,7 +33,7 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT
 // FIXME this instrumentation is not currently reliable and so is currently disabled
 // see DefaultWebClientInstrumentation and DefaultWebClientAdvice
 @Ignore
-class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClientDecorator> {
+class SpringWebfluxHttpClientTest extends HttpClientTest {
 
   @Shared
   def client = WebClient.builder().build()
@@ -53,8 +53,8 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
   }
 
   @Override
-  SpringWebfluxHttpClientDecorator decorator() {
-    return SpringWebfluxHttpClientDecorator.DECORATE
+  String component() {
+    return SpringWebfluxHttpClientDecorator.DECORATE.getComponentName()
   }
 
 

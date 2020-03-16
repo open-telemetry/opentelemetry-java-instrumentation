@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.test.base
 
-import io.opentelemetry.auto.decorator.HttpServerDecorator
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -47,7 +47,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 @Unroll
-abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> extends AgentTestRunner {
+abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   @Shared
   SERVER server
@@ -63,7 +63,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   @Shared
-  DECORATOR serverDecorator = decorator()
+  String component = component()
 
   def setupSpec() {
     server = startServer(port)
@@ -84,7 +84,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   abstract void stopServer(SERVER server)
 
-  abstract DECORATOR decorator()
+  abstract String component()
 
   String expectedOperationName(String method) {
     return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
@@ -95,10 +95,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   boolean hasRenderSpan(ServerEndpoint endpoint) {
-    false
-  }
-
-  boolean hasDispatchSpan(ServerEndpoint endpoint) {
     false
   }
 
@@ -354,9 +350,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null) {
     def spanCount = 1 // server span
-    if (hasDispatchSpan(endpoint)) {
-      spanCount++
-    }
     if (hasHandlerSpan()) {
       spanCount++
     }
@@ -374,14 +367,11 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         trace(it * 2 + 1, spanCount) {
           def spanIndex = 0
           serverSpan(it, spanIndex++, traceID, parentID, method, endpoint)
-          if (hasDispatchSpan(endpoint)) {
-            dispatchSpan(it, spanIndex++, span(0), method, endpoint)
-          }
           if (hasHandlerSpan()) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
           if (endpoint != NOT_FOUND) {
-            if (hasHandlerSpan() || hasDispatchSpan(endpoint)) { // currently there are no tests which have both
+            if (hasHandlerSpan()) {
               controllerSpan(it, spanIndex++, span(1), errorMessage)
             } else {
               controllerSpan(it, spanIndex++, span(0), errorMessage)
@@ -416,10 +406,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     throw new UnsupportedOperationException("renderSpan not implemented in " + getClass().name)
   }
 
-  void dispatchSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    throw new UnsupportedOperationException("dispatchSpan not implemented in " + getClass().name)
-  }
-
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
@@ -434,7 +420,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       }
       tags {
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

@@ -37,7 +37,7 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
+class JettyHandlerTest extends HttpServerTest<Server> {
 
   static {
     System.setProperty("ota.integration.jetty.enabled", "true")
@@ -73,8 +73,8 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
   }
 
   @Override
-  JettyDecorator decorator() {
-    return JettyDecorator.DECORATE
+  String component() {
+    return JettyDecorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -141,7 +141,7 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
       tags {
         "$MoreTags.RESOURCE_NAME" "$method $handlerName"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-        "$Tags.COMPONENT" serverDecorator.getComponentName()
+        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

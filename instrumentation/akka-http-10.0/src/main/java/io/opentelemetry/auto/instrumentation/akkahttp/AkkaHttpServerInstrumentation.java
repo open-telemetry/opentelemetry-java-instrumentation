@@ -65,9 +65,6 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$1",
       AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$2",
       packageName + ".AkkaHttpServerHeaders",
-      "io.opentelemetry.auto.decorator.BaseDecorator",
-      "io.opentelemetry.auto.decorator.ServerDecorator",
-      "io.opentelemetry.auto.decorator.HttpServerDecorator",
       packageName + ".AkkaHttpServerDecorator",
     };
   }

@@ -39,7 +39,7 @@ class HelperInjectionTest extends AgentSpecification {
   def "helpers injected to non-delegating classloader"() {
     setup:
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
-    HelperInjector injector = new HelperInjector(helperClassName)
+    HelperInjector injector = new HelperInjector("test", helperClassName)
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
 
     when:
@@ -71,7 +71,7 @@ class HelperInjectionTest extends AgentSpecification {
     ByteBuddyAgent.install()
     AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation())
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
-    HelperInjector injector = new HelperInjector(helperClassName)
+    HelperInjector injector = new HelperInjector("test", helperClassName)
     URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], (ClassLoader) null)
 
     when:

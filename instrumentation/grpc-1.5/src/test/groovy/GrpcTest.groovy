@@ -23,6 +23,7 @@ import io.grpc.ServerBuilder
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
+import io.opentelemetry.auto.common.exec.CommonTaskExecutor
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -31,6 +32,8 @@ import io.opentelemetry.auto.test.utils.PortUtils
 
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
@@ -43,8 +46,19 @@ class GrpcTest extends AgentTestRunner {
       void sayHello(
         final Helloworld.Request req, final StreamObserver<Helloworld.Response> responseObserver) {
         final Helloworld.Response reply = Helloworld.Response.newBuilder().setMessage("Hello $req.name").build()
-        responseObserver.onNext(reply)
-        responseObserver.onCompleted()
+        CommonTaskExecutor.INSTANCE.execute {
+          println "=================================="
+          println "=================================="
+          println "VALID????????? " + testTracer.getCurrentSpan().getContext().isValid()
+          println "=================================="
+          println "=================================="
+          if (!testTracer.getCurrentSpan().getContext().isValid()) {
+            responseObserver.onError(new IllegalStateException("no active span"))
+          } else {
+            responseObserver.onNext(reply)
+            responseObserver.onCompleted()
+          }
+        }
       }
     }
     def port = PortUtils.randomOpenPort()
@@ -61,17 +75,20 @@ class GrpcTest extends AgentTestRunner {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel)
 
     when:
-    def response = client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+    def response = runUnderTrace("parent") {
+      client.sayHello(Helloworld.Request.newBuilder().setName(name).build())
+    }
 
     then:
     response.message == "Hello $name"
 
     assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
+      trace(0, 3) {
+        basicSpan(it, 0, "parent")
+        span(1) {
           operationName "example.Greeter/SayHello"
           spanKind CLIENT
-          parent()
+          childOf span(0)
           errored false
           event(0) {
             eventName "message"
@@ -89,10 +106,10 @@ class GrpcTest extends AgentTestRunner {
             "status.code" "OK"
           }
         }
-        span(1) {
+        span(2) {
           operationName "example.Greeter/SayHello"
           spanKind SERVER
-          childOf span(0)
+          childOf span(1)
           errored false
           event(0) {
             eventName "message"

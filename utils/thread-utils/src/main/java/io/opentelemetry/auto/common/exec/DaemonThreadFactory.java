@@ -19,10 +19,6 @@ import java.util.concurrent.ThreadFactory;
 
 /** A {@link ThreadFactory} implementation that starts all {@link Thread} as daemons. */
 public final class DaemonThreadFactory implements ThreadFactory {
-  public static final DaemonThreadFactory TRACE_PROCESSOR =
-      new DaemonThreadFactory("opentelemetry-trace-processor");
-  public static final DaemonThreadFactory TRACE_WRITER =
-      new DaemonThreadFactory("opentelemetry-trace-writer");
   public static final DaemonThreadFactory TASK_SCHEDULER =
       new DaemonThreadFactory("opentelemetry-task-scheduler");
 
