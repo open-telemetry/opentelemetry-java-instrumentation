@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadFactory;
 /** A {@link ThreadFactory} implementation that starts all {@link Thread} as daemons. */
 public final class DaemonThreadFactory implements ThreadFactory {
   public static final DaemonThreadFactory TASK_SCHEDULER =
-      new DaemonThreadFactory("agent-task-scheduler");
+      new DaemonThreadFactory("opentelemetry-task-scheduler");
 
   private final String threadName;
 
