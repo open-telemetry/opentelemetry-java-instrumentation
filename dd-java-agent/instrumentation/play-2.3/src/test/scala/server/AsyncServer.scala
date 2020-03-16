@@ -1,0 +1,5 @@
+package server
+
+object AsyncServer {
+
+}
