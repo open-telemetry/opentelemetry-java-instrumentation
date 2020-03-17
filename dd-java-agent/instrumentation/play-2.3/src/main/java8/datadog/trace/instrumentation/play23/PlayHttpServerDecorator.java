@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.play24;
+package datadog.trace.instrumentation.play23;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;

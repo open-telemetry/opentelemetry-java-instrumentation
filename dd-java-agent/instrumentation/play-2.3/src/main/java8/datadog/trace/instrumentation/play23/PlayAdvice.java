@@ -1,11 +1,10 @@
-package datadog.trace.instrumentation.play24;
+package datadog.trace.instrumentation.play23;
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.play24.PlayHeaders.GETTER;
-import static datadog.trace.instrumentation.play24.PlayHttpServerDecorator.DECORATE;
+import static datadog.trace.instrumentation.play23.PlayHttpServerDecorator.DECORATE;
 
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
@@ -22,7 +21,7 @@ public class PlayAdvice {
   public static AgentScope onEnter(@Advice.Argument(0) final Request req) {
     final AgentSpan span;
     if (activeSpan() == null) {
-      final Context extractedContext = propagate().extract(req.headers(), GETTER);
+      final Context extractedContext = propagate().extract(req.headers(), PlayHeaders.GETTER);
       span = startSpan("play.request", extractedContext);
     } else {
       // An upstream framework (e.g. akka-http, netty) has already started the span.

@@ -1,10 +1,10 @@
-package datadog.trace.instrumentation.play24;
+package datadog.trace.instrumentation.play23;
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
-import static datadog.trace.instrumentation.play24.PlayHttpServerDecorator.DECORATE;
+import static datadog.trace.instrumentation.play23.PlayHttpServerDecorator.DECORATE;
 
-import datadog.trace.context.TraceScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
+import datadog.trace.context.TraceScope;
 import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Result;
 import scala.util.Try;

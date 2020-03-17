@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.play24;
+package datadog.trace.instrumentation.play23;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
