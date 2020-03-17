@@ -77,7 +77,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(1) final Command command) {
-      final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder("redis/" + command.name()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onStatement(span, command.name());
       return new SpanWithScope(span, TRACER.withSpan(span));

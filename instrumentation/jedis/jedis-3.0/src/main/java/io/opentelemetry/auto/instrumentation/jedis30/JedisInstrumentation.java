@@ -71,15 +71,17 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(1) final ProtocolCommand command) {
-      final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
-      DECORATE.afterStart(span);
+      final String query;
       if (command instanceof Protocol.Command) {
-        DECORATE.onStatement(span, ((Protocol.Command) command).name());
+        query = ((Protocol.Command) command).name();
       } else {
         // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
         // us if that changes
-        DECORATE.onStatement(span, new String(command.getRaw(), StandardCharsets.UTF_8));
+        query = new String(command.getRaw(), StandardCharsets.UTF_8);
       }
+      final Span span = TRACER.spanBuilder("redis/" + query).setSpanKind(CLIENT).startSpan();
+      DECORATE.afterStart(span);
+      DECORATE.onStatement(span, query);
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
 
