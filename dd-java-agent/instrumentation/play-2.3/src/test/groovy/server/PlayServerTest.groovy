@@ -44,11 +44,6 @@ class PlayServerTest extends HttpServerTest<TestServer> {
     "play.request"
   }
 
-  boolean testExceptionBody() {
-    // I can't figure out how to set a proper exception handler to customize the response body.
-    false
-  }
-
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {

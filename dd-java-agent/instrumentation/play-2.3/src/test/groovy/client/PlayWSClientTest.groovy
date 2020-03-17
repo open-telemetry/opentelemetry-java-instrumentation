@@ -8,8 +8,6 @@ import spock.lang.Subject
 
 import java.util.concurrent.TimeUnit
 
-// Play 2.6+ uses a separately versioned client that shades the underlying dependency
-// This means our built in instrumentation won't work.
 class PlayWSClientTest extends HttpClientTest {
   @Subject
   @Shared
