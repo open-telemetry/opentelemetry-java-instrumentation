@@ -1,246 +1,246 @@
-version: 2
+version: 2.1
 
 defaults: &defaults
   working_directory: ~/dd-trace-java
   resource_class: xlarge
   docker:
-  - image: &default_container datadog/dd-trace-java-docker-build:latest
+    - image: &default_container datadog/dd-trace-java-docker-build:latest
 
 cache_keys: &cache_keys
   # Reset the cache approx every release
   keys:
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
-  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
+    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
 jobs:
   build:
     <<: *defaults
 
     steps:
-    - checkout
+      - checkout
 
-    - restore_cache:
-        <<: *cache_keys
+      - restore_cache:
+          <<: *cache_keys
 
-    - run:
-        name: Build Project
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Ddatadog.forkedMaxHeapSize=1G -Ddatadog.forkedMinHeapSize=64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+      - run:
+          name: Build Project
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Ddatadog.forkedMaxHeapSize=1G -Ddatadog.forkedMinHeapSize=64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
-    - run:
-        name: Collect Libs
-        when: always
-        command: .circleci/collect_libs.sh
+      - run:
+          name: Collect Libs
+          when: always
+          command: .circleci/collect_libs.sh
 
-    - store_artifacts:
-        path: ./libs
+      - store_artifacts:
+          path: ./libs
 
-    - persist_to_workspace:
-        root: .
-        paths:
-        - .gradle
-        - workspace
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .gradle
+            - workspace
 
-    - save_cache:
-        key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-        paths: ~/.gradle
+      - save_cache:
+          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+          paths: ~/.gradle
 
 
   default_test_job: &default_test_job
     <<: *defaults
 
     docker:
-    - image: *default_container
-      # This is used by spymemcached instrumentation tests
-    - image: memcached
-      # This is used by rabbitmq instrumentation tests
-    - image: rabbitmq
+      - image: *default_container
+        # This is used by spymemcached instrumentation tests
+      - image: memcached
+        # This is used by rabbitmq instrumentation tests
+      - image: rabbitmq
 
     steps:
-    - checkout
+      - checkout
 
-    - attach_workspace:
-        at: .
+      - attach_workspace:
+          at: .
 
-    - restore_cache:
-        <<: *cache_keys
+      - restore_cache:
+          <<: *cache_keys
 
-    - run:
-        name: Run Tests
-        command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=6
+      - run:
+          name: Run Tests
+          command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=6
 
-    - run:
-        name: Collect Reports
-        when: on_fail
-        command: .circleci/collect_reports.sh
+      - run:
+          name: Collect Reports
+          when: on_fail
+          command: .circleci/collect_reports.sh
 
-    - store_artifacts:
-        path: ./reports
+      - store_artifacts:
+          path: ./reports
 
-    - run:
-        name: Collect Test Results
-        when: always
-        command: .circleci/collect_results.sh
+      - run:
+          name: Collect Test Results
+          when: always
+          command: .circleci/collect_results.sh
 
-    - store_test_results:
-        path: ./results
+      - store_test_results:
+          path: ./results
 
   test_7:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJava7
+      - TEST_TASK: testJava7
 
   test_8:
     <<: *default_test_job
     environment:
-    # We are building on Java8, this is our default JVM so no need to set more homes
-    - TEST_TASK: test jacocoTestReport jacocoTestCoverageVerification
+      # We are building on Java8, this is our default JVM so no need to set more homes
+      - TEST_TASK: test jacocoTestReport jacocoTestCoverageVerification
 
   test_latest8:
     <<: *default_test_job
     environment:
-    # We are building on Java8, this is our default JVM so no need to set more homes
-    - TEST_TASK: latestDepTest
+      # We are building on Java8, this is our default JVM so no need to set more homes
+      - TEST_TASK: latestDepTest
 
   test_ibm8:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJavaIBM8
+      - TEST_TASK: testJavaIBM8
 
   test_zulu8:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJavaZULU8
+      - TEST_TASK: testJavaZULU8
 
   test_9:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJava9
+      - TEST_TASK: testJava9
 
   test_10:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJava10
+      - TEST_TASK: testJava10
 
   test_11:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJava11
+      - TEST_TASK: testJava11
 
   test_zulu11:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJavaZULU11
+      - TEST_TASK: testJavaZULU11
 
   test_12:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJava12
+      - TEST_TASK: testJava12
 
   test_13:
     <<: *default_test_job
     environment:
-    - TEST_TASK: testJava13
+      - TEST_TASK: testJava13
 
   agent_integration_tests:
     <<: *defaults
     docker:
-    - image: *default_container
-    - image: datadog/docker-dd-agent
-      environment:
-      - DD_APM_ENABLED=true
-      - DD_BIND_HOST=0.0.0.0
-      - DD_API_KEY=invalid_key_but_this_is_fine
+      - image: *default_container
+      - image: datadog/docker-dd-agent
+        environment:
+          - DD_APM_ENABLED=true
+          - DD_BIND_HOST=0.0.0.0
+          - DD_API_KEY=invalid_key_but_this_is_fine
     steps:
-    - checkout
+      - checkout
 
-    - attach_workspace:
-        at: .
+      - attach_workspace:
+          at: .
 
-    - restore_cache:
-        <<: *cache_keys
+      - restore_cache:
+          <<: *cache_keys
 
-    - run:
-        name: Run Trace Agent Tests
-        command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+      - run:
+          name: Run Trace Agent Tests
+          command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
-    - run:
-        name: Collect Reports
-        when: on_fail
-        command: .circleci/collect_reports.sh
+      - run:
+          name: Collect Reports
+          when: on_fail
+          command: .circleci/collect_reports.sh
 
-    - store_artifacts:
-        path: ./reports
+      - store_artifacts:
+          path: ./reports
 
-    - run:
-        name: Collect Test Results
-        when: always
-        command: .circleci/collect_results.sh
+      - run:
+          name: Collect Test Results
+          when: always
+          command: .circleci/collect_results.sh
 
-    - store_test_results:
-        path: ./results
+      - store_test_results:
+          path: ./results
 
   check:
     <<: *defaults
 
     steps:
-    - checkout
+      - checkout
 
-    - attach_workspace:
-        at: .
+      - attach_workspace:
+          at: .
 
-    - restore_cache:
-        <<: *cache_keys
+      - restore_cache:
+          <<: *cache_keys
 
-    - run:
-        name: Build Project
-        command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+      - run:
+          name: Build Project
+          command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
-    - run:
-        name: Collect Reports
-        when: always
-        command: .circleci/collect_reports.sh
+      - run:
+          name: Collect Reports
+          when: always
+          command: .circleci/collect_reports.sh
 
-    - store_artifacts:
-        path: ./reports
+      - store_artifacts:
+          path: ./reports
 
   muzzle:
     <<: *defaults
     steps:
-    - checkout
+      - checkout
 
-    - restore_cache:
-        # Reset the cache approx every release
-        keys:
-        - dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
+      - restore_cache:
+          # Reset the cache approx every release
+          keys:
+            - dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
 
-    - run:
-        name: Verify Muzzle
-        command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
+      - run:
+          name: Verify Muzzle
+          command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
 
-    - save_cache:
-        key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
-        paths: ~/.gradle
+      - save_cache:
+          key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
+          paths: ~/.gradle
 
   publish: &publish
     <<: *defaults
     steps:
-    - checkout
+      - checkout
 
-    - attach_workspace:
-        at: .
+      - attach_workspace:
+          at: .
 
-    - restore_cache:
-        <<: *cache_keys
+      - restore_cache:
+          <<: *cache_keys
 
-    - deploy:
-        name: Publish master to Artifactory
-        command: |
-          ./gradlew \
-            -PbintrayUser=${BINTRAY_USER} \
-            -PbintrayApiKey=${BINTRAY_API_KEY} \
-            -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-            artifactoryPublish --max-workers=1 --build-cache --stacktrace --no-daemon
+      - deploy:
+          name: Publish master to Artifactory
+          command: |
+            ./gradlew \
+              -PbintrayUser=${BINTRAY_USER} \
+              -PbintrayApiKey=${BINTRAY_API_KEY} \
+              -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
+              artifactoryPublish --max-workers=1 --build-cache --stacktrace --no-daemon
 
   publish_master:
     <<: *publish
@@ -251,137 +251,137 @@ workflows:
   version: 2
   build_test_deploy:
     jobs:
-    - build:
-        filters:
-          tags:
-            only: /.*/
+      - build:
+          filters:
+            tags:
+              only: /.*/
 
-    - test_7:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_8:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_latest8:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_ibm8:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_zulu8:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_9:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_10:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_11:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_zulu11:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_12:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-    - test_13:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
+      - test_7:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_8:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_latest8:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_ibm8:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_zulu8:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_9:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_10:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_11:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_zulu11:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_12:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_13:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
 
-    - agent_integration_tests:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
+      - agent_integration_tests:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
 
-    - check:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
+      - check:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
 
-    - muzzle:
-        requires:
-        - build
-        filters:
-          branches:
-            ignore: master
+      - muzzle:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: master
 
-    - publish_master:
-        requires:
-        - test_7
-        - test_8
-        - test_latest8
-        - test_ibm8
-        - test_zulu8
-        - test_9
-        - test_10
-        - test_11
-        - test_zulu11
-        - test_12
-        - test_13
-        - agent_integration_tests
-        - check
-        filters:
-          branches:
-            only: master
-          tags:
-            ignore: /.*/
+      - publish_master:
+          requires:
+            - test_7
+            - test_8
+            - test_latest8
+            - test_ibm8
+            - test_zulu8
+            - test_9
+            - test_10
+            - test_11
+            - test_zulu11
+            - test_12
+            - test_13
+            - agent_integration_tests
+            - check
+          filters:
+            branches:
+              only: master
+            tags:
+              ignore: /.*/
 
-    - publish_tag:
-        requires:
-        - test_7
-        - test_8
-        - test_latest8
-        - test_ibm8
-        - test_zulu8
-        - test_9
-        - test_10
-        - test_11
-        - test_zulu11
-        - test_12
-        - test_13
-        - agent_integration_tests
-        - check
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v.*/
+      - publish_tag:
+          requires:
+            - test_7
+            - test_8
+            - test_latest8
+            - test_ibm8
+            - test_zulu8
+            - test_9
+            - test_10
+            - test_11
+            - test_zulu11
+            - test_12
+            - test_13
+            - agent_integration_tests
+            - check
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
