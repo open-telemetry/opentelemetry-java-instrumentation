@@ -33,7 +33,6 @@ import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -91,16 +90,13 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("clazz") final Class clazz,
         @Advice.Origin final Method method) {
 
-      // Update the parent "netty.request"
       final Span parent = TRACER.getCurrentSpan();
       final String resourceName = request.method().name() + " " + routeInfo.path();
-      parent.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       parent.setAttribute(Tags.COMPONENT, "finatra");
       parent.updateName(resourceName);
 
-      final Span span = TRACER.spanBuilder("finatra.controller").startSpan();
+      final Span span = TRACER.spanBuilder(DECORATE.spanNameForClass(clazz)).startSpan();
       DECORATE.afterStart(span);
-      span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForClass(clazz));
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
