@@ -131,6 +131,9 @@ repositories {
   maven {
     url "https://adoptopenjdk.jfrog.io/adoptopenjdk/jmc-libs-snapshots"
   }
+  maven {
+    url "https://repo.typesafe.com/typesafe/releases"
+  }
 }
 
 dependencies {

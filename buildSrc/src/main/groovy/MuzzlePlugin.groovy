@@ -14,16 +14,13 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.version.Version
-import org.gradle.api.Action
-import org.gradle.api.GradleException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.*
 import org.gradle.api.model.ObjectFactory
 
 import java.lang.reflect.Method
 import java.security.SecureClassLoader
 import java.util.concurrent.atomic.AtomicReference
+import java.util.regex.Pattern
 
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
@@ -36,7 +33,8 @@ class MuzzlePlugin implements Plugin<Project> {
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
   static {
     RemoteRepository central = new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build()
-    MUZZLE_REPOS = new ArrayList<RemoteRepository>(Arrays.asList(central))
+    RemoteRepository typesafe = new RemoteRepository.Builder("typesafe", "default", "https://repo.typesafe.com/typesafe/releases").build()
+    MUZZLE_REPOS = new ArrayList<RemoteRepository>(Arrays.asList(central, typesafe))
   }
 
   @Override
@@ -343,6 +341,8 @@ class MuzzlePlugin implements Plugin<Project> {
     return session
   }
 
+  private static final Pattern GIT_SHA_PATTERN = Pattern.compile('^.*-[0-9a-f]{7,}$')
+
   /**
    * Filter out snapshot-type builds from versions list.
    */
@@ -357,7 +357,8 @@ class MuzzlePlugin implements Plugin<Project> {
         version.contains(".m") ||
         version.contains("-m") ||
         version.contains("-dev") ||
-        version.contains("public_draft")
+        version.contains("public_draft") ||
+        version.matches(GIT_SHA_PATTERN)
     }
     return list
   }

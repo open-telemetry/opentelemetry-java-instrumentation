@@ -8,7 +8,7 @@ muzzle {
   pass {
     group = 'com.typesafe.play'
     module = 'play_2.11'
-    versions = '[2.3.9,2.4)'
+    versions = '[2.3.0,2.4)'
     assertInverse = true
   }
   fail {
@@ -35,11 +35,11 @@ testSets {
 }
 
 dependencies {
-  main_java8Compile group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.9'
+  main_java8Compile group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.0'
 
-  testCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.9'
-  testCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.9'
-  testCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.9')
+  testCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.0'
+  testCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.0'
+  testCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.0')
 
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.+'
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.+'
