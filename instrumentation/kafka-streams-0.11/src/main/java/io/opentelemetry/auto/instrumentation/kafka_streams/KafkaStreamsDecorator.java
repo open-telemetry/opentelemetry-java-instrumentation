@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.kafka_streams;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -44,10 +43,20 @@ public class KafkaStreamsDecorator extends ClientDecorator {
     return SpanTypes.MESSAGE_CONSUMER;
   }
 
+  public String spanNameForConsume(final StampedRecord record) {
+    if (record == null) {
+      return null;
+    }
+    final String topic = record.topic();
+    if (topic != null) {
+      return topic;
+    } else {
+      return "destination";
+    }
+  }
+
   public void onConsume(final Span span, final StampedRecord record) {
     if (record != null) {
-      final String topic = record.topic() == null ? "kafka" : record.topic();
-      span.setAttribute(MoreTags.RESOURCE_NAME, "Consume Topic " + topic);
       span.setAttribute("partition", record.partition());
       span.setAttribute("offset", record.offset());
     }
