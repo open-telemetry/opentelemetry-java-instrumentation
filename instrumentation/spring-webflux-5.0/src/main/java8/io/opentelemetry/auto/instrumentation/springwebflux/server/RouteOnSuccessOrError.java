@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
@@ -49,9 +48,8 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
         final Span parentSpan =
             (Span) serverRequest.attributes().get(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
         if (parentSpan != null) {
-          String resourceName = parseResourceName(predicateString);
+          final String resourceName = parseResourceName(predicateString);
           parentSpan.updateName(resourceName);
-          parentSpan.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
         }
       }
     }
