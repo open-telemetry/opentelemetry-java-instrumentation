@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -57,18 +56,16 @@ class HttpServletTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "servlet.service"
+          operationName "HttpServlet.service"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "HttpServlet.service"
             "$Tags.COMPONENT" "java-web-servlet-service"
           }
         }
         span(2) {
-          operationName "servlet.doGet"
+          operationName "${expectedResourceName}.doGet"
           childOf span(1)
           tags {
-            "$MoreTags.RESOURCE_NAME" "${expectedResourceName}.doGet"
             "$Tags.COMPONENT" "java-web-servlet-service"
           }
         }
@@ -108,21 +105,19 @@ class HttpServletTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, null, ex)
         span(1) {
-          operationName "servlet.service"
+          operationName "HttpServlet.service"
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "HttpServlet.service"
             "$Tags.COMPONENT" "java-web-servlet-service"
             errorTags(ex.class, ex.message)
           }
         }
         span(2) {
-          operationName "servlet.doGet"
+          operationName "${servlet.class.name}.doGet"
           childOf span(1)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "${servlet.class.name}.doGet"
             "$Tags.COMPONENT" "java-web-servlet-service"
             errorTags(ex.class, ex.message)
           }
