@@ -207,7 +207,7 @@ public class HelperInjector implements Transformer {
   }
 
   private static final File createTempDir() throws IOException {
-    return Files.createTempDirectory("datadog-temp-jars").toFile();
+    return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
   }
 
   private static final void deleteTempDir(final File file) {
