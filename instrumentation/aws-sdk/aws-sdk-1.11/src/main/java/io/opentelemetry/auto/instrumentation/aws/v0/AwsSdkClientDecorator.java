@@ -21,7 +21,6 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
 import java.util.Map;
@@ -41,6 +40,16 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
+  public String spanNameForRequest(final Request request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    final String awsServiceName = request.getServiceName();
+    final Class<?> awsOperation = request.getOriginalRequest().getClass();
+    return remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation);
+  }
+
+  @Override
   public Span onRequest(final Span span, final Request request) {
     // Call super first because we override the resource name below.
     super.onRequest(span, request);
@@ -53,10 +62,6 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     span.setAttribute("aws.service", awsServiceName);
     span.setAttribute("aws.operation", awsOperation.getSimpleName());
     span.setAttribute("aws.endpoint", request.getEndpoint().toString());
-
-    span.setAttribute(
-        MoreTags.RESOURCE_NAME,
-        remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
 
     if (contextStore != null) {
       final RequestMeta requestMeta = contextStore.get(originalRequest);
