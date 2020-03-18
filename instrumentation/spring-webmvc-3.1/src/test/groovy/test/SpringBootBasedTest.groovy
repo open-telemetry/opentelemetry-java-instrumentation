@@ -81,7 +81,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "response.render"
+      operationName "Render RedirectView"
       spanKind INTERNAL
       errored false
       tags {
@@ -95,12 +95,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "spring.handler"
+      operationName "TestController/${endpoint.name().toLowerCase()}"
       spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$MoreTags.RESOURCE_NAME" "TestController.${endpoint.name().toLowerCase()}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.getComponentName()
         if (endpoint == EXCEPTION) {
@@ -123,7 +122,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
         "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
