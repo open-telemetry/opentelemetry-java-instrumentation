@@ -121,7 +121,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 0, "Cluster.openBucket")
       }
       trace(1, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name(), 'SimpleN1qlQuery{statement=SELECT mockrow}')
+        assertCouchbaseCall(it, 0, 'SimpleN1qlQuery{statement=SELECT mockrow}', bucketCouchbase.name(), 'SimpleN1qlQuery{statement=SELECT mockrow}')
       }
     }
 
