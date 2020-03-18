@@ -1,0 +1,52 @@
+name: Add assets to release
+on:
+  release:
+    types: [published]
+env:
+  VERSION: ${{ github.event.release.name }}  #Can't use GITHUB_REF because it starts with a "v"
+jobs:
+  dd-java-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download from jcenter
+        run: |
+          wget https://oss.jfrog.org/artifactory/oss-release-local/com/datadoghq/dd-java-agent/$VERSION/dd-java-agent-$VERSION.jar
+      - name: Upload to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dd-java-agent-${{ env.VERSION }}.jar
+          asset_name: dd-java-agent-${{ env.VERSION }}.jar
+          asset_content_type: application/java-archive
+  dd-trace-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download from jcenter
+        run: |
+          wget https://oss.jfrog.org/artifactory/oss-release-local/com/datadoghq/dd-trace-api/$VERSION/dd-trace-api-$VERSION.jar
+      - name: Upload to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dd-trace-api-${{ env.VERSION }}.jar
+          asset_name: dd-trace-api-${{ env.VERSION }}.jar
+          asset_content_type: application/java-archive
+  dd-trace-ot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download from jcenter
+        run: |
+          wget https://oss.jfrog.org/artifactory/oss-release-local/com/datadoghq/dd-trace-ot/$VERSION/dd-trace-ot-$VERSION.jar
+      - name: Upload to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dd-trace-ot-${{ env.VERSION }}.jar
+          asset_name: dd-trace-ot-${{ env.VERSION }}.jar
+          asset_content_type: application/java-archive
