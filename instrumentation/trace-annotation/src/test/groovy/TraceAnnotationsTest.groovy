@@ -39,12 +39,11 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "SayTracedHello.sayHello"
           parent()
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "test"
-            "$MoreTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -61,32 +60,29 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "SayTracedHello.sayHELLOsayHA"
           parent()
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "test2"
-            "$MoreTags.RESOURCE_NAME" "SayTracedHello.sayHELLOsayHA"
             "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {
-          operationName "trace.annotation"
+          operationName "SayTracedHello.sayHello"
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "test"
-            "$MoreTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
           }
         }
         span(2) {
-          operationName "trace.annotation"
+          operationName "SayTracedHello.sayHello"
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "test"
-            "$MoreTags.RESOURCE_NAME" "SayTracedHello.sayHello"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -108,10 +104,9 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "SayTracedHello.sayERROR"
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "SayTracedHello.sayERROR"
             "$Tags.COMPONENT" "trace"
             errorTags(error.class)
           }
@@ -129,9 +124,8 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "SayTracedHello\$1.call"
           tags {
-            "$MoreTags.RESOURCE_NAME" "SayTracedHello\$1.call"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -152,17 +146,15 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "SayTracedHello\$1.call"
           tags {
-            "$MoreTags.RESOURCE_NAME" "SayTracedHello\$1.call"
             "$Tags.COMPONENT" "trace"
           }
         }
         trace(1, 1) {
           span(0) {
-            operationName "trace.annotation"
+            operationName "TraceAnnotationsTest\$1.call"
             tags {
-              "$MoreTags.RESOURCE_NAME" "TraceAnnotationsTest\$1.call"
               "$Tags.COMPONENT" "trace"
             }
           }

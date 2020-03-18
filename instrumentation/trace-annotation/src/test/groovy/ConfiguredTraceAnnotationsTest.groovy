@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.traceannotation.TraceAnnotationsInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -52,9 +51,8 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "trace.annotation"
+          operationName "AnnotationTracedCallable.call"
           tags {
-            "$MoreTags.RESOURCE_NAME" "AnnotationTracedCallable.call"
             "$Tags.COMPONENT" "trace"
           }
         }
