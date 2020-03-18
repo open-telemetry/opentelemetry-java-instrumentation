@@ -64,14 +64,14 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
           InstrumentationContext.get(Transaction.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, transaction, "hibernate.transaction.commit", null, true);
+          contextStore, transaction, "Transaction.commit", null, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, null);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
     }
   }
 }

@@ -66,7 +66,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final SharedSessionContract session) {
 
-      final Span span = TRACER.spanBuilder("hibernate.session").startSpan();
+      final Span span = TRACER.spanBuilder("Session").startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, session);
 

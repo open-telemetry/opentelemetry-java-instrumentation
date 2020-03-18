@@ -84,8 +84,6 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
                     .or(named("refresh"))
                     .or(named("insert"))
                     .or(named("delete"))
-                    // Iterator methods.
-                    .or(named("iterate"))
                     // Lazy-load methods.
                     .or(named("immediateLoad"))
                     .or(named("internalLoad"))),
@@ -149,16 +147,17 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
       final ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
       return SessionMethodUtils.startScopeFrom(
-          contextStore, session, "hibernate." + name, entity, startSpan);
+          contextStore, session, "Session." + name, entity, startSpan);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned,
+        @Advice.Origin("#m") final String name) {
 
-      SessionMethodUtils.closeScope(spanWithScope, throwable, returned);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, "Session." + name, returned);
     }
   }
 

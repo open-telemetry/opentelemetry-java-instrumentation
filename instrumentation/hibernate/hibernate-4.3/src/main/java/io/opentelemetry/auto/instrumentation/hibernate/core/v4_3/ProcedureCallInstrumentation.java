@@ -83,13 +83,13 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
           InstrumentationContext.get(ProcedureCall.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, call, "hibernate.procedure." + name, call.getProcedureName(), true);
+          contextStore, call, "ProcedureCall." + name, call.getProcedureName(), true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
-      SessionMethodUtils.closeScope(spanWithScope, throwable, null);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
     }
   }
 }
