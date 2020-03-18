@@ -75,7 +75,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
         @Advice.This final Object obj, @Advice.Argument(0) final HttpServletRequest req) {
-      final Span span = TRACER.spanBuilder("jsp.render").startSpan();
+      final Span span = TRACER.spanBuilder(DECORATE.spanNameOnRender(req)).startSpan();
       span.setAttribute("span.origin.type", obj.getClass().getSimpleName());
       span.setAttribute("servlet.context", req.getContextPath());
       DECORATE.afterStart(span);
