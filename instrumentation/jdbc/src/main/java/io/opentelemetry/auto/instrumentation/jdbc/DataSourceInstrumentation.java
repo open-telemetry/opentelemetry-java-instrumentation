@@ -23,7 +23,6 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -71,10 +70,12 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("database.connection").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(ds.getClass().getSimpleName() + "/getConnection")
+              .setSpanKind(CLIENT)
+              .startSpan();
       DECORATE.afterStart(span);
-
-      span.setAttribute(MoreTags.RESOURCE_NAME, ds.getClass().getSimpleName() + ".getConnection");
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

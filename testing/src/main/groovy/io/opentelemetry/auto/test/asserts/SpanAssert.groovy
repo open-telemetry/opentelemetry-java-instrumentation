@@ -21,6 +21,8 @@ import io.opentelemetry.sdk.trace.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
 
+import java.util.regex.Pattern
+
 import static TagsAssert.assertTags
 import static io.opentelemetry.auto.test.asserts.EventAssert.assertEvent
 
@@ -68,6 +70,11 @@ class SpanAssert {
 
   def operationName(String name) {
     assert span.name == name
+    checked.name = true
+  }
+
+  def operationName(Pattern pattern) {
+    assert span.name =~ pattern
     checked.name = true
   }
 
