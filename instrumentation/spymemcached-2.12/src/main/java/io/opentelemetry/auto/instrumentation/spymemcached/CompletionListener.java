@@ -29,9 +29,6 @@ import net.spy.memcached.MemcachedConnection;
 @Slf4j
 public abstract class CompletionListener<T> {
 
-  // Note: it looks like this value is being ignored and DBTypeDecorator overwrites it.
-  static final String OPERATION_NAME = "memcached.query";
-
   static final String SERVICE_NAME = "memcached";
   static final String COMPONENT_NAME = "java-spymemcached";
   static final String DB_TYPE = "memcached";
@@ -40,16 +37,17 @@ public abstract class CompletionListener<T> {
   static final String HIT = "hit";
   static final String MISS = "miss";
 
-  private final MemcachedConnection connection;
   private final Span span;
 
   public CompletionListener(final MemcachedConnection connection, final String methodName) {
-    this.connection = connection;
-    span = TRACER.spanBuilder(OPERATION_NAME).setSpanKind(CLIENT).startSpan();
+    span =
+        TRACER
+            .spanBuilder(DECORATE.spanNameOnOperation(methodName))
+            .setSpanKind(CLIENT)
+            .startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
-      DECORATE.onOperation(span, methodName);
     }
   }
 
