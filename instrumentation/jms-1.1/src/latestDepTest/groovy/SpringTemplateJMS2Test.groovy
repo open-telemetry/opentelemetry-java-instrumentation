@@ -99,16 +99,16 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, jmsResourceName)
+        producerSpan(it, 0, expectedSpanName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, expectedSpanName, false, HornetQMessageConsumer, traces[0][0])
       }
     }
 
     where:
-    destination                               | jmsResourceName
-    session.createQueue("SpringTemplateJMS2") | "Queue SpringTemplateJMS2"
+    destination                               | expectedSpanName
+    session.createQueue("SpringTemplateJMS2") | "SpringTemplateJMS2"
   }
 
   def "send and receive message generates spans"() {
@@ -130,21 +130,21 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       trace(0, 1) {
-        producerSpan(it, 0, jmsResourceName)
+        producerSpan(it, 0, expectedSpanName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, jmsResourceName, false, HornetQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, expectedSpanName, false, HornetQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "<temporary>") // receive doesn't propagate the trace, so this is a root
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "Temporary Queue", false, HornetQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "<temporary>", false, HornetQMessageConsumer, traces[2][0])
       }
     }
 
     where:
-    destination                               | jmsResourceName
-    session.createQueue("SpringTemplateJMS2") | "Queue SpringTemplateJMS2"
+    destination                               | expectedSpanName
+    session.createQueue("SpringTemplateJMS2") | "SpringTemplateJMS2"
   }
 }

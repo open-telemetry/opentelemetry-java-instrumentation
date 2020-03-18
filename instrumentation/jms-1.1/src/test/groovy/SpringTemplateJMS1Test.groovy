@@ -67,16 +67,16 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, jmsResourceName)
+        producerSpan(it, 0, expectedSpanName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, expectedSpanName, false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 
     where:
-    destination                               | jmsResourceName
-    session.createQueue("SpringTemplateJMS1") | "Queue SpringTemplateJMS1"
+    destination                               | expectedSpanName
+    session.createQueue("SpringTemplateJMS1") | "SpringTemplateJMS1"
   }
 
   def "send and receive message generates spans"() {
@@ -102,21 +102,21 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       trace(0, 1) {
-        producerSpan(it, 0, jmsResourceName)
+        producerSpan(it, 0, expectedSpanName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, expectedSpanName, false, ActiveMQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "Temporary Queue") // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "<temporary>") // receive doesn't propagate the trace, so this is a root
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "Temporary Queue", false, ActiveMQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "<temporary>", false, ActiveMQMessageConsumer, traces[2][0])
       }
     }
 
     where:
-    destination                               | jmsResourceName
-    session.createQueue("SpringTemplateJMS1") | "Queue SpringTemplateJMS1"
+    destination                               | expectedSpanName
+    session.createQueue("SpringTemplateJMS1") | "SpringTemplateJMS1"
   }
 }
