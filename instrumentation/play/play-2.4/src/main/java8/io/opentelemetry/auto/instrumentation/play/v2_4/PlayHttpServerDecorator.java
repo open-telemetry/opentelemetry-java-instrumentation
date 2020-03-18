@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.play.v2_4;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -78,7 +77,6 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
       if (!pathOption.isEmpty()) {
         final String path = (String) pathOption.get();
         span.updateName(request.method() + " " + path);
-        span.setAttribute(MoreTags.RESOURCE_NAME, request.method() + " " + path);
       }
     }
     return span;
