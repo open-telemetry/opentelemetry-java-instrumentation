@@ -94,13 +94,12 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
 
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "SearchAction"
           spanKind CLIENT
           errored false
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
@@ -138,12 +137,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "IndexAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -158,12 +156,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "elasticsearch.query"
+          operationName "PutMappingAction"
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -171,12 +168,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(3) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -210,12 +206,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
 
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -252,12 +247,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "IndexAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -272,12 +266,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -303,12 +296,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
 
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -345,12 +337,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
 
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "DeleteAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "DeleteAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "DeleteAction"
@@ -364,12 +355,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -396,12 +386,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
 
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "SearchAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"

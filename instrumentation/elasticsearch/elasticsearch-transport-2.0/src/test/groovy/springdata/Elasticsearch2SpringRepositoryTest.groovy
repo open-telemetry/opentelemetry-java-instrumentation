@@ -52,12 +52,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "SearchAction"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
@@ -84,11 +83,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "IndexAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"
@@ -101,12 +99,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "PutMappingAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -117,11 +114,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -143,11 +139,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"
@@ -176,11 +171,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(3) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "IndexAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"
@@ -195,11 +189,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -213,11 +206,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"
@@ -245,11 +237,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(3) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "DeleteAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "DeleteAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"
@@ -264,11 +255,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -282,11 +272,10 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "SearchAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
