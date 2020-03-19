@@ -18,7 +18,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.http_url_connection.UrlInstrumentation
+import io.opentelemetry.auto.instrumentation.httpurlconnection.UrlInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
