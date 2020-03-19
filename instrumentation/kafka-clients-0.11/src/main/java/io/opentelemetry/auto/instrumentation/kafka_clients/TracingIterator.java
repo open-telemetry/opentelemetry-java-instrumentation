@@ -29,7 +29,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 @Slf4j
 public class TracingIterator implements Iterator<ConsumerRecord> {
   private final Iterator<ConsumerRecord> delegateIterator;
-  private final String operationName;
   private final KafkaDecorator decorator;
 
   /**
@@ -39,11 +38,8 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
   private SpanWithScope currentSpanWithScope;
 
   public TracingIterator(
-      final Iterator<ConsumerRecord> delegateIterator,
-      final String operationName,
-      final KafkaDecorator decorator) {
+      final Iterator<ConsumerRecord> delegateIterator, final KafkaDecorator decorator) {
     this.delegateIterator = delegateIterator;
-    this.operationName = operationName;
     this.decorator = decorator;
   }
 
@@ -71,7 +67,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
     try {
       if (next != null) {
         final boolean consumer = !TRACER.getCurrentSpan().getContext().isValid();
-        final Span.Builder spanBuilder = TRACER.spanBuilder(operationName);
+        final Span.Builder spanBuilder = TRACER.spanBuilder(decorator.spanNameOnConsume(next));
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }

@@ -27,8 +27,7 @@ public class JaxRsClientDecorator
   public static final JaxRsClientDecorator DECORATE = new JaxRsClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory()
-          .get("io.opentelemetry.instrumentation.auto.jaxrs-client-2.0");
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jaxrs-client-2.0");
 
   @Override
   protected String getComponentName() {
