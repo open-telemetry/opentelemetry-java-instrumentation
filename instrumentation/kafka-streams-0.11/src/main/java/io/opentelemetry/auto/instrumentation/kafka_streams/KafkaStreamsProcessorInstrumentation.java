@@ -103,7 +103,8 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        final Span.Builder spanBuilder = TRACER.spanBuilder("kafka.consume").setSpanKind(CONSUMER);
+        final Span.Builder spanBuilder =
+            TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsume(record)).setSpanKind(CONSUMER);
         try {
           final SpanContext extractedContext =
               TRACER.getHttpTextFormat().extract(record.value.headers(), GETTER);
