@@ -105,10 +105,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       final Scope parentScope = NettyHttpServerDecorator.TRACER.withSpan(parentSpan);
 
       final Span errorSpan =
-          NettyHttpServerDecorator.TRACER
-              .spanBuilder("HTTP CONNECT")
-              .setSpanKind(CLIENT)
-              .startSpan();
+          NettyHttpServerDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
       errorSpan.setAttribute(Tags.COMPONENT, "netty");
       try (final Scope scope = NettyHttpServerDecorator.TRACER.withSpan(errorSpan)) {
         NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
