@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v3_3;
 
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
+import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -76,7 +76,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
           SessionMethodUtils.startScopeFrom(
               contextStore, query, "hibernate.query." + name, null, true);
       if (spanWithScope != null) {
-        DECORATOR.onStatement(spanWithScope.getSpan(), query.getQueryString());
+        DECORATE.onStatement(spanWithScope.getSpan(), query.getQueryString());
       }
       return spanWithScope;
     }
