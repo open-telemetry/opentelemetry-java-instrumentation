@@ -85,7 +85,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
 
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
       final Span span =
-          TRACER.spanBuilder(filter.getClass().getSimpleName() + "/doFilter").startSpan();
+          TRACER.spanBuilder(filter.getClass().getSimpleName() + ".doFilter").startSpan();
       FilterDecorator.DECORATE.afterStart(span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));

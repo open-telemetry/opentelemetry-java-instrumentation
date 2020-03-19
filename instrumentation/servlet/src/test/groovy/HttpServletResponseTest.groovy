@@ -71,21 +71,21 @@ class HttpServletResponseTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "HttpServletResponse/sendError"
+          operationName "HttpServletResponse.sendError"
           childOf span(0)
           tags {
             "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
         span(2) {
-          operationName "HttpServletResponse/sendError"
+          operationName "HttpServletResponse.sendError"
           childOf span(0)
           tags {
             "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
         span(3) {
-          operationName "HttpServletResponse/sendRedirect"
+          operationName "HttpServletResponse.sendRedirect"
           childOf span(0)
           tags {
             "$Tags.COMPONENT" "java-web-servlet-response"
@@ -123,7 +123,7 @@ class HttpServletResponseTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent", null, null, ex)
         span(1) {
-          operationName "HttpServletResponse/sendRedirect"
+          operationName "HttpServletResponse.sendRedirect"
           childOf span(0)
           errored true
           tags {

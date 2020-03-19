@@ -53,7 +53,7 @@ class FilterTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${filter.class.simpleName}/doFilter"
+          operationName "${filter.class.simpleName}.doFilter"
           childOf span(0)
           tags {
             "$Tags.COMPONENT" "java-web-servlet-filter"
@@ -89,7 +89,7 @@ class FilterTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent", null, null, ex)
         span(1) {
-          operationName "${filter.class.simpleName}/doFilter"
+          operationName "${filter.class.simpleName}.doFilter"
           childOf span(0)
           errored true
           tags {

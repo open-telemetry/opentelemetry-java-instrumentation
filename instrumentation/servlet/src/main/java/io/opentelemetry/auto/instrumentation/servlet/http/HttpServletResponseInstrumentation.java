@@ -87,7 +87,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("HttpServletResponse/" + method).startSpan();
+      final Span span = TRACER.spanBuilder("HttpServletResponse." + method).startSpan();
       DECORATE.afterStart(span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
