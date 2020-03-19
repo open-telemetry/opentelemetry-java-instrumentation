@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.sparkjava;
 
+import static io.opentelemetry.auto.instrumentation.sparkjava.RoutesInstrumentation.TracerHolder.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -80,7 +81,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
     public static void routeMatchEnricher(
         @Advice.Argument(0) final HttpMethod method, @Advice.Return final RouteMatch routeMatch) {
 
-      final Span span = TracerHolder.TRACER.getCurrentSpan();
+      final Span span = TRACER.getCurrentSpan();
       if (span != null && routeMatch != null) {
         final String resourceName = method.name().toUpperCase() + " " + routeMatch.getMatchUri();
         span.updateName(resourceName);
