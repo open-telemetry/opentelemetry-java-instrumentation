@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 public class HibernateDecorator extends OrmClientDecorator {
-  public static final HibernateDecorator DECORATOR = new HibernateDecorator();
+  public static final HibernateDecorator DECORATE = new HibernateDecorator();
   // TODO use tracer names *.hibernate-3.3, *.hibernate-4.0, *.hibernate-4.3 respectively in each
   // module
   public static final Tracer TRACER =
