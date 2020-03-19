@@ -588,7 +588,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         basicSpan(it, 0, "parent")
 
         span(1) {
-          operationName "${datasource.class.simpleName}/getConnection"
+          operationName "${datasource.class.simpleName}.getConnection"
           childOf span(0)
           tags {
             "$Tags.COMPONENT" "java-jdbc-connection"
@@ -596,7 +596,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         }
         if (recursive) {
           span(2) {
-            operationName "${datasource.class.simpleName}/getConnection"
+            operationName "${datasource.class.simpleName}.getConnection"
             childOf span(1)
             tags {
               "$Tags.COMPONENT" "java-jdbc-connection"
