@@ -29,7 +29,7 @@ import java.util.concurrent.Callable
 
 class TraceUtils {
 
-  private static final BaseDecorator DECORATOR = new BaseDecorator() {
+  private static final BaseDecorator DECORATE = new BaseDecorator() {
 
     protected String getSpanType() {
       return null
@@ -45,17 +45,17 @@ class TraceUtils {
   @SneakyThrows
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
     final Span span = TRACER.spanBuilder(rootOperationName).startSpan()
-    DECORATOR.afterStart(span)
+    DECORATE.afterStart(span)
 
     Scope scope = TRACER.withSpan(span)
 
     try {
       return r.call()
     } catch (final Exception e) {
-      DECORATOR.onError(span, e)
+      DECORATE.onError(span, e)
       throw e
     } finally {
-      DECORATOR.beforeFinish(span)
+      DECORATE.beforeFinish(span)
       span.end()
       scope.close()
     }
