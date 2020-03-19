@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate;
 
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
+import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
 
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
@@ -52,8 +52,8 @@ public class SessionMethodUtils {
 
     if (createSpan) {
       final Span span = TRACER.spanBuilder(operationName).setParent(sessionSpan).startSpan();
-      DECORATOR.afterStart(span);
-      DECORATOR.onOperation(span, entity);
+      DECORATE.afterStart(span);
+      DECORATE.onOperation(span, entity);
       return new SpanWithScope(span, TRACER.withSpan(span));
     } else {
       return new SpanWithScope(null, TRACER.withSpan(sessionSpan));
@@ -73,11 +73,11 @@ public class SessionMethodUtils {
 
     final Span span = spanWithScope.getSpan();
     if (span != null) {
-      DECORATOR.onError(span, throwable);
+      DECORATE.onError(span, throwable);
       if (entity != null) {
-        DECORATOR.onOperation(span, entity);
+        DECORATE.onOperation(span, entity);
       }
-      DECORATOR.beforeFinish(span);
+      DECORATE.beforeFinish(span);
       span.end();
     }
     spanWithScope.closeScope();

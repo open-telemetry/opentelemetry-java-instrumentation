@@ -20,7 +20,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.io.PrintWriter;
@@ -40,7 +39,6 @@ public class LogbackSpans {
       // this needs to be configurable
       return;
     }
-    final Span currentSpan = TRACER.getCurrentSpan();
 
     final Object throwableProxy = event.getThrowableProxy();
     Throwable t = null;
@@ -58,10 +56,6 @@ public class LogbackSpans {
       span.setAttribute("error.stack", toString(t));
     }
     span.end();
-  }
-
-  private static AttributeValue newAttributeValue(final String stringValue) {
-    return AttributeValue.stringAttributeValue(stringValue);
   }
 
   private static String toString(final Throwable t) {
