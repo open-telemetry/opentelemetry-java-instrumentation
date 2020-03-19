@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.springdata;
 
-import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.DECORATOR;
+import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -119,8 +119,8 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       }
 
       final Span span = TRACER.spanBuilder("repository.operation").startSpan();
-      DECORATOR.afterStart(span);
-      DECORATOR.onOperation(span, invokedMethod);
+      DECORATE.afterStart(span);
+      DECORATE.onOperation(span, invokedMethod);
 
       final Scope scope = TRACER.withSpan(span);
 
@@ -128,10 +128,10 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       try {
         result = methodInvocation.proceed();
       } catch (final Throwable t) {
-        DECORATOR.onError(span, t);
+        DECORATE.onError(span, t);
         throw t;
       } finally {
-        DECORATOR.beforeFinish(span);
+        DECORATE.beforeFinish(span);
         span.end();
         scope.close();
       }

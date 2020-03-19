@@ -92,7 +92,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterable<ConsumerRecord> iterable) {
       if (iterable != null) {
-        iterable = new TracingIterable(iterable, "kafka.consume", CONSUMER_DECORATE);
+        iterable = new TracingIterable(iterable, CONSUMER_DECORATE);
       }
     }
   }
@@ -102,7 +102,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord> iterable) {
       if (iterable != null) {
-        iterable = new TracingList(iterable, "kafka.consume", CONSUMER_DECORATE);
+        iterable = new TracingList(iterable, CONSUMER_DECORATE);
       }
     }
   }
@@ -112,7 +112,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterator<ConsumerRecord> iterator) {
       if (iterator != null) {
-        iterator = new TracingIterator(iterator, "kafka.consume", CONSUMER_DECORATE);
+        iterator = new TracingIterator(iterator, CONSUMER_DECORATE);
       }
     }
   }
