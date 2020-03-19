@@ -124,10 +124,10 @@ class JMS2Test extends AgentTestRunner {
 
     where:
     destination                      | expectedSpanName
-    session.createQueue("someQueue") | "someQueue"
-    session.createTopic("someTopic") | "someTopic"
-    session.createTemporaryQueue()   | "<temporary>"
-    session.createTemporaryTopic()   | "<temporary>"
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
+    session.createTemporaryQueue()   | "queue/<temporary>"
+    session.createTemporaryTopic()   | "topic/<temporary>"
   }
 
   def "sending to a MessageListener on #expectedSpanName generates a span"() {
@@ -163,10 +163,10 @@ class JMS2Test extends AgentTestRunner {
 
     where:
     destination                      | expectedSpanName
-    session.createQueue("someQueue") | "someQueue"
-    session.createTopic("someTopic") | "someTopic"
-    session.createTemporaryQueue()   | "<temporary>"
-    session.createTemporaryTopic()   | "<temporary>"
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
+    session.createTemporaryQueue()   | "queue/<temporary>"
+    session.createTemporaryTopic()   | "topic/<temporary>"
   }
 
   def "failing to receive message with receiveNoWait on #expectedSpanName works"() {
@@ -200,8 +200,8 @@ class JMS2Test extends AgentTestRunner {
 
     where:
     destination                      | expectedSpanName
-    session.createQueue("someQueue") | "someQueue"
-    session.createTopic("someTopic") | "someTopic"
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
   }
 
   def "failing to receive message with wait(timeout) on #expectedSpanName works"() {
@@ -235,8 +235,8 @@ class JMS2Test extends AgentTestRunner {
 
     where:
     destination                      | expectedSpanName
-    session.createQueue("someQueue") | "someQueue"
-    session.createTopic("someTopic") | "someTopic"
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
   }
 
   static producerSpan(TraceAssert trace, int index, String expectedSpanName) {

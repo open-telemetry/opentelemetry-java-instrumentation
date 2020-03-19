@@ -88,17 +88,17 @@ public abstract class JMSDecorator extends ClientDecorator {
       if (jmsDestination instanceof Queue) {
         final String queueName = ((Queue) jmsDestination).getQueueName();
         if (jmsDestination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX)) {
-          return "<temporary>";
+          return "queue/<temporary>";
         } else {
-          return queueName;
+          return "queue/" + queueName;
         }
       }
       if (jmsDestination instanceof Topic) {
         final String topicName = ((Topic) jmsDestination).getTopicName();
         if (jmsDestination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX)) {
-          return "<temporary>";
+          return "topic/<temporary>";
         } else {
-          return topicName;
+          return "topic/" + topicName;
         }
       }
     } catch (final Exception e) {

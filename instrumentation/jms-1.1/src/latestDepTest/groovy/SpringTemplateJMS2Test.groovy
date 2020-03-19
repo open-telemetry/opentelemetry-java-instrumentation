@@ -108,7 +108,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
 
     where:
     destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS2") | "SpringTemplateJMS2"
+    session.createQueue("SpringTemplateJMS2") | "queue/SpringTemplateJMS2"
   }
 
   def "send and receive message generates spans"() {
@@ -136,15 +136,15 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
         consumerSpan(it, 0, expectedSpanName, false, HornetQMessageConsumer, traces[0][0])
       }
       trace(2, 1) {
-        producerSpan(it, 0, "<temporary>") // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue/<temporary>") // receive doesn't propagate the trace, so this is a root
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "<temporary>", false, HornetQMessageConsumer, traces[2][0])
+        consumerSpan(it, 0, "queue/<temporary>", false, HornetQMessageConsumer, traces[2][0])
       }
     }
 
     where:
     destination                               | expectedSpanName
-    session.createQueue("SpringTemplateJMS2") | "SpringTemplateJMS2"
+    session.createQueue("SpringTemplateJMS2") | "queue/SpringTemplateJMS2"
   }
 }
