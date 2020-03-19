@@ -84,7 +84,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
           } else {
             // Annotation API
             operationName TestController.getSimpleName() + "." + annotatedMethod
@@ -152,7 +152,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
           } else {
             // Annotation API
             operationName TestController.getSimpleName() + "." + annotatedMethod
@@ -222,7 +222,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "ResourceWebHandler/handle"
+          operationName "ResourceWebHandler.handle"
           spanKind INTERNAL
           childOf(span(0))
           errored true
@@ -267,7 +267,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName EchoHandlerFunction.getSimpleName() + "/handle"
+          operationName EchoHandlerFunction.getSimpleName() + ".handle"
           spanKind INTERNAL
           childOf(span(0))
           tags {
@@ -319,7 +319,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           if (annotatedMethod == null) {
             // Functional API
-            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
           } else {
             // Annotation API
             operationName TestController.getSimpleName() + "." + annotatedMethod
@@ -384,7 +384,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "RedirectComponent/lambda"
+          operationName "RedirectComponent.lambda"
           spanKind INTERNAL
           childOf(span(0))
           tags {
@@ -414,7 +414,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationNameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", "/handle")
+          operationNameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", ".handle")
           spanKind INTERNAL
           childOf(span(0))
           tags {
@@ -461,7 +461,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           span(1) {
             if (annotatedMethod == null) {
               // Functional API
-              operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, "/handle")
+              operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
             } else {
               // Annotation API
               operationName TestController.getSimpleName() + "." + annotatedMethod

@@ -44,7 +44,7 @@ public class DispatcherHandlerAdvice {
     // so we could update resource name.
     exchange.getAttributes().put(AdviceUtils.PARENT_SPAN_ATTRIBUTE, parentSpan);
 
-    final Span span = TRACER.spanBuilder("DispatcherHandler/handle").startSpan();
+    final Span span = TRACER.spanBuilder("DispatcherHandler.handle").startSpan();
     DECORATE.afterStart(span);
     exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, span);
 
