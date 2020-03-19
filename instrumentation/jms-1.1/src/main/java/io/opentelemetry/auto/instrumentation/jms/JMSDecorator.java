@@ -62,7 +62,7 @@ public abstract class JMSDecorator extends ClientDecorator {
   }
 
   public String spanNameForReceive(final Method method) {
-    return "jms/" + method.getName();
+    return "jms." + method.getName();
   }
 
   public String spanNameForConsumer(final Message message) {
