@@ -64,9 +64,4 @@ public class PlayAdvice {
     // set the resource name on the upstream akka/netty span
     DECORATE.onRequest(rootSpan, req);
   }
-
-  // Unused method for muzzle to allow only 2.4-2.5
-  public static void muzzleCheck() {
-    play.libs.Akka.system();
-  }
 }

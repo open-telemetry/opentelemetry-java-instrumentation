@@ -6,6 +6,7 @@ import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
+import datadog.trace.instrumentation.play23.PlayHttpServerDecorator
 import play.api.test.TestServer
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.*
@@ -25,14 +26,15 @@ class PlayServerTest extends HttpServerTest<TestServer> {
 
   @Override
   String component() {
-    return ""
+    return "netty"
   }
 
   @Override
   String expectedOperationName() {
-    return "netty.request"
+    return "play.server"
   }
 
+  // We don't have instrumentation for this version of netty yet
   @Override
   boolean hasHandlerSpan() {
     true
@@ -53,7 +55,7 @@ class PlayServerTest extends HttpServerTest<TestServer> {
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
-        "$Tags.COMPONENT" ""
+        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String

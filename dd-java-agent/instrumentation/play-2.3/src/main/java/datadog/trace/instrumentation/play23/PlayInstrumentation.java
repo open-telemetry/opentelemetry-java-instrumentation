@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class PlayInstrumentation extends Instrumenter.Default {
 
   public PlayInstrumentation() {
-    super("play");
+    super("play", "play-action");
   }
 
   @Override

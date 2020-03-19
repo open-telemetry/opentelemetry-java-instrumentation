@@ -13,10 +13,11 @@ public class NettyServerTestInstrumentation implements Instrumenter {
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(named("io.netty.handler.codec.ByteToMessageDecoder"))
+        .type(named("org.jboss.netty.handler.codec.http.HttpRequestDecoder"))
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
-                    named("channelRead"), HttpServerTestAdvice.ServerEntryAdvice.class.getName()));
+                    named("createMessage"),
+                    HttpServerTestAdvice.ServerEntryAdvice.class.getName()));
   }
 }
