@@ -75,18 +75,17 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
 
     @Override
     public void run() {
-      final Span span = TRACER.spanBuilder("scheduled.call").startSpan();
+      if (runnable == null) {
+        return;
+      }
+      final Span span = TRACER.spanBuilder(DECORATE.spanNameOnRun(runnable)).startSpan();
       DECORATE.afterStart(span);
 
       try (final Scope scope = TRACER.withSpan(span)) {
-        DECORATE.onRun(span, runnable);
-
-        try {
-          runnable.run();
-        } catch (final Throwable throwable) {
-          DECORATE.onError(span, throwable);
-          throw throwable;
-        }
+        runnable.run();
+      } catch (final Throwable throwable) {
+        DECORATE.onError(span, throwable);
+        throw throwable;
       } finally {
         DECORATE.beforeFinish(span);
         span.end();
