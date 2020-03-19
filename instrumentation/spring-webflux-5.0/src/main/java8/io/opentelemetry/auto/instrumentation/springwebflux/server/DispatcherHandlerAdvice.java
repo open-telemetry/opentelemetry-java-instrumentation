@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringW
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils;
+import io.opentelemetry.auto.instrumentation.reactor.ReactorCoreAdviceUtils;
 import io.opentelemetry.trace.Span;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;

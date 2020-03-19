@@ -15,7 +15,7 @@
  */
 package server
 
-import io.opentelemetry.auto.instrumentation.netty41.server.NettyHttpServerDecorator
+import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions

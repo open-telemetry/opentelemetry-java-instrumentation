@@ -15,14 +15,14 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.trace_annotation.TraceAnnotationsInstrumentation
+import io.opentelemetry.auto.instrumentation.traceannotation.TraceAnnotationsInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.SayTracedHello
 
 import java.util.concurrent.Callable
 
-import static io.opentelemetry.auto.instrumentation.trace_annotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
+import static io.opentelemetry.auto.instrumentation.traceannotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 

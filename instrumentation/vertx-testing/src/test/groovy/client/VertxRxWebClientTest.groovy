@@ -15,7 +15,7 @@
  */
 package client
 
-import io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod

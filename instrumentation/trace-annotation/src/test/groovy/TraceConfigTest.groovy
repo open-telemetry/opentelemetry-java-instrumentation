@@ -15,7 +15,7 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.trace_annotation.TraceConfigInstrumentation
+import io.opentelemetry.auto.instrumentation.traceannotation.TraceConfigInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 
