@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v3_3;
 
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATOR;
+import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -142,8 +142,8 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         return;
       }
 
-      DECORATOR.onError(sessionSpan, throwable);
-      DECORATOR.beforeFinish(sessionSpan);
+      DECORATE.onError(sessionSpan, throwable);
+      DECORATE.beforeFinish(sessionSpan);
       sessionSpan.end();
     }
   }
