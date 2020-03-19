@@ -126,7 +126,7 @@ public class SpringWebHttpServerDecorator
       methodName = "<annotation>";
     }
 
-    return DECORATE.spanNameForClass(clazz) + "/" + methodName;
+    return DECORATE.spanNameForClass(clazz) + "." + methodName;
   }
 
   public String spanNameOnRender(final ModelAndView mv) {
