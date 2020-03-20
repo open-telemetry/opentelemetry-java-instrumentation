@@ -30,37 +30,37 @@ import java.util.concurrent.CompletableFuture
 @Timeout(10)
 class VertxHttpClientTest extends HttpClientTest {
 
-    @Shared
-    Vertx vertx = Vertx.vertx(new VertxOptions())
-    @Shared
-    HttpClient httpClient = vertx.createHttpClient()
+  @Shared
+  Vertx vertx = Vertx.vertx(new VertxOptions())
+  @Shared
+  HttpClient httpClient = vertx.createHttpClient()
 
-    @Override
-    int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-        CompletableFuture<HttpClientResponse> future = new CompletableFuture<>()
-        def request = httpClient.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
-        headers.each { request.putHeader(it.key, it.value) }
-        request.handler { response ->
-            callback?.call()
-            future.complete(response)
-        }
-        request.end()
-
-        return future.get().statusCode()
+  @Override
+  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+    CompletableFuture<HttpClientResponse> future = new CompletableFuture<>()
+    def request = httpClient.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    headers.each { request.putHeader(it.key, it.value) }
+    request.handler { response ->
+      callback?.call()
+      future.complete(response)
     }
+    request.end()
 
-    @Override
-    String component() {
-        return NettyHttpClientDecorator.DECORATE.getComponentName()
-    }
+    return future.get().statusCode()
+  }
 
-    @Override
-    boolean testRedirects() {
-        false
-    }
+  @Override
+  String component() {
+    return NettyHttpClientDecorator.DECORATE.getComponentName()
+  }
 
-    @Override
-    boolean testConnectionFailure() {
-        false
-    }
+  @Override
+  boolean testRedirects() {
+    false
+  }
+
+  @Override
+  boolean testConnectionFailure() {
+    false
+  }
 }

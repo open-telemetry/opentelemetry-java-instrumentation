@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import spock.lang.Subject
@@ -72,26 +71,23 @@ class HttpServletResponseTest extends AgentTestRunner {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "servlet.response"
+          operationName "HttpServletResponse.sendError"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "HttpServletResponse.sendError"
             "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
         span(2) {
-          operationName "servlet.response"
+          operationName "HttpServletResponse.sendError"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "HttpServletResponse.sendError"
             "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
         span(3) {
-          operationName "servlet.response"
+          operationName "HttpServletResponse.sendRedirect"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "HttpServletResponse.sendRedirect"
             "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
@@ -127,11 +123,10 @@ class HttpServletResponseTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent", null, null, ex)
         span(1) {
-          operationName "servlet.response"
+          operationName "HttpServletResponse.sendRedirect"
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "HttpServletResponse.sendRedirect"
             "$Tags.COMPONENT" "java-web-servlet-response"
             errorTags(ex.class, ex.message)
           }

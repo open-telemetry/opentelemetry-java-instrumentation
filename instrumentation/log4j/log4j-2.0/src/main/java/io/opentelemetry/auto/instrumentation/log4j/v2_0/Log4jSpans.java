@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.log4j.v2_0;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.io.PrintWriter;
@@ -48,10 +47,6 @@ public class Log4jSpans {
       span.setAttribute("error.stack", toString(t));
     }
     span.end();
-  }
-
-  private static AttributeValue newAttributeValue(final String stringValue) {
-    return AttributeValue.stringAttributeValue(stringValue);
   }
 
   private static String toString(final Throwable t) {

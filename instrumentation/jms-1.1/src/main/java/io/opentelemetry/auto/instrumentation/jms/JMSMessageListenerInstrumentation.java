@@ -81,7 +81,8 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
     public static SpanWithScope onEnter(
         @Advice.Argument(0) final Message message, @Advice.This final MessageListener listener) {
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("jms.onMessage").setSpanKind(CONSUMER);
+      final Span.Builder spanBuilder =
+          TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
         spanBuilder.setParent(extractedContext);
@@ -93,7 +94,6 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
       final Span span = spanBuilder.startSpan();
       span.setAttribute("span.origin.type", listener.getClass().getName());
       CONSUMER_DECORATE.afterStart(span);
-      CONSUMER_DECORATE.onReceive(span, message);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

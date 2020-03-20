@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.springwebmvc;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -31,6 +30,7 @@ import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.Controller;
 
 @Slf4j
@@ -94,13 +94,12 @@ public class SpringWebHttpServerDecorator
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
         span.updateName(resourceName);
-        span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       }
     }
     return span;
   }
 
-  public void onHandle(final Span span, final Object handler) {
+  public String spanNameOnHandle(final Object handler) {
     final Class<?> clazz;
     final String methodName;
 
@@ -127,15 +126,26 @@ public class SpringWebHttpServerDecorator
       methodName = "<annotation>";
     }
 
-    final String resourceName = DECORATE.spanNameForClass(clazz) + "." + methodName;
-    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+    return DECORATE.spanNameForClass(clazz) + "." + methodName;
+  }
+
+  public String spanNameOnRender(final ModelAndView mv) {
+    final String viewName = mv.getViewName();
+    if (viewName != null) {
+      return "Render " + viewName;
+    }
+    final View view = mv.getView();
+    if (view != null) {
+      return "Render " + view.getClass().getSimpleName();
+    }
+    // either viewName or view should be non-null, but just in case
+    return "Render <unknown>";
   }
 
   public Span onRender(final Span span, final ModelAndView mv) {
     final String viewName = mv.getViewName();
     if (viewName != null) {
       span.setAttribute("view.name", viewName);
-      span.setAttribute(MoreTags.RESOURCE_NAME, viewName);
     }
     if (mv.getView() != null) {
       span.setAttribute("view.type", mv.getView().getClass().getName());

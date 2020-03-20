@@ -32,6 +32,7 @@ import server.FooModel
 import server.SpringWebFluxTestApplication
 import server.TestController
 
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
@@ -71,7 +72,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -89,8 +89,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             // Annotation API
             operationName TestController.getSimpleName() + "." + annotatedMethod
           }
-          spanKind SERVER
-          childOf(span(0))
+          spanKind INTERNAL
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -140,7 +140,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -158,8 +157,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             // Annotation API
             operationName TestController.getSimpleName() + "." + annotatedMethod
           }
-          spanKind SERVER
-          childOf(span(0))
+          spanKind INTERNAL
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -177,7 +176,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(2) {
           operationName "tracedMethod"
-          childOf(span(1))
+          childOf span(1)
           errored false
           tags {
           }
@@ -213,7 +212,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /**"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -225,8 +223,8 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(1) {
           operationName "ResourceWebHandler.handle"
-          spanKind SERVER
-          childOf(span(0))
+          spanKind INTERNAL
+          childOf span(0)
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
@@ -259,7 +257,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "POST /echo"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -271,8 +268,8 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(1) {
           operationName EchoHandlerFunction.getSimpleName() + ".handle"
-          spanKind SERVER
-          childOf(span(0))
+          spanKind INTERNAL
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -284,7 +281,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(2) {
           operationName "echo"
-          childOf(span(1))
+          childOf span(1)
           tags {
           }
         }
@@ -310,7 +307,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -328,8 +324,8 @@ class SpringWebfluxTest extends AgentTestRunner {
             // Annotation API
             operationName TestController.getSimpleName() + "." + annotatedMethod
           }
-          spanKind SERVER
-          childOf(span(0))
+          spanKind INTERNAL
+          childOf span(0)
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
@@ -378,7 +374,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /double-greet-redirect"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -390,8 +385,8 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(1) {
           operationName "RedirectComponent.lambda"
-          spanKind SERVER
-          childOf(span(0))
+          spanKind INTERNAL
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -409,7 +404,6 @@ class SpringWebfluxTest extends AgentTestRunner {
           spanKind SERVER
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /double-greet"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -421,8 +415,8 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(1) {
           operationNameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", ".handle")
-          spanKind SERVER
-          childOf(span(0))
+          spanKind INTERNAL
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -455,7 +449,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             spanKind SERVER
             parent()
             tags {
-              "$MoreTags.RESOURCE_NAME" "GET $urlPathWithVariables"
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
               "$Tags.COMPONENT" "netty"
               "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -473,8 +466,8 @@ class SpringWebfluxTest extends AgentTestRunner {
               // Annotation API
               operationName TestController.getSimpleName() + "." + annotatedMethod
             }
-            spanKind SERVER
-            childOf(span(0))
+            spanKind INTERNAL
+            childOf span(0)
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
               "$Tags.COMPONENT" "spring-webflux-controller"

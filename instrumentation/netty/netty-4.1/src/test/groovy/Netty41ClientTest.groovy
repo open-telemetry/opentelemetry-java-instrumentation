@@ -102,7 +102,7 @@ class Netty41ClientTest extends HttpClientTest {
         // for up to a total of 10 seconds (default connection time limit)
         for (def i = 1; i < size; i++) {
           span(i) {
-            operationName "netty.connect"
+            operationName "CONNECT"
             childOf span(0)
             errored true
             tags {
@@ -208,7 +208,7 @@ class Netty41ClientTest extends HttpClientTest {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
-          childOf(span(0))
+          childOf span(0)
           operationName "tracedMethod"
           errored false
           tags {

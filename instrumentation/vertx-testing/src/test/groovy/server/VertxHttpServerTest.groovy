@@ -34,84 +34,84 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDI
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class VertxHttpServerTest extends HttpServerTest<Vertx> {
-    public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
+  public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
+
+  @Override
+  Vertx startServer(int port) {
+    def server = Vertx.vertx(new VertxOptions()
+    // Useful for debugging:
+    // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
+      .setClusterPort(port))
+    final CompletableFuture<Void> future = new CompletableFuture<>()
+    server.deployVerticle(verticle().name,
+      new DeploymentOptions()
+        .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
+        .setInstances(3)) { res ->
+      if (!res.succeeded()) {
+        throw new RuntimeException("Cannot deploy server Verticle", res.cause())
+      }
+      future.complete(null)
+    }
+
+    future.get()
+    return server
+  }
+
+  protected Class<io.vertx.reactivex.core.AbstractVerticle> verticle() {
+    return VertxWebTestServer
+  }
+
+  @Override
+  void stopServer(Vertx server) {
+    server.close()
+  }
+
+  @Override
+  String component() {
+    return NettyHttpServerDecorator.DECORATE.getComponentName()
+  }
+
+  @Override
+  boolean testExceptionBody() {
+    false
+  }
+
+  static class VertxWebTestServer extends AbstractVerticle {
 
     @Override
-    Vertx startServer(int port) {
-        def server = Vertx.vertx(new VertxOptions()
-        // Useful for debugging:
-        // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
-                .setClusterPort(port))
-        final CompletableFuture<Void> future = new CompletableFuture<>()
-        server.deployVerticle(verticle().name,
-                new DeploymentOptions()
-                        .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
-                        .setInstances(3)) { res ->
-            if (!res.succeeded()) {
-                throw new RuntimeException("Cannot deploy server Verticle", res.cause())
-            }
-            future.complete(null)
+    void start(final Future<Void> startFuture) {
+      final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT)
+      final Router router = Router.router(vertx)
+
+      router.route(SUCCESS.path).handler { ctx ->
+        controller(SUCCESS) {
+          ctx.response().setStatusCode(SUCCESS.status).end(SUCCESS.body)
         }
-
-        future.get()
-        return server
-    }
-
-    protected Class<io.vertx.reactivex.core.AbstractVerticle> verticle() {
-        return VertxWebTestServer
-    }
-
-    @Override
-    void stopServer(Vertx server) {
-        server.close()
-    }
-
-    @Override
-    String component() {
-        return NettyHttpServerDecorator.DECORATE.getComponentName()
-    }
-
-    @Override
-    boolean testExceptionBody() {
-        false
-    }
-
-    static class VertxWebTestServer extends AbstractVerticle {
-
-        @Override
-        void start(final Future<Void> startFuture) {
-            final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT)
-            final Router router = Router.router(vertx)
-
-            router.route(SUCCESS.path).handler { ctx ->
-                controller(SUCCESS) {
-                    ctx.response().setStatusCode(SUCCESS.status).end(SUCCESS.body)
-                }
-            }
-            router.route(QUERY_PARAM.path).handler { ctx ->
-                controller(QUERY_PARAM) {
-                    ctx.response().setStatusCode(QUERY_PARAM.status).end(ctx.request().query())
-                }
-            }
-            router.route(REDIRECT.path).handler { ctx ->
-                controller(REDIRECT) {
-                    ctx.response().setStatusCode(REDIRECT.status).putHeader("location", REDIRECT.body).end()
-                }
-            }
-            router.route(ERROR.path).handler { ctx ->
-                controller(ERROR) {
-                    ctx.response().setStatusCode(ERROR.status).end(ERROR.body)
-                }
-            }
-            router.route(EXCEPTION.path).handler { ctx ->
-                controller(EXCEPTION) {
-                    throw new Exception(EXCEPTION.body)
-                }
-            }
-
-            vertx.createHttpServer()
-                    .requestHandler { router.accept(it) }
-                    .listen(port) { startFuture.complete() }
+      }
+      router.route(QUERY_PARAM.path).handler { ctx ->
+        controller(QUERY_PARAM) {
+          ctx.response().setStatusCode(QUERY_PARAM.status).end(ctx.request().query())
         }
+      }
+      router.route(REDIRECT.path).handler { ctx ->
+        controller(REDIRECT) {
+          ctx.response().setStatusCode(REDIRECT.status).putHeader("location", REDIRECT.body).end()
+        }
+      }
+      router.route(ERROR.path).handler { ctx ->
+        controller(ERROR) {
+          ctx.response().setStatusCode(ERROR.status).end(ERROR.body)
+        }
+      }
+      router.route(EXCEPTION.path).handler { ctx ->
+        controller(EXCEPTION) {
+          throw new Exception(EXCEPTION.body)
+        }
+      }
+
+      vertx.createHttpServer()
+        .requestHandler { router.accept(it) }
+        .listen(port) { startFuture.complete() }
     }
+  }
 }

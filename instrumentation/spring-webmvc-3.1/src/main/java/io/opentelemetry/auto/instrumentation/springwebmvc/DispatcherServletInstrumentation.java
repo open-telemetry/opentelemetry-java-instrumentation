@@ -79,7 +79,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
-      final Span span = TRACER.spanBuilder("response.render").startSpan();
+      final Span span = TRACER.spanBuilder(DECORATE_RENDER.spanNameOnRender(mv)).startSpan();
       DECORATE_RENDER.afterStart(span);
       DECORATE_RENDER.onRender(span, mv);
       return new SpanWithScope(span, TRACER.withSpan(span));

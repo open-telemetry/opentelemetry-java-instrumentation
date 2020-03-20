@@ -40,7 +40,7 @@ class ExporterAdaptersTest extends Specification {
 
     then:
     file != null
-    
+
     where:
     exporter << [loggingExporterJar, jaegerExporterJar]
   }

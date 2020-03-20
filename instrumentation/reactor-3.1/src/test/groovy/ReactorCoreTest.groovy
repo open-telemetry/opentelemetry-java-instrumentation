@@ -50,14 +50,14 @@ class ReactorCoreTest extends AgentTestRunner {
         }
         span(1) {
           operationName "publisher-parent"
-          childOf(span(0))
+          childOf span(0)
           tags {
           }
         }
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
             operationName "add one"
-            childOf(span(1))
+            childOf span(1)
             tags {
             }
           }
@@ -97,7 +97,7 @@ class ReactorCoreTest extends AgentTestRunner {
         }
         span(1) {
           operationName "publisher-parent"
-          childOf(span(0))
+          childOf span(0)
           errored true
           tags {
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
@@ -130,7 +130,7 @@ class ReactorCoreTest extends AgentTestRunner {
         }
         span(1) {
           operationName "publisher-parent"
-          childOf(span(0))
+          childOf span(0)
           errored true
           tags {
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
@@ -139,7 +139,7 @@ class ReactorCoreTest extends AgentTestRunner {
         for (int i = 0; i < workSpans; i++) {
           span(i + 2) {
             operationName "add one"
-            childOf(span(1))
+            childOf span(1)
             tags {
             }
           }
@@ -168,7 +168,7 @@ class ReactorCoreTest extends AgentTestRunner {
         }
         span(1) {
           operationName "publisher-parent"
-          childOf(span(0))
+          childOf span(0)
           tags {
           }
         }
