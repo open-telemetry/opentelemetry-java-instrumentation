@@ -90,7 +90,7 @@ class SpringWebfluxTest extends AgentTestRunner {
             operationName TestController.getSimpleName() + "." + annotatedMethod
           }
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -158,7 +158,7 @@ class SpringWebfluxTest extends AgentTestRunner {
             operationName TestController.getSimpleName() + "." + annotatedMethod
           }
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -176,7 +176,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(2) {
           operationName "tracedMethod"
-          childOf(span(1))
+          childOf span(1)
           errored false
           tags {
           }
@@ -224,7 +224,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           operationName "ResourceWebHandler.handle"
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
@@ -269,7 +269,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           operationName EchoHandlerFunction.getSimpleName() + ".handle"
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -281,7 +281,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         }
         span(2) {
           operationName "echo"
-          childOf(span(1))
+          childOf span(1)
           tags {
           }
         }
@@ -325,7 +325,7 @@ class SpringWebfluxTest extends AgentTestRunner {
             operationName TestController.getSimpleName() + "." + annotatedMethod
           }
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           errored true
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
@@ -386,7 +386,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           operationName "RedirectComponent.lambda"
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -416,7 +416,7 @@ class SpringWebfluxTest extends AgentTestRunner {
         span(1) {
           operationNameContains(SpringWebFluxTestApplication.getSimpleName() + "\$", ".handle")
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "spring-webflux-controller"
@@ -467,7 +467,7 @@ class SpringWebfluxTest extends AgentTestRunner {
               operationName TestController.getSimpleName() + "." + annotatedMethod
             }
             spanKind INTERNAL
-            childOf(span(0))
+            childOf span(0)
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
               "$Tags.COMPONENT" "spring-webflux-controller"

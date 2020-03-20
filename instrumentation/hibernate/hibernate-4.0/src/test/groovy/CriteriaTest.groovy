@@ -61,11 +61,11 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(2) {
+          operationName ~/^select /
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"

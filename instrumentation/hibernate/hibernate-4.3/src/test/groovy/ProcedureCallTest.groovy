@@ -105,11 +105,11 @@ class ProcedureCallTest extends AgentTestRunner {
           }
         }
         span(2) {
+          operationName "{call TEST_PROC()}"
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.RESOURCE_NAME" "{call TEST_PROC()}"
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"

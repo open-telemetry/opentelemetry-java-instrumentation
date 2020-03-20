@@ -96,9 +96,15 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         @Advice.Origin final Method method,
         @Advice.Return final Message message,
         @Advice.Thrown final Throwable throwable) {
+      final String spanName;
+      if (message == null) {
+        spanName = CONSUMER_DECORATE.spanNameForReceive(method);
+      } else {
+        spanName = CONSUMER_DECORATE.spanNameForReceive(message);
+      }
       final Span.Builder spanBuilder =
           TRACER
-              .spanBuilder("jms.consume")
+              .spanBuilder(spanName)
               .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
@@ -117,11 +123,6 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
 
       try (final Scope scope = TRACER.withSpan(span)) {
         CONSUMER_DECORATE.afterStart(span);
-        if (message == null) {
-          CONSUMER_DECORATE.onReceive(span, method);
-        } else {
-          CONSUMER_DECORATE.onConsume(span, message);
-        }
         CONSUMER_DECORATE.onError(span, throwable);
         CONSUMER_DECORATE.beforeFinish(span);
         span.end();

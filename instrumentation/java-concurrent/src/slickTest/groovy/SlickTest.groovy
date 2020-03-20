@@ -43,13 +43,12 @@ class SlickTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "database.query"
+          operationName SlickUtils.TestQuery()
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" SlickUtils.Driver()
-            "$MoreTags.RESOURCE_NAME" SlickUtils.TestQuery()
             "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" SlickUtils.Driver()
