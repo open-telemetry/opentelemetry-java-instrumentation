@@ -1,21 +1,35 @@
 package client
 
 import datadog.trace.agent.test.base.HttpClientTest
+import datadog.trace.instrumentation.netty39.client.NettyHttpClientDecorator
+import play.GlobalSettings
 import play.libs.ws.WS
-import spock.lang.AutoCleanup
+import play.test.FakeApplication
+import play.test.Helpers
 import spock.lang.Shared
-import spock.lang.Subject
 
 import java.util.concurrent.TimeUnit
 
 class PlayWSClientTest extends HttpClientTest {
-  @Subject
   @Shared
-  @AutoCleanup
-  def client = WS.client()
+  def application = new FakeApplication(new File("."), FakeApplication.class.getClassLoader(), Collections.emptyMap(), Collections.emptyList(), new GlobalSettings())
+
+//  @Subject
+//  @Shared
+//  @AutoCleanup
+//  def client = WS.client()
+
+  def setup() {
+    Helpers.start(application)
+  }
+
+  def cleanup() {
+    Helpers.stop(application)
+  }
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+    def client = WS.client()
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
@@ -32,7 +46,7 @@ class PlayWSClientTest extends HttpClientTest {
 
   @Override
   String component() {
-    return "" // NettyHttpClientDecorator.DECORATE.component()
+    return NettyHttpClientDecorator.DECORATE.component()
   }
 
   @Override

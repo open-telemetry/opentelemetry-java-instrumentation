@@ -41,9 +41,13 @@ dependencies {
 
   testCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.0'
   testCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.0'
-  testCompile group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.0'
+  testCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.0') {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-websocket'
+  }
 
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.+'
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.+'
-  latestDepTestCompile group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.+'
+  latestDepTestCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.+') {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-websocket'
+  }
 }
