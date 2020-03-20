@@ -81,7 +81,7 @@ class SpringJpaTest extends AgentTestRunner {
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.SPAN_TYPE" "sql"
@@ -117,7 +117,7 @@ class SpringJpaTest extends AgentTestRunner {
         span(1) { // insert
           operationName ~/^insert /
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.SPAN_TYPE" "sql"
@@ -153,7 +153,7 @@ class SpringJpaTest extends AgentTestRunner {
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.SPAN_TYPE" "sql"
@@ -168,7 +168,7 @@ class SpringJpaTest extends AgentTestRunner {
         span(2) { // update
           operationName ~/^update /
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.SPAN_TYPE" "sql"
@@ -202,7 +202,7 @@ class SpringJpaTest extends AgentTestRunner {
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.SPAN_TYPE" "sql"
@@ -236,7 +236,7 @@ class SpringJpaTest extends AgentTestRunner {
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.SPAN_TYPE" "sql"
@@ -251,7 +251,7 @@ class SpringJpaTest extends AgentTestRunner {
         span(2) { // delete
           operationName ~/^delete /
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.SPAN_TYPE" "sql"

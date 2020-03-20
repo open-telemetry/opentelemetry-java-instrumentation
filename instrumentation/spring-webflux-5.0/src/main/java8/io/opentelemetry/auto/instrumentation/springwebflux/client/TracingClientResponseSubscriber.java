@@ -46,10 +46,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
     this.clientRequest = clientRequest;
     this.context = context;
     spanRef = new AtomicReference<>(span);
-    this.parentSpan =
-        parentSpan == null
-            ? DefaultSpan.getInvalid()
-            : parentSpan;
+    this.parentSpan = parentSpan == null ? DefaultSpan.getInvalid() : parentSpan;
   }
 
   @Override
