@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
@@ -60,10 +59,9 @@ public class HandlerAdapterAdvice {
     final PathPattern bestPattern =
         exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     if (parentSpan != null && bestPattern != null) {
-      String resourceName =
+      final String resourceName =
           exchange.getRequest().getMethodValue() + " " + bestPattern.getPatternString();
       parentSpan.updateName(resourceName);
-      parentSpan.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
     }
 
     return spanWithScope;

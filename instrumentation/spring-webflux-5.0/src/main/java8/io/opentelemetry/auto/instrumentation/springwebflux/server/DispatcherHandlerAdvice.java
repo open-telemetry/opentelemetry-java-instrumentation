@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils;
@@ -36,16 +35,16 @@ public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope methodEnter(@Advice.Argument(0) final ServerWebExchange exchange) {
+    final Span parentSpan = TRACER.getCurrentSpan();
+    if (!parentSpan.getContext().isValid()) {
+      return null;
+    }
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
     // right things so we have to store span in request itself. We also store parent (netty's) span
     // so we could update resource name.
-    final Span parentSpan = TRACER.getCurrentSpan();
-    if (parentSpan.getContext().isValid()) {
-      exchange.getAttributes().put(AdviceUtils.PARENT_SPAN_ATTRIBUTE, parentSpan);
-    }
+    exchange.getAttributes().put(AdviceUtils.PARENT_SPAN_ATTRIBUTE, parentSpan);
 
-    final Span span =
-        TRACER.spanBuilder("DispatcherHandler.handle").setSpanKind(SERVER).startSpan();
+    final Span span = TRACER.spanBuilder("DispatcherHandler.handle").startSpan();
     DECORATE.afterStart(span);
     exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, span);
 
@@ -58,6 +57,9 @@ public class DispatcherHandlerAdvice {
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Object> mono) {
+    if (spanWithScope == null) {
+      return;
+    }
     if (throwable == null && mono != null) {
       final Function<? super Mono<Object>, ? extends Publisher<Object>> function =
           ReactorCoreAdviceUtils.finishSpanNextOrError();
