@@ -25,8 +25,7 @@ public class DDDecoratorsFactory {
             new ResourceNameDecorator(),
             new ServiceNameDecorator(),
             new ServiceNameDecorator("service", false),
-            new ServletContextDecorator(),
-            new SpanTypeDecorator())) {
+            new ServletContextDecorator())) {
 
       if (Config.get().isDecoratorEnabled(decorator.getClass().getSimpleName())) {
         decorators.add(decorator);
