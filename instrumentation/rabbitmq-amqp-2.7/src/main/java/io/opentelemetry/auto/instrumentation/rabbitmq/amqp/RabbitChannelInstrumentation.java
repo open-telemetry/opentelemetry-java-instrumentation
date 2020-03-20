@@ -80,8 +80,6 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".RabbitDecorator",
-      packageName + ".RabbitDecorator$1",
-      packageName + ".RabbitDecorator$2",
       packageName + ".TextMapInjectAdapter",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",

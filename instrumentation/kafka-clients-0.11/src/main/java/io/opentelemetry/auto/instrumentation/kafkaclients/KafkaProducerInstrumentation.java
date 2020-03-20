@@ -57,8 +57,6 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".KafkaDecorator",
-      packageName + ".KafkaDecorator$1",
-      packageName + ".KafkaDecorator$2",
       packageName + ".TextMapInjectAdapter",
       KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
     };
