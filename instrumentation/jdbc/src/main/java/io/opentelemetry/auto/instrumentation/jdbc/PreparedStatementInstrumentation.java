@@ -79,7 +79,11 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("database.query").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(DECORATE.spanNameOnPreparedStatement(statement))
+              .setSpanKind(CLIENT)
+              .startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onPreparedStatement(span, statement);

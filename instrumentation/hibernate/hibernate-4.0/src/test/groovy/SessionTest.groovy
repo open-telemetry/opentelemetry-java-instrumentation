@@ -83,7 +83,6 @@ class SessionTest extends AbstractHibernateTest {
             spanKind CLIENT
             tags {
               "$MoreTags.SERVICE_NAME" "h2"
-              "$MoreTags.RESOURCE_NAME" String
               "$MoreTags.SPAN_TYPE" "sql"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" "h2"
@@ -175,11 +174,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(2) {
+          operationName ~/^select /
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^select /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -204,7 +203,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(3)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -343,7 +341,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(2)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -427,7 +424,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" String
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -530,11 +526,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(5) {
+          operationName ~/^insert /
           spanKind CLIENT
           childOf span(4)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^insert /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -545,11 +541,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(6) {
+          operationName ~/^delete /
           spanKind CLIENT
           childOf span(4)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^delete /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
@@ -581,11 +577,11 @@ class SessionTest extends AbstractHibernateTest {
           }
         }
         span(9) {
+          operationName ~/^insert /
           spanKind CLIENT
           childOf span(8)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.RESOURCE_NAME" ~/^insert /
             "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
