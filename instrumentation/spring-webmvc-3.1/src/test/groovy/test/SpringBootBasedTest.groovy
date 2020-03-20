@@ -21,7 +21,7 @@ import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
 import io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext

@@ -27,10 +27,14 @@ public abstract class HttpServerTypedTracer<
     extends ServerTypedTracer<T, REQUEST, RESPONSE> {
 
   @Override
-  protected Span.Builder buildSpan(REQUEST request, Span.Builder spanBuilder) {
-    SpanContext extract = tracer.getHttpTextFormat().extract(request, getGetter());
+  protected Span.Builder buildSpan(final REQUEST request, final Span.Builder spanBuilder) {
+    final SpanContext extract = tracer.getHttpTextFormat().extract(request, getGetter());
     if (extract.isValid()) {
       spanBuilder.setParent(extract);
+    } else {
+      // explicitly setting "no parent" in case a span was propagated to this thread
+      // by the java-concurrent instrumentation when the thread was started
+      spanBuilder.setNoParent();
     }
     return super.buildSpan(request, spanBuilder);
   }

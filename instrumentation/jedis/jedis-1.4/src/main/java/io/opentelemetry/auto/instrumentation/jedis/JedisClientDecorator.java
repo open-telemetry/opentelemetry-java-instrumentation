@@ -24,7 +24,7 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Comma
   public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jedis-1.4");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jedis-1.4");
 
   @Override
   protected String service() {

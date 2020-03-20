@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.concurrent.forkjoin.ForkJoinTask
 import spock.lang.Shared

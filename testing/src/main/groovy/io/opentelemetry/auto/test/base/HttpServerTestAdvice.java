@@ -24,7 +24,8 @@ import net.bytebuddy.asm.Advice;
 
 public abstract class HttpServerTestAdvice {
 
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   /**
    * This advice should be applied at the root of a http server request to validate the

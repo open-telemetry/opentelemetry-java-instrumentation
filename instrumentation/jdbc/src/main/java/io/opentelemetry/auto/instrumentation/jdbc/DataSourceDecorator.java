@@ -23,7 +23,7 @@ public class DataSourceDecorator extends BaseDecorator {
   public static final DataSourceDecorator DECORATE = new DataSourceDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jdbc");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jdbc");
 
   @Override
   protected String getComponentName() {

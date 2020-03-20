@@ -24,7 +24,7 @@ class OpenTelemetryApiTest extends AgentTestRunner {
 
   def "capture span, kind, attributes, and status"() {
     when:
-    def tracer = OpenTelemetry.getTracerFactory().get("test")
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
     def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
     testSpan.setAttribute("string", "1")
     testSpan.setAttribute("long", 2)
@@ -54,7 +54,7 @@ class OpenTelemetryApiTest extends AgentTestRunner {
 
   def "capture span with implicit parent"() {
     when:
-    def tracer = OpenTelemetry.getTracerFactory().get("test")
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
     runUnderTrace("parent") {
       def testSpan = tracer.spanBuilder("test").startSpan()
       testSpan.end()
@@ -81,7 +81,7 @@ class OpenTelemetryApiTest extends AgentTestRunner {
 
   def "capture span with explicit parent"() {
     when:
-    def tracer = OpenTelemetry.getTracerFactory().get("test")
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
     def testSpan = tracer.spanBuilder("test").setParent(parentSpan).startSpan()
     testSpan.end()
@@ -108,7 +108,7 @@ class OpenTelemetryApiTest extends AgentTestRunner {
 
   def "capture span with explicit no parent"() {
     when:
-    def tracer = OpenTelemetry.getTracerFactory().get("test")
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
     def parentScope = tracer.withSpan(parentSpan)
     def testSpan = tracer.spanBuilder("test").setNoParent().startSpan()
@@ -139,7 +139,7 @@ class OpenTelemetryApiTest extends AgentTestRunner {
 
   def "capture span with remote parent"() {
     when:
-    def tracer = OpenTelemetry.getTracerFactory().get("test")
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
     def testSpan = tracer.spanBuilder("test").setParent(parentSpan.getContext()).startSpan()
     testSpan.end()
@@ -166,7 +166,7 @@ class OpenTelemetryApiTest extends AgentTestRunner {
 
   def "capture name update"() {
     when:
-    def tracer = OpenTelemetry.getTracerFactory().get("test")
+    def tracer = OpenTelemetry.getTracerProvider().get("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.updateName("test2")
     testSpan.end()

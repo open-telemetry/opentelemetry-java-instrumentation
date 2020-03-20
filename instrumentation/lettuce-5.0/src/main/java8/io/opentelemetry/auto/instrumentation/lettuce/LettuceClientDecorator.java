@@ -26,7 +26,7 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   public static final LettuceClientDecorator DECORATE = new LettuceClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.lettuce-5.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.lettuce-5.0");
 
   @Override
   protected String service() {

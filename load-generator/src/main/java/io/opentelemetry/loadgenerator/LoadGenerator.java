@@ -33,7 +33,7 @@ import picocli.CommandLine.Option;
 public class LoadGenerator implements Callable<Integer> {
 
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   @Option(names = "--rate", required = true, description = "rate, per second, to generate traces")
   private int rate;

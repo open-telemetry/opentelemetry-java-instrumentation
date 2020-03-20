@@ -75,12 +75,12 @@ public class Servlet3Advice {
 
     final Span.Builder builder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
-    try {
-      final SpanContext extractedContext =
-          TRACER.getHttpTextFormat().extract(httpServletRequest, GETTER);
-      builder.setParent(extractedContext);
-    } catch (final IllegalArgumentException e) {
-      // Couldn't extract a context. We should treat this as a root span. '
+    final SpanContext extract = TRACER.getHttpTextFormat().extract(httpServletRequest, GETTER);
+    if (extract.isValid()) {
+      builder.setParent(extract);
+    } else {
+      // explicitly setting "no parent" in case a span was propagated to this thread
+      // by the java-concurrent instrumentation when the thread was started
       builder.setNoParent();
     }
     final Span span = builder.startSpan();

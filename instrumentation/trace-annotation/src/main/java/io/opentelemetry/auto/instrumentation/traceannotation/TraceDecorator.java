@@ -23,7 +23,7 @@ public class TraceDecorator extends BaseDecorator {
   public static final TraceDecorator DECORATE = new TraceDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.trace-annotation");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.trace-annotation");
 
   @Override
   protected String getComponentName() {

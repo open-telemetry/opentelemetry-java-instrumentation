@@ -30,7 +30,7 @@ public class JMSDecorator extends ClientDecorator {
   public static final JMSDecorator DECORATE = new JMSDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jms-1.1");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jms-1.1");
 
   @Override
   protected String service() {

@@ -61,10 +61,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
     if (request instanceof DocumentRequest) {
       final DocumentRequest req = (DocumentRequest) request;
       span.setAttribute("elasticsearch.request.write.type", req.type());
-      final String routing = req.routing();
-      if (routing != null) {
-        span.setAttribute("elasticsearch.request.write.routing", routing);
-      }
+      span.setAttribute("elasticsearch.request.write.routing", req.routing());
     }
   }
 

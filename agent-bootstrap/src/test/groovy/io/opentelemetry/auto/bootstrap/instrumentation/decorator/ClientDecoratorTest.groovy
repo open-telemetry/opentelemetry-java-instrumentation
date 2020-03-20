@@ -31,9 +31,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    if (serviceName != null) {
-      1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
-    }
+    1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _

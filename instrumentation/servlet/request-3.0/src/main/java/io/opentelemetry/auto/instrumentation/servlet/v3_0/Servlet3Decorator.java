@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 public class Servlet3Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.servlet-3.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet-3.0");
 
   public static final Servlet3Decorator DECORATE = new Servlet3Decorator();
 

@@ -71,17 +71,17 @@ public class AgentInstaller {
 
     final ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
-      // calling (shaded) OpenTelemetry.getTracerFactory() with context class loader set to the
+      // calling (shaded) OpenTelemetry.getTracerProvider() with context class loader set to the
       // agent class loader, so that SPI finds the agent's (isolated) SDK, and (shaded)
       // OpenTelemetry registers it, and then when instrumentation calls (shaded)
-      // OpenTelemetry.getTracerFactory() later, they get back the agent's (isolated) SDK
+      // OpenTelemetry.getTracerProvider() later, they get back the agent's (isolated) SDK
       //
       // but if we don't trigger this early registration, then if instrumentation is the first to
-      // call (shaded) OpenTelemetry.getTracerFactory(), then SPI can't see the agent class loader,
+      // call (shaded) OpenTelemetry.getTracerProvider(), then SPI can't see the agent class loader,
       // and so (shaded) OpenTelemetry registers the no-op TracerFactory, and it cannot be replaced
       // later
       Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
-      OpenTelemetry.getTracerFactory();
+      OpenTelemetry.getTracerProvider();
     } finally {
       Thread.currentThread().setContextClassLoader(savedContextClassLoader);
     }

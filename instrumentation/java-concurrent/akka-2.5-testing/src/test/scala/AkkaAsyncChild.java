@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AkkaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;

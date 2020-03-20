@@ -38,7 +38,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jaxrs-1.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-1.0");
 
   @Override
   protected String getComponentName() {

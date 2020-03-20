@@ -24,7 +24,7 @@ public class TextMapInjectAdapter implements HttpTextFormat.Setter<Headers> {
   public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
 
   @Override
-  public void put(final Headers headers, final String key, final String value) {
+  public void set(final Headers headers, final String key, final String value) {
     headers.remove(key).add(key, value.getBytes(StandardCharsets.UTF_8));
   }
 }

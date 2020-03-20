@@ -25,7 +25,7 @@ import io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.eclipse.jetty.servlet.ServletHandler
 import spock.lang.Retry
 

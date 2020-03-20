@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture

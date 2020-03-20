@@ -21,7 +21,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 class SlickUtils {
-  val TRACER: Tracer = OpenTelemetry.getTracerFactory.get("io.opentelemetry.auto")
+  val TRACER: Tracer = OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
   import SlickUtils._
 

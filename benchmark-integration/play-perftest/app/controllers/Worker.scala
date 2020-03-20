@@ -5,7 +5,7 @@ import io.opentelemetry.trace.Tracer
 import java.util.concurrent.TimeUnit
 
 object Worker {
-  val TRACER: Tracer = OpenTelemetry.getTracerFactory.get("io.opentelemetry.auto")
+  val TRACER: Tracer = OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
   def doWork(workTimeMS: Long) = {
     val span = TRACER.spanBuilder("work").startSpan()

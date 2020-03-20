@@ -26,7 +26,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
   public static final MemcacheClientDecorator DECORATE = new MemcacheClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.spymemcached-2.12");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spymemcached-2.12");
 
   @Override
   protected String service() {

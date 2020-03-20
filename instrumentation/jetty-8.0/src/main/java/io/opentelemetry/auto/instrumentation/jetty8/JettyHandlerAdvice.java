@@ -26,6 +26,7 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -44,11 +45,12 @@ public class JettyHandlerAdvice {
 
     final String resourceName = req.getMethod() + " " + source.getClass().getName();
     final Span.Builder spanBuilder = TRACER.spanBuilder(resourceName).setSpanKind(SERVER);
-    try {
-      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER);
+    final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER);
+    if (extractedContext.isValid()) {
       spanBuilder.setParent(extractedContext);
-    } catch (final IllegalArgumentException e) {
-      // Couldn't extract a context. We should treat this as a root span.
+    } else {
+      // explicitly setting "no parent" in case a span was propagated to this thread
+      // by the java-concurrent instrumentation when the thread was started
       spanBuilder.setNoParent();
     }
     final Span span = spanBuilder.startSpan();
@@ -75,8 +77,9 @@ public class JettyHandlerAdvice {
       return;
     }
     final Span span = spanWithScope.getSpan();
-    if (req.getUserPrincipal() != null) {
-      span.setAttribute(MoreTags.USER_NAME, req.getUserPrincipal().getName());
+    final Principal userPrincipal = req.getUserPrincipal();
+    if (userPrincipal != null) {
+      span.setAttribute(MoreTags.USER_NAME, userPrincipal.getName());
     }
     if (throwable != null) {
       DECORATE.onResponse(span, resp);

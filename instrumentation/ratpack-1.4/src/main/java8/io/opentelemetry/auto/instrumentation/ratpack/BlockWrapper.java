@@ -25,7 +25,7 @@ import ratpack.func.Block;
 @Slf4j
 public class BlockWrapper implements Block {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.ratpack-1.4");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.ratpack-1.4");
 
   private final Block delegate;
   private final Span span;

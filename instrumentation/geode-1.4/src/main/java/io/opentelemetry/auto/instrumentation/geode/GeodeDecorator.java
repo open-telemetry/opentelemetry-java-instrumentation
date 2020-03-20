@@ -24,7 +24,7 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
   public static GeodeDecorator DECORATE = new GeodeDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.geode-1.7");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.geode-1.7");
 
   @Override
   protected String dbType() {

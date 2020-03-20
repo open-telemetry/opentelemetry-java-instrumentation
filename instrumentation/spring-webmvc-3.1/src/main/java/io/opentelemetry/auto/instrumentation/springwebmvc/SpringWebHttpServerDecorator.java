@@ -38,7 +38,7 @@ public class SpringWebHttpServerDecorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.spring-webmvc-3.1");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webmvc-3.1");
   public static final SpringWebHttpServerDecorator DECORATE = new SpringWebHttpServerDecorator();
   public static final SpringWebHttpServerDecorator DECORATE_RENDER =
       new SpringWebHttpServerDecorator() {
@@ -143,12 +143,10 @@ public class SpringWebHttpServerDecorator
   }
 
   public Span onRender(final Span span, final ModelAndView mv) {
-    final String viewName = mv.getViewName();
-    if (viewName != null) {
-      span.setAttribute("view.name", viewName);
-    }
-    if (mv.getView() != null) {
-      span.setAttribute("view.type", mv.getView().getClass().getName());
+    span.setAttribute("view.name", mv.getViewName());
+    final View view = mv.getView();
+    if (view != null) {
+      span.setAttribute("view.type", view.getClass().getName());
     }
     return span;
   }

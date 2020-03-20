@@ -23,7 +23,7 @@ public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpUriRe
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
   @Override
-  public void put(final HttpUriRequest carrier, final String key, final String value) {
+  public void set(final HttpUriRequest carrier, final String key, final String value) {
     carrier.addHeader(key, value);
   }
 }

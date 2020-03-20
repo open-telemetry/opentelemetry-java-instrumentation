@@ -87,7 +87,9 @@ shadowJar {
 
   // relocate OpenTelemetry API usage
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"
+  relocate "io.opentelemetry.common", "io.opentelemetry.auto.shaded.io.opentelemetry.common"
   relocate "io.opentelemetry.context", "io.opentelemetry.auto.shaded.io.opentelemetry.context"
+  relocate "io.opentelemetry.correlationcontext", "io.opentelemetry.auto.shaded.io.opentelemetry.correlationcontext"
   relocate "io.opentelemetry.distributedcontext", "io.opentelemetry.auto.shaded.io.opentelemetry.distributedcontext"
   relocate "io.opentelemetry.internal", "io.opentelemetry.auto.shaded.io.opentelemetry.internal"
   relocate "io.opentelemetry.metrics", "io.opentelemetry.auto.shaded.io.opentelemetry.metrics"

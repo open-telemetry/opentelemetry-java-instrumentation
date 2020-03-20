@@ -61,26 +61,11 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
     if (contextStore != null) {
       final RequestMeta requestMeta = contextStore.get(originalRequest);
       if (requestMeta != null) {
-        final String bucketName = requestMeta.getBucketName();
-        if (bucketName != null) {
-          span.setAttribute("aws.bucket.name", bucketName);
-        }
-        final String queueUrl = requestMeta.getQueueUrl();
-        if (queueUrl != null) {
-          span.setAttribute("aws.queue.url", queueUrl);
-        }
-        final String queueName = requestMeta.getQueueName();
-        if (queueName != null) {
-          span.setAttribute("aws.queue.name", queueName);
-        }
-        final String streamName = requestMeta.getStreamName();
-        if (streamName != null) {
-          span.setAttribute("aws.stream.name", streamName);
-        }
-        final String tableName = requestMeta.getTableName();
-        if (tableName != null) {
-          span.setAttribute("aws.table.name", tableName);
-        }
+        span.setAttribute("aws.bucket.name", requestMeta.getBucketName());
+        span.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
+        span.setAttribute("aws.queue.name", requestMeta.getQueueName());
+        span.setAttribute("aws.stream.name", requestMeta.getStreamName());
+        span.setAttribute("aws.table.name", requestMeta.getTableName());
       }
     }
 

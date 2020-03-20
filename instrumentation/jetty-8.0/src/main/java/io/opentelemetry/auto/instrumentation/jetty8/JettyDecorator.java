@@ -29,7 +29,7 @@ public class JettyDecorator
   public static final JettyDecorator DECORATE = new JettyDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jetty-8.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jetty-8.0");
 
   @Override
   protected String getComponentName() {

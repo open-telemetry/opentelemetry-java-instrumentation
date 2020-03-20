@@ -22,7 +22,7 @@ import io.opentelemetry.trace.Tracer;
 public class HttpServletResponseDecorator extends BaseDecorator {
   public static final HttpServletResponseDecorator DECORATE = new HttpServletResponseDecorator();
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.servlet");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
 
   @Override
   protected String getComponentName() {

@@ -81,11 +81,12 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
-      try {
-        final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+      if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
-      } catch (final IllegalArgumentException e) {
-        // Couldn't extract a context. We should treat this as a root span.
+      } else {
+        // explicitly setting "no parent" in case a span was propagated to this thread
+        // by the java-concurrent instrumentation when the thread was started
         spanBuilder.setNoParent();
       }
 

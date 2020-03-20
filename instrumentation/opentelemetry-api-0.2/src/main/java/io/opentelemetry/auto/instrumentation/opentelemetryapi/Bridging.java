@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import unshaded.io.opentelemetry.trace.AttributeValue;
+import unshaded.io.opentelemetry.common.AttributeValue;
 import unshaded.io.opentelemetry.trace.EndSpanOptions;
 import unshaded.io.opentelemetry.trace.Span;
 import unshaded.io.opentelemetry.trace.SpanContext;
@@ -26,7 +26,7 @@ import unshaded.io.opentelemetry.trace.SpanId;
 import unshaded.io.opentelemetry.trace.Status;
 import unshaded.io.opentelemetry.trace.TraceFlags;
 import unshaded.io.opentelemetry.trace.TraceId;
-import unshaded.io.opentelemetry.trace.Tracestate;
+import unshaded.io.opentelemetry.trace.TraceState;
 
 /**
  * This class translates between the (unshaded) OpenTelemetry API that the user brings and the
@@ -53,13 +53,13 @@ public class Bridging {
           toUnshaded(shadedContext.getTraceId()),
           toUnshaded(shadedContext.getSpanId()),
           toUnshaded(shadedContext.getTraceFlags()),
-          toUnshaded(shadedContext.getTracestate()));
+          toUnshaded(shadedContext.getTraceState()));
     } else {
       return SpanContext.create(
           toUnshaded(shadedContext.getTraceId()),
           toUnshaded(shadedContext.getSpanId()),
           toUnshaded(shadedContext.getTraceFlags()),
-          toUnshaded(shadedContext.getTracestate()));
+          toUnshaded(shadedContext.getTraceState()));
     }
   }
 
@@ -69,22 +69,22 @@ public class Bridging {
           toShaded(unshadedContext.getTraceId()),
           toShaded(unshadedContext.getSpanId()),
           toShaded(unshadedContext.getTraceFlags()),
-          toShaded(unshadedContext.getTracestate()));
+          toShaded(unshadedContext.getTraceState()));
     } else {
       return io.opentelemetry.trace.SpanContext.create(
           toShaded(unshadedContext.getTraceId()),
           toShaded(unshadedContext.getSpanId()),
           toShaded(unshadedContext.getTraceFlags()),
-          toShaded(unshadedContext.getTracestate()));
+          toShaded(unshadedContext.getTraceState()));
     }
   }
 
-  public static Map<String, io.opentelemetry.trace.AttributeValue> toShaded(
+  public static Map<String, io.opentelemetry.common.AttributeValue> toShaded(
       final Map<String, AttributeValue> unshadedAttributes) {
-    final Map<String, io.opentelemetry.trace.AttributeValue> shadedAttributes = new HashMap<>();
+    final Map<String, io.opentelemetry.common.AttributeValue> shadedAttributes = new HashMap<>();
     for (final Map.Entry<String, AttributeValue> entry : unshadedAttributes.entrySet()) {
       final AttributeValue value = entry.getValue();
-      final io.opentelemetry.trace.AttributeValue shadedValue = toShadedOrNull(value);
+      final io.opentelemetry.common.AttributeValue shadedValue = toShadedOrNull(value);
       if (shadedValue != null) {
         shadedAttributes.put(entry.getKey(), shadedValue);
       }
@@ -92,20 +92,20 @@ public class Bridging {
     return shadedAttributes;
   }
 
-  public static io.opentelemetry.trace.AttributeValue toShadedOrNull(
+  public static io.opentelemetry.common.AttributeValue toShadedOrNull(
       final AttributeValue unshadedValue) {
     switch (unshadedValue.getType()) {
       case STRING:
-        return io.opentelemetry.trace.AttributeValue.stringAttributeValue(
+        return io.opentelemetry.common.AttributeValue.stringAttributeValue(
             unshadedValue.getStringValue());
       case LONG:
-        return io.opentelemetry.trace.AttributeValue.longAttributeValue(
+        return io.opentelemetry.common.AttributeValue.longAttributeValue(
             unshadedValue.getLongValue());
       case BOOLEAN:
-        return io.opentelemetry.trace.AttributeValue.booleanAttributeValue(
+        return io.opentelemetry.common.AttributeValue.booleanAttributeValue(
             unshadedValue.getBooleanValue());
       case DOUBLE:
-        return io.opentelemetry.trace.AttributeValue.doubleAttributeValue(
+        return io.opentelemetry.common.AttributeValue.doubleAttributeValue(
             unshadedValue.getDoubleValue());
       default:
         log.debug("unexpected attribute type: {}", unshadedValue.getType());
@@ -158,9 +158,9 @@ public class Bridging {
     return TraceFlags.fromByte(shadedTraceFlags.getByte());
   }
 
-  private static Tracestate toUnshaded(final io.opentelemetry.trace.Tracestate shadedTraceState) {
-    final Tracestate.Builder builder = Tracestate.builder();
-    for (final io.opentelemetry.trace.Tracestate.Entry entry : shadedTraceState.getEntries()) {
+  private static TraceState toUnshaded(final io.opentelemetry.trace.TraceState shadedTraceState) {
+    final TraceState.Builder builder = TraceState.builder();
+    for (final io.opentelemetry.trace.TraceState.Entry entry : shadedTraceState.getEntries()) {
       builder.set(entry.getKey(), entry.getValue());
     }
     return builder.build();
@@ -182,10 +182,10 @@ public class Bridging {
     return io.opentelemetry.trace.TraceFlags.fromByte(unshadedTraceFlags.getByte());
   }
 
-  private static io.opentelemetry.trace.Tracestate toShaded(final Tracestate unshadedTraceState) {
-    final io.opentelemetry.trace.Tracestate.Builder builder =
-        io.opentelemetry.trace.Tracestate.builder();
-    for (final Tracestate.Entry entry : unshadedTraceState.getEntries()) {
+  private static io.opentelemetry.trace.TraceState toShaded(final TraceState unshadedTraceState) {
+    final io.opentelemetry.trace.TraceState.Builder builder =
+        io.opentelemetry.trace.TraceState.builder();
+    for (final TraceState.Entry entry : unshadedTraceState.getEntries()) {
       builder.set(entry.getKey(), entry.getValue());
     }
     return builder.build();
