@@ -16,9 +16,9 @@
 package io.opentelemetry.auto.instrumentation.opentelemetryapi;
 
 import unshaded.io.opentelemetry.trace.Tracer;
-import unshaded.io.opentelemetry.trace.TracerFactory;
+import unshaded.io.opentelemetry.trace.TracerProvider;
 
-public class UnshadedTracerFactory implements TracerFactory {
+public class UnshadedTracerProvider implements TracerProvider {
 
   @Override
   public Tracer get(final String instrumentationName) {

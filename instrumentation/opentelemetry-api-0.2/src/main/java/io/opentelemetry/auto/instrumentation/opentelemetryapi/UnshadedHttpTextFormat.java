@@ -76,7 +76,7 @@ public class UnshadedHttpTextFormat implements HttpTextFormat<SpanContext> {
 
     @Override
     public void set(final C carrier, final String key, final String value) {
-      shadedSetter.put(carrier, key, value);
+      shadedSetter.set(carrier, key, value);
     }
   }
 }
