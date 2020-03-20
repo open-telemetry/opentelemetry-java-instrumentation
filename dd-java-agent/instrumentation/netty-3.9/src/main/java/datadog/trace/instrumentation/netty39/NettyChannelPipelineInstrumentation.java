@@ -147,6 +147,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     public static int checkDepth(
         @Advice.This final ChannelPipeline pipeline,
         @Advice.Argument(1) final ChannelHandler handler) {
+      // Pipelines are created once as a factory and then copied multiple times using the same add
+      // methods as we are hooking. If our handler has already been added we need to remove it so we
+      // don't end up with duplicates (this throws an exception)
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
@@ -174,6 +177,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     public static int checkDepth(
         @Advice.This final ChannelPipeline pipeline,
         @Advice.Argument(2) final ChannelHandler handler) {
+      // Pipelines are created once as a factory and then copied multiple times using the same add
+      // methods as we are hooking. If our handler has already been added we need to remove it so we
+      // don't end up with duplicates (this throws an exception)
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
