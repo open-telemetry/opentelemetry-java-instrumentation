@@ -18,7 +18,7 @@ package client
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.netty41.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest

@@ -30,12 +30,13 @@ public final class TracingHandler implements Handler {
   public static Handler INSTANCE = new TracingHandler();
 
   /**
-   * This constant is copied over from io.opentelemetry.auto.instrumentation.netty41.AttributeKeys.
-   * The key string must be kept consistent.
+   * This constant is copied over from
+   * io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys. The key string must be kept
+   * consistent.
    */
   public static final AttributeKey<Span> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
-          "io.opentelemetry.auto.instrumentation.netty41.server.HttpServerTracingHandler.span");
+          "io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler.span");
 
   @Override
   public void handle(final Context ctx) {

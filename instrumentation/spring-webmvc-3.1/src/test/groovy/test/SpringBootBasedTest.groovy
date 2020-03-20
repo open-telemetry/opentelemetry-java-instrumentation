@@ -18,8 +18,8 @@ package test
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.servlet3.Servlet3Decorator
-import io.opentelemetry.auto.instrumentation.springweb.SpringWebHttpServerDecorator
+import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
+import io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.SpanData

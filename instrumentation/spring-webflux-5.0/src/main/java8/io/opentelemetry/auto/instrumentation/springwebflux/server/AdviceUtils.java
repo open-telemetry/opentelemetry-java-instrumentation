@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 
-import io.opentelemetry.auto.instrumentation.reactor.core.ReactorCoreAdviceUtils;
+import io.opentelemetry.auto.instrumentation.reactor.ReactorCoreAdviceUtils;
 import io.opentelemetry.trace.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;

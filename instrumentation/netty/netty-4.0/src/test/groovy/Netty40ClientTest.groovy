@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.netty40.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient

@@ -15,7 +15,7 @@
  */
 package client
 
-import io.opentelemetry.auto.instrumentation.netty40.client.NettyHttpClientDecorator
+import io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import play.libs.ws.WS
 import spock.lang.AutoCleanup

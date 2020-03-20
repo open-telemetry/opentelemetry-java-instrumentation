@@ -33,7 +33,7 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
-import io.opentelemetry.auto.instrumentation.netty40.server.NettyHttpServerDecorator
+import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.test.base.HttpServerTest
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
