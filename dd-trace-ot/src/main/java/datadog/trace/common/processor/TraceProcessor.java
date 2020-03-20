@@ -2,6 +2,8 @@ package datadog.trace.common.processor;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.Config;
+import datadog.trace.common.processor.rule.AnalyticsSampleRateRule;
+import datadog.trace.common.processor.rule.DBStatementRule;
 import datadog.trace.common.processor.rule.ErrorRule;
 import datadog.trace.common.processor.rule.ResourceNameRule;
 import datadog.trace.common.processor.rule.SpanTypeRule;
@@ -19,6 +21,7 @@ public class TraceProcessor {
   final Rule[] DEFAULT_RULES =
       new Rule[] {
         // Rules are applied in order.
+        new DBStatementRule(),
         new ResourceNameRule(),
         new SpanTypeRule(),
         new Status5XXRule(),

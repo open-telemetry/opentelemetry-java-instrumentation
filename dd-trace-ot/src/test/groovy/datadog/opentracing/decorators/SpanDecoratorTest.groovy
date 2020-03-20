@@ -333,24 +333,18 @@ class SpanDecoratorTest extends DDSpecification {
 
   def "DBStatementAsResource should not interact on Mongo queries"() {
     when:
-    span.setResourceName("not-change-me")
-    Tags.COMPONENT.set(span, "java-mongo")
-    Tags.DB_STATEMENT.set(span, something)
+    span.setResourceName("existing")
+    Tags.COMPONENT.set(span, component)
+    Tags.DB_STATEMENT.set(span, statement)
+    span.finish()
 
     then:
-    span.getResourceName() == "not-change-me"
-
-
-    when:
-    span.setResourceName("change-me")
-    Tags.COMPONENT.set(span, "other-contrib")
-    Tags.DB_STATEMENT.set(span, something)
-
-    then:
-    span.getResourceName() == something
+    span.getResourceName() == resource
 
     where:
-    something = "fake-query"
+    component    | statement    | resource
+    "java-mongo" | "some-query" | "existing"
+    "other"      | "some-query" | "some-query"
   }
 
   def "set error flag when error tag reported"() {
