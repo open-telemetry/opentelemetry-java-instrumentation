@@ -18,7 +18,6 @@ public class DDDecoratorsFactory {
             new DBTypeDecorator(),
             new ForceManualDropDecorator(),
             new ForceManualKeepDecorator(),
-            new OperationDecorator(),
             new PeerServiceDecorator(),
             new ServiceNameDecorator(),
             new ServiceNameDecorator("service", false),

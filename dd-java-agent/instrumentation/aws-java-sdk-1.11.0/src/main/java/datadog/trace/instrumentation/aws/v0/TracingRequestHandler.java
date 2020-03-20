@@ -29,7 +29,7 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    final AgentSpan span = startSpan("aws.command");
+    final AgentSpan span = startSpan("aws.http");
     decorate.afterStart(span);
     decorate.onRequest(span, request);
     request.addHandlerContext(SCOPE_CONTEXT_KEY, activateSpan(span, true));

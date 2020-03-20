@@ -223,18 +223,6 @@ class SpanDecoratorTest extends DDSpecification {
     span.serviceName == "peer-service"
   }
 
-  def "set operation name"() {
-    when:
-    Tags.COMPONENT.set(span, component)
-
-    then:
-    span.getOperationName() == operationName
-
-    where:
-    component << OperationDecorator.MAPPINGS.keySet()
-    operationName << OperationDecorator.MAPPINGS.values()
-  }
-
   def "set resource name"() {
     when:
     span.setTag(DDTags.RESOURCE_NAME, name)

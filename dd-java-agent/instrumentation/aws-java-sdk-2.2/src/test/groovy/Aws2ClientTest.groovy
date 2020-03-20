@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
-class AwsClientTest extends AgentTestRunner {
+class Aws2ClientTest extends AgentTestRunner {
 
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER = StaticCredentialsProvider
     .create(AwsBasicCredentials.create("my-access-key", "my-secret-key"))
