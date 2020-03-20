@@ -238,6 +238,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "set resource name"() {
     when:
     span.setTag(DDTags.RESOURCE_NAME, name)
+    span.finish()
 
     then:
     span.getResourceName() == name
@@ -249,6 +250,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "set span type"() {
     when:
     span.setTag(DDTags.SPAN_TYPE, type)
+    span.finish()
 
     then:
     span.getSpanType() == type
@@ -285,26 +287,26 @@ class SpanDecoratorTest extends DDSpecification {
     span.setTag(ANALYTICS_SAMPLE_RATE, rate)
 
     then:
-    span.metrics == result
+    span.metrics.get(ANALYTICS_SAMPLE_RATE) == result
 
     where:
     rate  | result
-    00    | [(ANALYTICS_SAMPLE_RATE): 0]
-    1     | [(ANALYTICS_SAMPLE_RATE): 1]
-    0f    | [(ANALYTICS_SAMPLE_RATE): 0]
-    1f    | [(ANALYTICS_SAMPLE_RATE): 1]
-    0.1   | [(ANALYTICS_SAMPLE_RATE): 0.1]
-    1.1   | [(ANALYTICS_SAMPLE_RATE): 1.1]
-    -1    | [(ANALYTICS_SAMPLE_RATE): -1]
-    10    | [(ANALYTICS_SAMPLE_RATE): 10]
-    "00"  | [(ANALYTICS_SAMPLE_RATE): 0]
-    "1"   | [(ANALYTICS_SAMPLE_RATE): 1]
-    "1.0" | [(ANALYTICS_SAMPLE_RATE): 1]
-    "0"   | [(ANALYTICS_SAMPLE_RATE): 0]
-    "0.1" | [(ANALYTICS_SAMPLE_RATE): 0.1]
-    "1.1" | [(ANALYTICS_SAMPLE_RATE): 1.1]
-    "-1"  | [(ANALYTICS_SAMPLE_RATE): -1]
-    "str" | [:]
+    00    | 0
+    1     | 1
+    0f    | 0
+    1f    | 1
+    0.1   | 0.1
+    1.1   | 1.1
+    -1    | -1
+    10    | 10
+    "00"  | 0
+    "1"   | 1
+    "1.0" | 1
+    "0"   | 0
+    "0.1" | 0.1
+    "1.1" | 1.1
+    "-1"  | -1
+    "str" | null
   }
 
   def "set priority sampling via tag"() {
@@ -354,6 +356,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "set error flag when error tag reported"() {
     when:
     Tags.ERROR.set(span, error)
+    span.finish()
 
     then:
     span.isError() == error
@@ -367,6 +370,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "#attribute decorators apply to builder too"() {
     setup:
     def span = tracer.buildSpan("decorator.test").withTag(name, value).start()
+    span.finish()
 
     expect:
     span.context()."$attribute" == value
@@ -381,6 +385,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "decorators apply to builder too"() {
     when:
     def span = tracer.buildSpan("decorator.test").withTag("sn.tag1", "some val").start()
+    span.finish()
 
     then:
     span.serviceName == "some val"
@@ -393,12 +398,14 @@ class SpanDecoratorTest extends DDSpecification {
 
     when:
     span = tracer.buildSpan("decorator.test").withTag("error", "true").start()
+    span.finish()
 
     then:
     span.error
 
     when:
     span = tracer.buildSpan("decorator.test").withTag(Tags.DB_STATEMENT.key, "some-statement").start()
+    span.finish()
 
     then:
     span.resourceName == "some-statement"

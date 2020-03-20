@@ -15,7 +15,6 @@ public class DDDecoratorsFactory {
 
     for (final AbstractDecorator decorator :
         Arrays.asList(
-            new AnalyticsSampleRateDecorator(),
             new DBStatementAsResourceName(),
             new DBTypeDecorator(),
             new ForceManualDropDecorator(),

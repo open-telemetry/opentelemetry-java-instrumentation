@@ -25,6 +25,7 @@ public class TraceProcessor {
         new ErrorRule(),
         new URLAsResourceNameRule(),
         new Status404Rule(),
+        new AnalyticsSampleRateRule(),
       };
 
   private final List<Rule> rules;
