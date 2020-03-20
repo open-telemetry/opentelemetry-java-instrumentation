@@ -34,6 +34,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.jboss.netty.channel.Channel",
+        "org.jboss.netty.handler.codec.http.DefaultHttpHeaders", // Not in 3.7
         "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
         );
   }
