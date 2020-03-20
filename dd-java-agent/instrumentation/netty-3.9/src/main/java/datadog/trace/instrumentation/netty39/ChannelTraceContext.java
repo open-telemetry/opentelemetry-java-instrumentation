@@ -6,13 +6,13 @@ import datadog.trace.context.TraceScope;
 import lombok.Data;
 
 @Data
-public class ChannelState {
-  public static class Factory implements ContextStore.Factory<ChannelState> {
+public class ChannelTraceContext {
+  public static class Factory implements ContextStore.Factory<ChannelTraceContext> {
     public static final Factory INSTANCE = new Factory();
 
     @Override
-    public ChannelState create() {
-      return new ChannelState();
+    public ChannelTraceContext create() {
+      return new ChannelTraceContext();
     }
   }
 

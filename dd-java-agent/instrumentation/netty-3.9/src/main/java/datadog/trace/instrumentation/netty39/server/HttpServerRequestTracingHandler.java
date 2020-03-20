@@ -10,7 +10,7 @@ import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan.Context;
-import datadog.trace.instrumentation.netty39.ChannelState;
+import datadog.trace.instrumentation.netty39.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -19,20 +19,21 @@ import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandler {
 
-  private final ContextStore<Channel, ChannelState> contextStore;
+  private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
-  public HttpServerRequestTracingHandler(final ContextStore<Channel, ChannelState> contextStore) {
+  public HttpServerRequestTracingHandler(
+      final ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
   public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent msg)
       throws Exception {
-    final ChannelState channelState =
-        contextStore.putIfAbsent(ctx.getChannel(), ChannelState.Factory.INSTANCE);
+    final ChannelTraceContext channelTraceContext =
+        contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
     if (!(msg.getMessage() instanceof HttpRequest)) {
-      final AgentSpan span = channelState.getServerSpan();
+      final AgentSpan span = channelTraceContext.getServerSpan();
       if (span == null) {
         ctx.sendUpstream(msg); // superclass does not throw
       } else {
@@ -56,7 +57,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
       scope.setAsyncPropagation(true);
 
-      channelState.setServerSpan(span);
+      channelTraceContext.setServerSpan(span);
 
       try {
         ctx.sendUpstream(msg);

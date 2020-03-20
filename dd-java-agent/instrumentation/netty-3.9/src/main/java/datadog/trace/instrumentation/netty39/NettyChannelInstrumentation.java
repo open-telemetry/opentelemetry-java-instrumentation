@@ -46,7 +46,9 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".ChannelState", packageName + ".ChannelState$Factory"};
+    return new String[] {
+      packageName + ".ChannelTraceContext", packageName + ".ChannelTraceContext$Factory"
+    };
   }
 
   @Override
@@ -63,7 +65,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "org.jboss.netty.channel.Channel", ChannelState.class.getName());
+        "org.jboss.netty.channel.Channel", ChannelTraceContext.class.getName());
   }
 
   public static class ChannelConnectAdvice {
@@ -73,11 +75,11 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
       if (scope != null) {
         final TraceScope.Continuation continuation = scope.capture();
         if (continuation != null) {
-          final ContextStore<Channel, ChannelState> contextStore =
-              InstrumentationContext.get(Channel.class, ChannelState.class);
+          final ContextStore<Channel, ChannelTraceContext> contextStore =
+              InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
           if (!contextStore
-              .putIfAbsent(channel, ChannelState.Factory.INSTANCE)
+              .putIfAbsent(channel, ChannelTraceContext.Factory.INSTANCE)
               .compareAndSet(null, continuation)) {
             continuation.close();
           }

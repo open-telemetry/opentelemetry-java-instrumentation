@@ -63,8 +63,8 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ChannelState",
-      packageName + ".ChannelState$Factory",
+      packageName + ".ChannelTraceContext",
+      packageName + ".ChannelTraceContext$Factory",
       NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdviceUtil",
       // Util
       packageName + ".util.CombinedSimpleChannelHandler",
@@ -102,7 +102,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "org.jboss.netty.channel.Channel", ChannelState.class.getName());
+        "org.jboss.netty.channel.Channel", ChannelTraceContext.class.getName());
   }
 
   /**
@@ -112,7 +112,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
    */
   public static class ChannelPipelineAdviceUtil {
     public static void wrapHandler(
-        final ContextStore<Channel, ChannelState> contextStore,
+        final ContextStore<Channel, ChannelTraceContext> contextStore,
         final ChannelPipeline pipeline,
         final ChannelHandler handler) {
       try {
@@ -173,8 +173,8 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      final ContextStore<Channel, ChannelState> contextStore =
-          InstrumentationContext.get(Channel.class, ChannelState.class);
+      final ContextStore<Channel, ChannelTraceContext> contextStore =
+          InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
       ChannelPipelineAdviceUtil.wrapHandler(contextStore, pipeline, handler);
     }
@@ -203,8 +203,8 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      final ContextStore<Channel, ChannelState> contextStore =
-          InstrumentationContext.get(Channel.class, ChannelState.class);
+      final ContextStore<Channel, ChannelTraceContext> contextStore =
+          InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
       ChannelPipelineAdviceUtil.wrapHandler(contextStore, pipeline, handler);
     }

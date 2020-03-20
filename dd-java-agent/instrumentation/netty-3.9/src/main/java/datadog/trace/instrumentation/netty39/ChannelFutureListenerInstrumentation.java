@@ -54,8 +54,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ChannelState",
-      packageName + ".ChannelState$Factory",
+      packageName + ".ChannelTraceContext",
+      packageName + ".ChannelTraceContext$Factory",
       packageName + ".server.NettyHttpServerDecorator",
       packageName + ".server.NettyRequestExtractAdapter"
     };
@@ -73,7 +73,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "org.jboss.netty.channel.Channel", ChannelState.class.getName());
+        "org.jboss.netty.channel.Channel", ChannelTraceContext.class.getName());
   }
 
   public static class OperationCompleteAdvice {
@@ -89,12 +89,12 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final ContextStore<Channel, ChannelState> contextStore =
-          InstrumentationContext.get(Channel.class, ChannelState.class);
+      final ContextStore<Channel, ChannelTraceContext> contextStore =
+          InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
       final TraceScope.Continuation continuation =
           contextStore
-              .putIfAbsent(future.getChannel(), ChannelState.Factory.INSTANCE)
+              .putIfAbsent(future.getChannel(), ChannelTraceContext.Factory.INSTANCE)
               .getConnectionContinuationAndRemove();
       if (continuation == null) {
         return null;

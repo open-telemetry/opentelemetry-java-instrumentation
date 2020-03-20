@@ -5,7 +5,7 @@ import static datadog.trace.instrumentation.netty39.server.NettyHttpServerDecora
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
-import datadog.trace.instrumentation.netty39.ChannelState;
+import datadog.trace.instrumentation.netty39.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -14,19 +14,20 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHandler {
 
-  private final ContextStore<Channel, ChannelState> contextStore;
+  private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
-  public HttpServerResponseTracingHandler(final ContextStore<Channel, ChannelState> contextStore) {
+  public HttpServerResponseTracingHandler(
+      final ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
   public void writeRequested(final ChannelHandlerContext ctx, final MessageEvent msg)
       throws Exception {
-    final ChannelState channelState =
-        contextStore.putIfAbsent(ctx.getChannel(), ChannelState.Factory.INSTANCE);
+    final ChannelTraceContext channelTraceContext =
+        contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    final AgentSpan span = channelState.getServerSpan();
+    final AgentSpan span = channelTraceContext.getServerSpan();
     if (span == null || !(msg.getMessage() instanceof HttpResponse)) {
       ctx.sendDownstream(msg);
       return;

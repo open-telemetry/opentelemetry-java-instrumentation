@@ -11,7 +11,7 @@ import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.context.TraceScope;
-import datadog.trace.instrumentation.netty39.ChannelState;
+import datadog.trace.instrumentation.netty39.ChannelTraceContext;
 import java.net.InetSocketAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.netty.channel.Channel;
@@ -23,9 +23,10 @@ import org.jboss.netty.handler.codec.http.HttpRequest;
 @Slf4j
 public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
 
-  private final ContextStore<Channel, ChannelState> contextStore;
+  private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
-  public HttpClientRequestTracingHandler(final ContextStore<Channel, ChannelState> contextStore) {
+  public HttpClientRequestTracingHandler(
+      final ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
@@ -37,19 +38,19 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       return;
     }
 
-    final ChannelState channelState =
-        contextStore.putIfAbsent(ctx.getChannel(), ChannelState.Factory.INSTANCE);
+    final ChannelTraceContext channelTraceContext =
+        contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
     TraceScope parentScope = null;
-    final TraceScope.Continuation continuation = channelState.getConnectionContinuation();
+    final TraceScope.Continuation continuation = channelTraceContext.getConnectionContinuation();
     if (continuation != null) {
       parentScope = continuation.activate();
-      channelState.setConnectionContinuation(null);
+      channelTraceContext.setConnectionContinuation(null);
     }
 
     final HttpRequest request = (HttpRequest) msg.getMessage();
 
-    channelState.setClientParentSpan(activeSpan());
+    channelTraceContext.setClientParentSpan(activeSpan());
 
     final AgentSpan span = startSpan("netty.client.request");
     try (final AgentScope scope = activateSpan(span, false)) {
@@ -62,7 +63,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
         propagate().inject(span, request.headers(), SETTER);
       }
 
-      channelState.setClientSpan(span);
+      channelTraceContext.setClientSpan(span);
 
       try {
         ctx.sendDownstream(msg);

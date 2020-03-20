@@ -7,7 +7,7 @@ import static datadog.trace.instrumentation.netty39.client.NettyHttpClientDecora
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
-import datadog.trace.instrumentation.netty39.ChannelState;
+import datadog.trace.instrumentation.netty39.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -16,24 +16,25 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandler {
 
-  private final ContextStore<Channel, ChannelState> contextStore;
+  private final ContextStore<Channel, ChannelTraceContext> contextStore;
 
-  public HttpClientResponseTracingHandler(final ContextStore<Channel, ChannelState> contextStore) {
+  public HttpClientResponseTracingHandler(
+      final ContextStore<Channel, ChannelTraceContext> contextStore) {
     this.contextStore = contextStore;
   }
 
   @Override
   public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent msg)
       throws Exception {
-    final ChannelState channelState =
-        contextStore.putIfAbsent(ctx.getChannel(), ChannelState.Factory.INSTANCE);
+    final ChannelTraceContext channelTraceContext =
+        contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    AgentSpan parent = channelState.getClientParentSpan();
+    AgentSpan parent = channelTraceContext.getClientParentSpan();
     if (parent == null) {
       parent = noopSpan();
-      channelState.setClientParentSpan(noopSpan());
+      channelTraceContext.setClientParentSpan(noopSpan());
     }
-    final AgentSpan span = channelState.getClientSpan();
+    final AgentSpan span = channelTraceContext.getClientSpan();
 
     final boolean finishSpan = msg.getMessage() instanceof HttpResponse;
 
