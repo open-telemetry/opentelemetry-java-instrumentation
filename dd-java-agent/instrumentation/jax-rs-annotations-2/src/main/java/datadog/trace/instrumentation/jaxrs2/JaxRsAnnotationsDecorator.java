@@ -1,7 +1,5 @@
 package datadog.trace.instrumentation.jaxrs2;
 
-import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
-
 import datadog.trace.agent.tooling.ClassHierarchyIterable;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -27,7 +25,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 
-  private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
+  private final WeakMap<Class<?>, Map<Method, String>> resourceNames =
+      WeakMap.Provider.newWeakMap();
 
   @Override
   protected String[] instrumentationNames() {
@@ -45,7 +44,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   }
 
   public void onJaxRsSpan(
-      final AgentSpan span, final AgentSpan parent, final Class target, final Method method) {
+      final AgentSpan span, final AgentSpan parent, final Class<?> target, final Method method) {
 
     final String resourceName = getPathResourceName(target, method);
     updateParent(parent, resourceName);
@@ -81,7 +80,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
    *
    * @return The result can be an empty string but will never be {@code null}.
    */
-  private String getPathResourceName(final Class target, final Method method) {
+  private String getPathResourceName(final Class<?> target, final Method method) {
     Map<Method, String> classMap = resourceNames.get(target);
 
     if (classMap == null) {
@@ -138,7 +137,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return method.getAnnotation(Path.class);
   }
 
-  private Path findClassPath(final Class<Object> target) {
+  private Path findClassPath(final Class<?> target) {
     for (final Class<?> currentClass : new ClassHierarchyIterable(target)) {
       final Path annotation = currentClass.getAnnotation(Path.class);
       if (annotation != null) {

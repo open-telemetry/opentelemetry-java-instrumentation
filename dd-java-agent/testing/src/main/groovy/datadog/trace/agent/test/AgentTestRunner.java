@@ -307,4 +307,18 @@ public abstract class AgentTestRunner extends DDSpecification {
       }
     }
   }
+
+  protected static String getClassName(Class clazz) {
+    String className = clazz.getSimpleName();
+    if (className.isEmpty()) {
+      className = clazz.getName();
+      if (clazz.getPackage() != null) {
+        final String pkgName = clazz.getPackage().getName();
+        if (!pkgName.isEmpty()) {
+          className = clazz.getName().replace(pkgName, "").substring(1);
+        }
+      }
+    }
+    return className;
+  }
 }
