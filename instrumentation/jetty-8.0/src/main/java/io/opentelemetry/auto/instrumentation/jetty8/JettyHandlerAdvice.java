@@ -26,6 +26,7 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -76,8 +77,9 @@ public class JettyHandlerAdvice {
       return;
     }
     final Span span = spanWithScope.getSpan();
-    if (req.getUserPrincipal() != null) {
-      span.setAttribute(MoreTags.USER_NAME, req.getUserPrincipal().getName());
+    final Principal userPrincipal = req.getUserPrincipal();
+    if (userPrincipal != null) {
+      span.setAttribute(MoreTags.USER_NAME, userPrincipal.getName());
     }
     if (throwable != null) {
       DECORATE.onResponse(span, resp);

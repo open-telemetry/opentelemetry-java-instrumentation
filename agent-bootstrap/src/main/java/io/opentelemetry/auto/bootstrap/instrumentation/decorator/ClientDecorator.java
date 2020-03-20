@@ -25,9 +25,7 @@ public abstract class ClientDecorator extends BaseDecorator {
   @Override
   public Span afterStart(final Span span) {
     assert span != null;
-    if (service() != null) {
-      span.setAttribute(MoreTags.SERVICE_NAME, service());
-    }
+    span.setAttribute(MoreTags.SERVICE_NAME, service());
     return super.afterStart(span);
   }
 }

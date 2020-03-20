@@ -36,14 +36,8 @@ public abstract class BaseDecorator {
 
   public Span afterStart(final Span span) {
     assert span != null;
-    final String spanType = getSpanType();
-    if (spanType != null) {
-      span.setAttribute(MoreTags.SPAN_TYPE, spanType);
-    }
-    final String component = getComponentName();
-    if (component != null) {
-      span.setAttribute(Tags.COMPONENT, component);
-    }
+    span.setAttribute(MoreTags.SPAN_TYPE, getSpanType());
+    span.setAttribute(Tags.COMPONENT, getComponentName());
     return span;
   }
 
@@ -83,10 +77,7 @@ public abstract class BaseDecorator {
   }
 
   public static void addThrowable(final Span span, final Throwable throwable) {
-    final String message = throwable.getMessage();
-    if (message != null) {
-      span.setAttribute(MoreTags.ERROR_MSG, message);
-    }
+    span.setAttribute(MoreTags.ERROR_MSG, throwable.getMessage());
     span.setAttribute(MoreTags.ERROR_TYPE, throwable.getClass().getName());
 
     final StringWriter errorString = new StringWriter();

@@ -34,9 +34,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    if (serviceName != null) {
-      1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
-    }
+    1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     1 * span.setAttribute(Tags.DB_TYPE, "test-db")
     1 * span.setAttribute(MoreTags.SPAN_TYPE, "test-type")
@@ -57,13 +55,9 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (session) {
-      if (session.user) {
-        1 * span.setAttribute(Tags.DB_USER, session.user)
-      }
-      if (session.instance) {
-        1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
-      }
-      if (renameService && session.instance) {
+      1 * span.setAttribute(Tags.DB_USER, session.user)
+      1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
+      if (renameService) {
         1 * span.setAttribute(MoreTags.SERVICE_NAME, session.instance)
       }
     }

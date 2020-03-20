@@ -23,9 +23,11 @@ import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.HttpJspPage;
 import org.apache.jasper.JspCompilationContext;
+import org.apache.jasper.compiler.Compiler;
 import org.slf4j.LoggerFactory;
 
 public class JSPDecorator extends BaseDecorator {
@@ -48,13 +50,14 @@ public class JSPDecorator extends BaseDecorator {
     if (jspCompilationContext != null) {
       span.setAttribute(MoreTags.RESOURCE_NAME, jspCompilationContext.getJspFile());
 
-      if (jspCompilationContext.getServletContext() != null) {
-        span.setAttribute(
-            "servlet.context", jspCompilationContext.getServletContext().getContextPath());
+      final ServletContext servletContext = jspCompilationContext.getServletContext();
+      if (servletContext != null) {
+        span.setAttribute("servlet.context", servletContext.getContextPath());
       }
 
-      if (jspCompilationContext.getCompiler() != null) {
-        span.setAttribute("jsp.compiler", jspCompilationContext.getCompiler().getClass().getName());
+      final Compiler compiler = jspCompilationContext.getCompiler();
+      if (compiler != null) {
+        span.setAttribute("jsp.compiler", compiler.getClass().getName());
       }
       span.setAttribute("jsp.classFQCN", jspCompilationContext.getFQCN());
     }

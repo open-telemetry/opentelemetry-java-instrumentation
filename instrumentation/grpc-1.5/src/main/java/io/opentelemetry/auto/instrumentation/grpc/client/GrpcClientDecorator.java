@@ -45,9 +45,7 @@ public class GrpcClientDecorator extends ClientDecorator {
   public Span onClose(final Span span, final io.grpc.Status status) {
 
     span.setAttribute("status.code", status.getCode().name());
-    if (status.getDescription() != null) {
-      span.setAttribute("status.description", status.getDescription());
-    }
+    span.setAttribute("status.description", status.getDescription());
 
     onError(span, status.getCause());
     if (!status.isOk()) {

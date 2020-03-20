@@ -92,18 +92,18 @@ public class TwilioClientDecorator extends ClientDecorator {
       final Message message = (Message) result;
       span.setAttribute("twilio.account", message.getAccountSid());
       span.setAttribute("twilio.sid", message.getSid());
-      if (message.getStatus() != null) {
-        span.setAttribute("twilio.status", message.getStatus().toString());
+      final Message.Status status = message.getStatus();
+      if (status != null) {
+        span.setAttribute("twilio.status", status.toString());
       }
     } else if (result instanceof Call) {
       final Call call = (Call) result;
       span.setAttribute("twilio.account", call.getAccountSid());
       span.setAttribute("twilio.sid", call.getSid());
-      if (call.getParentCallSid() != null) {
-        span.setAttribute("twilio.parentSid", call.getParentCallSid());
-      }
-      if (call.getStatus() != null) {
-        span.setAttribute("twilio.status", call.getStatus().toString());
+      span.setAttribute("twilio.parentSid", call.getParentCallSid());
+      final Call.Status status = call.getStatus();
+      if (status != null) {
+        span.setAttribute("twilio.status", status.toString());
       }
     } else {
       // Use reflection to gather insight from other types; note that Twilio requests take close to

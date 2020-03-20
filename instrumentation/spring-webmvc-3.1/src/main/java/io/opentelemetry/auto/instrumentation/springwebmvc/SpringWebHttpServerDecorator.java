@@ -143,12 +143,10 @@ public class SpringWebHttpServerDecorator
   }
 
   public Span onRender(final Span span, final ModelAndView mv) {
-    final String viewName = mv.getViewName();
-    if (viewName != null) {
-      span.setAttribute("view.name", viewName);
-    }
-    if (mv.getView() != null) {
-      span.setAttribute("view.type", mv.getView().getClass().getName());
+    span.setAttribute("view.name", mv.getViewName());
+    final View view = mv.getView();
+    if (view != null) {
+      span.setAttribute("view.type", view.getClass().getName());
     }
     return span;
   }
