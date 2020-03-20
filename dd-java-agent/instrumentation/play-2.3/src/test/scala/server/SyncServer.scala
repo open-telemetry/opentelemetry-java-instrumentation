@@ -17,13 +17,11 @@ object SyncServer {
       HttpServerTest.controller(QUERY_PARAM, new ControllerClosureAdapter(Results.Status(QUERY_PARAM.getStatus).apply(QUERY_PARAM.getBody)))
     }
     case ("GET", "/error-status") => Action { request =>
-      HttpServerTest.controller(ERROR, new BlockClosureAdapter(() => {
-        throw new RuntimeException(ERROR.getBody)
-      }))
+      HttpServerTest.controller(QUERY_PARAM, new ControllerClosureAdapter(Results.Status(ERROR.getStatus).apply(ERROR.getBody)))
     }
     case ("GET", "/exception") => Action { request =>
       HttpServerTest.controller(EXCEPTION, new BlockClosureAdapter(() => {
-        throw new RuntimeException(EXCEPTION.getBody)
+        throw new Exception(EXCEPTION.getBody)
       }))
     }
   }

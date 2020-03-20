@@ -37,11 +37,13 @@ testSets {
 dependencies {
   main_java8Compile group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.0'
 
+  testCompile project(':dd-java-agent:instrumentation:netty-3.9')
+
   testCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.0'
   testCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.0'
-  testCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.0')
+  testCompile group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.0'
 
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.+'
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.+'
-  latestDepTestCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.+')
+  latestDepTestCompile group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.+'
 }

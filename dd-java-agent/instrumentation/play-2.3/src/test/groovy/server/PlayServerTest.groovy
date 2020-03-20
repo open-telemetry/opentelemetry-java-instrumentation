@@ -6,6 +6,7 @@ import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.instrumentation.api.Tags
+import datadog.trace.instrumentation.netty39.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.play23.PlayHttpServerDecorator
 import play.api.test.TestServer
 
@@ -26,12 +27,12 @@ class PlayServerTest extends HttpServerTest<TestServer> {
 
   @Override
   String component() {
-    return "netty"
+    return NettyHttpServerDecorator.DECORATE.component()
   }
 
   @Override
   String expectedOperationName() {
-    return "play.server"
+    return "netty.request"
   }
 
   // We don't have instrumentation for this version of netty yet
