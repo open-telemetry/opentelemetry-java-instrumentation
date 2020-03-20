@@ -26,11 +26,6 @@ public class TraceDecorator extends BaseDecorator {
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.trace-annotation");
 
   @Override
-  protected String getSpanType() {
-    return null;
-  }
-
-  @Override
   protected String getComponentName() {
     return "trace";
   }

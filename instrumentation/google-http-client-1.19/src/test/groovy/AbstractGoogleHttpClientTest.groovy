@@ -18,7 +18,6 @@ import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
@@ -77,7 +76,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "google-http-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" Long

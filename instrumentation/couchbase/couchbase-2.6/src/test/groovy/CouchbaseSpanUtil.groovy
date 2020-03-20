@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.SpanData
@@ -37,7 +36,6 @@ class CouchbaseSpanUtil {
       tags {
         "$MoreTags.SERVICE_NAME" "couchbase"
         "$MoreTags.RESOURCE_NAME" name
-        "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
 
         // Because of caching, not all requests hit the server so these tags may be absent

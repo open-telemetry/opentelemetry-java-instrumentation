@@ -35,7 +35,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
       1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     }
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
-    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.getSpanType())
     _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _
 
@@ -62,11 +61,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
       @Override
       protected String service() {
         return serviceName
-      }
-
-      @Override
-      protected String getSpanType() {
-        return "test-type"
       }
 
       @Override

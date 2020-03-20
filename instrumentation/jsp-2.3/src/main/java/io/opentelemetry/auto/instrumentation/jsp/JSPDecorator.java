@@ -35,11 +35,6 @@ public class JSPDecorator extends BaseDecorator {
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jsp-2.3");
 
   @Override
-  protected String getSpanType() {
-    return null;
-  }
-
-  @Override
   protected String getComponentName() {
     return "jsp-http-servlet";
   }

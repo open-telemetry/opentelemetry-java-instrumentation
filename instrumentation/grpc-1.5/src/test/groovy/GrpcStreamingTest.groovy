@@ -22,7 +22,6 @@ import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -121,7 +120,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -145,7 +143,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"

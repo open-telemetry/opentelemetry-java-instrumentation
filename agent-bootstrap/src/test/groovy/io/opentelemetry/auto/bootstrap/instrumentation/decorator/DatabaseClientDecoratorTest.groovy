@@ -39,7 +39,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     }
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     1 * span.setAttribute(Tags.DB_TYPE, "test-db")
-    1 * span.setAttribute(MoreTags.SPAN_TYPE, "test-type")
     0 * _
 
     where:
@@ -130,11 +129,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected String getComponentName() {
         return "test-component"
-      }
-
-      @Override
-      protected String getSpanType() {
-        return "test-type"
       }
 
       @Override

@@ -20,7 +20,6 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientD
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -45,11 +44,6 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   @Override
   protected String getComponentName() {
     return "java-jdbc"; // Overridden by onStatement and onPreparedStatement
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.SQL;
   }
 
   @Override

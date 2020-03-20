@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.hibernate.Session
@@ -89,7 +88,6 @@ class ProcedureCallTest extends AgentTestRunner {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -100,7 +98,6 @@ class ProcedureCallTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.RESOURCE_NAME" "TEST_PROC"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -110,7 +107,6 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
@@ -125,7 +121,6 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -160,7 +155,6 @@ class ProcedureCallTest extends AgentTestRunner {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -172,7 +166,6 @@ class ProcedureCallTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.RESOURCE_NAME" "TEST_PROC"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             errorTags(SQLGrammarException, "could not prepare statement")
           }
@@ -183,7 +176,6 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }

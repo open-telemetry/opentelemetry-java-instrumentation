@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -72,7 +71,6 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -97,7 +95,6 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -110,7 +107,6 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "GET"
@@ -135,7 +131,6 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -148,7 +143,6 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "RANDOMKEY"

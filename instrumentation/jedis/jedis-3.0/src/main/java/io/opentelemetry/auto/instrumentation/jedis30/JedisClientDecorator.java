@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.jedis30;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import redis.clients.jedis.commands.ProtocolCommand;
 
@@ -35,11 +34,6 @@ public class JedisClientDecorator extends DatabaseClientDecorator<ProtocolComman
   @Override
   protected String getComponentName() {
     return "redis-command";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.REDIS;
   }
 
   @Override
