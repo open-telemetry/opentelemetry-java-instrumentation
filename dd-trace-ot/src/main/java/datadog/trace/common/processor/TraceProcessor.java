@@ -2,6 +2,7 @@ package datadog.trace.common.processor;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.Config;
+import datadog.trace.common.processor.rule.ErrorRule;
 import datadog.trace.common.processor.rule.Status404Rule;
 import datadog.trace.common.processor.rule.Status5XXRule;
 import datadog.trace.common.processor.rule.URLAsResourceNameRule;
@@ -16,7 +17,7 @@ public class TraceProcessor {
   final Rule[] DEFAULT_RULES =
       new Rule[] {
         // Rules are applied in order.
-        new Status5XXRule(), new URLAsResourceNameRule(), new Status404Rule(),
+        new Status5XXRule(), new ErrorRule(), new URLAsResourceNameRule(), new Status404Rule(),
       };
 
   private final List<Rule> rules;

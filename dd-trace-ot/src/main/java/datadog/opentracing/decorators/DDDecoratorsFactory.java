@@ -18,7 +18,6 @@ public class DDDecoratorsFactory {
             new AnalyticsSampleRateDecorator(),
             new DBStatementAsResourceName(),
             new DBTypeDecorator(),
-            new ErrorFlag(),
             new ForceManualDropDecorator(),
             new ForceManualKeepDecorator(),
             new OperationDecorator(),

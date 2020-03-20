@@ -1,4 +1,3 @@
-import datadog.opentracing.decorators.ErrorFlag
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Trace
@@ -243,9 +242,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
 
   def "test exception exit"() {
     setup:
-
-    TEST_TRACER.addDecorator(new ErrorFlag())
-
     Throwable error = null
     try {
       SayTracedHello.sayERROR()
@@ -272,9 +268,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
 
   def "test exception exit with resource name"() {
     setup:
-
-    TEST_TRACER.addDecorator(new ErrorFlag())
-
     Throwable error = null
     try {
       SayTracedHello.sayERRORWithResource()
