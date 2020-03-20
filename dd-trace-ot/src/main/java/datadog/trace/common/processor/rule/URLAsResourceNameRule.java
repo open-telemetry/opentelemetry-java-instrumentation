@@ -21,17 +21,17 @@ public class URLAsResourceNameRule implements TraceProcessor.Rule {
 
   @Override
   public void processSpan(
-      final DDSpan span, final Map<String, String> meta, final Collection<DDSpan> trace) {
+      final DDSpan span, final Map<String, Object> tags, final Collection<DDSpan> trace) {
     final DDSpanContext context = span.context();
     if (context.isResourceNameSet()
-        || meta.get(Tags.HTTP_URL.getKey()) == null
-        || "404".equals(meta.get(Tags.HTTP_STATUS.getKey()))) {
+        || tags.get(Tags.HTTP_URL.getKey()) == null
+        || "404".equals(tags.get(Tags.HTTP_STATUS.getKey()))) {
       return;
     }
 
-    final String rawPath = rawPathFromUrlString(meta.get(Tags.HTTP_URL.getKey()).trim());
+    final String rawPath = rawPathFromUrlString(tags.get(Tags.HTTP_URL.getKey()).toString().trim());
     final String normalizedPath = normalizePath(rawPath);
-    final String resourceName = addMethodIfAvailable(meta, normalizedPath);
+    final String resourceName = addMethodIfAvailable(tags, normalizedPath);
 
     context.setResourceName(resourceName);
   }
@@ -87,11 +87,11 @@ public class URLAsResourceNameRule implements TraceProcessor.Rule {
     return PATH_MIXED_ALPHANUMERICS.matcher(path).replaceAll("?");
   }
 
-  private String addMethodIfAvailable(final Map<String, String> meta, String path) {
+  private String addMethodIfAvailable(final Map<String, Object> meta, String path) {
     // if the verb (GET, POST ...) is present, add it
-    final String verb = meta.get(Tags.HTTP_METHOD.getKey());
-    if (verb != null && !verb.isEmpty()) {
-      path = verb.toUpperCase() + " " + path;
+    final Object verb = meta.get(Tags.HTTP_METHOD.getKey());
+    if (verb != null && !verb.toString().isEmpty()) {
+      path = verb.toString().toUpperCase() + " " + path;
     }
     return path;
   }

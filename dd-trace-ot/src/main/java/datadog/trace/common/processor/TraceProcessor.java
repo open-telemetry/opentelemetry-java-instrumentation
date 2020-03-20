@@ -51,7 +51,7 @@ public class TraceProcessor {
   public interface Rule {
     String[] aliases();
 
-    void processSpan(DDSpan span, Map<String, String> meta, Collection<DDSpan> trace);
+    void processSpan(DDSpan span, Map<String, Object> tags, Collection<DDSpan> trace);
   }
 
   public List<DDSpan> onTraceComplete(final List<DDSpan> trace) {
@@ -64,9 +64,9 @@ public class TraceProcessor {
   }
 
   private void applyRules(final Collection<DDSpan> trace, final DDSpan span) {
-    final Map<String, String> meta = span.getMeta();
+    final Map<String, Object> tags = span.getTags();
     for (final Rule rule : rules) {
-      rule.processSpan(span, meta, trace);
+      rule.processSpan(span, tags, trace);
     }
   }
 }

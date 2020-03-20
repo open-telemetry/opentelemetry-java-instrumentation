@@ -15,9 +15,11 @@ public class Status5XXRule implements TraceProcessor.Rule {
 
   @Override
   public void processSpan(
-      final DDSpan span, final Map<String, String> meta, final Collection<DDSpan> trace) {
-    if (!span.context().getErrorFlag() && meta.containsKey(Tags.HTTP_STATUS.getKey())) {
-      final int responseCode = Integer.parseInt(meta.get(Tags.HTTP_STATUS.getKey()));
+      final DDSpan span, final Map<String, Object> tags, final Collection<DDSpan> trace) {
+    if (!span.context().getErrorFlag() && tags.containsKey(Tags.HTTP_STATUS.getKey())) {
+      final Object value = tags.get(Tags.HTTP_STATUS.getKey());
+      final int responseCode =
+          value instanceof Integer ? (int) value : Integer.parseInt(value.toString());
       span.setError(500 <= responseCode && responseCode < 600);
     }
   }
