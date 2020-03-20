@@ -1,0 +1,51 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+muzzle {
+  pass {
+    group = "io.netty"
+    module = "netty"
+    versions = "[3.9.0.Final,4)"
+    assertInverse = true
+  }
+  fail {
+    group = "io.netty"
+    module = "netty-all"
+    versions = "[,]"
+  }
+}
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'io.netty', name: 'netty', version: '3.9.0.Final'
+
+  testCompile group: 'io.netty', name: 'netty', version: '3.9.0.Final'
+  testCompile group: 'com.ning', name: 'async-http-client', version: '1.8.0'
+
+  latestDepTestCompile group: 'io.netty', name: 'netty', version: '3.9.9.Final'
+  latestDepTestCompile group: 'com.ning', name: 'async-http-client', version: '1.8.+'
+}
+
+// We need to force the dependency to the earliest supported version because other libraries declare newer versions.
+configurations.testCompile {
+  resolutionStrategy {
+    eachDependency { DependencyResolveDetails details ->
+      //specifying a fixed version for all libraries with io.netty' group
+      if (details.requested.group == 'io.netty') {
+        details.useVersion "3.9.0.Final"
+      }
+    }
+  }
+}
