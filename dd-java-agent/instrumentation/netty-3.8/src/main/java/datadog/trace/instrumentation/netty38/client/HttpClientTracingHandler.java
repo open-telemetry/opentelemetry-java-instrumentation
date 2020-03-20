@@ -1,8 +1,8 @@
-package datadog.trace.instrumentation.netty39.client;
+package datadog.trace.instrumentation.netty38.client;
 
 import datadog.trace.bootstrap.ContextStore;
-import datadog.trace.instrumentation.netty39.ChannelTraceContext;
-import datadog.trace.instrumentation.netty39.util.CombinedSimpleChannelHandler;
+import datadog.trace.instrumentation.netty38.ChannelTraceContext;
+import datadog.trace.instrumentation.netty38.util.CombinedSimpleChannelHandler;
 import org.jboss.netty.channel.Channel;
 
 public class HttpClientTracingHandler

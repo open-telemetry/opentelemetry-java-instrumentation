@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.base.HttpServerTest
-import datadog.trace.instrumentation.netty39.server.NettyHttpServerDecorator
+import datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator
 import org.jboss.netty.bootstrap.ServerBootstrap
 import org.jboss.netty.buffer.ChannelBuffer
 import org.jboss.netty.buffer.ChannelBuffers

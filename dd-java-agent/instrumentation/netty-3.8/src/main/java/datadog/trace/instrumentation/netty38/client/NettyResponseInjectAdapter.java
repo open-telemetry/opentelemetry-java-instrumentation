@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.netty39.client;
+package datadog.trace.instrumentation.netty38.client;
 
 import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import org.jboss.netty.handler.codec.http.HttpHeaders;

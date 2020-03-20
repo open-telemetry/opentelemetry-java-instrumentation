@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.netty39.util;
+package datadog.trace.instrumentation.netty38.util;
 
 import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;

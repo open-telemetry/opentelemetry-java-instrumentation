@@ -1,10 +1,10 @@
-package datadog.trace.instrumentation.netty39;
+package datadog.trace.instrumentation.netty38;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
-import static datadog.trace.instrumentation.netty39.NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES;
-import static datadog.trace.instrumentation.netty39.NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME;
+import static datadog.trace.instrumentation.netty38.NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES;
+import static datadog.trace.instrumentation.netty38.NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -34,7 +34,6 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.jboss.netty.channel.Channel",
-        "org.jboss.netty.buffer.EmptyChannelBuffer", // Not in 3.8
         "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
         );
   }

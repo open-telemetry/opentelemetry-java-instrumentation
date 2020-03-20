@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.netty39;
+package datadog.trace.instrumentation.netty38;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;

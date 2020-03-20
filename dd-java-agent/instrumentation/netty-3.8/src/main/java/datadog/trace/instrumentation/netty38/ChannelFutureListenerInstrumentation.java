@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.netty39;
+package datadog.trace.instrumentation.netty38;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
@@ -17,7 +17,7 @@ import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
 import datadog.trace.context.TraceScope;
-import datadog.trace.instrumentation.netty39.server.NettyHttpServerDecorator;
+import datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +41,6 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.jboss.netty.channel.ChannelFutureListener",
-        "org.jboss.netty.buffer.EmptyChannelBuffer", // Not in 3.8
         "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
         );
   }

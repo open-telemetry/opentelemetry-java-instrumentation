@@ -10,7 +10,7 @@ muzzle {
   pass {
     group = "io.netty"
     module = "netty"
-    versions = "[3.9.0.Final,3.10)"
+    versions = "[3.8.0.Final,3.10)"
     assertInverse = true
   }
   fail {
@@ -29,9 +29,9 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'io.netty', name: 'netty', version: '3.9.0.Final'
+  compileOnly group: 'io.netty', name: 'netty', version: '3.8.0.Final'
 
-  testCompile group: 'io.netty', name: 'netty', version: '3.9.0.Final'
+  testCompile group: 'io.netty', name: 'netty', version: '3.8.0.Final'
   testCompile group: 'com.ning', name: 'async-http-client', version: '1.8.0'
 
   latestDepTestCompile group: 'io.netty', name: 'netty', version: '3.9.+'
@@ -44,7 +44,7 @@ configurations.testCompile {
     eachDependency { DependencyResolveDetails details ->
       //specifying a fixed version for all libraries with io.netty' group
       if (details.requested.group == 'io.netty') {
-        details.useVersion "3.9.0.Final"
+        details.useVersion "3.8.0.Final"
       }
     }
   }

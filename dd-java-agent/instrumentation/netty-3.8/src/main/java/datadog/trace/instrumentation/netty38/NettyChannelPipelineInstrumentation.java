@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.netty39;
+package datadog.trace.instrumentation.netty38;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
@@ -12,12 +12,12 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import datadog.trace.instrumentation.netty39.client.HttpClientRequestTracingHandler;
-import datadog.trace.instrumentation.netty39.client.HttpClientResponseTracingHandler;
-import datadog.trace.instrumentation.netty39.client.HttpClientTracingHandler;
-import datadog.trace.instrumentation.netty39.server.HttpServerRequestTracingHandler;
-import datadog.trace.instrumentation.netty39.server.HttpServerResponseTracingHandler;
-import datadog.trace.instrumentation.netty39.server.HttpServerTracingHandler;
+import datadog.trace.instrumentation.netty38.client.HttpClientRequestTracingHandler;
+import datadog.trace.instrumentation.netty38.client.HttpClientResponseTracingHandler;
+import datadog.trace.instrumentation.netty38.client.HttpClientTracingHandler;
+import datadog.trace.instrumentation.netty38.server.HttpServerRequestTracingHandler;
+import datadog.trace.instrumentation.netty38.server.HttpServerResponseTracingHandler;
+import datadog.trace.instrumentation.netty38.server.HttpServerTracingHandler;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +50,6 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.jboss.netty.channel.ChannelPipeline",
-        "org.jboss.netty.buffer.EmptyChannelBuffer", // Not in 3.8
         "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
         );
   }

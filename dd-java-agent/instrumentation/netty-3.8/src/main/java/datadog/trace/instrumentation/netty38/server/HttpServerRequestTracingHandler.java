@@ -1,16 +1,16 @@
-package datadog.trace.instrumentation.netty39.server;
+package datadog.trace.instrumentation.netty38.server;
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.netty39.server.NettyHttpServerDecorator.DECORATE;
-import static datadog.trace.instrumentation.netty39.server.NettyRequestExtractAdapter.GETTER;
+import static datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator.DECORATE;
+import static datadog.trace.instrumentation.netty38.server.NettyRequestExtractAdapter.GETTER;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan.Context;
-import datadog.trace.instrumentation.netty39.ChannelTraceContext;
+import datadog.trace.instrumentation.netty38.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;

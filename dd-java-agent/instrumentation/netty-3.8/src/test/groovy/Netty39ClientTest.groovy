@@ -4,7 +4,7 @@ import com.ning.http.client.AsyncHttpClientConfig
 import com.ning.http.client.Response
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.bootstrap.instrumentation.api.Tags
-import datadog.trace.instrumentation.netty39.client.NettyHttpClientDecorator
+import datadog.trace.instrumentation.netty38.client.NettyHttpClientDecorator
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
