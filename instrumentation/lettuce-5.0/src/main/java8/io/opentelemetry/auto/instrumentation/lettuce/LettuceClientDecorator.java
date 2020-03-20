@@ -16,7 +16,6 @@
 package io.opentelemetry.auto.instrumentation.lettuce;
 
 import io.lettuce.core.RedisURI;
-import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
@@ -67,22 +66,7 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
       span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
 
       span.setAttribute("db.redis.dbIndex", connection.getDatabase());
-      span.setAttribute(
-          MoreTags.RESOURCE_NAME,
-          "CONNECT:"
-              + connection.getHost()
-              + ":"
-              + connection.getPort()
-              + "/"
-              + connection.getDatabase());
     }
     return super.onConnection(span, connection);
-  }
-
-  public Span onCommand(final Span span, final RedisCommand command) {
-    final String commandName = LettuceInstrumentationUtil.getCommandName(command);
-    span.setAttribute(
-        MoreTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
-    return span;
   }
 }

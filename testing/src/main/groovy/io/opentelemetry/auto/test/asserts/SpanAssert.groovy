@@ -71,6 +71,11 @@ class SpanAssert {
     checked.name = true
   }
 
+  def operationName(Closure spec) {
+    assert ((Closure) spec).call(span.name)
+    checked.name = true
+  }
+
   def operationNameContains(String... operationNameParts) {
     assertSpanNameContains(span.name, operationNameParts)
     checked.name = true

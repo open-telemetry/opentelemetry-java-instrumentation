@@ -31,9 +31,12 @@ public class LettuceAsyncCommandsAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand command) {
 
-    final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
+    final Span span =
+        TRACER
+            .spanBuilder(LettuceInstrumentationUtil.getCommandName(command))
+            .setSpanKind(CLIENT)
+            .startSpan();
     DECORATE.afterStart(span);
-    DECORATE.onCommand(span, command);
 
     return new SpanWithScope(span, TRACER.withSpan(span));
   }
