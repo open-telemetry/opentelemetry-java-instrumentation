@@ -67,7 +67,6 @@ class SparkJavaBasedTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /param/:param"
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jetty-handler"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
