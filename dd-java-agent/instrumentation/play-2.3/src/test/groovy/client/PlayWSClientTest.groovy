@@ -1,7 +1,7 @@
 package client
 
 import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.netty39.client.NettyHttpClientDecorator
+import datadog.trace.instrumentation.netty38.client.NettyHttpClientDecorator
 import play.GlobalSettings
 import play.libs.ws.WS
 import play.test.FakeApplication
@@ -13,11 +13,6 @@ import java.util.concurrent.TimeUnit
 class PlayWSClientTest extends HttpClientTest {
   @Shared
   def application = new FakeApplication(new File("."), FakeApplication.class.getClassLoader(), Collections.emptyMap(), Collections.emptyList(), new GlobalSettings())
-
-//  @Subject
-//  @Shared
-//  @AutoCleanup
-//  def client = WS.client()
 
   def setup() {
     Helpers.start(application)
