@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.bootstrap.AgentClassLoader
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
+import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
