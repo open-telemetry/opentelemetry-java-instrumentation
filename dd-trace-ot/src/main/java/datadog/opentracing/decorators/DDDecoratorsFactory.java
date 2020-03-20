@@ -22,7 +22,6 @@ public class DDDecoratorsFactory {
             new ForceManualKeepDecorator(),
             new OperationDecorator(),
             new PeerServiceDecorator(),
-            new ResourceNameDecorator(),
             new ServiceNameDecorator(),
             new ServiceNameDecorator("service", false),
             new ServletContextDecorator())) {

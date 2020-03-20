@@ -3,6 +3,7 @@ package datadog.trace.common.processor;
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.Config;
 import datadog.trace.common.processor.rule.ErrorRule;
+import datadog.trace.common.processor.rule.ResourceNameRule;
 import datadog.trace.common.processor.rule.SpanTypeRule;
 import datadog.trace.common.processor.rule.Status404Rule;
 import datadog.trace.common.processor.rule.Status5XXRule;
@@ -18,6 +19,7 @@ public class TraceProcessor {
   final Rule[] DEFAULT_RULES =
       new Rule[] {
         // Rules are applied in order.
+        new ResourceNameRule(),
         new SpanTypeRule(),
         new Status5XXRule(),
         new ErrorRule(),
