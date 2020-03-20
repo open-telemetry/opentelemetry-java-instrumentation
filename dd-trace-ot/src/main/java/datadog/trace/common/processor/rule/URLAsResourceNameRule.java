@@ -23,9 +23,10 @@ public class URLAsResourceNameRule implements TraceProcessor.Rule {
   public void processSpan(
       final DDSpan span, final Map<String, Object> tags, final Collection<DDSpan> trace) {
     final DDSpanContext context = span.context();
+    final Object httpStatus = tags.get(Tags.HTTP_STATUS.getKey());
     if (context.isResourceNameSet()
         || tags.get(Tags.HTTP_URL.getKey()) == null
-        || "404".equals(tags.get(Tags.HTTP_STATUS.getKey()))) {
+        || (httpStatus != null && (httpStatus.equals(404) || httpStatus.equals("404")))) {
       return;
     }
 

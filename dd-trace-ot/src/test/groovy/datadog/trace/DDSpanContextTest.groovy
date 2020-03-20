@@ -30,8 +30,10 @@ class DDSpanContextTest extends DDSpecification {
 
   def "special tags set certain values"() {
     setup:
-    def context = SpanFactory.newSpanOf(0).context
+    def span = SpanFactory.newSpanOf(0)
+    def context = span.context
     context.setTag(name, value)
+    span.finish()
     def thread = Thread.currentThread()
 
     def expectedTags = [(DDTags.THREAD_NAME): thread.name, (DDTags.THREAD_ID): thread.id]

@@ -16,7 +16,10 @@ public class Status404Rule implements TraceProcessor.Rule {
   @Override
   public void processSpan(
       final DDSpan span, final Map<String, Object> tags, final Collection<DDSpan> trace) {
-    if (!span.context().isResourceNameSet() && "404".equals(tags.get(Tags.HTTP_STATUS.getKey()))) {
+    final Object httpStatus = tags.get(Tags.HTTP_STATUS.getKey());
+    if (!span.context().isResourceNameSet()
+        && httpStatus != null
+        && (httpStatus.equals(404) || httpStatus.equals("404"))) {
       span.setResourceName("404");
     }
   }
