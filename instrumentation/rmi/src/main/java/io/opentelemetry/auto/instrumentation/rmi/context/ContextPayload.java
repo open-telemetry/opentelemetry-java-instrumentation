@@ -77,7 +77,7 @@ public class ContextPayload {
 
   public static class InjectAdapter implements HttpTextFormat.Setter<ContextPayload> {
     @Override
-    public void put(final ContextPayload carrier, final String key, final String value) {
+    public void set(final ContextPayload carrier, final String key, final String value) {
       carrier.getContext().put(key, value);
     }
   }

@@ -28,7 +28,7 @@ public class MessageInjectAdapter implements HttpTextFormat.Setter<Message> {
   static final String DASH = "__dash__";
 
   @Override
-  public void put(final Message carrier, final String key, final String value) {
+  public void set(final Message carrier, final String key, final String value) {
     final String propName = key.replace("-", DASH);
     try {
       carrier.setStringProperty(propName, value);
