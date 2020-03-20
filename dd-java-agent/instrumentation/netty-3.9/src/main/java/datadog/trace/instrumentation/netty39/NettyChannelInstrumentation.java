@@ -32,7 +32,11 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.jboss.netty.channel.Channel");
+    return hasClassesNamed(
+        "org.jboss.netty.channel.Channel",
+        "org.jboss.netty.buffer.EmptyChannelBuffer", // Not in 3.8
+        "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
+        );
   }
 
   @Override
@@ -42,7 +46,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".ChannelState"};
+    return new String[] {packageName + ".ChannelState", packageName + ".ChannelState$Factory"};
   }
 
   @Override

@@ -48,7 +48,11 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.jboss.netty.channel.ChannelPipeline");
+    return hasClassesNamed(
+        "org.jboss.netty.channel.ChannelPipeline",
+        "org.jboss.netty.buffer.EmptyChannelBuffer", // Not in 3.8
+        "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
+        );
   }
 
   @Override
@@ -60,6 +64,10 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".ChannelState",
+      packageName + ".ChannelState$Factory",
+      NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdviceUtil",
+      // Util
+      packageName + ".util.CombinedSimpleChannelHandler",
       // client helpers
       packageName + ".client.NettyHttpClientDecorator",
       packageName + ".client.NettyResponseInjectAdapter",
