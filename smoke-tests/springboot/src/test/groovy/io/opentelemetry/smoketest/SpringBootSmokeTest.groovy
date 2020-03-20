@@ -19,7 +19,7 @@ import okhttp3.Request
 
 class SpringBootSmokeTest extends AbstractServerSmokeTest {
 
-  static final HANDLER_SPAN = "LOGGED_SPAN spring.handler"
+  static final HANDLER_SPAN = "LOGGED_SPAN WebController.greeting"
   static final SERVLET_SPAN = "LOGGED_SPAN GET /greeting"
 
   @Override
