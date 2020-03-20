@@ -649,7 +649,6 @@ class SpymemcachedTest extends AgentTestRunner {
       tags {
         "$MoreTags.SERVICE_NAME" CompletionListener.SERVICE_NAME
         "$MoreTags.RESOURCE_NAME" operation
-        "$MoreTags.SPAN_TYPE" SpanTypes.MEMCACHED
         "$Tags.COMPONENT" CompletionListener.COMPONENT_NAME
         "$Tags.DB_TYPE" CompletionListener.DB_TYPE
 

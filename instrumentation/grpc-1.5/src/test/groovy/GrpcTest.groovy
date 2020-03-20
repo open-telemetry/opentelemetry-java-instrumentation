@@ -98,7 +98,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -119,7 +118,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -175,7 +173,6 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "${status.code.name()}"
@@ -197,7 +194,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.RPC_SERVICE" "Greeter"
             "status.code" "${status.code.name()}"
@@ -263,7 +259,6 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$Tags.COMPONENT" "grpc-client"
             "status.code" "UNKNOWN"
@@ -284,7 +279,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"

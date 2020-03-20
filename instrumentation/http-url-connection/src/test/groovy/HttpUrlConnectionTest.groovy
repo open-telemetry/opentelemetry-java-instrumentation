@@ -110,7 +110,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -127,7 +126,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -192,7 +190,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -209,7 +206,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -259,7 +255,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.RESOURCE_NAME" "GET $url.path"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -325,7 +320,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
             "$MoreTags.RESOURCE_NAME" "POST $url.path"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port

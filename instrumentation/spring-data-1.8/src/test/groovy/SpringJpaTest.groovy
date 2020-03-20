@@ -84,7 +84,6 @@ class SpringJpaTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
@@ -120,7 +119,6 @@ class SpringJpaTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
@@ -156,7 +154,6 @@ class SpringJpaTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
@@ -171,7 +168,6 @@ class SpringJpaTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
@@ -205,7 +201,6 @@ class SpringJpaTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
@@ -239,7 +234,6 @@ class SpringJpaTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"
@@ -254,7 +248,6 @@ class SpringJpaTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "hsqldb"
             "$Tags.DB_INSTANCE" "test"

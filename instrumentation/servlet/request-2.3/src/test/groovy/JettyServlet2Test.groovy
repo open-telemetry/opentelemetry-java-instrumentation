@@ -100,7 +100,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
         parent()
       }
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" "127.0.0.1"
         // No peer port

@@ -61,7 +61,6 @@ class RmiTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.RESOURCE_NAME" "Greeter.hello"
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
@@ -71,7 +70,6 @@ class RmiTest extends AgentTestRunner {
           spanKind SERVER
           tags {
             "$MoreTags.RESOURCE_NAME" "Server.hello"
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
           }
@@ -125,7 +123,6 @@ class RmiTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "Greeter.exceptional"
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
             errorTags(RuntimeException, String)
@@ -137,7 +134,6 @@ class RmiTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.RESOURCE_NAME" "Server.exceptional"
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
             errorTags(RuntimeException, String)
@@ -172,7 +168,6 @@ class RmiTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.RESOURCE_NAME" "Greeter.hello"
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
@@ -183,7 +178,6 @@ class RmiTest extends AgentTestRunner {
           spanKind SERVER
           tags {
             "$MoreTags.RESOURCE_NAME" "ServerLegacy.hello"
-            "$MoreTags.SPAN_TYPE" SpanTypes.RPC
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
           }

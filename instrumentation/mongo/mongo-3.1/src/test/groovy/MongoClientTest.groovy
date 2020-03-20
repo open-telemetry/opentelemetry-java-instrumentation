@@ -261,7 +261,6 @@ class MongoClientTest extends MongoBaseTest {
       }
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? instance : "mongo"
-        "$MoreTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" "127.0.0.1"

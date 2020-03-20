@@ -105,7 +105,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -137,7 +136,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "ClusterStatsAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -169,7 +167,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "GetAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -241,7 +238,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "CreateIndexAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -260,7 +256,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -278,7 +273,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "GetAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -300,7 +294,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "PutMappingAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -316,7 +309,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "IndexAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -336,7 +328,6 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "GetAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "127.0.0.1"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"

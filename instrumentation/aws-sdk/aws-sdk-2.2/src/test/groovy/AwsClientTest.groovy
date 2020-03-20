@@ -99,7 +99,6 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -129,7 +128,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -205,7 +203,6 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -238,7 +235,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "netty-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -322,7 +318,6 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$MoreTags.RESOURCE_NAME" "S3.GetObject"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -342,7 +337,6 @@ class AwsClientTest extends AgentTestRunner {
             errored true
             childOf span(0)
             tags {
-              "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
               "$MoreTags.NET_PEER_NAME" "localhost"
               "$MoreTags.NET_PEER_PORT" server.address.port

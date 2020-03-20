@@ -140,7 +140,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
       }
       tags {
         "$MoreTags.RESOURCE_NAME" "$method $handlerName"
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long

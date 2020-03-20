@@ -70,7 +70,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
         errored exception != null
         tags {
           "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-          "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
           "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.getComponentName()
           "$MoreTags.NET_PEER_NAME" "localhost"
           "$MoreTags.NET_PEER_PORT" uri.port

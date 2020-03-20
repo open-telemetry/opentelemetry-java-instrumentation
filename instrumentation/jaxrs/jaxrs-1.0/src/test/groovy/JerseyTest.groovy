@@ -58,7 +58,6 @@ class JerseyTest extends AgentTestRunner {
           operationName "jax-rs.request"
           tags {
             "$MoreTags.RESOURCE_NAME" controllerName
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }

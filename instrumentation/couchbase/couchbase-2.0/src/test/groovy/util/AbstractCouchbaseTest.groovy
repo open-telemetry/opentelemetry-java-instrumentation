@@ -135,7 +135,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       tags {
         "$MoreTags.SERVICE_NAME" "couchbase"
         "$MoreTags.RESOURCE_NAME" name
-        "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.DB_TYPE" "couchbase"
         if (bucketName != null) {

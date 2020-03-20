@@ -150,7 +150,6 @@ class JMS1Test extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
@@ -185,7 +184,6 @@ class JMS1Test extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
@@ -235,7 +233,6 @@ class JMS1Test extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
@@ -263,7 +260,6 @@ class JMS1Test extends AgentTestRunner {
       parent()
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" ActiveMQMessageProducer.name
       }
@@ -284,7 +280,6 @@ class JMS1Test extends AgentTestRunner {
       errored false
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" origin.name
       }

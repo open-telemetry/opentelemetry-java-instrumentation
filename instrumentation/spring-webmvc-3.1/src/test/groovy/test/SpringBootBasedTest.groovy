@@ -85,7 +85,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       spanKind INTERNAL
       errored false
       tags {
-        "$MoreTags.SPAN_TYPE" "web"
         "$Tags.COMPONENT" "spring-webmvc"
         "view.type" RedirectView.name
       }
@@ -100,7 +99,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.getComponentName()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -122,7 +120,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         parent()
       }
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long

@@ -79,7 +79,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "akka-http-client"
             errorTags(NullPointerException)
           }

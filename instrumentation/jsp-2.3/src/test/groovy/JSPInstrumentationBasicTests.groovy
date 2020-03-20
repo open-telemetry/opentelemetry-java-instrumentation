@@ -111,7 +111,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -179,7 +178,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -244,7 +242,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -306,7 +303,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -387,7 +383,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -448,7 +443,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -557,7 +551,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -617,7 +610,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           // resourceName "GET /$jspWebappContext/$staticFile"
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long

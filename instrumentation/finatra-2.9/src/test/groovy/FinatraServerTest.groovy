@@ -95,7 +95,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
       childOf(parent as SpanData)
       tags {
         "$MoreTags.RESOURCE_NAME" "FinatraController"
-        "$MoreTags.SPAN_TYPE" "web"
         "$Tags.COMPONENT" FinatraDecorator.DECORATE.getComponentName()
 
         // Finatra doesn't propagate the stack trace or exception to the instrumentation
@@ -119,7 +118,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
       }
       tags {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path}"
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

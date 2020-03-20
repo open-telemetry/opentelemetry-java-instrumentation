@@ -37,7 +37,6 @@ class CouchbaseSpanUtil {
       tags {
         "$MoreTags.SERVICE_NAME" "couchbase"
         "$MoreTags.RESOURCE_NAME" name
-        "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
 
         // Because of caching, not all requests hit the server so these tags may be absent

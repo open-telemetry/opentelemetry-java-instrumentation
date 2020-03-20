@@ -341,7 +341,6 @@ abstract class HttpClientTest extends AgentTestRunner {
       errored exception != null
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

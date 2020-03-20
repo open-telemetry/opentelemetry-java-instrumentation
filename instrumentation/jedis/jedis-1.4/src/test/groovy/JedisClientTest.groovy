@@ -72,7 +72,6 @@ class JedisClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -97,7 +96,6 @@ class JedisClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -110,7 +108,6 @@ class JedisClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "GET"
@@ -135,7 +132,6 @@ class JedisClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -148,7 +144,6 @@ class JedisClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "RANDOMKEY"

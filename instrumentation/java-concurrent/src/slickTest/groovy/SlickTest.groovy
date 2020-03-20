@@ -49,7 +49,6 @@ class SlickTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" SlickUtils.Driver()
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" SlickUtils.Driver()
             "$Tags.DB_INSTANCE" SlickUtils.Db()
