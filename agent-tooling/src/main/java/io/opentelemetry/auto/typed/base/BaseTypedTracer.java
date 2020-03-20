@@ -26,32 +26,32 @@ public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
   protected final Tracer tracer;
 
   protected BaseTypedTracer() {
-    tracer = OpenTelemetry.getTracerFactory().get(getInstrumentationName(), getVersion());
+    tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 
   protected abstract String getInstrumentationName();
 
   protected abstract String getVersion();
 
-  public final T startSpan(INSTANCE instance) {
+  public final T startSpan(final INSTANCE instance) {
     return startSpan(instance, tracer.spanBuilder(getSpanName(instance)));
   }
 
-  public final T startSpan(INSTANCE instance, Span parent) {
+  public final T startSpan(final INSTANCE instance, final Span parent) {
     return startSpan(instance, tracer.spanBuilder(getSpanName(instance)).setParent(parent));
   }
 
-  public final T startSpan(INSTANCE instance, SpanContext parent) {
+  public final T startSpan(final INSTANCE instance, final SpanContext parent) {
     return startSpan(instance, tracer.spanBuilder(getSpanName(instance)).setParent(parent));
   }
 
-  private T startSpan(INSTANCE instance, Span.Builder builder) {
+  private T startSpan(final INSTANCE instance, Span.Builder builder) {
     builder = buildSpan(instance, builder.setSpanKind(getSpanKind()));
-    T wrappedSpan = wrapSpan(builder.startSpan());
+    final T wrappedSpan = wrapSpan(builder.startSpan());
     return startSpan(instance, wrappedSpan);
   }
 
-  public final Scope withSpan(T span) {
+  public final Scope withSpan(final T span) {
     return tracer.withSpan(span);
   }
 
@@ -61,7 +61,7 @@ public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
 
   // Allow adding additional attributes before start.
   // eg spanBuilder.setNoParent() or tracer.extract.
-  protected Span.Builder buildSpan(INSTANCE instance, Span.Builder spanBuilder) {
+  protected Span.Builder buildSpan(final INSTANCE instance, final Span.Builder spanBuilder) {
     return spanBuilder;
   }
 
@@ -69,7 +69,7 @@ public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
   protected abstract T wrapSpan(Span span);
 
   // Allow adding additional attributes after start.
-  protected T startSpan(INSTANCE instance, T span) {
+  protected T startSpan(final INSTANCE instance, final T span) {
     return span;
   }
 }

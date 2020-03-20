@@ -38,7 +38,7 @@ public class SpringWebHttpServerDecorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.spring-webmvc-3.1");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webmvc-3.1");
   public static final SpringWebHttpServerDecorator DECORATE = new SpringWebHttpServerDecorator();
   public static final SpringWebHttpServerDecorator DECORATE_RENDER =
       new SpringWebHttpServerDecorator() {

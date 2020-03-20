@@ -24,7 +24,7 @@ import io.opentelemetry.trace.Tracer;
 public class CliApplication {
 
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   public static void main(final String[] args) throws InterruptedException {
     final CliApplication app = new CliApplication();

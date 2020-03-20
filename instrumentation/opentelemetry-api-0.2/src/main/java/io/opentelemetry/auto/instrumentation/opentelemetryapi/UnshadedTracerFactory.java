@@ -23,13 +23,13 @@ public class UnshadedTracerFactory implements TracerFactory {
   @Override
   public Tracer get(final String instrumentationName) {
     return new UnshadedTracer(
-        io.opentelemetry.OpenTelemetry.getTracerFactory().get(instrumentationName));
+        io.opentelemetry.OpenTelemetry.getTracerProvider().get(instrumentationName));
   }
 
   @Override
   public Tracer get(final String instrumentationName, final String instrumentationVersion) {
     return new UnshadedTracer(
-        io.opentelemetry.OpenTelemetry.getTracerFactory()
+        io.opentelemetry.OpenTelemetry.getTracerProvider()
             .get(instrumentationName, instrumentationVersion));
   }
 }

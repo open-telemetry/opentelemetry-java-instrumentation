@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JavaUtilLoggingSpans {
 
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.java-util-logging");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.java-util-logging");
 
   private static final Formatter FORMATTER = new AccessibleFormatter();
 

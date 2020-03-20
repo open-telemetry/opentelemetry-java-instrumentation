@@ -25,7 +25,7 @@ import io.opentelemetry.trace.Tracer;
 public class GrpcClientDecorator extends ClientDecorator {
   public static final GrpcClientDecorator DECORATE = new GrpcClientDecorator();
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.grpc-1.5");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grpc-1.5");
 
   @Override
   protected String getComponentName() {

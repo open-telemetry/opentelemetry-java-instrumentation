@@ -40,7 +40,7 @@ class TraceUtils {
     }
   }
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
   @SneakyThrows
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {

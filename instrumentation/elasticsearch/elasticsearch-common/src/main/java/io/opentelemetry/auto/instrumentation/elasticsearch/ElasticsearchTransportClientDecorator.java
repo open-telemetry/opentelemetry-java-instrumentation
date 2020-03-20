@@ -27,7 +27,7 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
       new ElasticsearchTransportClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.elasticsearch");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.elasticsearch");
 
   @Override
   protected String service() {

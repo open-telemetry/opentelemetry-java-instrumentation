@@ -24,7 +24,7 @@ import kotlinx.coroutines.selects.select
 import java.util.concurrent.TimeUnit
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
-  val tracer: Tracer = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
+  val tracer: Tracer = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
   fun tracedAcrossChannels() = runTest {
 

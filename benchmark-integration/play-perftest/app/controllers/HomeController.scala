@@ -11,7 +11,7 @@ import play.api.mvc._
   * application's work page which does busy wait to simulate some work
   */
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
-  val TRACER: Tracer = OpenTelemetry.getTracerFactory.get("io.opentelemetry.auto")
+  val TRACER: Tracer = OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
   /**
     * Create an Action to perform busy wait

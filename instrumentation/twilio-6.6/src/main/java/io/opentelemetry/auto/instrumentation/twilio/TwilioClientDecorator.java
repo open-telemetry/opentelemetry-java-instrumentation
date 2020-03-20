@@ -35,7 +35,7 @@ public class TwilioClientDecorator extends ClientDecorator {
   public static final TwilioClientDecorator DECORATE = new TwilioClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.twilio");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.twilio");
 
   static final String COMPONENT_NAME = "twilio-sdk";
 
