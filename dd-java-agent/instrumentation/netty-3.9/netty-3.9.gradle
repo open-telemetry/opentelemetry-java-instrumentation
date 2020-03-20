@@ -10,7 +10,7 @@ muzzle {
   pass {
     group = "io.netty"
     module = "netty"
-    versions = "[3.9.0.Final,4)"
+    versions = "[3.9.0.Final,3.10)"
     assertInverse = true
   }
   fail {
@@ -34,7 +34,7 @@ dependencies {
   testCompile group: 'io.netty', name: 'netty', version: '3.9.0.Final'
   testCompile group: 'com.ning', name: 'async-http-client', version: '1.8.0'
 
-  latestDepTestCompile group: 'io.netty', name: 'netty', version: '3.9.9.Final'
+  latestDepTestCompile group: 'io.netty', name: 'netty', version: '3.9.+'
   latestDepTestCompile group: 'com.ning', name: 'async-http-client', version: '1.8.+'
 }
 
