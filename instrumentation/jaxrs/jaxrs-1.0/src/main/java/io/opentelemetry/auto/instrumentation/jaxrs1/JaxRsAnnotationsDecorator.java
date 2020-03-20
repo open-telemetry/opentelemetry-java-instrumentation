@@ -42,11 +42,6 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jaxrs-1.0");
 
   @Override
-  protected String getSpanType() {
-    return null;
-  }
-
-  @Override
   protected String getComponentName() {
     return "jax-rs-controller";
   }

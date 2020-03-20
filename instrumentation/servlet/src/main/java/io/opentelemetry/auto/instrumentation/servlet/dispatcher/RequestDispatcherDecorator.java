@@ -25,11 +25,6 @@ public class RequestDispatcherDecorator extends BaseDecorator {
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.servlet");
 
   @Override
-  protected String getSpanType() {
-    return null;
-  }
-
-  @Override
   protected String getComponentName() {
     return "java-web-servlet-dispatcher";
   }

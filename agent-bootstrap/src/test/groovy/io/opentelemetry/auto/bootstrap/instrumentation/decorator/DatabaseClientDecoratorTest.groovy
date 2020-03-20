@@ -133,11 +133,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       }
 
       @Override
-      protected String getSpanType() {
-        return "test-type"
-      }
-
-      @Override
       protected String dbType() {
         return "test-db"
       }

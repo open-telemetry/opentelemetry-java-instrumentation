@@ -48,11 +48,6 @@ class ServerDecoratorTest extends BaseDecoratorTest {
     return new ServerDecorator() {
 
       @Override
-      protected String getSpanType() {
-        return "test-type"
-      }
-
-      @Override
       protected String getComponentName() {
         return "test-component"
       }

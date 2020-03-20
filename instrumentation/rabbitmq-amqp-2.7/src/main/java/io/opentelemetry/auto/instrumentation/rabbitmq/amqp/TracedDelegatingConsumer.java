@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
@@ -100,8 +100,8 @@ public class TracedDelegatingConsumer implements Consumer {
       span = spanBuilder.startSpan();
       span.setAttribute("message.size", body == null ? 0 : body.length);
       span.setAttribute("span.origin.type", delegate.getClass().getName());
-      CONSUMER_DECORATE.afterStart(span);
-      CONSUMER_DECORATE.onDeliver(span, queue, envelope);
+      DECORATE.afterStart(span);
+      DECORATE.onDeliver(span, queue, envelope);
 
       scope = TRACER.withSpan(span);
 
@@ -115,12 +115,12 @@ public class TracedDelegatingConsumer implements Consumer {
 
       } catch (final Throwable throwable) {
         if (span != null) {
-          CONSUMER_DECORATE.onError(span, throwable);
+          DECORATE.onError(span, throwable);
         }
         throw throwable;
       } finally {
         if (scope != null) {
-          CONSUMER_DECORATE.beforeFinish(span);
+          DECORATE.beforeFinish(span);
           span.end();
           scope.close();
         }

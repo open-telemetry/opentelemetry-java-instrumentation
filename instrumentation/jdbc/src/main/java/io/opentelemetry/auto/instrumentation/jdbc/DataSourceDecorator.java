@@ -29,9 +29,4 @@ public class DataSourceDecorator extends BaseDecorator {
   protected String getComponentName() {
     return "java-jdbc-connection";
   }
-
-  @Override
-  protected String getSpanType() {
-    return null;
-  }
 }

@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.grpc.client;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
@@ -30,11 +29,6 @@ public class GrpcClientDecorator extends ClientDecorator {
   @Override
   protected String getComponentName() {
     return "grpc-client";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.RPC;
   }
 
   @Override

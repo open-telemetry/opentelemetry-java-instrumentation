@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jms;
 
-import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -98,9 +98,9 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         @Advice.Thrown final Throwable throwable) {
       final String spanName;
       if (message == null) {
-        spanName = CONSUMER_DECORATE.spanNameForReceive(method);
+        spanName = DECORATE.spanNameForReceive(method);
       } else {
-        spanName = CONSUMER_DECORATE.spanNameForReceive(message);
+        spanName = DECORATE.spanNameForReceive(message);
       }
       final Span.Builder spanBuilder =
           TRACER
@@ -122,9 +122,9 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       span.setAttribute("span.origin.type", consumer.getClass().getName());
 
       try (final Scope scope = TRACER.withSpan(span)) {
-        CONSUMER_DECORATE.afterStart(span);
-        CONSUMER_DECORATE.onError(span, throwable);
-        CONSUMER_DECORATE.beforeFinish(span);
+        DECORATE.afterStart(span);
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
         span.end();
       }
     }

@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.kafkastreams;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
@@ -36,11 +35,6 @@ public class KafkaStreamsDecorator extends ClientDecorator {
   @Override
   protected String getComponentName() {
     return "java-kafka";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.MESSAGE_CONSUMER;
   }
 
   public String spanNameForConsume(final StampedRecord record) {

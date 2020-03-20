@@ -28,22 +28,6 @@ public class RabbitDecorator extends ClientDecorator {
 
   public static final RabbitDecorator DECORATE = new RabbitDecorator();
 
-  public static final RabbitDecorator PRODUCER_DECORATE =
-      new RabbitDecorator() {
-        @Override
-        protected String getSpanType() {
-          return SpanTypes.MESSAGE_PRODUCER;
-        }
-      };
-
-  public static final RabbitDecorator CONSUMER_DECORATE =
-      new RabbitDecorator() {
-        @Override
-        protected String getSpanType() {
-          return SpanTypes.MESSAGE_CONSUMER;
-        }
-      };
-
   public static final Tracer TRACER =
       OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.rabbitmq-amqp-2.7");
 
@@ -55,11 +39,6 @@ public class RabbitDecorator extends ClientDecorator {
   @Override
   protected String getComponentName() {
     return "rabbitmq-amqp";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.MESSAGE_CLIENT;
   }
 
   public void onPublish(final Span span, final String exchange, final String routingKey) {

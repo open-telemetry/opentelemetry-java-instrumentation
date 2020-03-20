@@ -65,11 +65,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
       }
 
       @Override
-      protected String getSpanType() {
-        return "test-type"
-      }
-
-      @Override
       protected String getComponentName() {
         return "test-component"
       }

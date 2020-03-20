@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jms;
 
-import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -82,7 +82,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
         @Advice.Argument(0) final Message message, @Advice.This final MessageListener listener) {
 
       final Span.Builder spanBuilder =
-          TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
+          TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
       try {
         final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
         spanBuilder.setParent(extractedContext);
@@ -93,7 +93,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
       final Span span = spanBuilder.startSpan();
       span.setAttribute("span.origin.type", listener.getClass().getName());
-      CONSUMER_DECORATE.afterStart(span);
+      DECORATE.afterStart(span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
@@ -105,8 +105,8 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
         return;
       }
       final Span span = spanWithScope.getSpan();
-      CONSUMER_DECORATE.onError(span, throwable);
-      CONSUMER_DECORATE.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
     }

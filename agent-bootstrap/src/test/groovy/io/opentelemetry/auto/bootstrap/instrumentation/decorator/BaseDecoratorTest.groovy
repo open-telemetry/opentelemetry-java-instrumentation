@@ -131,11 +131,6 @@ class BaseDecoratorTest extends AgentSpecification {
     return new BaseDecorator() {
 
       @Override
-      protected String getSpanType() {
-        return "test-type"
-      }
-
-      @Override
       protected String getComponentName() {
         return "test-component"
       }

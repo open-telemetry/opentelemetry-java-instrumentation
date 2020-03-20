@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jms;
 
-import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.PRODUCER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -104,11 +104,11 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
       final Span span =
           TRACER
-              .spanBuilder(PRODUCER_DECORATE.spanNameForProducer(message, defaultDestination))
+              .spanBuilder(DECORATE.spanNameForProducer(message, defaultDestination))
               .setSpanKind(PRODUCER)
               .startSpan();
       span.setAttribute("span.origin.type", producer.getClass().getName());
-      PRODUCER_DECORATE.afterStart(span);
+      DECORATE.afterStart(span);
 
       TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
@@ -124,8 +124,8 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       final Span span = spanWithScope.getSpan();
-      PRODUCER_DECORATE.onError(span, throwable);
-      PRODUCER_DECORATE.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
 
       span.end();
       spanWithScope.closeScope();
@@ -146,11 +146,11 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
       final Span span =
           TRACER
-              .spanBuilder(PRODUCER_DECORATE.spanNameForProducer(message, destination))
+              .spanBuilder(DECORATE.spanNameForProducer(message, destination))
               .setSpanKind(PRODUCER)
               .startSpan();
       span.setAttribute("span.origin.type", producer.getClass().getName());
-      PRODUCER_DECORATE.afterStart(span);
+      DECORATE.afterStart(span);
 
       TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
@@ -166,8 +166,8 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       final Span span = spanWithScope.getSpan();
-      PRODUCER_DECORATE.onError(span, throwable);
-      PRODUCER_DECORATE.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
     }
