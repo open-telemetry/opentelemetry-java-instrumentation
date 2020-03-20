@@ -31,7 +31,7 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.auto.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.auto.util.test.AgentSpecification;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.SpanData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;

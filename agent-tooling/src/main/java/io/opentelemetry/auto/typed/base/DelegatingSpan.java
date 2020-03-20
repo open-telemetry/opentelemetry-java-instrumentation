@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.typed.base;
 
-import io.opentelemetry.trace.AttributeValue;
+import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Event;
 import io.opentelemetry.trace.Span;
@@ -27,72 +27,73 @@ import java.util.Map;
 public class DelegatingSpan implements Span {
   protected final Span delegate;
 
-  public DelegatingSpan(Span delegate) {
+  public DelegatingSpan(final Span delegate) {
     this.delegate = delegate;
   }
 
   @Override
-  public void setAttribute(String key, String value) {
+  public void setAttribute(final String key, final String value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(String key, long value) {
+  public void setAttribute(final String key, final long value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(String key, double value) {
+  public void setAttribute(final String key, final double value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(String key, boolean value) {
+  public void setAttribute(final String key, final boolean value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void setAttribute(String key, AttributeValue value) {
+  public void setAttribute(final String key, final AttributeValue value) {
     delegate.setAttribute(key, value);
   }
 
   @Override
-  public void addEvent(String name) {
+  public void addEvent(final String name) {
     delegate.addEvent(name);
   }
 
   @Override
-  public void addEvent(String name, long timestamp) {
+  public void addEvent(final String name, final long timestamp) {
     delegate.addEvent(name, timestamp);
   }
 
   @Override
-  public void addEvent(String name, Map<String, AttributeValue> attributes) {
+  public void addEvent(final String name, final Map<String, AttributeValue> attributes) {
     delegate.addEvent(name, attributes);
   }
 
   @Override
-  public void addEvent(String name, Map<String, AttributeValue> attributes, long timestamp) {
+  public void addEvent(
+      final String name, final Map<String, AttributeValue> attributes, final long timestamp) {
     delegate.addEvent(name, attributes, timestamp);
   }
 
   @Override
-  public void addEvent(Event event) {
+  public void addEvent(final Event event) {
     delegate.addEvent(event);
   }
 
   @Override
-  public void addEvent(Event event, long timestamp) {
+  public void addEvent(final Event event, final long timestamp) {
     delegate.addEvent(event, timestamp);
   }
 
   @Override
-  public void setStatus(Status status) {
+  public void setStatus(final Status status) {
     delegate.setStatus(status);
   }
 
   @Override
-  public void updateName(String name) {
+  public void updateName(final String name) {
     delegate.updateName(name);
   }
 
@@ -102,7 +103,7 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void end(EndSpanOptions endOptions) {
+  public void end(final EndSpanOptions endOptions) {
     delegate.end(endOptions);
   }
 

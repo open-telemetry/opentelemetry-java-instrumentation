@@ -15,9 +15,9 @@
  */
 package io.opentelemetry.auto.exporters.loggingexporter;
 
-import io.opentelemetry.sdk.trace.SpanData;
+import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.trace.AttributeValue;
 import java.util.List;
 import java.util.Map;
 
