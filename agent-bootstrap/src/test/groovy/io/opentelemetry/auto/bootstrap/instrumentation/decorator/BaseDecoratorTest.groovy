@@ -34,7 +34,6 @@ class BaseDecoratorTest extends AgentSpecification {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.getSpanType())
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _
