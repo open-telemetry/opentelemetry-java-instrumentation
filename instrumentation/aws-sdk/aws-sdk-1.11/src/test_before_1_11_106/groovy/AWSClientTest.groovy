@@ -139,7 +139,7 @@ class AWSClientTest extends AgentTestRunner {
           operationName expectedOperationName(method)
           spanKind CLIENT
           errored false
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
@@ -212,7 +212,7 @@ class AWSClientTest extends AgentTestRunner {
           operationName expectedOperationName(method)
           spanKind CLIENT
           errored true
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
@@ -320,7 +320,7 @@ class AWSClientTest extends AgentTestRunner {
             operationName expectedOperationName("GET")
             spanKind CLIENT
             errored true
-            childOf(span(0))
+            childOf span(0)
             tags {
               "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"

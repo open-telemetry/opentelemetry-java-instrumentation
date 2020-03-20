@@ -21,7 +21,8 @@ import io.opentelemetry.trace.Tracer;
 
 public class HttpServletDecorator extends BaseDecorator {
   public static final HttpServletDecorator DECORATE = new HttpServletDecorator();
-  public static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.servlet");
 
   @Override
   protected String getSpanType() {

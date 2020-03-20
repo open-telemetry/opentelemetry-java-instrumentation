@@ -98,7 +98,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           operationName "elasticsearch.query"
           spanKind CLIENT
           errored false
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "SearchAction"
@@ -142,7 +142,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(1) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "IndexAction"
@@ -177,7 +177,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(3) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
@@ -217,7 +217,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(1) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "GetAction"
@@ -260,7 +260,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(1) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "IndexAction"
@@ -281,7 +281,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(2) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
@@ -313,7 +313,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(1) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "GetAction"
@@ -356,7 +356,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(1) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "DeleteAction"
@@ -376,7 +376,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(2) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
@@ -409,7 +409,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(1) {
           operationName "elasticsearch.query"
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "SearchAction"
