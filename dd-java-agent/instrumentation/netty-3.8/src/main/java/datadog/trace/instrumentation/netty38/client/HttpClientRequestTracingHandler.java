@@ -58,10 +58,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       DECORATE.onRequest(span, request);
       DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
 
-      // AWS calls are often signed, so we can't add headers without breaking the signature.
-      if (!request.headers().contains("amz-sdk-invocation-id")) {
-        propagate().inject(span, request.headers(), SETTER);
-      }
+      propagate().inject(span, request.headers(), SETTER);
 
       channelTraceContext.setClientSpan(span);
 
