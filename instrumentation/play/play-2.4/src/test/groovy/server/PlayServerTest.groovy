@@ -37,80 +37,80 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class PlayServerTest extends HttpServerTest<Server> {
-    @Override
-    Server startServer(int port) {
-        def router =
-                new RoutingDsl()
-                        .GET(SUCCESS.getPath()).routeTo({
-                    controller(SUCCESS) {
-                        Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
-                    }
-                } as Supplier)
-                        .GET(QUERY_PARAM.getPath()).routeTo({
-                    controller(QUERY_PARAM) {
-                        Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
-                    }
-                } as Supplier)
-                        .GET(REDIRECT.getPath()).routeTo({
-                    controller(REDIRECT) {
-                        Results.found(REDIRECT.getBody())
-                    }
-                } as Supplier)
-                        .GET(ERROR.getPath()).routeTo({
-                    controller(ERROR) {
-                        Results.status(ERROR.getStatus(), ERROR.getBody())
-                    }
-                } as Supplier)
-                        .GET(EXCEPTION.getPath()).routeTo({
-                    controller(EXCEPTION) {
-                        throw new Exception(EXCEPTION.getBody())
-                    }
-                } as Supplier)
-
-        return Server.forRouter(router.build(), port)
-    }
-
-    @Override
-    void stopServer(Server server) {
-        server.stop()
-    }
-
-    @Override
-    String component() {
-        return NettyHttpServerDecorator.DECORATE.getComponentName()
-    }
-
-    @Override
-    boolean hasHandlerSpan() {
-        true
-    }
-
-    boolean testExceptionBody() {
-        // I can't figure out how to set a proper exception handler to customize the response body.
-        false
-    }
-
-    @Override
-    void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-        trace.span(index) {
-            operationName "play.request"
-            spanKind INTERNAL
-            errored endpoint == ERROR || endpoint == EXCEPTION
-            childOf((SpanData) parent)
-            tags {
-                "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
-                "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
-                "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-                "$Tags.HTTP_URL" String
-                "$Tags.HTTP_METHOD" String
-                "$Tags.HTTP_STATUS" Long
-                if (endpoint == EXCEPTION) {
-                    errorTags(Exception, EXCEPTION.body)
-                }
-                if (endpoint.query) {
-                    "$MoreTags.HTTP_QUERY" endpoint.query
-                }
-            }
+  @Override
+  Server startServer(int port) {
+    def router =
+      new RoutingDsl()
+        .GET(SUCCESS.getPath()).routeTo({
+        controller(SUCCESS) {
+          Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
         }
+      } as Supplier)
+        .GET(QUERY_PARAM.getPath()).routeTo({
+        controller(QUERY_PARAM) {
+          Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())
+        }
+      } as Supplier)
+        .GET(REDIRECT.getPath()).routeTo({
+        controller(REDIRECT) {
+          Results.found(REDIRECT.getBody())
+        }
+      } as Supplier)
+        .GET(ERROR.getPath()).routeTo({
+        controller(ERROR) {
+          Results.status(ERROR.getStatus(), ERROR.getBody())
+        }
+      } as Supplier)
+        .GET(EXCEPTION.getPath()).routeTo({
+        controller(EXCEPTION) {
+          throw new Exception(EXCEPTION.getBody())
+        }
+      } as Supplier)
+
+    return Server.forRouter(router.build(), port)
+  }
+
+  @Override
+  void stopServer(Server server) {
+    server.stop()
+  }
+
+  @Override
+  String component() {
+    return NettyHttpServerDecorator.DECORATE.getComponentName()
+  }
+
+  @Override
+  boolean hasHandlerSpan() {
+    true
+  }
+
+  boolean testExceptionBody() {
+    // I can't figure out how to set a proper exception handler to customize the response body.
+    false
+  }
+
+  @Override
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      operationName "play.request"
+      spanKind INTERNAL
+      errored endpoint == ERROR || endpoint == EXCEPTION
+      childOf((SpanData) parent)
+      tags {
+        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
+        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
+        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_URL" String
+        "$Tags.HTTP_METHOD" String
+        "$Tags.HTTP_STATUS" Long
+        if (endpoint == EXCEPTION) {
+          errorTags(Exception, EXCEPTION.body)
+        }
+        if (endpoint.query) {
+          "$MoreTags.HTTP_QUERY" endpoint.query
+        }
+      }
     }
+  }
 }

@@ -18,7 +18,7 @@ class RangeQueryTest extends Specification {
     final VersionRangeRequest rangeRequest = new VersionRangeRequest()
     rangeRequest.setRepositories(MuzzlePlugin.MUZZLE_REPOS)
     rangeRequest.setArtifact(directiveArtifact)
-    
+
     // This call makes an actual network request, which may fail if network access is limited.
     final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 

@@ -99,25 +99,23 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "kafka.produce"
+          operationName SHARED_TOPIC
           spanKind PRODUCER
           errored false
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
           }
         }
         span(1) {
-          operationName "kafka.consume"
+          operationName SHARED_TOPIC
           spanKind CONSUMER
           errored false
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
@@ -170,26 +168,24 @@ class KafkaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "kafka.produce"
+          operationName SHARED_TOPIC
           spanKind PRODUCER
           errored false
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Produce Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "kafka.partition" { it >= 0 }
           }
         }
         span(1) {
-          operationName "kafka.consume"
+          operationName SHARED_TOPIC
           spanKind CONSUMER
           errored false
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.RESOURCE_NAME" "Consume Topic $SHARED_TOPIC"
             "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }

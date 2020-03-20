@@ -102,10 +102,13 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         defaultDestination = null;
       }
 
-      final Span span = TRACER.spanBuilder("jms.produce").setSpanKind(PRODUCER).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(PRODUCER_DECORATE.spanNameForProducer(message, defaultDestination))
+              .setSpanKind(PRODUCER)
+              .startSpan();
       span.setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
-      PRODUCER_DECORATE.onProduce(span, message, defaultDestination);
 
       TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
@@ -141,10 +144,13 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         return null;
       }
 
-      final Span span = TRACER.spanBuilder("jms.produce").setSpanKind(PRODUCER).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(PRODUCER_DECORATE.spanNameForProducer(message, destination))
+              .setSpanKind(PRODUCER)
+              .startSpan();
       span.setAttribute("span.origin.type", producer.getClass().getName());
       PRODUCER_DECORATE.afterStart(span);
-      PRODUCER_DECORATE.onProduce(span, message, destination);
 
       TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
