@@ -59,7 +59,9 @@ public class SpockRunner extends Sputnik {
     ByteBuddyAgent.install();
     final String[] testBS = {
       "io.opentelemetry.OpenTelemetry", // OpenTelemetry API
-      "io.opentelemetry.context", // OpenTelemetry API
+      "io.opentelemetry.common", // OpenTelemetry API
+      "io.opentelemetry.context", // OpenTelemetry API (context prop)
+      "io.opentelemetry.correlationcontext", // OpenTelemetry API
       "io.opentelemetry.distributedcontext", // OpenTelemetry API
       "io.opentelemetry.internal", // OpenTelemetry API
       "io.opentelemetry.metrics", // OpenTelemetry API
