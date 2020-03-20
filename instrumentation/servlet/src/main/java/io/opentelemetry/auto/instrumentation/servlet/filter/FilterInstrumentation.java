@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.filter;
 
+import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -86,7 +87,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
       // Here we use "this" instead of "the method target" to distinguish abstract filter instances.
       final Span span =
           TRACER.spanBuilder(filter.getClass().getSimpleName() + ".doFilter").startSpan();
-      FilterDecorator.DECORATE.afterStart(span);
+      DECORATE.afterStart(span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
@@ -98,8 +99,8 @@ public final class FilterInstrumentation extends Instrumenter.Default {
         return;
       }
       final Span span = spanWithScope.getSpan();
-      FilterDecorator.DECORATE.onError(span, throwable);
-      FilterDecorator.DECORATE.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
     }

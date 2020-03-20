@@ -93,9 +93,8 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
       // Now create a span for handler/controller execution.
 
-      final Span span = TRACER.spanBuilder("spring.handler").startSpan();
+      final Span span = TRACER.spanBuilder(DECORATE.spanNameOnHandle(handler)).startSpan();
       DECORATE.afterStart(span);
-      DECORATE.onHandle(span, handler);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }

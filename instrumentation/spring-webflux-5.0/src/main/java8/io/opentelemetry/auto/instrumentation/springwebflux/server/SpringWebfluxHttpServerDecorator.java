@@ -26,8 +26,7 @@ public class SpringWebfluxHttpServerDecorator extends ServerDecorator {
   public static final SpringWebfluxHttpServerDecorator DECORATE =
       new SpringWebfluxHttpServerDecorator();
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory()
-          .get("io.opentelemetry.instrumentation.auto.spring-webflux-5.0");
+      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.spring-webflux-5.0");
 
   @Override
   protected String getSpanType() {

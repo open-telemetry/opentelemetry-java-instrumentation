@@ -61,7 +61,7 @@ class JMS1Test extends AgentTestRunner {
     broker.stop()
   }
 
-  def "sending a message to #jmsResourceName generates spans"() {
+  def "sending a message to #expectedSpanName generates spans"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
@@ -74,10 +74,10 @@ class JMS1Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, jmsResourceName)
+        producerSpan(it, 0, expectedSpanName)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, jmsResourceName, false, ActiveMQMessageConsumer, traces[0][0])
+        consumerSpan(it, 0, expectedSpanName, false, ActiveMQMessageConsumer, traces[0][0])
       }
     }
 
@@ -86,14 +86,14 @@ class JMS1Test extends AgentTestRunner {
     consumer.close()
 
     where:
-    destination                      | jmsResourceName
-    session.createQueue("someQueue") | "Queue someQueue"
-    session.createTopic("someTopic") | "Topic someTopic"
-    session.createTemporaryQueue()   | "Temporary Queue"
-    session.createTemporaryTopic()   | "Temporary Topic"
+    destination                      | expectedSpanName
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
+    session.createTemporaryQueue()   | "queue/<temporary>"
+    session.createTemporaryTopic()   | "topic/<temporary>"
   }
 
-  def "sending to a MessageListener on #jmsResourceName generates a span"() {
+  def "sending to a MessageListener on #expectedSpanName generates a span"() {
     setup:
     def lock = new CountDownLatch(1)
     def messageRef = new AtomicReference<TextMessage>()
@@ -113,8 +113,8 @@ class JMS1Test extends AgentTestRunner {
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        producerSpan(it, 0, jmsResourceName)
-        consumerSpan(it, 1, jmsResourceName, true, consumer.messageListener.class, span(0))
+        producerSpan(it, 0, expectedSpanName)
+        consumerSpan(it, 1, expectedSpanName, true, consumer.messageListener.class, span(0))
       }
     }
     // This check needs to go after all traces have been accounted for
@@ -125,14 +125,14 @@ class JMS1Test extends AgentTestRunner {
     consumer.close()
 
     where:
-    destination                      | jmsResourceName
-    session.createQueue("someQueue") | "Queue someQueue"
-    session.createTopic("someTopic") | "Topic someTopic"
-    session.createTemporaryQueue()   | "Temporary Queue"
-    session.createTemporaryTopic()   | "Temporary Topic"
+    destination                      | expectedSpanName
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
+    session.createTemporaryQueue()   | "queue/<temporary>"
+    session.createTemporaryTopic()   | "topic/<temporary>"
   }
 
-  def "failing to receive message with receiveNoWait on #jmsResourceName works"() {
+  def "failing to receive message with receiveNoWait on #expectedSpanName works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -145,12 +145,11 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.consume"
+          operationName "jms.receiveNoWait"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.RESOURCE_NAME" "JMS receiveNoWait"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -163,12 +162,12 @@ class JMS1Test extends AgentTestRunner {
     consumer.close()
 
     where:
-    destination                      | jmsResourceName
-    session.createQueue("someQueue") | "Queue someQueue"
-    session.createTopic("someTopic") | "Topic someTopic"
+    destination                      | expectedSpanName
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
   }
 
-  def "failing to receive message with wait(timeout) on #jmsResourceName works"() {
+  def "failing to receive message with wait(timeout) on #expectedSpanName works"() {
     setup:
     def consumer = session.createConsumer(destination)
 
@@ -181,12 +180,11 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.consume"
+          operationName "jms.receive"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.RESOURCE_NAME" "JMS receive"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -199,12 +197,12 @@ class JMS1Test extends AgentTestRunner {
     consumer.close()
 
     where:
-    destination                      | jmsResourceName
-    session.createQueue("someQueue") | "Queue someQueue"
-    session.createTopic("someTopic") | "Topic someTopic"
+    destination                      | expectedSpanName
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
   }
 
-  def "sending a read-only message to #jmsResourceName fails"() {
+  def "sending a read-only message to #expectedSpanName fails"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
@@ -227,17 +225,16 @@ class JMS1Test extends AgentTestRunner {
     // The consumer span will also not be linked to the parent.
     assertTraces(2) {
       trace(0, 1) {
-        producerSpan(it, 0, jmsResourceName)
+        producerSpan(it, 0, expectedSpanName)
       }
       trace(1, 1) {
         span(0) {
           parent()
-          operationName "jms.consume"
+          operationName expectedSpanName
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.RESOURCE_NAME" "Consumed from $jmsResourceName"
             "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -251,22 +248,21 @@ class JMS1Test extends AgentTestRunner {
     consumer.close()
 
     where:
-    destination                      | jmsResourceName
-    session.createQueue("someQueue") | "Queue someQueue"
-    session.createTopic("someTopic") | "Topic someTopic"
-    session.createTemporaryQueue()   | "Temporary Queue"
-    session.createTemporaryTopic()   | "Temporary Topic"
+    destination                      | expectedSpanName
+    session.createQueue("someQueue") | "queue/someQueue"
+    session.createTopic("someTopic") | "topic/someTopic"
+    session.createTemporaryQueue()   | "queue/<temporary>"
+    session.createTemporaryTopic()   | "topic/<temporary>"
   }
 
-  static producerSpan(TraceAssert trace, int index, String jmsResourceName) {
+  static producerSpan(TraceAssert trace, int index, String expectedSpanName) {
     trace.span(index) {
-      operationName "jms.produce"
+      operationName expectedSpanName
       spanKind PRODUCER
       errored false
       parent()
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.RESOURCE_NAME" "Produced for $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" ActiveMQMessageProducer.name
@@ -274,14 +270,13 @@ class JMS1Test extends AgentTestRunner {
     }
   }
 
-  static consumerSpan(TraceAssert trace, int index, String jmsResourceName, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
+  static consumerSpan(TraceAssert trace, int index, String expectedSpanName, boolean messageListener, Class origin, Object parentOrLinkedSpan) {
     trace.span(index) {
+      operationName expectedSpanName
       if (messageListener) {
-        operationName "jms.onMessage"
         spanKind CONSUMER
         childOf((SpanData) parentOrLinkedSpan)
       } else {
-        operationName "jms.consume"
         spanKind CLIENT
         parent()
         hasLink((SpanData) parentOrLinkedSpan)
@@ -289,7 +284,6 @@ class JMS1Test extends AgentTestRunner {
       errored false
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
         "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" origin.name
