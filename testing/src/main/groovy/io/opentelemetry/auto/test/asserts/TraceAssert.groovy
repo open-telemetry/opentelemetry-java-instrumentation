@@ -19,7 +19,7 @@ import com.google.common.base.Stopwatch
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.auto.test.ListWriter
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.TraceId
 
 import java.util.concurrent.TimeUnit

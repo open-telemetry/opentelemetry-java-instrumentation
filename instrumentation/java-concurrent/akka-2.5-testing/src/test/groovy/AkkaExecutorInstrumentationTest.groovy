@@ -16,7 +16,7 @@
 import akka.dispatch.forkjoin.ForkJoinPool
 import akka.dispatch.forkjoin.ForkJoinTask
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException

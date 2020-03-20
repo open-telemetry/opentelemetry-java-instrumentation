@@ -18,7 +18,7 @@ package io.opentelemetry.auto.test.server.http
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.ListWriterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.SpanContext
 import io.opentelemetry.trace.Tracer
