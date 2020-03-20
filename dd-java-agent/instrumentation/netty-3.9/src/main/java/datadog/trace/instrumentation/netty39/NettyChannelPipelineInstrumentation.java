@@ -109,33 +109,27 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         final ChannelHandler handler) {
       try {
         // Server pipeline handlers
-        if (handler instanceof HttpServerCodec
-            && pipeline.get(HttpServerTracingHandler.class.getName()) == null) {
+        if (handler instanceof HttpServerCodec) {
           pipeline.addLast(
               HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler(contextStore));
-        } else if (handler instanceof HttpRequestDecoder
-            && pipeline.get(HttpServerRequestTracingHandler.class.getName()) == null) {
+        } else if (handler instanceof HttpRequestDecoder) {
           pipeline.addLast(
               HttpServerRequestTracingHandler.class.getName(),
               new HttpServerRequestTracingHandler(contextStore));
-        } else if (handler instanceof HttpResponseEncoder
-            && pipeline.get(HttpServerResponseTracingHandler.class.getName()) == null) {
+        } else if (handler instanceof HttpResponseEncoder) {
           pipeline.addLast(
               HttpServerResponseTracingHandler.class.getName(),
               new HttpServerResponseTracingHandler(contextStore));
         } else
         // Client pipeline handlers
-        if (handler instanceof HttpClientCodec
-            && pipeline.get(HttpClientTracingHandler.class.getName()) == null) {
+        if (handler instanceof HttpClientCodec) {
           pipeline.addLast(
               HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler(contextStore));
-        } else if (handler instanceof HttpRequestEncoder
-            && pipeline.get(HttpClientRequestTracingHandler.class.getName()) == null) {
+        } else if (handler instanceof HttpRequestEncoder) {
           pipeline.addLast(
               HttpClientRequestTracingHandler.class.getName(),
               new HttpClientRequestTracingHandler(contextStore));
-        } else if (handler instanceof HttpResponseDecoder
-            && pipeline.get(HttpClientResponseTracingHandler.class.getName()) == null) {
+        } else if (handler instanceof HttpResponseDecoder) {
           pipeline.addLast(
               HttpClientResponseTracingHandler.class.getName(),
               new HttpClientResponseTracingHandler(contextStore));
