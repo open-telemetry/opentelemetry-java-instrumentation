@@ -105,12 +105,13 @@ public class KafkaStreamsProcessorInstrumentation {
 
         final Span.Builder spanBuilder =
             TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsume(record)).setSpanKind(CONSUMER);
-        try {
-          final SpanContext extractedContext =
-              TRACER.getHttpTextFormat().extract(record.value.headers(), GETTER);
+        final SpanContext extractedContext =
+            TRACER.getHttpTextFormat().extract(record.value.headers(), GETTER);
+        if (extractedContext.isValid()) {
           spanBuilder.setParent(extractedContext);
-        } catch (final IllegalArgumentException e) {
-          // Couldn't extract a context. We should treat this as a root span.
+        } else {
+          // explicitly setting "no parent" in case a span was propagated to this thread
+          // by the java-concurrent instrumentation when the thread was started
           spanBuilder.setNoParent();
         }
         final Span span = spanBuilder.startSpan();

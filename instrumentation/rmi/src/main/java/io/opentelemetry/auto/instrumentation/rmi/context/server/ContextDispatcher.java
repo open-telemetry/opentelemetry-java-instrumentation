@@ -58,13 +58,12 @@ public class ContextDispatcher implements Dispatcher {
     if (PROPAGATOR.isOperationWithPayload(operationId)) {
       final ContextPayload payload = ContextPayload.read(in);
       if (payload != null) {
-        SpanContext context = null;
-        try {
-          context = TRACER.getHttpTextFormat().extract(payload, GETTER);
-        } catch (final IllegalArgumentException e) {
-          // couldn't extract a context
+        final SpanContext context = TRACER.getHttpTextFormat().extract(payload, GETTER);
+        if (context.isValid()) {
+          THREAD_LOCAL_CONTEXT.set(context);
+        } else {
+          THREAD_LOCAL_CONTEXT.set(null);
         }
-        THREAD_LOCAL_CONTEXT.set(context);
       }
     }
 

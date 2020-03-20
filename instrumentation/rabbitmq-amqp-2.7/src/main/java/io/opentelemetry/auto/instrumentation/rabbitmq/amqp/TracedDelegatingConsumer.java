@@ -82,18 +82,15 @@ public class TracedDelegatingConsumer implements Consumer {
     try {
       final Map<String, Object> headers = properties.getHeaders();
       final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command").setSpanKind(CONSUMER);
-      SpanContext extractedContext = null;
+      SpanContext extractedContext = SpanContext.getInvalid();
       if (headers != null) {
-        try {
-          extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
-        } catch (final IllegalArgumentException e) {
-          // couldn't extract a context
-          spanBuilder.setNoParent();
-        }
+        extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
       }
-      if (extractedContext != null) {
+      if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
       } else {
+        // explicitly setting "no parent" in case a span was propagated to this thread
+        // by the java-concurrent instrumentation when the thread was started
         spanBuilder.setNoParent();
       }
 

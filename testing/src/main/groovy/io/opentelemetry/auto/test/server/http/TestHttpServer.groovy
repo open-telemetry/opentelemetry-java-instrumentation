@@ -254,11 +254,12 @@ class TestHttpServer implements AutoCloseable {
       }
       if (isTestServer) {
         final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server").setSpanKind(SERVER)
-        try {
-          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER)
-          spanBuilder.setParent(extractedContext)
-        } catch (final IllegalArgumentException e) {
-          // couldn't extract a context
+        final SpanContext extract = TRACER.getHttpTextFormat().extract(req, GETTER)
+        if (extract.isValid()) {
+          spanBuilder.setParent(extract)
+        } else {
+          // explicitly setting "no parent" in case a span was propagated to this thread
+          // by the java-concurrent instrumentation when the thread was started
           spanBuilder.setNoParent()
         }
         final Span span = spanBuilder.startSpan()
