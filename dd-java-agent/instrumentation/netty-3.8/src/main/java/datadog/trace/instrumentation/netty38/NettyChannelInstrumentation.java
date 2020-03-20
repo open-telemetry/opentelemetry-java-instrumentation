@@ -34,7 +34,9 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.jboss.netty.channel.Channel",
+        // 3.7: cannot find symbol method headers() for type HttpRequest
         "org.jboss.netty.handler.codec.http.DefaultHttpHeaders", // Not in 3.7
+        // 3.10: NoSuchMethodError: org.jboss.netty.handler.codec.http.HttpRequest.setHeader
         "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
         );
   }

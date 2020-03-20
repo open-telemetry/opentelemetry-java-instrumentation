@@ -50,6 +50,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed(
         "org.jboss.netty.channel.ChannelPipeline",
+        // 3.10: NoSuchMethodError: org.jboss.netty.handler.codec.http.HttpRequest.setHeader
         "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
         );
   }
