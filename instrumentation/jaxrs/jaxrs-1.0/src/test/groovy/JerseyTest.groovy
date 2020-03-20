@@ -15,7 +15,6 @@
  */
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.junit.ClassRule
@@ -58,7 +57,6 @@ class JerseyTest extends AgentTestRunner {
           operationName "jax-rs.request"
           tags {
             "$MoreTags.RESOURCE_NAME" controllerName
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }

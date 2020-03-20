@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.kafkaclients;
 
-import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -51,8 +51,6 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".KafkaDecorator",
-      packageName + ".KafkaDecorator$1",
-      packageName + ".KafkaDecorator$2",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracingIterable",
       packageName + ".TracingIterator",
@@ -92,7 +90,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterable<ConsumerRecord> iterable) {
       if (iterable != null) {
-        iterable = new TracingIterable(iterable, CONSUMER_DECORATE);
+        iterable = new TracingIterable(iterable, DECORATE);
       }
     }
   }
@@ -102,7 +100,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord> iterable) {
       if (iterable != null) {
-        iterable = new TracingList(iterable, CONSUMER_DECORATE);
+        iterable = new TracingList(iterable, DECORATE);
       }
     }
   }
@@ -112,7 +110,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterator<ConsumerRecord> iterator) {
       if (iterator != null) {
-        iterator = new TracingIterator(iterator, CONSUMER_DECORATE);
+        iterator = new TracingIterator(iterator, DECORATE);
       }
     }
   }

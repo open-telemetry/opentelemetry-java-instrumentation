@@ -17,7 +17,6 @@ import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -134,7 +133,6 @@ class CassandraClientTest extends AgentTestRunner {
       }
       tags {
         "$MoreTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
-        "$MoreTags.SPAN_TYPE" SpanTypes.CASSANDRA
         "$Tags.COMPONENT" "java-cassandra"
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" "127.0.0.1"

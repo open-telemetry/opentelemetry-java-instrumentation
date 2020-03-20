@@ -19,7 +19,6 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -109,7 +108,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -135,7 +133,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -169,7 +166,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -201,7 +197,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -223,7 +218,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
             "db.command.results.count" 157
@@ -246,7 +240,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
             "db.command.cancelled" true
@@ -282,7 +275,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -304,7 +296,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }

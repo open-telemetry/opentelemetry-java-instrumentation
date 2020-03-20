@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.rmi.server;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 
 public class RmiServerDecorator extends ServerDecorator {
@@ -25,11 +24,6 @@ public class RmiServerDecorator extends ServerDecorator {
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rmi");
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.RPC;
-  }
 
   @Override
   protected String getComponentName() {

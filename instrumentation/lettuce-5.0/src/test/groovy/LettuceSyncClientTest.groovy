@@ -19,7 +19,6 @@ import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -116,7 +115,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$MoreTags.NET_PEER_NAME" HOST
             "$MoreTags.NET_PEER_PORT" port
@@ -149,7 +147,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$MoreTags.NET_PEER_NAME" HOST
             "$MoreTags.NET_PEER_PORT" incorrectPort
@@ -176,7 +173,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -199,7 +195,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -222,7 +217,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -245,7 +239,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -268,7 +261,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -291,7 +283,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -314,7 +305,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -336,7 +326,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
@@ -358,7 +347,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "redis"
-            "$MoreTags.SPAN_TYPE" SpanTypes.REDIS
             "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }

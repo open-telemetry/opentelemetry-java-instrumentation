@@ -25,11 +25,6 @@ public class HttpServletResponseDecorator extends BaseDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
 
   @Override
-  protected String getSpanType() {
-    return null;
-  }
-
-  @Override
   protected String getComponentName() {
     return "java-web-servlet-response";
   }

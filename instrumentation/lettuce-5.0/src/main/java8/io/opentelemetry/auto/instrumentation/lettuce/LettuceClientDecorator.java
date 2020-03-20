@@ -19,7 +19,6 @@ import io.lettuce.core.RedisURI;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -37,11 +36,6 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   @Override
   protected String getComponentName() {
     return "redis-client";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.REDIS;
   }
 
   @Override

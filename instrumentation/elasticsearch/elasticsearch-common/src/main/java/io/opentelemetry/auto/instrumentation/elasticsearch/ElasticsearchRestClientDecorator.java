@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.elasticsearch;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -39,11 +38,6 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
   @Override
   protected String getComponentName() {
     return "elasticsearch-java";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.ELASTICSEARCH;
   }
 
   @Override

@@ -18,7 +18,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.derby.jdbc.EmbeddedDataSource
@@ -199,7 +198,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -258,7 +256,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -309,7 +306,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -360,7 +356,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -411,7 +406,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -465,7 +459,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" driver
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -531,7 +524,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" driver
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             if (prepareStatement) {
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             } else {
@@ -643,7 +635,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" database
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" database
             "$Tags.DB_STATEMENT" query
@@ -706,7 +697,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" dbType
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" dbType
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -724,7 +714,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             errored false
             tags {
               "$MoreTags.SERVICE_NAME" dbType
-              "$MoreTags.SPAN_TYPE" SpanTypes.SQL
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" dbType
               "$Tags.DB_INSTANCE" dbName.toLowerCase()

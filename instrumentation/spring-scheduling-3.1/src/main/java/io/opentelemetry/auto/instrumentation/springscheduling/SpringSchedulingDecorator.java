@@ -31,11 +31,6 @@ public class SpringSchedulingDecorator extends BaseDecorator {
   private SpringSchedulingDecorator() {}
 
   @Override
-  protected String getSpanType() {
-    return null;
-  }
-
-  @Override
   protected String getComponentName() {
     return "spring-scheduling";
   }

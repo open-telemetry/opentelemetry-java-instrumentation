@@ -30,13 +30,10 @@ public abstract class BaseDecorator {
 
   protected BaseDecorator() {}
 
-  protected abstract String getSpanType();
-
   protected abstract String getComponentName();
 
   public Span afterStart(final Span span) {
     assert span != null;
-    span.setAttribute(MoreTags.SPAN_TYPE, getSpanType());
     span.setAttribute(Tags.COMPONENT, getComponentName());
     return span;
   }

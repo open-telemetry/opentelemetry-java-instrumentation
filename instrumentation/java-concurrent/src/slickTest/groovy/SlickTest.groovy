@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -49,7 +48,6 @@ class SlickTest extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" SlickUtils.Driver()
-            "$MoreTags.SPAN_TYPE" SpanTypes.SQL
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" SlickUtils.Driver()
             "$Tags.DB_INSTANCE" SlickUtils.Db()

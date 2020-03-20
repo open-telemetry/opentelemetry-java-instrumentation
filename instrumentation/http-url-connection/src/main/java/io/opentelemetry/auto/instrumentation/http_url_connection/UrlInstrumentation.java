@@ -28,7 +28,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -88,7 +87,6 @@ public class UrlInstrumentation extends Instrumenter.Default {
         protocol = protocol != null ? protocol : "url";
 
         final Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
-        span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_CLIENT);
         span.setAttribute(Tags.COMPONENT, COMPONENT);
 
         try (final Scope scope = TRACER.withSpan(span)) {

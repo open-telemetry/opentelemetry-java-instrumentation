@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -88,7 +87,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         parent()
       }
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long

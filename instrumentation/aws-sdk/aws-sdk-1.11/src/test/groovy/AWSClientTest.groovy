@@ -45,7 +45,6 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.http.conn.HttpHostConnectException
@@ -158,7 +157,6 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "$method"
@@ -178,7 +176,6 @@ class AWSClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -249,7 +246,6 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$MoreTags.RESOURCE_NAME" "$service.$operation"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
@@ -269,7 +265,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           childOf span(0)
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
@@ -312,7 +307,6 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$MoreTags.RESOURCE_NAME" "S3.HeadBucket"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD" "HEAD"
@@ -357,7 +351,6 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$MoreTags.RESOURCE_NAME" "S3.GetObject"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "GET"
@@ -380,7 +373,6 @@ class AWSClientTest extends AgentTestRunner {
             errored true
             childOf span(0)
             tags {
-              "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
               "$MoreTags.NET_PEER_NAME" "localhost"
               "$MoreTags.NET_PEER_PORT" server.address.port

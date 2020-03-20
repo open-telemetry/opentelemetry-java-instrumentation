@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.geode;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import org.apache.geode.cache.Region;
 
@@ -45,11 +44,6 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
   @Override
   protected String service() {
     return "apache-geode";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.CACHE;
   }
 
   @Override

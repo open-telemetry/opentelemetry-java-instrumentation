@@ -31,10 +31,6 @@ class TraceUtils {
 
   private static final BaseDecorator DECORATE = new BaseDecorator() {
 
-    protected String getSpanType() {
-      return null
-    }
-
     protected String getComponentName() {
       return null
     }

@@ -24,11 +24,6 @@ public class HystrixDecorator extends BaseDecorator {
   public static final HystrixDecorator DECORATE = new HystrixDecorator();
 
   @Override
-  protected String getSpanType() {
-    return null;
-  }
-
-  @Override
   protected String getComponentName() {
     return "hystrix";
   }

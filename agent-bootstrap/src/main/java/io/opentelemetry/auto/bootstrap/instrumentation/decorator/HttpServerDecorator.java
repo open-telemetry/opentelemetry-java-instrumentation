@@ -17,7 +17,6 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -39,11 +38,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   protected abstract Integer peerPort(CONNECTION connection);
 
   protected abstract Integer status(RESPONSE response);
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.HTTP_SERVER;
-  }
 
   public String spanNameForRequest(final REQUEST request) {
     if (request == null) {

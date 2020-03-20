@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.hibernate;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.OrmClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
@@ -34,11 +33,6 @@ public class HibernateDecorator extends OrmClientDecorator {
   @Override
   protected String service() {
     return "hibernate";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.HIBERNATE;
   }
 
   @Override
