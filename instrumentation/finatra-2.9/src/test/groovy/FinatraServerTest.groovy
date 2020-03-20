@@ -18,7 +18,6 @@ import com.twitter.util.Await
 import com.twitter.util.Closable
 import com.twitter.util.Duration
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert

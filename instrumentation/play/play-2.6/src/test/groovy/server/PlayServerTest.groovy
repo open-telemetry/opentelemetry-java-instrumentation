@@ -17,7 +17,6 @@ package server
 
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.play.v2_6.PlayHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert

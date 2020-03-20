@@ -16,7 +16,6 @@
 package server
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator
