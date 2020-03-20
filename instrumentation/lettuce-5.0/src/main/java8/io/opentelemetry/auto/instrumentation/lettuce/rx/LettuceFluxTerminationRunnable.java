@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorat
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentationUtil;
 import io.opentelemetry.trace.Span;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
@@ -99,10 +100,13 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
 
     @Override
     public void accept(final Subscription subscription) {
-      final Span span = TRACER.spanBuilder("redis.query").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(LettuceInstrumentationUtil.getCommandName(command))
+              .setSpanKind(CLIENT)
+              .startSpan();
       owner.span = span;
       DECORATE.afterStart(span);
-      DECORATE.onCommand(span, command);
       if (finishSpanOnClose) {
         DECORATE.beforeFinish(span);
         span.end();
