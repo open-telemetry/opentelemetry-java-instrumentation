@@ -80,7 +80,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(1) { // select
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
@@ -116,7 +116,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(1) { // insert
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^insert /
@@ -152,7 +152,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(1) { // select
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
@@ -167,7 +167,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(2) { // update
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^update /
@@ -201,7 +201,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(1) { // select
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
@@ -235,7 +235,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(1) { // select
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^select /
@@ -250,7 +250,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(2) { // delete
           spanKind CLIENT
-          childOf(span(0))
+          childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$MoreTags.RESOURCE_NAME" ~/^delete /

@@ -36,7 +36,8 @@ public class TracingCommandListener implements CommandListener {
 
   @Override
   public void commandStarted(final CommandStartedEvent event) {
-    final Span span = TRACER.spanBuilder("mongo.query").setSpanKind(CLIENT).startSpan();
+    final String statement = DECORATE.statement(event.getCommand());
+    final Span span = TRACER.spanBuilder(statement).setSpanKind(CLIENT).startSpan();
     try (final Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, event);
@@ -46,7 +47,7 @@ public class TracingCommandListener implements CommandListener {
         DECORATE.onPeerConnection(
             span, event.getConnectionDescription().getServerAddress().getSocketAddress());
       }
-      DECORATE.onStatement(span, event.getCommand());
+      DECORATE.onStatement(span, statement);
       spanMap.put(event.getRequestId(), span);
     }
   }

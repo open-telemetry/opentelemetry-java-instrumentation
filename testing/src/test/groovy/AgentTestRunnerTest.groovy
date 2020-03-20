@@ -128,7 +128,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
         }
         span(1) {
           operationName "child"
-          childOf(span(0))
+          childOf span(0)
         }
       }
     }

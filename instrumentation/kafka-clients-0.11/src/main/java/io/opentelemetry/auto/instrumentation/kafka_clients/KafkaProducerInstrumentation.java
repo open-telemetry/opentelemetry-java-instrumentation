@@ -82,7 +82,11 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("apiVersions") final ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
-      final Span span = TRACER.spanBuilder("kafka.produce").setSpanKind(PRODUCER).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(PRODUCER_DECORATE.spanNameOnProduce(record))
+              .setSpanKind(PRODUCER)
+              .startSpan();
       PRODUCER_DECORATE.afterStart(span);
       PRODUCER_DECORATE.onProduce(span, record);
 

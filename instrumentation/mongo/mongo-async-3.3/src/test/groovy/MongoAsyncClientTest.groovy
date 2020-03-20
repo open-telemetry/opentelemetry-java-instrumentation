@@ -290,7 +290,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
 
   def mongoSpan(TraceAssert trace, int index, Closure<Boolean> statementEval, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      operationName "mongo.query"
+      operationName statementEval
       spanKind CLIENT
       if (parentSpan == null) {
         parent()
@@ -299,7 +299,6 @@ class MongoAsyncClientTest extends MongoBaseTest {
       }
       tags {
         "$MoreTags.SERVICE_NAME" "mongo"
-        "$MoreTags.RESOURCE_NAME" statementEval
         "$MoreTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
         "$MoreTags.NET_PEER_NAME" "localhost"

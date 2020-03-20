@@ -100,7 +100,7 @@ class RatpackOtherTest extends AgentTestRunner {
         span(1) {
           operationName "GET /$route"
           spanKind INTERNAL
-          childOf(span(0))
+          childOf span(0)
           errored false
           tags {
             "$MoreTags.RESOURCE_NAME" "GET /$route"
