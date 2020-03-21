@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -80,7 +79,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName expectedSpanName
+          operationName controllerName
           tags {
             "$Tags.COMPONENT" "jax-rs-controller"
           }
@@ -89,21 +88,21 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     }
 
     where:
-    resource           | abortNormal | abortPrematch | parentResourceName         | expectedSpanName               | expectedResponse
-    "/test/hello/bob"  | false       | false         | "POST /test/hello/{name}"  | "Test1/hello"                  | "Test1 bob!"
-    "/test2/hello/bob" | false       | false         | "POST /test2/hello/{name}" | "Test2/hello"                  | "Test2 bob!"
-    "/test3/hi/bob"    | false       | false         | "POST /test3/hi/{name}"    | "Test3/hello"                  | "Test3 bob!"
+    resource           | abortNormal | abortPrematch | parentResourceName         | controllerName                 | expectedResponse
+    "/test/hello/bob"  | false       | false         | "POST /test/hello/{name}"  | "Test1.hello"                  | "Test1 bob!"
+    "/test2/hello/bob" | false       | false         | "POST /test2/hello/{name}" | "Test2.hello"                  | "Test2 bob!"
+    "/test3/hi/bob"    | false       | false         | "POST /test3/hi/{name}"    | "Test3.hello"                  | "Test3 bob!"
 
     // Resteasy and Jersey give different resource class names for just the below case
     // Resteasy returns "SubResource.class"
     // Jersey returns "Test1.class
-    // "/test/hello/bob"  | true        | false         | "POST /test/hello/{name}"  | "Test1/hello"                  | "Aborted"
+    // "/test/hello/bob"  | true        | false         | "POST /test/hello/{name}"  | "Test1.hello"                  | "Aborted"
 
-    "/test2/hello/bob" | true        | false         | "POST /test2/hello/{name}" | "Test2/hello"                  | "Aborted"
-    "/test3/hi/bob"    | true        | false         | "POST /test3/hi/{name}"    | "Test3/hello"                  | "Aborted"
-    "/test/hello/bob"  | false       | true          | null                       | "PrematchRequestFilter/filter" | "Aborted Prematch"
-    "/test2/hello/bob" | false       | true          | null                       | "PrematchRequestFilter/filter" | "Aborted Prematch"
-    "/test3/hi/bob"    | false       | true          | null                       | "PrematchRequestFilter/filter" | "Aborted Prematch"
+    "/test2/hello/bob" | true        | false         | "POST /test2/hello/{name}" | "Test2.hello"                  | "Aborted"
+    "/test3/hi/bob"    | true        | false         | "POST /test3/hi/{name}"    | "Test3.hello"                  | "Aborted"
+    "/test/hello/bob"  | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
+    "/test2/hello/bob" | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
+    "/test3/hi/bob"    | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
   }
 
   @Provider

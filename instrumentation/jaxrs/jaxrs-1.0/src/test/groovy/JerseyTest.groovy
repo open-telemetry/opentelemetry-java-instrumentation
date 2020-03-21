@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -53,7 +52,7 @@ class JerseyTest extends AgentTestRunner {
 
         span(1) {
           childOf span(0)
-          operationName expectedSpanName
+          operationName controllerName
           tags {
             "$Tags.COMPONENT" "jax-rs-controller"
           }
@@ -62,9 +61,9 @@ class JerseyTest extends AgentTestRunner {
     }
 
     where:
-    resource           | expectedResourceName       | expectedSpanName | expectedResponse
-    "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1/hello"    | "Test1 bob!"
-    "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2/hello"    | "Test2 bob!"
-    "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3/hello"    | "Test3 bob!"
+    resource           | expectedResourceName       | controllerName | expectedResponse
+    "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
+    "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
+    "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
   }
 }

@@ -99,12 +99,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "jax-rs.request"
+      operationName "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
       spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$MoreTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
         "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.getComponentName()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -126,7 +125,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
