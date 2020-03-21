@@ -28,12 +28,22 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
   private final String bucket;
   private final String query;
 
-  public CouchbaseOnSubscribe(
-      final Observable originalObservable,
-      final Method method,
-      final String bucket,
-      final String query) {
-    super(originalObservable, operationName(method, query), DECORATE, CLIENT);
+  public static CouchbaseOnSubscribe create(
+      final Observable originalObservable, final String bucket, final Method method) {
+    final Class<?> declaringClass = method.getDeclaringClass();
+    final String className =
+        declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
+    return new CouchbaseOnSubscribe(originalObservable, bucket, className + "." + method.getName());
+  }
+
+  public static CouchbaseOnSubscribe create(
+      final Observable originalObservable, final String bucket, final String query) {
+    return new CouchbaseOnSubscribe(originalObservable, bucket, query);
+  }
+
+  private CouchbaseOnSubscribe(
+      final Observable originalObservable, final String bucket, final String query) {
+    super(originalObservable, query, DECORATE, CLIENT);
 
     this.bucket = bucket;
     this.query = query;
@@ -45,15 +55,5 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
 
     span.setAttribute(Tags.DB_INSTANCE, bucket);
     span.setAttribute(Tags.DB_STATEMENT, query);
-  }
-
-  private static String operationName(final Method method, final String query) {
-    if (query != null) {
-      return query;
-    }
-    final Class<?> declaringClass = method.getDeclaringClass();
-    final String className =
-        declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
-    return className + "." + method.getName();
   }
 }

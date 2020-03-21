@@ -19,7 +19,7 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 
 class CouchbaseSpringTemplate26Test extends CouchbaseSpringTemplateTest {
   @Override
-  void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object dbStatement = null, Object parentSpan = null) {
-    CouchbaseSpanUtil.assertCouchbaseCall(trace, index, name, bucketName, dbStatement, parentSpan)
+  void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null) {
+    CouchbaseSpanUtil.assertCouchbaseCall(trace, index, name, bucketName, parentSpan)
   }
 }

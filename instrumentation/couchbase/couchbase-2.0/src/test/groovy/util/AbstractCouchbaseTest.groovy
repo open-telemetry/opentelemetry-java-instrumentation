@@ -121,7 +121,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       .socketConnectTimeout(timeout.intValue())
   }
 
-  void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object dbStatement = null, Object parentSpan = null) {
+  void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
       operationName name
       spanKind CLIENT
@@ -138,9 +138,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         if (bucketName != null) {
           "$Tags.DB_INSTANCE" bucketName
         }
-        if (dbStatement != null) {
-          "$Tags.DB_STATEMENT" dbStatement
-        }
+        "$Tags.DB_STATEMENT" name
       }
     }
   }
