@@ -105,7 +105,6 @@ class KafkaClientTest extends AgentTestRunner {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
           }
         }
@@ -116,7 +115,6 @@ class KafkaClientTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
             "offset" 0
@@ -174,7 +172,6 @@ class KafkaClientTest extends AgentTestRunner {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "kafka.partition" { it >= 0 }
           }
@@ -186,7 +183,6 @@ class KafkaClientTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "kafka"
-            "$MoreTags.SPAN_TYPE" "queue"
             "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
             "offset" 0

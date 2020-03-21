@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -98,7 +97,6 @@ class AwsClientTest extends AgentTestRunner {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -128,7 +126,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -203,7 +200,6 @@ class AwsClientTest extends AgentTestRunner {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -236,7 +232,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "netty-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
@@ -319,7 +314,6 @@ class AwsClientTest extends AgentTestRunner {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -339,7 +333,6 @@ class AwsClientTest extends AgentTestRunner {
             errored true
             childOf span(0)
             tags {
-              "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
               "$MoreTags.NET_PEER_NAME" "localhost"
               "$MoreTags.NET_PEER_PORT" server.address.port

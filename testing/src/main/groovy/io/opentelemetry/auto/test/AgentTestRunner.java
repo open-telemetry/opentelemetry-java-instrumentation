@@ -31,7 +31,7 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.auto.tooling.matcher.AdditionalLibraryIgnoresMatcher;
 import io.opentelemetry.auto.util.test.AgentSpecification;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.SpanData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -103,8 +103,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
     ((Logger) LoggerFactory.getLogger("io.opentelemetry.auto")).setLevel(Level.DEBUG);
 
     TEST_WRITER = new ListWriter();
-    OpenTelemetrySdk.getTracerFactory().addSpanProcessor(TEST_WRITER);
-    TEST_TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER);
+    TEST_TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
   }
 
   protected static Tracer getTestTracer() {

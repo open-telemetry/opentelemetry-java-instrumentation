@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import org.hibernate.Query
 import org.hibernate.Session
@@ -51,7 +50,6 @@ class QueryTest extends AbstractHibernateTest {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -62,7 +60,6 @@ class QueryTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.RESOURCE_NAME" resource
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
           }
@@ -72,7 +69,6 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
             "$Tags.DB_INSTANCE" "db1"
@@ -87,7 +83,6 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -101,7 +96,6 @@ class QueryTest extends AbstractHibernateTest {
             parent()
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
-              "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
             }
           }
@@ -112,7 +106,6 @@ class QueryTest extends AbstractHibernateTest {
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
               "$MoreTags.RESOURCE_NAME" resource
-              "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
               "$Tags.COMPONENT" "java-hibernate"
               "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
             }
@@ -123,7 +116,6 @@ class QueryTest extends AbstractHibernateTest {
             childOf span(1)
             tags {
               "$MoreTags.SERVICE_NAME" "h2"
-              "$MoreTags.SPAN_TYPE" "sql"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" "h2"
               "$Tags.DB_INSTANCE" "db1"
@@ -182,7 +174,6 @@ class QueryTest extends AbstractHibernateTest {
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -193,7 +184,6 @@ class QueryTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
             "$MoreTags.RESOURCE_NAME" "from Value"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -203,7 +193,6 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
-            "$MoreTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "h2"
             "$Tags.DB_INSTANCE" "db1"
@@ -218,7 +207,6 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.SPAN_TYPE" SpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
           }
         }

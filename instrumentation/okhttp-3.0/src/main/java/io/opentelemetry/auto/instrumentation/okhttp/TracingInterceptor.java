@@ -32,7 +32,7 @@ import okhttp3.Response;
 @Slf4j
 public class TracingInterceptor implements Interceptor {
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.okhttp-3.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.okhttp-3.0");
 
   @Override
   public Response intercept(final Chain chain) throws IOException {

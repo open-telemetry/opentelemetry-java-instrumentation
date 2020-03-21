@@ -17,7 +17,6 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -41,11 +40,6 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   protected abstract Integer status(RESPONSE response);
 
   @Override
-  protected String getSpanType() {
-    return SpanTypes.HTTP_CLIENT;
-  }
-
-  @Override
   protected String service() {
     return null;
   }
@@ -61,10 +55,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      final String method = method(request);
-      if (method != null) {
-        span.setAttribute(Tags.HTTP_METHOD, method);
-      }
+      span.setAttribute(Tags.HTTP_METHOD, method(request));
 
       // Copy of HttpServerDecorator url handling
       try {
@@ -100,12 +91,8 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
-            if (query != null) {
-              span.setAttribute(MoreTags.HTTP_QUERY, query);
-            }
-            if (fragment != null) {
-              span.setAttribute(MoreTags.HTTP_FRAGMENT, fragment);
-            }
+            span.setAttribute(MoreTags.HTTP_QUERY, query);
+            span.setAttribute(MoreTags.HTTP_FRAGMENT, fragment);
           }
         }
       } catch (final Exception e) {
@@ -113,12 +100,10 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       }
 
       final String hostname = hostname(request);
-      if (hostname != null) {
-        span.setAttribute(MoreTags.NET_PEER_NAME, hostname);
+      span.setAttribute(MoreTags.NET_PEER_NAME, hostname);
 
-        if (Config.get().isHttpClientSplitByDomain()) {
-          span.setAttribute(MoreTags.SERVICE_NAME, hostname);
-        }
+      if (Config.get().isHttpClientSplitByDomain()) {
+        span.setAttribute(MoreTags.SERVICE_NAME, hostname);
       }
       final Integer port = port(request);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.

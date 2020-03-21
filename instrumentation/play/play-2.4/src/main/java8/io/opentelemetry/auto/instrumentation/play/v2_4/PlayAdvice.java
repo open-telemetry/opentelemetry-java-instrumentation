@@ -33,13 +33,10 @@ public class PlayAdvice {
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
     final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
     if (!TRACER.getCurrentSpan().getContext().isValid()) {
-      try {
-        final SpanContext extractedContext =
-            TRACER.getHttpTextFormat().extract(req.headers(), GETTER);
+      final SpanContext extractedContext =
+          TRACER.getHttpTextFormat().extract(req.headers(), GETTER);
+      if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
-      } catch (final IllegalArgumentException e) {
-        // Couldn't extract a context. We should treat this as a root span.
-        spanBuilder.setNoParent();
       }
     } else {
       // An upstream framework (e.g. akka-http, netty) has already started the span.

@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi;
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.context.NoopScope;
 import unshaded.io.opentelemetry.context.Scope;
-import unshaded.io.opentelemetry.context.propagation.BinaryFormat;
 import unshaded.io.opentelemetry.context.propagation.HttpTextFormat;
 import unshaded.io.opentelemetry.trace.Span;
 import unshaded.io.opentelemetry.trace.SpanContext;
@@ -51,11 +50,6 @@ public class UnshadedTracer implements Tracer {
   @Override
   public Span.Builder spanBuilder(final String spanName) {
     return new UnshadedSpanBuilder(shadedTracer.spanBuilder(spanName));
-  }
-
-  @Override
-  public BinaryFormat<SpanContext> getBinaryFormat() {
-    return new UnshadedBinaryFormat(shadedTracer.getBinaryFormat());
   }
 
   @Override

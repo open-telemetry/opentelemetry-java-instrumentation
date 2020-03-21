@@ -45,7 +45,6 @@ public class OpenTelemetryApiInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".Bridging",
       packageName + ".Bridging$1",
-      packageName + ".UnshadedBinaryFormat",
       packageName + ".UnshadedHttpTextFormat",
       packageName + ".UnshadedHttpTextFormat$UnshadedSetter",
       packageName + ".UnshadedHttpTextFormat$UnshadedGetter",
@@ -53,7 +52,7 @@ public class OpenTelemetryApiInstrumentation extends Instrumenter.Default {
       packageName + ".UnshadedSpan",
       packageName + ".UnshadedSpanBuilder",
       packageName + ".UnshadedTracer",
-      packageName + ".UnshadedTracerFactory"
+      packageName + ".UnshadedTracerProvider"
     };
   }
 
@@ -61,18 +60,18 @@ public class OpenTelemetryApiInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod().and(isPublic()).and(named("getTracerFactory")).and(takesArguments(0)),
-        OpenTelemetryApiInstrumentation.class.getName() + "$GetTracerFactoryAdvice");
+        isMethod().and(isPublic()).and(named("getTracerProvider")).and(takesArguments(0)),
+        OpenTelemetryApiInstrumentation.class.getName() + "$GetTracerProviderAdvice");
     return transformers;
   }
 
-  public static class GetTracerFactoryAdvice {
+  public static class GetTracerProviderAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false)
-            unshaded.io.opentelemetry.trace.TracerFactory tracerFactory) {
-      tracerFactory = new UnshadedTracerFactory();
+            unshaded.io.opentelemetry.trace.TracerProvider tracerProvider) {
+      tracerProvider = new UnshadedTracerProvider();
     }
   }
 }

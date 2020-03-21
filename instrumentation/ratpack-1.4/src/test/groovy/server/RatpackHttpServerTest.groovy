@@ -16,13 +16,12 @@
 package server
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import ratpack.error.ServerErrorHandler
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
@@ -135,7 +134,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
       childOf((SpanData) parent)
       tags {
         "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.getComponentName()
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
@@ -165,7 +163,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
       }
       tags {
         "$MoreTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path}"
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

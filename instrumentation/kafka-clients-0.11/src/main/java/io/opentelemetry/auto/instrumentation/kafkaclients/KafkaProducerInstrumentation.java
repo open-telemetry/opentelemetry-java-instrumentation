@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.kafkaclients;
 
-import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.PRODUCER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
@@ -57,8 +57,6 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".KafkaDecorator",
-      packageName + ".KafkaDecorator$1",
-      packageName + ".KafkaDecorator$2",
       packageName + ".TextMapInjectAdapter",
       KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
     };
@@ -83,12 +81,9 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
       final Span span =
-          TRACER
-              .spanBuilder(PRODUCER_DECORATE.spanNameOnProduce(record))
-              .setSpanKind(PRODUCER)
-              .startSpan();
-      PRODUCER_DECORATE.afterStart(span);
-      PRODUCER_DECORATE.onProduce(span, record);
+          TRACER.spanBuilder(DECORATE.spanNameOnProduce(record)).setSpanKind(PRODUCER).startSpan();
+      DECORATE.afterStart(span);
+      DECORATE.onProduce(span, record);
 
       callback = new ProducerCallback(callback, span);
 
@@ -120,8 +115,8 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       final Span span = spanWithScope.getSpan();
-      PRODUCER_DECORATE.onError(span, throwable);
-      PRODUCER_DECORATE.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
     }
@@ -139,13 +134,13 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
     @Override
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
       try (final Scope scope = TRACER.withSpan(span)) {
-        PRODUCER_DECORATE.onError(span, exception);
+        DECORATE.onError(span, exception);
         try {
           if (callback != null) {
             callback.onCompletion(metadata, exception);
           }
         } finally {
-          PRODUCER_DECORATE.beforeFinish(span);
+          DECORATE.beforeFinish(span);
           span.end();
         }
       }

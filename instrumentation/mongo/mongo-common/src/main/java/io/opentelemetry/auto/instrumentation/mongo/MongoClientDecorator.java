@@ -22,7 +22,6 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +36,7 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
 
   // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.mongo");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.mongo");
 
   @Override
   protected String service() {
@@ -47,11 +46,6 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
   @Override
   protected String getComponentName() {
     return "java-mongo";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.MONGO;
   }
 
   @Override

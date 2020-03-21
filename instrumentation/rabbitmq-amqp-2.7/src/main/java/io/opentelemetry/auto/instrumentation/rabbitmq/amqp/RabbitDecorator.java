@@ -20,7 +20,6 @@ import com.rabbitmq.client.Envelope;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -28,24 +27,8 @@ public class RabbitDecorator extends ClientDecorator {
 
   public static final RabbitDecorator DECORATE = new RabbitDecorator();
 
-  public static final RabbitDecorator PRODUCER_DECORATE =
-      new RabbitDecorator() {
-        @Override
-        protected String getSpanType() {
-          return SpanTypes.MESSAGE_PRODUCER;
-        }
-      };
-
-  public static final RabbitDecorator CONSUMER_DECORATE =
-      new RabbitDecorator() {
-        @Override
-        protected String getSpanType() {
-          return SpanTypes.MESSAGE_CONSUMER;
-        }
-      };
-
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.rabbitmq-amqp-2.7");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rabbitmq-amqp-2.7");
 
   @Override
   protected String service() {
@@ -57,11 +40,6 @@ public class RabbitDecorator extends ClientDecorator {
     return "rabbitmq-amqp";
   }
 
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.MESSAGE_CLIENT;
-  }
-
   public void onPublish(final Span span, final String exchange, final String routingKey) {
     final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
     final String routing =
@@ -69,7 +47,6 @@ public class RabbitDecorator extends ClientDecorator {
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
     span.setAttribute(MoreTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
-    span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.MESSAGE_PRODUCER);
     span.setAttribute("amqp.command", "basic.publish");
     if (exchange != null && !exchange.isEmpty()) {
       span.setAttribute("amqp.exchange", exchange);
