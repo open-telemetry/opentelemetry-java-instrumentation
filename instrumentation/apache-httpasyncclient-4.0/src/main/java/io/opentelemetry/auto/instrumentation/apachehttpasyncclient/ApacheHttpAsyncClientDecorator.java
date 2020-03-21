@@ -33,7 +33,7 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
       new ApacheHttpAsyncClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.apache-httpasyncclient-4.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpasyncclient-4.0");
 
   @Override
   protected String getComponentName() {

@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.jms;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 import javax.jms.Destination;
@@ -27,25 +26,11 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 
-public abstract class JMSDecorator extends ClientDecorator {
-  public static final JMSDecorator PRODUCER_DECORATE =
-      new JMSDecorator() {
-        @Override
-        protected String getSpanType() {
-          return SpanTypes.MESSAGE_PRODUCER;
-        }
-      };
-
-  public static final JMSDecorator CONSUMER_DECORATE =
-      new JMSDecorator() {
-        @Override
-        protected String getSpanType() {
-          return SpanTypes.MESSAGE_CONSUMER;
-        }
-      };
+public class JMSDecorator extends ClientDecorator {
+  public static final JMSDecorator DECORATE = new JMSDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jms-1.1");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jms-1.1");
 
   @Override
   protected String service() {

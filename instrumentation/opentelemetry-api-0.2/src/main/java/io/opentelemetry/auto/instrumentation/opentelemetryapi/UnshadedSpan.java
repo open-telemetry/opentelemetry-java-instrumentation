@@ -19,7 +19,7 @@ import static io.opentelemetry.auto.instrumentation.opentelemetryapi.Bridging.to
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.Bridging.toShadedOrNull;
 
 import java.util.Map;
-import unshaded.io.opentelemetry.trace.AttributeValue;
+import unshaded.io.opentelemetry.common.AttributeValue;
 import unshaded.io.opentelemetry.trace.EndSpanOptions;
 import unshaded.io.opentelemetry.trace.Event;
 import unshaded.io.opentelemetry.trace.Span;
@@ -60,7 +60,7 @@ public class UnshadedSpan implements Span {
 
   @Override
   public void setAttribute(final String key, final AttributeValue value) {
-    final io.opentelemetry.trace.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
+    final io.opentelemetry.common.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
     if (convertedValue != null) {
       shadedSpan.setAttribute(key, convertedValue);
     }

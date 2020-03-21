@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LogbackSpans {
 
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.logback-1.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.logback-1.0");
 
   public static void capture(final ILoggingEvent event) {
 

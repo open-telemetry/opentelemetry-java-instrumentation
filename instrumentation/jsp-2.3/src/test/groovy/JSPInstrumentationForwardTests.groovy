@@ -16,7 +16,6 @@
 import com.google.common.io.Files
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
@@ -110,7 +109,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -201,7 +199,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -262,7 +259,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -398,7 +394,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -509,7 +504,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -585,7 +579,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long

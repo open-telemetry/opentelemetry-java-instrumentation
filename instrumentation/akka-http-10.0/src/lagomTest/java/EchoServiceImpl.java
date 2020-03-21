@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class EchoServiceImpl implements EchoService {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   @Override
   public ServiceCall<Source<String, NotUsed>, Source<String, NotUsed>> echo() {
@@ -39,7 +39,7 @@ public class EchoServiceImpl implements EchoService {
   }
 
   public List<String> tracedMethod() {
-    Span span = TRACER.spanBuilder("tracedMethod").startSpan();
+    final Span span = TRACER.spanBuilder("tracedMethod").startSpan();
     try {
       return java.util.Arrays.asList("msg1", "msg2", "msg3");
     } finally {

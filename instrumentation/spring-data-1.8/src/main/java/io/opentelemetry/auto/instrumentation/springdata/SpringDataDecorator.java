@@ -26,17 +26,12 @@ public final class SpringDataDecorator extends ClientDecorator {
   public static final SpringDataDecorator DECORATE = new SpringDataDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.spring-data-1.8");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-data-1.8");
 
   private SpringDataDecorator() {}
 
   @Override
   protected String service() {
-    return null;
-  }
-
-  @Override
-  protected String getSpanType() {
     return null;
   }
 

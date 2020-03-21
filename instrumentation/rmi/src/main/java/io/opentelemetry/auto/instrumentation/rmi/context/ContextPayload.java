@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ContextPayload {
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.rmi");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rmi");
 
   @Getter private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();
@@ -77,7 +77,7 @@ public class ContextPayload {
 
   public static class InjectAdapter implements HttpTextFormat.Setter<ContextPayload> {
     @Override
-    public void put(final ContextPayload carrier, final String key, final String value) {
+    public void set(final ContextPayload carrier, final String key, final String value) {
       carrier.getContext().put(key, value);
     }
   }

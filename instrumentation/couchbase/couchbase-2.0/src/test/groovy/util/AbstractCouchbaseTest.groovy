@@ -27,12 +27,11 @@ import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
@@ -135,7 +134,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       tags {
         "$MoreTags.SERVICE_NAME" "couchbase"
         "$MoreTags.RESOURCE_NAME" name
-        "$MoreTags.SPAN_TYPE" SpanTypes.COUCHBASE
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.DB_TYPE" "couchbase"
         if (bucketName != null) {

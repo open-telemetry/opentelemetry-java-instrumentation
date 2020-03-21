@@ -17,7 +17,7 @@ package io.opentelemetry.auto.test.asserts
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.trace.AttributeValue
+import io.opentelemetry.common.AttributeValue
 
 import java.util.regex.Pattern
 

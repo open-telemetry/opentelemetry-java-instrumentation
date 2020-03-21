@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jms;
 
-import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
@@ -61,8 +61,6 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".JMSDecorator",
-      packageName + ".JMSDecorator$1",
-      packageName + ".JMSDecorator$2",
       packageName + ".MessageExtractAdapter",
       packageName + ".MessageInjectAdapter"
     };
@@ -82,18 +80,19 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
         @Advice.Argument(0) final Message message, @Advice.This final MessageListener listener) {
 
       final Span.Builder spanBuilder =
-          TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
-      try {
-        final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+          TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
+      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+      if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
-      } catch (final IllegalArgumentException e) {
-        // Couldn't extract a context. We should treat this as a root span.
+      } else {
+        // explicitly setting "no parent" in case a span was propagated to this thread
+        // by the java-concurrent instrumentation when the thread was started
         spanBuilder.setNoParent();
       }
 
       final Span span = spanBuilder.startSpan();
       span.setAttribute("span.origin.type", listener.getClass().getName());
-      CONSUMER_DECORATE.afterStart(span);
+      DECORATE.afterStart(span);
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
@@ -105,8 +104,8 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
         return;
       }
       final Span span = spanWithScope.getSpan();
-      CONSUMER_DECORATE.onError(span, throwable);
-      CONSUMER_DECORATE.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
     }
