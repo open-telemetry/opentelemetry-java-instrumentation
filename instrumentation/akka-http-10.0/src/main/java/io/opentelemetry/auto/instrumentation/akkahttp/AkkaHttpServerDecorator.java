@@ -28,7 +28,7 @@ public class AkkaHttpServerDecorator
   public static final AkkaHttpServerDecorator DECORATE = new AkkaHttpServerDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.akka-http-10.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.akka-http-10.0");
 
   @Override
   protected String getComponentName() {

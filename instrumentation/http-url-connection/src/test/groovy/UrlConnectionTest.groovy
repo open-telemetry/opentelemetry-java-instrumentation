@@ -17,7 +17,6 @@ import io.opentelemetry.auto.bootstrap.AgentClassLoader
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -62,7 +61,6 @@ class UrlConnectionTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
@@ -113,7 +111,6 @@ class UrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" UrlInstrumentation.COMPONENT
             "$MoreTags.NET_PEER_PORT" 80
             // FIXME: These tags really make no sense for non-http connections, why do we set them?

@@ -18,12 +18,11 @@ import com.twitter.util.Await
 import com.twitter.util.Closable
 import com.twitter.util.Duration
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 
 import java.util.concurrent.TimeoutException
 
@@ -95,7 +94,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
       childOf(parent as SpanData)
       tags {
         "$MoreTags.RESOURCE_NAME" "FinatraController"
-        "$MoreTags.SPAN_TYPE" "web"
         "$Tags.COMPONENT" FinatraDecorator.DECORATE.getComponentName()
 
         // Finatra doesn't propagate the stack trace or exception to the instrumentation
@@ -119,7 +117,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
       }
       tags {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path}"
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

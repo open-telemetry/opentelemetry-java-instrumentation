@@ -23,11 +23,11 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
-  val TRACER: Tracer = OpenTelemetry.getTracerFactory.get("io.opentelemetry.auto")
+  val TRACER: Tracer = OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def traceWithFutureAndCallbacks() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)
@@ -88,8 +88,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def traceWithPromises() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)
@@ -136,8 +136,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def tracedWithFutureFirstCompletions() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)
@@ -164,8 +164,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-    * @return Number of expected spans in the trace
-    */
+   * @return Number of expected spans in the trace
+   */
   def tracedTimeout(): Integer = {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)

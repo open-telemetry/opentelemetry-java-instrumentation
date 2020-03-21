@@ -16,7 +16,6 @@
 package client
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
@@ -70,7 +69,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
         errored exception != null
         tags {
           "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-          "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
           "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.getComponentName()
           "$MoreTags.NET_PEER_NAME" "localhost"
           "$MoreTags.NET_PEER_PORT" uri.port

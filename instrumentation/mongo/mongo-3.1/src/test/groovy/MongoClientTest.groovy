@@ -21,10 +21,9 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -261,7 +260,6 @@ class MongoClientTest extends MongoBaseTest {
       }
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? instance : "mongo"
-        "$MoreTags.SPAN_TYPE" SpanTypes.MONGO
         "$Tags.COMPONENT" "java-mongo"
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" "127.0.0.1"

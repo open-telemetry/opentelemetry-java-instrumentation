@@ -19,7 +19,6 @@ import com.datastax.driver.core.Host;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Span;
 
 public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
@@ -33,11 +32,6 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   @Override
   protected String getComponentName() {
     return "java-cassandra";
-  }
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.CASSANDRA;
   }
 
   @Override
