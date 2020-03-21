@@ -21,7 +21,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
 import io.opentelemetry.trace.Span;
@@ -46,14 +45,9 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jaxrs-2.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-2.0");
 
   private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
-
-  @Override
-  protected String getSpanType() {
-    return null;
-  }
 
   @Override
   protected String getComponentName() {
@@ -65,8 +59,6 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
     final String resourceName = getPathResourceName(target, method);
     updateParent(parent, resourceName);
-
-    span.setAttribute(MoreTags.SPAN_TYPE, SpanTypes.HTTP_SERVER);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     final boolean isRootScope = !parent.getContext().isValid();

@@ -35,7 +35,7 @@ public class NettyHttpServerDecorator
   public static final NettyHttpServerDecorator DECORATE = new NettyHttpServerDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.netty-4.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-4.0");
 
   @Override
   protected String getComponentName() {

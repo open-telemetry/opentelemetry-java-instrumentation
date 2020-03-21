@@ -17,7 +17,7 @@ package io.opentelemetry.auto.test.asserts
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
 

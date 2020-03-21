@@ -15,11 +15,10 @@
  */
 import com.google.common.io.Files
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -187,7 +186,6 @@ class JMS2Test extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" HornetQMessageConsumer.name
           }
@@ -222,7 +220,6 @@ class JMS2Test extends AgentTestRunner {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "jms"
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
             "$Tags.COMPONENT" "jms"
             "span.origin.type" HornetQMessageConsumer.name
           }
@@ -247,7 +244,6 @@ class JMS2Test extends AgentTestRunner {
       errored false
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" HornetQMessageProducer.name
       }
@@ -269,7 +265,6 @@ class JMS2Test extends AgentTestRunner {
 
       tags {
         "$MoreTags.SERVICE_NAME" "jms"
-        "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
         "$Tags.COMPONENT" "jms"
         "span.origin.type" origin.name
       }

@@ -16,7 +16,6 @@
 package springdata
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -100,7 +99,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -153,7 +151,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "CreateIndexAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
@@ -169,7 +166,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
@@ -184,7 +180,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "SearchAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
@@ -201,7 +196,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "IndexAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -217,7 +211,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "PutMappingAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -233,7 +226,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "RefreshAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -252,7 +244,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "SearchAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
@@ -333,7 +324,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$MoreTags.RESOURCE_NAME" "SearchAction"
-            "$MoreTags.SPAN_TYPE" SpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"

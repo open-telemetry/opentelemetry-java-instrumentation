@@ -55,8 +55,6 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".RabbitDecorator",
-      packageName + ".RabbitDecorator$1",
-      packageName + ".RabbitDecorator$2",
       // These are only used by muzzleCheck:
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",

@@ -17,12 +17,11 @@ package server
 
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.play.v2_6.PlayHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import play.BuiltInComponents
 import play.Mode
 import play.mvc.Results
@@ -103,7 +102,6 @@ class PlayServerTest extends HttpServerTest<Server> {
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String
@@ -131,7 +129,6 @@ class PlayServerTest extends HttpServerTest<Server> {
         parent()
       }
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$Tags.HTTP_STATUS" endpoint.status
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

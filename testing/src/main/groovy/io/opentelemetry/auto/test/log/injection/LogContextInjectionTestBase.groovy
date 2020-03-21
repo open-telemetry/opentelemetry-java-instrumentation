@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 abstract class LogContextInjectionTestBase extends AgentTestRunner {
 
-  final Tracer tracer = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.test")
+  final Tracer tracer = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.test")
 
   /**
    * Set in the framework-specific context the given value at the given key

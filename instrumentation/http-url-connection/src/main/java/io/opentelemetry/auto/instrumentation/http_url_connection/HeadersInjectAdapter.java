@@ -23,7 +23,7 @@ public class HeadersInjectAdapter implements HttpTextFormat.Setter<HttpURLConnec
   public static final HeadersInjectAdapter SETTER = new HeadersInjectAdapter();
 
   @Override
-  public void put(final HttpURLConnection carrier, final String key, final String value) {
+  public void set(final HttpURLConnection carrier, final String key, final String value) {
     carrier.setRequestProperty(key, value);
   }
 }

@@ -16,7 +16,6 @@
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -648,7 +647,6 @@ class SpymemcachedTest extends AgentTestRunner {
 
       tags {
         "$MoreTags.SERVICE_NAME" CompletionListener.SERVICE_NAME
-        "$MoreTags.SPAN_TYPE" SpanTypes.MEMCACHED
         "$Tags.COMPONENT" CompletionListener.COMPONENT_NAME
         "$Tags.DB_TYPE" CompletionListener.DB_TYPE
 

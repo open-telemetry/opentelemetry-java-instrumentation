@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.geode.cache.client.ClientCacheFactory
@@ -133,7 +132,6 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.CACHE
             "$Tags.COMPONENT" "apache-geode-client"
             "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
@@ -145,7 +143,6 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.CACHE
             "$Tags.COMPONENT" "apache-geode-client"
             "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
@@ -157,7 +154,6 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.CACHE
             "$Tags.COMPONENT" "apache-geode-client"
             "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"

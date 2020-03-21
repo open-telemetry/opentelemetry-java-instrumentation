@@ -23,8 +23,8 @@ import com.google.common.collect.TreeTraverser;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import io.opentelemetry.sdk.trace.ReadableSpan;
-import io.opentelemetry.sdk.trace.SpanData;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.SpanId;
 import io.opentelemetry.trace.TraceId;
 import java.util.ArrayList;
@@ -71,6 +71,11 @@ public class ListWriter implements SpanProcessor {
   }
 
   @Override
+  public boolean isStartRequired() {
+    return true;
+  }
+
+  @Override
   public void onEnd(final ReadableSpan readableSpan) {
     final SpanData sd = readableSpan.toSpanData();
     log.debug(
@@ -104,6 +109,11 @@ public class ListWriter implements SpanProcessor {
       needsSpanSorting.add(span.getTraceId());
       tracesLock.notifyAll();
     }
+  }
+
+  @Override
+  public boolean isEndRequired() {
+    return true;
   }
 
   public List<List<SpanData>> getTraces() {
@@ -184,6 +194,9 @@ public class ListWriter implements SpanProcessor {
 
   @Override
   public void shutdown() {}
+
+  @Override
+  public void forceFlush() {}
 
   // must be called under tracesLock
   private void sortTraces() {

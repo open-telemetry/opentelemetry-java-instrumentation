@@ -24,11 +24,10 @@ import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
@@ -374,7 +373,6 @@ class RabbitMQTest extends AgentTestRunner {
 
         switch (tag("amqp.command")?.stringValue) {
           case "basic.publish":
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_PRODUCER
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
             "amqp.routing_key" {
@@ -384,20 +382,17 @@ class RabbitMQTest extends AgentTestRunner {
             "message.size" Long
             break
           case "basic.get":
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "amqp.command" "basic.get"
             "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "message.size" { it == null || it instanceof Long }
             break
           case "basic.deliver":
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CONSUMER
             "amqp.command" "basic.deliver"
             "span.origin.type" { it == "RabbitMQTest\$1" || it == "RabbitMQTest\$2" }
             "amqp.exchange" { it == "some-exchange" || it == "some-error-exchange" }
             "message.size" Long
             break
           default:
-            "$MoreTags.SPAN_TYPE" SpanTypes.MESSAGE_CLIENT
             "amqp.command" { it == null || it == resource }
         }
         if (exception) {
