@@ -20,13 +20,12 @@ import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jaxrs2.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.auto.test.utils.PortUtils
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.eclipse.jetty.servlet.ServletHandler
 import spock.lang.Retry
 
@@ -106,7 +105,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
       childOf((SpanData) parent)
       tags {
         "$MoreTags.RESOURCE_NAME" "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.getComponentName()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
@@ -129,7 +127,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
       }
       tags {
         "$MoreTags.RESOURCE_NAME" "$method ${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long

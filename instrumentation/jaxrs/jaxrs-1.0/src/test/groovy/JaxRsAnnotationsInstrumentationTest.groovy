@@ -48,7 +48,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           operationName "jax-rs.request"
           tags {
             "$MoreTags.RESOURCE_NAME" "POST /a"
-            "$MoreTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
@@ -79,7 +78,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "$MoreTags.RESOURCE_NAME" "${className}.call"
-            "$MoreTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }

@@ -18,11 +18,10 @@ package io.opentelemetry.auto.test.base
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -341,7 +340,6 @@ abstract class HttpClientTest extends AgentTestRunner {
       errored exception != null
       tags {
         "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_CLIENT
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

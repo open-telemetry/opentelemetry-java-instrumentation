@@ -28,7 +28,7 @@ public class Servlet2Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, ServletResponse> {
   public static final Servlet2Decorator DECORATE = new Servlet2Decorator();
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.servlet-2.3");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet-2.3");
 
   @Override
   protected String getComponentName() {

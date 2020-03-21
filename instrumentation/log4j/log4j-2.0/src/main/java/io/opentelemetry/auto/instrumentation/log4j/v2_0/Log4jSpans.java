@@ -30,7 +30,7 @@ import org.apache.logging.log4j.message.Message;
 public class Log4jSpans {
 
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.log4j-2.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.log4j-2.0");
 
   public static void capture(
       final Logger logger, final Level level, final Message message, final Throwable t) {

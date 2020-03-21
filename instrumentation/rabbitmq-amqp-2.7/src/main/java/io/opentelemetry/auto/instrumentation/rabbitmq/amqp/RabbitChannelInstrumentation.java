@@ -16,9 +16,7 @@
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.PRODUCER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
@@ -50,6 +48,7 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -82,8 +81,6 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".RabbitDecorator",
-      packageName + ".RabbitDecorator$1",
-      packageName + ".RabbitDecorator$2",
       packageName + ".TextMapInjectAdapter",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",
@@ -180,8 +177,8 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       final Span span = TRACER.getCurrentSpan();
 
       if (span.getContext().isValid()) {
-        PRODUCER_DECORATE.afterStart(span); // Overwrite tags set by generic decorator.
-        PRODUCER_DECORATE.onPublish(span, exchange, routingKey);
+        DECORATE.afterStart(span); // Overwrite tags set by generic decorator.
+        DECORATE.onPublish(span, exchange, routingKey);
         span.setAttribute("message.size", body == null ? 0 : body.length);
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
@@ -253,10 +250,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         final Map<String, Object> headers = response.getProps().getHeaders();
 
         if (headers != null) {
-          try {
-            spanBuilder.addLink(TRACER.getHttpTextFormat().extract(headers, GETTER));
-          } catch (final IllegalArgumentException e) {
-            // couldn't extract a context
+          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+          if (extractedContext.isValid()) {
+            spanBuilder.addLink(extractedContext);
           }
         }
       }
@@ -269,11 +265,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       }
       span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
       try (final Scope scope = TRACER.withSpan(span)) {
-        CONSUMER_DECORATE.afterStart(span);
-        CONSUMER_DECORATE.onGet(span, queue);
-        CONSUMER_DECORATE.onPeerConnection(span, connection.getAddress());
-        CONSUMER_DECORATE.onError(span, throwable);
-        CONSUMER_DECORATE.beforeFinish(span);
+        DECORATE.afterStart(span);
+        DECORATE.onGet(span, queue);
+        DECORATE.onPeerConnection(span, connection.getAddress());
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
       } finally {
         span.end();
       }

@@ -26,14 +26,9 @@ public class SpringSchedulingDecorator extends BaseDecorator {
   public static final SpringSchedulingDecorator DECORATE = new SpringSchedulingDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.spring-scheduling-3.1");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-scheduling-3.1");
 
   private SpringSchedulingDecorator() {}
-
-  @Override
-  protected String getSpanType() {
-    return null;
-  }
 
   @Override
   protected String getComponentName() {

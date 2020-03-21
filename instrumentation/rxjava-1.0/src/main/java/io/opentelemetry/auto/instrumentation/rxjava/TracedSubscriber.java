@@ -25,7 +25,7 @@ import rx.Subscriber;
 
 public class TracedSubscriber<T> extends Subscriber<T> {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.rxjava-1.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rxjava-1.0");
 
   private final AtomicReference<Span> spanRef;
   private final Subscriber<T> delegate;

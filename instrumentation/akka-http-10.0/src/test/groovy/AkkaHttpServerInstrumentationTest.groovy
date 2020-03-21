@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
@@ -60,7 +59,6 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
         parent()
       }
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method

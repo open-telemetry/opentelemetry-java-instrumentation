@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -139,7 +138,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         parent()
       }
       tags {
-        "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long

@@ -35,7 +35,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
   public static final PlayHttpServerDecorator DECORATE = new PlayHttpServerDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.play-2.4");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.play-2.4");
 
   @Override
   protected String getComponentName() {

@@ -33,7 +33,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.aws-sdk-2.2");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.aws-sdk-2.2");
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 

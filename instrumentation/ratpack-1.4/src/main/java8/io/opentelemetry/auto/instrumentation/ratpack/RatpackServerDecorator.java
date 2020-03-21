@@ -34,7 +34,7 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
   public static final RatpackServerDecorator DECORATE = new RatpackServerDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.ratpack-1.4");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.ratpack-1.4");
 
   @Override
   protected String getComponentName() {

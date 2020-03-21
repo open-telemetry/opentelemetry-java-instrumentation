@@ -31,7 +31,7 @@ import io.opentelemetry.trace.Tracer;
 /** Tracing Request Handler */
 public class TracingRequestHandler extends RequestHandler2 {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.aws-sdk-1.11");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.aws-sdk-1.11");
 
   private final AwsSdkClientDecorator decorate;
 

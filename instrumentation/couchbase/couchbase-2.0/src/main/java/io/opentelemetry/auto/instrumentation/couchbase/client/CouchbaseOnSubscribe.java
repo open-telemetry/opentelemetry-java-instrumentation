@@ -51,11 +51,7 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
 
     span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
 
-    if (bucket != null) {
-      span.setAttribute(Tags.DB_INSTANCE, bucket);
-    }
-    if (query != null) {
-      span.setAttribute(Tags.DB_STATEMENT, query);
-    }
+    span.setAttribute(Tags.DB_INSTANCE, bucket);
+    span.setAttribute(Tags.DB_STATEMENT, query);
   }
 }
