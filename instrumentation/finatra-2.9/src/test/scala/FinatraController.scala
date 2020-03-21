@@ -69,7 +69,7 @@ class FinatraController extends Controller {
     })
   }
 
-  any("/path/:id/param") { request : Request =>
+  any("/path/:id/param") { request: Request =>
     controller(PATH_PARAM, new Closure[Response](null) {
       override def call(): Response = {
         response.ok(request.params("id"))

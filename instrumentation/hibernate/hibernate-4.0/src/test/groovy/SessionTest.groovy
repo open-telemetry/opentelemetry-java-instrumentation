@@ -81,7 +81,7 @@ class SessionTest extends AbstractHibernateTest {
             tags {
               "$MoreTags.SERVICE_NAME" "h2"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-              "$Tags.DB_TYPE" "h2"
+              "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
               "$Tags.DB_STATEMENT" String
@@ -173,7 +173,7 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -195,7 +195,7 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
@@ -326,7 +326,7 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
@@ -406,7 +406,7 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
@@ -507,7 +507,7 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
@@ -521,7 +521,7 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^delete /
@@ -554,7 +554,7 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
