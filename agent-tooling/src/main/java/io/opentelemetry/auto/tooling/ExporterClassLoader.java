@@ -35,9 +35,13 @@ public class ExporterClassLoader extends URLClassLoader {
           rule(
               "#io.opentelemetry.OpenTelemetry",
               "#io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"),
+          rule("#io.opentelemetry.common", "#io.opentelemetry.auto.shaded.io.opentelemetry.common"),
           rule(
               "#io.opentelemetry.context",
               "#io.opentelemetry.auto.shaded.io.opentelemetry.context"),
+          rule(
+              "#io.opentelemetry.correlationcontext",
+              "#io.opentelemetry.auto.shaded.io.opentelemetry.correlationcontext"),
           rule(
               "#io.opentelemetry.distributedcontext",
               "#io.opentelemetry.auto.shaded.io.opentelemetry.distributedcontext"),

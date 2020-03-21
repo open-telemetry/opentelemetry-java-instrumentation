@@ -37,7 +37,7 @@ public class JettyPerftest {
   private static final ServletContextHandler servletContext = new ServletContextHandler();
 
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   public static void main(final String[] args) throws Exception {
     servletContext.addServlet(PerfServlet.class, PATH);

@@ -20,7 +20,7 @@ import io.opentelemetry.trace.Tracer;
 
 public class TracedClass extends UntracedClass {
   private static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   @Override
   public void f() {

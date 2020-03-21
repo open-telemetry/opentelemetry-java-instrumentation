@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
-import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
+import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
@@ -82,26 +82,23 @@ public class TracedDelegatingConsumer implements Consumer {
     try {
       final Map<String, Object> headers = properties.getHeaders();
       final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command").setSpanKind(CONSUMER);
-      SpanContext extractedContext = null;
+      SpanContext extractedContext = SpanContext.getInvalid();
       if (headers != null) {
-        try {
-          extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
-        } catch (final IllegalArgumentException e) {
-          // couldn't extract a context
-          spanBuilder.setNoParent();
-        }
+        extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
       }
-      if (extractedContext != null) {
+      if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
       } else {
+        // explicitly setting "no parent" in case a span was propagated to this thread
+        // by the java-concurrent instrumentation when the thread was started
         spanBuilder.setNoParent();
       }
 
       span = spanBuilder.startSpan();
       span.setAttribute("message.size", body == null ? 0 : body.length);
       span.setAttribute("span.origin.type", delegate.getClass().getName());
-      CONSUMER_DECORATE.afterStart(span);
-      CONSUMER_DECORATE.onDeliver(span, queue, envelope);
+      DECORATE.afterStart(span);
+      DECORATE.onDeliver(span, queue, envelope);
 
       scope = TRACER.withSpan(span);
 
@@ -115,12 +112,12 @@ public class TracedDelegatingConsumer implements Consumer {
 
       } catch (final Throwable throwable) {
         if (span != null) {
-          CONSUMER_DECORATE.onError(span, throwable);
+          DECORATE.onError(span, throwable);
         }
         throw throwable;
       } finally {
         if (scope != null) {
-          CONSUMER_DECORATE.beforeFinish(span);
+          DECORATE.beforeFinish(span);
           span.end();
           scope.close();
         }

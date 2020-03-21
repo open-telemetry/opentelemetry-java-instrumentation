@@ -71,13 +71,8 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }
-        SpanContext spanContext = null;
-        try {
-          spanContext = TRACER.getHttpTextFormat().extract(next.headers(), GETTER);
-        } catch (final IllegalArgumentException e) {
-          // Couldn't extract a context
-        }
-        if (spanContext != null) {
+        final SpanContext spanContext = TRACER.getHttpTextFormat().extract(next.headers(), GETTER);
+        if (spanContext.isValid()) {
           if (consumer) {
             spanBuilder.setParent(spanContext);
           } else {

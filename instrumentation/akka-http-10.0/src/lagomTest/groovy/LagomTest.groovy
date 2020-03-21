@@ -18,8 +18,6 @@ import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.SpanTypes
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import play.inject.guice.GuiceApplicationBuilder
@@ -81,7 +79,6 @@ class LagomTest extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
             "$Tags.HTTP_METHOD" "GET"
@@ -118,7 +115,6 @@ class LagomTest extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$MoreTags.SPAN_TYPE" SpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"
             "$Tags.HTTP_METHOD" "GET"

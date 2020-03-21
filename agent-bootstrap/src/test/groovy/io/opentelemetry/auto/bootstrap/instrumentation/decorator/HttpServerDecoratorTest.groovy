@@ -65,12 +65,8 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_URL, expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
-      if (expectedQuery != null) {
-        1 * span.setAttribute(MoreTags.HTTP_QUERY, expectedQuery)
-      }
-      if (expectedFragment != null) {
-        1 * span.setAttribute(MoreTags.HTTP_FRAGMENT, expectedFragment)
-      }
+      1 * span.setAttribute(MoreTags.HTTP_QUERY, expectedQuery)
+      1 * span.setAttribute(MoreTags.HTTP_FRAGMENT, expectedFragment)
     }
     1 * span.setAttribute(Tags.HTTP_METHOD, null)
     0 * _
@@ -108,6 +104,8 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
         1 * span.setAttribute(MoreTags.NET_PEER_IP, "10.0.0.1")
       } else if (ipv4 != null) {
         1 * span.setAttribute(MoreTags.NET_PEER_IP, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
+      } else {
+        1 * span.setAttribute(MoreTags.NET_PEER_IP, null)
       }
     }
     0 * _

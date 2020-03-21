@@ -17,7 +17,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.CallableW
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.RunnableWrapper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException

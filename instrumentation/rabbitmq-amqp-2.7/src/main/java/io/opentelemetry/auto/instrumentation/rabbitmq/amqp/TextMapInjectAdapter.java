@@ -23,7 +23,7 @@ public class TextMapInjectAdapter implements HttpTextFormat.Setter<Map<String, O
   public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
 
   @Override
-  public void put(final Map<String, Object> carrier, final String key, final String value) {
+  public void set(final Map<String, Object> carrier, final String key, final String value) {
     carrier.put(key, value);
   }
 }
