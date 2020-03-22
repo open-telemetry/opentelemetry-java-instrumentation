@@ -17,7 +17,6 @@ package io.opentelemetry.auto.test.utils
 
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.context.Scope
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -57,7 +56,7 @@ class TraceUtils {
     }
   }
 
-  static basicSpan(TraceAssert trace, int index, String operation, String resource = null, Object parentSpan = null, Throwable exception = null) {
+  static basicSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       if (parentSpan == null) {
         parent()
@@ -67,7 +66,6 @@ class TraceUtils {
       operationName operation
       errored exception != null
       tags {
-        "$MoreTags.RESOURCE_NAME" resource
         if (exception) {
           errorTags(exception.class, exception.message)
         }

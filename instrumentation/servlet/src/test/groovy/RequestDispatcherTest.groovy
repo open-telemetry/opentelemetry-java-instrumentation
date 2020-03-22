@@ -70,7 +70,7 @@ class RequestDispatcherTest extends AgentTestRunner {
             "$Tags.COMPONENT" "java-web-servlet-dispatcher"
           }
         }
-        basicSpan(it, 2, "$operation-child", null, span(1))
+        basicSpan(it, 2, "$operation-child", span(1))
       }
     }
 
@@ -108,7 +108,7 @@ class RequestDispatcherTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent", null, null, ex)
+        basicSpan(it, 0, "parent", null, ex)
         span(1) {
           operationName "servlet.$operation"
           childOf span(0)
@@ -119,7 +119,7 @@ class RequestDispatcherTest extends AgentTestRunner {
             errorTags(ex.class, ex.message)
           }
         }
-        basicSpan(it, 2, "$operation-child", null, span(1))
+        basicSpan(it, 2, "$operation-child", span(1))
       }
     }
 

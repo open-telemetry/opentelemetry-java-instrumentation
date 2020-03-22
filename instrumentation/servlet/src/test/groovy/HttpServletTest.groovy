@@ -103,7 +103,7 @@ class HttpServletTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent", null, null, ex)
+        basicSpan(it, 0, "parent", null, ex)
         span(1) {
           operationName "HttpServlet.service"
           childOf span(0)
