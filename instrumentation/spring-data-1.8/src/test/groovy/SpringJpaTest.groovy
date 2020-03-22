@@ -89,6 +89,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -124,6 +125,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -159,6 +161,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -173,6 +176,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^update /
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -206,6 +210,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -239,6 +244,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -253,6 +259,7 @@ class SpringJpaTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^delete /
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }

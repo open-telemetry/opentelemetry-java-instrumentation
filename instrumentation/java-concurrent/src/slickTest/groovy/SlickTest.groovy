@@ -53,6 +53,7 @@ class SlickTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" SlickUtils.Db()
             "$Tags.DB_USER" SlickUtils.Username()
             "$Tags.DB_STATEMENT" SlickUtils.TestQuery()
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }

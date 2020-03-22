@@ -74,6 +74,7 @@ class QueryTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -121,6 +122,7 @@ class QueryTest extends AbstractHibernateTest {
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
               "$Tags.DB_STATEMENT" ~/^select /
+              "$Tags.DB_URL" "h2:mem:"
               "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             }
           }
@@ -198,6 +200,7 @@ class QueryTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }

@@ -112,6 +112,7 @@ class ProcedureCallTest extends AgentTestRunner {
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "{call TEST_PROC()}"
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCCallableStatement"
           }
         }

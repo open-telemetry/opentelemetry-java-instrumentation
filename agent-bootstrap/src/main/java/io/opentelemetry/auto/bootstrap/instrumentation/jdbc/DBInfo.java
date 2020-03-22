@@ -21,10 +21,10 @@ import lombok.Data;
 @Data
 @Builder(builderClassName = "Builder", toBuilder = true)
 public class DBInfo {
-  public static final DBInfo DEFAULT = new Builder().type("database").build();
+  public static final DBInfo DEFAULT = new Builder().build();
   private final String type;
   private final String subtype;
-  private final String url;
+  private final String shortUrl; // "type:[subtype:]//host:port"
   private final String user;
   private final String instance;
   private final String db;

@@ -508,7 +508,7 @@ public enum JDBCConnectionUrlParser {
 
       final String h2Url = jdbcUrl.substring("h2:".length());
       if (h2Url.startsWith("mem:")) {
-        builder.subtype("mem");
+        builder.subtype("mem").host(null).port(null);
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring("mem:".length(), propLoc);
@@ -516,7 +516,7 @@ public enum JDBCConnectionUrlParser {
           instance = h2Url.substring("mem:".length());
         }
       } else if (h2Url.startsWith("file:")) {
-        builder.subtype("file");
+        builder.subtype("file").host(null).port(null);
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring("file:".length(), propLoc);
@@ -524,7 +524,7 @@ public enum JDBCConnectionUrlParser {
           instance = h2Url.substring("file:".length());
         }
       } else if (h2Url.startsWith("zip:")) {
-        builder.subtype("zip");
+        builder.subtype("zip").host(null).port(null);
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring("zip:".length(), propLoc);
@@ -544,7 +544,7 @@ public enum JDBCConnectionUrlParser {
         }
         return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("h2").subtype("ssl");
       } else {
-        builder.subtype("file");
+        builder.subtype("file").host(null).port(null);
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring(0, propLoc);
@@ -572,13 +572,13 @@ public enum JDBCConnectionUrlParser {
       }
       final String hsqlUrl = jdbcUrl.substring("hsqldb:".length());
       if (hsqlUrl.startsWith("mem:")) {
-        builder.subtype("mem");
+        builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl.substring("mem:".length());
       } else if (hsqlUrl.startsWith("file:")) {
-        builder.subtype("file");
+        builder.subtype("file").host(null).port(null);
         instance = hsqlUrl.substring("file:".length());
       } else if (hsqlUrl.startsWith("res:")) {
-        builder.subtype("res");
+        builder.subtype("res").host(null).port(null);
         instance = hsqlUrl.substring("res:".length());
       } else if (hsqlUrl.startsWith("hsql:")) {
         if (dbInfo.getPort() == null) {
@@ -601,7 +601,7 @@ public enum JDBCConnectionUrlParser {
         }
         return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("https");
       } else {
-        builder.subtype("mem");
+        builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl;
       }
       return builder.instance(instance);
@@ -631,25 +631,25 @@ public enum JDBCConnectionUrlParser {
 
       final String details = split[0];
       if (details.startsWith("memory:")) {
-        builder.subtype("memory");
+        builder.subtype("memory").host(null).port(null);
         final String urlInstance = details.substring("memory:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
       } else if (details.startsWith("directory:")) {
-        builder.subtype("directory");
+        builder.subtype("directory").host(null).port(null);
         final String urlInstance = details.substring("directory:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
       } else if (details.startsWith("classpath:")) {
-        builder.subtype("classpath");
+        builder.subtype("classpath").host(null).port(null);
         final String urlInstance = details.substring("classpath:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
       } else if (details.startsWith("jar:")) {
-        builder.subtype("jar");
+        builder.subtype("jar").host(null).port(null);
         final String urlInstance = details.substring("jar:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
@@ -677,7 +677,7 @@ public enum JDBCConnectionUrlParser {
           host = url;
         }
       } else {
-        builder.subtype("directory");
+        builder.subtype("directory").host(null).port(null);
         final String urlInstance = details;
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
@@ -736,13 +736,40 @@ public enum JDBCConnectionUrlParser {
     try {
       if (typeParsers.containsKey(baseType)) {
         // Delegate to specific parser
-        return typeParsers.get(baseType).doParse(jdbcUrl, parsedProps).build();
+        return withUrl(typeParsers.get(baseType).doParse(jdbcUrl, parsedProps));
       }
-      return GENERIC_URL_LIKE.doParse(connectionUrl, parsedProps).build();
+      return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps));
     } catch (final Exception e) {
       ExceptionLogger.LOGGER.debug("Error parsing URL", e);
       return parsedProps.build();
     }
+  }
+
+  private static DBInfo withUrl(final DBInfo.Builder builder) {
+    final DBInfo info = builder.build();
+    final String type = info.getType();
+    if (type == null) {
+      return builder.build();
+    }
+    final StringBuilder url = new StringBuilder();
+    url.append(type);
+    url.append(':');
+    final String subtype = info.getSubtype();
+    if (subtype != null) {
+      url.append(subtype);
+      url.append(':');
+    }
+    final String host = info.getHost();
+    if (host != null) {
+      url.append("//");
+      url.append(host);
+      final Integer port = info.getPort();
+      if (port != null) {
+        url.append(':');
+        url.append(port);
+      }
+    }
+    return builder.shortUrl(url.toString()).build();
   }
 
   // Source: https://stackoverflow.com/a/13592567
