@@ -361,7 +361,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     assertTraces(size * 2) {
       (0..size - 1).each {
         trace(it * 2, 1) {
-          basicSpan(it, 0, "TEST_SPAN", "ServerEntry")
+          basicSpan(it, 0, "TEST_SPAN")
         }
         trace(it * 2 + 1, spanCount) {
           def spanIndex = 0

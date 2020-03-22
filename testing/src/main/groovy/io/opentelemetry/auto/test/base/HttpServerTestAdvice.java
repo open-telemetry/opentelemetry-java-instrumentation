@@ -16,7 +16,6 @@
 package io.opentelemetry.auto.test.base;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -42,7 +41,6 @@ public abstract class HttpServerTestAdvice {
         return null;
       } else {
         final Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
-        span.setAttribute(MoreTags.RESOURCE_NAME, "ServerEntry");
         return new SpanWithScope(span, TRACER.withSpan(span));
       }
     }
