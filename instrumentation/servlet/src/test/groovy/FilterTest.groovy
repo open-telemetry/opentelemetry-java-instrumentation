@@ -87,7 +87,7 @@ class FilterTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, null, ex)
+        basicSpan(it, 0, "parent", null, ex)
         span(1) {
           operationName "${filter.class.simpleName}.doFilter"
           childOf span(0)

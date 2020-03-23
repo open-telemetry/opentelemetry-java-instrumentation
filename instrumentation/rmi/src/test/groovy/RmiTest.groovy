@@ -111,7 +111,7 @@ class RmiTest extends AgentTestRunner {
     def thrownException = thrown(RuntimeException)
     assertTraces(1) {
       trace(0, 3) {
-        basicSpan(it, 0, "parent", null, null, thrownException)
+        basicSpan(it, 0, "parent", null, thrownException)
         span(1) {
           operationName "Greeter.exceptional"
           spanKind CLIENT
