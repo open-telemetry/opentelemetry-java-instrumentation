@@ -20,7 +20,7 @@ import unshaded.io.opentelemetry.trace.Status
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static unshaded.io.opentelemetry.trace.Span.Kind.PRODUCER
 
-class OpenTelemetryApiTest extends AgentTestRunner {
+class TracerTest extends AgentTestRunner {
 
   def "capture span, kind, attributes, and status"() {
     when:

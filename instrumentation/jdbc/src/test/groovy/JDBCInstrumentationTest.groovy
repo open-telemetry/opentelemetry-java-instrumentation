@@ -199,7 +199,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
             "$Tags.COMPONENT" "java-jdbc-statement"
-            "$Tags.DB_TYPE" driver
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
               "$Tags.DB_USER" username
@@ -258,7 +258,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" driver
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
               "$Tags.DB_USER" username
@@ -309,7 +309,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" driver
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
               "$Tags.DB_USER" username
@@ -360,7 +360,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" driver
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
               "$Tags.DB_USER" username
@@ -411,7 +411,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-statement"
-            "$Tags.DB_TYPE" driver
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
               "$Tags.DB_USER" username
@@ -465,7 +465,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" driver
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
               "$Tags.DB_USER" username
@@ -535,7 +535,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             } else {
               "$Tags.COMPONENT" "java-jdbc-statement"
             }
-            "$Tags.DB_TYPE" driver
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
               "$Tags.DB_USER" username
@@ -643,7 +643,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" database
             "$Tags.COMPONENT" "java-jdbc-statement"
-            "$Tags.DB_TYPE" database
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_STATEMENT" query
             "$Tags.DB_URL" "testdb://localhost"
             "span.origin.type" TestStatement.name
@@ -706,7 +706,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" dbType
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" dbType
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             "$Tags.DB_USER" "SA"
             "$Tags.DB_STATEMENT" query
@@ -724,7 +724,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             tags {
               "$MoreTags.SERVICE_NAME" dbType
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-              "$Tags.DB_TYPE" dbType
+              "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" dbName.toLowerCase()
               "$Tags.DB_USER" "SA"
               "$Tags.DB_STATEMENT" query

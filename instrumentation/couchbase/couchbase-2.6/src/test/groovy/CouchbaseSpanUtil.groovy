@@ -23,9 +23,9 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
   // Of the class hierarchy of these tests
-  static void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object dbStatement = null, Object parentSpan = null) {
+  static void assertCouchbaseCall(TraceAssert trace, int index, Object name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      operationName "couchbase.call"
+      operationName name
       spanKind CLIENT
       errored false
       if (parentSpan == null) {
@@ -35,7 +35,6 @@ class CouchbaseSpanUtil {
       }
       tags {
         "$MoreTags.SERVICE_NAME" "couchbase"
-        "$MoreTags.RESOURCE_NAME" name
         "$Tags.COMPONENT" "couchbase-client"
 
         // Because of caching, not all requests hit the server so these tags may be absent
@@ -55,9 +54,7 @@ class CouchbaseSpanUtil {
         // that do have operation ids
         "couchbase.operation_id" { it == null || String }
 
-        if (dbStatement != null) {
-          "$Tags.DB_STATEMENT" dbStatement
-        }
+        "$Tags.DB_STATEMENT" name
       }
     }
   }

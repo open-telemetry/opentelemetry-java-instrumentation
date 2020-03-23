@@ -70,11 +70,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "repository.operation"
+          operationName "JpaRepository.findAll"
           spanKind INTERNAL
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "JpaRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
           }
         }
@@ -85,7 +84,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -106,11 +105,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.save"
           spanKind INTERNAL
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.save"
             "$Tags.COMPONENT" "spring-data"
           }
         }
@@ -121,7 +119,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
@@ -142,11 +140,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.save"
           spanKind INTERNAL
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.save"
             "$Tags.COMPONENT" "spring-data"
           }
         }
@@ -157,7 +154,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -172,7 +169,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^update /
@@ -191,11 +188,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "repository.operation"
+          operationName "JpaCustomerRepository.findByLastName"
           spanKind INTERNAL
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "JpaCustomerRepository.findByLastName"
             "$Tags.COMPONENT" "spring-data"
           }
         }
@@ -206,7 +202,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -225,11 +221,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.delete"
           spanKind INTERNAL
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.delete"
             "$Tags.COMPONENT" "spring-data"
           }
         }
@@ -240,7 +235,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -255,7 +250,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^delete /

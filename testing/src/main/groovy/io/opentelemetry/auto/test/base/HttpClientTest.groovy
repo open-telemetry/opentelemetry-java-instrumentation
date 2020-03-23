@@ -196,7 +196,7 @@ abstract class HttpClientTest extends AgentTestRunner {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method, false)
-        basicSpan(it, 2 + extraClientSpans(), "child", null, span(0))
+        basicSpan(it, 2 + extraClientSpans(), "child", span(0))
       }
     }
 
@@ -318,7 +318,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
-        basicSpan(it, 0, "parent", null, null, thrownException)
+        basicSpan(it, 0, "parent", null, thrownException)
         clientSpan(it, 1, span(0), method, false, false, uri, null, thrownException)
       }
     }

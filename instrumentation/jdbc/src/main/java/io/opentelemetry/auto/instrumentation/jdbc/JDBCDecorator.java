@@ -101,8 +101,8 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
       }
     }
 
+    span.setAttribute(Tags.DB_TYPE, "sql");
     if (dbInfo != null) {
-      span.setAttribute(Tags.DB_TYPE, dbInfo.getType());
       span.setAttribute(MoreTags.SERVICE_NAME, dbInfo.getType());
     }
     return super.onConnection(span, dbInfo);

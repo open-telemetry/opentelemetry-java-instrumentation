@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.opentelemetryapi;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
 import unshaded.io.opentelemetry.context.Scope;
 
-public class UnshadedScope implements Scope {
+class UnshadedScope implements Scope {
 
   private final io.opentelemetry.context.Scope shadedScope;
 
-  public UnshadedScope(final io.opentelemetry.context.Scope shadedScope) {
+  UnshadedScope(final io.opentelemetry.context.Scope shadedScope) {
     this.shadedScope = shadedScope;
   }
 

@@ -61,12 +61,11 @@ class SparkJavaBasedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET /param/:param"
+          operationName "/param/:param"
           spanKind SERVER
           errored false
           parent()
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /param/:param"
             "$Tags.COMPONENT" "jetty-handler"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long

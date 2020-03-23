@@ -49,7 +49,7 @@ class SlickTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" SlickUtils.Driver()
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" SlickUtils.Driver()
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" SlickUtils.Db()
             "$Tags.DB_USER" SlickUtils.Username()
             "$Tags.DB_STATEMENT" SlickUtils.TestQuery()

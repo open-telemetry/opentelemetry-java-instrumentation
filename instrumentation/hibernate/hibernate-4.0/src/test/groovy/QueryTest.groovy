@@ -45,7 +45,7 @@ class QueryTest extends AbstractHibernateTest {
       // With Transaction
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "Session"
           spanKind INTERNAL
           parent()
           tags {
@@ -54,14 +54,12 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.$queryMethodName"
+          operationName expectedSpanName
           spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" resource
             "$Tags.COMPONENT" "java-hibernate"
-            "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
           }
         }
         span(2) {
@@ -70,7 +68,7 @@ class QueryTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
@@ -79,7 +77,7 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "hibernate.transaction.commit"
+          operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -92,7 +90,7 @@ class QueryTest extends AbstractHibernateTest {
         // Without Transaction
         trace(1, 3) {
           span(0) {
-            operationName "hibernate.session"
+            operationName "Session"
             spanKind INTERNAL
             parent()
             tags {
@@ -101,14 +99,12 @@ class QueryTest extends AbstractHibernateTest {
             }
           }
           span(1) {
-            operationName "hibernate.$queryMethodName"
+            operationName expectedSpanName
             spanKind INTERNAL
             childOf span(0)
             tags {
               "$MoreTags.SERVICE_NAME" "hibernate"
-              "$MoreTags.RESOURCE_NAME" resource
               "$Tags.COMPONENT" "java-hibernate"
-              "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
             }
           }
           span(2) {
@@ -118,7 +114,7 @@ class QueryTest extends AbstractHibernateTest {
             tags {
               "$MoreTags.SERVICE_NAME" "h2"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-              "$Tags.DB_TYPE" "h2"
+              "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
               "$Tags.DB_STATEMENT" ~/^select /
@@ -131,24 +127,26 @@ class QueryTest extends AbstractHibernateTest {
     }
 
     where:
-    queryMethodName       | resource     | requiresTransaction | queryInteraction
-    "query.list"          | "Value"      | false               | { sess ->
+    queryMethodName       | expectedSpanName            | requiresTransaction | queryInteraction
+    "query/list"          | "from Value"                | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.list()
     }
-    "query.executeUpdate" | null         | true                | { sess ->
-      Query q = sess.createQuery("update Value set name = 'alyx'")
+    "query/executeUpdate" | "update Value set name = ?" | true                | { sess ->
+      Query q = sess.createQuery("update Value set name = ?")
+      q.setParameter(0, "alyx")
       q.executeUpdate()
     }
-    "query.uniqueResult"  | "Value"      | false               | { sess ->
-      Query q = sess.createQuery("from Value where id = 1")
+    "query/uniqueResult"  | "from Value where id = ?"   | false               | { sess ->
+      Query q = sess.createQuery("from Value where id = ?")
+      q.setParameter(0, 1L)
       q.uniqueResult()
     }
-    "iterate"             | "from Value" | false               | { sess ->
+    "iterate"             | "from Value"                | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.iterate()
     }
-    "query.scroll"        | null         | false               | { sess ->
+    "query/scroll"        | "from Value"                | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.scroll()
     }
@@ -171,7 +169,7 @@ class QueryTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "Session"
           spanKind INTERNAL
           parent()
           tags {
@@ -180,12 +178,11 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.iterate"
+          operationName "from Value"
           spanKind INTERNAL
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "hibernate"
-            "$MoreTags.RESOURCE_NAME" "from Value"
             "$Tags.COMPONENT" "java-hibernate"
           }
         }
@@ -196,7 +193,7 @@ class QueryTest extends AbstractHibernateTest {
           tags {
             "$MoreTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -205,7 +202,7 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "hibernate.transaction.commit"
+          operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
           tags {

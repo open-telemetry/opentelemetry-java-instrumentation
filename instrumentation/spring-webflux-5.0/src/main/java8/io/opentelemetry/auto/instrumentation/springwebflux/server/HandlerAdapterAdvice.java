@@ -59,8 +59,7 @@ public class HandlerAdapterAdvice {
     final PathPattern bestPattern =
         exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     if (parentSpan != null && bestPattern != null) {
-      final String resourceName =
-          exchange.getRequest().getMethodValue() + " " + bestPattern.getPatternString();
+      final String resourceName = bestPattern.getPatternString();
       parentSpan.updateName(resourceName);
     }
 
