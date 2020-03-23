@@ -12,7 +12,13 @@ import java.util.concurrent.TimeUnit
 
 class PlayWSClientTest extends HttpClientTest {
   @Shared
-  def application = new FakeApplication(new File("."), FakeApplication.class.getClassLoader(), Collections.emptyMap(), Collections.emptyList(), new GlobalSettings())
+  def application = new FakeApplication(
+    new File("."),
+    FakeApplication.class.getClassLoader(),
+    Collections.emptyMap(),
+    Collections.emptyList(),
+    new GlobalSettings()
+  )
 
   def setup() {
     Helpers.start(application)

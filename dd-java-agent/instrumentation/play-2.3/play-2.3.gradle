@@ -51,3 +51,8 @@ dependencies {
     exclude group: 'org.eclipse.jetty', module: 'jetty-websocket'
   }
 }
+
+compileLatestDepTestGroovy {
+  classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
+  dependsOn compileLatestDepTestScala
+}
