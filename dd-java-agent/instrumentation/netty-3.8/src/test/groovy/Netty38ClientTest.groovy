@@ -15,7 +15,7 @@ import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
-class Netty39ClientTest extends HttpClientTest {
+class Netty38ClientTest extends HttpClientTest {
 
   @Shared
   def clientConfig = new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(TimeUnit.SECONDS.toMillis(10).toInteger()).build()

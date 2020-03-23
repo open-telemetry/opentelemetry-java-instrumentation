@@ -4,6 +4,7 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.implementsInterface;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,7 +18,6 @@ import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.Tags;
 import datadog.trace.context.TraceScope;
-import datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -103,8 +103,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
       final AgentSpan errorSpan = startSpan("netty.connect").setTag(Tags.COMPONENT, "netty");
       try (final AgentScope scope = activateSpan(errorSpan, false)) {
-        NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
-        NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);
+        DECORATE.onError(errorSpan, cause);
+        DECORATE.beforeFinish(errorSpan);
         errorSpan.finish();
       }
 

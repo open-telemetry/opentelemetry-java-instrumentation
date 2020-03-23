@@ -14,7 +14,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.*
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.*
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
-class Netty39ServerTest extends HttpServerTest<Channel> {
+class Netty38ServerTest extends HttpServerTest<Channel> {
 
   ChannelPipeline channelPipeline() {
     ChannelPipeline channelPipeline = new DefaultChannelPipeline()
