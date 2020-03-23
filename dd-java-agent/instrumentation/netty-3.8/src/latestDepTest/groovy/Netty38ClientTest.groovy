@@ -19,9 +19,9 @@ class Netty38ClientTest extends HttpClientTest {
 
   @Shared
   def clientConfig = new AsyncHttpClientConfig.Builder()
-    .setRequestTimeoutInMs(TimeUnit.SECONDS.toMillis(10).toInteger())
+    .setRequestTimeout(TimeUnit.SECONDS.toMillis(10).toInteger())
     .build()
-  
+
   @Shared
   @AutoCleanup
   AsyncHttpClient asyncHttpClient = new AsyncHttpClient(clientConfig)

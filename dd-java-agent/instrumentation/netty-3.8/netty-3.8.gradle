@@ -10,7 +10,7 @@ muzzle {
   pass {
     group = "io.netty"
     module = "netty"
-    versions = "[3.8.0.Final,3.10)"
+    versions = "[3.8.0.Final,4)"
     assertInverse = true
   }
   fail {
@@ -23,9 +23,7 @@ muzzle {
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
+  latestDepTest
 }
 
 dependencies {
@@ -34,8 +32,8 @@ dependencies {
   testCompile group: 'io.netty', name: 'netty', version: '3.8.0.Final'
   testCompile group: 'com.ning', name: 'async-http-client', version: '1.8.0'
 
-  latestDepTestCompile group: 'io.netty', name: 'netty', version: '3.9.+'
-  latestDepTestCompile group: 'com.ning', name: 'async-http-client', version: '1.8.+'
+  latestDepTestCompile group: 'io.netty', name: 'netty', version: '3.10.+'
+  latestDepTestCompile group: 'com.ning', name: 'async-http-client', version: '1.9.+'
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.

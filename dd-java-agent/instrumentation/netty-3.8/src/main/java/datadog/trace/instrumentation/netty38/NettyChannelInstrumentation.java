@@ -32,13 +32,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed(
-        "org.jboss.netty.channel.Channel",
-        // 3.7: cannot find symbol method headers() for type HttpRequest
-        "org.jboss.netty.handler.codec.http.DefaultHttpHeaders", // Not in 3.7
-        // 3.10: NoSuchMethodError: org.jboss.netty.handler.codec.http.HttpRequest.setHeader
-        "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
-        );
+    return hasClassesNamed("org.jboss.netty.channel.Channel");
   }
 
   @Override
@@ -49,7 +43,9 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ChannelTraceContext", packageName + ".ChannelTraceContext$Factory"
+      packageName + ".AbstractNettyAdvice",
+      packageName + ".ChannelTraceContext",
+      packageName + ".ChannelTraceContext$Factory"
     };
   }
 
@@ -70,7 +66,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
         "org.jboss.netty.channel.Channel", ChannelTraceContext.class.getName());
   }
 
-  public static class ChannelConnectAdvice {
+  public static class ChannelConnectAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This final Channel channel) {
       final TraceScope scope = activeScope();

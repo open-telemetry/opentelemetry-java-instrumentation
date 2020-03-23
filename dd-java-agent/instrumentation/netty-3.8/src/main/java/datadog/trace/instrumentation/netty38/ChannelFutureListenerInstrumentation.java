@@ -39,11 +39,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed(
-        "org.jboss.netty.channel.ChannelFutureListener",
-        // 3.10: NoSuchMethodError: org.jboss.netty.handler.codec.http.HttpRequest.setHeader
-        "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
-        );
+    return hasClassesNamed("org.jboss.netty.channel.ChannelFutureListener");
   }
 
   @Override
@@ -54,6 +50,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".AbstractNettyAdvice",
       packageName + ".ChannelTraceContext",
       packageName + ".ChannelTraceContext$Factory",
       packageName + ".server.NettyHttpServerDecorator",
@@ -76,7 +73,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
         "org.jboss.netty.channel.Channel", ChannelTraceContext.class.getName());
   }
 
-  public static class OperationCompleteAdvice {
+  public static class OperationCompleteAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static TraceScope activateScope(@Advice.Argument(0) final ChannelFuture future) {
       /*

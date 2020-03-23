@@ -48,11 +48,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed(
-        "org.jboss.netty.channel.ChannelPipeline",
-        // 3.10: NoSuchMethodError: org.jboss.netty.handler.codec.http.HttpRequest.setHeader
-        "org.jboss.netty.channel.StaticChannelPipeline" // Not in 3.10
-        );
+    return hasClassesNamed("org.jboss.netty.channel.ChannelPipeline");
   }
 
   @Override
@@ -63,6 +59,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".AbstractNettyAdvice",
       packageName + ".ChannelTraceContext",
       packageName + ".ChannelTraceContext$Factory",
       NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdviceUtil",
@@ -150,7 +147,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class ChannelPipelineAdd2ArgsAdvice {
+  public static class ChannelPipelineAdd2ArgsAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This final ChannelPipeline pipeline,
@@ -180,7 +177,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class ChannelPipelineAdd3ArgsAdvice {
+  public static class ChannelPipelineAdd3ArgsAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This final ChannelPipeline pipeline,
