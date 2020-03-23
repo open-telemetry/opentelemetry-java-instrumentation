@@ -29,7 +29,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -75,14 +74,14 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       }
       final SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("rmi.request").setSpanKind(SERVER);
+      final Span.Builder spanBuilder =
+          TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(SERVER);
       if (context != null) {
         spanBuilder.setParent(context);
       } else {
         spanBuilder.setNoParent();
       }
       final Span span = spanBuilder.startSpan();
-      span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
       span.setAttribute("span.origin.type", thiz.getClass().getCanonicalName());
 
       DECORATE.afterStart(span);
