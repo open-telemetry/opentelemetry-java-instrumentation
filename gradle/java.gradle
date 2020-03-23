@@ -48,10 +48,15 @@ if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJav
     from sourceSets."main_$name".output
   }
 
-  tasks.withType(JavaCompile).configureEach {
-    if (it.name.toLowerCase().contains("test")) {
-      sourceCompatibility = version
-      targetCompatibility = version
+  // In some cases we would like to avoid setting java version to `minJavaVersionForTests`.
+  // For example we would like to be able to run profiling tests with ZULU8, but we cannot run it with other JDK8 implementations at the moment
+  def skipSettingTestJavaVersion = project.hasProperty('skipSettingTestJavaVersion') && project.getProperty('skipSettingTestJavaVersion')
+  if (!skipSettingTestJavaVersion) {
+    tasks.withType(JavaCompile).configureEach {
+      if (it.name.toLowerCase().contains("test")) {
+        sourceCompatibility = version
+        targetCompatibility = version
+      }
     }
   }
 }

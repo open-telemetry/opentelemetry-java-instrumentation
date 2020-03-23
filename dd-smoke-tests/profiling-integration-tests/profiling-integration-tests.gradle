@@ -5,7 +5,7 @@ plugins {
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_11
   // Zulu has backported profiling support
-  forceJdk = ['ZULU8', 'ZULU11', '12']
+  forceJdk = ['ZULU8']
   jmcVersion = '8.0.0-SNAPSHOT'
 }
 
