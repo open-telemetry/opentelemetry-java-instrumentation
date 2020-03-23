@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.elasticsearch.rest.v5_0;
 
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -75,8 +74,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Argument(1) final String endpoint,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
-      final Span span =
-          TRACER.spanBuilder("elasticsearch.rest.query").setSpanKind(CLIENT).startSpan();
+      final Span span = TRACER.spanBuilder(method + " " + endpoint).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, method, endpoint);
 

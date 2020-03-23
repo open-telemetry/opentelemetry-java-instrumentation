@@ -92,7 +92,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name(), ~/^ViewQuery\(doc\/all\).*/)
+        assertCouchbaseCall(it, 0, ~/^ViewQuery\(doc\/all\).*/, bucketCouchbase.name())
       }
     }
   }
@@ -134,8 +134,8 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", bucketCouchbase.name(), null, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 2, "Bucket.get", bucketCouchbase.name(), span(0))
       }
     }
 
@@ -161,8 +161,8 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), span(0))
       }
     }
 
@@ -189,9 +189,9 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.remove", bucketCouchbase.name(), null, span(0))
-        assertCouchbaseCall(it, 3, "Bucket.query", bucketCouchbase.name(), ~/^ViewQuery\(doc\/all\).*/, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 2, "Bucket.remove", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 3, ~/^ViewQuery\(doc\/all\).*/, bucketCouchbase.name(), span(0))
       }
     }
   }

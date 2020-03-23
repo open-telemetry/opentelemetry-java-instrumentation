@@ -15,42 +15,24 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.trace.Span
-
 class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
 
-  def "test onOperation #testName"() {
+  def "test spanNameForOperation #testName"() {
     setup:
     decorator = newDecorator({ e -> entityName })
 
     when:
-    decorator.onOperation(span, entity)
+    def result = decorator.spanNameForOperation("orm", entity)
 
     then:
-    if (isSet) {
-      1 * span.setAttribute(MoreTags.RESOURCE_NAME, entityName)
-    }
-    0 * _
+    result == spanName
 
     where:
-    testName          | entity     | entityName | isSet
-    "null entity"     | null       | "name"     | false
-    "null entityName" | "not null" | null       | false
-    "name set"        | "not null" | "name"     | true
+    testName          | entity     | entityName | spanName
+    "null entity"     | null       | "name"     | "orm"
+    "null entityName" | "not null" | null       | "orm"
+    "name set"        | "not null" | "name"     | "orm name"
   }
-
-  def "test onOperation null span"() {
-    setup:
-    decorator = newDecorator({ e -> null })
-
-    when:
-    decorator.onOperation((Span) null, null)
-
-    then:
-    thrown(AssertionError)
-  }
-
 
   def newDecorator(name) {
     return new OrmClientDecorator() {

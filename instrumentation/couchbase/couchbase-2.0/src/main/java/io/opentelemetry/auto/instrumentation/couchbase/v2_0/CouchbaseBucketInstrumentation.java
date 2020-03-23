@@ -88,7 +88,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
         return;
       }
       CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
-      result = Observable.create(new CouchbaseOnSubscribe(result, method, bucket, null));
+      result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
     }
   }
 
@@ -111,12 +111,15 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
       }
       CallDepthThreadLocalMap.reset(CouchbaseCluster.class);
 
-      // A query can be of many different types. We could track the creation of them and try to
-      // rewind back to when they were created from a string, but for now we rely on toString()
-      // returning something useful. That seems to be the case. If we're starting to see strange
-      // query texts, this is the place to look!
-      final String queryText = query != null ? query.toString() : null;
-      result = Observable.create(new CouchbaseOnSubscribe(result, method, bucket, queryText));
+      if (query != null) {
+        // A query can be of many different types. We could track the creation of them and try to
+        // rewind back to when they were created from a string, but for now we rely on toString()
+        // returning something useful. That seems to be the case. If we're starting to see strange
+        // query texts, this is the place to look!
+        result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, query.toString()));
+      } else {
+        result = Observable.create(CouchbaseOnSubscribe.create(result, bucket, method));
+      }
     }
   }
 }

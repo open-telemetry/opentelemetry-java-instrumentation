@@ -96,7 +96,7 @@ class Netty41ClientTest extends HttpClientTest {
     assertTraces(1) {
       def size = traces[0].size()
       trace(0, size) {
-        basicSpan(it, 0, "parent", null, null, thrownException)
+        basicSpan(it, 0, "parent", null, thrownException)
 
         // AsyncHttpClient retries across multiple resolved IP addresses (e.g. 127.0.0.1 and 0:0:0:0:0:0:0:1)
         // for up to a total of 10 seconds (default connection time limit)

@@ -81,8 +81,8 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
       }
       trace(1, 3) {
         basicSpan(it, 0, "someTrace")
-        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketSettings.name(), null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.get", bucketSettings.name(), null, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 2, "Bucket.get", bucketSettings.name(), span(0))
       }
     }
 
@@ -121,7 +121,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 0, "Cluster.openBucket")
       }
       trace(1, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name(), 'SimpleN1qlQuery{statement=SELECT mockrow}')
+        assertCouchbaseCall(it, 0, 'SimpleN1qlQuery{statement=SELECT mockrow}', bucketCouchbase.name())
       }
     }
 

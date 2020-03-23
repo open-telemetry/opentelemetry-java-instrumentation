@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.hystrix;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 
 public class HystrixDecorator extends BaseDecorator {
@@ -37,7 +36,7 @@ public class HystrixDecorator extends BaseDecorator {
 
       final String resourceName = groupName + "." + commandName + "." + methodName;
 
-      span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+      span.updateName(resourceName);
       span.setAttribute("hystrix.command", commandName);
       span.setAttribute("hystrix.group", groupName);
       span.setAttribute("hystrix.circuit-open", circuitOpen);

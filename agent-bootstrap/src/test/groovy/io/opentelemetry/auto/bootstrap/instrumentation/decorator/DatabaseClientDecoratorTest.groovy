@@ -56,6 +56,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     if (session) {
       1 * span.setAttribute(Tags.DB_USER, session.user)
       1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
+      1 * span.setAttribute(Tags.DB_URL, session.url)
       if (renameService) {
         1 * span.setAttribute(MoreTags.SERVICE_NAME, session.instance)
       }
@@ -66,7 +67,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     renameService | session
     false         | null
     true          | [user: "test-user"]
-    false         | [instance: "test-instance"]
+    false         | [instance: "test-instance", url: "test:"]
     true          | [user: "test-user", instance: "test-instance"]
   }
 
@@ -138,6 +139,11 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected String dbInstance(Map map) {
         return map.instance
+      }
+
+      @Override
+      protected String dbUrl(Map map) {
+        return map.url
       }
     }
   }

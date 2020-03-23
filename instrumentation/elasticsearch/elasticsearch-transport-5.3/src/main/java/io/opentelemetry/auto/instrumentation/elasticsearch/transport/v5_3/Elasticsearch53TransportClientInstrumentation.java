@@ -86,7 +86,8 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      final Span span = TRACER.spanBuilder("elasticsearch.query").setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER.spanBuilder(action.getClass().getSimpleName()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, action.getClass(), actionRequest.getClass());
 
