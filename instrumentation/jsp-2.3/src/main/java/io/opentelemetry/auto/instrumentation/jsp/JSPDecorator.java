@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.jsp;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
@@ -41,10 +40,14 @@ public class JSPDecorator extends BaseDecorator {
     return "jsp-http-servlet";
   }
 
+  public String spanNameOnCompile(final JspCompilationContext jspCompilationContext) {
+    return jspCompilationContext == null
+        ? "Compile"
+        : "Compile " + jspCompilationContext.getJspFile();
+  }
+
   public void onCompile(final Span span, final JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
-      span.setAttribute(MoreTags.RESOURCE_NAME, jspCompilationContext.getJspFile());
-
       final ServletContext servletContext = jspCompilationContext.getServletContext();
       if (servletContext != null) {
         span.setAttribute("servlet.context", servletContext.getContextPath());
@@ -58,15 +61,17 @@ public class JSPDecorator extends BaseDecorator {
     }
   }
 
-  public void onRender(final Span span, final HttpServletRequest req) {
+  public String spanNameOnRender(final HttpServletRequest req) {
     // get the JSP file name being rendered in an include action
     final Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
     String resourceName = req.getServletPath();
     if (includeServletPath instanceof String) {
       resourceName = includeServletPath.toString();
     }
-    span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+    return "Render " + resourceName;
+  }
 
+  public void onRender(final Span span, final HttpServletRequest req) {
     final Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
     if (forwardOrigin instanceof String) {
       span.setAttribute("jsp.forwardOrigin", forwardOrigin.toString());

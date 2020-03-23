@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.opentelemetryapi;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import unshaded.io.opentelemetry.trace.Tracer;
-import unshaded.io.opentelemetry.trace.TracerProvider;
+import unshaded.io.opentelemetry.metrics.Meter;
+import unshaded.io.opentelemetry.metrics.MeterProvider;
 
-public class UnshadedTracerProvider implements TracerProvider {
+public class UnshadedMeterProvider implements MeterProvider {
 
   @Override
-  public Tracer get(final String instrumentationName) {
-    return new UnshadedTracer(
-        io.opentelemetry.OpenTelemetry.getTracerProvider().get(instrumentationName));
+  public Meter get(final String instrumentationName) {
+    return new UnshadedMeter(
+        io.opentelemetry.OpenTelemetry.getMeterProvider().get(instrumentationName));
   }
 
   @Override
-  public Tracer get(final String instrumentationName, final String instrumentationVersion) {
-    return new UnshadedTracer(
-        io.opentelemetry.OpenTelemetry.getTracerProvider()
+  public Meter get(final String instrumentationName, final String instrumentationVersion) {
+    return new UnshadedMeter(
+        io.opentelemetry.OpenTelemetry.getMeterProvider()
             .get(instrumentationName, instrumentationVersion));
   }
 }

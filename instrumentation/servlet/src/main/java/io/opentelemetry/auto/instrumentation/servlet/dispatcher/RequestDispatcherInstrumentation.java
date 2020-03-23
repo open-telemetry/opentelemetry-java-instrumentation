@@ -28,7 +28,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -99,7 +98,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
       final String target =
           InstrumentationContext.get(RequestDispatcher.class, String.class).get(dispatcher);
-      span.setAttribute(MoreTags.RESOURCE_NAME, target);
+      span.setAttribute("dispatcher.target", target);
 
       // save the original servlet span before overwriting the request attribute, so that it can be
       // restored on method exit

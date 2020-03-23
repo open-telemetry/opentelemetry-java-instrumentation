@@ -128,8 +128,8 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, 1, "exchange.declare", span(0))
         rabbitSpan(it, 2, "queue.declare", span(0))
         rabbitSpan(it, 3, "queue.bind", span(0))
-        rabbitSpan(it, 4, "basic.publish $exchangeName -> $routingKey", span(0))
-        rabbitSpan(it, 5, "basic.get <generated>", span(0), span(4))
+        rabbitSpan(it, 4, "$exchangeName -> $routingKey", span(0))
+        rabbitSpan(it, 5, "<generated>", span(0), span(4))
       }
     }
 
@@ -155,10 +155,10 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, 0, "queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, 0, "basic.publish <default> -> <generated>")
+        rabbitSpan(it, 0, "<default> -> <generated>")
       }
       trace(2, 1) {
-        rabbitSpan(it, 0, "basic.get <generated>", null, traces[1][0])
+        rabbitSpan(it, 0, "<generated>", null, traces[1][0])
       }
     }
   }
@@ -185,7 +185,7 @@ class RabbitMQTest extends AgentTestRunner {
     (1..messageCount).each {
       channel.basicPublish(exchangeName, "", null, "msg $it".getBytes())
     }
-    def resource = messageCount % 2 == 0 ? "basic.deliver <generated>" : "basic.deliver $queueName"
+    def resource = messageCount % 2 == 0 ? "<generated>" : queueName
 
     expect:
     assertTraces(4 + messageCount) {
@@ -203,7 +203,7 @@ class RabbitMQTest extends AgentTestRunner {
       }
       (1..messageCount).each {
         trace(3 + it, 2) {
-          rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
+          rabbitSpan(it, 0, "$exchangeName -> <all>")
           rabbitSpan(it, 1, resource, span(0))
         }
       }
@@ -250,8 +250,8 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "basic.consume")
       }
       trace(4, 2) {
-        rabbitSpan(it, 0, "basic.publish $exchangeName -> <all>")
-        rabbitSpan(it, 1, "basic.deliver <generated>", span(0), null, error, error.message)
+        rabbitSpan(it, 0, "$exchangeName -> <all>")
+        rabbitSpan(it, 1, "<generated>", span(0), null, error, error.message)
       }
     }
 
@@ -275,14 +275,14 @@ class RabbitMQTest extends AgentTestRunner {
     }
 
     where:
-    command                 | exception             | errorMsg                                           | closure
-    "exchange.declare"      | IOException           | null                                               | {
+    command                | exception             | errorMsg                                           | closure
+    "exchange.declare"     | IOException           | null                                               | {
       it.exchangeDeclare("some-exchange", "invalid-type", true)
     }
-    "Channel.basicConsume"  | IllegalStateException | "Invalid configuration: 'queue' must be non-null." | {
+    "Channel.basicConsume" | IllegalStateException | "Invalid configuration: 'queue' must be non-null." | {
       it.basicConsume(null, null)
     }
-    "basic.get <generated>" | IOException           | null                                               | {
+    "<generated>"          | IOException           | null                                               | {
       it.basicGet("amq.gen-invalid-channel", true)
     }
   }
@@ -306,10 +306,10 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, 0, "basic.publish <default> -> some-routing-queue")
+        rabbitSpan(it, 0, "<default> -> some-routing-queue")
       }
       trace(2, 1) {
-        rabbitSpan(it, 0, "basic.get $queue.name", null, traces[1][0])
+        rabbitSpan(it, 0, queue.name, null, traces[1][0])
       }
     }
   }
@@ -335,7 +335,7 @@ class RabbitMQTest extends AgentTestRunner {
     String errorMsg = null
   ) {
     trace.span(index) {
-      operationName "amqp.command"
+      operationName resource
 
       switch (trace.span(index).attributes.get("amqp.command")?.stringValue) {
         case "basic.publish":
@@ -365,7 +365,6 @@ class RabbitMQTest extends AgentTestRunner {
 
       tags {
         "$MoreTags.SERVICE_NAME" "rabbitmq"
-        "$MoreTags.RESOURCE_NAME" resource
         "$Tags.COMPONENT" "rabbitmq-amqp"
         "$MoreTags.NET_PEER_NAME" { it == null || it instanceof String }
         "$MoreTags.NET_PEER_IP" { "127.0.0.1" }

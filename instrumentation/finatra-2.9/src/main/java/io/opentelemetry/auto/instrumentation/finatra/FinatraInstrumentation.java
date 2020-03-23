@@ -27,19 +27,16 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
-import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -86,21 +83,15 @@ public class FinatraInstrumentation extends Instrumenter.Default {
   public static class RouteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
-        @Advice.Argument(0) final Request request,
         @Advice.FieldValue("routeInfo") final RouteInfo routeInfo,
-        @Advice.FieldValue("clazz") final Class clazz,
-        @Advice.Origin final Method method) {
+        @Advice.FieldValue("clazz") final Class clazz) {
 
-      // Update the parent "netty.request"
       final Span parent = TRACER.getCurrentSpan();
-      final String resourceName = request.method().name() + " " + routeInfo.path();
-      parent.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
       parent.setAttribute(Tags.COMPONENT, "finatra");
-      parent.updateName(resourceName);
+      parent.updateName(routeInfo.path());
 
-      final Span span = TRACER.spanBuilder("finatra.controller").startSpan();
+      final Span span = TRACER.spanBuilder(DECORATE.spanNameForClass(clazz)).startSpan();
       DECORATE.afterStart(span);
-      span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForClass(clazz));
 
       return new SpanWithScope(span, TRACER.withSpan(span));
     }
