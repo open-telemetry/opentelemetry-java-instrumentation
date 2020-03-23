@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.opentelemetryapi;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.Bridging.toShaded;
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.Bridging.toUnshaded;
+import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShaded;
+import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toUnshaded;
 
 import java.util.List;
 import unshaded.io.opentelemetry.context.propagation.HttpTextFormat;
 import unshaded.io.opentelemetry.trace.SpanContext;
 
-public class UnshadedHttpTextFormat implements HttpTextFormat<SpanContext> {
+class UnshadedHttpTextFormat implements HttpTextFormat<SpanContext> {
 
   private final io.opentelemetry.context.propagation.HttpTextFormat<
           io.opentelemetry.trace.SpanContext>
       shadedHttpTextFormat;
 
-  public UnshadedHttpTextFormat(
+  UnshadedHttpTextFormat(
       final io.opentelemetry.context.propagation.HttpTextFormat<io.opentelemetry.trace.SpanContext>
           shadedHttpTextFormat) {
     this.shadedHttpTextFormat = shadedHttpTextFormat;
@@ -50,12 +50,12 @@ public class UnshadedHttpTextFormat implements HttpTextFormat<SpanContext> {
     shadedHttpTextFormat.inject(toShaded(value), carrier, new UnshadedSetter<>(setter));
   }
 
-  public static class UnshadedGetter<C>
+  private static class UnshadedGetter<C>
       implements io.opentelemetry.context.propagation.HttpTextFormat.Getter<C> {
 
     private final HttpTextFormat.Getter<C> shadedGetter;
 
-    public UnshadedGetter(final HttpTextFormat.Getter<C> shadedGetter) {
+    UnshadedGetter(final HttpTextFormat.Getter<C> shadedGetter) {
       this.shadedGetter = shadedGetter;
     }
 
@@ -65,12 +65,12 @@ public class UnshadedHttpTextFormat implements HttpTextFormat<SpanContext> {
     }
   }
 
-  public static class UnshadedSetter<C>
+  private static class UnshadedSetter<C>
       implements io.opentelemetry.context.propagation.HttpTextFormat.Setter<C> {
 
     private final HttpTextFormat.Setter<C> shadedSetter;
 
-    public UnshadedSetter(final Setter<C> shadedSetter) {
+    UnshadedSetter(final Setter<C> shadedSetter) {
       this.shadedSetter = shadedSetter;
     }
 

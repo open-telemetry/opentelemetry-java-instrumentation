@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.opentelemetryapi;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.context.NoopScope;
@@ -24,11 +24,11 @@ import unshaded.io.opentelemetry.trace.SpanContext;
 import unshaded.io.opentelemetry.trace.Tracer;
 
 @Slf4j
-public class UnshadedTracer implements Tracer {
+class UnshadedTracer implements Tracer {
 
   private final io.opentelemetry.trace.Tracer shadedTracer;
 
-  public UnshadedTracer(final io.opentelemetry.trace.Tracer shadedTracer) {
+  UnshadedTracer(final io.opentelemetry.trace.Tracer shadedTracer) {
     this.shadedTracer = shadedTracer;
   }
 
@@ -49,7 +49,7 @@ public class UnshadedTracer implements Tracer {
 
   @Override
   public Span.Builder spanBuilder(final String spanName) {
-    return new UnshadedSpanBuilder(shadedTracer.spanBuilder(spanName));
+    return new UnshadedSpan.Builder(shadedTracer.spanBuilder(spanName));
   }
 
   @Override
