@@ -84,7 +84,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -118,7 +118,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
@@ -152,7 +152,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -166,7 +166,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^update /
@@ -198,7 +198,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -230,7 +230,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
@@ -244,7 +244,7 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^delete /

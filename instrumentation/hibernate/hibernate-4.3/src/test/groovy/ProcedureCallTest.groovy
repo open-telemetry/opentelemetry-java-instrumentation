@@ -107,7 +107,7 @@ class ProcedureCallTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "{call TEST_PROC()}"
