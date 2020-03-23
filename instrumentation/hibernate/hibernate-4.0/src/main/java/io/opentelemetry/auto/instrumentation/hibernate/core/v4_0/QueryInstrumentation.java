@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.hibernate.core.v4_0;
 
-import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -32,10 +31,8 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Query;
-import org.hibernate.SQLQuery;
 
 @AutoService(Instrumenter.class)
 public class QueryInstrumentation extends AbstractHibernateInstrumentation {
@@ -58,6 +55,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
                 named("list")
                     .or(named("executeUpdate"))
                     .or(named("uniqueResult"))
+                    .or(named("iterate"))
                     .or(named("scroll"))),
         QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
   }
@@ -65,37 +63,20 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
   public static class QueryMethodAdvice extends V4Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope startMethod(
-        @Advice.This final Query query, @Advice.Origin("#m") final String name) {
+    public static SpanWithScope startMethod(@Advice.This final Query query) {
 
       final ContextStore<Query, Span> contextStore =
           InstrumentationContext.get(Query.class, Span.class);
 
-      // Note: We don't know what the entity is until the method is returning.
-      final SpanWithScope spanWithScope =
-          SessionMethodUtils.startScopeFrom(
-              contextStore, query, "hibernate.query." + name, null, true);
-      if (spanWithScope != null) {
-        DECORATE.onStatement(spanWithScope.getSpan(), query.getQueryString());
-      }
-      return spanWithScope;
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, query, query.getQueryString(), null, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.This final Query query,
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
+        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
 
-      Object entity = returned;
-      if (returned == null || query instanceof SQLQuery) {
-        // Not a method that returns results, or the query returns a table rather than an ORM
-        // object.
-        entity = query.getQueryString();
-      }
-
-      SessionMethodUtils.closeScope(spanWithScope, throwable, entity);
+      SessionMethodUtils.closeScope(spanWithScope, throwable, null, null);
     }
   }
 }

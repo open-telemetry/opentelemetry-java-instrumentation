@@ -81,12 +81,11 @@ class RatpackOtherTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "GET /$route"
+          operationName "/$route"
           spanKind SERVER
           parent()
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
@@ -96,12 +95,11 @@ class RatpackOtherTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "GET /$route"
+          operationName "/$route"
           spanKind INTERNAL
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "GET /$route"
             "$Tags.COMPONENT" "ratpack"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
