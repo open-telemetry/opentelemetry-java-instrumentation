@@ -16,7 +16,6 @@
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -42,10 +41,9 @@ class ViewRenderTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "view.render"
+          operationName "Render $template"
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "View $template"
             "$Tags.COMPONENT" "dropwizard-view"
             "span.origin.type" renderer.class.simpleName
           }

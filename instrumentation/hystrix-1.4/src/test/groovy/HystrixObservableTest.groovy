@@ -16,7 +16,6 @@
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import rx.Observable
@@ -79,11 +78,10 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "hystrix.cmd"
+          operationName "ExampleGroup.HystrixObservableTest\$1.execute"
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$1.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -176,11 +174,10 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "hystrix.cmd"
+          operationName "ExampleGroup.HystrixObservableTest\$2.execute"
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -189,11 +186,10 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "hystrix.cmd"
+          operationName "ExampleGroup.HystrixObservableTest\$2.fallback"
           childOf span(1)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.fallback"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -279,11 +275,10 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "hystrix.cmd"
+          operationName "FailingGroup.HystrixObservableTest\$3.execute"
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
@@ -292,11 +287,10 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "hystrix.cmd"
+          operationName "FailingGroup.HystrixObservableTest\$3.fallback"
           childOf span(1)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.fallback"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
