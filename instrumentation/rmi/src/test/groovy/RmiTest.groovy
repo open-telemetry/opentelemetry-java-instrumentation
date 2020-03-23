@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -55,20 +54,18 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "rmi.invoke"
+          operationName "Greeter.hello"
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
         }
         span(2) {
-          operationName "rmi.request"
+          operationName "Server.hello"
           spanKind SERVER
           tags {
-            "$MoreTags.RESOURCE_NAME" "Server.hello"
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
           }
@@ -116,23 +113,21 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, null, thrownException)
         span(1) {
-          operationName "rmi.invoke"
+          operationName "Greeter.exceptional"
           spanKind CLIENT
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "Greeter.exceptional"
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
             errorTags(RuntimeException, String)
           }
         }
         span(2) {
-          operationName "rmi.request"
+          operationName "Server.exceptional"
           spanKind SERVER
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "Server.exceptional"
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
             errorTags(RuntimeException, String)
@@ -162,21 +157,19 @@ class RmiTest extends AgentTestRunner {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "rmi.invoke"
+          operationName "Greeter.hello"
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.RESOURCE_NAME" "Greeter.hello"
             "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
         }
         span(2) {
           childOf span(1)
-          operationName "rmi.request"
+          operationName "ServerLegacy.hello"
           spanKind SERVER
           tags {
-            "$MoreTags.RESOURCE_NAME" "ServerLegacy.hello"
             "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
           }
