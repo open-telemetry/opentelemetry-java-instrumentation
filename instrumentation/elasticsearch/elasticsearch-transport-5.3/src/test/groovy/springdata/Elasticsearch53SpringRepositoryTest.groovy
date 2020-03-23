@@ -18,7 +18,6 @@ package springdata
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.sdk.trace.data.SpanData
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
@@ -81,26 +80,20 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findAll"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "SearchAction"
           spanKind CLIENT
           errored false
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
@@ -126,24 +119,19 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 4) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "ElasticsearchRepository.index"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
           }
         }
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "IndexAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -158,12 +146,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "elasticsearch.query"
+          operationName "PutMappingAction"
           spanKind CLIENT
           childOf span(1)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -171,12 +158,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(3) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -197,25 +183,19 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findById"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -240,24 +220,19 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(2) {
       trace(0, 3) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "ElasticsearchRepository.index"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
           }
         }
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "IndexAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -272,12 +247,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -290,25 +264,19 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
       trace(1, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findById"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -332,25 +300,19 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(2) {
       trace(0, 3) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.deleteById"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.deleteById"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "DeleteAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "DeleteAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "DeleteAction"
@@ -364,12 +326,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "elasticsearch.query"
+          operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -383,25 +344,19 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
       }
 
       trace(1, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findAll"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "SearchAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
@@ -415,14 +370,5 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
     where:
     indexName = "test-index"
-  }
-
-  def sort(List<SpanData> spans) {
-    // need to normalize span ordering since they are finished by different threads
-    if (spans[1].name == "repository.operation") {
-      def tmp = spans[1]
-      spans[1] = spans[0]
-      spans[0] = tmp
-    }
   }
 }

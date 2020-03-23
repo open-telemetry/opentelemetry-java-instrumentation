@@ -87,11 +87,10 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
@@ -113,12 +112,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -177,11 +175,10 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     assertTraces(5) {
       trace(0, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "CreateIndexAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "CreateIndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
@@ -192,11 +189,10 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "ClusterHealthAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
@@ -206,11 +202,10 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -224,11 +219,10 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(3, 2) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "IndexAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -238,12 +232,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "elasticsearch.query"
+          operationName "PutMappingAction"
           spanKind CLIENT
           childOf span(0)
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "PutMappingAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -254,11 +247,10 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       }
       trace(4, 1) {
         span(0) {
-          operationName "elasticsearch.query"
+          operationName "GetAction"
           spanKind CLIENT
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$MoreTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"

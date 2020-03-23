@@ -34,6 +34,7 @@ import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 class Elasticsearch5RestClientTest extends AgentTestRunner {
@@ -100,8 +101,8 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "elasticsearch.rest.query"
-          spanKind CLIENT
+          operationName "GET _cluster/health"
+          spanKind INTERNAL
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "elasticsearch"
