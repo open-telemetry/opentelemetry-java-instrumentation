@@ -26,6 +26,8 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
 
   private static final Pattern SPECIAL_CHARACTERS_REGEX = Pattern.compile("[\\(\\)&|]");
   private static final Pattern SPACES_REGEX = Pattern.compile("[ \\t]+");
+  private static final Pattern METHOD_REGEX =
+      Pattern.compile("^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) ");
 
   private final RouterFunction routerFunction;
   private final ServerRequest serverRequest;
@@ -48,8 +50,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
         final Span parentSpan =
             (Span) serverRequest.attributes().get(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
         if (parentSpan != null) {
-          final String resourceName = parseResourceName(predicateString);
-          parentSpan.updateName(resourceName);
+          parentSpan.updateName(parseRoute(predicateString));
         }
       }
     }
@@ -67,10 +68,13 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     }
   }
 
-  private String parseResourceName(final String routerString) {
-    return SPACES_REGEX
-        .matcher(SPECIAL_CHARACTERS_REGEX.matcher(routerString).replaceAll(""))
-        .replaceAll(" ")
-        .trim();
+  private String parseRoute(final String routerString) {
+    return METHOD_REGEX
+        .matcher(
+            SPACES_REGEX
+                .matcher(SPECIAL_CHARACTERS_REGEX.matcher(routerString).replaceAll(""))
+                .replaceAll(" ")
+                .trim())
+        .replaceAll("");
   }
 }
