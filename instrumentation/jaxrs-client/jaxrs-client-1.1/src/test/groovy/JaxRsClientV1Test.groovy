@@ -17,7 +17,7 @@ import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
 import com.sun.jersey.api.client.filter.LoggingFilter
-import io.opentelemetry.auto.instrumentation.jaxrs.v1.JaxRsClientV1Decorator
+import io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
 

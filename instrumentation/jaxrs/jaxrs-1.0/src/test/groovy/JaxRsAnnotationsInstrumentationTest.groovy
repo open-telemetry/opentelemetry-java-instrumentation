@@ -15,7 +15,7 @@
  */
 import io.opentelemetry.auto.bootstrap.WeakMap
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.jaxrs1.JaxRsAnnotationsDecorator
+import io.opentelemetry.auto.instrumentation.jaxrs.v1_0.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
 
 import javax.ws.rs.DELETE
