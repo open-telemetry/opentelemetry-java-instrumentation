@@ -86,7 +86,7 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
       description = "/" + description;
     }
 
-    span.updateName(ctx.getRequest().getMethod().getName() + " " + description);
+    span.updateName(description);
 
     return span;
   }
