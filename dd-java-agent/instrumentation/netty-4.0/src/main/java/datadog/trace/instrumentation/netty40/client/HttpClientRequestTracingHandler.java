@@ -60,10 +60,10 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
         span.finish();
         throw throwable;
       }
-    }
-
-    if (null != parentScope) {
-      parentScope.close();
+    } finally {
+      if (null != parentScope) {
+        parentScope.close();
+      }
     }
   }
 }
