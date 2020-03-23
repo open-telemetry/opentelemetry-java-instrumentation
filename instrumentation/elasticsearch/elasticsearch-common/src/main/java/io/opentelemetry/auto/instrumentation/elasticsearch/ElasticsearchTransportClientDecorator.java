@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.elasticsearch;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -54,13 +53,8 @@ public class ElasticsearchTransportClientDecorator extends DatabaseClientDecorat
   }
 
   public Span onRequest(final Span span, final Class action, final Class request) {
-    if (action != null) {
-      span.setAttribute(MoreTags.RESOURCE_NAME, action.getSimpleName());
-      span.setAttribute("elasticsearch.action", action.getSimpleName());
-    }
-    if (request != null) {
-      span.setAttribute("elasticsearch.request", request.getSimpleName());
-    }
+    span.setAttribute("elasticsearch.action", action.getSimpleName());
+    span.setAttribute("elasticsearch.request", request.getSimpleName());
     return span;
   }
 }
