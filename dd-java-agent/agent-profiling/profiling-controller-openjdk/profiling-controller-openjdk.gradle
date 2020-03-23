@@ -1,6 +1,11 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_11
+  // Zulu has backported profiling support
+  forceJdk = ['ZULU8']
+  // By default tests with be compiled for `minJavaVersionForTests` version,
+  // but in this case we would like to avoid this since we would like to run with ZULU8
+  skipSettingTestJavaVersion = true
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
@@ -26,7 +31,6 @@ Setup here is as following:
 * We compile with Java11 compiler to get JFR definitions.
 * We specify source/target as Java8 to get code that is loadable on Java8 - JFR defs are Java8 compatible.
 * We force IDEA to treat this as Java11 project with 'idea' plugin below.
-* We run tests only on Java11+.
  */
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
