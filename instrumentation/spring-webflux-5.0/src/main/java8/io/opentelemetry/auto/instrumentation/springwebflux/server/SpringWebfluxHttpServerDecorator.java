@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.SpanTypes;
 import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,12 +25,7 @@ public class SpringWebfluxHttpServerDecorator extends ServerDecorator {
   public static final SpringWebfluxHttpServerDecorator DECORATE =
       new SpringWebfluxHttpServerDecorator();
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.spring-webflux-5.0");
-
-  @Override
-  protected String getSpanType() {
-    return SpanTypes.HTTP_SERVER;
-  }
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
 
   @Override
   protected String getComponentName() {

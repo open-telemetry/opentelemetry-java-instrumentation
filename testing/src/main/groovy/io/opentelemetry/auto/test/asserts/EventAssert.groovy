@@ -17,7 +17,7 @@ package io.opentelemetry.auto.test.asserts
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.sdk.trace.SpanData.TimedEvent
+import io.opentelemetry.sdk.trace.data.SpanData.TimedEvent
 
 import static TagsAssert.assertTags
 

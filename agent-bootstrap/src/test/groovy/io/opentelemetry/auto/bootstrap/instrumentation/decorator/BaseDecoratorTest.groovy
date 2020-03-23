@@ -34,7 +34,6 @@ class BaseDecoratorTest extends AgentSpecification {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(MoreTags.SPAN_TYPE, decorator.getSpanType())
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     _ * span.setAttribute(_, _) // Want to allow other calls from child implementations.
     0 * _
@@ -70,6 +69,7 @@ class BaseDecoratorTest extends AgentSpecification {
       1 * span.setStatus(Status.UNKNOWN)
       1 * span.setAttribute(MoreTags.ERROR_TYPE, error.getClass().getName())
       1 * span.setAttribute(MoreTags.ERROR_STACK, _)
+      1 * span.setAttribute(MoreTags.ERROR_MSG, null)
     }
     0 * _
 
@@ -129,11 +129,6 @@ class BaseDecoratorTest extends AgentSpecification {
 
   def newDecorator() {
     return new BaseDecorator() {
-
-      @Override
-      protected String getSpanType() {
-        return "test-type"
-      }
 
       @Override
       protected String getComponentName() {
