@@ -142,6 +142,11 @@ jobs:
     environment:
       - TEST_TASK: testJava13
 
+  test_14:
+    <<: *default_test_job
+    environment:
+      - TEST_TASK: testJava14
+
   agent_integration_tests:
     <<: *defaults
     docker:
@@ -322,6 +327,12 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - test_14:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
 
       - agent_integration_tests:
           requires:
@@ -357,6 +368,7 @@ workflows:
             - test_zulu11
             - test_12
             - test_13
+            - test_14
             - agent_integration_tests
             - check
           filters:
@@ -378,6 +390,7 @@ workflows:
             - test_zulu11
             - test_12
             - test_13
+            - test_14
             - agent_integration_tests
             - check
           filters:
