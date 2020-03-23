@@ -61,7 +61,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "GET /param/:param"
+          operationName "/param/:param"
           spanKind SERVER
           errored false
           parent()

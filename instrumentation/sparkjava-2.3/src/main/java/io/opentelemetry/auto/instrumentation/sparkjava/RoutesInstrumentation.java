@@ -32,7 +32,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import spark.route.HttpMethod;
 import spark.routematch.RouteMatch;
 
 @AutoService(Instrumenter.class)
@@ -77,12 +76,11 @@ public class RoutesInstrumentation extends Instrumenter.Default {
   public static class RoutesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void routeMatchEnricher(
-        @Advice.Argument(0) final HttpMethod method, @Advice.Return final RouteMatch routeMatch) {
+    public static void routeMatchEnricher(@Advice.Return final RouteMatch routeMatch) {
 
       final Span span = TRACER.getCurrentSpan();
       if (span != null && routeMatch != null) {
-        span.updateName(method.name().toUpperCase() + " " + routeMatch.getMatchUri());
+        span.updateName(routeMatch.getMatchUri());
       }
     }
   }
