@@ -135,14 +135,13 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final Connection connection = channel.getConnection();
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder("amqp.command");
+      final Span.Builder spanBuilder = TRACER.spanBuilder(method);
       if (method.equals("Channel.basicPublish")) {
         spanBuilder.setSpanKind(PRODUCER);
       } else {
         spanBuilder.setSpanKind(CLIENT);
       }
       final Span span = spanBuilder.startSpan();
-      span.setAttribute(MoreTags.RESOURCE_NAME, method);
       span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
@@ -242,7 +241,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       // span creation
       final Span.Builder spanBuilder =
           TRACER
-              .spanBuilder("amqp.command")
+              .spanBuilder(DECORATE.spanNameOnGet(queue))
               .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
 

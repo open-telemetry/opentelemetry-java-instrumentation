@@ -19,7 +19,6 @@ import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Envelope;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -46,7 +45,7 @@ public class RabbitDecorator extends ClientDecorator {
         routingKey == null || routingKey.isEmpty()
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
-    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
+    span.updateName(exchangeName + " -> " + routing);
     span.setAttribute("amqp.command", "basic.publish");
     if (exchange != null && !exchange.isEmpty()) {
       span.setAttribute("amqp.exchange", exchange);
@@ -56,22 +55,26 @@ public class RabbitDecorator extends ClientDecorator {
     }
   }
 
-  public void onGet(final Span span, final String queue) {
-    final String queueName = queue.startsWith("amq.gen-") ? "<generated>" : queue;
-    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.get " + queueName);
+  public String spanNameOnGet(final String queue) {
+    return queue.startsWith("amq.gen-") ? "<generated>" : queue;
+  }
 
+  public void onGet(final Span span, final String queue) {
     span.setAttribute("amqp.command", "basic.get");
     span.setAttribute("amqp.queue", queue);
   }
 
-  public void onDeliver(final Span span, final String queue, final Envelope envelope) {
-    String queueName = queue;
+  public String spanNameOnDeliver(final String queue) {
     if (queue == null || queue.isEmpty()) {
-      queueName = "<default>";
+      return "<default>";
     } else if (queue.startsWith("amq.gen-")) {
-      queueName = "<generated>";
+      return "<generated>";
+    } else {
+      return queue;
     }
-    span.setAttribute(MoreTags.RESOURCE_NAME, "basic.deliver " + queueName);
+  }
+
+  public void onDeliver(final Span span, final Envelope envelope) {
     span.setAttribute("amqp.command", "basic.deliver");
 
     if (envelope != null) {
@@ -90,8 +93,7 @@ public class RabbitDecorator extends ClientDecorator {
     final String name = command.getMethod().protocolMethodName();
 
     if (!name.equals("basic.publish")) {
-      // Don't overwrite the name already set.
-      span.setAttribute(MoreTags.RESOURCE_NAME, name);
+      span.updateName(name);
     }
     span.setAttribute("amqp.command", name);
   }
