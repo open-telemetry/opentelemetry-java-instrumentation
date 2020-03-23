@@ -27,7 +27,7 @@ import java.time.Duration
 @RestController
 class TestController {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
   @GetMapping("/foo")
   Mono<FooModel> getFooModel() {

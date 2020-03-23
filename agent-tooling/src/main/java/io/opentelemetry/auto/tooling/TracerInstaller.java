@@ -39,12 +39,13 @@ public class TracerInstaller {
       if (exporterJar != null) {
         final SpanExporter exporter = loadFromJar(exporterJar);
         if (exporter != null) {
-          OpenTelemetrySdk.getTracerFactory()
+          OpenTelemetrySdk.getTracerProvider()
               .addSpanProcessor(SimpleSpansProcessor.newBuilder(exporter).build());
           log.info("Installed span exporter: " + exporter.getClass().getCanonicalName());
         } else {
           log.warn("No valid exporter found. Tracing will run but spans are dropped");
         }
+      } else {
         log.warn("No exporter is specified. Tracing will run but spans are dropped");
       }
     } else {

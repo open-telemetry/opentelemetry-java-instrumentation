@@ -32,7 +32,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   public static final JDBCDecorator DECORATE = new JDBCDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.jdbc");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jdbc");
 
   private static final String DB_QUERY = "DB Query";
 

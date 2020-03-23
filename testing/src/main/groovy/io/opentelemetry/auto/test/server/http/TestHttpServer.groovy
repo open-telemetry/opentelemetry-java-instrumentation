@@ -18,7 +18,7 @@ package io.opentelemetry.auto.test.server.http
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.asserts.ListWriterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.SpanContext
 import io.opentelemetry.trace.Tracer
@@ -39,7 +39,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class TestHttpServer implements AutoCloseable {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
   static TestHttpServer httpServer(boolean start = true,
                                    @DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
@@ -254,11 +254,12 @@ class TestHttpServer implements AutoCloseable {
       }
       if (isTestServer) {
         final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server").setSpanKind(SERVER)
-        try {
-          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(req, GETTER)
-          spanBuilder.setParent(extractedContext)
-        } catch (final IllegalArgumentException e) {
-          // couldn't extract a context
+        final SpanContext extract = TRACER.getHttpTextFormat().extract(req, GETTER)
+        if (extract.isValid()) {
+          spanBuilder.setParent(extract)
+        } else {
+          // explicitly setting "no parent" in case a span was propagated to this thread
+          // by the java-concurrent instrumentation when the thread was started
           spanBuilder.setNoParent()
         }
         final Span span = spanBuilder.startSpan()

@@ -27,7 +27,7 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   public static final GoogleHttpClientDecorator DECORATE = new GoogleHttpClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.google-http-client-1.19");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.google-http-client-1.19");
 
   @Override
   protected String method(final HttpRequest httpRequest) {

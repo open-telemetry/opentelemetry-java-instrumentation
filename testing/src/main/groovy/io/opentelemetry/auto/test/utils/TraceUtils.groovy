@@ -20,7 +20,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.context.Scope
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
 import lombok.SneakyThrows
@@ -36,7 +36,7 @@ class TraceUtils {
     }
   }
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
   @SneakyThrows
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {

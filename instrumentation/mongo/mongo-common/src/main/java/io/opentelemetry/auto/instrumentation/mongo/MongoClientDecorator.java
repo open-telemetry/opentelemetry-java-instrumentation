@@ -36,7 +36,7 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
 
   // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.mongo");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.mongo");
 
   @Override
   protected String service() {

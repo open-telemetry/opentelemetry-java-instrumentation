@@ -86,12 +86,8 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
           span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
-            if (url.getQuery() != null) {
-              span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
-            }
-            if (url.getFragment() != null) {
-              span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
-            }
+            span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
+            span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {
@@ -105,10 +101,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      final String ip = peerHostIP(connection);
-      if (ip != null) {
-        span.setAttribute(MoreTags.NET_PEER_IP, ip);
-      }
+      span.setAttribute(MoreTags.NET_PEER_IP, peerHostIP(connection));
       final Integer port = peerPort(connection);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {

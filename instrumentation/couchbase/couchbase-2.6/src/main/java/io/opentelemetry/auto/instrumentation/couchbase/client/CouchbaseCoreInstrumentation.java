@@ -69,7 +69,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
 
   public static class CouchbaseCoreAdvice {
     public static final Tracer TRACER =
-        OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.couchbase-2.6");
+        OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.couchbase-2.6");
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) final CouchbaseRequest request) {
@@ -88,9 +88,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
           span = parentSpan;
           contextStore.put(request, span);
 
-          if (request.operationId() != null) {
-            span.setAttribute("couchbase.operation_id", request.operationId());
-          }
+          span.setAttribute("couchbase.operation_id", request.operationId());
         }
       }
     }

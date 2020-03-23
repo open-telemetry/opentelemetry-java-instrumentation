@@ -37,7 +37,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @SpringBootApplication
 class SpringWebFluxTestApplication {
 
-  private static final Tracer TRACER = OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto")
+  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {

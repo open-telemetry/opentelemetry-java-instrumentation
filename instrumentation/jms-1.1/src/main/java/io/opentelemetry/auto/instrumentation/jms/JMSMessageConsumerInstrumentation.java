@@ -106,13 +106,8 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
               .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
-        SpanContext spanContext = null;
-        try {
-          spanContext = TRACER.getHttpTextFormat().extract(message, GETTER);
-        } catch (final IllegalArgumentException e) {
-          // Couldn't extract a context
-        }
-        if (spanContext != null) {
+        final SpanContext spanContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+        if (spanContext.isValid()) {
           spanBuilder.addLink(spanContext);
         }
       }

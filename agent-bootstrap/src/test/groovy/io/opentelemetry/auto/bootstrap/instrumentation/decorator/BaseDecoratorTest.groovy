@@ -69,6 +69,7 @@ class BaseDecoratorTest extends AgentSpecification {
       1 * span.setStatus(Status.UNKNOWN)
       1 * span.setAttribute(MoreTags.ERROR_TYPE, error.getClass().getName())
       1 * span.setAttribute(MoreTags.ERROR_STACK, _)
+      1 * span.setAttribute(MoreTags.ERROR_MSG, null)
     }
     0 * _
 

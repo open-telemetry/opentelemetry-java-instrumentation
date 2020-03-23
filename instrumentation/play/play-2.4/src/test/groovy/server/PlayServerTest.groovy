@@ -21,7 +21,7 @@ import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDe
 import io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server

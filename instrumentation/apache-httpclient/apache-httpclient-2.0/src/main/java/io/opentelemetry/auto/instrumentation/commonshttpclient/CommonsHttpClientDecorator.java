@@ -28,7 +28,7 @@ public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, 
   public static final CommonsHttpClientDecorator DECORATE = new CommonsHttpClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.apache-httpclient-2.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpclient-2.0");
 
   @Override
   protected String getComponentName() {

@@ -26,7 +26,7 @@ import com.mongodb.connection.ClusterSettings
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document

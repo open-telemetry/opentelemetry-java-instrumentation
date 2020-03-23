@@ -24,7 +24,7 @@ import io.opentelemetry.trace.Tracer;
 public class GrpcClientDecorator extends ClientDecorator {
   public static final GrpcClientDecorator DECORATE = new GrpcClientDecorator();
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.grpc-1.5");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grpc-1.5");
 
   @Override
   protected String getComponentName() {
@@ -39,9 +39,7 @@ public class GrpcClientDecorator extends ClientDecorator {
   public Span onClose(final Span span, final io.grpc.Status status) {
 
     span.setAttribute("status.code", status.getCode().name());
-    if (status.getDescription() != null) {
-      span.setAttribute("status.description", status.getDescription());
-    }
+    span.setAttribute("status.description", status.getDescription());
 
     onError(span, status.getCause());
     if (!status.isOk()) {

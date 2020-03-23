@@ -20,7 +20,7 @@ import static io.opentelemetry.auto.instrumentation.opentelemetryapi.Bridging.to
 
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import unshaded.io.opentelemetry.trace.AttributeValue;
+import unshaded.io.opentelemetry.common.AttributeValue;
 import unshaded.io.opentelemetry.trace.Link;
 import unshaded.io.opentelemetry.trace.Span;
 import unshaded.io.opentelemetry.trace.SpanContext;
@@ -72,6 +72,39 @@ public class UnshadedSpanBuilder implements Span.Builder {
   @Override
   public Span.Builder addLink(final Link link) {
     shadedBuilder.addLink(toShaded(link.getContext()), toShaded(link.getAttributes()));
+    return this;
+  }
+
+  @Override
+  public Span.Builder setAttribute(final String key, final String value) {
+    shadedBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  public Span.Builder setAttribute(final String key, final long value) {
+    shadedBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  public Span.Builder setAttribute(final String key, final double value) {
+    shadedBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  public Span.Builder setAttribute(final String key, final boolean value) {
+    shadedBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  public Span.Builder setAttribute(final String key, final AttributeValue value) {
+    final io.opentelemetry.common.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
+    if (convertedValue != null) {
+      shadedBuilder.setAttribute(key, convertedValue);
+    }
     return this;
   }
 

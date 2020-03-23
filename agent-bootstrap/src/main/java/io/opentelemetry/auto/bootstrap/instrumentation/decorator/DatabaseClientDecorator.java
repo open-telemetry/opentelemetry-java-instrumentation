@@ -31,10 +31,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   @Override
   public Span afterStart(final Span span) {
     assert span != null;
-    final String type = dbType();
-    if (type != null) {
-      span.setAttribute(Tags.DB_TYPE, type);
-    }
+    span.setAttribute(Tags.DB_TYPE, dbType());
     return super.afterStart(span);
   }
 
@@ -48,17 +45,11 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      final String user = dbUser(connection);
-      if (user != null) {
-        span.setAttribute(Tags.DB_USER, user);
-      }
-      final String instanceName = dbInstance(connection);
-      if (instanceName != null) {
-        span.setAttribute(Tags.DB_INSTANCE, instanceName);
-      }
+      span.setAttribute(Tags.DB_USER, dbUser(connection));
+      span.setAttribute(Tags.DB_INSTANCE, dbInstance(connection));
 
-      if (instanceName != null && Config.get().isDbClientSplitByInstance()) {
-        span.setAttribute(MoreTags.SERVICE_NAME, instanceName);
+      if (Config.get().isDbClientSplitByInstance()) {
+        span.setAttribute(MoreTags.SERVICE_NAME, dbInstance(connection));
       }
     }
     return span;

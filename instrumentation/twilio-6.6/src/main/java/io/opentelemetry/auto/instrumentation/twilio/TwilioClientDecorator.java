@@ -20,7 +20,6 @@ import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
@@ -34,7 +33,7 @@ public class TwilioClientDecorator extends ClientDecorator {
   public static final TwilioClientDecorator DECORATE = new TwilioClientDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerFactory().get("io.opentelemetry.auto.twilio");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.twilio");
 
   static final String COMPONENT_NAME = "twilio-sdk";
 
@@ -49,16 +48,8 @@ public class TwilioClientDecorator extends ClientDecorator {
   }
 
   /** Decorate trace based on service execution metadata. */
-  public Span onServiceExecution(
-      final Span span, final Object serviceExecutor, final String methodName) {
-
-    // Drop common package prefix (com.twilio.rest)
-    final String simpleClassName =
-        serviceExecutor.getClass().getCanonicalName().replaceFirst("^com\\.twilio\\.rest\\.", "");
-
-    span.setAttribute(MoreTags.RESOURCE_NAME, String.format("%s.%s", simpleClassName, methodName));
-
-    return span;
+  public String spanNameOnServiceExecution(final Object serviceExecutor, final String methodName) {
+    return spanNameForClass(serviceExecutor.getClass()) + "." + methodName;
   }
 
   /** Annotate the span with the results of the operation. */
@@ -86,18 +77,18 @@ public class TwilioClientDecorator extends ClientDecorator {
       final Message message = (Message) result;
       span.setAttribute("twilio.account", message.getAccountSid());
       span.setAttribute("twilio.sid", message.getSid());
-      if (message.getStatus() != null) {
-        span.setAttribute("twilio.status", message.getStatus().toString());
+      final Message.Status status = message.getStatus();
+      if (status != null) {
+        span.setAttribute("twilio.status", status.toString());
       }
     } else if (result instanceof Call) {
       final Call call = (Call) result;
       span.setAttribute("twilio.account", call.getAccountSid());
       span.setAttribute("twilio.sid", call.getSid());
-      if (call.getParentCallSid() != null) {
-        span.setAttribute("twilio.parentSid", call.getParentCallSid());
-      }
-      if (call.getStatus() != null) {
-        span.setAttribute("twilio.status", call.getStatus().toString());
+      span.setAttribute("twilio.parentSid", call.getParentCallSid());
+      final Call.Status status = call.getStatus();
+      if (status != null) {
+        span.setAttribute("twilio.status", status.toString());
       }
     } else {
       // Use reflection to gather insight from other types; note that Twilio requests take close to

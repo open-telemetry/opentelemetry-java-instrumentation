@@ -19,7 +19,7 @@ import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.auto.test.ListWriter
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError

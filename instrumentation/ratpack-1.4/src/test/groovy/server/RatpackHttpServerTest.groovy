@@ -21,7 +21,7 @@ import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDe
 import io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.sdk.trace.SpanData
+import io.opentelemetry.sdk.trace.data.SpanData
 import ratpack.error.ServerErrorHandler
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
