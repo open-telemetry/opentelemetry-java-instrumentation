@@ -14,7 +14,7 @@ class PlayWSClientTest extends HttpClientTest {
   @Shared
   def application = new FakeApplication(
     new File("."),
-    FakeApplication.class.getClassLoader(),
+    FakeApplication.getClassLoader(),
     Collections.emptyMap(),
     Collections.emptyList(),
     new GlobalSettings()
