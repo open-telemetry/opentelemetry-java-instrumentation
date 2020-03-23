@@ -28,6 +28,11 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
 
   protected abstract String dbInstance(CONNECTION connection);
 
+  // TODO make abstract after implementing in all subclasses
+  protected String dbUrl(final CONNECTION connection) {
+    return null;
+  }
+
   @Override
   public Span afterStart(final Span span) {
     assert span != null;
@@ -47,6 +52,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
     if (connection != null) {
       span.setAttribute(Tags.DB_USER, dbUser(connection));
       span.setAttribute(Tags.DB_INSTANCE, dbInstance(connection));
+      span.setAttribute(Tags.DB_URL, dbUrl(connection));
 
       if (Config.get().isDbClientSplitByInstance()) {
         span.setAttribute(MoreTags.SERVICE_NAME, dbInstance(connection));

@@ -85,6 +85,7 @@ class SessionTest extends AbstractHibernateTest {
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
               "$Tags.DB_STATEMENT" ~/^select /
+              "$Tags.DB_URL" "h2:mem:"
               "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             }
           }
@@ -170,6 +171,7 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -242,6 +244,7 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^select /
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -264,6 +267,7 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -394,6 +398,7 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -472,6 +477,7 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" String
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -571,6 +577,7 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^insert /
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -585,6 +592,7 @@ class SessionTest extends AbstractHibernateTest {
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/^delete /
+            "$Tags.DB_URL" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }

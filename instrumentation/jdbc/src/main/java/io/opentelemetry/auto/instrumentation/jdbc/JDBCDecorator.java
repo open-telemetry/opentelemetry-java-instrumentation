@@ -65,6 +65,11 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
   }
 
+  @Override
+  protected String dbUrl(final DBInfo info) {
+    return info.getShortUrl();
+  }
+
   public Span onConnection(final Span span, final Connection connection) {
     DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
     /*
