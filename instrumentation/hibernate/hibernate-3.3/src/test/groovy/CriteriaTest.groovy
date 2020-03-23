@@ -40,7 +40,7 @@ class CriteriaTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "hibernate.session"
+          operationName "Session"
           spanKind INTERNAL
           parent()
           tags {
@@ -49,7 +49,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          operationName "hibernate.criteria.$methodName"
+          operationName "Criteria.$methodName"
           spanKind INTERNAL
           childOf span(0)
           tags {
@@ -72,7 +72,7 @@ class CriteriaTest extends AbstractHibernateTest {
           }
         }
         span(3) {
-          operationName "hibernate.transaction.commit"
+          operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
           tags {

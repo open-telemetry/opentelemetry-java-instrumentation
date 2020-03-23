@@ -15,22 +15,17 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.trace.Span;
-
 public abstract class OrmClientDecorator extends DatabaseClientDecorator {
 
   public abstract String entityName(final Object entity);
 
-  public Span onOperation(final Span span, final Object entity) {
-
-    assert span != null;
+  public String spanNameForOperation(final String operationName, final Object entity) {
     if (entity != null) {
-      final String name = entityName(entity);
-      if (name != null) {
-        span.setAttribute(MoreTags.RESOURCE_NAME, name);
-      } // else we keep any existing resource.
+      final String entityName = entityName(entity);
+      if (entityName != null) {
+        return operationName + " " + entityName;
+      }
     }
-    return span;
+    return operationName;
   }
 }
