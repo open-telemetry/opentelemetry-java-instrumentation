@@ -20,11 +20,11 @@ class PlayWSClientTest extends HttpClientTest {
     new GlobalSettings()
   )
 
-  def setup() {
+  def setupSpec() {
     Helpers.start(application)
   }
 
-  def cleanup() {
+  def cleanupSpec() {
     Helpers.stop(application)
   }
 
