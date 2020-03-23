@@ -149,12 +149,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -196,12 +195,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "CallCreator.create"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.CallCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
             "twilio.account" "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -265,12 +263,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -362,12 +359,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -479,12 +475,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.createAsync"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.createAsync"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -493,12 +488,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -574,12 +568,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             errorTags(ApiException, "Testing Failure")
           }
@@ -607,13 +600,12 @@ class TwilioClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           parent()
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -664,12 +656,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.createAsync"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.createAsync"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -678,12 +669,11 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -747,23 +737,21 @@ class TwilioClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.createAsync"
           spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.createAsync"
             "$Tags.COMPONENT" "twilio-sdk"
             errorTags(ApiException, "Testing Failure")
           }
         }
         span(2) {
-          operationName "twilio.sdk"
+          operationName "MessageCreator.create"
           spanKind CLIENT
           errored true
           tags {
             "$MoreTags.SERVICE_NAME" "twilio-sdk"
-            "$MoreTags.RESOURCE_NAME" "api.v2010.account.MessageCreator.create"
             "$Tags.COMPONENT" "twilio-sdk"
             errorTags(ApiException, "Testing Failure")
           }

@@ -18,7 +18,6 @@ package springdata
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.sdk.trace.data.SpanData
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
@@ -81,18 +80,13 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findAll"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
           operationName "SearchAction"
           spanKind CLIENT
@@ -125,14 +119,10 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 4) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "ElasticsearchRepository.index"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
           }
         }
@@ -193,18 +183,13 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findById"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
           operationName "GetAction"
           spanKind CLIENT
@@ -235,14 +220,10 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(2) {
       trace(0, 3) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "ElasticsearchRepository.index"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "ElasticsearchRepository.index"
             "$Tags.COMPONENT" "spring-data"
           }
         }
@@ -283,18 +264,13 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
       trace(1, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findById"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findById"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
           operationName "GetAction"
           spanKind CLIENT
@@ -324,18 +300,13 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     and:
     assertTraces(2) {
       trace(0, 3) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.deleteById"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.deleteById"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
           operationName "DeleteAction"
           spanKind CLIENT
@@ -373,18 +344,13 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
       }
 
       trace(1, 2) {
-        sortSpans {
-          sort(spans)
-        }
         span(0) {
-          operationName "repository.operation"
+          operationName "CrudRepository.findAll"
           spanKind INTERNAL
           tags {
-            "$MoreTags.RESOURCE_NAME" "CrudRepository.findAll"
             "$Tags.COMPONENT" "spring-data"
           }
         }
-
         span(1) {
           operationName "SearchAction"
           spanKind CLIENT
@@ -404,14 +370,5 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
     where:
     indexName = "test-index"
-  }
-
-  def sort(List<SpanData> spans) {
-    // need to normalize span ordering since they are finished by different threads
-    if (spans[1].name == "repository.operation") {
-      def tmp = spans[1]
-      spans[1] = spans[0]
-      spans[0] = tmp
-    }
   }
 }
