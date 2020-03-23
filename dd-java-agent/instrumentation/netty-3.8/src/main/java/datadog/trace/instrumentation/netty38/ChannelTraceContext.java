@@ -20,20 +20,4 @@ public class ChannelTraceContext {
   AgentSpan serverSpan;
   AgentSpan clientSpan;
   AgentSpan clientParentSpan;
-
-  public boolean compareAndSet(
-      final TraceScope.Continuation compareTo, final TraceScope.Continuation setTo) {
-    if (connectionContinuation == compareTo) {
-      connectionContinuation = setTo;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  public TraceScope.Continuation getConnectionContinuationAndRemove() {
-    final TraceScope.Continuation current = connectionContinuation;
-    connectionContinuation = null;
-    return current;
-  }
 }

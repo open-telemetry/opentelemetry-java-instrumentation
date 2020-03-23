@@ -92,7 +92,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       final TraceScope.Continuation continuation =
           contextStore
               .putIfAbsent(future.getChannel(), ChannelTraceContext.Factory.INSTANCE)
-              .getConnectionContinuationAndRemove();
+              .getConnectionContinuation();
+      contextStore.get(future.getChannel()).setConnectionContinuation(null);
       if (continuation == null) {
         return null;
       }

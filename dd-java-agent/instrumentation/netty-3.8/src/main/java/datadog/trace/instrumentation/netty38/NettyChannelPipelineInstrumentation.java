@@ -139,8 +139,6 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
               HttpClientResponseTracingHandler.class.getName(),
               new HttpClientResponseTracingHandler(contextStore));
         }
-      } catch (final IllegalArgumentException e) {
-        // Prevented adding duplicate handlers.
       } finally {
         CallDepthThreadLocalMap.reset(ChannelPipeline.class);
       }

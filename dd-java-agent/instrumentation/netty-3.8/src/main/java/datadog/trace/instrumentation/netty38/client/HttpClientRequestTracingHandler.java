@@ -70,10 +70,10 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
         span.finish();
         throw throwable;
       }
-    }
-
-    if (null != parentScope) {
-      parentScope.close();
+    } finally {
+      if (parentScope != null) {
+        parentScope.close();
+      }
     }
   }
 }
