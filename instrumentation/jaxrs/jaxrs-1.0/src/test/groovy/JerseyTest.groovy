@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.dropwizard.testing.junit.ResourceTestRule
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.junit.ClassRule
@@ -47,16 +46,14 @@ class JerseyTest extends AgentTestRunner {
         span(0) {
           operationName expectedResourceName
           tags {
-            "$MoreTags.RESOURCE_NAME" expectedResourceName
             "$Tags.COMPONENT" "jax-rs"
           }
         }
 
         span(1) {
           childOf span(0)
-          operationName "jax-rs.request"
+          operationName controllerName
           tags {
-            "$MoreTags.RESOURCE_NAME" controllerName
             "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
