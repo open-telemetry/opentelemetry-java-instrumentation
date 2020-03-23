@@ -45,6 +45,7 @@ public class TracerInstaller {
         } else {
           log.warn("No valid exporter found. Tracing will run but spans are dropped");
         }
+      } else {
         log.warn("No exporter is specified. Tracing will run but spans are dropped");
       }
     } else {
