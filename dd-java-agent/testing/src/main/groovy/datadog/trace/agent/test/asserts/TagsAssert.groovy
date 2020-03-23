@@ -12,7 +12,6 @@ class TagsAssert {
   private final BigInteger spanParentId
   private final Map<String, Object> tags
   private final Set<String> assertedTags = new TreeSet<>()
-  private final Set<String> ignoredTags = ["slow.stack"] // Don't error if this tag isn't checked.
 
   private TagsAssert(DDSpan span) {
     this.spanParentId = span.parentId
@@ -103,7 +102,6 @@ class TagsAssert {
   void assertTagsAllVerified() {
     def set = new TreeMap<>(tags).keySet()
     set.removeAll(assertedTags)
-    set.removeAll(ignoredTags)
     // The primary goal is to ensure the set is empty.
     // tags and assertedTags are included via an "always true" comparison
     // so they provide better context in the error message.
