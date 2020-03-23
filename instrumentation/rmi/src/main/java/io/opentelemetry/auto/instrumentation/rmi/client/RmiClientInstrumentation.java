@@ -25,7 +25,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -69,8 +68,8 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
-      final Span span = TRACER.spanBuilder("rmi.invoke").setSpanKind(CLIENT).startSpan();
-      span.setAttribute(MoreTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
+      final Span span =
+          TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(CLIENT).startSpan();
       span.setAttribute("span.origin.type", method.getDeclaringClass().getCanonicalName());
 
       DECORATE.afterStart(span);

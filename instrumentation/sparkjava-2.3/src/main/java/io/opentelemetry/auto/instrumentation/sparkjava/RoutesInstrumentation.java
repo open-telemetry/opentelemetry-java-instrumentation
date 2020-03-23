@@ -24,7 +24,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -33,7 +32,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import spark.route.HttpMethod;
 import spark.routematch.RouteMatch;
 
 @AutoService(Instrumenter.class)
@@ -78,14 +76,11 @@ public class RoutesInstrumentation extends Instrumenter.Default {
   public static class RoutesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void routeMatchEnricher(
-        @Advice.Argument(0) final HttpMethod method, @Advice.Return final RouteMatch routeMatch) {
+    public static void routeMatchEnricher(@Advice.Return final RouteMatch routeMatch) {
 
       final Span span = TRACER.getCurrentSpan();
       if (span != null && routeMatch != null) {
-        final String resourceName = method.name().toUpperCase() + " " + routeMatch.getMatchUri();
-        span.updateName(resourceName);
-        span.setAttribute(MoreTags.RESOURCE_NAME, resourceName);
+        span.updateName(routeMatch.getMatchUri());
       }
     }
   }
