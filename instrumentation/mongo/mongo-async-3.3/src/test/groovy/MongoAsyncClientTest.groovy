@@ -302,6 +302,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" "127.0.0.1"
         "$MoreTags.NET_PEER_PORT" port
+        "$Tags.DB_URL" "mongodb://localhost:"+port
         "$Tags.DB_STATEMENT" statementEval
         "$Tags.DB_TYPE" "mongo"
         "$Tags.DB_INSTANCE" instance
