@@ -44,16 +44,6 @@ public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, C
   }
 
   @Override
-  protected String hostname(final ClientRequest httpRequest) {
-    return httpRequest.getURI().getHost();
-  }
-
-  @Override
-  protected Integer port(final ClientRequest httpRequest) {
-    return httpRequest.getURI().getPort();
-  }
-
-  @Override
   protected Integer status(final ClientResponse clientResponse) {
     return clientResponse.getStatus();
   }

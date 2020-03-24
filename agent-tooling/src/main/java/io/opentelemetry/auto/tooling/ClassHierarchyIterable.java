@@ -43,7 +43,7 @@ import java.util.Set;
 public class ClassHierarchyIterable implements Iterable<Class<?>> {
   private final Class<?> baseClass;
 
-  public ClassHierarchyIterable(final Class baseClass) {
+  public ClassHierarchyIterable(final Class<?> baseClass) {
     this.baseClass = baseClass;
   }
 

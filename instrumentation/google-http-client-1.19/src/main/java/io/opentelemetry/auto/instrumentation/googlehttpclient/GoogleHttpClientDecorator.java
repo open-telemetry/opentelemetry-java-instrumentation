@@ -44,16 +44,6 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   }
 
   @Override
-  protected String hostname(final HttpRequest httpRequest) {
-    return httpRequest.getUrl().getHost();
-  }
-
-  @Override
-  protected Integer port(final HttpRequest httpRequest) {
-    return httpRequest.getUrl().getPort();
-  }
-
-  @Override
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
   }

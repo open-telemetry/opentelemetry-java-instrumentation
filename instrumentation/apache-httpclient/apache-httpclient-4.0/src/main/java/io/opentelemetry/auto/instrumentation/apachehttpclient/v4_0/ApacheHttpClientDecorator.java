@@ -44,26 +44,6 @@ public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriReques
   }
 
   @Override
-  protected String hostname(final HttpUriRequest httpRequest) {
-    final URI uri = httpRequest.getURI();
-    if (uri != null) {
-      return uri.getHost();
-    } else {
-      return null;
-    }
-  }
-
-  @Override
-  protected Integer port(final HttpUriRequest httpRequest) {
-    final URI uri = httpRequest.getURI();
-    if (uri != null) {
-      return uri.getPort();
-    } else {
-      return null;
-    }
-  }
-
-  @Override
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.getStatusLine().getStatusCode();
   }

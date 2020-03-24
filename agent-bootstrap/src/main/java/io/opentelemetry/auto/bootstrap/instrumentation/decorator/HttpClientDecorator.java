@@ -33,10 +33,6 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
 
-  protected abstract String hostname(REQUEST request);
-
-  protected abstract Integer port(REQUEST request);
-
   protected abstract Integer status(RESPONSE response);
 
   @Override
@@ -68,9 +64,13 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           }
           if (url.getHost() != null) {
             urlBuilder.append(url.getHost());
-            if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
-              urlBuilder.append(":");
-              urlBuilder.append(url.getPort());
+            span.setAttribute(MoreTags.NET_PEER_NAME, url.getHost());
+            if (url.getPort() > 0) {
+              span.setAttribute(MoreTags.NET_PEER_PORT, url.getPort());
+              if (url.getPort() != 80 && url.getPort() != 443) {
+                urlBuilder.append(":");
+                urlBuilder.append(url.getPort());
+              }
             }
           }
           final String path = url.getPath();
@@ -97,15 +97,6 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
         }
       } catch (final Exception e) {
         log.debug("Error tagging url", e);
-      }
-
-      final String hostname = hostname(request);
-      span.setAttribute(MoreTags.NET_PEER_NAME, hostname);
-
-      final Integer port = port(request);
-      // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
-      if (port != null && port > 0) {
-        span.setAttribute(MoreTags.NET_PEER_PORT, port);
       }
     }
     return span;

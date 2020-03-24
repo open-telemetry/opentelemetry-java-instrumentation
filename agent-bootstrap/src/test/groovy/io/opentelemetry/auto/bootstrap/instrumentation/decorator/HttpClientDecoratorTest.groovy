@@ -27,7 +27,7 @@ import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   @Shared
-  def testUrl = new URI("http://myhost/somepath")
+  def testUrl = new URI("http://myhost:123/somepath")
 
   def span = Mock(Span)
 
@@ -42,15 +42,15 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     if (req) {
       1 * span.setAttribute(Tags.HTTP_METHOD, req.method)
       1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.host)
-      1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.port)
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
+      1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
     }
     0 * _
 
     where:
     req << [
       null,
-      [method: "test-method", url: testUrl, host: "test-host", port: 555]
+      [method: "test-method", url: testUrl]
     ]
   }
 
@@ -72,23 +72,28 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setAttribute(MoreTags.HTTP_FRAGMENT, expectedFragment)
     }
     1 * span.setAttribute(Tags.HTTP_METHOD, null)
-    1 * span.setAttribute(MoreTags.NET_PEER_NAME, null)
+    if (hostname) {
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, hostname)
+    }
+    if (port) {
+      1 * span.setAttribute(MoreTags.NET_PEER_PORT, port)
+    }
     0 * _
 
     where:
-    tagQueryString | url                                                   | expectedUrl                                     | expectedQuery      | expectedFragment
-    false          | null                                                  | null                                            | null               | null
-    false          | ""                                                    | "/"                                             | ""                 | null
-    false          | "/path?query"                                         | "/path?query"                                   | ""                 | null
-    false          | "https://host:0"                                      | "https://host/"                                 | ""                 | null
-    false          | "https://host/path"                                   | "https://host/path"                             | ""                 | null
-    false          | "http://host:99/path?query#fragment"                  | "http://host:99/path?query#fragment"            | ""                 | null
-    true           | null                                                  | null                                            | null               | null
-    true           | ""                                                    | "/"                                             | null               | null
-    true           | "/path?encoded+%28query%29%3F"                        | "/path?encoded+(query)?"                        | "encoded+(query)?" | null
-    true           | "https://host:0"                                      | "https://host/"                                 | null               | null
-    true           | "https://host/path"                                   | "https://host/path"                             | null               | null
-    true           | "http://host:99/path?query#encoded+%28fragment%29%3F" | "http://host:99/path?query#encoded+(fragment)?" | "query"            | "encoded+(fragment)?"
+    tagQueryString | url                                                   | expectedUrl                                     | expectedQuery      | expectedFragment      | hostname | port
+    false          | null                                                  | null                                            | null               | null                  | null     | null
+    false          | ""                                                    | "/"                                             | ""                 | null                  | null     | null
+    false          | "/path?query"                                         | "/path?query"                                   | ""                 | null                  | null     | null
+    false          | "https://host:0"                                      | "https://host/"                                 | ""                 | null                  | "host"   | null
+    false          | "https://host/path"                                   | "https://host/path"                             | ""                 | null                  | "host"   | null
+    false          | "http://host:99/path?query#fragment"                  | "http://host:99/path?query#fragment"            | ""                 | null                  | "host"   | 99
+    true           | null                                                  | null                                            | null               | null                  | null     | null
+    true           | ""                                                    | "/"                                             | null               | null                  | null     | null
+    true           | "/path?encoded+%28query%29%3F"                        | "/path?encoded+(query)?"                        | "encoded+(query)?" | null                  | null     | null
+    true           | "https://host:0"                                      | "https://host/"                                 | null               | null                  | "host"   | null
+    true           | "https://host/path"                                   | "https://host/path"                             | null               | null                  | "host"   | null
+    true           | "http://host:99/path?query#encoded+%28fragment%29%3F" | "http://host:99/path?query#encoded+(fragment)?" | "query"            | "encoded+(fragment)?" | "host"   | 99
 
     req = [url: url == null ? null : new URI(url)]
   }
@@ -164,16 +169,6 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected URI url(Map m) {
         return m.url
-      }
-
-      @Override
-      protected String hostname(Map m) {
-        return m.host
-      }
-
-      @Override
-      protected Integer port(Map m) {
-        return m.port
       }
 
       @Override

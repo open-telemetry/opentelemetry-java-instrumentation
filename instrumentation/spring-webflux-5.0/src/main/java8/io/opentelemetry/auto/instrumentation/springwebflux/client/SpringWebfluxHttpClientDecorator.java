@@ -54,16 +54,6 @@ public class SpringWebfluxHttpClientDecorator
   }
 
   @Override
-  protected String hostname(final ClientRequest httpRequest) {
-    return httpRequest.url().getHost();
-  }
-
-  @Override
-  protected Integer port(final ClientRequest httpRequest) {
-    return httpRequest.url().getPort();
-  }
-
-  @Override
   protected Integer status(final ClientResponse httpResponse) {
     return httpResponse.statusCode().value();
   }
