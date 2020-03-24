@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.mongo;
 
+import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
@@ -55,6 +56,23 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
 
   @Override
   protected String dbUser(final CommandStartedEvent event) {
+    return null;
+  }
+
+  @Override
+  protected String dbUrl(final CommandStartedEvent event) {
+    final ConnectionDescription connectionDescription = event.getConnectionDescription();
+    if (connectionDescription != null) {
+      final ServerAddress sa = connectionDescription.getServerAddress();
+      if (sa != null) {
+        // https://docs.mongodb.com/manual/reference/connection-string/
+        final String host = sa.getHost();
+        final int port = sa.getPort();
+        if (host != null && port != 0) {
+          return "mongodb://" + host + ":" + port;
+        }
+      }
+    }
     return null;
   }
 
