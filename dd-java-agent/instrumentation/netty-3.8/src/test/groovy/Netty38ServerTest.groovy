@@ -3,9 +3,9 @@ import datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator
 import org.jboss.netty.bootstrap.ServerBootstrap
 import org.jboss.netty.buffer.ChannelBuffer
 import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.channel.Channel
 import org.jboss.netty.channel.ChannelHandlerContext
 import org.jboss.netty.channel.ChannelPipeline
+import org.jboss.netty.channel.ChannelPipelineFactory
 import org.jboss.netty.channel.DefaultChannelPipeline
 import org.jboss.netty.channel.DownstreamMessageEvent
 import org.jboss.netty.channel.ExceptionEvent
@@ -35,7 +35,7 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
-class Netty38ServerTest extends HttpServerTest<Channel> {
+class Netty38ServerTest extends HttpServerTest<ServerBootstrap> {
 
   ChannelPipeline channelPipeline() {
     ChannelPipeline channelPipeline = new DefaultChannelPipeline()
@@ -107,18 +107,24 @@ class Netty38ServerTest extends HttpServerTest<Channel> {
   }
 
   @Override
-  Channel startServer(int port) {
+  ServerBootstrap startServer(int port) {
     ServerBootstrap bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory())
     bootstrap.setParentHandler(new LoggingHandler(InternalLogLevel.INFO))
-    bootstrap.setPipeline(channelPipeline())
+    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+      @Override
+      ChannelPipeline getPipeline() throws Exception {
+        return channelPipeline()
+      }
+    })
 
     InetSocketAddress address = new InetSocketAddress(port)
-    return bootstrap.bind(address)
+    bootstrap.bind(address)
+    return bootstrap
   }
 
   @Override
-  void stopServer(Channel server) {
-    server?.disconnect()
+  void stopServer(ServerBootstrap server) {
+    server?.shutdown()
   }
 
   @Override
