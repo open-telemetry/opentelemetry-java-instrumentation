@@ -21,6 +21,8 @@ import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.jboss.netty.handler.codec.http.HttpServerCodec
 import org.jboss.netty.handler.logging.LoggingHandler
 import org.jboss.netty.logging.InternalLogLevel
+import org.jboss.netty.logging.InternalLoggerFactory
+import org.jboss.netty.logging.Slf4JLoggerFactory
 import org.jboss.netty.util.CharsetUtil
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -37,8 +39,15 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
 class Netty38ServerTest extends HttpServerTest<ServerBootstrap> {
 
+  static final LoggingHandler LOGGING_HANDLER
+  static {
+    InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory())
+    LOGGING_HANDLER = new LoggingHandler(SERVER_LOGGER.name, InternalLogLevel.DEBUG, true)
+  }
+
   ChannelPipeline channelPipeline() {
     ChannelPipeline channelPipeline = new DefaultChannelPipeline()
+    channelPipeline.addFirst("logger", LOGGING_HANDLER)
 
     channelPipeline.addLast("http-codec", new HttpServerCodec())
     channelPipeline.addLast("controller", new SimpleChannelHandler() {
@@ -109,7 +118,7 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> {
   @Override
   ServerBootstrap startServer(int port) {
     ServerBootstrap bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory())
-    bootstrap.setParentHandler(new LoggingHandler(InternalLogLevel.INFO))
+    bootstrap.setParentHandler(LOGGING_HANDLER)
     bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
       @Override
       ChannelPipeline getPipeline() throws Exception {
