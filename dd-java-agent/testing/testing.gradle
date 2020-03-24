@@ -22,6 +22,7 @@ dependencies {
   compile deps.guava
 
   compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+  compile group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: versions.okhttp
 
   compile project(':dd-java-agent:agent-tooling')
   compile project(':utils:test-utils')
