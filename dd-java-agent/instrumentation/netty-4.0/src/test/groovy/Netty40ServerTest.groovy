@@ -34,16 +34,20 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
 class Netty40ServerTest extends HttpServerTest<EventLoopGroup> {
 
+  static final LoggingHandler LOGGING_HANDLER = new LoggingHandler(SERVER_LOGGER.name, LogLevel.DEBUG)
+
   @Override
   EventLoopGroup startServer(int port) {
     def eventLoopGroup = new NioEventLoopGroup()
 
     ServerBootstrap bootstrap = new ServerBootstrap()
       .group(eventLoopGroup)
-      .handler(new LoggingHandler(LogLevel.INFO))
+      .handler(LOGGING_HANDLER)
       .childHandler([
         initChannel: { ch ->
           ChannelPipeline pipeline = ch.pipeline()
+          pipeline.addFirst("logger", LOGGING_HANDLER)
+
           def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
           handlers.each { pipeline.addLast(it) }
           pipeline.addLast([
