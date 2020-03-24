@@ -3,15 +3,36 @@ import datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator
 import org.jboss.netty.bootstrap.ServerBootstrap
 import org.jboss.netty.buffer.ChannelBuffer
 import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.channel.*
+import org.jboss.netty.channel.Channel
+import org.jboss.netty.channel.ChannelHandlerContext
+import org.jboss.netty.channel.ChannelPipeline
+import org.jboss.netty.channel.DefaultChannelPipeline
+import org.jboss.netty.channel.DownstreamMessageEvent
+import org.jboss.netty.channel.ExceptionEvent
+import org.jboss.netty.channel.FailedChannelFuture
+import org.jboss.netty.channel.MessageEvent
+import org.jboss.netty.channel.SimpleChannelHandler
+import org.jboss.netty.channel.SucceededChannelFuture
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory
-import org.jboss.netty.handler.codec.http.*
+import org.jboss.netty.handler.codec.http.DefaultHttpResponse
+import org.jboss.netty.handler.codec.http.HttpRequest
+import org.jboss.netty.handler.codec.http.HttpResponse
+import org.jboss.netty.handler.codec.http.HttpResponseStatus
+import org.jboss.netty.handler.codec.http.HttpServerCodec
 import org.jboss.netty.handler.logging.LoggingHandler
 import org.jboss.netty.logging.InternalLogLevel
 import org.jboss.netty.util.CharsetUtil
 
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.*
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.*
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.forPath
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
 class Netty38ServerTest extends HttpServerTest<Channel> {
@@ -68,7 +89,8 @@ class Netty38ServerTest extends HttpServerTest<Channel> {
 
       @Override
       void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent ex) throws Exception {
-        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(ex.getCause().getMessage(), CharsetUtil.UTF_8)
+        def message = ex.getCause() == null ? "<no cause> " + ex.message : ex.cause.message == null ? "<null>" : ex.cause.message
+        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(message, CharsetUtil.UTF_8)
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR)
         response.setContent(buffer)
         response.headers().set(CONTENT_TYPE, "text/plain")
