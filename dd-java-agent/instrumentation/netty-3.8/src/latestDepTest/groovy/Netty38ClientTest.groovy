@@ -62,6 +62,11 @@ class Netty38ClientTest extends HttpClientTest {
     false
   }
 
+  @Override
+  boolean testRemoteConnection() {
+    return false
+  }
+
   def "connection error (unopened port)"() {
     given:
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
