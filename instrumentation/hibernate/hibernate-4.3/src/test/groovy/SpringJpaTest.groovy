@@ -51,10 +51,11 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -79,10 +80,11 @@ class SpringJpaTest extends AgentTestRunner {
             tags {
               "$MoreTags.SERVICE_NAME" "hsqldb"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-              "$Tags.DB_TYPE" "hsqldb"
+              "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" "test"
               "$Tags.DB_USER" "sa"
               "$Tags.DB_STATEMENT" "call next value for hibernate_sequence"
+              "$Tags.DB_URL" "hsqldb:mem:"
               "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
             }
           }
@@ -95,10 +97,11 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -120,10 +123,11 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -135,10 +139,11 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "update Customer set firstName=?, lastName=? where id=?"
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -160,10 +165,11 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -183,10 +189,11 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -198,10 +205,11 @@ class SpringJpaTest extends AgentTestRunner {
           tags {
             "$MoreTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
-            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
             "$Tags.DB_STATEMENT" "delete from Customer where id=?"
+            "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }

@@ -15,7 +15,7 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.jetty8.JettyDecorator
+import io.opentelemetry.auto.instrumentation.jetty.JettyDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.eclipse.jetty.server.Request
@@ -138,7 +138,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         parent()
       }
       tags {
-        "$MoreTags.RESOURCE_NAME" "$method $handlerName"
         "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long

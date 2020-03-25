@@ -121,7 +121,7 @@ class HttpServletResponseTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, null, ex)
+        basicSpan(it, 0, "parent", null, ex)
         span(1) {
           operationName "HttpServletResponse.sendRedirect"
           childOf span(0)

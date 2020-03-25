@@ -48,7 +48,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 2) {
         assertCouchbaseCall(it, 0, "Cluster.openBucket", null)
-        assertCouchbaseCall(it, 1, "ClusterManager.hasBucket", null, null, span(0))
+        assertCouchbaseCall(it, 1, "ClusterManager.hasBucket", null, span(0))
       }
     }
 
@@ -85,8 +85,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), null, span(1))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
       }
     }
 
@@ -130,9 +130,9 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       trace(0, 4) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), null, span(1))
-        assertCouchbaseCall(it, 3, "Bucket.get", bucketSettings.name(), null, span(2))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(1))
+        assertCouchbaseCall(it, 3, "Bucket.get", bucketSettings.name(), span(2))
       }
     }
 
@@ -175,8 +175,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, null, span(0))
-        assertCouchbaseCall(it, 2, "Bucket.query", bucketCouchbase.name(), 'SimpleN1qlQuery{statement=SELECT mockrow}', span(1))
+        assertCouchbaseCall(it, 1, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 2, 'SimpleN1qlQuery{statement=SELECT mockrow}', bucketCouchbase.name(), span(1))
       }
     }
 

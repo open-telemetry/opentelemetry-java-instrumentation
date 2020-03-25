@@ -16,7 +16,7 @@
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Ignore
 import spock.lang.Requires
@@ -108,7 +108,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -124,7 +123,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -188,7 +186,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -204,7 +201,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -253,7 +249,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "GET $url.path"
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -318,7 +313,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           errored false
           tags {
             "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$MoreTags.RESOURCE_NAME" "POST $url.path"
             "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port

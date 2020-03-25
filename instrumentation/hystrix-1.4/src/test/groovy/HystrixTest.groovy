@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import com.netflix.hystrix.HystrixCommand
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import spock.lang.Timeout
@@ -65,11 +64,10 @@ class HystrixTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "hystrix.cmd"
+          operationName "ExampleGroup.HystrixTest\$1.execute"
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$1.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -130,11 +128,10 @@ class HystrixTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "hystrix.cmd"
+          operationName "ExampleGroup.HystrixTest\$2.execute"
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$2.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -143,11 +140,10 @@ class HystrixTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "hystrix.cmd"
+          operationName "ExampleGroup.HystrixTest\$2.fallback"
           childOf span(1)
           errored false
           tags {
-            "$MoreTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$2.fallback"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"

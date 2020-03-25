@@ -32,7 +32,7 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 /**
  * Unfortunately because we're using an embedded GlassFish instance, we aren't exercising the standard
- * OSGi setup that requires {@link io.opentelemetry.auto.instrumentation.classloader.ClassloadingInstrumentation}.
+ * OSGi setup that requires {@link io.opentelemetry.auto.instrumentation.javaclassloader.ClassloadingInstrumentation}.
  */
 // TODO: Figure out a better way to test with OSGi included.
 class GlassFishServerTest extends HttpServerTest<GlassFish> {

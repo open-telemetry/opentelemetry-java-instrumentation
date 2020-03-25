@@ -88,12 +88,10 @@ public class SpringWebHttpServerDecorator
   @Override
   public Span onRequest(final Span span, final HttpServletRequest request) {
     if (request != null) {
-      final String method = request.getMethod();
       final Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-      if (method != null && bestMatchingPattern != null) {
-        final String resourceName = method + " " + bestMatchingPattern;
-        span.updateName(resourceName);
+      if (bestMatchingPattern != null) {
+        span.updateName(bestMatchingPattern.toString());
       }
     }
     return span;
