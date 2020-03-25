@@ -1,8 +1,10 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
+import spock.lang.Timeout
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
 
+@Timeout(5)
 class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
 
   @Override
@@ -13,6 +15,8 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = false
+      connection.connectTimeout = CONNECT_TIMEOUT_MS
+      connection.readTimeout = READ_TIMEOUT_MS
       def parentSpan = activeScope()
       def stream = connection.inputStream
       assert activeScope() == parentSpan

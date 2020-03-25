@@ -5,6 +5,7 @@ import datadog.trace.bootstrap.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import spock.lang.Ignore
 import spock.lang.Requires
+import spock.lang.Timeout
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
@@ -12,6 +13,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
+@Timeout(5)
 class HttpUrlConnectionTest extends HttpClientTest {
 
   static final RESPONSE = "Hello."
@@ -25,6 +27,8 @@ class HttpUrlConnectionTest extends HttpClientTest {
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
+      connection.connectTimeout = CONNECT_TIMEOUT_MS
+      connection.readTimeout = READ_TIMEOUT_MS
       def parentSpan = activeScope()
       def stream = connection.inputStream
       assert activeScope() == parentSpan
