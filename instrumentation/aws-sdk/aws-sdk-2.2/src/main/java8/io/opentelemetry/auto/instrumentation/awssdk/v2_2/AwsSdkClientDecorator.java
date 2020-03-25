@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
@@ -60,13 +59,17 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     return span;
   }
 
+  public String spanName(final ExecutionAttributes attributes) {
+    final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+    final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+
+    return awsServiceName + "." + awsOperation;
+  }
+
   public Span onAttributes(final Span span, final ExecutionAttributes attributes) {
 
     final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-
-    // Resource Name has to be set after the HTTP_URL because otherwise decorators overwrite it
-    span.setAttribute(MoreTags.RESOURCE_NAME, awsServiceName + "." + awsOperation);
 
     span.setAttribute("aws.agent", COMPONENT_NAME);
     span.setAttribute("aws.service", awsServiceName);

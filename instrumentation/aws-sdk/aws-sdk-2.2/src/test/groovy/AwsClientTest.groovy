@@ -91,13 +91,12 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName expectedOperationName(method)
+          operationName "$service.$operation"
           spanKind CLIENT
           errored false
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -195,13 +194,12 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName expectedOperationName(method)
+          operationName "$service.$operation"
           spanKind CLIENT
           errored false
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.RESOURCE_NAME" "$service.$operation"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -310,13 +308,12 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          operationName expectedOperationName("GET")
+          operationName "S3.GetObject"
           spanKind CLIENT
           errored true
           parent()
           tags {
             "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$MoreTags.RESOURCE_NAME" "S3.GetObject"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
