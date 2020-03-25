@@ -21,7 +21,7 @@ class Netty38ClientTest extends HttpClientTest {
   def clientConfig = new AsyncHttpClientConfig.Builder()
     .setRequestTimeoutInMs(TimeUnit.SECONDS.toMillis(10).toInteger())
     .build()
-  
+
   @Shared
   @AutoCleanup
   AsyncHttpClient asyncHttpClient = new AsyncHttpClient(clientConfig)
@@ -60,6 +60,11 @@ class Netty38ClientTest extends HttpClientTest {
   @Override
   boolean testConnectionFailure() {
     false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
   }
 
   def "connection error (unopened port)"() {
