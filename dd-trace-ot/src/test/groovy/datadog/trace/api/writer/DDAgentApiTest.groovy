@@ -2,6 +2,7 @@ package datadog.trace.api.writer
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import datadog.opentracing.DDSpanContext
 import datadog.opentracing.SpanFactory
 import datadog.trace.common.writer.ddagent.DDAgentApi
 import datadog.trace.common.writer.ddagent.DDAgentResponseListener
@@ -101,7 +102,8 @@ class DDAgentApiTest extends DDSpecification {
       "duration" : 0,
       "error"    : 0,
       "meta"     : ["thread.name": Thread.currentThread().getName(), "thread.id": "${Thread.currentThread().id}"],
-      "metrics"  : [:],
+      //TODO : use DDSpanContext.DD_MEASURED as a key
+      "metrics"  : ["_dd.measured": DDSpanContext.DD_MEASURED_DEFAULT],
       "name"     : "fakeOperation",
       "parent_id": 0,
       "resource" : "fakeResource",
@@ -115,7 +117,7 @@ class DDAgentApiTest extends DDSpecification {
       "duration" : 0,
       "error"    : 0,
       "meta"     : ["thread.name": Thread.currentThread().getName(), "thread.id": "${Thread.currentThread().id}"],
-      "metrics"  : [:],
+      "metrics"  : ["_dd.measured": DDSpanContext.DD_MEASURED_DEFAULT],
       "name"     : "fakeOperation",
       "parent_id": 0,
       "resource" : "my-resource",

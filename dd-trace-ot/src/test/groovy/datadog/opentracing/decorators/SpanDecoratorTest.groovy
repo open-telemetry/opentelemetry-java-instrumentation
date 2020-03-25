@@ -279,10 +279,13 @@ class SpanDecoratorTest extends DDSpecification {
 
   def "span metrics starts empty but added with rate limiting value of #rate"() {
     expect:
-    span.metrics == [:]
+    span.metrics == DDSpanContext.DEFAULT_METRICS
 
     when:
     span.setTag(ANALYTICS_SAMPLE_RATE, rate)
+    // these 2 lines to avoid checking for {@code DDSpanContext.DD_MEASURED} for every metric:
+    span.context().setMetric(DDSpanContext.DD_MEASURED, 42)
+    span.metrics.remove(DDSpanContext.DD_MEASURED, 42)
 
     then:
     span.metrics == result

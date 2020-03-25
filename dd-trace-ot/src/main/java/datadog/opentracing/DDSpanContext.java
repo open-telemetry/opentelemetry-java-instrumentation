@@ -25,8 +25,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   public static final String PRIORITY_SAMPLING_KEY = "_sampling_priority_v1";
   public static final String SAMPLE_RATE_KEY = "_sample_rate";
   public static final String ORIGIN_KEY = "_dd.origin";
+  public static final String DD_MEASURED = "_dd.measured";
+  public static final Number DD_MEASURED_DEFAULT = 1;
 
-  private static final Map<String, Number> EMPTY_METRICS = Collections.emptyMap();
+  private static final Map<String, Number> DEFAULT_METRICS =
+      Collections.singletonMap(DD_MEASURED, DD_MEASURED_DEFAULT);
 
   // Shared with other span contexts
   /** For technical reasons, the ref to the original tracer */
@@ -307,12 +310,12 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public Map<String, Number> getMetrics() {
     final Map<String, Number> metrics = this.metrics.get();
-    return metrics == null ? EMPTY_METRICS : metrics;
+    return metrics == null ? DEFAULT_METRICS : metrics;
   }
 
   public void setMetric(final String key, final Number value) {
     if (metrics.get() == null) {
-      metrics.compareAndSet(null, new ConcurrentHashMap<String, Number>());
+      metrics.compareAndSet(null, new ConcurrentHashMap<>(DEFAULT_METRICS));
     }
     if (value instanceof Float) {
       metrics.get().put(key, value.doubleValue());
