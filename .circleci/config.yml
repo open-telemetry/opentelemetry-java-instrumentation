@@ -252,6 +252,18 @@ jobs:
   publish_tag:
     <<: *publish
 
+  copy_artifact_s3:
+    docker:
+      - image: circleci/python:3.6.4
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          command: |
+            sudo pip install boto3
+            python .circleci/copy_artifact_s3.py
+
 workflows:
   version: 2
   build_test_deploy:
@@ -340,6 +352,10 @@ workflows:
           filters:
             tags:
               only: /.*/
+
+      - copy_artifact_s3:
+          requires:
+            - build
 
       - check:
           requires:
