@@ -15,13 +15,20 @@ class PlayWSClientTest extends HttpClientTest {
   def application = new FakeApplication(
     new File("."),
     FakeApplication.getClassLoader(),
-    Collections.emptyMap(),
+    [
+      "ws.timeout.connection": CONNECT_TIMEOUT_MS,
+      "ws.timeout.request"   : READ_TIMEOUT_MS
+    ],
     Collections.emptyList(),
     new GlobalSettings()
   )
 
+  @Shared
+  def client
+
   def setupSpec() {
     Helpers.start(application)
+    client = WS.client()
   }
 
   def cleanupSpec() {
@@ -30,7 +37,6 @@ class PlayWSClientTest extends HttpClientTest {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def client = WS.client()
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
@@ -62,6 +68,15 @@ class PlayWSClientTest extends HttpClientTest {
 
   @Override
   boolean testConnectionFailure() {
+    false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    // On connection failures the operation and resource names end up different from expected.
+    // This would require a lot of changes to the base client test class to support
+    // span.operationName = "netty.connect"
+    // span.resourceName = "netty.connect"
     false
   }
 }
