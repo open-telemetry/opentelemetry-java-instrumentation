@@ -356,6 +356,11 @@ workflows:
       - copy_artifact_s3:
           requires:
             - build
+          filters:
+            branches:
+              only:
+                - master
+                - .*-reliability
 
       - check:
           requires:
