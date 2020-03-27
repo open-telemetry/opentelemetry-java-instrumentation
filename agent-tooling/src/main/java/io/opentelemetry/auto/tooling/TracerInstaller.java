@@ -17,8 +17,8 @@ package io.opentelemetry.auto.tooling;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.exportersupport.SpanExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
@@ -74,7 +74,7 @@ public class TracerInstaller {
         log.warn(
             "Exporter JAR defines more than one factory. Only the first one found will be used");
       }
-      return f.fromConfig(new DefaultConfigProvider("exporter"));
+      return f.fromConfig(new DefaultExporterConfig("exporter"));
     }
     log.warn("No matching providers in jar " + exporterJar);
     return null;
