@@ -1,5 +1,0 @@
-apply from: "${rootDir}/gradle/java.gradle"
-
-dependencies {
-  compileOnly deps.opentelemetrySdk
-}

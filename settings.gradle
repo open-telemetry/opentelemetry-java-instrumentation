@@ -27,9 +27,6 @@ include ':agent-bootstrap'
 include ':agent-tooling'
 include ':load-generator'
 
-// exporter support
-include ':exporter-support'
-
 // misc
 include ':testing'
 include ':utils:test-utils'

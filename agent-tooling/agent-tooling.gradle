@@ -21,9 +21,8 @@ dependencies {
 
   compile deps.opentelemetryApi
   compile deps.opentelemetrySdk
+  compile deps.opentelemetrySdkAutoConfig
 
-  // TODO: This might have to live in opentelemetry-java
-  compile project(':exporter-support')
 
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy
