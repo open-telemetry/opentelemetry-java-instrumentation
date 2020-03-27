@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.play.v2_4;
 import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayHeaders.GETTER;
 import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -46,7 +47,7 @@ public class PlayAdvice {
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
 
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

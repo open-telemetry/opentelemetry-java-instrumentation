@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpC
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -44,7 +45,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     final Span parentSpan =
         ctx.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY).getAndRemove();
     if (parentSpan != null) {
-      parentScope = TRACER.withSpan(parentSpan);
+      parentScope = currentContextWith(parentSpan);
     }
 
     final HttpRequest request = (HttpRequest) msg;
@@ -58,7 +59,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     final Span span =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
       DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());

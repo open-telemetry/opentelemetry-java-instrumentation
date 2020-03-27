@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.spymemcached;
 import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.spymemcached.MemcacheClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -45,14 +46,14 @@ public abstract class CompletionListener<T> {
             .spanBuilder(DECORATE.spanNameOnOperation(methodName))
             .setSpanKind(CLIENT)
             .startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
     }
   }
 
   protected void closeAsyncSpan(final T future) {
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       try {
         processResult(span, future);
       } catch (final CancellationException e) {
@@ -80,7 +81,7 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeSyncSpan(final Throwable thrown) {
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.onError(span, thrown);
       DECORATE.beforeFinish(span);
       span.end();

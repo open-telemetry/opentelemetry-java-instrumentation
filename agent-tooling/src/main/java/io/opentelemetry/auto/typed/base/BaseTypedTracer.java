@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.typed.base;
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -52,7 +54,7 @@ public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
   }
 
   public final Scope withSpan(final T span) {
-    return tracer.withSpan(span);
+    return currentContextWith(span);
   }
 
   protected abstract String getSpanName(INSTANCE instance);

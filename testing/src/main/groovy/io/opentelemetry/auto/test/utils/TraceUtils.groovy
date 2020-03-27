@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.test.utils
 
+
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -25,6 +26,8 @@ import io.opentelemetry.trace.Tracer
 import lombok.SneakyThrows
 
 import java.util.concurrent.Callable
+
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 
 class TraceUtils {
 
@@ -42,7 +45,7 @@ class TraceUtils {
     final Span span = TRACER.spanBuilder(rootOperationName).startSpan()
     DECORATE.afterStart(span)
 
-    Scope scope = TRACER.withSpan(span)
+    Scope scope = currentContextWith(span)
 
     try {
       return r.call()

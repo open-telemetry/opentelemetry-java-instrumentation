@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.jetty.HttpServletRequestExtr
 import static io.opentelemetry.auto.instrumentation.jetty.JettyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jetty.JettyDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
@@ -63,7 +64,7 @@ public class JettyHandlerAdvice {
     req.setAttribute(SPAN_ATTRIBUTE, span);
     req.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     req.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

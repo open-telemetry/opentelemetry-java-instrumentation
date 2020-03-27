@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsDec
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -118,7 +119,7 @@ public class KafkaStreamsProcessorInstrumentation {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        holder.setSpanWithScope(new SpanWithScope(span, TRACER.withSpan(span)));
+        holder.setSpanWithScope(new SpanWithScope(span, currentContextWith(span)));
       }
     }
   }

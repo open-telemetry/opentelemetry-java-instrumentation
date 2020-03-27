@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.springwebflux.client.HttpHea
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -54,7 +55,7 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
     final Span span = builder.startSpan();
     DECORATE.afterStart(span);
 
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
 
       final ClientRequest mutatedRequest =
           ClientRequest.from(clientRequest)

@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.auto.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -50,7 +51,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
     final Span span =
         TRACER.spanBuilder(DECORATE.spanName(executionAttributes)).setSpanKind(CLIENT).startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
     }
@@ -73,7 +74,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
     // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-    ScopeHolder.CURRENT.set(TRACER.withSpan(span));
+    ScopeHolder.CURRENT.set(currentContextWith(span));
   }
 
   @Override

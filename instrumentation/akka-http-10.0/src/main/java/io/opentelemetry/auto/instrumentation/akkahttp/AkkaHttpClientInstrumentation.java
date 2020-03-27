@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.akkahttp;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -104,7 +105,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         // Request is immutable, so we have to assign new value once we update headers
         request = headers.getRequest();
       }
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

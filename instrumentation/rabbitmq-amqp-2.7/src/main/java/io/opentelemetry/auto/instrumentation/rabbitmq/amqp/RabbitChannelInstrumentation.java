@@ -24,6 +24,7 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -146,7 +147,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       CURRENT_RABBIT_SPAN.set(span);
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -263,7 +264,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         span.setAttribute("message.size", response.getBody().length);
       }
       span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onGet(span, queue);
         DECORATE.onPeerConnection(span, connection.getAddress());

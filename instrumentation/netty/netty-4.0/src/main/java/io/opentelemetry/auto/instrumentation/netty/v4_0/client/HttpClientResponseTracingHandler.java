@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.netty.v4_0.client;
 
 import static io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -40,7 +40,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     final boolean finishSpan = msg instanceof HttpResponse;
 
     if (span != null && finishSpan) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         DECORATE.onResponse(span, (HttpResponse) msg);
         DECORATE.beforeFinish(span);
         span.end();
@@ -48,7 +48,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     }
 
     // We want the callback in the scope of the parent, not the client span
-    try (final Scope scope = TRACER.withSpan(parent)) {
+    try (final Scope scope = currentContextWith(parent)) {
       ctx.fireChannelRead(msg);
     }
   }

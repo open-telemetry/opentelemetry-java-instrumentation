@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecor
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerHeaders.GETTER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -124,7 +125,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       DECORATE.onConnection(span, request);
       DECORATE.onRequest(span, request);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     public static void finishSpan(final Span span, final HttpResponse response) {

@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDi
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -107,7 +108,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       // this tells the dispatched servlet to use the current span as the parent for its work
       request.setAttribute(SPAN_ATTRIBUTE, span);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

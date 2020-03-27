@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsD
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -104,7 +105,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       DECORATE.onJaxRsSpan(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

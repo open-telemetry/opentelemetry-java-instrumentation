@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.smoketest.cli;
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -41,7 +43,7 @@ public class CliApplication {
 
   public void exampleTrace() throws InterruptedException {
     final Span span = TRACER.spanBuilder("example").startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       Thread.sleep(500);
       span.end();
     }

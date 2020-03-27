@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.traceannotation;
 
 import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -29,7 +30,7 @@ public class TraceAdvice {
   public static SpanWithScope onEnter(@Advice.Origin final Method method) {
     final Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
     DECORATE.afterStart(span);
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

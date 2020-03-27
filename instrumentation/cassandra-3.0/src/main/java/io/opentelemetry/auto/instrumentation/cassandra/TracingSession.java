@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.cassandra;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static io.opentelemetry.auto.instrumentation.cassandra.CassandraClientDecorator.DECORATE;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
@@ -77,7 +78,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSet execute(final String query) {
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       try {
         final ResultSet resultSet = session.execute(query);
         beforeSpanFinish(span, resultSet);
@@ -94,7 +95,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSet execute(final String query, final Object... values) {
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       try {
         final ResultSet resultSet = session.execute(query, values);
         beforeSpanFinish(span, resultSet);
@@ -111,7 +112,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSet execute(final String query, final Map<String, Object> values) {
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       try {
         final ResultSet resultSet = session.execute(query, values);
         beforeSpanFinish(span, resultSet);
@@ -129,7 +130,7 @@ public class TracingSession implements Session {
   public ResultSet execute(final Statement statement) {
     final String query = getQuery(statement);
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       try {
         final ResultSet resultSet = session.execute(statement);
         beforeSpanFinish(span, resultSet);
@@ -146,7 +147,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(final String query) {
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(query);
       future.addListener(createListener(span, future), executorService);
 
@@ -157,7 +158,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(final String query, final Object... values) {
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(query, values);
       future.addListener(createListener(span, future), executorService);
 
@@ -168,7 +169,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(final String query, final Map<String, Object> values) {
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(query, values);
       future.addListener(createListener(span, future), executorService);
 
@@ -180,7 +181,7 @@ public class TracingSession implements Session {
   public ResultSetFuture executeAsync(final Statement statement) {
     final String query = getQuery(statement);
     final Span span = startSpan(query);
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(statement);
       future.addListener(createListener(span, future), executorService);
 
@@ -248,7 +249,7 @@ public class TracingSession implements Session {
     return new Runnable() {
       @Override
       public void run() {
-        try (final Scope scope = TRACER.withSpan(span)) {
+        try (final Scope scope = currentContextWith(span)) {
           beforeSpanFinish(span, future.get());
         } catch (final InterruptedException | ExecutionException e) {
           beforeSpanFinish(span, e);

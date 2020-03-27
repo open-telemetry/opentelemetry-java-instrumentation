@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.DEC
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -93,7 +94,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       final Span span = TRACER.spanBuilder(DECORATE.spanNameForClass(clazz)).startSpan();
       DECORATE.afterStart(span);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

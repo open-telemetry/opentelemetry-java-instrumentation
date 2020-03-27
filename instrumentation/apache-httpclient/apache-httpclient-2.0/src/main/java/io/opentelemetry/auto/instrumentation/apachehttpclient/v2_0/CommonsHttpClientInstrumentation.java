@@ -21,6 +21,7 @@ import static io.opentelemetry.auto.instrumentation.apachehttpclient.v2_0.HttpHe
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -90,7 +91,7 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
               .spanBuilder(DECORATE.spanNameForRequest(httpMethod))
               .setSpanKind(CLIENT)
               .startSpan();
-      final Scope scope = TRACER.withSpan(span);
+      final Scope scope = currentContextWith(span);
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, httpMethod);

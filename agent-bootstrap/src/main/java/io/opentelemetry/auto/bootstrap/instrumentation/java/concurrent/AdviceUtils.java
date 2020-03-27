@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
@@ -43,7 +45,7 @@ public class AdviceUtils {
     if (state != null) {
       final Span parentSpan = state.getAndResetParentSpan();
       if (parentSpan != null) {
-        return new SpanWithScope(parentSpan, TRACER.withSpan(parentSpan));
+        return new SpanWithScope(parentSpan, currentContextWith(parentSpan));
       }
     }
     return null;

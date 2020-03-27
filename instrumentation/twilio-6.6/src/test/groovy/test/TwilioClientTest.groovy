@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 
 class TwilioClientTest extends AgentTestRunner {
   final static String ACCOUNT_SID = "abc"
@@ -541,7 +542,7 @@ class TwilioClientTest extends AgentTestRunner {
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
     def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
+    def testScope = currentContextWith(testSpan)
 
     when:
     Message.creator(
@@ -702,7 +703,7 @@ class TwilioClientTest extends AgentTestRunner {
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
     def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = TEST_TRACER.withSpan(testSpan)
+    def testScope = currentContextWith(testSpan)
 
     ListenableFuture<Message> future = Message.creator(
       new PhoneNumber("+1 555 720 5913"),  // To number

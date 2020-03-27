@@ -21,6 +21,7 @@ import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHe
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -170,7 +171,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
     public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
       final Span span =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-      final Scope scope = TRACER.withSpan(span);
+      final Scope scope = currentContextWith(span);
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);

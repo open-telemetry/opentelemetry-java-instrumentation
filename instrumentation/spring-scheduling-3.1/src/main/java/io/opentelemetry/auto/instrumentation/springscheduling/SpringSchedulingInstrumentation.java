@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.springscheduling;
 
 import static io.opentelemetry.auto.instrumentation.springscheduling.SpringSchedulingDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springscheduling.SpringSchedulingDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -81,7 +82,7 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
       final Span span = TRACER.spanBuilder(DECORATE.spanNameOnRun(runnable)).startSpan();
       DECORATE.afterStart(span);
 
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         runnable.run();
       } catch (final Throwable throwable) {
         DECORATE.onError(span, throwable);

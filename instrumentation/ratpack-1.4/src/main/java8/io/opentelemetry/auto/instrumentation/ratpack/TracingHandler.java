@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.ratpack;
 
 import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -56,7 +57,7 @@ public final class TracingHandler implements Handler {
     ctx.getResponse()
         .beforeSend(
             response -> {
-              try (final Scope ignored = TRACER.withSpan(ratpackSpan)) {
+              try (final Scope ignored = currentContextWith(ratpackSpan)) {
                 if (nettySpan != null) {
                   // Rename the netty span resource name with the ratpack route.
                   DECORATE.onContext(nettySpan, ctx);
@@ -68,7 +69,7 @@ public final class TracingHandler implements Handler {
               }
             });
 
-    try (final Scope scope = TRACER.withSpan(ratpackSpan)) {
+    try (final Scope scope = currentContextWith(ratpackSpan)) {
       ctx.next();
     } catch (final Throwable e) {
       DECORATE.onError(ratpackSpan, e);

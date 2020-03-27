@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.netty.v4_0;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -102,12 +103,12 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (parentSpan == null) {
         return null;
       }
-      final Scope parentScope = NettyHttpServerDecorator.TRACER.withSpan(parentSpan);
+      final Scope parentScope = currentContextWith(parentSpan);
 
       final Span errorSpan =
           NettyHttpServerDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
       errorSpan.setAttribute(Tags.COMPONENT, "netty");
-      try (final Scope scope = NettyHttpServerDecorator.TRACER.withSpan(errorSpan)) {
+      try (final Scope scope = currentContextWith(errorSpan)) {
         NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
         NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);
         errorSpan.end();

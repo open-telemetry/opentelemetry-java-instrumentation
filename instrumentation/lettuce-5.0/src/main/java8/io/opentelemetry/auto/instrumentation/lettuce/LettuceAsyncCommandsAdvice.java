@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorat
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceInstrumentationUtil.doFinishSpanEarly;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -38,7 +39,7 @@ public class LettuceAsyncCommandsAdvice {
             .startSpan();
     DECORATE.afterStart(span);
 
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

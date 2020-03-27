@@ -23,6 +23,7 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -94,7 +95,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         request.getProperties().put(SPAN_ATTRIBUTE, span);
 
         TRACER.getHttpTextFormat().inject(span.getContext(), request.getHeaders(), SETTER);
-        return new SpanWithScope(span, TRACER.withSpan(span));
+        return new SpanWithScope(span, currentContextWith(span));
       }
       return null;
     }

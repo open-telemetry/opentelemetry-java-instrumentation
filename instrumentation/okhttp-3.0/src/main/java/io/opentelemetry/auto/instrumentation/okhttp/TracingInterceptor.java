@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.okhttp;
 import static io.opentelemetry.auto.instrumentation.okhttp.OkHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.okhttp.RequestBuilderInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
@@ -42,7 +43,7 @@ public class TracingInterceptor implements Interceptor {
             .setSpanKind(CLIENT)
             .startSpan();
 
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, chain.request());
 

@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -108,7 +109,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         }
       }
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -133,7 +134,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         DECORATE.onError(span, exception);
         try {
           if (callback != null) {

@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapt
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
@@ -70,7 +71,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     DECORATE.afterStart(span);
 
     final ServerCall.Listener<ReqT> result;
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
 
       try {
         // Wrap the server call so that we can decorate the span
@@ -104,7 +105,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void close(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().close(status, trailers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -129,14 +130,14 @@ public class TracingServerInterceptor implements ServerInterceptor {
       attributes.put("message.type", AttributeValue.stringAttributeValue("RECEIVED"));
       attributes.put("message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
       span.addEvent("message", attributes);
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onMessage(message);
       }
     }
 
     @Override
     public void onHalfClose() {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onHalfClose();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -149,7 +150,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onCancel() {
       // Finishes span.
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onCancel();
         span.setAttribute("canceled", true);
       } catch (final Throwable e) {
@@ -164,7 +165,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onComplete() {
       // Finishes span.
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onComplete();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -177,7 +178,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onReady() {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onReady();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);

@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.hibernate;
 
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.ContextStore;
@@ -57,9 +58,9 @@ public class SessionMethodUtils {
               .setParent(sessionSpan)
               .startSpan();
       DECORATE.afterStart(span);
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     } else {
-      return new SpanWithScope(null, TRACER.withSpan(sessionSpan));
+      return new SpanWithScope(null, currentContextWith(sessionSpan));
     }
   }
 

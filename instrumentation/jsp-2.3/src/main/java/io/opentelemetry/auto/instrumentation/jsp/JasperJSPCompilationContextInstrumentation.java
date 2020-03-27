@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.jsp;
 
 import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jsp.JSPDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -68,7 +69,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
       final Span span =
           TRACER.spanBuilder(DECORATE.spanNameOnCompile(jspCompilationContext)).startSpan();
       DECORATE.afterStart(span);
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

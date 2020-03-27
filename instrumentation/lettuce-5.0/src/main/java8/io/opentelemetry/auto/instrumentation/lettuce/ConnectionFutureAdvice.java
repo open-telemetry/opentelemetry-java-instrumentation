@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.lettuce;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.lettuce.LettuceClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
@@ -32,7 +33,7 @@ public class ConnectionFutureAdvice {
     final Span span = TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, redisURI);
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

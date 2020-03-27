@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorato
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
@@ -101,7 +102,7 @@ public class TracedDelegatingConsumer implements Consumer {
       DECORATE.afterStart(span);
       DECORATE.onDeliver(span, envelope);
 
-      scope = TRACER.withSpan(span);
+      scope = currentContextWith(span);
 
     } catch (final Exception e) {
       log.debug("Instrumentation error in tracing consumer", e);

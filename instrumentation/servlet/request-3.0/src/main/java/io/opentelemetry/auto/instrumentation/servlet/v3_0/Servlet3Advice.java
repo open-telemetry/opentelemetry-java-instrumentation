@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.servlet.v3_0.HttpServletRequ
 import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
@@ -58,7 +59,7 @@ public class Servlet3Advice {
         // other trace
 
         // re-scope the current work using the span in the request attribute
-        return new SpanWithScope(null, TRACER.withSpan(span));
+        return new SpanWithScope(null, currentContextWith(span));
       } else {
         // everything is good, just inside of a nested servlet/filter
 
@@ -94,7 +95,7 @@ public class Servlet3Advice {
     httpServletRequest.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     httpServletRequest.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
 
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

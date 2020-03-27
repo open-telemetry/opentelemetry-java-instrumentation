@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletRequ
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
@@ -83,7 +84,7 @@ public class Servlet2Advice {
     httpServletRequest.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     httpServletRequest.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
 
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

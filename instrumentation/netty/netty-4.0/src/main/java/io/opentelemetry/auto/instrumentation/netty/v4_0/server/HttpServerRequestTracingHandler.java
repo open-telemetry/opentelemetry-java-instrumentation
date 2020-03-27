@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpS
 import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyRequestExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -38,7 +39,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       if (span == null) {
         ctx.fireChannelRead(msg); // superclass does not throw
       } else {
-        try (final Scope scope = TRACER.withSpan(span)) {
+        try (final Scope scope = currentContextWith(span)) {
           ctx.fireChannelRead(msg); // superclass does not throw
         }
       }
@@ -59,7 +60,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       spanBuilder.setNoParent();
     }
     final Span span = spanBuilder.startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, ctx.channel());
       DECORATE.onRequest(span, request);

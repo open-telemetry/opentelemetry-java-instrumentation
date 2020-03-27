@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import unshaded.io.opentelemetry.OpenTelemetry
 import unshaded.io.opentelemetry.trace.Status
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static unshaded.io.opentelemetry.trace.Span.Kind.PRODUCER
+import static unshaded.io.opentelemetry.trace.TracingContextUtils.currentContextWith
 
 class TracerTest extends AgentTestRunner {
 
@@ -110,7 +112,7 @@ class TracerTest extends AgentTestRunner {
     when:
     def tracer = OpenTelemetry.getTracerProvider().get("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
-    def parentScope = tracer.withSpan(parentSpan)
+    def parentScope = currentContextWith(parentSpan)
     def testSpan = tracer.spanBuilder("test").setNoParent().startSpan()
     testSpan.end()
     parentSpan.end()

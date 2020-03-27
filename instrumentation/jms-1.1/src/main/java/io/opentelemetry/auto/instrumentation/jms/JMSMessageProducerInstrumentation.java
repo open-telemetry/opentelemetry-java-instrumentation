@@ -21,6 +21,7 @@ import static io.opentelemetry.auto.instrumentation.jms.MessageInjectAdapter.SET
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -110,7 +111,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
       TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -152,7 +153,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
       TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
