@@ -22,11 +22,14 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -109,7 +112,8 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       span.setAttribute("span.origin.type", producer.getClass().getName());
       DECORATE.afterStart(span);
 
-      TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
+      final Context context = withSpan(span, Context.current());
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, message, SETTER);
 
       return new SpanWithScope(span, currentContextWith(span));
     }
@@ -151,7 +155,8 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       span.setAttribute("span.origin.type", producer.getClass().getName());
       DECORATE.afterStart(span);
 
-      TRACER.getHttpTextFormat().inject(span.getContext(), message, SETTER);
+      final Context context = withSpan(span, Context.current());
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, message, SETTER);
 
       return new SpanWithScope(span, currentContextWith(span));
     }

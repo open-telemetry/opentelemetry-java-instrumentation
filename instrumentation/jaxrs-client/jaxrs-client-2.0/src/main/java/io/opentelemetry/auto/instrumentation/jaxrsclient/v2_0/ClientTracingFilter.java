@@ -19,9 +19,10 @@ import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.InjectAdapt
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
-import io.opentelemetry.context.Scope;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.Span;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -43,14 +44,16 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
             .spanBuilder(DECORATE.spanNameForRequest(requestContext))
             .setSpanKind(CLIENT)
             .startSpan();
-    try (final Scope scope = currentContextWith(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, requestContext);
 
-      TRACER.getHttpTextFormat().inject(span.getContext(), requestContext.getHeaders(), SETTER);
+    DECORATE.afterStart(span);
+    DECORATE.onRequest(span, requestContext);
 
-      requestContext.setProperty(SPAN_PROPERTY_NAME, span);
-    }
+    final Context context = withSpan(span, Context.current());
+    OpenTelemetry.getPropagators()
+        .getHttpTextFormat()
+        .inject(context, requestContext.getHeaders(), SETTER);
+
+    requestContext.setProperty(SPAN_PROPERTY_NAME, span);
   }
 
   @Override

@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpC
 import static io.opentelemetry.auto.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -30,6 +31,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
@@ -111,11 +114,11 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
       final Span span = state.getSpan();
 
-      try (final Scope scope = currentContextWith(span)) {
-        DECORATE.afterStart(span);
-        DECORATE.onRequest(span, request);
-        TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
-      }
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, request);
+
+      final Context context = withSpan(span, Context.current());
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

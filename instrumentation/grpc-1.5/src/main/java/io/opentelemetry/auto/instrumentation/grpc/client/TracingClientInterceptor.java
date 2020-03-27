@@ -20,16 +20,19 @@ import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecora
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
 import io.grpc.ClientInterceptor;
+import io.grpc.Context;
 import io.grpc.ForwardingClientCall;
 import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.context.Scope;
@@ -83,7 +86,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void start(final Listener<RespT> responseListener, final Metadata headers) {
-      TRACER.getHttpTextFormat().inject(span.getContext(), headers, SETTER);
+      final Context context = withSpan(span, Context.current());
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
       try (final Scope scope = currentContextWith(span)) {
         super.start(new TracingClientCallListener<>(span, responseListener), headers);
       } catch (final Throwable e) {

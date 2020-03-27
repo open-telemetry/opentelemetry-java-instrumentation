@@ -17,8 +17,9 @@ package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator.TRACER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -27,6 +28,8 @@ import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -99,13 +102,15 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
+      final Context context = withSpan(span, Context.current());
+
       if (request != null) {
         final AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-        TRACER.getHttpTextFormat().inject(span.getContext(), request, headers);
+        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, headers);
         // Request is immutable, so we have to assign new value once we update headers
         request = headers.getRequest();
       }
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, withScopedContext(context));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

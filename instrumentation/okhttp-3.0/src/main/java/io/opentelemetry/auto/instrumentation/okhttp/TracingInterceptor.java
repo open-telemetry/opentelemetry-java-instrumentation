@@ -17,9 +17,11 @@ package io.opentelemetry.auto.instrumentation.okhttp;
 
 import static io.opentelemetry.auto.instrumentation.okhttp.OkHttpClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.okhttp.RequestBuilderInjectAdapter.SETTER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -43,26 +45,25 @@ public class TracingInterceptor implements Interceptor {
             .setSpanKind(CLIENT)
             .startSpan();
 
-    try (final Scope scope = currentContextWith(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, chain.request());
+    DECORATE.afterStart(span);
+    DECORATE.onRequest(span, chain.request());
 
-      final Request.Builder requestBuilder = chain.request().newBuilder();
-      TRACER.getHttpTextFormat().inject(span.getContext(), requestBuilder, SETTER);
+    final Context context = withSpan(span, Context.current());
 
-      final Response response;
-      try {
-        response = chain.proceed(requestBuilder.build());
-      } catch (final Exception e) {
-        DECORATE.onError(span, e);
-        span.end();
-        throw e;
-      }
+    final Request.Builder requestBuilder = chain.request().newBuilder();
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, requestBuilder, SETTER);
 
-      DECORATE.onResponse(span, response);
-      DECORATE.beforeFinish(span);
+    final Response response;
+    try (final Scope scope = withScopedContext(context)) {
+      response = chain.proceed(requestBuilder.build());
+    } catch (final Exception e) {
+      DECORATE.onError(span, e);
       span.end();
-      return response;
+      throw e;
     }
+    DECORATE.onResponse(span, response);
+    DECORATE.beforeFinish(span);
+    span.end();
+    return response;
   }
 }
