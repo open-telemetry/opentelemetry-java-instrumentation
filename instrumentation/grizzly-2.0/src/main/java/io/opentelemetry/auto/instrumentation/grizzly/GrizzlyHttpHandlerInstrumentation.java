@@ -31,7 +31,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -86,14 +85,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-      final SpanContext extractedContext = extract(request, GETTER);
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
-      } else {
-        // explicitly setting "no parent" in case a span was propagated to this thread
-        // by the java-concurrent instrumentation when the thread was started
-        spanBuilder.setNoParent();
-      }
+      spanBuilder.setParent(extract(request, GETTER));
       final Span span = spanBuilder.startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, request);

@@ -28,7 +28,6 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.io.IOException;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -85,15 +84,9 @@ public class TracedDelegatingConsumer implements Consumer {
       final Map<String, Object> headers = properties.getHeaders();
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameOnDeliver(queue)).setSpanKind(CONSUMER);
-      SpanContext extractedContext = SpanContext.getInvalid();
       if (headers != null) {
-        extractedContext = extract(headers, GETTER);
-      }
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
+        spanBuilder.setParent(extract(headers, GETTER));
       } else {
-        // explicitly setting "no parent" in case a span was propagated to this thread
-        // by the java-concurrent instrumentation when the thread was started
         spanBuilder.setNoParent();
       }
 

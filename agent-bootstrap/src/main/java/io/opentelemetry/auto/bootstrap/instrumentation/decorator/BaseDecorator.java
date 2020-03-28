@@ -122,7 +122,7 @@ public abstract class BaseDecorator {
 
   public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
     final Context context =
-        getPropagators().getHttpTextFormat().extract(Context.ROOT, carrier, getter);
+        getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
     final Span span = getSpan(context);
     return span.getContext();
   }

@@ -32,7 +32,6 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 import java.util.HashMap;
 import java.util.Map;
@@ -112,14 +111,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public static SpanWithScope createSpan(final HttpRequest request) {
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-      final SpanContext extractedContext = extract(request, GETTER);
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
-      } else {
-        // explicitly setting "no parent" in case a span was propagated to this thread
-        // by the java-concurrent instrumentation when the thread was started
-        spanBuilder.setNoParent();
-      }
+      spanBuilder.setParent(extract(request, GETTER));
       final Span span = spanBuilder.startSpan();
 
       DECORATE.afterStart(span);

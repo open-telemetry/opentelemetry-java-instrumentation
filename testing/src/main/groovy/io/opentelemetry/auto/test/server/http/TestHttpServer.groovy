@@ -16,11 +16,11 @@
 package io.opentelemetry.auto.test.server.http
 
 import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
 import io.opentelemetry.auto.test.asserts.ListWriterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.SpanContext
 import io.opentelemetry.trace.Tracer
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.atomic.AtomicReference
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract
 import static io.opentelemetry.auto.test.server.http.HttpServletRequestExtractAdapter.GETTER
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
@@ -255,14 +254,7 @@ class TestHttpServer implements AutoCloseable {
       }
       if (isTestServer) {
         final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server").setSpanKind(SERVER)
-        final SpanContext extract = extract(req, GETTER)
-        if (extract.isValid()) {
-          spanBuilder.setParent(extract)
-        } else {
-          // explicitly setting "no parent" in case a span was propagated to this thread
-          // by the java-concurrent instrumentation when the thread was started
-          spanBuilder.setNoParent()
-        }
+        spanBuilder.setParent(BaseDecorator.extract(req, GETTER))
         final Span span = spanBuilder.startSpan()
         span.end()
       }

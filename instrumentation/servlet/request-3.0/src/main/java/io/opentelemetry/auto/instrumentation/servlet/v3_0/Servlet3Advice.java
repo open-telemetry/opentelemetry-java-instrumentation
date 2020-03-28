@@ -28,7 +28,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -77,14 +76,7 @@ public class Servlet3Advice {
 
     final Span.Builder builder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
-    final SpanContext extract = extract(httpServletRequest, GETTER);
-    if (extract.isValid()) {
-      builder.setParent(extract);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      builder.setNoParent();
-    }
+    builder.setParent(extract(httpServletRequest, GETTER));
     final Span span = builder.startSpan();
     span.setAttribute("span.origin.type", servlet.getClass().getName());
 

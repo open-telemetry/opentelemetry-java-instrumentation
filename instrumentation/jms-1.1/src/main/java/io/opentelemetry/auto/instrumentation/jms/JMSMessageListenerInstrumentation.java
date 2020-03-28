@@ -32,7 +32,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -83,14 +82,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
-      final SpanContext extractedContext = extract(message, GETTER);
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
-      } else {
-        // explicitly setting "no parent" in case a span was propagated to this thread
-        // by the java-concurrent instrumentation when the thread was started
-        spanBuilder.setNoParent();
-      }
+      spanBuilder.setParent(extract(message, GETTER));
 
       final Span span = spanBuilder.startSpan();
       span.setAttribute("span.origin.type", listener.getClass().getName());

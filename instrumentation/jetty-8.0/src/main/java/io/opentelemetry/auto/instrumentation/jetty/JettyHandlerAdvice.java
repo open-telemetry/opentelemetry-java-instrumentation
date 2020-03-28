@@ -27,7 +27,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
@@ -47,14 +46,7 @@ public class JettyHandlerAdvice {
 
     final Span.Builder spanBuilder =
         TRACER.spanBuilder(req.getMethod() + " " + source.getClass().getName()).setSpanKind(SERVER);
-    final SpanContext extractedContext = extract(req, GETTER);
-    if (extractedContext.isValid()) {
-      spanBuilder.setParent(extractedContext);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      spanBuilder.setNoParent();
-    }
+    spanBuilder.setParent(extract(req, GETTER));
     final Span span = spanBuilder.startSpan();
 
     span.setAttribute("span.origin.type", source.getClass().getName());

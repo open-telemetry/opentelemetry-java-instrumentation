@@ -34,7 +34,6 @@ import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
@@ -55,14 +54,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     final String methodName = call.getMethodDescriptor().getFullMethodName();
     final Span.Builder spanBuilder = TRACER.spanBuilder(methodName).setSpanKind(SERVER);
-    final SpanContext extractedContext = extract(headers, GETTER);
-    if (extractedContext.isValid()) {
-      spanBuilder.setParent(extractedContext);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      spanBuilder.setNoParent();
-    }
+    spanBuilder.setParent(extract(headers, GETTER));
     final Span span = spanBuilder.startSpan();
     final SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     final InetSocketAddress iAddr =

@@ -28,7 +28,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
@@ -51,14 +50,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     final Span.Builder spanBuilder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-    final SpanContext extractedContext = extract(request.headers(), GETTER);
-    if (extractedContext.isValid()) {
-      spanBuilder.setParent(extractedContext);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      spanBuilder.setNoParent();
-    }
+    spanBuilder.setParent(extract(request.headers(), GETTER));
     final Span span = spanBuilder.startSpan();
     try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
