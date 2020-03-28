@@ -18,7 +18,7 @@ package io.opentelemetry.auto.exporters.loggingexporter;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 public class LoggingExporter implements SpanExporter {
@@ -29,7 +29,7 @@ public class LoggingExporter implements SpanExporter {
   }
 
   @Override
-  public ResultCode export(final List<SpanData> list) {
+  public ResultCode export(final Collection<SpanData> list) {
     for (final SpanData span : list) {
       System.out.print(
           prefix + " " + span.getName() + " " + span.getSpanId().toLowerBase16() + " ");
