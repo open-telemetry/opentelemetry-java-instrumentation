@@ -6,6 +6,6 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compile deps.opentelemetryJaeger
-  compile project(':exporter-support')
+  compileOnly deps.opentelemetrySdkAutoConfig
   compile group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
 }

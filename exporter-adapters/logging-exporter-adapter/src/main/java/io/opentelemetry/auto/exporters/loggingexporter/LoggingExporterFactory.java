@@ -15,13 +15,13 @@
  */
 package io.opentelemetry.auto.exporters.loggingexporter;
 
-import io.opentelemetry.auto.exportersupport.ConfigProvider;
-import io.opentelemetry.auto.exportersupport.SpanExporterFactory;
+import io.opentelemetry.sdk.contrib.auto.config.Config;
+import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class LoggingExporterFactory implements SpanExporterFactory {
   @Override
-  public SpanExporter fromConfig(final ConfigProvider config) {
+  public SpanExporter fromConfig(final Config config) {
     return new LoggingExporter(config.getString("logging.prefix", "no-prefix"));
   }
 }

@@ -17,9 +17,9 @@ package io.opentelemetry.auto.exporters.jaeger;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.opentelemetry.auto.exportersupport.ConfigProvider;
-import io.opentelemetry.auto.exportersupport.SpanExporterFactory;
 import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
+import io.opentelemetry.sdk.contrib.auto.config.Config;
+import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class JaegerExporterFactory implements SpanExporterFactory {
@@ -34,7 +34,7 @@ public class JaegerExporterFactory implements SpanExporterFactory {
   private static final String DEFAULT_SERVICE = "(unknown service)";
 
   @Override
-  public SpanExporter fromConfig(final ConfigProvider config) {
+  public SpanExporter fromConfig(final Config config) {
     final String host = config.getString(HOST_CONFIG, null);
     if (host == null) {
       throw new IllegalArgumentException(HOST_CONFIG + " must be specified");

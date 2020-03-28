@@ -16,12 +16,11 @@
 package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.exportersupport.ConfigProvider;
 
-public class DefaultConfigProvider implements ConfigProvider {
+public class DefaultExporterConfig implements io.opentelemetry.sdk.contrib.auto.config.Config {
   private final String prefix;
 
-  public DefaultConfigProvider(final String prefix) {
+  public DefaultExporterConfig(final String prefix) {
     this.prefix = prefix;
   }
 
