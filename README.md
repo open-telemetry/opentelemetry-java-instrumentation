@@ -8,6 +8,59 @@ but we strongly discourage any production use!
 This project uses a technique known as bytecode instrumentation to add tracing to a Java application.
 Simply put, we provide a Java agent that can be attached to any Java 7+ application and dynamically adds code to enable tracing. 
 
+## Supported Java libraries and frameworks
+
+| Library/Framework                                                                                                                     | Versions                       |
+|---------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
+| [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
+| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
+| [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
+| [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
+| [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+ (not including 4.x yet)   |
+| [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ (not including 3.x yet)   |
+| [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                             | 0.7+                           |
+| [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 2.0+ (not including 7.x yet)   |
+| [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)                        | 5.0+                           |
+| [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
+| [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
+| [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
+| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+                           |
+| [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
+| [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
+| [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
+| [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
+| [java.util.logging](https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/package-summary.html)           | Java 7+                        |
+| [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
+| [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
+| [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
+| [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
+| [Jetty](https://www.eclipse.org/jetty/)                                                                                               | 8.0+                           |
+| [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
+| [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
+| [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
+| [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 5.0+                           |
+| [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
+| [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
+| [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
+| [Netty](https://github.com/netty/netty)                                                                                               | 4.0+                           |
+| [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
+| [Play](https://github.com/playframework/playframework)                                                                                | 2.4+ (not including 2.8.x yet) |
+| [Play WS](https://github.com/playframework/play-ws)                                                                                   | 1.0+                           |
+| [Project Reactor](https://github.com/reactor/reactor-core)                                                                            | 3.1+                           |
+| [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
+| [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
+| [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
+| [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
+| [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.3+                           |
+| [Spark Web Framework](https://github.com/perwendel/spark)                                                                             | 2.3+                           |
+| [Spring Data](https://spring.io/projects/spring-data)                                                                                 | 1.8+                           |
+| [Spring Scheduling](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html)       | 3.1+                           |
+| [Spring Servlet MVC](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html) | 3.1+                           |
+| [Spring Webflux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
+| [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
+| [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+                           |
+
+
 ## Using the agent
 As mentioned above, this project is in a very early phase of development and not yet stable. 
 However, you can try it on your Java application by following these instructions.
