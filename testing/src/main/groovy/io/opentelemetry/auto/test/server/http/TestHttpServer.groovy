@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.atomic.AtomicReference
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract
 import static io.opentelemetry.auto.test.server.http.HttpServletRequestExtractAdapter.GETTER
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
@@ -254,7 +255,7 @@ class TestHttpServer implements AutoCloseable {
       }
       if (isTestServer) {
         final Span.Builder spanBuilder = TRACER.spanBuilder("test-http-server").setSpanKind(SERVER)
-        final SpanContext extract = TRACER.getHttpTextFormat().extract(req, GETTER)
+        final SpanContext extract = extract(req, GETTER)
         if (extract.isValid()) {
           spanBuilder.setParent(extract)
         } else {

@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerHeaders.GETTER;
@@ -111,7 +112,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public static SpanWithScope createSpan(final HttpRequest request) {
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
+      final SpanContext extractedContext = extract(request, GETTER);
       if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
       } else {

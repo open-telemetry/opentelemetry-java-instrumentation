@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.netty.v4_0.server;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyRequestExtractAdapter.GETTER;
@@ -50,8 +51,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     final Span.Builder spanBuilder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-    final SpanContext extractedContext =
-        TRACER.getHttpTextFormat().extract(request.headers(), GETTER);
+    final SpanContext extractedContext = extract(request.headers(), GETTER);
     if (extractedContext.isValid()) {
       spanBuilder.setParent(extractedContext);
     } else {

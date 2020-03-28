@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
@@ -255,7 +256,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         final Map<String, Object> headers = response.getProps().getHeaders();
 
         if (headers != null) {
-          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+          final SpanContext extractedContext = extract(headers, GETTER);
           if (extractedContext.isValid()) {
             spanBuilder.addLink(extractedContext);
           }

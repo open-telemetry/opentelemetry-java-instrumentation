@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.grizzly;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
@@ -85,7 +86,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
+      final SpanContext extractedContext = extract(request, GETTER);
       if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
       } else {

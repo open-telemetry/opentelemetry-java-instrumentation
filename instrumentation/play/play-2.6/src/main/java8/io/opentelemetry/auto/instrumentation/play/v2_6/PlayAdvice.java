@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.play.v2_6;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.play.v2_6.PlayHeaders.GETTER;
 import static io.opentelemetry.auto.instrumentation.play.v2_6.PlayHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.play.v2_6.PlayHttpServerDecorator.TRACER;
@@ -34,8 +35,7 @@ public class PlayAdvice {
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
     final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
     if (!TRACER.getCurrentSpan().getContext().isValid()) {
-      final SpanContext extractedContext =
-          TRACER.getHttpTextFormat().extract(req.headers(), GETTER);
+      final SpanContext extractedContext = extract(req.headers(), GETTER);
       if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
       }

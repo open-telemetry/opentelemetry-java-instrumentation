@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.typed.server.http;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
+
 import io.opentelemetry.auto.typed.server.ServerTypedTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
@@ -28,7 +30,7 @@ public abstract class HttpServerTypedTracer<
 
   @Override
   protected Span.Builder buildSpan(final REQUEST request, final Span.Builder spanBuilder) {
-    final SpanContext extract = tracer.getHttpTextFormat().extract(request, getGetter());
+    final SpanContext extract = extract(request, getGetter());
     if (extract.isValid()) {
       spanBuilder.setParent(extract);
     } else {

@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.kafkastreams;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
@@ -106,8 +107,7 @@ public class KafkaStreamsProcessorInstrumentation {
 
         final Span.Builder spanBuilder =
             TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsume(record)).setSpanKind(CONSUMER);
-        final SpanContext extractedContext =
-            TRACER.getHttpTextFormat().extract(record.value.headers(), GETTER);
+        final SpanContext extractedContext = extract(record.value.headers(), GETTER);
         if (extractedContext.isValid()) {
           spanBuilder.setParent(extractedContext);
         } else {

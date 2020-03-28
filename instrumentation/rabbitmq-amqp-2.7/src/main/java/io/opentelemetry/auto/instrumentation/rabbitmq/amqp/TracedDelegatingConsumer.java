@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
@@ -86,7 +87,7 @@ public class TracedDelegatingConsumer implements Consumer {
           TRACER.spanBuilder(DECORATE.spanNameOnDeliver(queue)).setSpanKind(CONSUMER);
       SpanContext extractedContext = SpanContext.getInvalid();
       if (headers != null) {
-        extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+        extractedContext = extract(headers, GETTER);
       }
       if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);

@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jms;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
@@ -82,7 +83,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
-      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
+      final SpanContext extractedContext = extract(message, GETTER);
       if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
       } else {

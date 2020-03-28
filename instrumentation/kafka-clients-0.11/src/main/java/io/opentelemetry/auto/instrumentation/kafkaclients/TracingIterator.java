@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.kafkaclients;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
@@ -72,7 +73,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }
-        final SpanContext spanContext = TRACER.getHttpTextFormat().extract(next.headers(), GETTER);
+        final SpanContext spanContext = extract(next.headers(), GETTER);
         if (spanContext.isValid()) {
           if (consumer) {
             spanBuilder.setParent(spanContext);

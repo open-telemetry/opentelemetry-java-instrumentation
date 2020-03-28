@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.grpc.server;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
@@ -54,7 +55,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     final String methodName = call.getMethodDescriptor().getFullMethodName();
     final Span.Builder spanBuilder = TRACER.spanBuilder(methodName).setSpanKind(SERVER);
-    final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+    final SpanContext extractedContext = extract(headers, GETTER);
     if (extractedContext.isValid()) {
       spanBuilder.setParent(extractedContext);
     } else {

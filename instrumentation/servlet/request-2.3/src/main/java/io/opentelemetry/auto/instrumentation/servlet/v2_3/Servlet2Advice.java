@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator.DECORATE;
@@ -64,7 +65,7 @@ public class Servlet2Advice {
 
     final Span.Builder builder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
-    final SpanContext extract = TRACER.getHttpTextFormat().extract(httpServletRequest, GETTER);
+    final SpanContext extract = extract(httpServletRequest, GETTER);
     if (extract.isValid()) {
       builder.setParent(extract);
     } else {
