@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.common.AttributeValue;
+import unshaded.io.opentelemetry.trace.DefaultSpan;
 import unshaded.io.opentelemetry.trace.EndSpanOptions;
 import unshaded.io.opentelemetry.trace.Span;
 import unshaded.io.opentelemetry.trace.SpanContext;
@@ -46,6 +47,26 @@ public class Bridging {
 
   // this is just an optimization to save some byte array allocations
   public static final ThreadLocal<byte[]> BUFFER = new ThreadLocal<>();
+
+  public static Span toUnshaded(final io.opentelemetry.trace.Span shadedSpan) {
+    if (!shadedSpan.getContext().isValid()) {
+      // no need to wrap
+      return DefaultSpan.getInvalid();
+    } else {
+      return new UnshadedSpan(shadedSpan);
+    }
+  }
+
+  public static io.opentelemetry.trace.Span toShadedOrNull(final Span unshadedSpan) {
+    if (!unshadedSpan.getContext().isValid()) {
+      // no need to wrap
+      return io.opentelemetry.trace.DefaultSpan.getInvalid();
+    } else if (unshadedSpan instanceof UnshadedSpan) {
+      return ((UnshadedSpan) unshadedSpan).getShadedSpan();
+    } else {
+      return null;
+    }
+  }
 
   public static SpanContext toUnshaded(final io.opentelemetry.trace.SpanContext shadedContext) {
     if (shadedContext.isRemote()) {

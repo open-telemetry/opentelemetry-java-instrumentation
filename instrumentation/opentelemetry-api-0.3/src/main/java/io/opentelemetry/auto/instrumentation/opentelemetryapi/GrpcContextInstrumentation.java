@@ -17,15 +17,13 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation.UnshadedContextPropagators;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.UnshadedMeterProvider;
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.UnshadedTracerProvider;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,57 +34,29 @@ import net.bytebuddy.matcher.ElementMatcher;
 import unshaded.io.grpc.Context;
 
 @AutoService(Instrumenter.class)
-public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
+public class GrpcContextInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("unshaded.io.opentelemetry.OpenTelemetry");
+    return named("unshaded.io.grpc.Context");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod().and(isPublic()).and(named("getTracerProvider")).and(takesArguments(0)),
-        OpenTelemetryApiInstrumentation.class.getName() + "$GetTracerProviderAdvice");
-    transformers.put(
-        isMethod().and(isPublic()).and(named("getMeterProvider")).and(takesArguments(0)),
-        OpenTelemetryApiInstrumentation.class.getName() + "$GetMeterProviderAdvice");
-    transformers.put(
-        isMethod().and(isPublic()).and(named("getPropagators")).and(takesArguments(0)),
-        OpenTelemetryApiInstrumentation.class.getName() + "$GetPropagatorsAdvice");
+        isMethod().and(isPublic()).and(isStatic()).and(named("current")).and(takesArguments(0)),
+        GrpcContextInstrumentation.class.getName() + "$CurrentAdvice");
     return transformers;
   }
 
-  public static class GetTracerProviderAdvice {
+  public static class CurrentAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false)
-            unshaded.io.opentelemetry.trace.TracerProvider tracerProvider) {
-      tracerProvider = new UnshadedTracerProvider();
-    }
-  }
-
-  public static class GetMeterProviderAdvice {
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false)
-            unshaded.io.opentelemetry.metrics.MeterProvider meterProvider) {
-      meterProvider = new UnshadedMeterProvider();
-    }
-  }
-
-  public static class GetPropagatorsAdvice {
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false)
-            unshaded.io.opentelemetry.context.propagation.ContextPropagators contextPropagators) {
+    public static void methodExit(@Advice.Return final unshaded.io.grpc.Context context) {
       final ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
-      contextPropagators = new UnshadedContextPropagators(contextStore);
+      contextStore.put(context, io.grpc.Context.current());
     }
   }
 }

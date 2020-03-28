@@ -132,6 +132,14 @@ class UnshadedSpan implements Span {
     return shadedSpan.isRecording();
   }
 
+  @Override
+  public boolean equals(final Object other) {
+    if (!(other instanceof UnshadedSpan)) {
+      return false;
+    }
+    return shadedSpan.equals(((UnshadedSpan) other).shadedSpan);
+  }
+
   @Slf4j
   static class Builder implements Span.Builder {
 
