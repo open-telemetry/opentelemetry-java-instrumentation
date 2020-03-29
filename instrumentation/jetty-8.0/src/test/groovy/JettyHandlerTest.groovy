@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.jetty.JettyDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.eclipse.jetty.server.Request
@@ -69,11 +68,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   @Override
   void stopServer(Server server) {
     server.stop()
-  }
-
-  @Override
-  String component() {
-    return JettyDecorator.DECORATE.getComponentName()
   }
 
   @Override

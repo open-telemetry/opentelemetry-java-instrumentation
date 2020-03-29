@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.JerseyClientBuilder
@@ -57,11 +56,6 @@ abstract class JaxRsClientAsyncTest extends HttpClientTest {
     // need to wait for callback to complete in case test is expecting span from it
     latch.await()
     return response.status
-  }
-
-  @Override
-  String component() {
-    return JaxRsClientDecorator.DECORATE.getComponentName()
   }
 
   abstract ClientBuilder builder()

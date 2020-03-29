@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -25,11 +24,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> {
-
-  @Override
-  String component() {
-    return AkkaHttpServerDecorator.DECORATE.getComponentName()
-  }
 
   @Override
   boolean testExceptionBody() {

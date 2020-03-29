@@ -33,7 +33,6 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
-import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.test.base.HttpServerTest
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
@@ -117,10 +116,5 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> {
   @Override
   void stopServer(EventLoopGroup server) {
     server?.shutdownGracefully()
-  }
-
-  @Override
-  String component() {
-    NettyHttpServerDecorator.DECORATE.getComponentName()
   }
 }

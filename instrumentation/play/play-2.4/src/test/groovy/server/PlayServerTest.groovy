@@ -17,7 +17,6 @@ package server
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
@@ -72,11 +71,6 @@ class PlayServerTest extends HttpServerTest<Server> {
   @Override
   void stopServer(Server server) {
     server.stop()
-  }
-
-  @Override
-  String component() {
-    return NettyHttpServerDecorator.DECORATE.getComponentName()
   }
 
   @Override

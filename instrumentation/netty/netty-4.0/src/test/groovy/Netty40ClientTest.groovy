@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
@@ -51,11 +50,6 @@ class Netty40ClientTest extends HttpClientTest {
       }
     }).get()
     return response.statusCode
-  }
-
-  @Override
-  String component() {
-    return NettyHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

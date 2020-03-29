@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
@@ -49,11 +48,6 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
   @Override
   void stopServer(HttpServer server) {
     server.stop()
-  }
-
-  @Override
-  String component() {
-    return GrizzlyDecorator.DECORATE.getComponentName()
   }
 
   static class SimpleExceptionMapper implements ExceptionMapper<Throwable> {

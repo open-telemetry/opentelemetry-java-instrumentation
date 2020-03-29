@@ -18,7 +18,6 @@ package client
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
-import io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.springframework.http.HttpMethod
@@ -50,12 +49,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
 
     response.statusCode().value()
   }
-
-  @Override
-  String component() {
-    return SpringWebfluxHttpClientDecorator.DECORATE.getComponentName()
-  }
-
 
   @Override
   // parent spanRef must be cast otherwise it breaks debugging classloading (junit loads it early)

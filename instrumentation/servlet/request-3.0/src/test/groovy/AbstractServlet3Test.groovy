@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.Span
@@ -34,11 +33,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port/$context/")
-  }
-
-  @Override
-  String component() {
-    return Servlet3Decorator.DECORATE.getComponentName()
   }
 
   // FIXME: Add authentication tests back in...

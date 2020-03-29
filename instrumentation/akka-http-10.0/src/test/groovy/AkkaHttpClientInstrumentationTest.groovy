@@ -20,7 +20,6 @@ import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
 
@@ -49,11 +48,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
       .get()
     callback?.call()
     return response.status().intValue()
-  }
-
-  @Override
-  String component() {
-    return AkkaHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

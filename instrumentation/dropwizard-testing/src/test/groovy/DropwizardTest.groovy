@@ -73,11 +73,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
   }
 
   @Override
-  String component() {
-    return "jax-rs"
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }

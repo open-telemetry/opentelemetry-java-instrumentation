@@ -17,7 +17,6 @@ package test
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
 import io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
@@ -48,11 +47,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void stopServer(ConfigurableApplicationContext ctx) {
     ctx.close()
-  }
-
-  @Override
-  String component() {
-    return Servlet3Decorator.DECORATE.getComponentName()
   }
 
   @Override

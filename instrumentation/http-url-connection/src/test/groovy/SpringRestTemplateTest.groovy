@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -35,11 +34,6 @@ class SpringRestTemplateTest extends HttpClientTest {
     ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
     callback?.call()
     return response.statusCode.value()
-  }
-
-  @Override
-  String component() {
-    return HttpUrlConnectionDecorator.DECORATE.getComponentName()
   }
 
   @Override

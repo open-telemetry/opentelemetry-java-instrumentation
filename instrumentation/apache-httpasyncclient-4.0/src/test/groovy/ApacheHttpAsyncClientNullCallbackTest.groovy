@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
@@ -48,11 +47,6 @@ class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest {
       callback()
     }
     return 200
-  }
-
-  @Override
-  String component() {
-    return ApacheHttpAsyncClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

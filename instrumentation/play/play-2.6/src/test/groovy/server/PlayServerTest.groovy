@@ -15,7 +15,6 @@
  */
 package server
 
-import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.play.v2_6.PlayHttpServerDecorator
@@ -77,11 +76,6 @@ class PlayServerTest extends HttpServerTest<Server> {
   @Override
   void stopServer(Server server) {
     server.stop()
-  }
-
-  @Override
-  String component() {
-    return AkkaHttpServerDecorator.DECORATE.getComponentName()
   }
 
   @Override

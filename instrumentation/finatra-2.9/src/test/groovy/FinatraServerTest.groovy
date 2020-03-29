@@ -75,11 +75,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
   }
 
   @Override
-  String component() {
-    return FinatraDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean testPathParam() {
     true
   }

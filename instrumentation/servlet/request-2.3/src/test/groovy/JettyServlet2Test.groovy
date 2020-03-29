@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.eclipse.jetty.server.Server
@@ -74,11 +73,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port/$CONTEXT/")
-  }
-
-  @Override
-  String component() {
-    return Servlet2Decorator.DECORATE.getComponentName()
   }
 
   @Override

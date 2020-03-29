@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.apache.catalina.servlets.DefaultServlet
@@ -79,11 +78,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
   @Override
   void stopServer(GlassFish server) {
     server.stop()
-  }
-
-  @Override
-  String component() {
-    return Servlet3Decorator.DECORATE.getComponentName()
   }
 
   @Override
