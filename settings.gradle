@@ -137,10 +137,14 @@ include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
 
+// exporter support
+include ':exporter-support'
+
 // exporter adapters
 include ":auto-exporters"
 include ":auto-exporters:jaeger"
 include ":auto-exporters:logging"
+include ":auto-exporters:otlp"
 
 // benchmark
 include ':benchmark'
@@ -162,3 +166,4 @@ project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
 project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporters-jaeger'
 project(':auto-exporters:logging').name = 'opentelemetry-auto-exporters-logging'
+project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporters-otlp'
