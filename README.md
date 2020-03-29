@@ -1,12 +1,8 @@
 # OpenTelemetry Auto-Instrumentation for Java
 
-## Notice - Work in Progress!
-*This project is still in the early phases of development and is not yet stable.* You are welcome to experiment with it, 
-but we strongly discourage any production use!
-
 ## Introduction
-This project uses a technique known as bytecode instrumentation to add tracing to a Java application.
-Simply put, we provide a Java agent that can be attached to any Java 7+ application and dynamically adds code to enable tracing. 
+This project provides a Java agent that can be attached to any Java 7+ application and dynamically injects bytecode
+to capture telemetry from a number of popular libraries and frameworks.
 
 ## Supported Java libraries and frameworks
 
@@ -60,11 +56,6 @@ Simply put, we provide a Java agent that can be attached to any Java 7+ applicat
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+                           |
 
-
-## Using the agent
-As mentioned above, this project is in a very early phase of development and not yet stable. 
-However, you can try it on your Java application by following these instructions.
-
 ### Download and run
 
 Download the [latest release](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases).
@@ -86,23 +77,24 @@ java -javaagent:path/to/opentelemetry-auto-<version>.jar \
 | ota.exporter.jar | OTA_EXPORTER_JAR     | Path to the exporter fat-jar that you want to use |
 
 ### Available exporters
-Currently two exporters are available and bundled with this project. They area available under the ```exporter-adapters``` directory. 
+There are two exporters available under
+[releases](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases).
 
 #### Jaeger exporter
 A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently only supports gRPC as its communications protocol.
 
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
-| ota.exporter.jaeger.host         | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
+| ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
 | ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
 
 #### Logging Exporter
 The logging exporter simply prints the name of the span along with its attributes to stdout. It is used manly
-for testing and debugging. It takes a single configuration parameter.
+for testing and debugging.
 
-| System property             | Environment variable        | Purpose                                                            |
-|-----------------------------|-----------------------------|--------------------------------------------------------------------|
-| ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | A string that is printed in front of the span name and attributes. |
+| System property             | Environment variable        | Purpose                                                                      |
+|-----------------------------|-----------------------------|------------------------------------------------------------------------------|
+| ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
 
 These parameter names are very likely to change over time, so please check back here when trying out a new version!
 
