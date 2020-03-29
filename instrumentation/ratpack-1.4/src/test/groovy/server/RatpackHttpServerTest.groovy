@@ -17,7 +17,6 @@ package server
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -127,7 +126,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.getComponentName()
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" String
@@ -155,7 +153,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

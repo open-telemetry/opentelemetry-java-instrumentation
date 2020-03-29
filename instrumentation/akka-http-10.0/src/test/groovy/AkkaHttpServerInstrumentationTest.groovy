@@ -53,7 +53,6 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status

@@ -21,7 +21,6 @@ import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -99,7 +98,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$Tags.COMPONENT" JaxRsAnnotationsDecorator.DECORATE.getComponentName()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
@@ -120,7 +118,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

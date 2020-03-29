@@ -19,7 +19,6 @@ import com.twitter.util.Closable
 import com.twitter.util.Duration
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -88,8 +87,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
       errored errorEndpoint
       childOf(parent as SpanData)
       tags {
-        "$Tags.COMPONENT" FinatraDecorator.DECORATE.getComponentName()
-
         // Finatra doesn't propagate the stack trace or exception to the instrumentation
         // so the normal errorTags() method can't be used
       }
@@ -109,7 +106,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

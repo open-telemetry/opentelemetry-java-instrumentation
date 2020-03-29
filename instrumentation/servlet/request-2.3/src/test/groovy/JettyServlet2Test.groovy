@@ -93,7 +93,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" "127.0.0.1"
         // No peer port
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

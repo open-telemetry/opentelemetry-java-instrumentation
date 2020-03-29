@@ -70,17 +70,12 @@ abstract class HttpClientTest extends AgentTestRunner {
     }
   }
 
-  @Shared
-  String component = component()
-
   /**
    * Make the request and return the status code response
    * @param method
    * @return
    */
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
-
-  abstract String component()
 
   Integer statusOnRedirectError() {
     return null
@@ -317,7 +312,6 @@ abstract class HttpClientTest extends AgentTestRunner {
       spanKind CLIENT
       errored exception != null
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" uri.port
