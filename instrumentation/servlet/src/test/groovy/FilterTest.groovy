@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
 import javax.servlet.Filter
@@ -56,7 +55,6 @@ class FilterTest extends AgentTestRunner {
           operationName "${filter.class.simpleName}.doFilter"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-filter"
           }
         }
       }
@@ -93,7 +91,6 @@ class FilterTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-filter"
             errorTags(ex.class, ex.message)
           }
         }

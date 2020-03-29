@@ -103,7 +103,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -117,7 +116,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -176,7 +174,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -190,7 +187,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -234,7 +230,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -294,7 +289,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"

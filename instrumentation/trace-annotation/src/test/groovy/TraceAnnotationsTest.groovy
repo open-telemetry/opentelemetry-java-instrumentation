@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.SayTracedHello
@@ -43,7 +42,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           errored false
           tags {
             "myattr" "test"
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
@@ -64,7 +62,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           errored false
           tags {
             "myattr" "test2"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(1) {
@@ -73,7 +70,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           errored false
           tags {
             "myattr" "test"
-            "$Tags.COMPONENT" "trace"
           }
         }
         span(2) {
@@ -82,7 +78,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           errored false
           tags {
             "myattr" "test"
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
@@ -106,7 +101,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "SayTracedHello.sayERROR"
           errored true
           tags {
-            "$Tags.COMPONENT" "trace"
             errorTags(error.class)
           }
         }
@@ -125,7 +119,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           operationName "SayTracedHello\$1.call"
           tags {
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
@@ -147,14 +140,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           operationName "SayTracedHello\$1.call"
           tags {
-            "$Tags.COMPONENT" "trace"
           }
         }
         trace(1, 1) {
           span(0) {
             operationName "TraceAnnotationsTest\$1.call"
             tags {
-              "$Tags.COMPONENT" "trace"
             }
           }
         }

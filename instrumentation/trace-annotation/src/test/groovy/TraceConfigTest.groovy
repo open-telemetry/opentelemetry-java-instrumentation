@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.traceannotation.TraceConfigInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
@@ -51,7 +50,6 @@ class TraceConfigTest extends AgentTestRunner {
         span(0) {
           operationName "ConfigTracedCallable.call"
           tags {
-            "$Tags.COMPONENT" "trace"
           }
         }
       }

@@ -126,7 +126,6 @@ class CassandraClientTest extends AgentTestRunner {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$Tags.COMPONENT" "java-cassandra"
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" "127.0.0.1"
         "$MoreTags.NET_PEER_PORT" EmbeddedCassandraServerHelper.getNativeTransportPort()

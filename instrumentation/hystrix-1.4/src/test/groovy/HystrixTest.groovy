@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import com.netflix.hystrix.HystrixCommand
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import spock.lang.Timeout
 
@@ -68,7 +67,6 @@ class HystrixTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -132,7 +130,6 @@ class HystrixTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -144,7 +141,6 @@ class HystrixTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false

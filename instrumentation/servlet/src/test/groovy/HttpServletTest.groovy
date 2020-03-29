@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
 import javax.servlet.http.HttpServletRequest
@@ -59,14 +58,12 @@ class HttpServletTest extends AgentTestRunner {
           operationName "HttpServlet.service"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-service"
           }
         }
         span(2) {
           operationName "${expectedResourceName}.doGet"
           childOf span(1)
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-service"
           }
         }
       }
@@ -109,7 +106,6 @@ class HttpServletTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-service"
             errorTags(ex.class, ex.message)
           }
         }
@@ -118,7 +114,6 @@ class HttpServletTest extends AgentTestRunner {
           childOf span(1)
           errored true
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-service"
             errorTags(ex.class, ex.message)
           }
         }

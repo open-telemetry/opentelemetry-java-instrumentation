@@ -84,7 +84,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       spanKind INTERNAL
       errored false
       tags {
-        "$Tags.COMPONENT" "spring-webmvc"
         "view.type" RedirectView.name
       }
     }

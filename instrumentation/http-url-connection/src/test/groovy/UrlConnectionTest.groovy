@@ -56,7 +56,6 @@ class UrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "$url/"

@@ -96,7 +96,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
@@ -146,7 +145,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "CreateIndexAction"
           spanKind CLIENT
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
@@ -159,7 +157,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
@@ -171,7 +168,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
@@ -185,7 +181,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "IndexAction"
           spanKind CLIENT
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
@@ -198,7 +193,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
@@ -211,7 +205,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "RefreshAction"
           spanKind CLIENT
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
@@ -227,7 +220,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
@@ -305,7 +297,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"

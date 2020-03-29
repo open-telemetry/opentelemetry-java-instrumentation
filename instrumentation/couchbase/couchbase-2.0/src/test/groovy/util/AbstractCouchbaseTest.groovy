@@ -125,7 +125,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$Tags.COMPONENT" "couchbase-client"
         "$Tags.DB_TYPE" "couchbase"
         if (bucketName != null) {
           "$Tags.DB_INSTANCE" bucketName

@@ -25,7 +25,6 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.common.exec.CommonTaskExecutor
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 
@@ -98,7 +97,6 @@ class GrpcTest extends AgentTestRunner {
           }
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
-            "$Tags.COMPONENT" "grpc-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" port
             "status.code" "OK"
@@ -118,7 +116,6 @@ class GrpcTest extends AgentTestRunner {
           }
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
-            "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "status.code" "OK"
@@ -173,7 +170,6 @@ class GrpcTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
-            "$Tags.COMPONENT" "grpc-client"
             "status.code" "${status.code.name()}"
             "status.description" description
             "$MoreTags.NET_PEER_NAME" "localhost"
@@ -193,7 +189,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.RPC_SERVICE" "Greeter"
             "status.code" "${status.code.name()}"
             "status.description" description
@@ -259,7 +254,6 @@ class GrpcTest extends AgentTestRunner {
           errored true
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
-            "$Tags.COMPONENT" "grpc-client"
             "status.code" "UNKNOWN"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" Long
@@ -278,7 +272,6 @@ class GrpcTest extends AgentTestRunner {
             }
           }
           tags {
-            "$Tags.COMPONENT" "grpc-server"
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -103,7 +102,6 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT" "java-kafka"
           }
         }
         span(1) {
@@ -112,7 +110,6 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
             "offset" 0
           }
@@ -168,7 +165,6 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT" "java-kafka"
             "kafka.partition" { it >= 0 }
           }
         }
@@ -178,7 +174,6 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
             "offset" 0
           }

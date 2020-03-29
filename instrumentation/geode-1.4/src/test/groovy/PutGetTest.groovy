@@ -131,7 +131,6 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "apache-geode-client"
             "$Tags.DB_TYPE" "geode"
             "$Tags.DB_INSTANCE" "test-region"
           }
@@ -141,7 +140,6 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "apache-geode-client"
             "$Tags.DB_TYPE" "geode"
             "$Tags.DB_INSTANCE" "test-region"
           }
@@ -151,7 +149,6 @@ class PutGetTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "apache-geode-client"
             "$Tags.DB_TYPE" "geode"
             "$Tags.DB_INSTANCE" "test-region"
             if (query != null) {

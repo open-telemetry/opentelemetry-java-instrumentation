@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import rmi.app.Greeter
@@ -58,7 +57,6 @@ class RmiTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
         }
@@ -66,7 +64,6 @@ class RmiTest extends AgentTestRunner {
           operationName "Server.hello"
           spanKind SERVER
           tags {
-            "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
           }
         }
@@ -118,7 +115,6 @@ class RmiTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
             errorTags(RuntimeException, String)
           }
@@ -128,7 +124,6 @@ class RmiTest extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
             errorTags(RuntimeException, String)
           }
@@ -161,7 +156,6 @@ class RmiTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "rmi-client"
             "span.origin.type" Greeter.canonicalName
           }
         }
@@ -170,7 +164,6 @@ class RmiTest extends AgentTestRunner {
           operationName "ServerLegacy.hello"
           spanKind SERVER
           tags {
-            "$Tags.COMPONENT" "rmi-server"
             "span.origin.type" server.class.canonicalName
           }
         }

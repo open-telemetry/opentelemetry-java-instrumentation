@@ -76,7 +76,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "google-http-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "${uri}"

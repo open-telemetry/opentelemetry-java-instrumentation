@@ -16,7 +16,6 @@
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import rx.Observable
 import rx.schedulers.Schedulers
@@ -82,7 +81,6 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -178,7 +176,6 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -190,7 +187,6 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -279,7 +275,6 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
@@ -291,7 +286,6 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored true
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false

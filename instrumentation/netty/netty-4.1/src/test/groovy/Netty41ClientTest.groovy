@@ -20,7 +20,6 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
@@ -106,7 +105,6 @@ class Netty41ClientTest extends HttpClientTest {
             childOf span(0)
             errored true
             tags {
-              "$Tags.COMPONENT" "netty"
               "error.type" AbstractChannel.AnnotatedConnectException.name
               "error.stack" String
               // slightly different message on windows

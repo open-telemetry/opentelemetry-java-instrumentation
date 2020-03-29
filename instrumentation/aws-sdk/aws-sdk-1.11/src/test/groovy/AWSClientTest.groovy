@@ -155,7 +155,6 @@ class AWSClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
@@ -174,7 +173,6 @@ class AWSClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
@@ -242,7 +240,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
             "aws.service" { it.contains(service) }
@@ -261,7 +258,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
@@ -301,7 +297,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD" "HEAD"
             "aws.service" "Amazon S3"
@@ -343,7 +338,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "GET"
             "aws.service" "Amazon S3"
@@ -365,7 +359,6 @@ class AWSClientTest extends AgentTestRunner {
             errored true
             childOf span(0)
             tags {
-              "$Tags.COMPONENT" "apache-httpclient"
               "$MoreTags.NET_PEER_NAME" "localhost"
               "$MoreTags.NET_PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/someBucket/someKey"

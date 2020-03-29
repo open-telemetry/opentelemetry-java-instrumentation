@@ -34,7 +34,6 @@ class CouchbaseSpanUtil {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$Tags.COMPONENT" "couchbase-client"
 
         // Because of caching, not all requests hit the server so these tags may be absent
         "$MoreTags.NET_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == null }

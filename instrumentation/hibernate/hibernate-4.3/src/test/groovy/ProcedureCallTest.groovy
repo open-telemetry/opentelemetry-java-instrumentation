@@ -86,7 +86,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -94,7 +93,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
@@ -102,7 +100,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(1)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -116,7 +113,6 @@ class ProcedureCallTest extends AgentTestRunner {
           operationName "Transaction.commit"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
       }
@@ -149,7 +145,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -158,7 +153,6 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(0)
           errored(true)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
             errorTags(SQLGrammarException, "could not prepare statement")
           }
         }
@@ -167,7 +161,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
       }

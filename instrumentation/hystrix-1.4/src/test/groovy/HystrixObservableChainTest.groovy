@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import com.netflix.hystrix.HystrixObservableCommand
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import rx.Observable
 import rx.schedulers.Schedulers
@@ -89,7 +88,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -107,7 +105,6 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
             "hystrix.circuit-open" false
