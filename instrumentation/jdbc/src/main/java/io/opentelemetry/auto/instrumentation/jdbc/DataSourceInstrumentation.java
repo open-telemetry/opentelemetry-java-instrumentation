@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.DEC
 import static io.opentelemetry.auto.instrumentation.jdbc.DataSourceDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -77,7 +78,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
               .startSpan();
       DECORATE.afterStart(span);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

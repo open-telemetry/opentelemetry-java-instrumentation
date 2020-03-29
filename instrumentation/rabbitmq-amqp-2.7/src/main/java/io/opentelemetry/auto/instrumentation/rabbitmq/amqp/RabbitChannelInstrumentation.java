@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.rabbitmq.amqp;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_SPAN;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorator.TRACER;
@@ -24,6 +25,8 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -42,6 +45,8 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
@@ -146,7 +151,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       CURRENT_RABBIT_SPAN.set(span);
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -193,7 +198,9 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<String, Object>() : new HashMap<>(headers);
 
-        TRACER.getHttpTextFormat().inject(span.getContext(), headers, SETTER);
+        final Context context = withSpan(span, Context.current());
+
+        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(
@@ -249,7 +256,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         final Map<String, Object> headers = response.getProps().getHeaders();
 
         if (headers != null) {
-          final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(headers, GETTER);
+          final SpanContext extractedContext = extract(headers, GETTER);
           if (extractedContext.isValid()) {
             spanBuilder.addLink(extractedContext);
           }
@@ -263,7 +270,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         span.setAttribute("message.size", response.getBody().length);
       }
       span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onGet(span, queue);
         DECORATE.onPeerConnection(span, connection.getAddress());

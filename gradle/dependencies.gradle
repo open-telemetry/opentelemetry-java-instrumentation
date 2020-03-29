@@ -3,7 +3,7 @@ def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
 ext {
   versions = [
-    opentelemetry: '0.2.4',
+    opentelemetry: '0.3.0',
 
     slf4j        : "1.7.29",
     guava        : "20.0", // Last version to support Java 7

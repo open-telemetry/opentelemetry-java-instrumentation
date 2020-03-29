@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.httpurlconnection;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -89,7 +90,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
         final Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
         span.setAttribute(Tags.COMPONENT, COMPONENT);
 
-        try (final Scope scope = TRACER.withSpan(span)) {
+        try (final Scope scope = currentContextWith(span)) {
           span.setAttribute(Tags.HTTP_URL, url.toString());
           span.setAttribute(MoreTags.NET_PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
           final String host = url.getHost();

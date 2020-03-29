@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDeco
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -95,7 +96,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       final Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
       DECORATE.afterStart(span);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

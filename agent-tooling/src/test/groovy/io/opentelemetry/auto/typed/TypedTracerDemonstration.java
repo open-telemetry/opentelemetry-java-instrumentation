@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.typed;
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+
 import io.opentelemetry.auto.typed.client.SampleHttpClientTypedSpan;
 import io.opentelemetry.auto.typed.client.SampleHttpClientTypedTracer;
 import io.opentelemetry.auto.typed.server.SampleHttpServerTypedSpan;
@@ -24,35 +26,35 @@ import io.opentelemetry.context.Scope;
 class TypedTracerDemonstration {
 
   private void serverDemonstration() {
-    SampleHttpServerTypedTracer tracer = new SampleHttpServerTypedTracer();
+    final SampleHttpServerTypedTracer tracer = new SampleHttpServerTypedTracer();
 
-    SampleHttpServerTypedSpan span = tracer.startSpan("request instance");
+    final SampleHttpServerTypedSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
-    try (Scope scope = tracer.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       // make request
-      String response = "response instance";
+      final String response = "response instance";
 
       span.end(response);
       // span.onResponse("response instance"); // implicitly called on end.
-    } catch (Exception ex) {
+    } catch (final Exception ex) {
       span.end(ex);
     }
   }
 
   private void clientDemonstration() {
-    SampleHttpClientTypedTracer tracer = new SampleHttpClientTypedTracer();
+    final SampleHttpClientTypedTracer tracer = new SampleHttpClientTypedTracer();
 
-    SampleHttpClientTypedSpan span = tracer.startSpan("request instance");
+    final SampleHttpClientTypedSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
-    try (Scope scope = tracer.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       // make request
-      String response = "response instance";
+      final String response = "response instance";
 
       span.end(response);
       // span.onResponse("response instance"); // implicitly called on end.
-    } catch (Exception ex) {
+    } catch (final Exception ex) {
       span.end(ex);
     }
   }

@@ -15,11 +15,13 @@
  */
 package io.opentelemetry.auto.instrumentation.grizzly;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,7 +31,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -84,14 +85,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(request, GETTER);
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
-      } else {
-        // explicitly setting "no parent" in case a span was propagated to this thread
-        // by the java-concurrent instrumentation when the thread was started
-        spanBuilder.setNoParent();
-      }
+      spanBuilder.setParent(extract(request, GETTER));
       final Span span = spanBuilder.startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, request);
@@ -102,7 +96,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

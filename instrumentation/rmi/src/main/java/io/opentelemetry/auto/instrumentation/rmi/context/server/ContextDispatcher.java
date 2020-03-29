@@ -15,9 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.rmi.context.server;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.bootstrap.instrumentation.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.GETTER;
-import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPayload.TRACER;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static io.opentelemetry.auto.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 
@@ -58,7 +58,7 @@ public class ContextDispatcher implements Dispatcher {
     if (PROPAGATOR.isOperationWithPayload(operationId)) {
       final ContextPayload payload = ContextPayload.read(in);
       if (payload != null) {
-        final SpanContext context = TRACER.getHttpTextFormat().extract(payload, GETTER);
+        final SpanContext context = extract(payload, GETTER);
         if (context.isValid()) {
           THREAD_LOCAL_CONTEXT.set(context);
         } else {

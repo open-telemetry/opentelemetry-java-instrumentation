@@ -15,10 +15,12 @@
  */
 package io.opentelemetry.auto.instrumentation.netty.v4_1.server;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyRequestExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -26,7 +28,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
@@ -38,7 +39,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       if (span == null) {
         ctx.fireChannelRead(msg); // superclass does not throw
       } else {
-        try (final Scope scope = TRACER.withSpan(span)) {
+        try (final Scope scope = currentContextWith(span)) {
           ctx.fireChannelRead(msg); // superclass does not throw
         }
       }
@@ -49,17 +50,9 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     final Span.Builder spanBuilder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-    final SpanContext extractedContext =
-        TRACER.getHttpTextFormat().extract(request.headers(), GETTER);
-    if (extractedContext.isValid()) {
-      spanBuilder.setParent(extractedContext);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      spanBuilder.setNoParent();
-    }
+    spanBuilder.setParent(extract(request.headers(), GETTER));
     final Span span = spanBuilder.startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, ctx.channel());
       DECORATE.onRequest(span, request);

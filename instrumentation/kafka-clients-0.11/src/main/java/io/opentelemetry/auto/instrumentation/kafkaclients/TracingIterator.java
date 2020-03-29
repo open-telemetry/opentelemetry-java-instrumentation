@@ -15,9 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.kafkaclients;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -71,7 +73,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }
-        final SpanContext spanContext = TRACER.getHttpTextFormat().extract(next.headers(), GETTER);
+        final SpanContext spanContext = extract(next.headers(), GETTER);
         if (spanContext.isValid()) {
           if (consumer) {
             spanBuilder.setParent(spanContext);
@@ -82,7 +84,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         final Span span = spanBuilder.startSpan();
         decorator.afterStart(span);
         decorator.onConsume(span, next);
-        currentSpanWithScope = new SpanWithScope(span, TRACER.withSpan(span));
+        currentSpanWithScope = new SpanWithScope(span, currentContextWith(span));
       }
     } catch (final Exception e) {
       log.debug("Error during decoration", e);

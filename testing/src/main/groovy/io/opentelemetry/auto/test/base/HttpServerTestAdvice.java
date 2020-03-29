@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.test.base;
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -41,7 +43,7 @@ public abstract class HttpServerTestAdvice {
         return null;
       } else {
         final Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
-        return new SpanWithScope(span, TRACER.withSpan(span));
+        return new SpanWithScope(span, currentContextWith(span));
       }
     }
 

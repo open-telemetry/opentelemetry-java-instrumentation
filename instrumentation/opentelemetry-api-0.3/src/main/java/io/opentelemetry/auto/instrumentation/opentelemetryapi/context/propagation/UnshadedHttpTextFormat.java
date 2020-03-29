@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
+package io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation;
 
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShaded;
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toUnshaded;
-
+import io.opentelemetry.auto.bootstrap.ContextStore;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.context.propagation.HttpTextFormat;
-import unshaded.io.opentelemetry.trace.SpanContext;
 
-class UnshadedHttpTextFormat implements HttpTextFormat<SpanContext> {
+@Slf4j
+class UnshadedHttpTextFormat implements HttpTextFormat {
 
-  private final io.opentelemetry.context.propagation.HttpTextFormat<
-          io.opentelemetry.trace.SpanContext>
-      shadedHttpTextFormat;
+  private final io.opentelemetry.context.propagation.HttpTextFormat shadedHttpTextFormat;
+  private final ContextStore<Context, io.grpc.Context> contextStore;
 
   UnshadedHttpTextFormat(
-      final io.opentelemetry.context.propagation.HttpTextFormat<io.opentelemetry.trace.SpanContext>
-          shadedHttpTextFormat) {
+      final io.opentelemetry.context.propagation.HttpTextFormat shadedHttpTextFormat,
+      final ContextStore<Context, io.grpc.Context> contextStore) {
     this.shadedHttpTextFormat = shadedHttpTextFormat;
+    this.contextStore = contextStore;
   }
 
   @Override
@@ -40,14 +40,35 @@ class UnshadedHttpTextFormat implements HttpTextFormat<SpanContext> {
   }
 
   @Override
-  public <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
-    return toUnshaded(shadedHttpTextFormat.extract(carrier, new UnshadedGetter<>(getter)));
+  public <C> Context extract(
+      final Context context, final C carrier, final HttpTextFormat.Getter<C> getter) {
+    final io.grpc.Context shadedContext = contextStore.get(context);
+    if (shadedContext == null) {
+      if (log.isDebugEnabled()) {
+        log.debug("unexpected context: {}", context, new Exception("unexpected context"));
+      }
+      return context;
+    }
+    final io.grpc.Context updatedShadedContext =
+        shadedHttpTextFormat.extract(shadedContext, carrier, new UnshadedGetter<>(getter));
+    if (updatedShadedContext == shadedContext) {
+      return context;
+    }
+    contextStore.put(context, updatedShadedContext);
+    return context;
   }
 
   @Override
   public <C> void inject(
-      final SpanContext value, final C carrier, final HttpTextFormat.Setter<C> setter) {
-    shadedHttpTextFormat.inject(toShaded(value), carrier, new UnshadedSetter<>(setter));
+      final Context context, final C carrier, final HttpTextFormat.Setter<C> setter) {
+    final io.grpc.Context shadedContext = contextStore.get(context);
+    if (shadedContext == null) {
+      if (log.isDebugEnabled()) {
+        log.debug("unexpected context: {}", context, new Exception("unexpected context"));
+      }
+      return;
+    }
+    shadedHttpTextFormat.inject(shadedContext, carrier, new UnshadedSetter<>(setter));
   }
 
   private static class UnshadedGetter<C>

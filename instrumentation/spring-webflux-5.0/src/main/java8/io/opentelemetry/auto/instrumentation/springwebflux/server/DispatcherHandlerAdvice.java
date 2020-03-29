@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.reactor.ReactorCoreAdviceUtils;
@@ -48,7 +49,7 @@ public class DispatcherHandlerAdvice {
     DECORATE.afterStart(span);
     exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, span);
 
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

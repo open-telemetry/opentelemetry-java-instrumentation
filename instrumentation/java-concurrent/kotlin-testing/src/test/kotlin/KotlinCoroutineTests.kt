@@ -15,6 +15,7 @@
  */
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.trace.Tracer
+import io.opentelemetry.trace.TracingContextUtils.currentContextWith
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.consumeEach
@@ -133,7 +134,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
 
   private fun <T> runTest(block: suspend CoroutineScope.() -> T): T {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
-    val parentScope = tracer.withSpan(parentSpan)
+    val parentScope = currentContextWith(parentSpan)
     try {
       return runBlocking(dispatcher, block = block)
     } finally {

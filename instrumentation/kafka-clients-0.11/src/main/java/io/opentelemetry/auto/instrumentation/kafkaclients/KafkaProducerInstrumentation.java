@@ -19,6 +19,8 @@ import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -26,6 +28,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -91,8 +95,11 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       // This is how similar check is being done in Kafka client itself:
       // https://github.com/apache/kafka/blob/05fcfde8f69b0349216553f711fdfc3f0259c601/clients/src/main/java/org/apache/kafka/common/record/MemoryRecordsBuilder.java#L411-L412
       if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2) {
+        final Context context = withSpan(span, Context.current());
         try {
-          TRACER.getHttpTextFormat().inject(span.getContext(), record.headers(), SETTER);
+          OpenTelemetry.getPropagators()
+              .getHttpTextFormat()
+              .inject(context, record.headers(), SETTER);
         } catch (final IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
@@ -104,11 +111,13 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          TRACER.getHttpTextFormat().inject(span.getContext(), record.headers(), SETTER);
+          OpenTelemetry.getPropagators()
+              .getHttpTextFormat()
+              .inject(context, record.headers(), SETTER);
         }
       }
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -133,7 +142,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         DECORATE.onError(span, exception);
         try {
           if (callback != null) {

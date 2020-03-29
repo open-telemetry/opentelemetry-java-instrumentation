@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.springdata;
 
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springdata.SpringDataDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -121,7 +122,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       final Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(invokedMethod)).startSpan();
       DECORATE.afterStart(span);
 
-      final Scope scope = TRACER.withSpan(span);
+      final Scope scope = currentContextWith(span);
 
       Object result = null;
       try {

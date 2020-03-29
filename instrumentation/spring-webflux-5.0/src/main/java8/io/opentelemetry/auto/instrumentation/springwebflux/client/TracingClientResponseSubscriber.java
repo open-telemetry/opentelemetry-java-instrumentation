@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
 import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
@@ -57,7 +57,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       return;
     }
 
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
 
       DECORATE.onRequest(span, clientRequest);
 
@@ -65,7 +65,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
           new Subscription() {
             @Override
             public void request(final long n) {
-              try (final Scope scope = TRACER.withSpan(span)) {
+              try (final Scope scope = currentContextWith(span)) {
                 subscription.request(n);
               }
             }
@@ -90,7 +90,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       span.end();
     }
 
-    try (final Scope scope = TRACER.withSpan(parentSpan)) {
+    try (final Scope scope = currentContextWith(parentSpan)) {
       subscriber.onNext(clientResponse);
     }
   }
@@ -104,7 +104,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       span.end();
     }
 
-    try (final Scope scope = TRACER.withSpan(parentSpan)) {
+    try (final Scope scope = currentContextWith(parentSpan)) {
 
       subscriber.onError(throwable);
     }
@@ -118,7 +118,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       span.end();
     }
 
-    try (final Scope scope = TRACER.withSpan(parentSpan)) {
+    try (final Scope scope = currentContextWith(parentSpan)) {
 
       subscriber.onComplete();
     }

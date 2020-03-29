@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.test.log.injection
 
+
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
@@ -23,6 +24,8 @@ import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
 
 import java.util.concurrent.atomic.AtomicReference
+
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 
 /**
  * This class represents the standard test cases that new logging library integrations MUST
@@ -52,7 +55,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     when:
     put("foo", "bar")
     Span rootSpan = TEST_TRACER.spanBuilder("root").startSpan()
-    Scope rootScope = TEST_TRACER.withSpan(rootSpan)
+    Scope rootScope = currentContextWith(rootSpan)
 
     then:
     get("ot.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
@@ -61,7 +64,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
 
     when:
     Span childSpan = TEST_TRACER.spanBuilder("child").startSpan()
-    Scope childScope = TEST_TRACER.withSpan(childSpan)
+    Scope childScope = currentContextWith(childSpan)
 
     then:
     get("ot.trace_id") == tracer.getCurrentSpan().getContext().getTraceId().toLowerBase16()
@@ -108,7 +111,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
       void run() {
         // other trace in scope
         final Span thread2Span = TEST_TRACER.spanBuilder("root2").startSpan()
-        final Scope thread2Scope = TEST_TRACER.withSpan(thread2Span)
+        final Scope thread2Scope = currentContextWith(thread2Span)
         try {
           thread2TraceId.set(get("ot.trace_id"))
         } finally {
@@ -118,7 +121,7 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
       }
     }
     final Span mainSpan = TEST_TRACER.spanBuilder("root").startSpan()
-    final Scope mainScope = TEST_TRACER.withSpan(mainSpan)
+    final Scope mainScope = currentContextWith(mainSpan)
     thread1.start()
     thread2.start()
     final String mainThreadTraceId = get("ot.trace_id")

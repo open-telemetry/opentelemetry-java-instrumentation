@@ -19,16 +19,20 @@ import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecora
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.grpc.client.GrpcInjectAdapter.SETTER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
 import io.grpc.ClientInterceptor;
+import io.grpc.Context;
 import io.grpc.ForwardingClientCall;
 import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.context.Scope;
@@ -53,7 +57,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     final String methodName = method.getFullMethodName();
     final Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       GrpcHelper.prepareSpan(span, methodName, peerAddress, false);
 
@@ -82,8 +86,9 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void start(final Listener<RespT> responseListener, final Metadata headers) {
-      TRACER.getHttpTextFormat().inject(span.getContext(), headers, SETTER);
-      try (final Scope scope = TRACER.withSpan(span)) {
+      final Context context = withSpan(span, Context.current());
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
+      try (final Scope scope = currentContextWith(span)) {
         super.start(new TracingClientCallListener<>(span, responseListener), headers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -95,7 +100,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(final ReqT message) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         super.sendMessage(message);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -122,7 +127,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
       attributes.put("message.type", AttributeValue.stringAttributeValue("SENT"));
       attributes.put("message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
       span.addEvent("message", attributes);
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onMessage(message);
       }
     }
@@ -131,7 +136,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onClose(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
       // Finishes span.
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onClose(status, trailers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -144,7 +149,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onReady() {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate().onReady();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);

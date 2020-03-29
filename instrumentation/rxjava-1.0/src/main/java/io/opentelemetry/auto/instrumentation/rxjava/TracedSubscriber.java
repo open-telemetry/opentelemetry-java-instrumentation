@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.rxjava;
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.context.Scope;
@@ -45,7 +47,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onStart() {
     final Span span = spanRef.get();
     if (span != null) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate.onStart();
       }
     } else {
@@ -57,7 +59,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onNext(final T value) {
     final Span span = spanRef.get();
     if (span != null) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate.onNext(value);
       } catch (final Throwable e) {
         onError(e);
@@ -72,7 +74,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
     final Span span = spanRef.getAndSet(null);
     if (span != null) {
       boolean errored = false;
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         delegate.onCompleted();
       } catch (final Throwable e) {
         // Repopulate the spanRef for onError
@@ -95,7 +97,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onError(final Throwable e) {
     final Span span = spanRef.getAndSet(null);
     if (span != null) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         decorator.onError(span, e);
         delegate.onError(e);
       } catch (final Throwable e2) {

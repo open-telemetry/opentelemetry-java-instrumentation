@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsD
 import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -87,7 +88,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
           parent = TRACER.getCurrentSpan();
           span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
 
-          final SpanWithScope scope = new SpanWithScope(span, TRACER.withSpan(span));
+          final SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
 
           DECORATE.afterStart(span);
           DECORATE.onJaxRsSpan(span, parent, resourceClass, method);

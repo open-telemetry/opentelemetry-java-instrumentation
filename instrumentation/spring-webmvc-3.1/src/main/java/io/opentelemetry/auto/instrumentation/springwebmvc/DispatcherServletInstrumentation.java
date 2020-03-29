@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.springwebmvc;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.DECORATE_RENDER;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -82,7 +83,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       final Span span = TRACER.spanBuilder(DECORATE_RENDER.spanNameOnRender(mv)).startSpan();
       DECORATE_RENDER.afterStart(span);
       DECORATE_RENDER.onRender(span, mv);
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

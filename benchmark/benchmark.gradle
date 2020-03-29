@@ -5,7 +5,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  jmh group: 'io.opentelemetry', name: 'opentelemetry-api', version: '0.2.4'
+  jmh group: 'io.opentelemetry', name: 'opentelemetry-api', version: '0.3.0'
   jmh deps.bytebuddyagent
 }
 

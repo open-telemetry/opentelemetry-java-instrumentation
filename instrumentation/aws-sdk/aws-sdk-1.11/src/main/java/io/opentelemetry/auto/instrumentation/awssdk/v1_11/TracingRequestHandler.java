@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.auto.instrumentation.awssdk.v1_11.RequestMeta.SPAN_SCOPE_PAIR_CONTEXT_KEY;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -52,7 +53,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     decorate.afterStart(span);
     decorate.onRequest(span, request);
     request.addHandlerContext(
-        SPAN_SCOPE_PAIR_CONTEXT_KEY, new SpanWithScope(span, TRACER.withSpan(span)));
+        SPAN_SCOPE_PAIR_CONTEXT_KEY, new SpanWithScope(span, currentContextWith(span)));
   }
 
   @Override

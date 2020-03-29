@@ -15,12 +15,14 @@
  */
 package io.opentelemetry.auto.instrumentation.jms;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jms.JMSDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -30,7 +32,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -81,20 +82,13 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
-      final SpanContext extractedContext = TRACER.getHttpTextFormat().extract(message, GETTER);
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
-      } else {
-        // explicitly setting "no parent" in case a span was propagated to this thread
-        // by the java-concurrent instrumentation when the thread was started
-        spanBuilder.setNoParent();
-      }
+      spanBuilder.setParent(extract(message, GETTER));
 
       final Span span = spanBuilder.startSpan();
       span.setAttribute("span.origin.type", listener.getClass().getName());
       DECORATE.afterStart(span);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

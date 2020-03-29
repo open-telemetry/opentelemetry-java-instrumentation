@@ -21,6 +21,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagation.UnshadedContextPropagators;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.UnshadedMeterProvider;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.UnshadedTracerProvider;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -30,55 +33,14 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import unshaded.io.grpc.Context;
 
 @AutoService(Instrumenter.class)
-public class OpenTelemetryApiInstrumentation extends Instrumenter.Default {
-  public OpenTelemetryApiInstrumentation() {
-    super("opentelemetry-api");
-  }
+public class OpenTelemetryApiInstrumentation extends AbstractInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     return named("unshaded.io.opentelemetry.OpenTelemetry");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".metrics.UnshadedBatchRecorder",
-      packageName + ".metrics.UnshadedDoubleCounter",
-      packageName + ".metrics.UnshadedDoubleCounter$BoundInstrument",
-      packageName + ".metrics.UnshadedDoubleCounter$Builder",
-      packageName + ".metrics.UnshadedDoubleMeasure",
-      packageName + ".metrics.UnshadedDoubleMeasure$BoundInstrument",
-      packageName + ".metrics.UnshadedDoubleMeasure$Builder",
-      packageName + ".metrics.UnshadedDoubleObserver",
-      packageName + ".metrics.UnshadedDoubleObserver$Builder",
-      packageName + ".metrics.UnshadedDoubleObserver$ShadedResultDoubleObserver",
-      packageName + ".metrics.UnshadedDoubleObserver$UnshadedResultDoubleObserver",
-      packageName + ".metrics.UnshadedLongCounter",
-      packageName + ".metrics.UnshadedLongCounter$BoundInstrument",
-      packageName + ".metrics.UnshadedLongCounter$Builder",
-      packageName + ".metrics.UnshadedLongMeasure",
-      packageName + ".metrics.UnshadedLongMeasure$BoundInstrument",
-      packageName + ".metrics.UnshadedLongMeasure$Builder",
-      packageName + ".metrics.UnshadedLongObserver",
-      packageName + ".metrics.UnshadedLongObserver$Builder",
-      packageName + ".metrics.UnshadedLongObserver$ShadedResultLongObserver",
-      packageName + ".metrics.UnshadedLongObserver$UnshadedResultLongObserver",
-      packageName + ".metrics.UnshadedMeter",
-      packageName + ".metrics.UnshadedMeterProvider",
-      packageName + ".trace.Bridging",
-      packageName + ".trace.Bridging$1",
-      packageName + ".trace.UnshadedHttpTextFormat",
-      packageName + ".trace.UnshadedHttpTextFormat$UnshadedSetter",
-      packageName + ".trace.UnshadedHttpTextFormat$UnshadedGetter",
-      packageName + ".trace.UnshadedScope",
-      packageName + ".trace.UnshadedSpan",
-      packageName + ".trace.UnshadedSpan$Builder",
-      packageName + ".trace.UnshadedTracer",
-      packageName + ".trace.UnshadedTracerProvider"
-    };
   }
 
   @Override
@@ -90,6 +52,9 @@ public class OpenTelemetryApiInstrumentation extends Instrumenter.Default {
     transformers.put(
         isMethod().and(isPublic()).and(named("getMeterProvider")).and(takesArguments(0)),
         OpenTelemetryApiInstrumentation.class.getName() + "$GetMeterProviderAdvice");
+    transformers.put(
+        isMethod().and(isPublic()).and(named("getPropagators")).and(takesArguments(0)),
+        OpenTelemetryApiInstrumentation.class.getName() + "$GetPropagatorsAdvice");
     return transformers;
   }
 
@@ -110,6 +75,18 @@ public class OpenTelemetryApiInstrumentation extends Instrumenter.Default {
         @Advice.Return(readOnly = false)
             unshaded.io.opentelemetry.metrics.MeterProvider meterProvider) {
       meterProvider = new UnshadedMeterProvider();
+    }
+  }
+
+  public static class GetPropagatorsAdvice {
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(
+        @Advice.Return(readOnly = false)
+            unshaded.io.opentelemetry.context.propagation.ContextPropagators contextPropagators) {
+      final ContextStore<Context, io.grpc.Context> contextStore =
+          InstrumentationContext.get(Context.class, io.grpc.Context.class);
+      contextPropagators = new UnshadedContextPropagators(contextStore);
     }
   }
 }

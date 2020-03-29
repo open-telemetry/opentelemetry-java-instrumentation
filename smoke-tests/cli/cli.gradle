@@ -13,7 +13,7 @@ jar {
 }
 
 dependencies {
-  compile group: 'io.opentelemetry', name: 'opentelemetry-api', version: '0.2.4'
+  compile group: 'io.opentelemetry', name: 'opentelemetry-api', version: '0.3.0'
 
   testCompile project(':smoke-tests')
 }

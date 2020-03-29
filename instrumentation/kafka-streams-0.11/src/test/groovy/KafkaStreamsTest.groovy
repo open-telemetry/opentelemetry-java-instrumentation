@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import io.grpc.Context
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.context.propagation.HttpTextFormat
-import io.opentelemetry.trace.SpanContext
 import io.opentelemetry.trace.propagation.HttpTraceContext
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.trace.TracingContextUtils.getSpan
 
 class KafkaStreamsTest extends AgentTestRunner {
   static final STREAM_PENDING = "test.pending"
@@ -205,7 +206,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     def headers = received.headers()
     headers.iterator().hasNext()
     def traceparent = new String(headers.headers("traceparent").iterator().next().value())
-    SpanContext spanContext = new HttpTraceContext().extract("", new HttpTextFormat.Getter<String>() {
+    Context context = new HttpTraceContext().extract(Context.ROOT, "", new HttpTextFormat.Getter<String>() {
       @Override
       String get(String carrier, String key) {
         if (key == "traceparent") {
@@ -214,6 +215,7 @@ class KafkaStreamsTest extends AgentTestRunner {
         return null
       }
     })
+    def spanContext = getSpan(context).getContext()
     spanContext.traceId == TEST_WRITER.traces[0][3].traceId
     spanContext.spanId == TEST_WRITER.traces[0][3].spanId
 

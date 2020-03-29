@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.jedis.v3_0;
 import static io.opentelemetry.auto.instrumentation.jedis.v3_0.JedisClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jedis.v3_0.JedisClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -82,7 +83,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       final Span span = TRACER.spanBuilder(query).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onStatement(span, query);
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

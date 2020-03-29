@@ -15,18 +15,19 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 import java.security.Principal;
 import javax.servlet.ServletRequest;
@@ -63,14 +64,7 @@ public class Servlet2Advice {
 
     final Span.Builder builder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
-    final SpanContext extract = TRACER.getHttpTextFormat().extract(httpServletRequest, GETTER);
-    if (extract.isValid()) {
-      builder.setParent(extract);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      builder.setNoParent();
-    }
+    builder.setParent(extract(httpServletRequest, GETTER));
 
     final Span span = builder.startSpan();
     span.setAttribute("span.origin.type", servlet.getClass().getName());
@@ -83,7 +77,7 @@ public class Servlet2Advice {
     httpServletRequest.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     httpServletRequest.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
 
-    return new SpanWithScope(span, TRACER.withSpan(span));
+    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

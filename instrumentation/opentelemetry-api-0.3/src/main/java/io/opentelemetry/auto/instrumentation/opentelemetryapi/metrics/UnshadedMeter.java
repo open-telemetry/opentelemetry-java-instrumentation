@@ -15,12 +15,10 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.Map;
 import unshaded.io.opentelemetry.metrics.BatchRecorder;
 import unshaded.io.opentelemetry.metrics.DoubleCounter;
 import unshaded.io.opentelemetry.metrics.DoubleMeasure;
 import unshaded.io.opentelemetry.metrics.DoubleObserver;
-import unshaded.io.opentelemetry.metrics.LabelSet;
 import unshaded.io.opentelemetry.metrics.LongCounter;
 import unshaded.io.opentelemetry.metrics.LongMeasure;
 import unshaded.io.opentelemetry.metrics.LongObserver;
@@ -67,17 +65,5 @@ class UnshadedMeter implements Meter {
   @Override
   public BatchRecorder newBatchRecorder(final String... keyValuePairs) {
     return new UnshadedBatchRecorder(shadedMeter.newBatchRecorder(keyValuePairs));
-  }
-
-  @Override
-  public LabelSet createLabelSet(final String... keyValuePairs) {
-    // this is going away
-    return null;
-  }
-
-  @Override
-  public LabelSet createLabelSet(final Map<String, String> labels) {
-    // this is going away
-    return null;
   }
 }

@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
@@ -60,7 +61,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        final SpanWithScope scope = new SpanWithScope(span, TRACER.withSpan(span));
+        final SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
 
         DECORATE.afterStart(span);
         DECORATE.onJaxRsSpan(span, parent, filterClass, method);

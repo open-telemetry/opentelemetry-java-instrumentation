@@ -20,6 +20,7 @@ import static io.opentelemetry.auto.instrumentation.jdbc.JDBCDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -88,7 +89,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       DECORATE.onConnection(span, connection);
       DECORATE.onPreparedStatement(span, statement);
       span.setAttribute("span.origin.type", statement.getClass().getName());
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

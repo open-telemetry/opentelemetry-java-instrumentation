@@ -15,6 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.rmi.context;
 
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
+
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
@@ -47,7 +50,8 @@ public class ContextPayload {
 
   public static ContextPayload from(final Span span) {
     final ContextPayload payload = new ContextPayload();
-    TRACER.getHttpTextFormat().inject(span.getContext(), payload, SETTER);
+    final Context context = withSpan(span, Context.current());
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, payload, SETTER);
     return payload;
   }
 

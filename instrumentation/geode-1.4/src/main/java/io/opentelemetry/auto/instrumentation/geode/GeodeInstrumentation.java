@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.geode.GeodeDecorator.DECORAT
 import static io.opentelemetry.auto.instrumentation.geode.GeodeDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -94,7 +95,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       span.setAttribute(Tags.DB_INSTANCE, thiz.getName());
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -128,7 +129,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       span.setAttribute(Tags.DB_INSTANCE, thiz.getName());
       span.setAttribute(Tags.DB_STATEMENT, query);
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

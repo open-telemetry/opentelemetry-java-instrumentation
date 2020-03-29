@@ -15,10 +15,11 @@
  */
 package io.opentelemetry.auto.typed.server.http;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
+
 import io.opentelemetry.auto.typed.server.ServerTypedTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,14 +29,7 @@ public abstract class HttpServerTypedTracer<
 
   @Override
   protected Span.Builder buildSpan(final REQUEST request, final Span.Builder spanBuilder) {
-    final SpanContext extract = tracer.getHttpTextFormat().extract(request, getGetter());
-    if (extract.isValid()) {
-      spanBuilder.setParent(extract);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      spanBuilder.setNoParent();
-    }
+    spanBuilder.setParent(extract(request, getGetter()));
     return super.buildSpan(request, spanBuilder);
   }
 

@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorat
 import static io.opentelemetry.auto.instrumentation.servlet.filter.FilterDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -89,7 +90,7 @@ public final class FilterInstrumentation extends Instrumenter.Default {
           TRACER.spanBuilder(filter.getClass().getSimpleName() + ".doFilter").startSpan();
       DECORATE.afterStart(span);
 
-      return new SpanWithScope(span, TRACER.withSpan(span));
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -20,7 +20,9 @@ import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.Apache
 import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,6 +31,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -170,16 +174,18 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
     public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
       final Span span =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-      final Scope scope = TRACER.withSpan(span);
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
+      final Context context = withSpan(span, Context.current());
       final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!awsClientCall) {
-        TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
+        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
       }
+      final Scope scope = withScopedContext(context);
+
       return new SpanWithScope(span, scope);
     }
 

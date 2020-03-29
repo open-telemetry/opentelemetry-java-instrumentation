@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.ratpack;
 
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -38,7 +40,7 @@ public class BlockWrapper implements Block {
 
   @Override
   public void execute() throws Exception {
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (final Scope scope = currentContextWith(span)) {
       delegate.execute();
     }
   }

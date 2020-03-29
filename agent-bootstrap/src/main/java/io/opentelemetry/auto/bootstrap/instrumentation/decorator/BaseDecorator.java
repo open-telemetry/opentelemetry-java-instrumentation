@@ -15,9 +15,15 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
+import static io.opentelemetry.OpenTelemetry.getPropagators;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
+
+import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -112,5 +118,12 @@ public abstract class BaseDecorator {
       }
     }
     return className;
+  }
+
+  public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
+    final Context context =
+        getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
+    final Span span = getSpan(context);
+    return span.getContext();
   }
 }

@@ -22,7 +22,9 @@ import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClient
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -32,6 +34,8 @@ import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -93,8 +97,11 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         DECORATE.onRequest(span, request);
         request.getProperties().put(SPAN_ATTRIBUTE, span);
 
-        TRACER.getHttpTextFormat().inject(span.getContext(), request.getHeaders(), SETTER);
-        return new SpanWithScope(span, TRACER.withSpan(span));
+        final Context context = withSpan(span, Context.current());
+        OpenTelemetry.getPropagators()
+            .getHttpTextFormat()
+            .inject(context, request.getHeaders(), SETTER);
+        return new SpanWithScope(span, withScopedContext(context));
       }
       return null;
     }

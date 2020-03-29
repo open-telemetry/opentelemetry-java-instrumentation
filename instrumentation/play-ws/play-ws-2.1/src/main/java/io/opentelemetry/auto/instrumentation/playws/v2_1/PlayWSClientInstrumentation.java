@@ -19,8 +19,11 @@ import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.
 import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.playws.BasePlayWSClientInstrumentation;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -42,7 +45,9 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
-      TRACER.getHttpTextFormat().inject(span.getContext(), request, SETTER);
+
+      final Context context = withSpan(span, Context.current());
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);

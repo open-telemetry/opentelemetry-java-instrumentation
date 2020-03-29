@@ -20,6 +20,8 @@ import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlCon
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -28,6 +30,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
@@ -102,7 +106,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         if (!state.hasSpan() && !state.isFinished()) {
           final Span span = state.start(thiz);
           if (!connected) {
-            TRACER.getHttpTextFormat().inject(span.getContext(), thiz, SETTER);
+            final Context context = withSpan(span, Context.current());
+            OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, thiz, SETTER);
           }
         }
         return state;
@@ -152,7 +157,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
               .spanBuilder(DECORATE.spanNameForRequest(connection))
               .setSpanKind(CLIENT)
               .startSpan();
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, connection);
         return span;
@@ -172,7 +177,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(final Throwable throwable) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = currentContextWith(span)) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
@@ -188,7 +193,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        * (e.g. breaks getOutputStream).
        */
       if (responseCode > 0) {
-        try (final Scope scope = TRACER.withSpan(span)) {
+        try (final Scope scope = currentContextWith(span)) {
           DECORATE.onResponse(span, responseCode);
           DECORATE.beforeFinish(span);
           span.end();

@@ -15,11 +15,13 @@
  */
 package io.opentelemetry.auto.instrumentation.kafkastreams;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsDecorator.CONSUMER_DECORATE;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.KafkaStreamsProcessorInstrumentation.SpanScopeHolder.HOLDER;
 import static io.opentelemetry.auto.instrumentation.kafkastreams.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -32,7 +34,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -105,20 +106,12 @@ public class KafkaStreamsProcessorInstrumentation {
 
         final Span.Builder spanBuilder =
             TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsume(record)).setSpanKind(CONSUMER);
-        final SpanContext extractedContext =
-            TRACER.getHttpTextFormat().extract(record.value.headers(), GETTER);
-        if (extractedContext.isValid()) {
-          spanBuilder.setParent(extractedContext);
-        } else {
-          // explicitly setting "no parent" in case a span was propagated to this thread
-          // by the java-concurrent instrumentation when the thread was started
-          spanBuilder.setNoParent();
-        }
+        spanBuilder.setParent(extract(record.value.headers(), GETTER));
         final Span span = spanBuilder.startSpan();
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
-        holder.setSpanWithScope(new SpanWithScope(span, TRACER.withSpan(span)));
+        holder.setSpanWithScope(new SpanWithScope(span, currentContextWith(span)));
       }
     }
   }
