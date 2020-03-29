@@ -16,8 +16,6 @@
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.derby.jdbc.EmbeddedDataSource
@@ -37,7 +35,6 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -180,9 +177,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     setup:
     Statement statement = connection.createStatement()
     ResultSet resultSet = runUnderTrace("parent") {
-      withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
-        return statement.executeQuery(query)
-      }
+      return statement.executeQuery(query)
     }
 
     expect:
@@ -197,7 +192,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? dbName.toLowerCase() : driver
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -217,22 +211,22 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver   | connection                                                           | username | renameService | query                                           | url
-    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | false         | "SELECT 3"                                      | "h2:mem:"
-    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | false         | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | false         | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | new Driver().connect(jdbcUrls.get("h2"), connectionProps)            | null     | true          | "SELECT 3"                                      | "h2:mem:"
-    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps) | "APP"    | true          | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps)    | "SA"     | true          | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | false         | "SELECT 3"                                      | "h2:mem:"
-    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | false         | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | true          | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | false         | "SELECT 3"                                      | "h2:mem:"
-    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | true          | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | false         | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | true          | "SELECT 3"                                      | "h2:mem:"
-    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | false         | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
-    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | false         | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    driver   | connection                                                           | username | query                                           | url
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | "SELECT 3"                                      | "h2:mem:"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), connectionProps)            | null     | "SELECT 3"                                      | "h2:mem:"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps)    | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | "SELECT 3"                                      | "h2:mem:"
+    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | "SELECT 3"                                      | "h2:mem:"
+    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
+    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | "SELECT 3"                                      | "h2:mem:"
+    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"                | "derby:memory:"
+    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS" | "hsqldb:mem:"
   }
 
   @Unroll
@@ -256,7 +250,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -307,7 +300,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -358,7 +350,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -409,7 +400,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -463,7 +453,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" driver
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -529,7 +518,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" driver
             if (prepareStatement) {
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             } else {
@@ -641,7 +629,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" database
             "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_STATEMENT" query
@@ -704,7 +691,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" dbType
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -722,7 +708,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             spanKind CLIENT
             errored false
             tags {
-              "$MoreTags.SERVICE_NAME" dbType
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" dbName.toLowerCase()

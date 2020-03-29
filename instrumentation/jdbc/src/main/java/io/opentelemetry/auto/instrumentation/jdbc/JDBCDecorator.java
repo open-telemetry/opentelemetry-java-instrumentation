@@ -19,7 +19,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -102,9 +101,6 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
 
     span.setAttribute(Tags.DB_TYPE, "sql");
-    if (dbInfo != null) {
-      span.setAttribute(MoreTags.SERVICE_NAME, dbInfo.getType());
-    }
     return super.onConnection(span, dbInfo);
   }
 

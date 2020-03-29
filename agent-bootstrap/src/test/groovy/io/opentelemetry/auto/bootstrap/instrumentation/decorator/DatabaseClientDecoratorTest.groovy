@@ -15,12 +15,8 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
-import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
-
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
@@ -34,7 +30,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(MoreTags.SERVICE_NAME, serviceName)
     1 * span.setAttribute(Tags.COMPONENT, "test-component")
     1 * span.setAttribute(Tags.DB_TYPE, "test-db")
     0 * _
@@ -48,27 +43,23 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
-      decorator.onConnection(span, session)
-    }
+    decorator.onConnection(span, session)
 
     then:
     if (session) {
       1 * span.setAttribute(Tags.DB_USER, session.user)
       1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
       1 * span.setAttribute(Tags.DB_URL, session.url)
-      if (renameService) {
-        1 * span.setAttribute(MoreTags.SERVICE_NAME, session.instance)
-      }
     }
     0 * _
 
     where:
-    renameService | session
-    false         | null
-    true          | [user: "test-user"]
-    false         | [instance: "test-instance", url: "test:"]
-    true          | [user: "test-user", instance: "test-instance"]
+    session << [
+      null,
+      [user: "test-user"],
+      [instance: "test-instance", url: "test:"],
+      [user: "test-user", instance: "test-instance"]
+    ]
   }
 
   def "test onStatement"() {

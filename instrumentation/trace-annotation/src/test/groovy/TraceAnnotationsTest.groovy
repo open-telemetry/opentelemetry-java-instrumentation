@@ -42,6 +42,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "myattr" "test"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -62,6 +63,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "myattr" "test2"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -70,6 +72,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "myattr" "test"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -78,6 +81,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "myattr" "test"
             "$Tags.COMPONENT" "trace"
           }
         }

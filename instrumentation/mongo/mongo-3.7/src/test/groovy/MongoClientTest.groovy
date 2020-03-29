@@ -20,7 +20,6 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -30,7 +29,6 @@ import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -60,21 +58,18 @@ class MongoClientTest extends MongoBaseTest {
     MongoDatabase db = client.getDatabase(dbName)
 
     when:
-    withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
-      db.createCollection(collectionName)
-    }
+    db.createCollection(collectionName)
 
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}", renameService)
+        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
       }
     }
 
     where:
     dbName = "test_db"
     collectionName = "testCollection"
-    renameService << [false, true]
   }
 
   def "test create collection no description"() {
@@ -87,7 +82,7 @@ class MongoClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}", false, dbName)
+        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}", dbName)
       }
     }
 
@@ -252,7 +247,7 @@ class MongoClientTest extends MongoBaseTest {
     collectionName = "testCollection"
   }
 
-  def mongoSpan(TraceAssert trace, int index, String statement, boolean renameService = false, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
+  def mongoSpan(TraceAssert trace, int index, String statement, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName { it.replace(" ", "") == statement }
       spanKind CLIENT
@@ -262,7 +257,6 @@ class MongoClientTest extends MongoBaseTest {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$MoreTags.SERVICE_NAME" renameService ? instance : "mongo"
         "$Tags.COMPONENT" "java-mongo"
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" "127.0.0.1"

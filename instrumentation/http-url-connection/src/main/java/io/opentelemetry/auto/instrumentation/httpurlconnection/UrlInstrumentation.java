@@ -27,7 +27,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
-import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -96,9 +95,6 @@ public class UrlInstrumentation extends Instrumenter.Default {
           final String host = url.getHost();
           if (host != null && !host.isEmpty()) {
             span.setAttribute(MoreTags.NET_PEER_NAME, host);
-            if (Config.get().isHttpClientSplitByDomain()) {
-              span.setAttribute(MoreTags.SERVICE_NAME, host);
-            }
           }
 
           DECORATE.onError(span, throwable);

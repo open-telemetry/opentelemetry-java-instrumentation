@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -84,17 +82,12 @@ class SpymemcachedTest extends AgentTestRunner {
         memcachedContainer.getMappedPort(defaultMemcachedPort)
       )
     }
-
-    // This setting should have no effect since decorator returns null for the instance.
-    System.setProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
   }
 
   def cleanupSpec() {
     if (memcachedContainer) {
       memcachedContainer.stop()
     }
-
-    System.clearProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE)
   }
 
   ReentrantLock queueLock
@@ -646,7 +639,6 @@ class SpymemcachedTest extends AgentTestRunner {
       errored(error != null && error != "canceled")
 
       tags {
-        "$MoreTags.SERVICE_NAME" CompletionListener.SERVICE_NAME
         "$Tags.COMPONENT" CompletionListener.COMPONENT_NAME
         "$Tags.DB_TYPE" CompletionListener.DB_TYPE
 

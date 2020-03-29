@@ -25,7 +25,6 @@ import com.couchbase.mock.Bucket
 import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -77,9 +76,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
     mock.createBucket(convert(bucketCouchbase))
     mock.createBucket(convert(bucketMemcache))
-
-    // This setting should have no effect since decorator returns null for the instance.
-    System.setProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
   }
 
   private static BucketConfiguration convert(BucketSettings bucketSettings) {
@@ -94,8 +90,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
   def cleanupSpec() {
     mock?.stop()
-
-    System.clearProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE)
   }
 
   protected DefaultCouchbaseEnvironment.Builder envBuilder(BucketSettings bucketSettings) {

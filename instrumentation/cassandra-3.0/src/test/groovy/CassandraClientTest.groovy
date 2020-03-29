@@ -15,7 +15,6 @@
  */
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -24,7 +23,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -60,19 +58,17 @@ class CassandraClientTest extends AgentTestRunner {
     setup:
     Session session = cluster.connect(keyspace)
 
-    withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
-      session.execute(statement)
-    }
+    session.execute(statement)
 
     expect:
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", null, false)
+          cassandraSpan(it, 0, "USE $keyspace", null)
         }
       }
       trace(keyspace ? 1 : 0, 1) {
-        cassandraSpan(it, 0, statement, keyspace, renameService)
+        cassandraSpan(it, 0, statement, keyspace)
       }
     }
 
@@ -80,33 +76,31 @@ class CassandraClientTest extends AgentTestRunner {
     session.close()
 
     where:
-    statement                                                                                         | keyspace    | renameService
-    "DROP KEYSPACE IF EXISTS sync_test"                                                               | null        | false
-    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null        | true
-    "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "sync_test" | false
-    "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "sync_test" | false
-    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "sync_test" | true
+    statement                                                                                         | keyspace
+    "DROP KEYSPACE IF EXISTS sync_test"                                                               | null
+    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
+    "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "sync_test"
+    "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "sync_test"
+    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "sync_test"
   }
 
   def "test async"() {
     setup:
     Session session = cluster.connect(keyspace)
     runUnderTrace("parent") {
-      withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
-        session.executeAsync(statement)
-      }
+      session.executeAsync(statement)
     }
 
     expect:
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", null, false)
+          cassandraSpan(it, 0, "USE $keyspace", null)
         }
       }
       trace(keyspace ? 1 : 0, 2) {
         basicSpan(it, 0, "parent")
-        cassandraSpan(it, 1, statement, keyspace, renameService, span(0))
+        cassandraSpan(it, 1, statement, keyspace, span(0))
       }
     }
 
@@ -114,15 +108,15 @@ class CassandraClientTest extends AgentTestRunner {
     session.close()
 
     where:
-    statement                                                                                          | keyspace     | renameService
-    "DROP KEYSPACE IF EXISTS async_test"                                                               | null         | false
-    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null         | true
-    "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "async_test" | false
-    "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "async_test" | false
-    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "async_test" | true
+    statement                                                                                          | keyspace
+    "DROP KEYSPACE IF EXISTS async_test"                                                               | null
+    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
+    "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "async_test"
+    "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "async_test"
+    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "async_test"
   }
 
-  def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, boolean renameService, Object parentSpan = null, Throwable exception = null) {
+  def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName statement
       spanKind CLIENT
@@ -132,7 +126,6 @@ class CassandraClientTest extends AgentTestRunner {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$MoreTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
         "$Tags.COMPONENT" "java-cassandra"
         "$MoreTags.NET_PEER_NAME" "localhost"
         "$MoreTags.NET_PEER_IP" "127.0.0.1"
