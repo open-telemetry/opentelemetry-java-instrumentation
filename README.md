@@ -73,38 +73,36 @@ The instrumentation agent is enabled using the -javaagent flag to the JVM. Confi
 as Java system properties (-D flags) or as environment variables. This is an example:
 
 ```
-java -javaagent:/path/to/opentelemetry-auto-<version>.jar \
-     -Dota.exporter.jar=exporter-adapters/logging-exporter-adapter/build/libs/logging-exporter-adapter-0.1.2-SNAPSHOT.jar \
-     -Dota.jaeger.host=localhost \
-     -Dota.jaeger.port=14250 \
-     -Dota.service=shopping \
+java -javaagent:path/to/opentelemetry-auto-<version>.jar \
+     -Dota.exporter.jar=path/to/opentelemetry-auto-exporters-jaeger-<version>.jar \
+     -Dota.exporter.jaeger.endpoint=localhost:14250 \
+     -Dota.exporter.jaeger.service.name=shopping \
      -jar myapp.jar
 ```
 
 ### Configuration parameters (subject to change!)
-System property | Environment variable | Purpose
---- | --- | ---
-ota.exporter.jar | OTA_EXPORTER_JAR | The path to an exporter JAR
-ota.service | OTA_SERVICE | The service name of this JVM instance. This is used as a label in Jaeger to distinguish between JVM instances in a multi-service environment.
+| System property  | Environment variable | Purpose                                           |
+|------------------|----------------------|---------------------------------------------------|
+| ota.exporter.jar | OTA_EXPORTER_JAR     | Path to the exporter fat-jar that you want to use |
 
 ### Available exporters
 Currently two exporters are available and bundled with this project. They area available under the ```exporter-adapters``` directory. 
+
+#### Jaeger exporter
+A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently only supports gRPC as its communications protocol.
+
+| System property                  | Environment variable             | Purpose                                                              |
+|----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter.jaeger.host         | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
+| ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
 
 #### Logging Exporter
 The logging exporter simply prints the name of the span along with its attributes to stdout. It is used manly
 for testing and debugging. It takes a single configuration parameter.
 
-System property | Environment variable | Purpose
---- | --- | ---
-ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | A string that is printed in front of the span name and attributes.
-
-#### Jaeger exporter
-A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently only supports gRPC as its communications protocol.
-
-System property | Environment variable | Purpose
---- | --- | ---
-ota.exporter.jaeger.host | OTA_EXPORTER_JAEGER_HOST | The Jaeger host to connect to. Currently only gRPC is supported.
-ota.exporter.jaeger.port | OTA_EXPORTER_JAEGER_PORT | The port to connect to on the Jaeger host. Currently only gRPC is supported
+| System property             | Environment variable        | Purpose                                                            |
+|-----------------------------|-----------------------------|--------------------------------------------------------------------|
+| ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | A string that is printed in front of the span name and attributes. |
 
 These parameter names are very likely to change over time, so please check back here when trying out a new version!
 

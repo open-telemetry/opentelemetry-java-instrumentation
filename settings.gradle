@@ -138,9 +138,9 @@ include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
 
 // exporter adapters
-include ":exporter-adapters"
-include ":exporter-adapters:logging-exporter-adapter"
-include ":exporter-adapters:jaeger-adapter"
+include ":auto-exporters"
+include ":auto-exporters:jaeger"
+include ":auto-exporters:logging"
 
 // benchmark
 include ':benchmark'
@@ -160,3 +160,5 @@ setBuildFile(rootProject)
 project(':agent-bootstrap').name = 'auto-bootstrap'
 project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
+project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporters-jaeger'
+project(':auto-exporters:logging').name = 'opentelemetry-auto-exporters-logging'
