@@ -1,1 +1,1 @@
-io.opentelemetry.auto.exporters.loggingexporter.LoggingExporterFactory
+io.opentelemetry.auto.exporters.logging.LoggingExporterFactory
