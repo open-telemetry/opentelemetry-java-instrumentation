@@ -96,7 +96,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -199,7 +198,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -313,7 +311,6 @@ class AwsClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port

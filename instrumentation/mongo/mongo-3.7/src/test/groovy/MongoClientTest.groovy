@@ -271,7 +271,7 @@ class MongoClientTest extends MongoBaseTest {
           it.replace(" ", "") == statement
         }
         "$Tags.DB_TYPE" "mongo"
-        "$Tags.DB_URL" "mongodb://localhost:"+port
+        "$Tags.DB_URL" "mongodb://localhost:" + port
         "$Tags.DB_INSTANCE" instance
       }
     }

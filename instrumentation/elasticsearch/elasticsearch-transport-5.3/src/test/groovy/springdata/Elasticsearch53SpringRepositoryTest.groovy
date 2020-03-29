@@ -15,7 +15,6 @@
  */
 package springdata
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -93,7 +92,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
@@ -131,7 +129,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -150,7 +147,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(1)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -162,7 +158,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -195,7 +190,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -232,7 +226,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
@@ -251,7 +244,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -276,7 +268,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -312,7 +303,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "DeleteAction"
@@ -330,7 +320,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
@@ -356,7 +345,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"

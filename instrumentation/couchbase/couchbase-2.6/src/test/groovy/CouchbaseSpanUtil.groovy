@@ -34,7 +34,6 @@ class CouchbaseSpanUtil {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$MoreTags.SERVICE_NAME" "couchbase"
         "$Tags.COMPONENT" "couchbase-client"
 
         // Because of caching, not all requests hit the server so these tags may be absent

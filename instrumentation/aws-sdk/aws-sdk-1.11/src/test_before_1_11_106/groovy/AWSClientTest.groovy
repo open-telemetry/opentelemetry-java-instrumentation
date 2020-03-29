@@ -118,7 +118,6 @@ class AWSClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "$method"
@@ -188,7 +187,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
@@ -248,7 +246,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD" "GET"
@@ -292,7 +289,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "GET"

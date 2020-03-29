@@ -26,7 +26,6 @@ import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
 import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -132,7 +131,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         childOf((SpanData) parentSpan)
       }
       tags {
-        "$MoreTags.SERVICE_NAME" "couchbase"
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.DB_TYPE" "couchbase"
         if (bucketName != null) {

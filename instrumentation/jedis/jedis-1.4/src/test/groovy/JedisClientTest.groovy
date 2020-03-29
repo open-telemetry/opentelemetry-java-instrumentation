@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -70,7 +69,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -94,7 +92,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -106,7 +103,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "GET"
@@ -130,7 +126,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -142,7 +137,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "RANDOMKEY"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "RANDOMKEY"
