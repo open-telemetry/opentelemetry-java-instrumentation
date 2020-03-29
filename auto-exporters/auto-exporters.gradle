@@ -1,0 +1,19 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  testCompile project(':auto-tooling')
+
+  testCompile project(':auto-exporters:opentelemetry-auto-exporters-jaeger')
+  testCompile project(':auto-exporters:opentelemetry-auto-exporters-logging')
+}
+
+tasks.withType(Test).configureEach() {
+  dependsOn ':auto-exporters:opentelemetry-auto-exporters-jaeger:shadowJar'
+  dependsOn ':auto-exporters:opentelemetry-auto-exporters-logging:shadowJar'
+  doFirst {
+    systemProperty 'projectVersion', allprojects.version[0]
+    systemProperty 'adapterRoot', "${rootDir}/auto-exporters"
+    systemProperty 'jaegerExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-jaeger').tasks.shadowJar.archivePath
+    systemProperty 'loggingExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-logging').tasks.shadowJar.archivePath
+  }
+}
