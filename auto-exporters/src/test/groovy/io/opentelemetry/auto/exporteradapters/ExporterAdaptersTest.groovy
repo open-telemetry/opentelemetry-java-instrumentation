@@ -66,6 +66,6 @@ class ExporterAdaptersTest extends Specification {
     where:
     exporter           | classname
     jaegerExporterJar  | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
-    loggingExporterJar | 'io.opentelemetry.auto.exporters.loggingexporter.LoggingExporterFactory'
+    loggingExporterJar | 'io.opentelemetry.auto.exporters.logging.LoggingExporterFactory'
   }
 }
