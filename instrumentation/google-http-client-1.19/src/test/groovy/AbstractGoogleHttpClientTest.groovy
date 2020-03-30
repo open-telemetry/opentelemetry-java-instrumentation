@@ -19,7 +19,6 @@ import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.googlehttpclient.GoogleHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
 
@@ -51,11 +50,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
   abstract HttpResponse executeRequest(HttpRequest request)
 
   @Override
-  String component() {
-    return GoogleHttpClientDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean testCircularRedirects() {
     // Circular redirects don't throw an exception with Google Http Client
     return false
@@ -76,7 +70,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "google-http-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "${uri}"

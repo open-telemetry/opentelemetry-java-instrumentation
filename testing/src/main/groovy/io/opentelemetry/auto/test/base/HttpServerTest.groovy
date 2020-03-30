@@ -61,9 +61,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     return new URI("http://localhost:$port/")
   }
 
-  @Shared
-  String component = component()
-
   def setupSpec() {
     server = startServer(port)
     println getClass().name + " http server started at: http://localhost:$port/"
@@ -82,8 +79,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   abstract void stopServer(SERVER server)
-
-  abstract String component()
 
   String expectedOperationName(String method) {
     return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
@@ -418,7 +413,6 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_PORT" Long
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

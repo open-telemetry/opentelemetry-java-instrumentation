@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequest
@@ -27,11 +26,6 @@ import spock.lang.Shared
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest {
   @Shared
   def client = new DefaultHttpClient()
-
-  @Override
-  String component() {
-    return ApacheHttpClientDecorator.DECORATE.getComponentName()
-  }
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {

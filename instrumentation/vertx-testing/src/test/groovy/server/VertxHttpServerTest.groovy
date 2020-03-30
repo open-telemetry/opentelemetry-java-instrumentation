@@ -15,7 +15,6 @@
  */
 package server
 
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
@@ -64,11 +63,6 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> {
   @Override
   void stopServer(Vertx server) {
     server.close()
-  }
-
-  @Override
-  String component() {
-    return NettyHttpServerDecorator.DECORATE.getComponentName()
   }
 
   @Override

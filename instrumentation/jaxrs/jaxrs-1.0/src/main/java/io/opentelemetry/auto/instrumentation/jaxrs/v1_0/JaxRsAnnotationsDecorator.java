@@ -20,7 +20,6 @@ import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -62,8 +61,6 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (span == null) {
       return;
     }
-    span.setAttribute(Tags.COMPONENT, "jax-rs");
-
     if (!resourceName.isEmpty()) {
       span.updateName(resourceName);
     }

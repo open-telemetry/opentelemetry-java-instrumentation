@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
@@ -55,11 +53,6 @@ class Netty40ClientTest extends HttpClientTest {
   }
 
   @Override
-  String component() {
-    return NettyHttpClientDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }
@@ -96,7 +89,6 @@ class Netty40ClientTest extends HttpClientTest {
             childOf span(0)
             errored true
             tags {
-              "$Tags.COMPONENT" "netty"
               Class errorClass = ConnectException
               try {
                 errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

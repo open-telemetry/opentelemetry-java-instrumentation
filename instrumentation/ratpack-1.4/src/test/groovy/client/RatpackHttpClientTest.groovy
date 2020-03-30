@@ -15,7 +15,6 @@
  */
 package client
 
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import ratpack.exec.ExecResult
 import ratpack.http.client.HttpClient
@@ -49,11 +48,6 @@ class RatpackHttpClientTest extends HttpClientTest {
       }
     }
     return result.value
-  }
-
-  @Override
-  String component() {
-    return NettyHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

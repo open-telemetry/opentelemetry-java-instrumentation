@@ -17,8 +17,6 @@ package server
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator
-import io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -75,11 +73,6 @@ class PlayServerTest extends HttpServerTest<Server> {
   }
 
   @Override
-  String component() {
-    return NettyHttpServerDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }
@@ -97,7 +90,6 @@ class PlayServerTest extends HttpServerTest<Server> {
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.getComponentName()
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String

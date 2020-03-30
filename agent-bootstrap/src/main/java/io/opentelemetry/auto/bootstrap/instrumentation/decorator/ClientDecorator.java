@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 
 public abstract class ClientDecorator extends BaseDecorator {
@@ -25,7 +24,6 @@ public abstract class ClientDecorator extends BaseDecorator {
   @Override
   public Span afterStart(final Span span) {
     assert span != null;
-    span.setAttribute(MoreTags.SERVICE_NAME, service());
     return super.afterStart(span);
   }
 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 
 class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
@@ -36,11 +35,6 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
     } finally {
       connection.disconnect()
     }
-  }
-
-  @Override
-  String component() {
-    return HttpUrlConnectionDecorator.DECORATE.getComponentName()
   }
 
   @Override

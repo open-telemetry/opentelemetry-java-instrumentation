@@ -102,9 +102,6 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       final String hostname = hostname(request);
       span.setAttribute(MoreTags.NET_PEER_NAME, hostname);
 
-      if (Config.get().isHttpClientSplitByDomain()) {
-        span.setAttribute(MoreTags.SERVICE_NAME, hostname);
-      }
       final Integer port = port(request);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {

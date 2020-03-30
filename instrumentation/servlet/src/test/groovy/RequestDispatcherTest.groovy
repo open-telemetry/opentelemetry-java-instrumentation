@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.Span
 
@@ -66,7 +65,6 @@ class RequestDispatcherTest extends AgentTestRunner {
           childOf span(0)
           tags {
             "dispatcher.target" target
-            "$Tags.COMPONENT" "java-web-servlet-dispatcher"
           }
         }
         basicSpan(it, 2, "$operation-child", span(1))
@@ -114,7 +112,6 @@ class RequestDispatcherTest extends AgentTestRunner {
           errored true
           tags {
             "dispatcher.target" target
-            "$Tags.COMPONENT" "java-web-servlet-dispatcher"
             errorTags(ex.class, ex.message)
           }
         }

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.bootstrap.WeakMap
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -46,7 +45,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         span(0) {
           operationName "POST /a"
           tags {
-            "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
       }
@@ -67,14 +65,12 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           operationName name
           parent()
           tags {
-            "$Tags.COMPONENT" "jax-rs"
           }
         }
         span(1) {
           operationName "${className}.call"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
       }

@@ -15,13 +15,10 @@
  */
 import io.opentelemetry.auto.bootstrap.AgentClassLoader
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.httpurlconnection.UrlInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -30,14 +27,12 @@ class UrlConnectionTest extends AgentTestRunner {
 
   def "trace request with connection failure #scheme"() {
     when:
-    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      runUnderTrace("someTrace") {
-        URLConnection connection = url.openConnection()
-        connection.setConnectTimeout(10000)
-        connection.setReadTimeout(10000)
-        assert TEST_TRACER.getCurrentSpan() != null
-        connection.inputStream
-      }
+    runUnderTrace("someTrace") {
+      URLConnection connection = url.openConnection()
+      connection.setConnectTimeout(10000)
+      connection.setReadTimeout(10000)
+      assert TEST_TRACER.getCurrentSpan() != null
+      connection.inputStream
     }
 
     then:
@@ -60,8 +55,6 @@ class UrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "$url/"
@@ -73,9 +66,7 @@ class UrlConnectionTest extends AgentTestRunner {
     }
 
     where:
-    scheme  | renameService
-    "http"  | true
-    "https" | false
+    scheme << ["http", "https"]
 
     url = new URI("$scheme://localhost:$UNUSABLE_PORT").toURL()
   }
@@ -85,10 +76,8 @@ class UrlConnectionTest extends AgentTestRunner {
     def url = new URI("file:/some-random-file%abc").toURL()
 
     when:
-    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      runUnderTrace("someTrace") {
-        url.openConnection()
-      }
+    runUnderTrace("someTrace") {
+      url.openConnection()
     }
 
     then:
@@ -111,7 +100,6 @@ class UrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" UrlInstrumentation.COMPONENT
             "$MoreTags.NET_PEER_PORT" 80
             // FIXME: These tags really make no sense for non-http connections, why do we set them?
             "$Tags.HTTP_URL" "$url"
@@ -120,9 +108,6 @@ class UrlConnectionTest extends AgentTestRunner {
         }
       }
     }
-
-    where:
-    renameService << [false, true]
   }
 
   def "AgentClassloader ClassNotFoundException doesn't create span"() {

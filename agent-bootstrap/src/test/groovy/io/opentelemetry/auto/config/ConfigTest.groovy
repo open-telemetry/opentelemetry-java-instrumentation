@@ -21,9 +21,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
 import static io.opentelemetry.auto.config.Config.CONFIGURATION_FILE
-import static io.opentelemetry.auto.config.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static io.opentelemetry.auto.config.Config.HTTP_CLIENT_ERROR_STATUSES
-import static io.opentelemetry.auto.config.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
 import static io.opentelemetry.auto.config.Config.HTTP_SERVER_ERROR_STATUSES
 import static io.opentelemetry.auto.config.Config.PREFIX
 import static io.opentelemetry.auto.config.Config.RUNTIME_CONTEXT_FIELD_INJECTION
@@ -47,8 +45,6 @@ class ConfigTest extends AgentSpecification {
     config.traceEnabled == true
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..599).toSet()
-    config.httpClientSplitByDomain == false
-    config.dbClientSplitByInstance == false
     config.runtimeContextFieldInjection == true
     config.toString().contains("traceEnabled=true")
 
@@ -67,8 +63,6 @@ class ConfigTest extends AgentSpecification {
     prop.setProperty(TRACE_METHODS, "mypackage.MyClass[myMethod]")
     prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
-    prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
-    prop.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
 
     when:
@@ -79,8 +73,6 @@ class ConfigTest extends AgentSpecification {
     config.traceMethods == "mypackage.MyClass[myMethod]"
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
-    config.httpClientSplitByDomain == true
-    config.dbClientSplitByInstance == true
     config.runtimeContextFieldInjection == false
   }
 
@@ -90,8 +82,6 @@ class ConfigTest extends AgentSpecification {
     System.setProperty(PREFIX + TRACE_METHODS, "mypackage.MyClass[myMethod]")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
-    System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
-    System.setProperty(PREFIX + DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
 
     when:
@@ -102,8 +92,6 @@ class ConfigTest extends AgentSpecification {
     config.traceMethods == "mypackage.MyClass[myMethod]"
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
-    config.httpClientSplitByDomain == true
-    config.dbClientSplitByInstance == true
     config.runtimeContextFieldInjection == false
   }
 
@@ -139,8 +127,6 @@ class ConfigTest extends AgentSpecification {
     System.setProperty(PREFIX + TRACE_METHODS, " ")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
-    System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
-    System.setProperty(PREFIX + DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "invalid")
 
     when:
     def config = new Config()
@@ -150,8 +136,6 @@ class ConfigTest extends AgentSpecification {
     config.traceMethods == " "
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..599).toSet()
-    config.httpClientSplitByDomain == false
-    config.dbClientSplitByInstance == false
   }
 
   def "sys props override properties"() {
@@ -161,8 +145,6 @@ class ConfigTest extends AgentSpecification {
     properties.setProperty(TRACE_METHODS, "mypackage.MyClass[myMethod]")
     properties.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
-    properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
-    properties.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
 
     when:
     def config = Config.get(properties)
@@ -172,8 +154,6 @@ class ConfigTest extends AgentSpecification {
     config.traceMethods == "mypackage.MyClass[myMethod]"
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
-    config.httpClientSplitByDomain == true
-    config.dbClientSplitByInstance == true
   }
 
   def "override null properties"() {

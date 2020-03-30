@@ -34,7 +34,6 @@ import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -88,7 +87,6 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("clazz") final Class clazz) {
 
       final Span parent = TRACER.getCurrentSpan();
-      parent.setAttribute(Tags.COMPONENT, "finatra");
       parent.updateName(routeInfo.path());
 
       final Span span = TRACER.spanBuilder(DECORATE.spanNameForClass(clazz)).startSpan();

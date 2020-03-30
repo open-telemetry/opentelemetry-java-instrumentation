@@ -26,7 +26,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.netty.channel.ChannelFuture;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -107,7 +106,6 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
       final Span errorSpan =
           NettyHttpServerDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-      errorSpan.setAttribute(Tags.COMPONENT, "netty");
       try (final Scope scope = currentContextWith(errorSpan)) {
         NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
         NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);

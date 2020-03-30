@@ -109,7 +109,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$forwardFromFileName"
@@ -125,7 +124,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /$forwardFromFileName"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -136,7 +134,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /$forwardFromFileName"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspForwardFromClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -147,7 +144,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /$forwardDestFileName"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardDestClassPrefix$jspForwardDestClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -158,7 +154,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /$forwardDestFileName"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspForwardDestClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/$forwardFromFileName"
@@ -195,7 +190,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToHtml.jsp"
@@ -211,7 +205,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /forwards/forwardToHtml.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -222,7 +215,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /forwards/forwardToHtml.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -253,7 +245,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
@@ -269,7 +260,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /forwards/forwardToIncludeMulti.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -280,7 +270,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /forwards/forwardToIncludeMulti.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToIncludeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -291,7 +280,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /includes/includeMulti.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -302,7 +290,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /includes/includeMulti.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
@@ -314,7 +301,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -325,7 +311,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
@@ -337,7 +322,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -348,7 +332,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
@@ -380,7 +363,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToJspForward.jsp"
@@ -396,7 +378,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /forwards/forwardToJspForward.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -407,7 +388,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /forwards/forwardToJspForward.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToJspForward_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -418,7 +398,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /forwards/forwardToSimpleJava.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -429,7 +408,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /forwards/forwardToSimpleJava.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToSimpleJava_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
@@ -441,7 +419,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /common/loop.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.loop_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -452,7 +429,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /common/loop.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "loop_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
@@ -484,7 +460,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToCompileError.jsp"
@@ -501,7 +476,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /forwards/forwardToCompileError.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -512,7 +486,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /forwards/forwardToCompileError.jsp"
           errored true
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToCompileError_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -524,7 +497,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /compileError.jsp"
           errored true
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.compileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -556,7 +528,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/forwards/forwardToNonExistent.jsp"
@@ -572,7 +543,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Compile /forwards/forwardToNonExistent.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToNonExistent_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -583,7 +553,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           operationName "Render /forwards/forwardToNonExistent.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "forwardToNonExistent_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
