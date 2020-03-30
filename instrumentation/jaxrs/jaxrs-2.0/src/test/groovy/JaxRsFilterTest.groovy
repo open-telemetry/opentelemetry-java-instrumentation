@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.dropwizard.testing.junit.ResourceTestRule
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.jboss.resteasy.core.Dispatcher
 import org.jboss.resteasy.mock.MockDispatcherFactory
@@ -74,14 +73,12 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
         span(0) {
           operationName parentResourceName != null ? parentResourceName : "test.span"
           tags {
-            "$Tags.COMPONENT" "jax-rs"
           }
         }
         span(1) {
           childOf span(0)
           operationName controllerName
           tags {
-            "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
       }

@@ -29,7 +29,6 @@ import io.dropwizard.views.View;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -84,7 +83,6 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
         return null;
       }
       final Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
-      span.setAttribute(Tags.COMPONENT, "dropwizard-view");
       span.setAttribute("span.origin.type", obj.getClass().getSimpleName());
       return new SpanWithScope(span, currentContextWith(span));
     }

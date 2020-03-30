@@ -15,7 +15,6 @@
  */
 package client
 
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.core.VertxOptions
@@ -63,11 +62,6 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest {
       }
     })
     return future.get()
-  }
-
-  @Override
-  String component() {
-    return NettyHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

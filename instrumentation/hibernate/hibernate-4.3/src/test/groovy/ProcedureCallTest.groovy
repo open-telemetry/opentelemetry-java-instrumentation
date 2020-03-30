@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.hibernate.Session
@@ -87,8 +86,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "hibernate"
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -96,8 +93,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "hibernate"
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
@@ -105,8 +100,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(1)
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -120,8 +113,6 @@ class ProcedureCallTest extends AgentTestRunner {
           operationName "Transaction.commit"
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "hibernate"
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
       }
@@ -154,8 +145,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "hibernate"
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -164,8 +153,6 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(0)
           errored(true)
           tags {
-            "$MoreTags.SERVICE_NAME" "hibernate"
-            "$Tags.COMPONENT" "java-hibernate"
             errorTags(SQLGrammarException, "could not prepare statement")
           }
         }
@@ -174,8 +161,6 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "hibernate"
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
       }

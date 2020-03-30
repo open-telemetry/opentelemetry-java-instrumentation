@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.okhttp.OkHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -36,11 +35,6 @@ class OkHttp3Test extends HttpClientTest {
     def response = client.newCall(request).execute()
     callback?.call()
     return response.code()
-  }
-
-  @Override
-  String component() {
-    return OkHttpClientDecorator.DECORATE.getComponentName()
   }
 
   boolean testRedirects() {

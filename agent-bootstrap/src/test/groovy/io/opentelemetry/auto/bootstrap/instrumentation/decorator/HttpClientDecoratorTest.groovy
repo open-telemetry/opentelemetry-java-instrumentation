@@ -36,9 +36,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      decorator.onRequest(span, req)
-    }
+    decorator.onRequest(span, req)
 
     then:
     if (req) {
@@ -46,18 +44,14 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
       1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.host)
       1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.port)
-      if (renameService) {
-        1 * span.setAttribute(MoreTags.SERVICE_NAME, req.host)
-      }
     }
     0 * _
 
     where:
-    renameService | req
-    false         | null
-    true          | null
-    false         | [method: "test-method", url: testUrl, host: "test-host", port: 555]
-    true          | [method: "test-method", url: testUrl, host: "test-host", port: 555]
+    req << [
+      null,
+      [method: "test-method", url: testUrl, host: "test-host", port: 555]
+    ]
   }
 
   def "test url handling for #url"() {
@@ -188,4 +182,5 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       }
     }
   }
+
 }

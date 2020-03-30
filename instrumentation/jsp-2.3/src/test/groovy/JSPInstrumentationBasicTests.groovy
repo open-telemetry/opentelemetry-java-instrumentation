@@ -110,7 +110,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
@@ -126,7 +125,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /$jspFileName"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -137,7 +135,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /$jspFileName"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -175,7 +172,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
@@ -191,7 +187,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /getQuery.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -202,7 +197,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /getQuery.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -237,7 +231,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/post.jsp"
@@ -253,7 +246,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /post.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -264,7 +256,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /post.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -296,7 +287,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
@@ -319,7 +309,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /$jspFileName"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -330,7 +319,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /$jspFileName"
           errored true
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -374,7 +362,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
@@ -390,7 +377,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /includes/includeHtml.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -401,7 +387,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /includes/includeHtml.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -432,7 +417,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
@@ -448,7 +432,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /includes/includeMulti.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -459,7 +442,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /includes/includeMulti.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -470,7 +452,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -481,7 +462,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -492,7 +472,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -503,7 +482,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -534,7 +512,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
@@ -551,7 +528,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Compile /$jspFileName"
           errored true
           tags {
-            "$Tags.COMPONENT" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -592,7 +568,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           // resourceName "GET /$jspWebappContext/$staticFile"
           errored false
           tags {
-            "$Tags.COMPONENT" "java-web-servlet"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$staticFile"

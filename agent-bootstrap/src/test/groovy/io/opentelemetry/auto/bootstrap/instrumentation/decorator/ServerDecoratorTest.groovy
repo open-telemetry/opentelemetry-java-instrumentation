@@ -16,7 +16,6 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
 
 class ServerDecoratorTest extends BaseDecoratorTest {
@@ -29,7 +28,6 @@ class ServerDecoratorTest extends BaseDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(Tags.COMPONENT, "test-component")
     0 * _
   }
 

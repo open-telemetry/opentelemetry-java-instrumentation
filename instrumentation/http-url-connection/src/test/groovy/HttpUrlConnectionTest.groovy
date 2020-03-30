@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Ignore
 import spock.lang.Requires
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -52,11 +49,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
   }
 
   @Override
-  String component() {
-    return HttpUrlConnectionDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean testCircularRedirects() {
     false
   }
@@ -65,28 +57,26 @@ class HttpUrlConnectionTest extends HttpClientTest {
   def "trace request with propagation (useCaches: #useCaches)"() {
     setup:
     def url = server.address.resolve("/success").toURL()
-    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      runUnderTrace("someTrace") {
-        HttpURLConnection connection = url.openConnection()
-        connection.useCaches = useCaches
-        assert activeSpan() != null
-        def stream = connection.inputStream
-        def lines = stream.readLines()
-        stream.close()
-        assert connection.getResponseCode() == STATUS
-        assert lines == [RESPONSE]
+    runUnderTrace("someTrace") {
+      HttpURLConnection connection = url.openConnection()
+      connection.useCaches = useCaches
+      assert activeSpan() != null
+      def stream = connection.inputStream
+      def lines = stream.readLines()
+      stream.close()
+      assert connection.getResponseCode() == STATUS
+      assert lines == [RESPONSE]
 
-        // call again to ensure the cycling is ok
-        connection = url.openConnection()
-        connection.useCaches = useCaches
-        assert activeSpan() != null
-        assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
-        connection.inputStream
-        stream = connection.inputStream // one more to ensure state is working
-        lines = stream.readLines()
-        stream.close()
-        assert lines == [RESPONSE]
-      }
+      // call again to ensure the cycling is ok
+      connection = url.openConnection()
+      connection.useCaches = useCaches
+      assert activeSpan() != null
+      assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
+      connection.inputStream
+      stream = connection.inputStream // one more to ensure state is working
+      lines = stream.readLines()
+      stream.close()
+      assert lines == [RESPONSE]
     }
 
     expect:
@@ -107,8 +97,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -122,8 +110,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -136,37 +122,34 @@ class HttpUrlConnectionTest extends HttpClientTest {
 
     where:
     useCaches << [false, true]
-    renameService << [true, false]
   }
 
   @Ignore
   def "trace request without propagation (useCaches: #useCaches)"() {
     setup:
     def url = server.address.resolve("/success").toURL()
-    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      runUnderTrace("someTrace") {
-        HttpURLConnection connection = url.openConnection()
-        connection.useCaches = useCaches
-        connection.addRequestProperty("is-test-server", "false")
-        assert activeSpan() != null
-        def stream = connection.inputStream
-        connection.inputStream // one more to ensure state is working
-        def lines = stream.readLines()
-        stream.close()
-        assert connection.getResponseCode() == STATUS
-        assert lines == [RESPONSE]
+    runUnderTrace("someTrace") {
+      HttpURLConnection connection = url.openConnection()
+      connection.useCaches = useCaches
+      connection.addRequestProperty("is-test-server", "false")
+      assert activeSpan() != null
+      def stream = connection.inputStream
+      connection.inputStream // one more to ensure state is working
+      def lines = stream.readLines()
+      stream.close()
+      assert connection.getResponseCode() == STATUS
+      assert lines == [RESPONSE]
 
-        // call again to ensure the cycling is ok
-        connection = url.openConnection()
-        connection.useCaches = useCaches
-        connection.addRequestProperty("is-test-server", "false")
-        assert activeSpan() != null
-        assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
-        stream = connection.inputStream
-        lines = stream.readLines()
-        stream.close()
-        assert lines == [RESPONSE]
-      }
+      // call again to ensure the cycling is ok
+      connection = url.openConnection()
+      connection.useCaches = useCaches
+      connection.addRequestProperty("is-test-server", "false")
+      assert activeSpan() != null
+      assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
+      stream = connection.inputStream
+      lines = stream.readLines()
+      stream.close()
+      assert lines == [RESPONSE]
     }
 
     expect:
@@ -185,8 +168,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -200,8 +181,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -214,22 +193,19 @@ class HttpUrlConnectionTest extends HttpClientTest {
 
     where:
     useCaches << [false, true]
-    renameService << [false, true]
   }
 
   @Ignore
   def "test broken API usage"() {
     setup:
     def url = server.address.resolve("/success").toURL()
-    HttpURLConnection conn = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      runUnderTrace("someTrace") {
-        HttpURLConnection connection = url.openConnection()
-        connection.setRequestProperty("Connection", "close")
-        connection.addRequestProperty("is-test-server", "false")
-        assert activeSpan() != null
-        assert connection.getResponseCode() == STATUS
-        return connection
-      }
+    runUnderTrace("someTrace") {
+      HttpURLConnection connection = url.openConnection()
+      connection.setRequestProperty("Connection", "close")
+      connection.addRequestProperty("is-test-server", "false")
+      assert activeSpan() != null
+      assert connection.getResponseCode() == STATUS
+      return connection
     }
 
     expect:
@@ -248,8 +224,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -265,34 +239,31 @@ class HttpUrlConnectionTest extends HttpClientTest {
 
     where:
     iteration << (1..10)
-    renameService = (iteration % 2 == 0) // alternate even/odd
   }
 
   @Ignore
   def "test post request"() {
     setup:
     def url = server.address.resolve("/success").toURL()
-    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      runUnderTrace("someTrace") {
-        HttpURLConnection connection = url.openConnection()
-        connection.setRequestMethod("POST")
+    runUnderTrace("someTrace") {
+      HttpURLConnection connection = url.openConnection()
+      connection.setRequestMethod("POST")
 
-        String urlParameters = "q=ASDF&w=&e=&r=12345&t="
+      String urlParameters = "q=ASDF&w=&e=&r=12345&t="
 
-        // Send post request
-        connection.setDoOutput(true)
-        DataOutputStream wr = new DataOutputStream(connection.getOutputStream())
-        wr.writeBytes(urlParameters)
-        wr.flush()
-        wr.close()
+      // Send post request
+      connection.setDoOutput(true)
+      DataOutputStream wr = new DataOutputStream(connection.getOutputStream())
+      wr.writeBytes(urlParameters)
+      wr.flush()
+      wr.close()
 
-        assert connection.getResponseCode() == STATUS
+      assert connection.getResponseCode() == STATUS
 
-        def stream = connection.inputStream
-        def lines = stream.readLines()
-        stream.close()
-        assert lines == [RESPONSE]
-      }
+      def stream = connection.inputStream
+      def lines = stream.readLines()
+      stream.close()
+      assert lines == [RESPONSE]
     }
 
     expect:
@@ -312,8 +283,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -323,9 +292,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
         }
       }
     }
-
-    where:
-    renameService << [false, true]
   }
 
   // This test makes no sense on IBM JVM because there is no HttpsURLConnectionImpl class there

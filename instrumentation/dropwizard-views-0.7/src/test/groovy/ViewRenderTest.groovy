@@ -16,7 +16,6 @@
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 
 import java.nio.charset.StandardCharsets
@@ -44,7 +43,6 @@ class ViewRenderTest extends AgentTestRunner {
           operationName "Render $template"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "dropwizard-view"
             "span.origin.type" renderer.class.simpleName
           }
         }

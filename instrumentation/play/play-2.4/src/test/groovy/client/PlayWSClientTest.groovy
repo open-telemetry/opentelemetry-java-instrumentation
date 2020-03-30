@@ -15,7 +15,6 @@
  */
 package client
 
-import io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import play.libs.ws.WS
 import spock.lang.AutoCleanup
@@ -44,11 +43,6 @@ class PlayWSClientTest extends HttpClientTest {
       it.status
     }
     return status.toCompletableFuture().get()
-  }
-
-  @Override
-  String component() {
-    return NettyHttpClientDecorator.DECORATE.getComponentName()
   }
 
   @Override
