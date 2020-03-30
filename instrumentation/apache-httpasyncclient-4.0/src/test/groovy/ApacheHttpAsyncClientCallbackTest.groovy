@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.http.HttpResponse
 import org.apache.http.concurrent.FutureCallback
@@ -63,11 +62,6 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {
     })
 
     return responseFuture.get()
-  }
-
-  @Override
-  String component() {
-    return ApacheHttpAsyncClientDecorator.DECORATE.getComponentName()
   }
 
   @Override

@@ -106,7 +106,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -130,7 +129,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -162,7 +160,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -192,7 +189,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -212,7 +208,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
             "db.command.results.count" 157
           }
@@ -233,7 +228,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
             "db.command.cancelled" true
             "db.command.results.count" 2
@@ -267,7 +261,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -287,7 +280,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }

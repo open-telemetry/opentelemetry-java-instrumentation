@@ -20,8 +20,6 @@ import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
 
@@ -53,11 +51,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
   }
 
   @Override
-  String component() {
-    return AkkaHttpClientDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }
@@ -77,7 +70,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "akka-http-client"
             errorTags(NullPointerException)
           }
         }

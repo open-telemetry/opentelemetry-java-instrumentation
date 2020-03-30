@@ -43,8 +43,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class UrlInstrumentation extends Instrumenter.Default {
 
-  public static final String COMPONENT = "UrlConnection";
-
   public UrlInstrumentation() {
     super("urlconnection", "httpurlconnection");
   }
@@ -87,7 +85,6 @@ public class UrlInstrumentation extends Instrumenter.Default {
         protocol = protocol != null ? protocol : "url";
 
         final Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
-        span.setAttribute(Tags.COMPONENT, COMPONENT);
 
         try (final Scope scope = currentContextWith(span)) {
           span.setAttribute(Tags.HTTP_URL, url.toString());

@@ -30,7 +30,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(Tags.COMPONENT, "test-component")
     1 * span.setAttribute(Tags.DB_TYPE, "test-db")
     0 * _
 

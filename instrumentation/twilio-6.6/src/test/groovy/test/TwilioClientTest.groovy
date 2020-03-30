@@ -154,7 +154,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -199,7 +198,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
             "twilio.account" "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.sid" "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -266,7 +264,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -278,7 +275,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -361,7 +357,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -373,7 +368,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -385,7 +379,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -476,7 +469,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -488,7 +480,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -500,7 +491,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -512,7 +502,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" String
             "$Tags.HTTP_URL" String
             "$Tags.HTTP_METHOD" String
@@ -567,7 +556,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             errorTags(ApiException, "Testing Failure")
           }
         }
@@ -599,7 +587,6 @@ class TwilioClientTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -653,7 +640,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -665,7 +651,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -732,7 +717,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             errorTags(ApiException, "Testing Failure")
           }
         }
@@ -741,7 +725,6 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "twilio-sdk"
             errorTags(ApiException, "Testing Failure")
           }
         }

@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.apache.catalina.servlets.DefaultServlet
@@ -82,11 +81,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
   }
 
   @Override
-  String component() {
-    return Servlet3Decorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean redirectHasBody() {
     true
   }
@@ -104,7 +98,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_STATUS" endpoint.status

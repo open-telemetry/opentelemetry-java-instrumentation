@@ -192,7 +192,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -250,7 +249,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -300,7 +298,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -350,7 +347,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -400,7 +396,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -453,7 +448,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
@@ -519,9 +513,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             if (prepareStatement) {
-              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             } else {
-              "$Tags.COMPONENT" "java-jdbc-statement"
             }
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
@@ -578,7 +570,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           operationName "${datasource.class.simpleName}.getConnection"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-connection"
           }
         }
         if (recursive) {
@@ -586,7 +577,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             operationName "${datasource.class.simpleName}.getConnection"
             childOf span(1)
             tags {
-              "$Tags.COMPONENT" "java-jdbc-connection"
             }
           }
         }
@@ -629,7 +619,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_STATEMENT" query
             "$Tags.DB_URL" "testdb://localhost"
@@ -691,7 +680,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             "$Tags.DB_USER" "SA"
@@ -708,7 +696,6 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             spanKind CLIENT
             errored false
             tags {
-              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" dbName.toLowerCase()
               "$Tags.DB_USER" "SA"

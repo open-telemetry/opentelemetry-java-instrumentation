@@ -96,7 +96,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
@@ -125,7 +124,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
@@ -198,7 +196,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
@@ -230,7 +227,6 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT" "netty-client"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" server.address.port
@@ -311,7 +307,6 @@ class AwsClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
@@ -330,7 +325,6 @@ class AwsClientTest extends AgentTestRunner {
             errored true
             childOf span(0)
             tags {
-              "$Tags.COMPONENT" "apache-httpclient"
               "$MoreTags.NET_PEER_NAME" "localhost"
               "$MoreTags.NET_PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/somebucket/somekey"

@@ -60,7 +60,6 @@ class SessionTest extends AbstractHibernateTest {
             spanKind INTERNAL
             parent()
             tags {
-              "$Tags.COMPONENT" "java-hibernate"
             }
           }
           span(1) {
@@ -68,7 +67,6 @@ class SessionTest extends AbstractHibernateTest {
             spanKind INTERNAL
             childOf span(0)
             tags {
-              "$Tags.COMPONENT" "java-hibernate"
             }
           }
           span(2) {
@@ -76,7 +74,6 @@ class SessionTest extends AbstractHibernateTest {
             spanKind CLIENT
             childOf span(1)
             tags {
-              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
@@ -90,7 +87,6 @@ class SessionTest extends AbstractHibernateTest {
             spanKind INTERNAL
             childOf span(0)
             tags {
-              "$Tags.COMPONENT" "java-hibernate"
             }
           }
         }
@@ -134,7 +130,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -142,7 +137,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
@@ -150,14 +144,12 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(3) {
           spanKind CLIENT
           childOf span(2)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -211,7 +203,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -219,7 +210,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
@@ -227,7 +217,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(1)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -241,14 +230,12 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(4) {
           spanKind CLIENT
           childOf span(3)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -299,7 +286,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -308,7 +294,6 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(0)
           errored(true)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
             errorTags(MappingException, "Unknown entity: java.lang.Long")
           }
         }
@@ -317,7 +302,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
       }
@@ -349,7 +333,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -357,7 +340,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
@@ -365,14 +347,12 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(3) {
           spanKind CLIENT
           childOf span(2)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -433,7 +413,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(1) {
@@ -441,14 +420,12 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
           spanKind CLIENT
           childOf span(1)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -462,7 +439,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
       }
@@ -510,7 +486,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(2) {
@@ -518,7 +493,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(1)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(3) {
@@ -526,7 +500,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(1)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(4) {
@@ -534,7 +507,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(1)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(5) {
@@ -542,7 +514,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(4)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -556,7 +527,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind CLIENT
           childOf span(4)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
@@ -570,7 +540,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(8) {
@@ -578,7 +547,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(7)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(9) {
@@ -586,7 +554,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
         span(10) {
@@ -594,7 +561,6 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(9)
           tags {
-            "$Tags.COMPONENT" "java-hibernate"
           }
         }
       }

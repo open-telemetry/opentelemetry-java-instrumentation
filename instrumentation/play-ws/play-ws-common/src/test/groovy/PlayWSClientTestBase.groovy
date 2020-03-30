@@ -53,11 +53,6 @@ abstract class PlayWSClientTestBase extends HttpClientTest {
     system?.terminate()
   }
 
-  @Override
-  String component() {
-    return PlayWSClientDecorator.DECORATE.getComponentName()
-  }
-
   String expectedOperationName() {
     return "play-ws.request"
   }

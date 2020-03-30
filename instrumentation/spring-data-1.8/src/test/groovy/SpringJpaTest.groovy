@@ -73,7 +73,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind INTERNAL
           errored false
           tags {
-            "$Tags.COMPONENT" "spring-data"
           }
         }
         span(1) { // select
@@ -81,7 +80,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -107,7 +105,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind INTERNAL
           errored false
           tags {
-            "$Tags.COMPONENT" "spring-data"
           }
         }
         span(1) { // insert
@@ -115,7 +112,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -141,7 +137,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind INTERNAL
           errored false
           tags {
-            "$Tags.COMPONENT" "spring-data"
           }
         }
         span(1) { // select
@@ -149,7 +144,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -163,7 +157,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -187,7 +180,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind INTERNAL
           errored false
           tags {
-            "$Tags.COMPONENT" "spring-data"
           }
         }
         span(1) { // select
@@ -195,7 +187,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -219,7 +210,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind INTERNAL
           errored false
           tags {
-            "$Tags.COMPONENT" "spring-data"
           }
         }
         span(1) { // select
@@ -227,7 +217,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -241,7 +230,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"

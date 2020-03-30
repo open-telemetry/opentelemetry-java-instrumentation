@@ -17,8 +17,6 @@ package client
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
-import io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.springframework.http.HttpMethod
@@ -52,12 +50,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
   }
 
   @Override
-  String component() {
-    return SpringWebfluxHttpClientDecorator.DECORATE.getComponentName()
-  }
-
-
-  @Override
   // parent spanRef must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
     super.clientSpan(trace, index, parentSpan, method, tagQueryString, uri, status, exception)
@@ -68,7 +60,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
         spanKind CLIENT
         errored exception != null
         tags {
-          "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.getComponentName()
           "$MoreTags.NET_PEER_NAME" "localhost"
           "$MoreTags.NET_PEER_PORT" uri.port
           "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

@@ -79,7 +79,6 @@ class LagomTest extends AgentTestRunner {
           spanKind SERVER
           errored false
           tags {
-            "$Tags.COMPONENT" "akka-http-server"
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 101
@@ -115,7 +114,6 @@ class LagomTest extends AgentTestRunner {
           spanKind SERVER
           errored true
           tags {
-            "$Tags.COMPONENT" "akka-http-server"
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500

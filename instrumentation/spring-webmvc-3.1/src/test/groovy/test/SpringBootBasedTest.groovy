@@ -17,8 +17,6 @@ package test
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator
-import io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -51,11 +49,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  String component() {
-    return Servlet3Decorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean hasHandlerSpan() {
     true
   }
@@ -84,7 +77,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       spanKind INTERNAL
       errored false
       tags {
-        "$Tags.COMPONENT" "spring-webmvc"
         "view.type" RedirectView.name
       }
     }
@@ -98,7 +90,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       tags {
-        "$Tags.COMPONENT" SpringWebHttpServerDecorator.DECORATE.getComponentName()
         if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
@@ -119,7 +110,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         parent()
       }
       tags {
-        "$Tags.COMPONENT" component
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
         "$MoreTags.NET_PEER_PORT" Long
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }

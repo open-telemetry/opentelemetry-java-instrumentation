@@ -101,7 +101,6 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           spanKind INTERNAL
           parent()
           tags {
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" httpPort
             "$Tags.HTTP_URL" "_cluster/health"
@@ -114,7 +113,6 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "apache-httpasyncclient"
             "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200

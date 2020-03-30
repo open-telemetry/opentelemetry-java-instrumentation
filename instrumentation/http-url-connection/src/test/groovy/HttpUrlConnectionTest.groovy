@@ -15,7 +15,6 @@
  */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Ignore
 import spock.lang.Requires
@@ -47,11 +46,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
     } finally {
       connection.disconnect()
     }
-  }
-
-  @Override
-  String component() {
-    return HttpUrlConnectionDecorator.DECORATE.getComponentName()
   }
 
   @Override
@@ -103,7 +97,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -117,7 +110,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -176,7 +168,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -190,7 +181,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -234,7 +224,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
@@ -294,7 +283,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "http-url-connection"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
