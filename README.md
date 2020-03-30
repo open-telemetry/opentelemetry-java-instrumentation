@@ -77,7 +77,7 @@ java -javaagent:path/to/opentelemetry-auto-<version>.jar \
 | ota.exporter.jar | OTA_EXPORTER_JAR     | Path to the exporter fat-jar that you want to use |
 
 ### Available exporters
-There are two exporters available under
+There are three exporters available under
 [releases](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases).
 
 #### Jaeger exporter
@@ -87,6 +87,13 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently onl
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
 | ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
+
+#### OTLP exporter
+A simple wrapper for the OTLP exporter of opentelemetry-java.
+
+| System property                  | Environment variable             | Purpose                                                              |
+|----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter.otlp.endpoint       | OTA_EXPORTER_OTLP_ENDPOINT       | The OTLP endpoint to connect to.                                     |
 
 #### Logging Exporter
 The logging exporter simply prints the name of the span along with its attributes to stdout. It is used manly
