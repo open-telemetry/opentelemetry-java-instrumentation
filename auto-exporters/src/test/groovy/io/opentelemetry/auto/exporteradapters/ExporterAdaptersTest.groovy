@@ -26,10 +26,13 @@ class ExporterAdaptersTest extends Specification {
   def adapterRoot = System.getProperty("adapterRoot")
 
   @Shared
-  def loggingExporterJar = System.getProperty("loggingExporterJar")
+  def otlpExporterJar = System.getProperty("otlpExporterJar")
 
   @Shared
   def jaegerExporterJar = System.getProperty("jaegerExporterJar")
+
+  @Shared
+  def loggingExporterJar = System.getProperty("loggingExporterJar")
 
   @Shared
   def jaegerDir = new File("${adapterRoot}/jaeger-adapter/build/libs")
@@ -42,7 +45,7 @@ class ExporterAdaptersTest extends Specification {
     file != null
 
     where:
-    exporter << [loggingExporterJar, jaegerExporterJar]
+    exporter << [otlpExporterJar, jaegerExporterJar, loggingExporterJar]
   }
 
   def "test exporter load"() {
@@ -65,6 +68,7 @@ class ExporterAdaptersTest extends Specification {
 
     where:
     exporter           | classname
+    otlpExporterJar    | 'io.opentelemetry.auto.exporters.otlp.OtlpSpanExporterFactory'
     jaegerExporterJar  | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
     loggingExporterJar | 'io.opentelemetry.auto.exporters.logging.LoggingExporterFactory'
   }

@@ -9,7 +9,6 @@ set -e
 LIBS_DIR=./libs/
 mkdir -p $LIBS_DIR >/dev/null 2>&1
 
-for lib_path in workspace/*/build/libs; do
-    echo "saving libs in $lib_path"
-    cp $lib_path/*.jar $LIBS_DIR/
-done
+cp workspace/java-agent/build/libs/*.jar $LIBS_DIR/
+cp workspace/auto-exporters/*/build/libs/*.jar $LIBS_DIR/
+cp workspace/exporter-support/build/libs/*.jar $LIBS_DIR/
