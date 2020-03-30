@@ -90,7 +90,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
@@ -116,7 +115,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
@@ -178,7 +176,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           operationName "CreateIndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
@@ -192,7 +189,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
@@ -205,7 +201,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"
@@ -225,7 +220,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           operationName "IndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"
@@ -242,7 +236,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
@@ -256,7 +249,6 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$MoreTags.NET_PEER_NAME" "local"
             "$MoreTags.NET_PEER_IP" "0.0.0.0"

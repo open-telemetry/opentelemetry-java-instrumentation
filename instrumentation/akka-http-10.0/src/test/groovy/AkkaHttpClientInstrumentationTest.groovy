@@ -83,8 +83,5 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
         }
       }
     }
-
-    where:
-    renameService << [false, true]
   }
 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.geode.cache.client.ClientCacheFactory
@@ -133,7 +132,6 @@ class PutGetTest extends AgentTestRunner {
           errored false
           tags {
             "$Tags.COMPONENT" "apache-geode-client"
-            "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
             "$Tags.DB_INSTANCE" "test-region"
           }
@@ -144,7 +142,6 @@ class PutGetTest extends AgentTestRunner {
           errored false
           tags {
             "$Tags.COMPONENT" "apache-geode-client"
-            "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
             "$Tags.DB_INSTANCE" "test-region"
           }
@@ -155,7 +152,6 @@ class PutGetTest extends AgentTestRunner {
           errored false
           tags {
             "$Tags.COMPONENT" "apache-geode-client"
-            "$MoreTags.SERVICE_NAME" "apache-geode"
             "$Tags.DB_TYPE" "geode"
             "$Tags.DB_INSTANCE" "test-region"
             if (query != null) {

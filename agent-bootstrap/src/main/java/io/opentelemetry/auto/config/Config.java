@@ -66,8 +66,6 @@ public class Config {
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
   public static final String HTTP_SERVER_TAG_QUERY_STRING = "http.server.tag.query-string";
   public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
-  public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
-  public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
   public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
   public static final String SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
       "trace.span.duration-above-average.stacktrace.millis";
@@ -89,8 +87,6 @@ public class Config {
       parseIntegerRangeSet("400-599", "default");
   private static final boolean DEFAULT_HTTP_SERVER_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
-  private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
-  private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
   private static final int DEFAULT_SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
       (int) TimeUnit.SECONDS.toMillis(1);
@@ -114,8 +110,6 @@ public class Config {
   @Getter private final Set<Integer> httpClientErrorStatuses;
   @Getter private final boolean httpServerTagQueryString;
   @Getter private final boolean httpClientTagQueryString;
-  @Getter private final boolean httpClientSplitByDomain;
-  @Getter private final boolean dbClientSplitByInstance;
   @Getter private final Integer scopeDepthLimit;
   @Getter private final long spanDurationAboveAverageStacktraceNanos;
   @Getter private final boolean runtimeContextFieldInjection;
@@ -177,14 +171,6 @@ public class Config {
         getBooleanSettingFromEnvironment(
             HTTP_CLIENT_TAG_QUERY_STRING, DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING);
 
-    httpClientSplitByDomain =
-        getBooleanSettingFromEnvironment(
-            HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN);
-
-    dbClientSplitByInstance =
-        getBooleanSettingFromEnvironment(
-            DB_CLIENT_HOST_SPLIT_BY_INSTANCE, DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE);
-
     scopeDepthLimit =
         getIntegerSettingFromEnvironment(SCOPE_DEPTH_LIMIT, DEFAULT_SCOPE_DEPTH_LIMIT);
 
@@ -245,14 +231,6 @@ public class Config {
     httpClientTagQueryString =
         getPropertyBooleanValue(
             properties, HTTP_CLIENT_TAG_QUERY_STRING, parent.httpClientTagQueryString);
-
-    httpClientSplitByDomain =
-        getPropertyBooleanValue(
-            properties, HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, parent.httpClientSplitByDomain);
-
-    dbClientSplitByInstance =
-        getPropertyBooleanValue(
-            properties, DB_CLIENT_HOST_SPLIT_BY_INSTANCE, parent.dbClientSplitByInstance);
 
     scopeDepthLimit =
         getPropertyIntegerValue(properties, SCOPE_DEPTH_LIMIT, parent.scopeDepthLimit);

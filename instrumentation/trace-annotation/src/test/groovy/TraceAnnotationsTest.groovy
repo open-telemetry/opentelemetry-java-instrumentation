@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
@@ -43,7 +42,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test"
+            "myattr" "test"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -64,7 +63,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test2"
+            "myattr" "test2"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -73,7 +72,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test"
+            "myattr" "test"
             "$Tags.COMPONENT" "trace"
           }
         }
@@ -82,7 +81,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test"
+            "myattr" "test"
             "$Tags.COMPONENT" "trace"
           }
         }

@@ -364,7 +364,6 @@ class RabbitMQTest extends AgentTestRunner {
       errored exception != null
 
       tags {
-        "$MoreTags.SERVICE_NAME" "rabbitmq"
         "$Tags.COMPONENT" "rabbitmq-amqp"
         "$MoreTags.NET_PEER_NAME" { it == null || it instanceof String }
         "$MoreTags.NET_PEER_IP" { "127.0.0.1" }

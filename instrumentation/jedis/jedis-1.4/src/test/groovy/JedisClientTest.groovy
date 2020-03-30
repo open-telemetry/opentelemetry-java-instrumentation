@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -42,16 +40,11 @@ class JedisClientTest extends AgentTestRunner {
   def setupSpec() {
     println "Using redis: $redisServer.args"
     redisServer.start()
-
-    // This setting should have no effect since decorator returns null for the instance.
-    System.setProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
   }
 
   def cleanupSpec() {
     redisServer.stop()
 //    jedis.close()  // not available in the early version we're using.
-
-    System.clearProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE)
   }
 
   def setup() {
@@ -70,7 +63,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -94,7 +86,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -106,7 +97,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "GET"
@@ -130,7 +120,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "SET"
@@ -142,7 +131,6 @@ class JedisClientTest extends AgentTestRunner {
           operationName "RANDOMKEY"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.DB_TYPE" "redis"
             "$Tags.DB_STATEMENT" "RANDOMKEY"

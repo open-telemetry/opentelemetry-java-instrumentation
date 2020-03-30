@@ -15,8 +15,6 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
-import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 
@@ -53,10 +51,6 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
       span.setAttribute(Tags.DB_USER, dbUser(connection));
       span.setAttribute(Tags.DB_INSTANCE, dbInstance(connection));
       span.setAttribute(Tags.DB_URL, dbUrl(connection));
-
-      if (Config.get().isDbClientSplitByInstance()) {
-        span.setAttribute(MoreTags.SERVICE_NAME, dbInstance(connection));
-      }
     }
     return span;
   }
