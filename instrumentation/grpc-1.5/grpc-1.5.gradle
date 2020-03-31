@@ -53,4 +53,11 @@ dependencies {
   latestDepTestCompile group: 'io.grpc', name: 'grpc-netty', version: '+'
   latestDepTestCompile group: 'io.grpc', name: 'grpc-protobuf', version: '+'
   latestDepTestCompile group: 'io.grpc', name: 'grpc-stub', version: '+'
+
+  // this instrumentation needs to be able to be able to reference the OpenTelemetry API's gRPC Context
+  // that is shaded in the bootstrap class loader (for sending telemetry to the agent),
+  // separately from the gRPC Context that is brought by gRPC
+  compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
+
+  testCompile project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
 }
