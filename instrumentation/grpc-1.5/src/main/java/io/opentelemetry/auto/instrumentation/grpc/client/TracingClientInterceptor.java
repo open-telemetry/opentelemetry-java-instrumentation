@@ -86,6 +86,11 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void start(final Listener<RespT> responseListener, final Metadata headers) {
+      // this reference to io.grpc.Context will be shaded during the build
+      // see instrumentation.gradle: "relocate OpenTelemetry API dependency usage"
+      // (luckily the grpc instrumentation doesn't need to reference unshaded grpc Context, so we
+      // don't need to worry about distinguishing them like in the opentelemetry-api
+      // instrumentation)
       final Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
       try (final Scope scope = currentContextWith(span)) {
