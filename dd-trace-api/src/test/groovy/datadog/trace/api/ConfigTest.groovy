@@ -406,6 +406,19 @@ class ConfigTest extends DDSpecification {
     config.profilingApiKey == "test-api-key"
   }
 
+  def "sensitive information removed for toString/debug log"() {
+    setup:
+    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "test-secret-api-key")
+    environmentVariables.set(PROFILING_PROXY_PASSWORD, "test-secret-proxy-password")
+
+    when:
+    def config = new Config()
+
+    then:
+    !config.toString().contains("test-secret-api-key")
+    !config.toString().contains("test-secret-proxy-password")
+  }
+
   def "sys props override env vars"() {
     setup:
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")

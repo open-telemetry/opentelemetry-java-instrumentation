@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * system property, but uppercased with '.' -> '_'.
  */
 @Slf4j
-@ToString(includeFieldNames = true)
+@ToString(includeFieldNames = true, exclude = {"profilingApiKey", "profilingProxyPassword"})
 public class Config {
   /** Config keys below */
   private static final String PREFIX = "dd.";
