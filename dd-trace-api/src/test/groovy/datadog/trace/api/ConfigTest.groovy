@@ -415,7 +415,9 @@ class ConfigTest extends DDSpecification {
     def config = new Config()
 
     then:
+    config.toString().contains("profilingApiKey=****");
     !config.toString().contains("test-secret-api-key")
+    config.toString().contains("profilingProxyPassword=****");
     !config.toString().contains("test-secret-proxy-password")
   }
 

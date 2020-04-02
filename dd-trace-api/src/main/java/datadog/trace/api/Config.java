@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * system property, but uppercased with '.' -> '_'.
  */
 @Slf4j
-@ToString(includeFieldNames = true, exclude = {"profilingApiKey", "profilingProxyPassword"})
+@ToString(includeFieldNames = true)
 public class Config {
   /** Config keys below */
   private static final String PREFIX = "dd.";
@@ -201,6 +201,14 @@ public class Config {
 
   /** A tag intended for internal use only, hence not added to the public api DDTags class. */
   private static final String INTERNAL_HOST_NAME = "_dd.hostname";
+
+  /** Used for masking sensitive information when doing toString */
+  @ToString.Include(name = "profilingApiKey")
+  private String profilingApiKeyMasker() { return "****"; }
+
+  /** Used for masking sensitive information when doing toString */
+  @ToString.Include(name = "profilingProxyPassword")
+  private String profilingProxyPasswordMasker() { return "****"; }
 
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
