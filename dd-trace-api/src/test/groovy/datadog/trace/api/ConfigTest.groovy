@@ -407,23 +407,6 @@ class ConfigTest extends DDSpecification {
     config.profilingApiKey == "test-api-key"
   }
 
-  def "sensitive information removed for toString/debug log"() {
-    setup:
-    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "test-secret-api-key")
-    environmentVariables.set(DD_PROFILING_PROXY_PASSWORD_ENV, "test-secret-proxy-password")
-
-    when:
-    def config = new Config()
-
-    then:
-    config.toString().contains("profilingApiKey=****");
-    !config.toString().contains("test-secret-api-key")
-    config.toString().contains("profilingProxyPassword=****");
-    !config.toString().contains("test-secret-proxy-password")
-    config.getProfilingApiKey() == "test-secret-api-key"
-    config.getProfilingProxyPassword() == "test-secret-proxy-password"
-  }
-
   def "sys props override env vars"() {
     setup:
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
@@ -1122,5 +1105,31 @@ class ConfigTest extends DDSpecification {
     config.headerTags == [e: "5"]
 
     config.mergedProfilingTags == [a: "1", f: "6", (HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+  }
+
+  def "sensitive information removed for toString/debug log"() {
+    setup:
+    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "test-secret-api-key")
+    environmentVariables.set(DD_PROFILING_PROXY_PASSWORD_ENV, "test-secret-proxy-password")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.toString().contains("profilingApiKey=****")
+    !config.toString().contains("test-secret-api-key")
+    config.toString().contains("profilingProxyPassword=****")
+    !config.toString().contains("test-secret-proxy-password")
+    config.profilingApiKey == "test-secret-api-key"
+    config.profilingProxyPassword == "test-secret-proxy-password"
+  }
+
+  def "toString works when passwords are empty"() {
+    when:
+    def config = new Config()
+
+    then:
+    config.toString().contains("profilingApiKey=null")
+    config.toString().contains("profilingProxyPassword=null")
   }
 }
