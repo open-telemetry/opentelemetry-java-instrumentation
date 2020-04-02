@@ -40,8 +40,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(includeFieldNames = true)
 public class Config {
+
   /** Config keys below */
   private static final String PREFIX = "dd.";
+
+  public static final String PROFILING_URL_TEMPLATE = "https://intake.profile.%s/v1/input";
 
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
@@ -106,6 +109,7 @@ public class Config {
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
   public static final String PROFILING_ENABLED = "profiling.enabled";
+  public static final String PROFILING_SITE = "profiling.site";
   public static final String PROFILING_URL = "profiling.url";
 
   public static final String PROFILING_API_KEY = "profiling.api-key";
@@ -173,8 +177,7 @@ public class Config {
   public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
 
   public static final boolean DEFAULT_PROFILING_ENABLED = false;
-  public static final String DEFAULT_PROFILING_URL =
-      "https://intake.profile.datadoghq.com/v1/input";
+  public static final String DEFAULT_PROFILING_SITE = "datadoghq.com";
   public static final int DEFAULT_PROFILING_START_DELAY = 10;
   public static final boolean DEFAULT_PROFILING_START_FORCE_FIRST = false;
   public static final int DEFAULT_PROFILING_UPLOAD_PERIOD = 60; // 1 min
@@ -269,7 +272,8 @@ public class Config {
   @Getter private final Double traceRateLimit;
 
   @Getter private final boolean profilingEnabled;
-  @Getter private final String profilingUrl;
+  @Getter private final String profilingSite;
+  private final String profilingUrl;
   @Getter private final String profilingApiKey;
   private final Map<String, String> profilingTags;
   @Getter private final int profilingStartDelay;
@@ -415,7 +419,8 @@ public class Config {
 
     profilingEnabled =
         getBooleanSettingFromEnvironment(PROFILING_ENABLED, DEFAULT_PROFILING_ENABLED);
-    profilingUrl = getSettingFromEnvironment(PROFILING_URL, DEFAULT_PROFILING_URL);
+    profilingSite = getSettingFromEnvironment(PROFILING_SITE, DEFAULT_PROFILING_SITE);
+    profilingUrl = getSettingFromEnvironment(PROFILING_URL, null);
     // Note: We do not want APiKey to be loaded from property for security reasons
     // Note: we do not use defined default here
     // FIXME: We should use better authentication mechanism
@@ -609,6 +614,7 @@ public class Config {
 
     profilingEnabled =
         getPropertyBooleanValue(properties, PROFILING_ENABLED, parent.profilingEnabled);
+    profilingSite = properties.getProperty(PROFILING_SITE, parent.profilingSite);
     profilingUrl = properties.getProperty(PROFILING_URL, parent.profilingUrl);
     profilingApiKey = properties.getProperty(PROFILING_API_KEY, parent.profilingApiKey);
     profilingTags = getPropertyMapValue(properties, PROFILING_TAGS, parent.profilingTags);
@@ -734,17 +740,25 @@ public class Config {
     return Collections.unmodifiableMap(result);
   }
 
+  public String getFinalProfilingUrl() {
+    if (profilingUrl == null) {
+      return String.format(PROFILING_URL_TEMPLATE, profilingSite);
+    } else {
+      return profilingUrl;
+    }
+  }
+
   public boolean isIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     return integrationEnabled(integrationNames, defaultEnabled);
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isIntegrationEnabled(SortedSet, boolean)}.
    */
   public static boolean integrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
@@ -774,11 +788,11 @@ public class Config {
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
    */
   public static boolean jmxFetchIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
@@ -803,11 +817,11 @@ public class Config {
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
    */
   public static boolean traceAnalyticsIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {

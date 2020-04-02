@@ -120,7 +120,7 @@ public class RecordingUploaderTest {
     server.start();
     url = server.url(URL_PATH);
 
-    when(config.getProfilingUrl()).thenReturn(server.url(URL_PATH).toString());
+    when(config.getFinalProfilingUrl()).thenReturn(server.url(URL_PATH).toString());
     when(config.getProfilingApiKey()).thenReturn(APIKEY_VALUE);
     when(config.getMergedProfilingTags()).thenReturn(TAGS);
     when(config.getProfilingUploadTimeout()).thenReturn((int) REQUEST_TIMEOUT.getSeconds());
@@ -199,7 +199,7 @@ public class RecordingUploaderTest {
   public void testRequestWithProxy() throws IOException, InterruptedException {
     final String backendHost = "intake.profiling.datadoghq.com:1234";
     final String backendUrl = "http://intake.profiling.datadoghq.com:1234" + URL_PATH;
-    when(config.getProfilingUrl())
+    when(config.getFinalProfilingUrl())
         .thenReturn("http://intake.profiling.datadoghq.com:1234" + URL_PATH);
     when(config.getProfilingProxyHost()).thenReturn(server.url("").host());
     when(config.getProfilingProxyPort()).thenReturn(server.url("").port());
@@ -235,7 +235,7 @@ public class RecordingUploaderTest {
   @Test
   public void testRequestWithProxyDefaultPassword() throws IOException, InterruptedException {
     final String backendUrl = "http://intake.profiling.datadoghq.com:1234" + URL_PATH;
-    when(config.getProfilingUrl())
+    when(config.getFinalProfilingUrl())
         .thenReturn("http://intake.profiling.datadoghq.com:1234" + URL_PATH);
     when(config.getProfilingProxyHost()).thenReturn(server.url("").host());
     when(config.getProfilingProxyPort()).thenReturn(server.url("").port());
