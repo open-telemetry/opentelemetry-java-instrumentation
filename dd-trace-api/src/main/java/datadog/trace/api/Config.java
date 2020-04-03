@@ -40,12 +40,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(includeFieldNames = true)
 public class Config {
+
   /** Config keys below */
   private static final String PREFIX = "dd.";
+
+  public static final String PROFILING_URL_TEMPLATE = "https://intake.profile.%s/v1/input";
 
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
   public static final String CONFIGURATION_FILE = "trace.config";
+  public static final String SITE = "site";
   public static final String SERVICE_NAME = "service.name";
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
@@ -93,7 +97,7 @@ public class Config {
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_CONFIG_DIR = "jmxfetch.config.dir";
   public static final String JMX_FETCH_CONFIG = "jmxfetch.config";
-  public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
+  @Deprecated public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
   public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
   public static final String JMX_FETCH_STATSD_HOST = "jmxfetch.statsd.host";
@@ -106,8 +110,8 @@ public class Config {
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
   public static final String PROFILING_ENABLED = "profiling.enabled";
+  @Deprecated // Use dd.site instead
   public static final String PROFILING_URL = "profiling.url";
-
   public static final String PROFILING_API_KEY = "profiling.api-key";
   public static final String PROFILING_API_KEY_FILE = "profiling.api-key-file";
   public static final String PROFILING_API_KEY_OLD = "profiling.apikey";
@@ -134,6 +138,7 @@ public class Config {
   public static final String LANGUAGE_TAG_KEY = "language";
   public static final String LANGUAGE_TAG_VALUE = "jvm";
 
+  public static final String DEFAULT_SITE = "datadoghq.com";
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
@@ -173,8 +178,6 @@ public class Config {
   public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
 
   public static final boolean DEFAULT_PROFILING_ENABLED = false;
-  public static final String DEFAULT_PROFILING_URL =
-      "https://intake.profile.datadoghq.com/v1/input";
   public static final int DEFAULT_PROFILING_START_DELAY = 10;
   public static final boolean DEFAULT_PROFILING_START_FORCE_FIRST = false;
   public static final int DEFAULT_PROFILING_UPLOAD_PERIOD = 60; // 1 min
@@ -219,6 +222,12 @@ public class Config {
    * and every JMX metric that is sent out.
    */
   @Getter private final String runtimeId;
+
+  /**
+   * Note: this has effect only on profiling site. Traces are sent to Datadog agent and are not
+   * affected by this setting.
+   */
+  @Getter private final String site;
 
   @Getter private final String serviceName;
   @Getter private final boolean traceEnabled;
@@ -281,7 +290,7 @@ public class Config {
   @Getter private final Double traceRateLimit;
 
   @Getter private final boolean profilingEnabled;
-  @Getter private final String profilingUrl;
+  @Deprecated private final String profilingUrl;
   @Getter private final String profilingApiKey;
   private final Map<String, String> profilingTags;
   @Getter private final int profilingStartDelay;
@@ -305,6 +314,7 @@ public class Config {
 
     runtimeId = UUID.randomUUID().toString();
 
+    site = getSettingFromEnvironment(SITE, DEFAULT_SITE);
     serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
 
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
@@ -427,7 +437,7 @@ public class Config {
 
     profilingEnabled =
         getBooleanSettingFromEnvironment(PROFILING_ENABLED, DEFAULT_PROFILING_ENABLED);
-    profilingUrl = getSettingFromEnvironment(PROFILING_URL, DEFAULT_PROFILING_URL);
+    profilingUrl = getSettingFromEnvironment(PROFILING_URL, null);
     // Note: We do not want APiKey to be loaded from property for security reasons
     // Note: we do not use defined default here
     // FIXME: We should use better authentication mechanism
@@ -490,6 +500,7 @@ public class Config {
   private Config(final Properties properties, final Config parent) {
     runtimeId = parent.runtimeId;
 
+    site = properties.getProperty(SITE, parent.site);
     serviceName = properties.getProperty(SERVICE_NAME, parent.serviceName);
 
     traceEnabled = getPropertyBooleanValue(properties, TRACE_ENABLED, parent.traceEnabled);
@@ -746,17 +757,25 @@ public class Config {
     return Collections.unmodifiableMap(result);
   }
 
+  public String getFinalProfilingUrl() {
+    if (profilingUrl == null) {
+      return String.format(PROFILING_URL_TEMPLATE, site);
+    } else {
+      return profilingUrl;
+    }
+  }
+
   public boolean isIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     return integrationEnabled(integrationNames, defaultEnabled);
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isIntegrationEnabled(SortedSet, boolean)}.
    */
   public static boolean integrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
@@ -786,11 +805,11 @@ public class Config {
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
    */
   public static boolean jmxFetchIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
@@ -815,11 +834,11 @@ public class Config {
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
    */
   public static boolean traceAnalyticsIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {

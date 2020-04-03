@@ -55,6 +55,7 @@ import static datadog.trace.api.Config.RUNTIME_ID_TAG
 import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SERVICE_TAG
+import static datadog.trace.api.Config.SITE
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.SPLIT_BY_TAGS
 import static datadog.trace.api.Config.TAGS
@@ -134,7 +135,8 @@ class ConfigTest extends DDSpecification {
     config.healthMetricsStatsdPort == null
 
     config.profilingEnabled == false
-    config.profilingUrl == Config.DEFAULT_PROFILING_URL
+    config.site == Config.DEFAULT_SITE
+    config.profilingUrl == null
     config.profilingApiKey == null
     config.mergedProfilingTags == [(HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.profilingStartDelay == 10
@@ -199,6 +201,7 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(TRACE_RATE_LIMIT, "200")
 
     prop.setProperty(PROFILING_ENABLED, "true")
+    prop.setProperty(SITE, "new site")
     prop.setProperty(PROFILING_URL, "new url")
     prop.setProperty(PROFILING_API_KEY, "new api key")
     prop.setProperty(PROFILING_TAGS, "f:6,host:test-host")
@@ -255,6 +258,7 @@ class ConfigTest extends DDSpecification {
     config.traceRateLimit == 200
 
     config.profilingEnabled == true
+    config.site == "new site"
     config.profilingUrl == "new url"
     config.profilingApiKey == "new api key" // we can still override via internal properties object
     config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
@@ -311,6 +315,7 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_RATE_LIMIT, "200")
 
     System.setProperty(PREFIX + PROFILING_ENABLED, "true")
+    System.setProperty(PREFIX + SITE, "new site")
     System.setProperty(PREFIX + PROFILING_URL, "new url")
     System.setProperty(PREFIX + PROFILING_API_KEY, "new api key")
     System.setProperty(PREFIX + PROFILING_TAGS, "f:6,host:test-host")
@@ -367,6 +372,7 @@ class ConfigTest extends DDSpecification {
     config.traceRateLimit == 200
 
     config.profilingEnabled == true
+    config.site == "new site"
     config.profilingUrl == "new url"
     config.profilingApiKey == null // system properties cannot be used to provide a key
     config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
@@ -1106,6 +1112,15 @@ class ConfigTest extends DDSpecification {
 
     config.mergedProfilingTags == [a: "1", f: "6", (HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
   }
+  
+  def "toString works when passwords are empty"() {
+    when:
+    def config = new Config()
+
+    then:
+    config.toString().contains("profilingApiKey=null")
+    config.toString().contains("profilingProxyPassword=null")
+  }
 
   def "sensitive information removed for toString/debug log"() {
     setup:
@@ -1124,12 +1139,30 @@ class ConfigTest extends DDSpecification {
     config.profilingProxyPassword == "test-secret-proxy-password"
   }
 
-  def "toString works when passwords are empty"() {
+  def "custom datadog site"() {
+    setup:
+    def prop = new Properties()
+    prop.setProperty(SITE, "some.new.site")
+
     when:
-    def config = new Config()
+    Config config = Config.get(prop)
 
     then:
-    config.toString().contains("profilingApiKey=null")
-    config.toString().contains("profilingProxyPassword=null")
+    config.getFinalProfilingUrl() == "https://intake.profile.some.new.site/v1/input"
   }
+
+
+  def "custom profiling url override"() {
+    setup:
+    def prop = new Properties()
+    prop.setProperty(SITE, "some.new.site")
+    prop.setProperty(PROFILING_URL, "https://some.new.url/goes/here")
+
+    when:
+    Config config = Config.get(prop)
+
+    then:
+    config.getFinalProfilingUrl() == "https://some.new.url/goes/here"
+  }
+
 }
