@@ -94,6 +94,7 @@ class ConfigTest extends DDSpecification {
   private static final DD_PROFILING_API_KEY_ENV = "DD_PROFILING_API_KEY"
   private static final DD_PROFILING_API_KEY_OLD_ENV = "DD_PROFILING_APIKEY"
   private static final DD_PROFILING_TAGS_ENV = "DD_PROFILING_TAGS"
+  private static final DD_PROFILING_PROXY_PASSWORD_ENV = "DD_PROFILING_PROXY_PASSWORD"
 
   def "verify defaults"() {
     when:
@@ -1111,6 +1112,32 @@ class ConfigTest extends DDSpecification {
 
     config.mergedProfilingTags == [a: "1", f: "6", (HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
   }
+  
+  def "toString works when passwords are empty"() {
+    when:
+    def config = new Config()
+
+    then:
+    config.toString().contains("profilingApiKey=null")
+    config.toString().contains("profilingProxyPassword=null")
+  }
+
+  def "sensitive information removed for toString/debug log"() {
+    setup:
+    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "test-secret-api-key")
+    environmentVariables.set(DD_PROFILING_PROXY_PASSWORD_ENV, "test-secret-proxy-password")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.toString().contains("profilingApiKey=****")
+    !config.toString().contains("test-secret-api-key")
+    config.toString().contains("profilingProxyPassword=****")
+    !config.toString().contains("test-secret-proxy-password")
+    config.profilingApiKey == "test-secret-api-key"
+    config.profilingProxyPassword == "test-secret-proxy-password"
+  }
 
   def "custom datadog site"() {
     setup:
@@ -1124,6 +1151,7 @@ class ConfigTest extends DDSpecification {
     config.getFinalProfilingUrl() == "https://intake.profile.some.new.site/v1/input"
   }
 
+
   def "custom profiling url override"() {
     setup:
     def prop = new Properties()
@@ -1136,4 +1164,5 @@ class ConfigTest extends DDSpecification {
     then:
     config.getFinalProfilingUrl() == "https://some.new.url/goes/here"
   }
+
 }
