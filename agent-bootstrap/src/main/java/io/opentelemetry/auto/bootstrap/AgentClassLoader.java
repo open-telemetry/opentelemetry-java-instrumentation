@@ -29,6 +29,8 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
+import java.util.Enumeration;
+import java.util.Vector;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -130,6 +132,16 @@ public class AgentClassLoader extends URLClassLoader {
       s += "data";
     }
     return super.findResource(s);
+  }
+
+  @Override
+  public Enumeration<URL> findResources(String name) throws IOException {
+    URL found = findResource(name);
+    Vector<URL> answer = new Vector<>();
+    if (found != null) {
+      answer.add(found);
+    }
+    return answer.elements();
   }
 
   /**
