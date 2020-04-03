@@ -24,10 +24,10 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest {
   private static final int TIMEOUT_SECS = 30
 
   String generatePolicyFile() {
-    String policyFile = "${buildDirectory}/security.policy";
+    String policyFile = "${buildDirectory}/security.policy"
     new File(policyFile).text = "grant codeBase \"file:"+shadowJarPath+"\" {\n"+
       "  permission java.security.AllPermission;\n"+
-      "};\n";
+      "};\n"
     return policyFile
   }
 
@@ -40,9 +40,9 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest {
     command.addAll((String[]) ["-cp", "${buildDirectory}/classes/java/main"])
     command.add("-Djava.security.manager")
     command.add("-Djava.security.policy="+generatePolicyFile())
-    command.add("io.opentelemetry.smoketest.securitymanager.Application");
+    command.add("io.opentelemetry.smoketest.securitymanager.Application")
 
-    System.out.println("Running: "+command);
+    System.out.println("Running: "+command)
 
     ProcessBuilder processBuilder = new ProcessBuilder(command)
     processBuilder.directory(new File(buildDirectory))

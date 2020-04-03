@@ -63,15 +63,21 @@ class ClassLoadingTest extends Specification {
 
   // We are doing this because Groovy cannot properly resolve constructor argument types in anonymous classes
   static class CountingClassLoader extends URLClassLoader {
-    public int count = 0
+    public int getResourceCount = 0
+    public int count = 0;
 
     CountingClassLoader(URL[] urls) {
       super(urls, (ClassLoader) null)
     }
+    @Override
+    protected Class<?> findClass(final String name) throws ClassNotFoundException {
+      count++;
+      return super.findClass(name);
+    }
 
     @Override
     URL getResource(String name) {
-      count++
+      getResourceCount++
       return super.getResource(name)
     }
   }
@@ -83,13 +89,13 @@ class ClassLoadingTest extends Specification {
     when:
     //loader.loadClass("aaa")
     loader.loadClass(ClassToInstrument.getName())
-    int countAfterFirstLoad = loader.count
+    int countAfterFirstLoad = loader.getResourceCount
     loader.loadClass(ClassToInstrumentChild.getName())
 
     then:
     // ClassToInstrumentChild won't cause an additional getResource() because its TypeDescription is created from transformation bytes.
     loader.count > 0
-    loader.count == countAfterFirstLoad
+    loader.getResourceCount == countAfterFirstLoad
   }
 
   def "make sure that ByteBuddy doesn't reuse cached type descriptions between different classloaders"() {

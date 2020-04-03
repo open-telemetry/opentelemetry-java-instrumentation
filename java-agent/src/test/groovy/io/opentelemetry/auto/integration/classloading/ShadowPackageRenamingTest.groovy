@@ -39,8 +39,6 @@ class ShadowPackageRenamingTest extends Specification {
       clazz.getProtectionDomain().getCodeSource().getLocation()
 
     expect:
-    agentSource.getFile() == "/"
-    agentSource.getProtocol() == "x-internal-jar"
     agentSource == agentGuavaDep
     agentSource.getFile() != userGuava.getFile()
   }
@@ -52,7 +50,7 @@ class ShadowPackageRenamingTest extends Specification {
     thrown ClassNotFoundException
   }
 
-  def "agent jar contains no bootstrap classes"() {
+  def "agent jar contains no bad prefixes"() {
     setup:
     final ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
 
@@ -77,12 +75,8 @@ class ShadowPackageRenamingTest extends Specification {
       }
     }
 
-    final List<ClassPath.ClassInfo> agentDuplicateClassFile = new ArrayList<>()
     final List<String> badAgentPrefixes = []
     for (ClassPath.ClassInfo classInfo : agentClasspath.getAllClasses()) {
-      if (bootstrapClasses.contains(classInfo.getName())) {
-        agentDuplicateClassFile.add(classInfo)
-      }
       boolean goodPrefix = false
       for (int i = 0; i < agentPrefixes.length; ++i) {
         if (classInfo.getName().startsWith(agentPrefixes[i])) {
@@ -96,7 +90,6 @@ class ShadowPackageRenamingTest extends Specification {
     }
 
     expect:
-    agentDuplicateClassFile == []
     badBootstrapPrefixes == []
     badAgentPrefixes == []
   }
