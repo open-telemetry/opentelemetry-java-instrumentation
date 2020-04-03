@@ -202,6 +202,18 @@ public class Config {
   /** A tag intended for internal use only, hence not added to the public api DDTags class. */
   private static final String INTERNAL_HOST_NAME = "_dd.hostname";
 
+  /** Used for masking sensitive information when doing toString */
+  @ToString.Include(name = "profilingApiKey")
+  private String profilingApiKeyMasker() {
+    return profilingApiKey != null ? "****" : null;
+  }
+
+  /** Used for masking sensitive information when doing toString */
+  @ToString.Include(name = "profilingProxyPassword")
+  private String profilingProxyPasswordMasker() {
+    return profilingProxyPassword != null ? "****" : null;
+  }
+
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
    * and every JMX metric that is sent out.
