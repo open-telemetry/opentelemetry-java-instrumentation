@@ -54,6 +54,10 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest {
   def "Application runs correctly with java.security.manager"() {
     expect:
     assert serverProcess.waitFor() == 0
+    logfile.readLines().each{line ->
+      assert line == null || !line.contains("ERROR")
+    }
+    assert logfile.readLines().size() > 1
   }
 
 
