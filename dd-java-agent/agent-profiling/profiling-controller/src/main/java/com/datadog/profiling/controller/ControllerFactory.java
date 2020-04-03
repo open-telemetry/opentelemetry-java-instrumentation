@@ -49,8 +49,28 @@ public final class ControllerFactory {
         | InstantiationException
         | IllegalAccessException
         | InvocationTargetException e) {
-      throw new UnsupportedEnvironmentException(
-          "The JFR controller could not find a supported JFR API", e);
+      String exMsg = "The JFR controller could not find a supported JFR API"
+        + getFixProposalMessage();
+      throw new UnsupportedEnvironmentException(exMsg, e);
+    }
+  }
+
+  private static String getFixProposalMessage() {
+    try {
+      String javaVersion = System.getProperty("java.version");
+      if (javaVersion == null) {
+        return "";
+      }
+      String javaVendor = System.getProperty("java.vendor", "");
+      if (javaVersion.startsWith("1.8")) {
+        if (javaVendor.startsWith("Azul Systems")) {
+          return ", use Azul zulu version 1.8.0_212+";
+        }
+        // TODO Add version minimum once JFR backported into OpenJDK distros
+      }
+      return ", use OpenJDK 11+ or Azul zulu version 1.8.0_212+";
+    } catch (Exception ex) {
+      return "";
     }
   }
 }
