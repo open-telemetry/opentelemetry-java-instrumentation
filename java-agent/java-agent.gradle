@@ -32,6 +32,7 @@ jar {
       "Premain-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
+      "Boot-Class-Path": "./${archivesBaseName}-${version}.jar",
     )
   }
 }

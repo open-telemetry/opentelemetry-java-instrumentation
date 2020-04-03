@@ -224,9 +224,7 @@ public class Agent {
       agentParent = getPlatformClassLoader();
     }
 
-    final Class<?> loaderClass =
-        ClassLoader.getSystemClassLoader()
-            .loadClass("io.opentelemetry.auto.bootstrap.AgentClassLoader");
+    final Class<?> loaderClass = Class.forName("io.opentelemetry.auto.bootstrap.AgentClassLoader");
     final Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
     return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);

@@ -15,9 +15,20 @@
  */
 package io.opentelemetry.auto.bootstrap;
 
-import java.net.MalformedURLException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.CodeSource;
+import java.security.PermissionCollection;
+import java.security.Policy;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.security.ProtectionDomain;
+import java.security.cert.Certificate;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -37,6 +48,10 @@ public class AgentClassLoader extends URLClassLoader {
   // As a workaround, we keep a reference to the bootstrap jar
   // to use only for resource lookups.
   private final BootstrapClassLoaderProxy bootstrapProxy;
+
+  private final String internalJarFileName;
+  private final AccessControlContext acc;
+  private final URL bootstrapJarLocaton;
   /**
    * Construct a new AgentClassLoader
    *
@@ -47,42 +62,74 @@ public class AgentClassLoader extends URLClassLoader {
    */
   public AgentClassLoader(
       final URL bootstrapJarLocation, final String internalJarFileName, final ClassLoader parent) {
-    super(new URL[] {}, parent);
+    super(new URL[] {bootstrapJarLocation}, parent);
+    this.internalJarFileName = internalJarFileName;
+    this.bootstrapJarLocaton = bootstrapJarLocation;
 
     // some tests pass null
     bootstrapProxy =
         bootstrapJarLocation == null
             ? new BootstrapClassLoaderProxy(new URL[0])
             : new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation});
+    this.acc = AccessController.getContext();
+  }
 
+  protected Class<?> findClass(final String name) throws ClassNotFoundException {
+    Class result;
     try {
-      // The fields of the URL are mostly dummy.  InternalJarURLHandler is the only important
-      // field.  If extending this class from Classloader instead of URLClassloader required less
-      // boilerplate it could be used and the need for dummy fields would be reduced
+      result =
+          (Class)
+              AccessController.doPrivileged(
+                  new PrivilegedExceptionAction<Class<?>>() {
+                    public Class<?> run() throws ClassNotFoundException {
+                      final String path = name.replace('.', '/').concat(".class");
+                      final URL res = AgentClassLoader.this.getResource(path);
+                      if (res != null) {
+                        try {
+                          final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                          final InputStream in = res.openStream();
+                          final byte[] buf = new byte[4 * 1024];
+                          int read = in.read(buf);
+                          while (read != -1) {
+                            bout.write(buf, 0, read);
+                            read = in.read(buf);
+                          }
+                          in.close();
+                          final byte[] classBytes = bout.toByteArray();
+                          final CodeSource cs =
+                              new CodeSource(bootstrapJarLocaton, (Certificate[]) null);
+                          final PermissionCollection pc = Policy.getPolicy().getPermissions(cs);
+                          final ProtectionDomain pd =
+                              new ProtectionDomain(cs, pc, AgentClassLoader.this, null);
+                          return AgentClassLoader.this.defineClass(
+                              name, classBytes, 0, classBytes.length, pd);
+                        } catch (IOException var4) {
+                          throw new ClassNotFoundException(name, var4);
+                        }
+                      } else {
+                        return null;
+                      }
+                    }
+                  },
+                  acc);
+    } catch (PrivilegedActionException var4) {
+      throw (ClassNotFoundException) var4.getException();
+    }
 
-      final URL internalJarURL =
-          new URL(
-              "x-internal-jar",
-              null,
-              0,
-              "/",
-              new InternalJarURLHandler(internalJarFileName, bootstrapJarLocation));
-
-      addURL(internalJarURL);
-    } catch (final MalformedURLException e) {
-      // This can't happen with current URL constructor
-      log.error("URL malformed.  Unsupported JDK?", e);
+    if (result == null) {
+      throw new ClassNotFoundException(name);
+    } else {
+      return result;
     }
   }
 
   @Override
-  public URL getResource(final String resourceName) {
-    final URL bootstrapResource = bootstrapProxy.getResource(resourceName);
-    if (null == bootstrapResource) {
-      return super.getResource(resourceName);
-    } else {
-      return bootstrapResource;
+  public URL findResource(final String resourceName) {
+    String s = internalJarFileName + "/" + resourceName;
+    if (resourceName.endsWith(".class")) {
+      s += "data";
     }
+    return super.findResource(s);
   }
 
   /**

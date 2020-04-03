@@ -1,0 +1,13 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'io.opentelemetry.smoketest.securitymanager.Application'
+    )
+  }
+}
+
+dependencies {
+  testCompile project(':smoke-tests')
+}

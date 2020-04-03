@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.List;
-import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,11 +61,9 @@ public class AgentBootstrap {
 
   public static void agentmain(final String agentArgs, final Instrumentation inst) {
     try {
-
       final URL bootstrapURL = installBootstrapJar(inst);
 
-      final Class<?> agentClass =
-          ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.Agent");
+      final Class<?> agentClass = Class.forName("io.opentelemetry.auto.bootstrap.Agent");
       final Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
       startMethod.invoke(null, inst, bootstrapURL);
     } catch (final Throwable ex) {
@@ -87,12 +84,26 @@ public class AgentBootstrap {
       final File bootstrapFile = new File(bootstrapURL.toURI());
 
       if (!bootstrapFile.isDirectory()) {
-        inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapFile));
         return bootstrapURL;
       }
     }
 
-    System.out.println("Could not get bootstrap jar from code source, using -javaagent arg");
+    // Then try loading resource and parsing the URL
+    final URL inJarUrl =
+        ClassLoader.getSystemClassLoader()
+            .getResource(AgentBootstrap.class.getName().replace('.', '/').concat(".class"));
+    if (inJarUrl != null) {
+      String s = inJarUrl.toString();
+      // Jar urls are like file:/path/to/some.jar!/some/resource
+      if (s.contains("file:") && s.indexOf('!') > s.indexOf("file:")) {
+        s = s.substring(s.indexOf("file:"), s.indexOf('!'));
+        bootstrapURL = new URL(s);
+        return bootstrapURL;
+      }
+    }
+
+    System.out.println(
+        "Could not get bootstrap jar from code source or classloader resource, using -javaagent arg");
 
     // ManagementFactory indirectly references java.util.logging.LogManager
     // - On Oracle-based JDKs after 1.8
@@ -130,7 +141,6 @@ public class AgentBootstrap {
       throw new RuntimeException("Unable to find javaagent file: " + javaagentFile);
     }
     bootstrapURL = javaagentFile.toURI().toURL();
-    inst.appendToBootstrapClassLoaderSearch(new JarFile(javaagentFile));
 
     return bootstrapURL;
   }
@@ -139,10 +149,9 @@ public class AgentBootstrap {
     try {
       // Try Oracle-based
       final Class managementFactoryHelperClass =
-          AgentBootstrap.class.getClassLoader().loadClass("sun.management.ManagementFactoryHelper");
+          Class.forName("sun.management.ManagementFactoryHelper");
 
-      final Class vmManagementClass =
-          AgentBootstrap.class.getClassLoader().loadClass("sun.management.VMManagement");
+      final Class vmManagementClass = Class.forName("sun.management.VMManagement");
 
       Object vmManagement;
 
@@ -161,7 +170,7 @@ public class AgentBootstrap {
 
     } catch (final ReflectiveOperationException e) {
       try { // Try IBM-based.
-        final Class VMClass = AgentBootstrap.class.getClassLoader().loadClass("com.ibm.oti.vm.VM");
+        final Class VMClass = Class.forName("com.ibm.oti.vm.VM");
         final String[] argArray = (String[]) VMClass.getMethod("getVMArgs").invoke(null);
         return Arrays.asList(argArray);
       } catch (final ReflectiveOperationException e1) {

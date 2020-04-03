@@ -26,7 +26,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -76,7 +75,8 @@ public class UrlInstrumentation extends Instrumenter.Default {
       if (throwable != null) {
         // Various agent components end up calling `openConnection` indirectly
         // when loading classes. Avoid tracing these calls.
-        final boolean disableTracing = handler instanceof InternalJarURLHandler;
+        final boolean disableTracing =
+            url.toString().contains("auto-tooling-and-instrumentation.isolated");
         if (disableTracing) {
           return;
         }

@@ -35,6 +35,7 @@ include ':utils:thread-utils'
 // smoke tests
 include ':smoke-tests:cli'
 include ':smoke-tests:java9-modules'
+include ':smoke-tests:security-manager'
 include ':smoke-tests:play'
 include ':smoke-tests:springboot'
 include ':smoke-tests:wildfly'
