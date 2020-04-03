@@ -97,7 +97,7 @@ public class Config {
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_CONFIG_DIR = "jmxfetch.config.dir";
   public static final String JMX_FETCH_CONFIG = "jmxfetch.config";
-  public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
+  @Deprecated public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
   public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
   public static final String JMX_FETCH_STATSD_HOST = "jmxfetch.statsd.host";
@@ -110,8 +110,8 @@ public class Config {
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
   public static final String PROFILING_ENABLED = "profiling.enabled";
+  @Deprecated // Use dd.site instead
   public static final String PROFILING_URL = "profiling.url";
-
   public static final String PROFILING_API_KEY = "profiling.api-key";
   public static final String PROFILING_API_KEY_FILE = "profiling.api-key-file";
   public static final String PROFILING_API_KEY_OLD = "profiling.apikey";
@@ -278,7 +278,7 @@ public class Config {
   @Getter private final Double traceRateLimit;
 
   @Getter private final boolean profilingEnabled;
-  private final String profilingUrl;
+  @Deprecated private final String profilingUrl;
   @Getter private final String profilingApiKey;
   private final Map<String, String> profilingTags;
   @Getter private final int profilingStartDelay;
