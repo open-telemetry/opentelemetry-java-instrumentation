@@ -64,15 +64,15 @@ class ClassLoadingTest extends Specification {
   // We are doing this because Groovy cannot properly resolve constructor argument types in anonymous classes
   static class CountingClassLoader extends URLClassLoader {
     public int getResourceCount = 0
-    public int count = 0;
+    public int count = 0
 
     CountingClassLoader(URL[] urls) {
       super(urls, (ClassLoader) null)
     }
     @Override
     protected Class<?> findClass(final String name) throws ClassNotFoundException {
-      count++;
-      return super.findClass(name);
+      count++
+      return super.findClass(name)
     }
 
     @Override

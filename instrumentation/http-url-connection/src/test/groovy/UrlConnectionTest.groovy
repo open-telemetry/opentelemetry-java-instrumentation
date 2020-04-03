@@ -112,7 +112,7 @@ class UrlConnectionTest extends AgentTestRunner {
 
   def "AgentClassloader ClassNotFoundException doesn't create span"() {
     given:
-    ClassLoader agentLoader = new AgentClassLoader(null, null, null)
+    ClassLoader agentLoader = new AgentClassLoader(new URL("file:/does/not/exist"), null, null)
     ClassLoader childLoader = new URLClassLoader(new URL[0], agentLoader)
 
     when:
