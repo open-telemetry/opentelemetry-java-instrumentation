@@ -57,6 +57,8 @@ public final class ClassLoaderMatcher {
         CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
     private static final String AGENT_CLASSLOADER_NAME =
         "io.opentelemetry.auto.bootstrap.AgentClassLoader";
+    private static final String EXPORTER_CLASSLOADER_NAME =
+        "io.opentelemetry.auto.tooling.ExporterClassLoader";
 
     private SkipClassLoaderMatcher() {}
 
@@ -92,6 +94,7 @@ public final class ClassLoaderMatcher {
         case "org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader":
         case "sun.misc.Launcher$ExtClassLoader":
         case AGENT_CLASSLOADER_NAME:
+        case EXPORTER_CLASSLOADER_NAME:
           return true;
       }
       return false;

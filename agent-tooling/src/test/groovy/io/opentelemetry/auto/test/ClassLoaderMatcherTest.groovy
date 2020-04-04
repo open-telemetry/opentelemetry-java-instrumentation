@@ -17,6 +17,7 @@ package io.opentelemetry.auto.test
 
 import io.opentelemetry.auto.bootstrap.AgentClassLoader
 import io.opentelemetry.auto.tooling.ClassLoaderMatcher
+import io.opentelemetry.auto.tooling.ExporterClassLoader
 import io.opentelemetry.auto.util.test.AgentSpecification
 
 class ClassLoaderMatcherTest extends AgentSpecification {
@@ -27,6 +28,13 @@ class ClassLoaderMatcherTest extends AgentSpecification {
     final URLClassLoader agentLoader = new AgentClassLoader(root, null, null)
     expect:
     ClassLoaderMatcher.skipClassLoader().matches(agentLoader)
+  }
+
+  def "skips exporter classloader"() {
+    setup:
+    final URLClassLoader exporterLoader = new ExporterClassLoader(new URL[0], null)
+    expect:
+    ClassLoaderMatcher.skipClassLoader().matches(exporterLoader)
   }
 
   def "does not skip empty classloader"() {
@@ -44,5 +52,10 @@ class ClassLoaderMatcherTest extends AgentSpecification {
   def "AgentClassLoader class name is hardcoded in ClassLoaderMatcher"() {
     expect:
     AgentClassLoader.name == "io.opentelemetry.auto.bootstrap.AgentClassLoader"
+  }
+
+  def "ExporterClassLoader class name is hardcoded in ClassLoaderMatcher"() {
+    expect:
+    ExporterClassLoader.name == "io.opentelemetry.auto.tooling.ExporterClassLoader"
   }
 }
