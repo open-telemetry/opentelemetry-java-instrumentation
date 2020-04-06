@@ -6,7 +6,7 @@ import spock.lang.Specification
 
 abstract class AbstractSmokeTest extends Specification {
 
-  public static final PROFILING_API_KEY = "org2_api_key"
+  public static final API_KEY = "some-api-key"
   public static final PROFILING_START_DELAY_SECONDS = 1
   public static final int PROFILING_RECORDING_UPLOAD_PERIOD_SECONDS = 5
 
@@ -49,7 +49,7 @@ abstract class AbstractSmokeTest extends Specification {
     ProcessBuilder processBuilder = createProcessBuilder()
 
     processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
-    processBuilder.environment().put("DD_PROFILING_APIKEY", PROFILING_API_KEY)
+    processBuilder.environment().put("DD_API_KEY", API_KEY)
 
     processBuilder.redirectErrorStream(true)
     File log = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")

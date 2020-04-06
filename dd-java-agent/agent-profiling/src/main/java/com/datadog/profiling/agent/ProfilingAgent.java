@@ -34,7 +34,7 @@ public class ProfilingAgent {
         log.info("Profiling: disabled");
         return;
       }
-      if (config.getProfilingApiKey() == null) {
+      if (config.getApiKey() == null) {
         log.info("Profiling: no API key, profiling disabled");
         return;
       }
@@ -80,6 +80,7 @@ public class ProfilingAgent {
   }
 
   private static class ShutdownHook extends Thread {
+
     private final WeakReference<ProfilingSystem> profilerRef;
     private final WeakReference<RecordingUploader> uploaderRef;
 
