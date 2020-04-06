@@ -20,17 +20,17 @@ public class ControllerFactoryTest {
   @Test
   @EnabledOnJre({JAVA_8})
   public void testCreateControllerJava8() {
-    System.out.println("Java Version: " + System.getProperty("java.version") + " " + System.getProperty("java.vendor"));
-    UnsupportedEnvironmentException unsupportedEnvironmentException = assertThrows(
-      UnsupportedEnvironmentException.class,
-      () -> {
-        ControllerFactory.createController(config);
-      });
-    System.out.println(unsupportedEnvironmentException.getMessage());
-    System.out.println(System.getProperty("java.vendor"));
-    String expected = "The JFR controller could not find a supported JFR API, use OpenJDK 11+ or Azul zulu version 1.8.0_212+";
+    UnsupportedEnvironmentException unsupportedEnvironmentException =
+        assertThrows(
+            UnsupportedEnvironmentException.class,
+            () -> {
+              ControllerFactory.createController(config);
+            });
+    String expected =
+        "The JFR controller could not find a supported JFR API, use OpenJDK 11+ or Azul zulu version 1.8.0_212+";
     if ("Azul Systems, Inc.".equals(System.getProperty("java.vendor"))) {
-      expected = "The JFR controller could not find a supported JFR API, use Azul zulu version 1.8.0_212+";
+      expected =
+          "The JFR controller could not find a supported JFR API, use Azul zulu version 1.8.0_212+";
     }
     assertEquals(expected, unsupportedEnvironmentException.getMessage());
   }

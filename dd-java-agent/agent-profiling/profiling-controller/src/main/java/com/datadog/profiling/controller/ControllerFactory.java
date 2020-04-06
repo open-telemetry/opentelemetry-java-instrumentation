@@ -49,8 +49,8 @@ public final class ControllerFactory {
         | InstantiationException
         | IllegalAccessException
         | InvocationTargetException e) {
-      String exMsg = "The JFR controller could not find a supported JFR API"
-        + getFixProposalMessage();
+      String exMsg =
+          "The JFR controller could not find a supported JFR API" + getFixProposalMessage();
       throw new UnsupportedEnvironmentException(exMsg, e);
     }
   }
