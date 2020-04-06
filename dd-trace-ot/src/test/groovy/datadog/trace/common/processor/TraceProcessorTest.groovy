@@ -2,6 +2,7 @@ package datadog.trace.common.processor
 
 import datadog.opentracing.SpanFactory
 import datadog.trace.agent.test.utils.ConfigUtils
+import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.processor.rule.Status404Rule
 import datadog.trace.common.processor.rule.URLAsResourceNameRule
 import datadog.trace.util.test.DDSpecification
@@ -60,8 +61,11 @@ class TraceProcessorTest extends DDSpecification {
     span.getResourceName() == "404"
   }
 
-  def "status #status code error=#error"() {
+  def "#type status #status code error=#error"() {
     setup:
+    if (type) {
+      span.setSpanType(DDSpanTypes."$type")
+    }
     Tags.HTTP_STATUS.set(span, status)
 
     when:
@@ -71,14 +75,23 @@ class TraceProcessorTest extends DDSpecification {
     span.isError() == error
 
     where:
-    status | error
-    400    | false
-    404    | false
-    499    | false
-    500    | true
-    550    | true
-    599    | true
-    600    | false
+    type          | status | error
+    null          | 400    | false
+    null          | 500    | false
+    "HTTP_CLIENT" | 400    | true
+    "HTTP_CLIENT" | 404    | true
+    "HTTP_CLIENT" | 499    | true
+    "HTTP_CLIENT" | 500    | false
+    "HTTP_CLIENT" | 550    | false
+    "HTTP_CLIENT" | 599    | false
+    "HTTP_CLIENT" | 600    | false
+    "HTTP_SERVER" | 400    | false
+    "HTTP_SERVER" | 404    | false
+    "HTTP_SERVER" | 499    | false
+    "HTTP_SERVER" | 500    | true
+    "HTTP_SERVER" | 550    | true
+    "HTTP_SERVER" | 599    | true
+    "HTTP_SERVER" | 600    | false
   }
 
   def "resource name set with url path #url to #resourceName"() {

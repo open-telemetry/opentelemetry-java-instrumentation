@@ -273,6 +273,7 @@ class SpanDecoratorTest extends DDSpecification {
 
     when:
     span.setTag(ANALYTICS_SAMPLE_RATE, rate)
+    span.finish()
 
     then:
     span.metrics.get(ANALYTICS_SAMPLE_RATE) == result

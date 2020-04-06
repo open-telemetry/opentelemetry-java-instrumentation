@@ -23,10 +23,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class TwilioClientTest extends AgentTestRunner {
 
@@ -108,23 +105,24 @@ class TwilioClientTest extends AgentTestRunner {
     Twilio.init(ACCOUNT_SID, AUTH_TOKEN)
   }
 
+  def cleanup() {
+    Twilio.getExecutorService().shutdown()
+    Twilio.setExecutorService(null)
+    Twilio.setRestClient(null)
+  }
+
   def "synchronous message"() {
     setup:
     twilioRestClient.getObjectMapper() >> new ObjectMapper()
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes()), 200)
 
-    activateSpan(startSpan("test"), true)
-
-    Message message = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(twilioRestClient)
-
-    def scope = activeScope()
-    if (scope) {
-      scope.close()
+    Message message = runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(twilioRestClient)
     }
 
     expect:
@@ -169,19 +167,14 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes()), 200)
 
-    activateSpan(startSpan("test"), true)
+    Call call = runUnderTrace("test") {
+      Call.creator(
+        new PhoneNumber("+15558881234"),  // To number
+        new PhoneNumber("+15559994321"),  // From number
 
-    Call call = Call.creator(
-      new PhoneNumber("+15558881234"),  // To number
-      new PhoneNumber("+15559994321"),  // From number
-
-      // Read TwiML at this URL when a call connects (hold music)
-      new URI("http://twimlets.com/holdmusic?Bucket=com.twilio.music.ambient")
-    ).create(twilioRestClient)
-
-    def scope = activeScope()
-    if (scope) {
-      scope.close()
+        // Read TwiML at this URL when a call connects (hold music)
+        new URI("http://twimlets.com/holdmusic?Bucket=com.twilio.music.ambient")
+      ).create(twilioRestClient)
     }
 
     expect:
@@ -250,17 +243,12 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    activateSpan(startSpan("test"), true)
-
-    Message message = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(realTwilioRestClient)
-
-    def scope = activeScope()
-    if (scope) {
-      scope.close()
+    Message message = runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(realTwilioRestClient)
     }
 
     expect:
@@ -361,21 +349,15 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    activateSpan(startSpan("test"), true)
-
-    Message message = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(realTwilioRestClient)
-
-    def scope = activeScope()
-    if (scope) {
-      scope.close()
+    Message message = runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(realTwilioRestClient)
     }
 
     expect:
-
     message.body == "Hello, World!"
 
     assertTraces(1) {
@@ -427,14 +409,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "http.request"
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
-          errored true
+          errored false
           tags {
             "$Tags.COMPONENT" "apache-httpclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.PEER_HOSTNAME" String
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.PEER_HOSTNAME" "api.twilio.com"
+            "$Tags.HTTP_URL" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
+            "$Tags.HTTP_METHOD" "POST"
+            "$Tags.HTTP_STATUS" 500
             defaultTags()
           }
         }
@@ -488,29 +470,22 @@ class TwilioClientTest extends AgentTestRunner {
         .httpClient(networkHttpClient)
         .build()
 
-    activateSpan(startSpan("test"), true)
+    Message message = runUnderTrace("test") {
+      ListenableFuture<Message> future = Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).createAsync(realTwilioRestClient)
 
-    ListenableFuture<Message> future = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).createAsync(realTwilioRestClient)
-
-    Message message
-    try {
-      message = future.get(10, TimeUnit.SECONDS)
-    } finally {
-      // Give the future callback a chance to run
-      Thread.sleep(1000)
-      def scope = activeScope()
-      if (scope) {
-        activeSpan().finish()
-        scope.close()
+      try {
+        return future.get(10, TimeUnit.SECONDS)
+      } finally {
+        // Give the future callback a chance to run
+        Thread.sleep(1000)
       }
     }
 
     expect:
-
     message.body == "Hello, World!"
 
     assertTraces(1) {
@@ -580,14 +555,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "http.request"
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
-          errored true
+          errored false
           tags {
             "$Tags.COMPONENT" "apache-httpclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.PEER_HOSTNAME" String
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.PEER_HOSTNAME" "api.twilio.com"
+            "$Tags.HTTP_URL" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
+            "$Tags.HTTP_METHOD" "POST"
+            "$Tags.HTTP_STATUS" 500
             defaultTags()
           }
         }
@@ -607,34 +582,29 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
-    activateSpan(startSpan("test"), true)
-
     when:
-    Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(twilioRestClient)
+    runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(twilioRestClient)
+    }
 
     then:
     thrown(ApiException)
 
-    def scope = activeScope()
-    if (scope) {
-      scope.close()
-    }
-
     expect:
-
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
           operationName "test"
           resourceName "test"
-          errored false
+          errored true
           parent()
           tags {
+            errorTags(ApiException, "Testing Failure")
             defaultTags()
           }
         }
@@ -702,24 +672,19 @@ class TwilioClientTest extends AgentTestRunner {
 
     when:
 
-    activateSpan(startSpan("test"), true)
+    Message message = runUnderTrace("test") {
 
-    ListenableFuture<Message> future = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).createAsync(twilioRestClient)
+      ListenableFuture<Message> future = Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).createAsync(twilioRestClient)
 
-    Message message
-    try {
-      message = future.get(10, TimeUnit.SECONDS)
-    } finally {
-      // Give the future callback a chance to run
-      Thread.sleep(1000)
-      def scope = activeScope()
-      if (scope) {
-        activeSpan().finish()
-        scope.close()
+      try {
+        return future.get(10, TimeUnit.SECONDS)
+      } finally {
+        // Give the future callback a chance to run
+        Thread.sleep(1000)
       }
     }
 
@@ -792,25 +757,18 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
-    activateSpan(startSpan("test"), true)
-
-    ListenableFuture<Message> future = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).createAsync(twilioRestClient)
-
-
     when:
-    Message message
-    try {
-      message = future.get(10, TimeUnit.SECONDS)
+    Message message = runUnderTrace("test") {
+      ListenableFuture<Message> future = Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).createAsync(twilioRestClient)
 
-    } finally {
-      Thread.sleep(1000)
-      def scope = activeScope()
-      if (scope) {
-        scope.close()
+      try {
+        return future.get(10, TimeUnit.SECONDS)
+      } finally {
+        Thread.sleep(1000)
       }
     }
 
@@ -825,10 +783,11 @@ class TwilioClientTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "test"
           resourceName "test"
-          errored false
+          errored true
           parent()
           tags {
             defaultTags()
+            errorTags(ApiException, "Testing Failure")
           }
         }
         span(1) {
@@ -859,11 +818,5 @@ class TwilioClientTest extends AgentTestRunner {
         }
       }
     }
-
-    cleanup:
-    Twilio.getExecutorService().shutdown()
-    Twilio.setExecutorService(null)
-    Twilio.setRestClient(null)
   }
-
 }
