@@ -1,5 +1,6 @@
 package com.datadog.profiling.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.condition.JRE.JAVA_8;
 
@@ -19,10 +20,18 @@ public class ControllerFactoryTest {
   @Test
   @EnabledOnJre({JAVA_8})
   public void testCreateControllerJava8() {
-    assertThrows(
-        UnsupportedEnvironmentException.class,
-        () -> {
-          ControllerFactory.createController(config);
-        });
+    UnsupportedEnvironmentException unsupportedEnvironmentException =
+        assertThrows(
+            UnsupportedEnvironmentException.class,
+            () -> {
+              ControllerFactory.createController(config);
+            });
+    String expected =
+        "The JFR controller could not find a supported JFR API, use OpenJDK 11+ or Azul zulu version 1.8.0_212+";
+    if ("Azul Systems, Inc.".equals(System.getProperty("java.vendor"))) {
+      expected =
+          "The JFR controller could not find a supported JFR API, use Azul zulu version 1.8.0_212+";
+    }
+    assertEquals(expected, unsupportedEnvironmentException.getMessage());
   }
 }
