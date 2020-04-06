@@ -8,6 +8,8 @@ import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import static datadog.trace.api.Config.AGENT_HOST
 import static datadog.trace.api.Config.AGENT_PORT_LEGACY
 import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
+import static datadog.trace.api.Config.API_KEY
+import static datadog.trace.api.Config.API_KEY_FILE
 import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
@@ -32,9 +34,8 @@ import static datadog.trace.api.Config.LANGUAGE_TAG_VALUE
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.PRIORITY_SAMPLING
-import static datadog.trace.api.Config.PROFILING_API_KEY
-import static datadog.trace.api.Config.PROFILING_API_KEY_FILE
 import static datadog.trace.api.Config.PROFILING_API_KEY_FILE_OLD
+import static datadog.trace.api.Config.PROFILING_API_KEY_FILE_VERY_OLD
 import static datadog.trace.api.Config.PROFILING_ENABLED
 import static datadog.trace.api.Config.PROFILING_PROXY_HOST
 import static datadog.trace.api.Config.PROFILING_PROXY_PASSWORD
@@ -75,6 +76,7 @@ class ConfigTest extends DDSpecification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
+  private static final DD_API_KEY_ENV = "DD_API_KEY"
   private static final DD_SERVICE_NAME_ENV = "DD_SERVICE_NAME"
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
@@ -91,8 +93,8 @@ class ConfigTest extends DDSpecification {
   private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
   private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
 
-  private static final DD_PROFILING_API_KEY_ENV = "DD_PROFILING_API_KEY"
-  private static final DD_PROFILING_API_KEY_OLD_ENV = "DD_PROFILING_APIKEY"
+  private static final DD_PROFILING_API_KEY_OLD_ENV = "DD_PROFILING_API_KEY"
+  private static final DD_PROFILING_API_KEY_VERY_OLD_ENV = "DD_PROFILING_APIKEY"
   private static final DD_PROFILING_TAGS_ENV = "DD_PROFILING_TAGS"
   private static final DD_PROFILING_PROXY_PASSWORD_ENV = "DD_PROFILING_PROXY_PASSWORD"
 
@@ -101,6 +103,8 @@ class ConfigTest extends DDSpecification {
     Config config = provider()
 
     then:
+    config.apiKey == null
+    config.site == Config.DEFAULT_SITE
     config.serviceName == "unnamed-java-app"
     config.traceEnabled == true
     config.writerType == "DDAgentWriter"
@@ -135,9 +139,7 @@ class ConfigTest extends DDSpecification {
     config.healthMetricsStatsdPort == null
 
     config.profilingEnabled == false
-    config.site == Config.DEFAULT_SITE
     config.profilingUrl == null
-    config.profilingApiKey == null
     config.mergedProfilingTags == [(HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.profilingStartDelay == 10
     config.profilingStartForceFirst == false
@@ -162,6 +164,8 @@ class ConfigTest extends DDSpecification {
   def "specify overrides via properties"() {
     setup:
     def prop = new Properties()
+    prop.setProperty(API_KEY, "new api key")
+    prop.setProperty(SITE, "new site")
     prop.setProperty(SERVICE_NAME, "something else")
     prop.setProperty(TRACE_ENABLED, "false")
     prop.setProperty(WRITER_TYPE, "LoggingWriter")
@@ -201,9 +205,7 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(TRACE_RATE_LIMIT, "200")
 
     prop.setProperty(PROFILING_ENABLED, "true")
-    prop.setProperty(SITE, "new site")
     prop.setProperty(PROFILING_URL, "new url")
-    prop.setProperty(PROFILING_API_KEY, "new api key")
     prop.setProperty(PROFILING_TAGS, "f:6,host:test-host")
     prop.setProperty(PROFILING_START_DELAY, "1111")
     prop.setProperty(PROFILING_START_FORCE_FIRST, "true")
@@ -220,6 +222,8 @@ class ConfigTest extends DDSpecification {
     Config config = Config.get(prop)
 
     then:
+    config.apiKey == "new api key" // we can still override via internal properties object
+    config.site == "new site"
     config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
@@ -258,9 +262,7 @@ class ConfigTest extends DDSpecification {
     config.traceRateLimit == 200
 
     config.profilingEnabled == true
-    config.site == "new site"
     config.profilingUrl == "new url"
-    config.profilingApiKey == "new api key" // we can still override via internal properties object
     config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.profilingStartDelay == 1111
     config.profilingStartForceFirst == true
@@ -276,6 +278,8 @@ class ConfigTest extends DDSpecification {
 
   def "specify overrides via system properties"() {
     setup:
+    System.setProperty(PREFIX + API_KEY, "new api key")
+    System.setProperty(PREFIX + SITE, "new site")
     System.setProperty(PREFIX + SERVICE_NAME, "something else")
     System.setProperty(PREFIX + TRACE_ENABLED, "false")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
@@ -315,9 +319,7 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_RATE_LIMIT, "200")
 
     System.setProperty(PREFIX + PROFILING_ENABLED, "true")
-    System.setProperty(PREFIX + SITE, "new site")
     System.setProperty(PREFIX + PROFILING_URL, "new url")
-    System.setProperty(PREFIX + PROFILING_API_KEY, "new api key")
     System.setProperty(PREFIX + PROFILING_TAGS, "f:6,host:test-host")
     System.setProperty(PREFIX + PROFILING_START_DELAY, "1111")
     System.setProperty(PREFIX + PROFILING_START_FORCE_FIRST, "true")
@@ -334,6 +336,8 @@ class ConfigTest extends DDSpecification {
     Config config = new Config()
 
     then:
+    config.apiKey == null // system properties cannot be used to provide a key
+    config.site == "new site"
     config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
@@ -372,9 +376,7 @@ class ConfigTest extends DDSpecification {
     config.traceRateLimit == 200
 
     config.profilingEnabled == true
-    config.site == "new site"
     config.profilingUrl == "new url"
-    config.profilingApiKey == null // system properties cannot be used to provide a key
     config.mergedProfilingTags == [b: "2", f: "6", (HOST_TAG): "test-host", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.profilingStartDelay == 1111
     config.profilingStartForceFirst == true
@@ -390,6 +392,7 @@ class ConfigTest extends DDSpecification {
 
   def "specify overrides via env vars"() {
     setup:
+    environmentVariables.set(DD_API_KEY_ENV, "test-api-key")
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
@@ -397,12 +400,12 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
     environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
     environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
-    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "test-api-key")
 
     when:
     def config = new Config()
 
     then:
+    config.apiKey == "test-api-key"
     config.serviceName == "still something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
@@ -410,7 +413,6 @@ class ConfigTest extends DDSpecification {
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.jmxFetchMetricsConfigs == ["some/file"]
     config.reportHostName == true
-    config.profilingApiKey == "test-api-key"
   }
 
   def "sys props override env vars"() {
@@ -1008,19 +1010,30 @@ class ConfigTest extends DDSpecification {
 
   def "verify api key loaded from file: #path"() {
     setup:
-    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "default-api-key")
-    System.setProperty(PREFIX + PROFILING_API_KEY_FILE, path)
+    environmentVariables.set(DD_API_KEY_ENV, "default-api-key")
+    System.setProperty(PREFIX + API_KEY_FILE, path)
 
     when:
     def config = new Config()
 
     then:
-    config.profilingApiKey == expectedKey
+    config.apiKey == expectedKey
 
     where:
     path                                                        | expectedKey
     getClass().getClassLoader().getResource("apikey").getFile() | "test-api-key"
     "/path/that/doesnt/exist"                                   | "default-api-key"
+  }
+
+  def "verify api key loaded from old option name"() {
+    setup:
+    environmentVariables.set(DD_PROFILING_API_KEY_OLD_ENV, "old-api-key")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.apiKey == "old-api-key"
   }
 
   def "verify api key loaded from file for old option name: #path"() {
@@ -1032,7 +1045,7 @@ class ConfigTest extends DDSpecification {
     def config = new Config()
 
     then:
-    config.profilingApiKey == expectedKey
+    config.apiKey == expectedKey
 
     where:
     path                                                            | expectedKey
@@ -1040,16 +1053,56 @@ class ConfigTest extends DDSpecification {
     "/path/that/doesnt/exist"                                       | "default-api-key"
   }
 
-  def "verify api key loaded from new option when both new and old are set"() {
+  def "verify api key loaded from very old option name"() {
     setup:
-    System.setProperty(PREFIX + PROFILING_API_KEY_FILE_OLD, getClass().getClassLoader().getResource("apikey.old").getFile())
-    System.setProperty(PREFIX + PROFILING_API_KEY_FILE, getClass().getClassLoader().getResource("apikey").getFile())
+    environmentVariables.set(DD_PROFILING_API_KEY_VERY_OLD_ENV, "very-old-api-key")
 
     when:
     def config = new Config()
 
     then:
-    config.profilingApiKey == "test-api-key"
+    config.apiKey == "very-old-api-key"
+  }
+
+  def "verify api key loaded from file for very old option name: #path"() {
+    setup:
+    environmentVariables.set(DD_PROFILING_API_KEY_VERY_OLD_ENV, "default-api-key")
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE_VERY_OLD, path)
+
+    when:
+    def config = new Config()
+
+    then:
+    config.apiKey == expectedKey
+
+    where:
+    path                                                                 | expectedKey
+    getClass().getClassLoader().getResource("apikey.very-old").getFile() | "test-api-key-very-old"
+    "/path/that/doesnt/exist"                                            | "default-api-key"
+  }
+
+  def "verify api key loaded from new option when both new and old are set"() {
+    setup:
+    System.setProperty(PREFIX + API_KEY_FILE, getClass().getClassLoader().getResource("apikey").getFile())
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE_OLD, getClass().getClassLoader().getResource("apikey.old").getFile())
+
+    when:
+    def config = new Config()
+
+    then:
+    config.apiKey == "test-api-key"
+  }
+
+  def "verify api key loaded from new option when both old and very old are set"() {
+    setup:
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE_OLD, getClass().getClassLoader().getResource("apikey.old").getFile())
+    System.setProperty(PREFIX + PROFILING_API_KEY_FILE_VERY_OLD, getClass().getClassLoader().getResource("apikey.very-old").getFile())
+
+    when:
+    def config = new Config()
+
+    then:
+    config.apiKey == "test-api-key-old"
   }
 
   def "verify dd.tags overrides global tags in properties"() {
@@ -1112,30 +1165,30 @@ class ConfigTest extends DDSpecification {
 
     config.mergedProfilingTags == [a: "1", f: "6", (HOST_TAG): config.getHostName(), (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
   }
-  
+
   def "toString works when passwords are empty"() {
     when:
     def config = new Config()
 
     then:
-    config.toString().contains("profilingApiKey=null")
+    config.toString().contains("apiKey=null")
     config.toString().contains("profilingProxyPassword=null")
   }
 
   def "sensitive information removed for toString/debug log"() {
     setup:
-    environmentVariables.set(DD_PROFILING_API_KEY_ENV, "test-secret-api-key")
+    environmentVariables.set(DD_API_KEY_ENV, "test-secret-api-key")
     environmentVariables.set(DD_PROFILING_PROXY_PASSWORD_ENV, "test-secret-proxy-password")
 
     when:
     def config = new Config()
 
     then:
-    config.toString().contains("profilingApiKey=****")
+    config.toString().contains("apiKey=****")
     !config.toString().contains("test-secret-api-key")
     config.toString().contains("profilingProxyPassword=****")
     !config.toString().contains("test-secret-proxy-password")
-    config.profilingApiKey == "test-secret-api-key"
+    config.apiKey == "test-secret-api-key"
     config.profilingProxyPassword == "test-secret-proxy-password"
   }
 

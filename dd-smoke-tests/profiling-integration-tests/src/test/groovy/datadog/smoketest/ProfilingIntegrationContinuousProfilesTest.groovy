@@ -57,7 +57,7 @@ class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
 
     then:
     firstRequest.getRequestUrl().toString() == profilingUrl
-    firstRequest.getHeader("DD-API-KEY") == PROFILING_API_KEY
+    firstRequest.getHeader("DD-API-KEY") == API_KEY
 
     firstRequestParameters.get("recording-name").get(0) == 'dd-profiling'
     firstRequestParameters.get("format").get(0) == "jfr"
@@ -87,7 +87,7 @@ class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
 
     then:
     secondRequest.getRequestUrl().toString() == profilingUrl
-    secondRequest.getHeader("DD-API-KEY") == PROFILING_API_KEY
+    secondRequest.getHeader("DD-API-KEY") == API_KEY
 
     secondRequestParameters.get("recording-name").get(0) == 'dd-profiling'
     def secondStartTime = Instant.parse(secondRequestParameters.get("recording-start").get(0))

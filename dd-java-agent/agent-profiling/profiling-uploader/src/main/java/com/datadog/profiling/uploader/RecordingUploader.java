@@ -122,7 +122,7 @@ public final class RecordingUploader {
 
   public RecordingUploader(final Config config) {
     url = config.getFinalProfilingUrl();
-    apiKey = config.getProfilingApiKey();
+    apiKey = config.getApiKey();
 
     /*
     FIXME: currently `Config` class cannot get access to some pieces of information we need here:
