@@ -40,7 +40,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class JSPInstrumentation extends Instrumenter.Default {
 
   public JSPInstrumentation() {
-    super("jsp", "jsp-render");
+    super("jsp");
   }
 
   @Override

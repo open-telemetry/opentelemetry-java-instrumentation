@@ -42,7 +42,7 @@ import org.apache.http.HttpRequest;
 public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Default {
 
   public ApacheHttpClientRedirectInstrumentation() {
-    super("httpasyncclient", "apache-httpasyncclient");
+    super("apache-httpasyncclient");
   }
 
   @Override

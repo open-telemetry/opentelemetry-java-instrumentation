@@ -36,10 +36,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrumentation {
 
-  public RouterFunctionInstrumentation() {
-    super("spring-webflux-functional");
-  }
-
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.

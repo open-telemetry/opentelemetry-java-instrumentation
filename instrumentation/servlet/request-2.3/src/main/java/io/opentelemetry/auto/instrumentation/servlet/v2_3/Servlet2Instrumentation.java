@@ -34,7 +34,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class Servlet2Instrumentation extends Instrumenter.Default {
 
   public Servlet2Instrumentation() {
-    super("servlet", "servlet-2");
+    super("servlet-2.3", "servlet");
   }
 
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3

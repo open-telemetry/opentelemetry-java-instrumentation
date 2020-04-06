@@ -44,7 +44,7 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 public final class ResteasyClientConnectionErrorInstrumentation extends Instrumenter.Default {
 
   public ResteasyClientConnectionErrorInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-client");
+    super("jaxrs-client");
   }
 
   @Override

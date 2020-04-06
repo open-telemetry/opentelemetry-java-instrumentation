@@ -37,7 +37,7 @@ import org.apache.kafka.common.record.TimestampType;
 public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Instrumenter.Default {
 
   public KafkaStreamsSourceNodeRecordDeserializerInstrumentation() {
-    super("kafka", "kafka-streams");
+    super("kafka-streams");
   }
 
   @Override

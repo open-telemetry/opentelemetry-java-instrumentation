@@ -41,7 +41,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ContainerRequestFilterInstrumentation extends Instrumenter.Default {
 
   public ContainerRequestFilterInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-filter");
+    super("jaxrs");
   }
 
   @Override

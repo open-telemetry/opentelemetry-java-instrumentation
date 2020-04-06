@@ -55,7 +55,7 @@ import org.apache.http.protocol.HttpContext;
 public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
   public ApacheHttpAsyncClientInstrumentation() {
-    super("httpasyncclient", "apache-httpasyncclient");
+    super("apache-httpasyncclient");
   }
 
   @Override

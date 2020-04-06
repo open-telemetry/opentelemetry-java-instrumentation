@@ -39,7 +39,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class HttpServletResponseInstrumentation extends Instrumenter.Default {
   public HttpServletResponseInstrumentation() {
-    super("servlet", "servlet-response");
+    super("servlet");
   }
 
   @Override

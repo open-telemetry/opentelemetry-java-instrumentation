@@ -34,8 +34,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @Slf4j
 public abstract class AbstractExecutorInstrumentation extends Instrumenter.Default {
 
-  public static final String EXEC_NAME = "java_concurrent";
-
   private final boolean TRACE_ALL_EXECUTORS = Config.get().isTraceExecutorsAll();
 
   /**
@@ -52,7 +50,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
   private final Collection<String> WHITELISTED_EXECUTORS_PREFIXES;
 
   public AbstractExecutorInstrumentation(final String... additionalNames) {
-    super(EXEC_NAME, additionalNames);
+    super("java-concurrent", additionalNames);
 
     if (TRACE_ALL_EXECUTORS) {
       log.info("Tracing all executors enabled.");

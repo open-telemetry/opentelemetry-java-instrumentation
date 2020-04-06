@@ -40,7 +40,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
   public AsyncContextInstrumentation() {
-    super("servlet", "servlet-3");
+    super("servlet-3.0", "servlet");
   }
 
   @Override

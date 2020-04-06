@@ -46,7 +46,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   public RmiServerInstrumentation() {
-    super("rmi", "rmi-server");
+    super("rmi");
   }
 
   @Override

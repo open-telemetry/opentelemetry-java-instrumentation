@@ -44,7 +44,7 @@ import org.glassfish.jersey.client.ClientRequest;
 public final class JerseyClientConnectionErrorInstrumentation extends Instrumenter.Default {
 
   public JerseyClientConnectionErrorInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-client");
+    super("jaxrs-client");
   }
 
   @Override

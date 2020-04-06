@@ -50,7 +50,7 @@ import scala.util.Try;
 @AutoService(Instrumenter.class)
 public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   public AkkaHttpClientInstrumentation() {
-    super("akka-http", "akka-http-client");
+    super("akka-http");
   }
 
   @Override

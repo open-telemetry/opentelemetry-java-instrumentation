@@ -18,10 +18,9 @@ package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 import io.opentelemetry.auto.tooling.Instrumenter;
 
 public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Default {
-  private static final String INSTRUMENTATION_NAME = "aws-sdk";
 
   public AbstractAwsClientInstrumentation() {
-    super(INSTRUMENTATION_NAME);
+    super("aws-sdk");
   }
 
   @Override

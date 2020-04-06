@@ -20,14 +20,13 @@ import net.bytebuddy.utility.JavaModule;
 
 @AutoService(Instrumenter.class)
 public class MDCInjectionInstrumentation extends Instrumenter.Default {
-  public static final String MDC_INSTRUMENTATION_NAME = "mdc";
 
   // Intentionally doing the string replace to bypass gradle shadow rename
   // mdcClassName = org.slf4j.MDC
   private static final String mdcClassName = "org.TMP.MDC".replaceFirst("TMP", "slf4j");
 
   public MDCInjectionInstrumentation() {
-    super(MDC_INSTRUMENTATION_NAME);
+    super("slf4j-mdc");
   }
 
   @Override

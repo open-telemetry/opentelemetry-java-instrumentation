@@ -48,7 +48,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
   public TwilioAsyncInstrumentation() {
-    super("twilio-sdk");
+    super("twilio");
   }
 
   @Override

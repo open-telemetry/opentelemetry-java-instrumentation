@@ -53,11 +53,8 @@ import org.jboss.netty.handler.codec.http.HttpServerCodec;
 @AutoService(Instrumenter.class)
 public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
-  static final String INSTRUMENTATION_NAME = "netty";
-  static final String[] ADDITIONAL_INSTRUMENTATION_NAMES = {"netty-3.9"};
-
   public NettyChannelPipelineInstrumentation() {
-    super(INSTRUMENTATION_NAME, ADDITIONAL_INSTRUMENTATION_NAMES);
+    super("netty-3.8", "netty");
   }
 
   @Override

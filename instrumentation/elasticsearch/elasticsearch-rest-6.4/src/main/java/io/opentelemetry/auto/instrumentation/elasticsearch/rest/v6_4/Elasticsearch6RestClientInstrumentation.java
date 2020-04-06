@@ -40,7 +40,7 @@ import org.elasticsearch.client.ResponseListener;
 public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Default {
 
   public Elasticsearch6RestClientInstrumentation() {
-    super("elasticsearch", "elasticsearch-rest", "elasticsearch-rest-6");
+    super("elasticsearch-rest-6.0", "elasticsearch-rest", "elasticsearch");
   }
 
   @Override

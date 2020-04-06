@@ -42,7 +42,7 @@ import org.elasticsearch.action.ActionResponse;
 public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.Default {
 
   public Elasticsearch2TransportClientInstrumentation() {
-    super("elasticsearch", "elasticsearch-transport", "elasticsearch-transport-2");
+    super("elasticsearch-transport-2.0", "elasticsearch-transport", "elasticsearch");
   }
 
   @Override

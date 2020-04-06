@@ -24,7 +24,7 @@ import org.hibernate.SharedSessionContract;
 public abstract class AbstractHibernateInstrumentation extends Instrumenter.Default {
 
   public AbstractHibernateInstrumentation() {
-    super("hibernate", "hibernate-core");
+    super("hibernate");
   }
 
   @Override

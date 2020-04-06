@@ -44,7 +44,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
   public HandlerAdapterInstrumentation() {
-    super("spring-web");
+    super("spring-webmvc");
   }
 
   @Override

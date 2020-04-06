@@ -36,7 +36,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   public JaxRsClientInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-client");
+    super("jaxrs-client");
   }
 
   @Override

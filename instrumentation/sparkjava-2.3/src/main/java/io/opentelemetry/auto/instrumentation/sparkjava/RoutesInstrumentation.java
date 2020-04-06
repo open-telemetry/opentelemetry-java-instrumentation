@@ -38,7 +38,7 @@ import spark.routematch.RouteMatch;
 public class RoutesInstrumentation extends Instrumenter.Default {
 
   public RoutesInstrumentation() {
-    super("sparkjava", "sparkjava-2.4");
+    super("sparkjava");
   }
 
   @Override

@@ -34,7 +34,7 @@ import okhttp3.OkHttpClient;
 public class OkHttp3Instrumentation extends Instrumenter.Default {
 
   public OkHttp3Instrumentation() {
-    super("okhttp", "okhttp-3");
+    super("okhttp");
   }
 
   @Override

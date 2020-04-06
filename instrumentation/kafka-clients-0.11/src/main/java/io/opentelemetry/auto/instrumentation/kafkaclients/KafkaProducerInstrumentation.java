@@ -49,7 +49,7 @@ import org.apache.kafka.common.record.RecordBatch;
 public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
   public KafkaProducerInstrumentation() {
-    super("kafka");
+    super("kafka-clients");
   }
 
   @Override

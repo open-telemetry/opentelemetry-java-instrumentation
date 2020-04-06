@@ -42,7 +42,7 @@ import org.springframework.web.servlet.ModelAndView;
 public final class DispatcherServletInstrumentation extends Instrumenter.Default {
 
   public DispatcherServletInstrumentation() {
-    super("spring-web");
+    super("spring-webmvc");
   }
 
   @Override

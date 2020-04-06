@@ -43,7 +43,7 @@ import org.apache.geode.cache.Region;
 @AutoService(Instrumenter.class)
 public class GeodeInstrumentation extends Instrumenter.Default {
   public GeodeInstrumentation() {
-    super("geode", "geode-client");
+    super("geode");
   }
 
   @Override

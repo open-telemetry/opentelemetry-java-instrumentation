@@ -39,7 +39,7 @@ import org.elasticsearch.client.ResponseListener;
 public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Default {
 
   public Elasticsearch5RestClientInstrumentation() {
-    super("elasticsearch", "elasticsearch-rest", "elasticsearch-rest-5");
+    super("elasticsearch-rest-5.0", "elasticsearch-rest", "elasticsearch");
   }
 
   @Override

@@ -40,7 +40,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Default {
 
   public JaxRsAsyncResponseInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-annotations");
+    super("jaxrs");
   }
 
   @Override

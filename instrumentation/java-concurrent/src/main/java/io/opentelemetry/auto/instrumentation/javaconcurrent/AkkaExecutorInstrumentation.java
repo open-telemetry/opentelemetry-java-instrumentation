@@ -42,7 +42,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   public AkkaExecutorInstrumentation() {
-    super(EXEC_NAME + ".akka_fork_join");
+    super("java-concurrent-akka");
   }
 
   @Override

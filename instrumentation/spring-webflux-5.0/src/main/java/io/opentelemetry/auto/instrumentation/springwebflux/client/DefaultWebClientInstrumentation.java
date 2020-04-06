@@ -34,7 +34,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class DefaultWebClientInstrumentation extends Instrumenter.Default {
 
   public DefaultWebClientInstrumentation() {
-    super("spring-webflux", "spring-webflux-client");
+    super("spring-webflux");
   }
 
   @Override

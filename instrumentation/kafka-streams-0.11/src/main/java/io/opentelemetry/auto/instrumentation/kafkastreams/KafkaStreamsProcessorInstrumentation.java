@@ -63,7 +63,7 @@ public class KafkaStreamsProcessorInstrumentation {
   public static class StartInstrumentation extends Instrumenter.Default {
 
     public StartInstrumentation() {
-      super("kafka", "kafka-streams");
+      super("kafka-streams");
     }
 
     @Override
@@ -120,7 +120,7 @@ public class KafkaStreamsProcessorInstrumentation {
   public static class StopInstrumentation extends Instrumenter.Default {
 
     public StopInstrumentation() {
-      super("kafka", "kafka-streams");
+      super("kafka-streams");
     }
 
     @Override

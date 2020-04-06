@@ -43,7 +43,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class RequestDispatcherInstrumentation extends Instrumenter.Default {
   public RequestDispatcherInstrumentation() {
-    super("servlet", "servlet-dispatcher");
+    super("servlet");
   }
 
   @Override

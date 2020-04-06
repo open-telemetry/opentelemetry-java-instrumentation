@@ -43,7 +43,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class DropwizardViewInstrumentation extends Instrumenter.Default {
 
   public DropwizardViewInstrumentation() {
-    super("dropwizard", "dropwizard-view");
+    super("dropwizard-views");
   }
 
   @Override

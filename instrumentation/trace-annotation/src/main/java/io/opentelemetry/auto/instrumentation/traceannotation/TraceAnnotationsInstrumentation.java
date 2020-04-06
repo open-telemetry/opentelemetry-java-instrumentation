@@ -61,7 +61,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   private final ElementMatcher.Junction<NamedElement> methodTraceMatcher;
 
   public TraceAnnotationsInstrumentation() {
-    super("trace", "trace-annotation");
+    super("trace-annotation");
 
     final String configString = Config.get().getTraceAnnotations();
     if (configString == null) {

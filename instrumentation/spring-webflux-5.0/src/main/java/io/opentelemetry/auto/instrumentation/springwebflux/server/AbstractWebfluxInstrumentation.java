@@ -19,8 +19,8 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 
 public abstract class AbstractWebfluxInstrumentation extends Instrumenter.Default {
 
-  public AbstractWebfluxInstrumentation(final String... additionalNames) {
-    super("spring-webflux", additionalNames);
+  public AbstractWebfluxInstrumentation() {
+    super("spring-webflux");
   }
 
   @Override

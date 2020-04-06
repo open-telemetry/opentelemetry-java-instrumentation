@@ -42,7 +42,7 @@ import scala.concurrent.forkjoin.ForkJoinTask;
 public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   public ScalaExecutorInstrumentation() {
-    super(EXEC_NAME + ".scala_fork_join");
+    super("java-concurrent-scala");
   }
 
   @Override

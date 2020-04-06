@@ -34,7 +34,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class JettyHandlerInstrumentation extends Instrumenter.Default {
 
   public JettyHandlerInstrumentation() {
-    super("jetty", "jetty-8");
+    super("jetty");
   }
 
   @Override

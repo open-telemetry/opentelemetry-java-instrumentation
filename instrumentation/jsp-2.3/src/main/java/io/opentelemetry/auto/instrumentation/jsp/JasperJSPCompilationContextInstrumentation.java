@@ -38,7 +38,7 @@ import org.apache.jasper.JspCompilationContext;
 public final class JasperJSPCompilationContextInstrumentation extends Instrumenter.Default {
 
   public JasperJSPCompilationContextInstrumentation() {
-    super("jsp", "jsp-compile");
+    super("jsp");
   }
 
   @Override

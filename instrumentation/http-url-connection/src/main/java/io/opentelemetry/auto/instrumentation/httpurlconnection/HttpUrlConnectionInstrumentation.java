@@ -50,7 +50,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   public HttpUrlConnectionInstrumentation() {
-    super("httpurlconnection");
+    super("http-url-connection");
   }
 
   @Override

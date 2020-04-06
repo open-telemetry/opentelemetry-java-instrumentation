@@ -61,7 +61,7 @@ import sun.rmi.transport.Connection;
 public class RmiClientContextInstrumentation extends Instrumenter.Default {
 
   public RmiClientContextInstrumentation() {
-    super("rmi", "rmi-context-propagator", "rmi-client-context-propagator");
+    super("rmi", "rmi-context-propagator");
   }
 
   @Override

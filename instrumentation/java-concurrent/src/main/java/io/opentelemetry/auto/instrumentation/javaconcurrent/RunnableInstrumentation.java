@@ -42,7 +42,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class RunnableInstrumentation extends Instrumenter.Default {
 
   public RunnableInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME);
+    super("java-concurrent");
   }
 
   @Override

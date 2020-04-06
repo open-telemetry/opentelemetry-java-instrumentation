@@ -135,7 +135,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     }
 
     public TracerClassInstrumentation(final String className, final Set<String> methodNames) {
-      super("trace", "trace-config");
+      super("trace-annotation");
       this.className = className;
       this.methodNames = methodNames;
     }

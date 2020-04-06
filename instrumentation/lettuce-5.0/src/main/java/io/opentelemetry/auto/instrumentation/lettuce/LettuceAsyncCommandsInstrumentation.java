@@ -31,7 +31,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
 
   public LettuceAsyncCommandsInstrumentation() {
-    super("lettuce", "lettuce-5-async");
+    super("lettuce");
   }
 
   @Override

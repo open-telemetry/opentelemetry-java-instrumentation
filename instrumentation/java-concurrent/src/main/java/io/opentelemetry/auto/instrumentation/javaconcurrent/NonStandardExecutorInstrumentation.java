@@ -32,7 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class NonStandardExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   public NonStandardExecutorInstrumentation() {
-    super(EXEC_NAME + ".other");
+    super("java-concurrent-other");
   }
 
   @Override

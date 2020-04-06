@@ -38,7 +38,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public abstract class AbstractRequestContextInstrumentation extends Instrumenter.Default {
   public AbstractRequestContextInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-filter");
+    super("jaxrs");
   }
 
   @Override

@@ -37,7 +37,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
 
   public FluxAndMonoInstrumentation() {
-    super("reactor-core");
+    super("reactor");
   }
 
   @Override

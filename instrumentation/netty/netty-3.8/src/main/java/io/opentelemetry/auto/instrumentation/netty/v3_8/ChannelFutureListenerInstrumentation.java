@@ -43,9 +43,7 @@ import org.jboss.netty.channel.ChannelFuture;
 public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   public ChannelFutureListenerInstrumentation() {
-    super(
-        NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME,
-        NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES);
+    super("netty-3.8", "netty");
   }
 
   @Override

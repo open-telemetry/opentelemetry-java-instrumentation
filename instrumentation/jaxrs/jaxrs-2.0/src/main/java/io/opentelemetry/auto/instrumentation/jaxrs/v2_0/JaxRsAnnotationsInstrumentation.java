@@ -46,7 +46,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   private static final String JAX_ENDPOINT_OPERATION_NAME = "jax-rs.request";
 
   public JaxRsAnnotationsInstrumentation() {
-    super("jax-rs", "jaxrs", "jax-rs-annotations");
+    super("jaxrs");
   }
 
   @Override

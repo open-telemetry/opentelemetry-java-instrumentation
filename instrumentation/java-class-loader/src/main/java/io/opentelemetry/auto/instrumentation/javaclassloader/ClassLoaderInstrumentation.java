@@ -49,7 +49,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class ClassLoaderInstrumentation extends Instrumenter.Default {
   public ClassLoaderInstrumentation() {
-    super("class-loader");
+    super("java-class-loader");
   }
 
   @Override

@@ -42,7 +42,7 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public final class JedisInstrumentation extends Instrumenter.Default {
 
   public JedisInstrumentation() {
-    super("jedis", "redis");
+    super("jedis");
   }
 
   @Override

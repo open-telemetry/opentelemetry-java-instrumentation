@@ -86,7 +86,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   }
 
   public FutureInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME);
+    super("java-concurrent");
   }
 
   @Override

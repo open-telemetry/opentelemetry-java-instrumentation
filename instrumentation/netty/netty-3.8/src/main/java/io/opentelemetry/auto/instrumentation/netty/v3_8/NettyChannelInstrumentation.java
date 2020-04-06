@@ -39,9 +39,7 @@ import org.jboss.netty.channel.Channel;
 @AutoService(Instrumenter.class)
 public class NettyChannelInstrumentation extends Instrumenter.Default {
   public NettyChannelInstrumentation() {
-    super(
-        NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME,
-        NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES);
+    super("netty-3.8", "netty");
   }
 
   @Override

@@ -36,7 +36,7 @@ import sun.rmi.transport.Target;
 public class RmiServerContextInstrumentation extends Instrumenter.Default {
 
   public RmiServerContextInstrumentation() {
-    super("rmi", "rmi-context-propagator", "rmi-server-context-propagator");
+    super("rmi", "rmi-context-propagator");
   }
 
   @Override

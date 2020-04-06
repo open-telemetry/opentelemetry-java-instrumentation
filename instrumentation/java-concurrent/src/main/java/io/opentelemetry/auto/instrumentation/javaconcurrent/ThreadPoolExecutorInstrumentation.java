@@ -44,7 +44,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
 
   public ThreadPoolExecutorInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME);
+    super("java-concurrent");
   }
 
   @Override

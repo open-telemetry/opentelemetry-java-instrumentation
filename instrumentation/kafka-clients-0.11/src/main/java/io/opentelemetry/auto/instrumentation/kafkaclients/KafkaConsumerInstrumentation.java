@@ -39,7 +39,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
 
   public KafkaConsumerInstrumentation() {
-    super("kafka");
+    super("kafka-clients");
   }
 
   @Override

@@ -40,7 +40,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
 
   public GrpcClientBuilderInstrumentation() {
-    super("grpc", "grpc-client");
+    super("grpc");
   }
 
   @Override

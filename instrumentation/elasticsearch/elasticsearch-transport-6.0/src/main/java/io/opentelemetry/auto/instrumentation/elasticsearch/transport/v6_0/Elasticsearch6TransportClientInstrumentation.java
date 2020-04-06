@@ -46,7 +46,7 @@ import org.elasticsearch.action.ActionResponse;
 public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.Default {
 
   public Elasticsearch6TransportClientInstrumentation() {
-    super("elasticsearch", "elasticsearch-transport", "elasticsearch-transport-6");
+    super("elasticsearch-transport-6.0", "elasticsearch-transport", "elasticsearch");
   }
 
   @Override

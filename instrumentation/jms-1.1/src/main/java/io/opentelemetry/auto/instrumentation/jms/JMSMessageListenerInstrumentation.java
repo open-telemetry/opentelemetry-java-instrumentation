@@ -44,7 +44,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class JMSMessageListenerInstrumentation extends Instrumenter.Default {
 
   public JMSMessageListenerInstrumentation() {
-    super("jms", "jms-1", "jms-2");
+    super("jms");
   }
 
   @Override

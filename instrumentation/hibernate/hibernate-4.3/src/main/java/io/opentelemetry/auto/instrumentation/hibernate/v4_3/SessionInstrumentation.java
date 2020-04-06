@@ -43,7 +43,7 @@ import org.hibernate.procedure.ProcedureCall;
 public class SessionInstrumentation extends Instrumenter.Default {
 
   public SessionInstrumentation() {
-    super("hibernate", "hibernate-core");
+    super("hibernate");
   }
 
   @Override

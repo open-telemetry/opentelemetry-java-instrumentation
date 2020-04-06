@@ -58,7 +58,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public ApacheHttpClientInstrumentation() {
-    super("httpclient", "apache-httpclient", "apache-http-client");
+    super("apache-httpclient");
   }
 
   @Override

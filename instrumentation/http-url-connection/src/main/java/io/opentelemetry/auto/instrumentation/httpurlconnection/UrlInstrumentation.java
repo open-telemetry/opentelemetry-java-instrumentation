@@ -44,7 +44,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class UrlInstrumentation extends Instrumenter.Default {
 
   public UrlInstrumentation() {
-    super("urlconnection", "httpurlconnection");
+    super("http-url-connection", "url-connection");
   }
 
   @Override

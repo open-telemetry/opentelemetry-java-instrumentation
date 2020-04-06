@@ -49,7 +49,7 @@ import scala.runtime.AbstractFunction1;
 @AutoService(Instrumenter.class)
 public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   public AkkaHttpServerInstrumentation() {
-    super("akka-http", "akka-http-server");
+    super("akka-http");
   }
 
   @Override

@@ -55,7 +55,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
   static final String TASK_CLASS_NAME = "scala.concurrent.forkjoin.ForkJoinTask";
 
   public ScalaForkJoinTaskInstrumentation() {
-    super(AbstractExecutorInstrumentation.EXEC_NAME);
+    super("java-concurrent", "java-concurrent-scala");
   }
 
   @Override

@@ -33,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
 
   public GrpcServerBuilderInstrumentation() {
-    super("grpc", "grpc-server");
+    super("grpc");
   }
 
   @Override

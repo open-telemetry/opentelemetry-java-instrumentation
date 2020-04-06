@@ -68,7 +68,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
   public RabbitChannelInstrumentation() {
-    super("amqp", "rabbitmq");
+    super("rabbitmq");
   }
 
   @Override

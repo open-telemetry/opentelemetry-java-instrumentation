@@ -32,10 +32,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 // FIXME this instrumentation relied on scope listener
 // @AutoService(Instrumenter.class)
 public class ThreadContextInstrumentation extends Instrumenter.Default {
-  public static final String MDC_INSTRUMENTATION_NAME = "log4j";
 
   public ThreadContextInstrumentation() {
-    super(MDC_INSTRUMENTATION_NAME);
+    super("log4j");
   }
 
   @Override
