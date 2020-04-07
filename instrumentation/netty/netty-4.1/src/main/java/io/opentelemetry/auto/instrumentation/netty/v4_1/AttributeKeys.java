@@ -20,19 +20,17 @@ import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
 import io.opentelemetry.trace.Span;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class AttributeKeys {
-
-  private static final WeakMap<ClassLoader, Map<String, AttributeKey<?>>> map =
+  private static final WeakMap<ClassLoader, ConcurrentMap<String, AttributeKey<?>>> map =
       WeakMap.Implementation.DEFAULT.get();
-
-  private static final WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>
+  private static final WeakMap.ValueSupplier<ClassLoader, ConcurrentMap<String, AttributeKey<?>>>
       mapSupplier =
-          new WeakMap.ValueSupplier<ClassLoader, Map<String, AttributeKey<?>>>() {
+          new WeakMap.ValueSupplier<ClassLoader, ConcurrentMap<String, AttributeKey<?>>>() {
             @Override
-            public Map<String, AttributeKey<?>> get(final ClassLoader ignored) {
+            public ConcurrentMap<String, AttributeKey<?>> get(final ClassLoader ignore) {
               return new ConcurrentHashMap<>();
             }
           };
@@ -62,7 +60,7 @@ public class AttributeKeys {
    * cassandra driver.
    */
   private static <T> AttributeKey<T> attributeKey(final String key) {
-    final Map<String, AttributeKey<?>> classLoaderMap =
+    final ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
         map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
       return (AttributeKey<T>) classLoaderMap.get(key);

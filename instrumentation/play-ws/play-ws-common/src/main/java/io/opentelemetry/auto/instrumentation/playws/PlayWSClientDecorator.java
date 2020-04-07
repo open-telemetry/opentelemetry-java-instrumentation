@@ -40,16 +40,6 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String hostname(final Request request) {
-    return request.getUri().getHost();
-  }
-
-  @Override
-  protected Integer port(final Request request) {
-    return request.getUri().getPort();
-  }
-
-  @Override
   protected Integer status(final Response response) {
     return response.getStatusCode();
   }

@@ -45,16 +45,6 @@ public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, Ht
   }
 
   @Override
-  protected String hostname(final HttpRequest httpRequest) {
-    return httpRequest.getUri().host().address();
-  }
-
-  @Override
-  protected Integer port(final HttpRequest httpRequest) {
-    return httpRequest.getUri().port();
-  }
-
-  @Override
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.status().intValue();
   }

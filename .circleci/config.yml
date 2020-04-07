@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 defaults: &defaults
   working_directory: ~/dd-trace-java
@@ -142,6 +142,11 @@ jobs:
     environment:
       - TEST_TASK: testJava13
 
+  test_14:
+    <<: *default_test_job
+    environment:
+      - TEST_TASK: testJava14
+
   check:
     <<: *defaults
 
@@ -278,7 +283,13 @@ workflows:
       #     filters:
       #       tags:
       #         only: /.*/
-      - test_13:
+      # - test_13:
+      #     requires:
+      #       - build
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      - test_14:
           requires:
             - build
           filters:
@@ -311,7 +322,8 @@ workflows:
             - test_11
             # - test_zulu11
             # - test_12
-            - test_13
+            # - test_13
+            - test_14
             - check
           filters:
             branches:
@@ -331,7 +343,8 @@ workflows:
             - test_11
             # - test_zulu11
             # - test_12
-            - test_13
+            # - test_13
+            - test_14
             - check
           filters:
             branches:
