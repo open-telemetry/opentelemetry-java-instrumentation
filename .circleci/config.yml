@@ -360,7 +360,7 @@ workflows:
             branches:
               only:
                 - master
-                - .*-reliability
+                - /.*-reliability/
 
       - check:
           requires:
