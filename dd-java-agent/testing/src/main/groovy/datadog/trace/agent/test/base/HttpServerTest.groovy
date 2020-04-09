@@ -27,6 +27,7 @@ import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -92,7 +93,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     false
   }
 
-  // Return the handler span's name
+  /** Return the handler span's name */
   String reorderHandlerSpan() {
     null
   }
@@ -111,6 +112,11 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   boolean testExceptionBody() {
     true
+  }
+
+  /** Return the expected resource name */
+  String testPathParam() {
+    null
   }
 
   enum ServerEndpoint {
@@ -155,6 +161,10 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
     URI resolve(URI address) {
       return address.resolve(path)
+    }
+
+    String resource(String method, URI address, String pathParam) {
+      return status == 404 ? "404" : "$method ${pathParam ? pathParam : resolve(address).path}"
     }
 
     private static final Map<String, ServerEndpoint> PATH_MAP = values().collectEntries { [it.path, it] }
@@ -286,6 +296,37 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     method = "GET"
     body = null
     endpoint << [SUCCESS, QUERY_PARAM]
+  }
+
+  def "test path param"() {
+    setup:
+    assumeTrue(testPathParam() != null)
+    def request = request(PATH_PARAM, method, body).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == PATH_PARAM.status
+    response.body().string() == PATH_PARAM.body
+
+    and:
+    cleanAndAssertTraces(1) {
+      if (hasHandlerSpan()) {
+        trace(0, 3) {
+          serverSpan(it, 0, null, null, method, PATH_PARAM)
+          handlerSpan(it, 1, span(0), PATH_PARAM)
+          controllerSpan(it, 2, span(1))
+        }
+      } else {
+        trace(0, 2) {
+          serverSpan(it, 0, null, null, method, PATH_PARAM)
+          controllerSpan(it, 1, span(0))
+        }
+      }
+    }
+
+    where:
+    method = "GET"
+    body = null
   }
 
   def "test success with multiple header attached parent"() {
@@ -521,7 +562,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     trace.span(index) {
       serviceName expectedServiceName()
       operationName expectedOperationName()
-      resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
+      resourceName endpoint.resource(method, address, testPathParam())
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {

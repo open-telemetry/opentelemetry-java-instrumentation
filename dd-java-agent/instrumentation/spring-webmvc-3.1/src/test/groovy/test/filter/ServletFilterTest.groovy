@@ -1,4 +1,4 @@
-package test
+package test.filter
 
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
@@ -21,11 +21,11 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static java.util.Collections.singletonMap
 
-class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext> {
+class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
 
   @Override
   ConfigurableApplicationContext startServer(int port) {
-    def app = new SpringApplication(AppConfig)
+    def app = new SpringApplication(FilteredAppConfig)
     app.setDefaultProperties(singletonMap("server.port", port))
     def context = app.run()
     return context
@@ -48,7 +48,17 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
   @Override
   boolean hasHandlerSpan() {
-    true
+    false
+  }
+
+  @Override
+  String testPathParam() {
+    "/path/{id}/param"
+  }
+
+  @Override
+  boolean testExceptionBody() {
+    false
   }
 
   @Override
@@ -116,7 +126,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       serviceName expectedServiceName()
       operationName expectedOperationName()
-      resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
+      resourceName endpoint.resource(method, address, testPathParam())
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {

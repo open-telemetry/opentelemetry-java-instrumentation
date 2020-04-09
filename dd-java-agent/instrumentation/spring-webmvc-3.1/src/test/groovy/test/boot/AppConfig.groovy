@@ -1,4 +1,4 @@
-package test
+package test.boot
 
 import org.apache.catalina.connector.Connector
 import org.springframework.boot.autoconfigure.SpringBootApplication

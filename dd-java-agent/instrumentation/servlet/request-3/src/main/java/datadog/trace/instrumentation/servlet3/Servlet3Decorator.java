@@ -2,8 +2,11 @@ package datadog.trace.instrumentation.servlet3;
 
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.servlet.Filter;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,10 +61,30 @@ public class Servlet3Decorator
   public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
-      span.setTag("servlet.context", request.getContextPath());
       span.setTag("servlet.path", request.getServletPath());
+      span.setTag("servlet.context", request.getContextPath());
+      onContext(span, request, request.getServletContext());
     }
     return super.onRequest(span, request);
+  }
+
+  /**
+   * This method executes the filter created by
+   * datadog.trace.instrumentation.springweb.DispatcherServletInstrumentation$HandlerMappingAdvice.
+   * This was easier and less "hacky" than other ways to add the filter to the front of the filter
+   * chain.
+   */
+  private void onContext(
+      final AgentSpan span, final HttpServletRequest request, final ServletContext context) {
+    final Object attribute = context.getAttribute("dd.dispatcher-filter");
+    if (attribute instanceof Filter) {
+      final Filter filter = (Filter) attribute;
+      try {
+        request.setAttribute(DD_SPAN_ATTRIBUTE, span);
+        filter.doFilter(request, null, null);
+      } catch (final IOException | ServletException e) {
+      }
+    }
   }
 
   @Override
