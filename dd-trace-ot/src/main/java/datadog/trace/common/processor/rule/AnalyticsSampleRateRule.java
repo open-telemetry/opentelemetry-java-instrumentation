@@ -16,18 +16,19 @@ public class AnalyticsSampleRateRule implements TraceProcessor.Rule {
   @Override
   public void processSpan(
       final DDSpan span, final Map<String, Object> tags, final Collection<DDSpan> trace) {
-    if (tags.containsKey(DDTags.ANALYTICS_SAMPLE_RATE)) {
-      final Object value = tags.get(DDTags.ANALYTICS_SAMPLE_RATE);
-      if (value instanceof Number) {
-        span.context().setMetric(DDTags.ANALYTICS_SAMPLE_RATE, (Number) value);
-      } else if (value instanceof String) {
-        try {
-          span.context()
-              .setMetric(DDTags.ANALYTICS_SAMPLE_RATE, Double.parseDouble((String) value));
-        } catch (final NumberFormatException ex) {
-          // ignore
-        }
+    final Object sampleRateValue = tags.get(DDTags.ANALYTICS_SAMPLE_RATE);
+    if (sampleRateValue instanceof Number) {
+      span.context().setMetric(DDTags.ANALYTICS_SAMPLE_RATE, (Number) sampleRateValue);
+    } else if (sampleRateValue instanceof String) {
+      try {
+        span.context()
+            .setMetric(DDTags.ANALYTICS_SAMPLE_RATE, Double.parseDouble((String) sampleRateValue));
+      } catch (final NumberFormatException ex) {
+        // ignore
       }
+    }
+
+    if (tags.containsKey(DDTags.ANALYTICS_SAMPLE_RATE)) {
       span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, (String) null); // Remove the tag
     }
   }

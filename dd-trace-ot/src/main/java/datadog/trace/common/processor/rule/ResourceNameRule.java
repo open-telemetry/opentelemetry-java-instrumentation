@@ -16,8 +16,12 @@ public class ResourceNameRule implements TraceProcessor.Rule {
   @Override
   public void processSpan(
       final DDSpan span, final Map<String, Object> tags, final Collection<DDSpan> trace) {
+    final Object name = tags.get(DDTags.RESOURCE_NAME);
+    if (name != null) {
+      span.setResourceName(name.toString());
+    }
+
     if (tags.containsKey(DDTags.RESOURCE_NAME)) {
-      span.setResourceName(tags.get(DDTags.RESOURCE_NAME).toString());
       span.setTag(DDTags.RESOURCE_NAME, (String) null); // Remove the tag
     }
   }

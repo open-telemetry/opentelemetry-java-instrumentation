@@ -23,7 +23,7 @@ public class DDDecoratorsFactory {
             new ServiceNameDecorator("service", false),
             new ServletContextDecorator())) {
 
-      if (Config.get().isDecoratorEnabled(decorator.getClass().getSimpleName())) {
+      if (Config.get().isRuleEnabled(decorator.getClass().getSimpleName())) {
         decorators.add(decorator);
       } else {
         log.debug("{} disabled", decorator.getClass().getSimpleName());

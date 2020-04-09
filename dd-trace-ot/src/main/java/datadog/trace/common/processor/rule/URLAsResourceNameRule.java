@@ -89,10 +89,13 @@ public class URLAsResourceNameRule implements TraceProcessor.Rule {
   }
 
   private String addMethodIfAvailable(final Map<String, Object> meta, String path) {
-    // if the verb (GET, POST ...) is present, add it
-    final Object verb = meta.get(Tags.HTTP_METHOD.getKey());
-    if (verb != null && !verb.toString().isEmpty()) {
-      path = verb.toString().toUpperCase() + " " + path;
+    // if the method (GET, POST ...) is present, add it
+    final Object method = meta.get(Tags.HTTP_METHOD.getKey());
+    if (method != null) {
+      final String verb = method.toString().toUpperCase().trim();
+      if (!verb.isEmpty()) {
+        path = verb + " " + path;
+      }
     }
     return path;
   }

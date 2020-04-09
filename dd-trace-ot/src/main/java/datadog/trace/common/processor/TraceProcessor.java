@@ -5,10 +5,10 @@ import datadog.trace.api.Config;
 import datadog.trace.common.processor.rule.AnalyticsSampleRateRule;
 import datadog.trace.common.processor.rule.DBStatementRule;
 import datadog.trace.common.processor.rule.ErrorRule;
+import datadog.trace.common.processor.rule.HttpStatusErrorRule;
 import datadog.trace.common.processor.rule.ResourceNameRule;
 import datadog.trace.common.processor.rule.SpanTypeRule;
 import datadog.trace.common.processor.rule.Status404Rule;
-import datadog.trace.common.processor.rule.Status5XXRule;
 import datadog.trace.common.processor.rule.URLAsResourceNameRule;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +24,7 @@ public class TraceProcessor {
         new DBStatementRule(),
         new ResourceNameRule(),
         new SpanTypeRule(),
-        new Status5XXRule(),
+        new HttpStatusErrorRule(),
         new ErrorRule(),
         new URLAsResourceNameRule(),
         new Status404Rule(),
@@ -44,9 +44,9 @@ public class TraceProcessor {
   }
 
   private static boolean isEnabled(final Rule rule) {
-    boolean enabled = Config.get().isDecoratorEnabled(rule.getClass().getSimpleName());
+    boolean enabled = Config.get().isRuleEnabled(rule.getClass().getSimpleName());
     for (final String alias : rule.aliases()) {
-      enabled &= Config.get().isDecoratorEnabled(alias);
+      enabled &= Config.get().isRuleEnabled(alias);
     }
     if (!enabled) {
       log.debug("{} disabled", rule.getClass().getSimpleName());

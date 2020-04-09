@@ -830,7 +830,7 @@ public class Config {
     return jmxFetchIntegrationEnabled(integrationNames, defaultEnabled);
   }
 
-  public boolean isDecoratorEnabled(final String name) {
+  public boolean isRuleEnabled(final String name) {
     return getBooleanSettingFromEnvironment("trace." + name + ".enabled", true)
         && getBooleanSettingFromEnvironment("trace." + name.toLowerCase() + ".enabled", true);
   }
