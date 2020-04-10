@@ -899,7 +899,7 @@ public class Config {
    * @return
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
-  private static String getSettingFromEnvironment(final String name, final String defaultValue) {
+  public static String getSettingFromEnvironment(final String name, final String defaultValue) {
     String value;
     final String systemPropertyName = propertyNameToSystemPropertyName(name);
 
