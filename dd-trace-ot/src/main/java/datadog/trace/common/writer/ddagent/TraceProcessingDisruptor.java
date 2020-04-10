@@ -3,6 +3,7 @@ package datadog.trace.common.writer.ddagent;
 import com.lmax.disruptor.EventHandler;
 import datadog.common.exec.DaemonThreadFactory;
 import datadog.opentracing.DDSpan;
+import datadog.opentracing.DDSpanContext;
 import datadog.trace.common.writer.DDAgentWriter;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +66,7 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
             // attempt to have agent scale the metrics properly
             ((DDSpan) event.data.get(0).getLocalRootSpan())
                 .context()
-                .setMetric("_sample_rate", 1d / event.representativeCount);
+                .setMetric(DDSpanContext.SAMPLE_RATE_KEY, 1d / event.representativeCount);
           }
           try {
             final byte[] serializedTrace = api.serializeTrace(event.data);

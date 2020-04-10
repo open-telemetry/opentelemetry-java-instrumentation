@@ -82,6 +82,8 @@ class ConfigTest extends DDSpecification {
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
   private static final DD_SERVICE_MAPPING_ENV = "DD_SERVICE_MAPPING"
   private static final DD_TAGS_ENV = "DD_TAGS"
+  private static final DD_ENV_ENV = "DD_ENV"
+  private static final DD_VERSION_ENV = "DD_VERSION"
   private static final DD_GLOBAL_TAGS_ENV = "DD_TRACE_GLOBAL_TAGS"
   private static final DD_SPAN_TAGS_ENV = "DD_TRACE_SPAN_TAGS"
   private static final DD_HEADER_TAGS_ENV = "DD_TRACE_HEADER_TAGS"
@@ -951,6 +953,7 @@ class ConfigTest extends DDSpecification {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
     environmentVariables.set("DD_SERVICE_NAME", "set-in-env")
+    environmentVariables.set("DD_SERVICE", "some-other-ignored-name")
 
     when:
     def config = new Config()
@@ -961,7 +964,17 @@ class ConfigTest extends DDSpecification {
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
     System.clearProperty(PREFIX + SERVICE_NAME)
-    environmentVariables.clear("DD_SERVICE_NAME")
+  }
+
+  def "verify fallback to DD_SERVICE"() {
+    setup:
+    environmentVariables.set("DD_SERVICE", "service-name-from-dd-service-env-var")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "service-name-from-dd-service-env-var"
   }
 
   def "verify fallback to properties file that does not exist does not crash app"() {
@@ -1216,6 +1229,122 @@ class ConfigTest extends DDSpecification {
 
     then:
     config.getFinalProfilingUrl() == "https://some.new.url/goes/here"
+  }
+
+  def "fallback to DD_TAGS"() {
+    setup:
+    environmentVariables.set(DD_TAGS_ENV, "a:1,b:2,c:3")
+
+    when:
+    Config config = new Config()
+
+    then:
+    config.mergedSpanTags == [a: "1", c: "3", b: "2"]
+  }
+
+  def "precedence of DD_ENV and DD_VERSION"() {
+    setup:
+    environmentVariables.set(DD_ENV_ENV, "test_env")
+    environmentVariables.set(DD_VERSION_ENV, "1.2.3")
+    environmentVariables.set(DD_TAGS_ENV, "dd.env:production   ,    dd.version:3.2.1")
+
+    when:
+    Config config = new Config()
+
+    then:
+    config.mergedSpanTags == ["dd.env": "test_env", "dd.version": "1.2.3"]
+  }
+
+  def "propertyNameToEnvironmentVariableName unit test"() {
+    expect:
+    Config.propertyNameToEnvironmentVariableName(Config.SERVICE) == "DD_SERVICE"
+  }
+
+  def "getProperty*Value unit test"() {
+    setup:
+    def p = new Properties()
+    p.setProperty("a", "42.42")
+    p.setProperty("intProp", "13")
+
+    expect:
+    Config.getPropertyDoubleValue(p, "intProp", 40) == 13
+    Config.getPropertyDoubleValue(p, "a", 41) == 42.42
+    Config.getPropertyIntegerValue(p, "b", 61) == 61
+    Config.getPropertyIntegerValue(p, "intProp", 61) == 13
+    Config.getPropertyBooleanValue(p, "a", true) == false
+  }
+
+  def "valueOf positive test"() {
+    expect:
+    Config.valueOf(value, tClass, defaultValue) == expected
+
+    where:
+    value      | tClass  | defaultValue | expected
+    "42.42"    | Boolean | true         | false
+    "42.42"    | Boolean | null         | false
+    "true"     | Boolean | null         | true
+    "trUe"     | Boolean | null         | true
+    "trUe"     | Boolean | false        | true
+    "tru"      | Boolean | true         | false
+    "truee"    | Boolean | true         | false
+    "true "    | Boolean | true         | false
+    " true"    | Boolean | true         | false
+    " true "   | Boolean | true         | false
+    "   true  "| Boolean | true         | false
+    null       | Float   | 43.3         | 43.3
+    "42.42"    | Float   | 21.21        | 42.42f
+    null       | Double  | 43.3         | 43.3
+    "42.42"    | Double  | 21.21        | 42.42
+    null       | Integer | 13           | 13
+    "44"       | Integer | 21           | 44
+    "45"       | Long    | 21           | 45
+    "46"       | Short   | 21           | 46
+  }
+
+  def "valueOf negative test when tClass is null"() {
+    when:
+    Config.valueOf(value, tClass, defaultValue)
+
+    then:
+    def exception = thrown(NullPointerException)
+    exception.message == "tClass is marked non-null but is null"
+
+    where:
+    value      | tClass  | defaultValue
+    null       | null    | "42"
+    ""         | null    | "43"
+    "      "   | null    | "44"
+    "1"        | null    | "45"
+  }
+
+  def "valueOf negative test"() {
+    when:
+    Config.valueOf(value, tClass, null)
+
+    then:
+    def exception = thrown(NumberFormatException)
+    println("cause: " : exception.message)
+
+    where:
+    value      | tClass
+    "42.42"    | Number
+    "42.42"    | Byte
+    "42.42"    | Character
+    "42.42"    | Short
+    "42.42"    | Integer
+    "42.42"    | Long
+    "42.42"    | Object
+    "42.42"    | Object[]
+    "42.42"    | boolean[]
+    "42.42"    | boolean
+    "42.42"    | byte
+    "42.42"    | byte
+    "42.42"    | char
+    "42.42"    | short
+    "42.42"    | int
+    "42.42"    | long
+    "42.42"    | double
+    "42.42"    | float
   }
 
 }

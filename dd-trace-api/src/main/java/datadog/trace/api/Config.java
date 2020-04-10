@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +27,7 @@ import java.util.SortedSet;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,12 +67,13 @@ public class Config {
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String SERVICE_MAPPING = "service.mapping";
 
+  private static final String ENV = "env";
+  private static final String VERSION = "version";
   public static final String TAGS = "tags";
   @Deprecated // Use dd.tags instead
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
-
   public static final String TRACE_ANALYTICS_ENABLED = "trace.analytics.enabled";
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_EXECUTORS_ALL = "trace.executors.all";
@@ -139,7 +143,8 @@ public class Config {
   public static final String PROFILING_PROXY_PASSWORD = "profiling.proxy.password";
 
   public static final String RUNTIME_ID_TAG = "runtime-id";
-  public static final String SERVICE_TAG = "service";
+  public static final String SERVICE = "service";
+  public static final String SERVICE_TAG = SERVICE;
   public static final String HOST_TAG = "host";
   public static final String LANGUAGE_TAG_KEY = "language";
   public static final String LANGUAGE_TAG_VALUE = "jvm";
@@ -338,7 +343,9 @@ public class Config {
       }
     }
     site = getSettingFromEnvironment(SITE, DEFAULT_SITE);
-    serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
+    serviceName =
+        getSettingFromEnvironment(
+            SERVICE_NAME, getSettingFromEnvironment(SERVICE, DEFAULT_SERVICE_NAME));
 
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     integrationsEnabled =
@@ -357,7 +364,10 @@ public class Config {
         getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
     serviceMapping = getMapSettingFromEnvironment(SERVICE_MAPPING, null);
 
-    tags = getMapSettingFromEnvironment(TAGS, null);
+    final Map<String, String> tagsPreMap = new HashMap<>(getMapSettingFromEnvironment(TAGS, null));
+    addPropToMapIfDefinedByEnvironment(tagsPreMap, ENV);
+    addPropToMapIfDefinedByEnvironment(tagsPreMap, VERSION);
+    tags = Collections.unmodifiableMap(tagsPreMap);
     globalTags = getMapSettingFromEnvironment(GLOBAL_TAGS, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
@@ -405,17 +415,11 @@ public class Config {
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
 
     propagationStylesToExtract =
-        getEnumSetSettingFromEnvironment(
-            PROPAGATION_STYLE_EXTRACT,
-            DEFAULT_PROPAGATION_STYLE_EXTRACT,
-            PropagationStyle.class,
-            true);
+        getPropagationStyleSetSettingFromEnvironmentOrDefault(
+            PROPAGATION_STYLE_EXTRACT, DEFAULT_PROPAGATION_STYLE_EXTRACT);
     propagationStylesToInject =
-        getEnumSetSettingFromEnvironment(
-            PROPAGATION_STYLE_INJECT,
-            DEFAULT_PROPAGATION_STYLE_INJECT,
-            PropagationStyle.class,
-            true);
+        getPropagationStyleSetSettingFromEnvironmentOrDefault(
+            PROPAGATION_STYLE_INJECT, DEFAULT_PROPAGATION_STYLE_INJECT);
 
     jmxFetchEnabled =
         getBooleanSettingFromEnvironment(JMX_FETCH_ENABLED, DEFAULT_JMX_FETCH_ENABLED);
@@ -597,13 +601,13 @@ public class Config {
             properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
 
     final Set<PropagationStyle> parsedPropagationStylesToExtract =
-        getPropertySetValue(properties, PROPAGATION_STYLE_EXTRACT, PropagationStyle.class);
+        getPropagationStyleSetFromPropertyValue(properties, PROPAGATION_STYLE_EXTRACT);
     propagationStylesToExtract =
         parsedPropagationStylesToExtract == null
             ? parent.propagationStylesToExtract
             : parsedPropagationStylesToExtract;
     final Set<PropagationStyle> parsedPropagationStylesToInject =
-        getPropertySetValue(properties, PROPAGATION_STYLE_INJECT, PropagationStyle.class);
+        getPropagationStyleSetFromPropertyValue(properties, PROPAGATION_STYLE_INJECT);
     propagationStylesToInject =
         parsedPropagationStylesToInject == null
             ? parent.propagationStylesToInject
@@ -803,7 +807,8 @@ public class Config {
    * @deprecated This method should only be used internally. Use the instance getter instead {@link
    *     #isIntegrationEnabled(SortedSet, boolean)}.
    */
-  public static boolean integrationEnabled(
+  @Deprecated
+  private static boolean integrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
@@ -896,9 +901,10 @@ public class Config {
    */
   private static String getSettingFromEnvironment(final String name, final String defaultValue) {
     String value;
+    final String systemPropertyName = propertyNameToSystemPropertyName(name);
 
     // System properties and properties provided from command line have the highest precedence
-    value = System.getProperties().getProperty(propertyNameToSystemPropertyName(name));
+    value = System.getProperties().getProperty(systemPropertyName);
     if (null != value) {
       return value;
     }
@@ -910,7 +916,7 @@ public class Config {
     }
 
     // If value is not defined yet, we look at properties optionally defined in a properties file
-    value = propertiesFromConfigFile.getProperty(propertyNameToSystemPropertyName(name));
+    value = propertiesFromConfigFile.getProperty(systemPropertyName);
     if (null != value) {
       return value;
     }
@@ -919,6 +925,7 @@ public class Config {
   }
 
   /** @deprecated This method should only be used internally. Use the explicit getter instead. */
+  @NonNull
   private static Map<String, String> getMapSettingFromEnvironment(
       final String name, final String defaultValue) {
     return parseMap(
@@ -931,7 +938,8 @@ public class Config {
    *
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
-  public static List<String> getListSettingFromEnvironment(
+  @NonNull
+  private static List<String> getListSettingFromEnvironment(
       final String name, final String defaultValue) {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
@@ -943,8 +951,7 @@ public class Config {
    */
   public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
+    return getSettingFromEnvironmentWithLog(name, Boolean.class, defaultValue);
   }
 
   /**
@@ -953,13 +960,7 @@ public class Config {
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
   public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    try {
-      return value == null ? defaultValue : Float.valueOf(value);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
+    return getSettingFromEnvironmentWithLog(name, Float.class, defaultValue);
   }
 
   /**
@@ -967,15 +968,10 @@ public class Config {
    *
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
-  public static Double getDoubleSettingFromEnvironment(
+  @Deprecated
+  private static Double getDoubleSettingFromEnvironment(
       final String name, final Double defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    try {
-      return value == null ? defaultValue : Double.valueOf(value);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
+    return getSettingFromEnvironmentWithLog(name, Double.class, defaultValue);
   }
 
   /**
@@ -983,9 +979,13 @@ public class Config {
    */
   private static Integer getIntegerSettingFromEnvironment(
       final String name, final Integer defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
+    return getSettingFromEnvironmentWithLog(name, Integer.class, defaultValue);
+  }
+
+  private static <T> T getSettingFromEnvironmentWithLog(
+      final String name, Class<T> tClass, final T defaultValue) {
     try {
-      return value == null ? defaultValue : Integer.valueOf(value);
+      return valueOf(getSettingFromEnvironment(name, null), tClass, defaultValue);
     } catch (final NumberFormatException e) {
       log.warn("Invalid configuration for " + name, e);
       return defaultValue;
@@ -996,28 +996,22 @@ public class Config {
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a set of
    * strings splitting by space or comma.
    */
-  private static <T extends Enum<T>> Set<T> getEnumSetSettingFromEnvironment(
-      final String name,
-      final String defaultValue,
-      final Class<T> clazz,
-      final boolean emptyResultMeansUseDefault) {
+  private static Set<PropagationStyle> getPropagationStyleSetSettingFromEnvironmentOrDefault(
+      final String name, final String defaultValue) {
     final String value = getSettingFromEnvironment(name, defaultValue);
-    Set<T> result =
-        convertStringSetToEnumSet(
-            parseStringIntoSetOfNonEmptyStrings(value, SPLIT_BY_SPACE_OR_COMMA_REGEX), clazz);
+    Set<PropagationStyle> result =
+        convertStringSetToPropagationStyleSet(parseStringIntoSetOfNonEmptyStrings(value));
 
-    if (emptyResultMeansUseDefault && result.isEmpty()) {
+    if (result.isEmpty()) {
       // Treat empty parsing result as no value and use default instead
       result =
-          convertStringSetToEnumSet(
-              parseStringIntoSetOfNonEmptyStrings(defaultValue, SPLIT_BY_SPACE_OR_COMMA_REGEX),
-              clazz);
+          convertStringSetToPropagationStyleSet(parseStringIntoSetOfNonEmptyStrings(defaultValue));
     }
 
     return result;
   }
 
-  private Set<Integer> getIntegerRangeSettingFromEnvironment(
+  private static Set<Integer> getIntegerRangeSettingFromEnvironment(
       final String name, final Set<Integer> defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
     try {
@@ -1035,6 +1029,7 @@ public class Config {
    * @param setting The setting name, e.g. `service.name`
    * @return The public facing environment variable name
    */
+  @NonNull
   private static String propertyNameToEnvironmentVariableName(final String setting) {
     return ENV_REPLACEMENT
         .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
@@ -1048,8 +1043,39 @@ public class Config {
    * @param setting The setting name, e.g. `service.name`
    * @return The public facing system property name
    */
+  @NonNull
   private static String propertyNameToSystemPropertyName(final String setting) {
     return PREFIX + setting;
+  }
+
+  /**
+   * @param value to parse by tClass::valueOf
+   * @param tClass should contain static parsing method "T valueOf(String)"
+   * @param defaultValue
+   * @param <T>
+   * @return value == null || value.trim().isEmpty() ? defaultValue : tClass.valueOf(value)
+   * @throws NumberFormatException
+   */
+  private static <T> T valueOf(
+      final String value, @NonNull final Class<T> tClass, final T defaultValue) {
+    if (value == null || value.trim().isEmpty()) {
+      log.debug("valueOf: using defaultValue '{}' for '{}' of '{}' ", defaultValue, value, tClass);
+      return defaultValue;
+    }
+    try {
+      return (T)
+          MethodHandles.publicLookup()
+              .findStatic(tClass, "valueOf", MethodType.methodType(tClass, String.class))
+              .invoke(value);
+    } catch (NumberFormatException e) {
+      throw e;
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      log.debug("Can't invoke or access 'valueOf': ", e);
+      throw new NumberFormatException(e.toString());
+    } catch (Throwable e) {
+      log.debug("Can't parse: ", e);
+      throw new NumberFormatException(e.toString());
+    }
   }
 
   private static Map<String, String> getPropertyMapValue(
@@ -1066,29 +1092,25 @@ public class Config {
 
   private static Boolean getPropertyBooleanValue(
       final Properties properties, final String name, final Boolean defaultValue) {
-    final String value = properties.getProperty(name);
-    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
+    return valueOf(properties.getProperty(name), Boolean.class, defaultValue);
   }
 
   private static Integer getPropertyIntegerValue(
       final Properties properties, final String name, final Integer defaultValue) {
-    final String value = properties.getProperty(name);
-    return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
+    return valueOf(properties.getProperty(name), Integer.class, defaultValue);
   }
 
   private static Double getPropertyDoubleValue(
       final Properties properties, final String name, final Double defaultValue) {
-    final String value = properties.getProperty(name);
-    return value == null || value.trim().isEmpty() ? defaultValue : Double.valueOf(value);
+    return valueOf(properties.getProperty(name), Double.class, defaultValue);
   }
 
-  private static <T extends Enum<T>> Set<T> getPropertySetValue(
-      final Properties properties, final String name, final Class<T> clazz) {
+  private static Set<PropagationStyle> getPropagationStyleSetFromPropertyValue(
+      final Properties properties, final String name) {
     final String value = properties.getProperty(name);
     if (value != null) {
-      final Set<T> result =
-          convertStringSetToEnumSet(
-              parseStringIntoSetOfNonEmptyStrings(value, SPLIT_BY_SPACE_OR_COMMA_REGEX), clazz);
+      final Set<PropagationStyle> result =
+          convertStringSetToPropagationStyleSet(parseStringIntoSetOfNonEmptyStrings(value));
       if (!result.isEmpty()) {
         return result;
       }
@@ -1097,7 +1119,7 @@ public class Config {
     return null;
   }
 
-  private Set<Integer> getPropertyIntegerRangeValue(
+  private static Set<Integer> getPropertyIntegerRangeValue(
       final Properties properties, final String name, final Set<Integer> defaultValue) {
     final String value = properties.getProperty(name);
     try {
@@ -1108,6 +1130,7 @@ public class Config {
     }
   }
 
+  @NonNull
   private static Map<String, String> parseMap(final String str, final String settingName) {
     // If we ever want to have default values besides an empty map, this will need to change.
     if (str == null || str.trim().isEmpty()) {
@@ -1137,9 +1160,9 @@ public class Config {
     return Collections.unmodifiableMap(map);
   }
 
-  private static Set<Integer> parseIntegerRangeSet(String str, final String settingName)
+  @NonNull
+  private static Set<Integer> parseIntegerRangeSet(@NonNull String str, final String settingName)
       throws NumberFormatException {
-    assert str != null;
     str = str.replaceAll("\\s", "");
     if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
       log.warn(
@@ -1169,10 +1192,26 @@ public class Config {
     return Collections.unmodifiableSet(set);
   }
 
+  @NonNull
   private static Map<String, String> newHashMap(final int size) {
     return new HashMap<>(size + 1, 1f);
   }
 
+  /**
+   * @param map
+   * @param propName
+   * @return true if map was modified
+   */
+  private static boolean addPropToMapIfDefinedByEnvironment(
+      final Map<String, String> map, final String propName) {
+    final String val = getSettingFromEnvironment(propName, null);
+    if (val != null) {
+      return !val.equals(map.put(propertyNameToSystemPropertyName(propName), val));
+    }
+    return false;
+  }
+
+  @NonNull
   private static List<String> parseList(final String str) {
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyList();
@@ -1186,13 +1225,13 @@ public class Config {
     return Collections.unmodifiableList(Arrays.asList(tokens));
   }
 
-  private static Set<String> parseStringIntoSetOfNonEmptyStrings(
-      final String str, final String regex) {
+  @NonNull
+  private static Set<String> parseStringIntoSetOfNonEmptyStrings(final String str) {
     // Using LinkedHashSet to preserve original string order
     final Set<String> result = new LinkedHashSet<>();
     // Java returns single value when splitting an empty string. We do not need that value, so
     // we need to throw it out.
-    for (final String value : str.split(regex)) {
+    for (final String value : str.split(SPLIT_BY_SPACE_OR_COMMA_REGEX)) {
       if (!value.isEmpty()) {
         result.add(value);
       }
@@ -1200,15 +1239,16 @@ public class Config {
     return Collections.unmodifiableSet(result);
   }
 
-  private static <V extends Enum<V>> Set<V> convertStringSetToEnumSet(
-      final Set<String> input, final Class<V> clazz) {
+  @NonNull
+  private static Set<PropagationStyle> convertStringSetToPropagationStyleSet(
+      final Set<String> input) {
     // Using LinkedHashSet to preserve original string order
-    final Set<V> result = new LinkedHashSet<>();
+    final Set<PropagationStyle> result = new LinkedHashSet<>();
     for (final String value : input) {
       try {
-        result.add(Enum.valueOf(clazz, value.toUpperCase()));
+        result.add(PropagationStyle.valueOf(value.toUpperCase()));
       } catch (final IllegalArgumentException e) {
-        log.debug("Cannot recognize config string value: {}, {}", value, clazz);
+        log.debug("Cannot recognize config string value: {}, {}", value, PropagationStyle.class);
       }
     }
     return Collections.unmodifiableSet(result);
@@ -1245,8 +1285,7 @@ public class Config {
       return properties;
     }
 
-    try {
-      final FileReader fileReader = new FileReader(configurationFile);
+    try (final FileReader fileReader = new FileReader(configurationFile)) {
       properties.load(fileReader);
     } catch (final FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
@@ -1259,8 +1298,8 @@ public class Config {
   }
 
   /** Returns the detected hostname. First tries locally, then using DNS */
-  private String getHostName() {
-    String possibleHostname = null;
+  private static String getHostName() {
+    String possibleHostname;
 
     // Try environment variable.  This works in almost all environments
     if (System.getProperty("os.name").startsWith("Windows")) {
@@ -1275,12 +1314,11 @@ public class Config {
     }
 
     // Try hostname command
-    try {
-      final Process process = Runtime.getRuntime().exec("hostname");
-      final BufferedReader reader =
-          new BufferedReader(new InputStreamReader(process.getInputStream()));
+    try (final BufferedReader reader =
+        new BufferedReader(
+            new InputStreamReader(Runtime.getRuntime().exec("hostname").getInputStream()))) {
       possibleHostname = reader.readLine();
-    } catch (final Exception e) {
+    } catch (final Exception ignore) {
       // Ignore.  Hostname command is not always available
     }
 
