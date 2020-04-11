@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.test.base.HttpClientTest
+import spock.lang.Timeout
 
+@Timeout(5)
 class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
 
   @Override
@@ -22,6 +24,8 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
     HttpURLConnection connection = uri.toURL().openConnection()
     try {
       connection.setRequestMethod(method)
+      connection.connectTimeout = CONNECT_TIMEOUT_MS
+      connection.readTimeout = READ_TIMEOUT_MS
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       return connection.getResponseCode()

@@ -17,7 +17,6 @@ import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
 import com.ning.http.client.Response
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -65,6 +64,11 @@ class Netty38ClientTest extends HttpClientTest {
     false
   }
 
+  @Override
+  boolean testRemoteConnection() {
+    return false
+  }
+
   def "connection error (unopened port)"() {
     given:
     def uri = new URI("http://127.0.0.1:$UNUSABLE_PORT/")
@@ -88,7 +92,6 @@ class Netty38ClientTest extends HttpClientTest {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "netty"
             Class errorClass = ConnectException
             try {
               errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

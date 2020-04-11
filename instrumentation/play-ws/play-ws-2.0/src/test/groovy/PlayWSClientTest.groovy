@@ -23,9 +23,11 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import java.util.concurrent.TimeUnit
 
+@Timeout(5)
 class PlayJavaWSClientTest extends PlayWSClientTestBase {
   @Shared
   StandaloneWSClient wsClient
@@ -52,6 +54,7 @@ class PlayJavaWSClientTest extends PlayWSClientTestBase {
   }
 }
 
+@Timeout(5)
 class PlayJavaStreamedWSClientTest extends PlayWSClientTestBase {
   @Shared
   StandaloneWSClient wsClient
@@ -81,6 +84,7 @@ class PlayJavaStreamedWSClientTest extends PlayWSClientTestBase {
   }
 }
 
+@Timeout(5)
 class PlayScalaWSClientTest extends PlayWSClientTestBase {
   @Shared
   play.api.libs.ws.StandaloneWSClient wsClient
@@ -111,6 +115,7 @@ class PlayScalaWSClientTest extends PlayWSClientTestBase {
   }
 }
 
+@Timeout(5)
 class PlayScalaStreamedWSClientTest extends PlayWSClientTestBase {
   @Shared
   play.api.libs.ws.StandaloneWSClient wsClient

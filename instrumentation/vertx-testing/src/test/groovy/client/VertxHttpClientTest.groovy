@@ -18,7 +18,7 @@ package client
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
-import io.vertx.core.http.HttpClient
+import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.HttpClientResponse
 import io.vertx.core.http.HttpMethod
 import spock.lang.Shared
@@ -30,9 +30,11 @@ import java.util.concurrent.CompletableFuture
 class VertxHttpClientTest extends HttpClientTest {
 
   @Shared
-  Vertx vertx = Vertx.vertx(new VertxOptions())
+  def vertx = Vertx.vertx(new VertxOptions())
   @Shared
-  HttpClient httpClient = vertx.createHttpClient()
+  def clientOptions = new HttpClientOptions().setConnectTimeout(CONNECT_TIMEOUT_MS).setIdleTimeout(READ_TIMEOUT_MS)
+  @Shared
+  def httpClient = vertx.createHttpClient(clientOptions)
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -55,6 +57,11 @@ class VertxHttpClientTest extends HttpClientTest {
 
   @Override
   boolean testConnectionFailure() {
+    false
+  }
+
+  boolean testRemoteConnection() {
+    // FIXME: figure out how to configure timeouts.
     false
   }
 }

@@ -18,11 +18,13 @@ import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Ignore
 import spock.lang.Requires
+import spock.lang.Timeout
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
+@Timeout(5)
 class HttpUrlConnectionTest extends HttpClientTest {
 
   static final RESPONSE = "Hello."
@@ -36,6 +38,8 @@ class HttpUrlConnectionTest extends HttpClientTest {
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
+      connection.connectTimeout = CONNECT_TIMEOUT_MS
+      connection.readTimeout = READ_TIMEOUT_MS
       def parentSpan = TEST_TRACER.getCurrentSpan()
       def stream = connection.inputStream
       assert TEST_TRACER.getCurrentSpan() == parentSpan

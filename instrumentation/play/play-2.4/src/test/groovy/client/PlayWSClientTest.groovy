@@ -20,9 +20,11 @@ import play.libs.ws.WS
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Subject
+import spock.lang.Timeout
 
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.
+@Timeout(5)
 class PlayWSClientTest extends HttpClientTest {
   @Subject
   @Shared
@@ -53,5 +55,10 @@ class PlayWSClientTest extends HttpClientTest {
   @Override
   boolean testConnectionFailure() {
     false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
   }
 }

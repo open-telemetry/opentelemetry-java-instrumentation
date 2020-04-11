@@ -15,19 +15,28 @@
  */
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.http.HttpResponse
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import java.util.concurrent.CompletableFuture
 
+@Timeout(5)
 class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {
+
+  @Shared
+  RequestConfig requestConfig = RequestConfig.custom()
+    .setConnectTimeout(CONNECT_TIMEOUT_MS)
+    .setSocketTimeout(READ_TIMEOUT_MS)
+    .build()
 
   @AutoCleanup
   @Shared
-  def client = HttpAsyncClients.createDefault()
+  def client = HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build()
 
   def setupSpec() {
     client.start()
@@ -67,5 +76,10 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    false // otherwise SocketTimeoutException for https requests
   }
 }

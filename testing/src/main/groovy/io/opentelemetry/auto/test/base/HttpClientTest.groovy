@@ -23,6 +23,7 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.AutoCleanup
+import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -40,6 +41,8 @@ import static org.junit.Assume.assumeTrue
 @Unroll
 abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
+  protected static final CONNECT_TIMEOUT_MS = 1000
+  protected static final READ_TIMEOUT_MS = 2000
 
   @AutoCleanup
   @Shared
@@ -250,8 +253,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "basic #method request with circular redirects"() {
     given:
-    assumeTrue(testRedirects())
-    assumeTrue(testCircularRedirects())
+    assumeTrue(testRedirects() && testCircularRedirects())
     def uri = server.address.resolve("/circular-redirect")
 
     when:
@@ -300,6 +302,77 @@ abstract class HttpClientTest extends AgentTestRunner {
     method = "GET"
   }
 
+  def "connection error dropped request"() {
+    given:
+    assumeTrue(testRemoteConnection())
+    // https://stackoverflow.com/a/100859
+    def uri = new URI("http://www.google.com:81/")
+
+    when:
+    runUnderTrace("parent") {
+      doRequest(method, uri)
+    }
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+    assertTraces(1) {
+      trace(0, 2 + extraClientSpans()) {
+        basicSpan(it, 0, "parent", null, thrownException)
+        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+      }
+    }
+
+    where:
+    method = "HEAD"
+  }
+
+  def "connection error non routable address"() {
+    given:
+    assumeTrue(testRemoteConnection())
+    def uri = new URI("https://192.0.2.1/")
+
+    when:
+    runUnderTrace("parent") {
+      doRequest(method, uri)
+    }
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+    assertTraces(1) {
+      trace(0, 2 + extraClientSpans()) {
+        basicSpan(it, 0, "parent", null, thrownException)
+        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+      }
+    }
+
+    where:
+    method = "HEAD"
+  }
+
+  // IBM JVM has different protocol support for TLS
+  @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
+  def "test https request"() {
+    given:
+    assumeTrue(testRemoteConnection())
+    def uri = new URI("https://www.google.com/")
+
+    when:
+    def status = doRequest(method, uri)
+
+    then:
+    status == 200
+    assertTraces(1) {
+      trace(0, 1 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, false, uri)
+      }
+    }
+
+    where:
+    method = "HEAD"
+  }
+
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
     trace.span(index) {
@@ -312,9 +385,9 @@ abstract class HttpClientTest extends AgentTestRunner {
       spanKind CLIENT
       errored exception != null
       tags {
-        "$MoreTags.NET_PEER_NAME" "localhost"
+        "$MoreTags.NET_PEER_NAME" uri.host
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$MoreTags.NET_PEER_PORT" uri.port
+        "$MoreTags.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 } // Optional
         "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "$Tags.HTTP_METHOD" method
         if (status) {
@@ -363,6 +436,10 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   boolean testConnectionFailure() {
+    true
+  }
+
+  boolean testRemoteConnection() {
     true
   }
 

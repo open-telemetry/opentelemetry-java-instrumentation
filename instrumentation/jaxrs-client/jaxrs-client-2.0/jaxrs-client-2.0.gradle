@@ -32,7 +32,8 @@ dependencies {
   testCompile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
 
   testCompile group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.0'
-  testCompile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.0.Final'
+  testCompile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.5.Final'
+  // ^ This version has timeouts https://issues.redhat.com/browse/RESTEASY-975
   testCompile group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.1.0'
   // Doesn't work with CXF 3.0.x because their context is wrong:
   // https://github.com/apache/cxf/commit/335c7bad2436f08d6d54180212df5a52157c9f21
