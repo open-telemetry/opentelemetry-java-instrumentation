@@ -17,17 +17,13 @@ package io.opentelemetry.auto.instrumentation.rxjava;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 
 public class TracedSubscriber<T> extends Subscriber<T> {
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rxjava-1.0");
 
   private final AtomicReference<Span> spanRef;
   private final Subscriber<T> delegate;

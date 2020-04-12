@@ -172,10 +172,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       return finished;
     }
 
-    public void finish() {
-      finished = true;
-    }
-
     public void finishSpan(final Throwable throwable) {
       try (final Scope scope = currentContextWith(span)) {
         DECORATE.onError(span, throwable);

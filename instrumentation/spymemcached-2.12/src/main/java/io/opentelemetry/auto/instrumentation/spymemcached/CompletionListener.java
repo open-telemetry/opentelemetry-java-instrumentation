@@ -30,9 +30,6 @@ import net.spy.memcached.MemcachedConnection;
 @Slf4j
 public abstract class CompletionListener<T> {
 
-  static final String SERVICE_NAME = "memcached";
-  static final String COMPONENT_NAME = "java-spymemcached";
-  static final String DB_TYPE = "memcached";
   static final String DB_COMMAND_CANCELLED = "db.command.cancelled";
   static final String MEMCACHED_RESULT = "memcaced.result";
   static final String HIT = "hit";
