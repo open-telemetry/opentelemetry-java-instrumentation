@@ -22,12 +22,12 @@ import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -36,6 +36,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
 @AutoService(Instrumenter.class)
@@ -53,7 +54,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.Protocol");
+    return named("redis.clients.jedis.Connection");
   }
 
   @Override
@@ -67,9 +68,8 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod()
-            .and(isPublic())
             .and(named("sendCommand"))
-            .and(takesArgument(1, named("redis.clients.jedis.Protocol$Command"))),
+            .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command"))),
         JedisInstrumentation.class.getName() + "$JedisAdvice");
     // FIXME: This instrumentation only incorporates sending the command, not processing the result.
   }
@@ -77,9 +77,16 @@ public final class JedisInstrumentation extends Instrumenter.Default {
   public static class JedisAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(@Advice.Argument(1) final Command command) {
+    public static SpanWithScope onEnter(
+        @Advice.This final Connection connection, @Advice.Argument(0) final Command command) {
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
+      if (callDepth > 0) {
+        return null;
+      }
+
       final Span span = TRACER.spanBuilder(command.name()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
+      DECORATE.onConnection(span, connection);
       DECORATE.onStatement(span, command.name());
       return new SpanWithScope(span, currentContextWith(span));
     }
@@ -87,6 +94,11 @@ public final class JedisInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
+      if (spanWithScope == null) {
+        return;
+      }
+      CallDepthThreadLocalMap.reset(Connection.class);
+
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
