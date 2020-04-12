@@ -45,11 +45,6 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
   }
 
   @Override
-  protected String getComponentName() {
-    return "java-mongo";
-  }
-
-  @Override
   protected String dbType() {
     return "mongo";
   }

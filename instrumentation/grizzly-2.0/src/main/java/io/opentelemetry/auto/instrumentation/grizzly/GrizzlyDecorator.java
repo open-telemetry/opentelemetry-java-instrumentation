@@ -60,9 +60,4 @@ public class GrizzlyDecorator extends HttpServerDecorator<Request, Request, Resp
   protected Integer status(final Response containerResponse) {
     return containerResponse.getStatus();
   }
-
-  @Override
-  protected String getComponentName() {
-    return "grizzly";
-  }
 }

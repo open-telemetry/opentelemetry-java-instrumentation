@@ -23,9 +23,4 @@ public class ReactorCoreDecorator extends BaseDecorator {
   public static ReactorCoreDecorator DECORATE = new ReactorCoreDecorator();
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.reactor-3.1");
-
-  @Override
-  protected String getComponentName() {
-    return "reactor-core";
-  }
 }

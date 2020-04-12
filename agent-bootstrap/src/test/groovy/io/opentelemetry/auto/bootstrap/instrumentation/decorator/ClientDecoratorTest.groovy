@@ -56,11 +56,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
       protected String service() {
         return serviceName
       }
-
-      @Override
-      protected String getComponentName() {
-        return "test-component"
-      }
     }
   }
 }

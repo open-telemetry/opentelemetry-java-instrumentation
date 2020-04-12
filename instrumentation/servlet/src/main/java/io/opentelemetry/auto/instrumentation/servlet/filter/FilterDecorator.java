@@ -23,9 +23,4 @@ public class FilterDecorator extends BaseDecorator {
   public static final FilterDecorator DECORATE = new FilterDecorator();
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
-
-  @Override
-  protected String getComponentName() {
-    return "java-web-servlet-filter";
-  }
 }

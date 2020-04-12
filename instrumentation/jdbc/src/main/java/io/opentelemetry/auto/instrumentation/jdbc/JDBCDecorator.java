@@ -41,11 +41,6 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   }
 
   @Override
-  protected String getComponentName() {
-    return "java-jdbc"; // Overridden by onStatement and onPreparedStatement
-  }
-
-  @Override
   protected String dbType() {
     return "jdbc";
   }

@@ -32,11 +32,6 @@ public class JedisClientDecorator extends DatabaseClientDecorator<ProtocolComman
   }
 
   @Override
-  protected String getComponentName() {
-    return "redis-command";
-  }
-
-  @Override
   protected String dbType() {
     return "redis";
   }

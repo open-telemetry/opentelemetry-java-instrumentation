@@ -157,11 +157,6 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       }
 
       @Override
-      protected String getComponentName() {
-        return "test-component"
-      }
-
-      @Override
       protected String method(Map m) {
         return m.method
       }

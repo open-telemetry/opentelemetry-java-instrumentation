@@ -32,11 +32,6 @@ public class KafkaStreamsDecorator extends ClientDecorator {
     return "kafka";
   }
 
-  @Override
-  protected String getComponentName() {
-    return "java-kafka";
-  }
-
   public String spanNameForConsume(final StampedRecord record) {
     if (record == null) {
       return null;

@@ -31,11 +31,6 @@ public class AkkaHttpServerDecorator
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.akka-http-10.0");
 
   @Override
-  protected String getComponentName() {
-    return "akka-http-server";
-  }
-
-  @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.method().value();
   }

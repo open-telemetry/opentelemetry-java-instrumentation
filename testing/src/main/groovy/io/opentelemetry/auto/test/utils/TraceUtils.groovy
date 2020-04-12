@@ -32,10 +32,6 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 class TraceUtils {
 
   private static final BaseDecorator DECORATE = new BaseDecorator() {
-
-    protected String getComponentName() {
-      return null
-    }
   }
 
   private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")

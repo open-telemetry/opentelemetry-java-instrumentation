@@ -30,11 +30,6 @@ public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, Ht
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.akka-http-10.0");
 
   @Override
-  protected String getComponentName() {
-    return "akka-http-client";
-  }
-
-  @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.method().value();
   }

@@ -60,11 +60,6 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
       protected String service() {
         return "test-service"
       }
-
-      @Override
-      protected String getComponentName() {
-        return "test-component"
-      }
     }
   }
 

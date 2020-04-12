@@ -42,11 +42,6 @@ class ServerDecoratorTest extends BaseDecoratorTest {
   @Override
   def newDecorator() {
     return new ServerDecorator() {
-
-      @Override
-      protected String getComponentName() {
-        return "test-component"
-      }
     }
   }
 }

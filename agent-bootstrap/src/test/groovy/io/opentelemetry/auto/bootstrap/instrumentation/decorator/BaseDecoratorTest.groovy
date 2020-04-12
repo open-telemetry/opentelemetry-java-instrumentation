@@ -127,11 +127,6 @@ class BaseDecoratorTest extends AgentSpecification {
 
   def newDecorator() {
     return new BaseDecorator() {
-
-      @Override
-      protected String getComponentName() {
-        return "test-component"
-      }
     }
   }
 

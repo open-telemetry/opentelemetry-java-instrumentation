@@ -31,9 +31,4 @@ public final class SpringDataDecorator extends ClientDecorator {
   protected String service() {
     return null;
   }
-
-  @Override
-  protected String getComponentName() {
-    return "spring-data";
-  }
 }

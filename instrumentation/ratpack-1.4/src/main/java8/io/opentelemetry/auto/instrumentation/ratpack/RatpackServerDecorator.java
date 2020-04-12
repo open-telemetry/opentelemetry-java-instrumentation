@@ -37,11 +37,6 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.ratpack-1.4");
 
   @Override
-  protected String getComponentName() {
-    return "ratpack";
-  }
-
-  @Override
   protected String method(final Request request) {
     return request.getMethod().getName();
   }

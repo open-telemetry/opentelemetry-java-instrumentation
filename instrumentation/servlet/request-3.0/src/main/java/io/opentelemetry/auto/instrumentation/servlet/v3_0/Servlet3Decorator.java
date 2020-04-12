@@ -33,11 +33,6 @@ public class Servlet3Decorator
   public static final Servlet3Decorator DECORATE = new Servlet3Decorator();
 
   @Override
-  protected String getComponentName() {
-    return "java-web-servlet";
-  }
-
-  @Override
   protected String method(final HttpServletRequest httpServletRequest) {
     return httpServletRequest.getMethod();
   }

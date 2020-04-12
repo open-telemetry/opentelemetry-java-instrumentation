@@ -35,11 +35,6 @@ public class JSPDecorator extends BaseDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jsp-2.3");
 
-  @Override
-  protected String getComponentName() {
-    return "jsp-http-servlet";
-  }
-
   public String spanNameOnCompile(final JspCompilationContext jspCompilationContext) {
     return jspCompilationContext == null
         ? "Compile"

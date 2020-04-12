@@ -30,11 +30,6 @@ public class SpringSchedulingDecorator extends BaseDecorator {
 
   private SpringSchedulingDecorator() {}
 
-  @Override
-  protected String getComponentName() {
-    return "spring-scheduling";
-  }
-
   public String spanNameOnRun(final Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       final ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;

@@ -30,11 +30,6 @@ public class JaxRsClientDecorator
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-client-2.0");
 
   @Override
-  protected String getComponentName() {
-    return "jax-rs.client";
-  }
-
-  @Override
   protected String method(final ClientRequestContext httpRequest) {
     return httpRequest.getMethod();
   }

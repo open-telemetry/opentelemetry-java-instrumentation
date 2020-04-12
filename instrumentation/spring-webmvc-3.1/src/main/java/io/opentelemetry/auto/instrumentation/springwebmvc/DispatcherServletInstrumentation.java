@@ -16,7 +16,6 @@
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.DECORATE_RENDER;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -52,10 +51,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".SpringWebHttpServerDecorator",
-      packageName + ".SpringWebHttpServerDecorator$1",
-    };
+    return new String[] {packageName + ".SpringWebHttpServerDecorator"};
   }
 
   @Override
@@ -80,9 +76,9 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
-      final Span span = TRACER.spanBuilder(DECORATE_RENDER.spanNameOnRender(mv)).startSpan();
-      DECORATE_RENDER.afterStart(span);
-      DECORATE_RENDER.onRender(span, mv);
+      final Span span = TRACER.spanBuilder(DECORATE.spanNameOnRender(mv)).startSpan();
+      DECORATE.afterStart(span);
+      DECORATE.onRender(span, mv);
       return new SpanWithScope(span, currentContextWith(span));
     }
 
@@ -90,8 +86,8 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       final Span span = spanWithScope.getSpan();
-      DECORATE_RENDER.onError(span, throwable);
-      DECORATE_RENDER.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
     }

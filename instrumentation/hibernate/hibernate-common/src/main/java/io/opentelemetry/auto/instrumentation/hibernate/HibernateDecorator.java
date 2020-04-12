@@ -36,11 +36,6 @@ public class HibernateDecorator extends OrmClientDecorator {
   }
 
   @Override
-  protected String getComponentName() {
-    return "java-hibernate";
-  }
-
-  @Override
   protected String dbType() {
     return null;
   }

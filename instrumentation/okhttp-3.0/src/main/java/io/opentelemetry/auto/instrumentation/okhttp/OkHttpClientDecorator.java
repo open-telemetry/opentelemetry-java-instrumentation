@@ -29,11 +29,6 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String getComponentName() {
-    return "okhttp";
-  }
-
-  @Override
   protected String method(final Request httpRequest) {
     return httpRequest.method();
   }

@@ -26,11 +26,6 @@ public class RmiClientDecorator extends ClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rmi");
 
   @Override
-  protected String getComponentName() {
-    return "rmi-client";
-  }
-
-  @Override
   protected String service() {
     return null;
   }

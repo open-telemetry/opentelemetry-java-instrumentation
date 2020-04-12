@@ -34,11 +34,6 @@ public class RabbitDecorator extends ClientDecorator {
     return "rabbitmq";
   }
 
-  @Override
-  protected String getComponentName() {
-    return "rabbitmq-amqp";
-  }
-
   public void onPublish(final Span span, final String exchange, final String routingKey) {
     final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
     final String routing =

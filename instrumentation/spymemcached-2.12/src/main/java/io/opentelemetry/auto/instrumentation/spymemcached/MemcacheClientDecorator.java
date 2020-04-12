@@ -32,11 +32,6 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
   }
 
   @Override
-  protected String getComponentName() {
-    return "java-spymemcached";
-  }
-
-  @Override
   protected String dbType() {
     return "memcached";
   }
