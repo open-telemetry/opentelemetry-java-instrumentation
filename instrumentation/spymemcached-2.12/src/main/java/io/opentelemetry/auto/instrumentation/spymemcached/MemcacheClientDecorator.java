@@ -27,11 +27,6 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spymemcached-2.12");
 
   @Override
-  protected String service() {
-    return "memcached";
-  }
-
-  @Override
   protected String dbType() {
     return "memcached";
   }

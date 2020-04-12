@@ -35,11 +35,6 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
   protected abstract Integer status(RESPONSE response);
 
-  @Override
-  protected String service() {
-    return null;
-  }
-
   public String spanNameForRequest(final REQUEST request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;

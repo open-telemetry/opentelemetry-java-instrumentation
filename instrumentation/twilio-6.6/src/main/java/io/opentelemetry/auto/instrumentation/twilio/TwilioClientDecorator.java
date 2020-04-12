@@ -37,11 +37,6 @@ public class TwilioClientDecorator extends ClientDecorator {
 
   static final String COMPONENT_NAME = "twilio-sdk";
 
-  @Override
-  protected String service() {
-    return COMPONENT_NAME;
-  }
-
   /** Decorate trace based on service execution metadata. */
   public String spanNameOnServiceExecution(final Object serviceExecutor, final String methodName) {
     return spanNameForClass(serviceExecutor.getClass()) + "." + methodName;

@@ -19,8 +19,6 @@ import io.opentelemetry.trace.Span;
 
 public abstract class ClientDecorator extends BaseDecorator {
 
-  protected abstract String service();
-
   @Override
   public Span afterStart(final Span span) {
     assert span != null;

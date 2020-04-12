@@ -148,13 +148,8 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
   }
 
   @Override
-  def newDecorator(String serviceName = "test-service") {
+  def newDecorator() {
     return new HttpClientDecorator<Map, Map>() {
-
-      @Override
-      protected String service() {
-        return serviceName
-      }
 
       @Override
       protected String method(Map m) {

@@ -24,11 +24,6 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   public static final OkHttpClientDecorator DECORATE = new OkHttpClientDecorator();
 
   @Override
-  protected String service() {
-    return null;
-  }
-
-  @Override
   protected String method(final Request httpRequest) {
     return httpRequest.method();
   }

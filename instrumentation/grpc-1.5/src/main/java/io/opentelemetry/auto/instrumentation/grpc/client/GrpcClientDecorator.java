@@ -26,11 +26,6 @@ public class GrpcClientDecorator extends ClientDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grpc-1.5");
 
-  @Override
-  protected String service() {
-    return null;
-  }
-
   public Span onClose(final Span span, final io.grpc.Status status) {
 
     span.setAttribute("status.code", status.getCode().name());

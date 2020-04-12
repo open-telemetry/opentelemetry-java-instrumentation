@@ -29,11 +29,6 @@ public class RabbitDecorator extends ClientDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rabbitmq-amqp-2.7");
 
-  @Override
-  protected String service() {
-    return "rabbitmq";
-  }
-
   public void onPublish(final Span span, final String exchange, final String routingKey) {
     final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
     final String routing =

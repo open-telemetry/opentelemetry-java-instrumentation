@@ -31,11 +31,6 @@ public class HibernateDecorator extends OrmClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.hibernate");
 
   @Override
-  protected String service() {
-    return "hibernate";
-  }
-
-  @Override
   protected String dbType() {
     return null;
   }

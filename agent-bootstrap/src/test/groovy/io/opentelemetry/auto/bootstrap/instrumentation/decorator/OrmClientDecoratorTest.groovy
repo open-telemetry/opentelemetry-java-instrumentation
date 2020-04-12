@@ -55,12 +55,6 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
       protected String dbInstance(Object o) {
         return "test-user"
       }
-
-      @Override
-      protected String service() {
-        return "test-service"
-      }
     }
   }
-
 }

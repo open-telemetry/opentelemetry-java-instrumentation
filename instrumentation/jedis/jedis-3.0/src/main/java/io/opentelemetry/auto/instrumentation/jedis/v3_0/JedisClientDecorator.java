@@ -27,11 +27,6 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jedis-1.4");
 
   @Override
-  protected String service() {
-    return "redis";
-  }
-
-  @Override
   protected String dbType() {
     return "redis";
   }
