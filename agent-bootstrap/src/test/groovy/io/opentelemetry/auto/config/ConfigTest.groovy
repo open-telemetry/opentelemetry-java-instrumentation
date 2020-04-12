@@ -221,35 +221,6 @@ class ConfigTest extends AgentSpecification {
     integrationNames = new TreeSet<>(names)
   }
 
-  def "test getFloatSettingFromEnvironment(#name)"() {
-    setup:
-    environmentVariables.set("OTA_ENV_ZERO_TEST", "0.0")
-    environmentVariables.set("OTA_ENV_FLOAT_TEST", "1.0")
-    environmentVariables.set("OTA_FLOAT_TEST", "0.2")
-
-    System.setProperty("ota.prop.zero.test", "0")
-    System.setProperty("ota.prop.float.test", "0.3")
-    System.setProperty("ota.float.test", "0.4")
-    System.setProperty("ota.garbage.test", "garbage")
-    System.setProperty("ota.negative.test", "-1")
-
-    expect:
-    Config.getFloatSettingFromEnvironment(name, defaultValue) == (float) expected
-
-    where:
-    name              | expected
-    "env.zero.test"   | 0.0
-    "prop.zero.test"  | 0
-    "env.float.test"  | 1.0
-    "prop.float.test" | 0.3
-    "float.test"      | 0.4
-    "negative.test"   | -1.0
-    "garbage.test"    | 10.0
-    "default.test"    | 10.0
-
-    defaultValue = 10.0
-  }
-
   def "verify integer range configs on tracer"() {
     setup:
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, value)

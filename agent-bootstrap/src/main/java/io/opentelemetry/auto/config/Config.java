@@ -247,19 +247,6 @@ public class Config {
 
   public boolean isIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
-    return integrationEnabled(integrationNames, defaultEnabled);
-  }
-
-  /**
-   * @param integrationNames
-   * @param defaultEnabled
-   * @return
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isIntegrationEnabled(SortedSet, boolean)}.
-   */
-  @Deprecated
-  private static boolean integrationEnabled(
-      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
@@ -314,8 +301,6 @@ public class Config {
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a list by
    * splitting on `,`.
-   *
-   * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
   @NonNull
   private static List<String> getListSettingFromEnvironment(
@@ -325,21 +310,10 @@ public class Config {
 
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Boolean.
-   *
-   * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
-  public static Boolean getBooleanSettingFromEnvironment(
+  private static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
     return getSettingFromEnvironmentWithLog(name, Boolean.class, defaultValue);
-  }
-
-  /**
-   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Float.
-   *
-   * @deprecated This method should only be used internally. Use the explicit getter instead.
-   */
-  public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
-    return getSettingFromEnvironmentWithLog(name, Float.class, defaultValue);
   }
 
   /**
