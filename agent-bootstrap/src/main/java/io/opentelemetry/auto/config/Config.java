@@ -90,8 +90,6 @@ public class Config {
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
   public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
 
-  private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
-
   private static final String DEFAULT_TRACE_ANNOTATIONS = null;
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
