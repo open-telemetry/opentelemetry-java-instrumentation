@@ -46,8 +46,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
   }
 
   @Override
-  public void writeRequested(final ChannelHandlerContext ctx, final MessageEvent msg)
-      throws Exception {
+  public void writeRequested(final ChannelHandlerContext ctx, final MessageEvent msg) {
     if (!(msg.getMessage() instanceof HttpRequest)) {
       ctx.sendDownstream(msg);
       return;

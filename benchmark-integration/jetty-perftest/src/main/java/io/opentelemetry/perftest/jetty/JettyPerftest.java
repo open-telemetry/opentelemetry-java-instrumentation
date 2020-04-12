@@ -23,7 +23,6 @@ import io.opentelemetry.perftest.Worker;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -65,7 +64,7 @@ public class JettyPerftest {
   public static class PerfServlet extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
-        throws ServletException, IOException {
+        throws IOException {
       if (request.getParameter("error") != null) {
         throw new RuntimeException("some sync error");
       }

@@ -17,7 +17,6 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Set;
@@ -94,7 +93,7 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public URL getResource(final String s) throws MalformedURLException {
+    public URL getResource(final String s) {
       return null;
     }
 
@@ -114,7 +113,7 @@ public class RequestDispatcherUtils {
     }
 
     @Override
-    public Servlet getServlet(final String s) throws ServletException {
+    public Servlet getServlet(final String s) {
       return null;
     }
 
@@ -187,7 +186,7 @@ public class RequestDispatcherUtils {
           "forward-child",
           new Callable<Object>() {
             @Override
-            public Object call() throws Exception {
+            public Object call() {
               return null;
             }
           });
@@ -203,7 +202,7 @@ public class RequestDispatcherUtils {
           "include-child",
           new Callable<Object>() {
             @Override
-            public Object call() throws Exception {
+            public Object call() {
               return null;
             }
           });

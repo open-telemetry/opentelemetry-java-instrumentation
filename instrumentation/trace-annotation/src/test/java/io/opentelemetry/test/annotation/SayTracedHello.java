@@ -42,21 +42,21 @@ public class SayTracedHello {
     throw new RuntimeException();
   }
 
-  public static String fromCallable() throws Exception {
+  public static String fromCallable() {
     return new Callable<String>() {
       @com.newrelic.api.agent.Trace
       @Override
-      public String call() throws Exception {
+      public String call() {
         return "Howdy!";
       }
     }.call();
   }
 
-  public static String fromCallableWhenDisabled() throws Exception {
+  public static String fromCallableWhenDisabled() {
     return new Callable<String>() {
       @com.newrelic.api.agent.Trace
       @Override
-      public String call() throws Exception {
+      public String call() {
         return "Howdy!";
       }
     }.call();
