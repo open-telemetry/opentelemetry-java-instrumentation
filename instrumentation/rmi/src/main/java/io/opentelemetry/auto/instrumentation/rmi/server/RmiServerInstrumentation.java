@@ -66,7 +66,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   }
 
   public static class ServerAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = true)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
         @Advice.This final Object thiz, @Advice.Origin final Method method) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
