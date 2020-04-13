@@ -22,7 +22,7 @@ public class AgentTooling {
 
   private static void registerWeakMapProvider() {
     if (!WeakMap.Provider.isProviderRegistered()) {
-      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent(new Cleaner()));
+      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent());
       //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
       //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
     }

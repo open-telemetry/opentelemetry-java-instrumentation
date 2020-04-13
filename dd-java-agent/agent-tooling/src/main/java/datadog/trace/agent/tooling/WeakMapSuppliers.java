@@ -33,11 +33,6 @@ class WeakMapSuppliers {
   static class WeakConcurrent implements WeakMap.Implementation {
 
     @VisibleForTesting static final long CLEAN_FREQUENCY_SECONDS = 1;
-    private final Cleaner cleaner;
-
-    WeakConcurrent(final Cleaner cleaner) {
-      this.cleaner = cleaner;
-    }
 
     @Override
     public <K, V> WeakMap<K, V> get() {
