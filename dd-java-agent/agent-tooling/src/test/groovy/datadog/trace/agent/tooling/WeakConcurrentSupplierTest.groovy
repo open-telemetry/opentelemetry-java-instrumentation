@@ -13,9 +13,7 @@ import java.util.concurrent.TimeUnit
 // These tests fail sometimes in CI.
 class WeakConcurrentSupplierTest extends DDSpecification {
   @Shared
-  def cleaner = new Cleaner()
-  @Shared
-  def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent(cleaner)
+  def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent()
   @Shared
   def weakInlineSupplier = new WeakMapSuppliers.WeakConcurrent.Inline()
   @Shared
@@ -59,7 +57,7 @@ class WeakConcurrentSupplierTest extends DDSpecification {
 
     where:
     name             | supplierSupplier
-    "WeakConcurrent" | { -> new WeakMapSuppliers.WeakConcurrent(cleaner) }
+    "WeakConcurrent" | { -> new WeakMapSuppliers.WeakConcurrent() }
     "WeakInline"     | { -> new WeakMapSuppliers.WeakConcurrent.Inline() }
     "Guava"          | { -> new WeakMapSuppliers.Guava() }
   }
