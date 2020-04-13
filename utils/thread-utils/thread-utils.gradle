@@ -1,5 +1,10 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
+// TODO: add more tests
+excludedClassesCoverage += [
+  'datadog.common.exec*'
+]
+
 dependencies {
   compile deps.slf4j
 
