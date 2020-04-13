@@ -57,7 +57,7 @@ class WeakConcurrentSupplierTest extends DDSpecification {
 
     where:
     name             | supplierSupplier
-    "WeakConcurrent" | { -> new WeakMapSuppliers.WeakConcurrent(cleaner) }
+    "WeakConcurrent" | { -> new WeakMapSuppliers.WeakConcurrent() }
     "WeakInline"     | { -> new WeakMapSuppliers.WeakConcurrent.Inline() }
     "Guava"          | { -> new WeakMapSuppliers.Guava() }
   }
