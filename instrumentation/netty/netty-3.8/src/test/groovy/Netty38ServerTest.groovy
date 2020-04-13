@@ -17,9 +17,9 @@ import io.opentelemetry.auto.test.base.HttpServerTest
 import org.jboss.netty.bootstrap.ServerBootstrap
 import org.jboss.netty.buffer.ChannelBuffer
 import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.channel.Channel
 import org.jboss.netty.channel.ChannelHandlerContext
 import org.jboss.netty.channel.ChannelPipeline
+import org.jboss.netty.channel.ChannelPipelineFactory
 import org.jboss.netty.channel.DefaultChannelPipeline
 import org.jboss.netty.channel.DownstreamMessageEvent
 import org.jboss.netty.channel.ExceptionEvent
@@ -35,6 +35,8 @@ import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.jboss.netty.handler.codec.http.HttpServerCodec
 import org.jboss.netty.handler.logging.LoggingHandler
 import org.jboss.netty.logging.InternalLogLevel
+import org.jboss.netty.logging.InternalLoggerFactory
+import org.jboss.netty.logging.Slf4JLoggerFactory
 import org.jboss.netty.util.CharsetUtil
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -49,10 +51,17 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
-class Netty38ServerTest extends HttpServerTest<Channel> {
+class Netty38ServerTest extends HttpServerTest<ServerBootstrap> {
+
+  static final LoggingHandler LOGGING_HANDLER
+  static {
+    InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory())
+    LOGGING_HANDLER = new LoggingHandler(SERVER_LOGGER.name, InternalLogLevel.DEBUG, true)
+  }
 
   ChannelPipeline channelPipeline() {
     ChannelPipeline channelPipeline = new DefaultChannelPipeline()
+    channelPipeline.addFirst("logger", LOGGING_HANDLER)
 
     channelPipeline.addLast("http-codec", new HttpServerCodec())
     channelPipeline.addLast("controller", new SimpleChannelHandler() {
@@ -103,7 +112,8 @@ class Netty38ServerTest extends HttpServerTest<Channel> {
 
       @Override
       void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent ex) throws Exception {
-        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(ex.getCause().getMessage(), CharsetUtil.UTF_8)
+        def message = ex.cause == null ? "<no cause> " + ex.message : ex.cause.message == null ? "<null>" : ex.cause.message
+        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(message, CharsetUtil.UTF_8)
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR)
         response.setContent(buffer)
         response.headers().set(CONTENT_TYPE, "text/plain")
@@ -120,17 +130,23 @@ class Netty38ServerTest extends HttpServerTest<Channel> {
   }
 
   @Override
-  Channel startServer(int port) {
+  ServerBootstrap startServer(int port) {
     ServerBootstrap bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory())
-    bootstrap.setParentHandler(new LoggingHandler(InternalLogLevel.INFO))
-    bootstrap.setPipeline(channelPipeline())
+    bootstrap.setParentHandler(LOGGING_HANDLER)
+    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+      @Override
+      ChannelPipeline getPipeline() throws Exception {
+        return channelPipeline()
+      }
+    })
 
     InetSocketAddress address = new InetSocketAddress(port)
-    return bootstrap.bind(address)
+    bootstrap.bind(address)
+    return bootstrap
   }
 
   @Override
-  void stopServer(Channel server) {
-    server?.disconnect()
+  void stopServer(ServerBootstrap server) {
+    server?.shutdown()
   }
 }

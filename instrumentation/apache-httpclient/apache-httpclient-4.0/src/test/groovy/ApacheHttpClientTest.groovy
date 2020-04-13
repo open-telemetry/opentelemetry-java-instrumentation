@@ -20,12 +20,21 @@ import org.apache.http.HttpResponse
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicHttpRequest
+import org.apache.http.params.HttpConnectionParams
+import org.apache.http.params.HttpParams
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
+import spock.lang.Timeout
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest {
   @Shared
   def client = new DefaultHttpClient()
+
+  def setupSpec() {
+    HttpParams httpParams = client.getParams()
+    HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
+    HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
+  }
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -64,6 +73,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 }
 
+@Timeout(5)
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
@@ -74,8 +84,14 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
     return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
   }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
+  }
 }
 
+@Timeout(5)
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
@@ -86,8 +102,14 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
     return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
   }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
+  }
 }
 
+@Timeout(5)
 class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
@@ -98,8 +120,14 @@ class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<BasicH
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
     return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, { response -> response })
   }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
+  }
 }
 
+@Timeout(5)
 class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
@@ -110,8 +138,14 @@ class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest
   HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
     return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, { response -> response }, new BasicHttpContext())
   }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
+  }
 }
 
+@Timeout(5)
 class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {
@@ -124,6 +158,7 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
   }
 }
 
+@Timeout(5)
 class ApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {
@@ -136,6 +171,7 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest>
   }
 }
 
+@Timeout(5)
 class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {
@@ -148,6 +184,7 @@ class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<HttpUri
   }
 }
 
+@Timeout(5)
 class ApacheClientUriRequestResponseHandlerContext extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {

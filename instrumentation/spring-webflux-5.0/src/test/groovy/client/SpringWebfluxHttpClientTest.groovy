@@ -24,12 +24,14 @@ import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Ignore
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 // FIXME this instrumentation is not currently reliable and so is currently disabled
 // see DefaultWebClientInstrumentation and DefaultWebClientAdvice
 @Ignore
+@Timeout(5)
 class SpringWebfluxHttpClientTest extends HttpClientTest {
 
   @Shared
@@ -91,6 +93,11 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
   }
 
   boolean testConnectionFailure() {
+    false
+  }
+
+  boolean testRemoteConnection() {
+    // FIXME: figure out how to configure timeouts.
     false
   }
 }

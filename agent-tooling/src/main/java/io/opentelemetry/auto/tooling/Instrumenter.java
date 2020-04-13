@@ -22,6 +22,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.tooling.bytebuddy.AgentTransformers;
 import io.opentelemetry.auto.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
 import io.opentelemetry.auto.tooling.context.InstrumentationContextProvider;
@@ -122,7 +123,7 @@ public interface Instrumenter {
       if (helperClassNames.length > 0) {
         agentBuilder =
             agentBuilder.transform(
-                new HelperInjector(this.getClass().getSimpleName(), helperClassNames));
+                new HelperInjector(getClass().getSimpleName(), helperClassNames));
       }
       return agentBuilder;
     }

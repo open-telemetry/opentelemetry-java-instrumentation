@@ -47,16 +47,20 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 
 class Netty41ServerTest extends HttpServerTest<EventLoopGroup> {
 
+  static final LoggingHandler LOGGING_HANDLER = new LoggingHandler(SERVER_LOGGER.name, LogLevel.DEBUG)
+
   @Override
   EventLoopGroup startServer(int port) {
     def eventLoopGroup = new NioEventLoopGroup()
 
     ServerBootstrap bootstrap = new ServerBootstrap()
       .group(eventLoopGroup)
-      .handler(new LoggingHandler(LogLevel.INFO))
+      .handler(LOGGING_HANDLER)
       .childHandler([
         initChannel: { ch ->
           ChannelPipeline pipeline = ch.pipeline()
+          pipeline.addFirst("logger", LOGGING_HANDLER)
+
           def handlers = [new HttpServerCodec()]
           handlers.each { pipeline.addLast(it) }
           pipeline.addLast([

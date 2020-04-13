@@ -22,9 +22,11 @@ import akka.stream.ActorMaterializer
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
+@Timeout(5)
 class AkkaHttpClientInstrumentationTest extends HttpClientTest {
 
   @Shared
@@ -53,6 +55,12 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
   @Override
   boolean testRedirects() {
     false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    // Not sure how to properly set timeouts...
+    return false
   }
 
   def "singleRequest exception trace"() {

@@ -18,8 +18,12 @@ import org.apache.http.HttpResponse
 import org.apache.http.client.ResponseHandler
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.message.BasicHeader
+import org.apache.http.params.HttpConnectionParams
+import org.apache.http.params.HttpParams
 import spock.lang.Shared
+import spock.lang.Timeout
 
+@Timeout(5)
 class ApacheHttpClientResponseHandlerTest extends HttpClientTest {
 
   @Shared
@@ -31,6 +35,12 @@ class ApacheHttpClientResponseHandlerTest extends HttpClientTest {
     Integer handleResponse(HttpResponse response) {
       return response.statusLine.statusCode
     }
+  }
+
+  def setupSpec() {
+    HttpParams httpParams = client.getParams()
+    HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
+    HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
   }
 
   @Override
