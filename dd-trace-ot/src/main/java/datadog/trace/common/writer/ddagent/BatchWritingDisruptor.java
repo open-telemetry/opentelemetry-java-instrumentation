@@ -2,6 +2,7 @@ package datadog.trace.common.writer.ddagent;
 
 import com.lmax.disruptor.EventHandler;
 import datadog.common.exec.CommonTaskExecutor;
+import datadog.common.exec.CommonTaskExecutor.Task;
 import datadog.common.exec.DaemonThreadFactory;
 import datadog.trace.common.writer.DDAgentWriter;
 import java.util.ArrayList;
@@ -32,17 +33,8 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
 
     if (0 < flushFrequencySeconds) {
       // This provides a steady stream of events to enable flushing with a low throughput.
-      final Runnable heartbeat =
-          new Runnable() {
-            @Override
-            public void run() {
-              // Only add if the buffer is empty.
-              if (running && getCurrentCount() == 0) {
-                disruptor.getRingBuffer().tryPublishEvent(heartbeatTranslator);
-              }
-            }
-          };
-      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(heartbeat, 100, 100, TimeUnit.MILLISECONDS);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(
+          new HeartbeatTask(), this, 100, 100, TimeUnit.MILLISECONDS, "disruptor heartbeat");
     }
   }
 
@@ -56,6 +48,12 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
     // blocking call to ensure serialized traces aren't discarded and apply back pressure.
     disruptor.getRingBuffer().publishEvent(dataTranslator, data, representativeCount);
     return true;
+  }
+
+  private void heartbeat() {
+    if (running && getCurrentCount() == 0) {
+      disruptor.getRingBuffer().tryPublishEvent(heartbeatTranslator);
+    }
   }
 
   // Intentionally not thread safe.
@@ -160,6 +158,14 @@ public class BatchWritingDisruptor extends AbstractDisruptor<byte[]> {
       } else {
         nextScheduledFlush = Long.MAX_VALUE;
       }
+    }
+  }
+
+  // Important to use explicit class to avoid implicit hard references to BatchWritingDisruptor
+  private static final class HeartbeatTask implements Task<BatchWritingDisruptor> {
+    @Override
+    public void run(final BatchWritingDisruptor target) {
+      target.heartbeat();
     }
   }
 }
