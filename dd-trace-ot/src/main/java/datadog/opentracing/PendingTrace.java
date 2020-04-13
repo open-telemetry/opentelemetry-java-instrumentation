@@ -290,6 +290,8 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     }
   }
 
+  // FIXME: it should be possible to simplify this logic and avod having SpanCleaner and
+  // SpanCleanerTask
   private static class SpanCleaner implements Runnable, Closeable {
     private static final long CLEAN_FREQUENCY = 1;
 
