@@ -36,6 +36,10 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
    *
    * <p>If {@code target} is GCed periodic task is canceled.
    *
+   * <p>This method should be able to schedule task in majority of cases. The only reasonable case
+   * when this would fail is when task is being scheduled during JVM shutdown. In this case this
+   * method will return 'fake' future that can still be canceled to avoid confusing callers.
+   *
    * @param task task to run. Important: must not hold any strong references to target (or anything
    *     else non static)
    * @param target target object to pass to task
@@ -66,9 +70,13 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
         periodicTask.setFuture(future);
         return future;
       } catch (final RejectedExecutionException e) {
-        log.warn("Cleaning task rejected. Will not run: {}", name);
+        log.warn("Periodic task rejected. Will not run: {}", name);
       }
     }
+    /*
+     * Return a 'fake' unscheduled future to allow caller call 'cancel' on it if needed.
+     * We are using 'fake' object instead of null to avoid callers needing to deal with nulls.
+     */
     return new UnscheduledFuture(name);
   }
 
@@ -129,12 +137,12 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
     void run(T target);
   }
 
-  public static class PeriodicTask<T> implements Runnable {
+  private static class PeriodicTask<T> implements Runnable {
     private final WeakReference<T> target;
     private final Task<T> task;
     private volatile ScheduledFuture<?> future = null;
 
-    private PeriodicTask(final Task<T> task, final T target) {
+    public PeriodicTask(final Task<T> task, final T target) {
       this.target = new WeakReference<>(target);
       this.task = task;
     }
@@ -156,7 +164,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
 
   // Unscheduled future
   @Slf4j
-  public static class UnscheduledFuture implements ScheduledFuture<Object> {
+  private static class UnscheduledFuture implements ScheduledFuture<Object> {
     private final String name;
 
     public UnscheduledFuture(final String name) {
@@ -175,7 +183,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
 
     @Override
     public boolean cancel(final boolean mayInterruptIfRunning) {
-      log.debug("Cancelling future for: {}", name);
+      log.debug("Cancelling unscheduled future for: {}", name);
       return false;
     }
 
