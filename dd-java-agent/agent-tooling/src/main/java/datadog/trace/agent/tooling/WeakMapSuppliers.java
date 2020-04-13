@@ -3,6 +3,8 @@ package datadog.trace.agent.tooling;
 import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
+import datadog.common.exec.CommonTaskExecutor;
+import datadog.common.exec.CommonTaskExecutor.Task;
 import datadog.trace.bootstrap.WeakMap;
 import java.util.concurrent.TimeUnit;
 
@@ -40,15 +42,23 @@ class WeakMapSuppliers {
     @Override
     public <K, V> WeakMap<K, V> get() {
       final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false, true);
-      cleaner.scheduleCleaning(map, MapCleaner.CLEANER, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(
+          MapCleaningTask.INSTANCE,
+          map,
+          CLEAN_FREQUENCY_SECONDS,
+          CLEAN_FREQUENCY_SECONDS,
+          TimeUnit.SECONDS,
+          "cleaner for " + map);
       return new Adapter<>(map);
     }
 
-    private static class MapCleaner implements Cleaner.Adapter<WeakConcurrentMap> {
-      private static final MapCleaner CLEANER = new MapCleaner();
+    // Important to use explicit class to avoid implicit hard references to target
+    private static class MapCleaningTask implements Task<WeakConcurrentMap> {
+
+      static final MapCleaningTask INSTANCE = new MapCleaningTask();
 
       @Override
-      public void clean(final WeakConcurrentMap target) {
+      public void run(final WeakConcurrentMap target) {
         target.expungeStaleEntries();
       }
     }

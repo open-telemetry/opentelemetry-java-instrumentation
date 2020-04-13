@@ -1,10 +1,8 @@
-package datadog.trace.agent.tooling
+package datadog.common.exec
 
-import datadog.common.exec.CommonTaskExecutor
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
 import spock.lang.Retry
-import spock.lang.Subject
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
@@ -13,19 +11,15 @@ import java.util.concurrent.atomic.AtomicInteger
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 @Retry
-class CleanerTest extends DDSpecification {
-
-  @Subject
-  def cleaner = new Cleaner()
+class PeriodicSchedulingTest extends DDSpecification {
 
   def "test scheduling"() {
     setup:
     def latch = new CountDownLatch(2)
-    def target = new Object()
-    def action = new Cleaner.Adapter<Object>() {
+    def task = new CommonTaskExecutor.Task<CountDownLatch>() {
       @Override
-      void clean(Object t) {
-        latch.countDown()
+      void run(CountDownLatch target) {
+        target.countDown()
       }
     }
 
@@ -33,7 +27,7 @@ class CleanerTest extends DDSpecification {
     !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
-    cleaner.scheduleCleaning(target, action, 10, MILLISECONDS)
+    CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(task, latch, 10, 10, MILLISECONDS, "test")
 
     then:
     latch.await(500, MILLISECONDS)
@@ -43,10 +37,10 @@ class CleanerTest extends DDSpecification {
     setup:
     def callCount = new AtomicInteger()
     def target = new WeakReference(new Object())
-    def action = new Cleaner.Adapter<Object>() {
+    def task = new CommonTaskExecutor.Task<Object>() {
       @Override
-      void clean(Object t) {
-        callCount.incrementAndGet()
+      void run(Object t) {
+        callCount.countDown()
       }
     }
 
@@ -54,7 +48,7 @@ class CleanerTest extends DDSpecification {
     !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
-    cleaner.scheduleCleaning(target.get(), action, 10, MILLISECONDS)
+    CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(task, target.get(), 10, 10, MILLISECONDS, "test")
     GCUtils.awaitGC(target)
     Thread.sleep(1)
     def snapshot = callCount.get()
@@ -67,10 +61,10 @@ class CleanerTest extends DDSpecification {
   def "test null target"() {
     setup:
     def callCount = new AtomicInteger()
-    def action = new Cleaner.Adapter<Object>() {
+    def task = new CommonTaskExecutor.Task<Object>() {
       @Override
-      void clean(Object t) {
-        callCount.incrementAndGet()
+      void run(Object t) {
+        callCount.countDown()
       }
     }
 
@@ -78,7 +72,7 @@ class CleanerTest extends DDSpecification {
     !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
-    cleaner.scheduleCleaning(null, action, 10, MILLISECONDS)
+    CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(task, null, 10, 10, MILLISECONDS, "test")
     Thread.sleep(11)
 
     then:
