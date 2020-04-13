@@ -28,10 +28,21 @@ public class ControllerFactoryTest {
             });
     String expected =
         "The JFR controller could not find a supported JFR API, use OpenJDK 11+ or Azul zulu version 1.8.0_212+";
-    if ("Azul Systems, Inc.".equals(System.getProperty("java.vendor"))) {
+    final String javaVendor = System.getProperty("java.vendor");
+    final String javaRuntimeName = System.getProperty("java.runtime.name");
+    final String javaVersion = System.getProperty("java.version");
+    if ("Azul Systems, Inc.".equals(javaVendor)) {
       expected =
           "The JFR controller could not find a supported JFR API, use Azul zulu version 1.8.0_212+";
+    } else if ("Java(TM) SE Runtime Environment".equals(javaRuntimeName)
+        && "Oracle Corporation".equals(javaVendor)
+        && javaVersion.startsWith("1.8")) {
+      // condition for OracleJRE8 (with proprietary JFR inside)
+      expected = "The JFR controller is currently not supported on the Oracle JDK <= JDK 11!";
     }
-    assertEquals(expected, unsupportedEnvironmentException.getMessage());
+    assertEquals(
+        expected,
+        unsupportedEnvironmentException.getMessage(),
+        "'" + javaRuntimeName + "' / '" + javaVendor + "' / '" + javaVersion + "'");
   }
 }
