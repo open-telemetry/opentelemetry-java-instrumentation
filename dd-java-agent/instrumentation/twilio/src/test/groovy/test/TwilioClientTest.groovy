@@ -758,7 +758,7 @@ class TwilioClientTest extends AgentTestRunner {
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
     when:
-    Message message = runUnderTrace("test") {
+    runUnderTrace("test") {
       ListenableFuture<Message> future = Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number

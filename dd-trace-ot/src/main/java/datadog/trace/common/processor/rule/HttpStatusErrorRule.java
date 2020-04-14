@@ -17,8 +17,8 @@ public class HttpStatusErrorRule implements TraceProcessor.Rule {
   @Override
   public void processSpan(
       final DDSpan span, final Map<String, Object> tags, final Collection<DDSpan> trace) {
-    if (!span.context().getErrorFlag() && tags.containsKey(Tags.HTTP_STATUS.getKey())) {
-      final Object value = tags.get(Tags.HTTP_STATUS.getKey());
+    final Object value = tags.get(Tags.HTTP_STATUS.getKey());
+    if (value != null && !span.context().getErrorFlag()) {
       try {
         final int status =
             value instanceof Integer ? (int) value : Integer.parseInt(value.toString());
