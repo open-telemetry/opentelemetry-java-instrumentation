@@ -15,10 +15,9 @@
  */
 package io.opentelemetry.auto.tooling.muzzle;
 
-import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
-import io.opentelemetry.auto.bootstrap.WeakMap;
+import io.opentelemetry.auto.bootstrap.WeakCache;
 import io.opentelemetry.auto.tooling.AgentTooling;
 import io.opentelemetry.auto.tooling.Utils;
 import io.opentelemetry.auto.tooling.muzzle.Reference.Mismatch;
@@ -29,6 +28,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
@@ -37,8 +37,8 @@ import net.bytebuddy.pool.TypePool;
 
 /** Matches a set of references against a classloader. */
 @Slf4j
-public final class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader, Boolean> {
-  private final WeakMap<ClassLoader, Boolean> mismatchCache = newWeakMap();
+public final class ReferenceMatcher {
+  private final WeakCache<ClassLoader, Boolean> mismatchCache = AgentTooling.newWeakCache();
   private final Reference[] references;
   private final Set<String> helperClassNames;
 
@@ -65,12 +65,18 @@ public final class ReferenceMatcher implements WeakMap.ValueSupplier<ClassLoader
     if (loader == BOOTSTRAP_LOADER) {
       loader = Utils.getBootstrapProxy();
     }
-
-    return mismatchCache.computeIfAbsent(loader, this);
+    final ClassLoader cl = loader;
+    return mismatchCache.getIfPresentOrCompute(
+        loader,
+        new Callable<Boolean>() {
+          @Override
+          public Boolean call() {
+            return doesMatch(cl);
+          }
+        });
   }
 
-  @Override
-  public Boolean get(final ClassLoader loader) {
+  private boolean doesMatch(final ClassLoader loader) {
     for (final Reference reference : references) {
       // Don't reference-check helper classes.
       // They will be injected by the instrumentation's HelperInjector.

@@ -155,11 +155,11 @@ class AWSClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
+            "$MoreTags.NET_PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
             "aws.service" { it.contains(service) }
             "aws.endpoint" "$server.address"
             "aws.operation" "${operation}Request"
@@ -175,7 +175,6 @@ class AWSClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "${server.address}${path}"
@@ -243,10 +242,10 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
+            "$MoreTags.NET_PEER_NAME" "localhost"
+            "$MoreTags.NET_PEER_PORT" 61
             "aws.service" { it.contains(service) }
             "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
             "aws.operation" "${operation}Request"
@@ -263,7 +262,6 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "apache-httpclient"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
@@ -303,10 +301,9 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD" "HEAD"
+            "$MoreTags.NET_PEER_NAME" "s3.amazonaws.com"
             "aws.service" "Amazon S3"
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.operation" "HeadBucketRequest"
@@ -346,10 +343,10 @@ class AWSClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "java-aws-sdk"
-            "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "GET"
+            "$MoreTags.NET_PEER_PORT" server.address.port
+            "$MoreTags.NET_PEER_NAME" "localhost"
             "aws.service" "Amazon S3"
             "aws.endpoint" "$server.address"
             "aws.operation" "GetObjectRequest"
@@ -369,7 +366,6 @@ class AWSClientTest extends AgentTestRunner {
             errored true
             childOf span(0)
             tags {
-              "$Tags.COMPONENT" "apache-httpclient"
               "$MoreTags.NET_PEER_NAME" "localhost"
               "$MoreTags.NET_PEER_PORT" server.address.port
               "$Tags.HTTP_URL" "$server.address/someBucket/someKey"

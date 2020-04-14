@@ -15,18 +15,14 @@
  */
 package io.opentelemetry.auto.tooling;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import io.opentelemetry.auto.bootstrap.PatchLogger;
+import io.opentelemetry.auto.bootstrap.WeakCache;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 public final class ClassLoaderMatcher {
   public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
-  public static final int CACHE_MAX_SIZE = 25; // limit number of cached responses for each matcher.
-  public static final int CACHE_CONCURRENCY =
-      Math.max(8, Runtime.getRuntime().availableProcessors());
 
   /** A private constructor that must not be invoked. */
   private ClassLoaderMatcher() {
@@ -53,10 +49,11 @@ public final class ClassLoaderMatcher {
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
     /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-    private static final Cache<ClassLoader, Boolean> skipCache =
-        CacheBuilder.newBuilder().weakKeys().concurrencyLevel(CACHE_CONCURRENCY).build();
     private static final String AGENT_CLASSLOADER_NAME =
         "io.opentelemetry.auto.bootstrap.AgentClassLoader";
+    private static final String EXPORTER_CLASSLOADER_NAME =
+        "io.opentelemetry.auto.tooling.ExporterClassLoader";
+    private static final WeakCache<ClassLoader, Boolean> skipCache = AgentTooling.newWeakCache();
 
     private SkipClassLoaderMatcher() {}
 
@@ -92,6 +89,7 @@ public final class ClassLoaderMatcher {
         case "org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader":
         case "sun.misc.Launcher$ExtClassLoader":
         case AGENT_CLASSLOADER_NAME:
+        case EXPORTER_CLASSLOADER_NAME:
           return true;
       }
       return false;
@@ -125,12 +123,7 @@ public final class ClassLoaderMatcher {
   private static class ClassLoaderHasClassesNamedMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-    private final Cache<ClassLoader, Boolean> cache =
-        CacheBuilder.newBuilder()
-            .weakKeys()
-            .maximumSize(CACHE_MAX_SIZE)
-            .concurrencyLevel(CACHE_CONCURRENCY)
-            .build();
+    private final WeakCache<ClassLoader, Boolean> cache = AgentTooling.newWeakCache(25);
 
     private final String[] resources;
 

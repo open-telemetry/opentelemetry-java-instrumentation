@@ -3,8 +3,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 minimumBranchCoverage = 0.6
 minimumInstructionCoverage = 0.8
 excludedClassesCoverage += [
-  'io.opentelemetry.auto.tooling.*',
-  'io.opentelemetry.auto.decorator.*' // temporarily until all the deprecated methods which are no longer being tested are removed
+  'io.opentelemetry.auto.tooling.*'
 ]
 
 configurations {
@@ -23,6 +22,8 @@ dependencies {
   compile deps.opentelemetrySdk
   compile deps.opentelemetrySdkAutoConfig
 
+  // TODO: move the interface in exporter-support into opentelemetry-sdk-contrib-auto-config
+  compile project(':exporter-support')
 
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -49,8 +48,6 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -78,8 +75,6 @@ class SpringJpaTest extends AgentTestRunner {
             operationName "call next value for hibernate_sequence"
             spanKind CLIENT
             tags {
-              "$MoreTags.SERVICE_NAME" "hsqldb"
-              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" "test"
               "$Tags.DB_USER" "sa"
@@ -95,8 +90,6 @@ class SpringJpaTest extends AgentTestRunner {
           operationName ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -121,8 +114,6 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -137,8 +128,6 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "update Customer set firstName=?, lastName=? where id=?"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -163,8 +152,6 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -187,8 +174,6 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"
@@ -203,8 +188,6 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "delete from Customer where id=?"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "hsqldb"
-            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" "test"
             "$Tags.DB_USER" "sa"

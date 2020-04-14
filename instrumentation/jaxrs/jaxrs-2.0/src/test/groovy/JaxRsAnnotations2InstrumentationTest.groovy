@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.bootstrap.WeakMap
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jaxrs.v2_0.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
 
@@ -29,7 +28,7 @@ import java.lang.reflect.Method
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 
-class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
+class JaxRsAnnotations2InstrumentationTest extends AgentTestRunner {
 
   def "instrumentation can be used as root span and resource is set to METHOD PATH"() {
     setup:
@@ -46,7 +45,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         span(0) {
           operationName "POST /a"
           tags {
-            "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
       }
@@ -67,14 +65,12 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           operationName name
           parent()
           tags {
-            "$Tags.COMPONENT" "jax-rs"
           }
         }
         span(1) {
           operationName "${className}.call"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "jax-rs-controller"
           }
         }
       }
@@ -143,7 +139,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     // TODO: uncomment when we drop support for Java 7
 //    "GET /child/invoke"         | new JavaInterfaces.DefaultChildClassOnInterface()
 
-    className = getName(obj.class)
+    className = getClassName(obj.class)
 
     // JavaInterfaces classes are loaded on a different classloader, so we need to find the right cache instance.
     decorator = obj.class.classLoader.loadClass(JaxRsAnnotationsDecorator.name).getField("DECORATE").get(null)
@@ -197,19 +193,5 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     @POST
     void call() {
     }
-  }
-
-  def getName(Class clazz) {
-    String className = clazz.getSimpleName()
-    if (className.isEmpty()) {
-      className = clazz.getName()
-      if (clazz.getPackage() != null) {
-        final String pkgName = clazz.getPackage().getName()
-        if (!pkgName.isEmpty()) {
-          className = clazz.getName().replace(pkgName, "").substring(1)
-        }
-      }
-    }
-    return className
   }
 }

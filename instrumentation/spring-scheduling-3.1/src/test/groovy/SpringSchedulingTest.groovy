@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
@@ -35,7 +34,6 @@ class SpringSchedulingTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT" "spring-scheduling"
           }
         }
       }
@@ -58,7 +56,6 @@ class SpringSchedulingTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT" "spring-scheduling"
           }
         }
       }

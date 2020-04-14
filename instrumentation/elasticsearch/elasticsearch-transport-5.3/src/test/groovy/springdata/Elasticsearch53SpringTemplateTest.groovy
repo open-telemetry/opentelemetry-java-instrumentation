@@ -16,7 +16,6 @@
 package springdata
 
 import com.google.common.collect.ImmutableSet
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -116,8 +115,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
@@ -167,8 +164,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "CreateIndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
@@ -181,8 +176,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
@@ -194,8 +187,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
@@ -209,8 +200,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "IndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
@@ -228,8 +217,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
@@ -241,8 +228,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "RefreshAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
@@ -258,8 +243,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
@@ -337,8 +320,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"

@@ -15,9 +15,13 @@
  */
 package io.opentelemetry.auto.tooling;
 
+import io.opentelemetry.auto.bootstrap.WeakCache;
+import io.opentelemetry.auto.bootstrap.WeakCache.Provider;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.tooling.bytebuddy.AgentCachingPoolStrategy;
 import io.opentelemetry.auto.tooling.bytebuddy.AgentLocationStrategy;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 /**
  * This class contains class references for objects shared by the agent installer as well as muzzle
@@ -31,8 +35,40 @@ public class AgentTooling {
     registerWeakMapProvider();
   }
 
+  private static void registerWeakMapProvider() {
+    if (!WeakMap.Provider.isProviderRegistered()) {
+      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent(new Cleaner()));
+      //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
+      //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
+    }
+  }
+
+  private static <K, V> Provider loadWeakCacheProvider() {
+    final Iterator<Provider> providers =
+        ServiceLoader.load(Provider.class, AgentInstaller.class.getClassLoader()).iterator();
+    if (providers.hasNext()) {
+      final Provider provider = providers.next();
+      if (providers.hasNext()) {
+        throw new IllegalStateException(
+            "Only one implementation of WeakCache.Provider suppose to be in classpath");
+      }
+      return provider;
+    }
+    throw new IllegalStateException("Can't load implementation of WeakCache.Provider");
+  }
+
+  private static final Provider weakCacheProvider = loadWeakCacheProvider();
+
   private static final AgentLocationStrategy LOCATION_STRATEGY = new AgentLocationStrategy();
   private static final AgentCachingPoolStrategy POOL_STRATEGY = new AgentCachingPoolStrategy();
+
+  public static <K, V> WeakCache<K, V> newWeakCache() {
+    return weakCacheProvider.newWeakCache();
+  }
+
+  public static <K, V> WeakCache<K, V> newWeakCache(final long maxSize) {
+    return weakCacheProvider.newWeakCache(maxSize);
+  }
 
   public static AgentLocationStrategy locationStrategy() {
     return LOCATION_STRATEGY;
@@ -40,13 +76,5 @@ public class AgentTooling {
 
   public static AgentCachingPoolStrategy poolStrategy() {
     return POOL_STRATEGY;
-  }
-
-  private static void registerWeakMapProvider() {
-    if (!WeakMap.Provider.isProviderRegistered()) {
-      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent(new Cleaner()));
-      //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
-      //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
-    }
   }
 }

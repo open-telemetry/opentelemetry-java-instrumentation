@@ -20,13 +20,13 @@ import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpClientDecorator
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
+@Timeout(5)
 class AkkaHttpClientInstrumentationTest extends HttpClientTest {
 
   @Shared
@@ -53,13 +53,14 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
   }
 
   @Override
-  String component() {
-    return AkkaHttpClientDecorator.DECORATE.getComponentName()
+  boolean testRedirects() {
+    false
   }
 
   @Override
-  boolean testRedirects() {
-    false
+  boolean testRemoteConnection() {
+    // Not sure how to properly set timeouts...
+    return false
   }
 
   def "singleRequest exception trace"() {
@@ -77,14 +78,10 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
           spanKind CLIENT
           errored true
           tags {
-            "$Tags.COMPONENT" "akka-http-client"
             errorTags(NullPointerException)
           }
         }
       }
     }
-
-    where:
-    renameService << [false, true]
   }
 }

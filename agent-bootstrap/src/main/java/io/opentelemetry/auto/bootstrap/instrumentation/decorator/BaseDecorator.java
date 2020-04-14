@@ -20,7 +20,6 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -40,7 +39,6 @@ public abstract class BaseDecorator {
 
   public Span afterStart(final Span span) {
     assert span != null;
-    span.setAttribute(Tags.COMPONENT, getComponentName());
     return span;
   }
 

@@ -21,7 +21,7 @@ def isCI = System.getenv("CI") != null
 
 allprojects {
   group = 'io.opentelemetry.auto'
-  version = '0.1.2-SNAPSHOT'
+  version = '0.2.3-SNAPSHOT'
 
   if (isCI) {
     buildDir = "${rootDir}/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"

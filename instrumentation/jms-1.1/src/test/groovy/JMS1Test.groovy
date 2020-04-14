@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -148,8 +146,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "jms"
-            "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -182,8 +178,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "jms"
-            "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -231,8 +225,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "jms"
-            "$Tags.COMPONENT" "jms"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -258,8 +250,6 @@ class JMS1Test extends AgentTestRunner {
       errored false
       parent()
       tags {
-        "$MoreTags.SERVICE_NAME" "jms"
-        "$Tags.COMPONENT" "jms"
         "span.origin.type" ActiveMQMessageProducer.name
       }
     }
@@ -278,8 +268,6 @@ class JMS1Test extends AgentTestRunner {
       }
       errored false
       tags {
-        "$MoreTags.SERVICE_NAME" "jms"
-        "$Tags.COMPONENT" "jms"
         "span.origin.type" origin.name
       }
     }

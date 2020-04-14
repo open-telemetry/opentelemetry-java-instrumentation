@@ -114,8 +114,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$MoreTags.NET_PEER_NAME" HOST
             "$MoreTags.NET_PEER_PORT" port
             "$Tags.DB_TYPE" "redis"
@@ -146,8 +144,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$MoreTags.NET_PEER_NAME" HOST
             "$MoreTags.NET_PEER_PORT" incorrectPort
             "$Tags.DB_TYPE" "redis"
@@ -172,8 +168,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -194,8 +188,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -216,8 +208,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -238,8 +228,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -260,8 +248,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -282,8 +268,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -304,8 +288,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -325,8 +307,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }
@@ -346,8 +326,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "redis"
-            "$Tags.COMPONENT" "redis-client"
             "$Tags.DB_TYPE" "redis"
           }
         }

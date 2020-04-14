@@ -16,7 +16,6 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Tracer;
 import io.opentracing.contrib.dropwizard.Trace;
 import java.util.concurrent.Callable;
@@ -28,13 +27,13 @@ public class SayTracedHello {
 
   @Trace
   public static String sayHello() {
-    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test");
+    TRACER.getCurrentSpan().setAttribute("myattr", "test");
     return "hello!";
   }
 
   @Trace
   public static String sayHELLOsayHA() {
-    TRACER.getCurrentSpan().setAttribute(MoreTags.SERVICE_NAME, "test2");
+    TRACER.getCurrentSpan().setAttribute("myattr", "test2");
     return sayHello() + sayHello();
   }
 

@@ -19,19 +19,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(includeFieldNames = true)
 public class Config {
+
   /** Config keys below */
   private static final String PREFIX = "ota.";
 
@@ -66,11 +66,7 @@ public class Config {
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
   public static final String HTTP_SERVER_TAG_QUERY_STRING = "http.server.tag.query-string";
   public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
-  public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
-  public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
   public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
-  public static final String SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
-      "trace.span.duration-above-average.stacktrace.millis";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
@@ -89,11 +85,7 @@ public class Config {
       parseIntegerRangeSet("400-599", "default");
   private static final boolean DEFAULT_HTTP_SERVER_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
-  private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
-  private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
-  private static final int DEFAULT_SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS =
-      (int) TimeUnit.SECONDS.toMillis(1);
 
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
   public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
@@ -114,10 +106,7 @@ public class Config {
   @Getter private final Set<Integer> httpClientErrorStatuses;
   @Getter private final boolean httpServerTagQueryString;
   @Getter private final boolean httpClientTagQueryString;
-  @Getter private final boolean httpClientSplitByDomain;
-  @Getter private final boolean dbClientSplitByInstance;
   @Getter private final Integer scopeDepthLimit;
-  @Getter private final long spanDurationAboveAverageStacktraceNanos;
   @Getter private final boolean runtimeContextFieldInjection;
 
   @Getter private final boolean logInjectionEnabled;
@@ -177,23 +166,8 @@ public class Config {
         getBooleanSettingFromEnvironment(
             HTTP_CLIENT_TAG_QUERY_STRING, DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING);
 
-    httpClientSplitByDomain =
-        getBooleanSettingFromEnvironment(
-            HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN);
-
-    dbClientSplitByInstance =
-        getBooleanSettingFromEnvironment(
-            DB_CLIENT_HOST_SPLIT_BY_INSTANCE, DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE);
-
     scopeDepthLimit =
         getIntegerSettingFromEnvironment(SCOPE_DEPTH_LIMIT, DEFAULT_SCOPE_DEPTH_LIMIT);
-
-    spanDurationAboveAverageStacktraceNanos =
-        TimeUnit.MILLISECONDS.toNanos(
-            getIntegerSettingFromEnvironment(
-                    SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS,
-                    DEFAULT_SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS)
-                .longValue());
 
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
@@ -246,25 +220,8 @@ public class Config {
         getPropertyBooleanValue(
             properties, HTTP_CLIENT_TAG_QUERY_STRING, parent.httpClientTagQueryString);
 
-    httpClientSplitByDomain =
-        getPropertyBooleanValue(
-            properties, HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, parent.httpClientSplitByDomain);
-
-    dbClientSplitByInstance =
-        getPropertyBooleanValue(
-            properties, DB_CLIENT_HOST_SPLIT_BY_INSTANCE, parent.dbClientSplitByInstance);
-
     scopeDepthLimit =
         getPropertyIntegerValue(properties, SCOPE_DEPTH_LIMIT, parent.scopeDepthLimit);
-
-    // do we care about the integer downcast here?
-    spanDurationAboveAverageStacktraceNanos =
-        TimeUnit.MILLISECONDS.toNanos(
-            getPropertyIntegerValue(
-                properties,
-                SPAN_DURATION_ABOVE_AVERAGE_STACKTRACE_MILLIS,
-                (int)
-                    TimeUnit.NANOSECONDS.toMillis(parent.spanDurationAboveAverageStacktraceNanos)));
 
     runtimeContextFieldInjection =
         getPropertyBooleanValue(
@@ -294,13 +251,14 @@ public class Config {
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isIntegrationEnabled(SortedSet, boolean)}.
    */
-  public static boolean integrationEnabled(
+  @Deprecated
+  private static boolean integrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
@@ -330,9 +288,10 @@ public class Config {
    */
   public static String getSettingFromEnvironment(final String name, final String defaultValue) {
     String value;
+    final String systemPropertyName = propertyNameToSystemPropertyName(name);
 
     // System properties and properties provided from command line have the highest precedence
-    value = System.getProperties().getProperty(propertyNameToSystemPropertyName(name));
+    value = System.getProperties().getProperty(systemPropertyName);
     if (null != value) {
       return value;
     }
@@ -344,7 +303,7 @@ public class Config {
     }
 
     // If value is not defined yet, we look at properties optionally defined in a properties file
-    value = propertiesFromConfigFile.getProperty(propertyNameToSystemPropertyName(name));
+    value = propertiesFromConfigFile.getProperty(systemPropertyName);
     if (null != value) {
       return value;
     }
@@ -358,7 +317,8 @@ public class Config {
    *
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
-  public static List<String> getListSettingFromEnvironment(
+  @NonNull
+  private static List<String> getListSettingFromEnvironment(
       final String name, final String defaultValue) {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
@@ -370,8 +330,7 @@ public class Config {
    */
   public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
+    return getSettingFromEnvironmentWithLog(name, Boolean.class, defaultValue);
   }
 
   /**
@@ -380,13 +339,7 @@ public class Config {
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
   public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    try {
-      return value == null ? defaultValue : Float.valueOf(value);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
+    return getSettingFromEnvironmentWithLog(name, Float.class, defaultValue);
   }
 
   /**
@@ -394,41 +347,20 @@ public class Config {
    */
   private static Integer getIntegerSettingFromEnvironment(
       final String name, final Integer defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
+    return getSettingFromEnvironmentWithLog(name, Integer.class, defaultValue);
+  }
+
+  private static <T> T getSettingFromEnvironmentWithLog(
+      final String name, final Class<T> tClass, final T defaultValue) {
     try {
-      return value == null ? defaultValue : Integer.valueOf(value);
+      return valueOf(getSettingFromEnvironment(name, null), tClass, defaultValue);
     } catch (final NumberFormatException e) {
       log.warn("Invalid configuration for " + name, e);
       return defaultValue;
     }
   }
 
-  /**
-   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a set of
-   * strings splitting by space or comma.
-   */
-  private static <T extends Enum<T>> Set<T> getEnumSetSettingFromEnvironment(
-      final String name,
-      final String defaultValue,
-      final Class<T> clazz,
-      final boolean emptyResultMeansUseDefault) {
-    final String value = getSettingFromEnvironment(name, defaultValue);
-    Set<T> result =
-        convertStringSetToEnumSet(
-            parseStringIntoSetOfNonEmptyStrings(value, SPLIT_BY_SPACE_OR_COMMA_REGEX), clazz);
-
-    if (emptyResultMeansUseDefault && result.isEmpty()) {
-      // Treat empty parsing result as no value and use default instead
-      result =
-          convertStringSetToEnumSet(
-              parseStringIntoSetOfNonEmptyStrings(defaultValue, SPLIT_BY_SPACE_OR_COMMA_REGEX),
-              clazz);
-    }
-
-    return result;
-  }
-
-  private Set<Integer> getIntegerRangeSettingFromEnvironment(
+  private static Set<Integer> getIntegerRangeSettingFromEnvironment(
       final String name, final Set<Integer> defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
     try {
@@ -446,6 +378,7 @@ public class Config {
    * @param setting The setting name, e.g. `trace.enabled`
    * @return The public facing environment variable name
    */
+  @NonNull
   private static String propertyNameToEnvironmentVariableName(final String setting) {
     return ENV_REPLACEMENT
         .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
@@ -459,14 +392,39 @@ public class Config {
    * @param setting The setting name, e.g. `trace.config`
    * @return The public facing system property name
    */
+  @NonNull
   private static String propertyNameToSystemPropertyName(final String setting) {
     return PREFIX + setting;
   }
 
-  private static Map<String, String> getPropertyMapValue(
-      final Properties properties, final String name, final Map<String, String> defaultValue) {
-    final String value = properties.getProperty(name);
-    return value == null || value.trim().isEmpty() ? defaultValue : parseMap(value, name);
+  /**
+   * @param value to parse by tClass::valueOf
+   * @param tClass should contain static parsing method "T valueOf(String)"
+   * @param defaultValue
+   * @param <T>
+   * @return value == null || value.trim().isEmpty() ? defaultValue : tClass.valueOf(value)
+   * @throws NumberFormatException
+   */
+  private static <T> T valueOf(
+      final String value, @NonNull final Class<T> tClass, final T defaultValue) {
+    if (value == null || value.trim().isEmpty()) {
+      log.debug("valueOf: using defaultValue '{}' for '{}' of '{}' ", defaultValue, value, tClass);
+      return defaultValue;
+    }
+    try {
+      return (T)
+          MethodHandles.publicLookup()
+              .findStatic(tClass, "valueOf", MethodType.methodType(tClass, String.class))
+              .invoke(value);
+    } catch (final NumberFormatException e) {
+      throw e;
+    } catch (final NoSuchMethodException | IllegalAccessException e) {
+      log.debug("Can't invoke or access 'valueOf': ", e);
+      throw new NumberFormatException(e.toString());
+    } catch (final Throwable e) {
+      log.debug("Can't parse: ", e);
+      throw new NumberFormatException(e.toString());
+    }
   }
 
   private static List<String> getPropertyListValue(
@@ -477,32 +435,15 @@ public class Config {
 
   private static Boolean getPropertyBooleanValue(
       final Properties properties, final String name, final Boolean defaultValue) {
-    final String value = properties.getProperty(name);
-    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
+    return valueOf(properties.getProperty(name), Boolean.class, defaultValue);
   }
 
   private static Integer getPropertyIntegerValue(
       final Properties properties, final String name, final Integer defaultValue) {
-    final String value = properties.getProperty(name);
-    return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
+    return valueOf(properties.getProperty(name), Integer.class, defaultValue);
   }
 
-  private static <T extends Enum<T>> Set<T> getPropertySetValue(
-      final Properties properties, final String name, final Class<T> clazz) {
-    final String value = properties.getProperty(name);
-    if (value != null) {
-      final Set<T> result =
-          convertStringSetToEnumSet(
-              parseStringIntoSetOfNonEmptyStrings(value, SPLIT_BY_SPACE_OR_COMMA_REGEX), clazz);
-      if (!result.isEmpty()) {
-        return result;
-      }
-    }
-    // null means parent value should be used
-    return null;
-  }
-
-  private Set<Integer> getPropertyIntegerRangeValue(
+  private static Set<Integer> getPropertyIntegerRangeValue(
       final Properties properties, final String name, final Set<Integer> defaultValue) {
     final String value = properties.getProperty(name);
     try {
@@ -513,38 +454,9 @@ public class Config {
     }
   }
 
-  private static Map<String, String> parseMap(final String str, final String settingName) {
-    // If we ever want to have default values besides an empty map, this will need to change.
-    if (str == null || str.trim().isEmpty()) {
-      return Collections.emptyMap();
-    }
-    if (!str.matches("(([^,:]+:[^,:]*,)*([^,:]+:[^,:]*),?)?")) {
-      log.warn(
-          "Invalid config for {}: '{}'. Must match 'key1:value1,key2:value2'.", settingName, str);
-      return Collections.emptyMap();
-    }
-
-    final String[] tokens = str.split(",", -1);
-    final Map<String, String> map = newHashMap(tokens.length);
-
-    for (final String token : tokens) {
-      final String[] keyValue = token.split(":", -1);
-      if (keyValue.length == 2) {
-        final String key = keyValue[0].trim();
-        final String value = keyValue[1].trim();
-        if (value.length() <= 0) {
-          log.warn("Ignoring empty value for key '{}' in config for {}", key, settingName);
-          continue;
-        }
-        map.put(key, value);
-      }
-    }
-    return Collections.unmodifiableMap(map);
-  }
-
-  private static Set<Integer> parseIntegerRangeSet(String str, final String settingName)
+  @NonNull
+  private static Set<Integer> parseIntegerRangeSet(@NonNull String str, final String settingName)
       throws NumberFormatException {
-    assert str != null;
     str = str.replaceAll("\\s", "");
     if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
       log.warn(
@@ -574,10 +486,7 @@ public class Config {
     return Collections.unmodifiableSet(set);
   }
 
-  private static Map<String, String> newHashMap(final int size) {
-    return new HashMap<>(size + 1, 1f);
-  }
-
+  @NonNull
   private static List<String> parseList(final String str) {
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyList();
@@ -589,34 +498,6 @@ public class Config {
       tokens[i] = tokens[i].trim();
     }
     return Collections.unmodifiableList(Arrays.asList(tokens));
-  }
-
-  private static Set<String> parseStringIntoSetOfNonEmptyStrings(
-      final String str, final String regex) {
-    // Using LinkedHashSet to preserve original string order
-    final Set<String> result = new LinkedHashSet<>();
-    // Java returns single value when splitting an empty string. We do not need that value, so
-    // we need to throw it out.
-    for (final String value : str.split(regex)) {
-      if (!value.isEmpty()) {
-        result.add(value);
-      }
-    }
-    return Collections.unmodifiableSet(result);
-  }
-
-  private static <V extends Enum<V>> Set<V> convertStringSetToEnumSet(
-      final Set<String> input, final Class<V> clazz) {
-    // Using LinkedHashSet to preserve original string order
-    final Set<V> result = new LinkedHashSet<>();
-    for (final String value : input) {
-      try {
-        result.add(Enum.valueOf(clazz, value.toUpperCase()));
-      } catch (final IllegalArgumentException e) {
-        log.debug("Cannot recognize config string value: {}, {}", value, clazz);
-      }
-    }
-    return Collections.unmodifiableSet(result);
   }
 
   /**
@@ -650,23 +531,13 @@ public class Config {
       return properties;
     }
 
-    FileReader fileReader = null;
-    try {
-      fileReader = new FileReader(configurationFile);
+    try (final FileReader fileReader = new FileReader(configurationFile)) {
       properties.load(fileReader);
     } catch (final FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
     } catch (final IOException ioe) {
       log.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
-    } finally {
-      if (fileReader != null) {
-        try {
-          fileReader.close();
-        } catch (final IOException ioe) {
-          log.error("Configuration file '{}' was not closed correctly.", configurationFilePath);
-        }
-      }
     }
 
     return properties;

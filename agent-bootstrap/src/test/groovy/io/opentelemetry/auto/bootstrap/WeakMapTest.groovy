@@ -21,11 +21,11 @@ class WeakMapTest extends Specification {
 
   def supplier = new CounterSupplier()
 
-  def sut = new WeakMap.MapAdapter<String, Integer>(new WeakHashMap<>())
+  def weakMap = new WeakMap.MapAdapter<String, Integer>(new WeakHashMap<>())
 
   def "getOrCreate a value"() {
     when:
-    def count = sut.computeIfAbsent('key', supplier)
+    def count = weakMap.computeIfAbsent('key', supplier)
 
     then:
     count == 1
@@ -34,8 +34,8 @@ class WeakMapTest extends Specification {
 
   def "getOrCreate a value multiple times same class loader same key"() {
     when:
-    def count1 = sut.computeIfAbsent('key', supplier)
-    def count2 = sut.computeIfAbsent('key', supplier)
+    def count1 = weakMap.computeIfAbsent('key', supplier)
+    def count2 = weakMap.computeIfAbsent('key', supplier)
 
     then:
     count1 == 1
@@ -45,8 +45,8 @@ class WeakMapTest extends Specification {
 
   def "getOrCreate a value multiple times same class loader different keys"() {
     when:
-    def count1 = sut.computeIfAbsent('key1', supplier)
-    def count2 = sut.computeIfAbsent('key2', supplier)
+    def count1 = weakMap.computeIfAbsent('key1', supplier)
+    def count2 = weakMap.computeIfAbsent('key2', supplier)
 
     then:
     count1 == 1

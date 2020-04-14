@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
@@ -93,8 +92,6 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
@@ -119,8 +116,6 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
@@ -181,8 +176,6 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "CreateIndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
@@ -195,8 +188,6 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
@@ -212,8 +203,6 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "IndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
@@ -231,8 +220,6 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
@@ -244,8 +231,6 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.SERVICE_NAME" "elasticsearch"
-            "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"

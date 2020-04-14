@@ -24,7 +24,6 @@ import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
 import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -364,8 +363,6 @@ class RabbitMQTest extends AgentTestRunner {
       errored exception != null
 
       tags {
-        "$MoreTags.SERVICE_NAME" "rabbitmq"
-        "$Tags.COMPONENT" "rabbitmq-amqp"
         "$MoreTags.NET_PEER_NAME" { it == null || it instanceof String }
         "$MoreTags.NET_PEER_IP" { "127.0.0.1" }
         "$MoreTags.NET_PEER_PORT" { it == null || it instanceof Long }

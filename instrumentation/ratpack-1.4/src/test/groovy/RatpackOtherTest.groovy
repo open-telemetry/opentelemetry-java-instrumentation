@@ -86,7 +86,6 @@ class RatpackOtherTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT" "netty"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "${app.address.resolve(path)}"
@@ -100,7 +99,6 @@ class RatpackOtherTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT" "ratpack"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
             "$Tags.HTTP_URL" "${app.address.resolve(path)}"

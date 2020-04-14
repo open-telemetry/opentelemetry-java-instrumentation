@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.SayTracedHello
@@ -43,8 +41,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test"
-            "$Tags.COMPONENT" "trace"
+            "myattr" "test"
           }
         }
       }
@@ -64,8 +61,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test2"
-            "$Tags.COMPONENT" "trace"
+            "myattr" "test2"
           }
         }
         span(1) {
@@ -73,8 +69,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test"
-            "$Tags.COMPONENT" "trace"
+            "myattr" "test"
           }
         }
         span(2) {
@@ -82,8 +77,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$MoreTags.SERVICE_NAME" "test"
-            "$Tags.COMPONENT" "trace"
+            "myattr" "test"
           }
         }
       }
@@ -107,7 +101,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "SayTracedHello.sayERROR"
           errored true
           tags {
-            "$Tags.COMPONENT" "trace"
             errorTags(error.class)
           }
         }
@@ -126,7 +119,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           operationName "SayTracedHello\$1.call"
           tags {
-            "$Tags.COMPONENT" "trace"
           }
         }
       }
@@ -148,14 +140,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           operationName "SayTracedHello\$1.call"
           tags {
-            "$Tags.COMPONENT" "trace"
           }
         }
         trace(1, 1) {
           span(0) {
             operationName "TraceAnnotationsTest\$1.call"
             tags {
-              "$Tags.COMPONENT" "trace"
             }
           }
         }

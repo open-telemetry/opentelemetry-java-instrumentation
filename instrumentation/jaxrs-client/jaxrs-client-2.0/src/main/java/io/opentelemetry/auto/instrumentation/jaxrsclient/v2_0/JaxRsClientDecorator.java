@@ -45,16 +45,6 @@ public class JaxRsClientDecorator
   }
 
   @Override
-  protected String hostname(final ClientRequestContext httpRequest) {
-    return httpRequest.getUri().getHost();
-  }
-
-  @Override
-  protected Integer port(final ClientRequestContext httpRequest) {
-    return httpRequest.getUri().getPort();
-  }
-
-  @Override
   protected Integer status(final ClientResponseContext httpResponse) {
     return httpResponse.getStatus();
   }

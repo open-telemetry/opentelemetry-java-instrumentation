@@ -81,8 +81,8 @@ dependencies {
 
 tasks.withType(Test).configureEach {
   // Multi-threaded logging seems to be causing deadlocks with Gradle's log capture.
-//  jvmArgs "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug"
-//  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+  //  jvmArgs "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug"
+  //  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
 
   doFirst {
     // Defining here to allow jacoco to be first on the command line.

@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0.JaxRsClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
+import org.glassfish.jersey.client.ClientConfig
+import org.glassfish.jersey.client.ClientProperties
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+import spock.lang.Timeout
 
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
@@ -26,6 +28,7 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import java.util.concurrent.TimeUnit
 
 abstract class JaxRsClientTest extends HttpClientTest {
 
@@ -43,19 +46,18 @@ abstract class JaxRsClientTest extends HttpClientTest {
     return response.status
   }
 
-  @Override
-  String component() {
-    return JaxRsClientDecorator.DECORATE.getComponentName()
-  }
-
   abstract ClientBuilder builder()
 }
 
+@Timeout(5)
 class JerseyClientTest extends JaxRsClientTest {
 
   @Override
   ClientBuilder builder() {
-    return new JerseyClientBuilder()
+    ClientConfig config = new ClientConfig()
+    config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MS)
+    config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MS)
+    return new JerseyClientBuilder().withConfig(config)
   }
 
   boolean testCircularRedirects() {
@@ -63,24 +65,29 @@ class JerseyClientTest extends JaxRsClientTest {
   }
 }
 
+@Timeout(5)
 class ResteasyClientTest extends JaxRsClientTest {
 
   @Override
   ClientBuilder builder() {
     return new ResteasyClientBuilder()
+      .establishConnectionTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .socketTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
   boolean testRedirects() {
     false
   }
-
 }
 
+@Timeout(5)
 class CxfClientTest extends JaxRsClientTest {
 
   @Override
   ClientBuilder builder() {
     return new ClientBuilderImpl()
+//      .property(ClientImpl.HTTP_CONNECTION_TIMEOUT_PROP, (long) CONNECT_TIMEOUT_MS)
+//      .property(ClientImpl.HTTP_RECEIVE_TIMEOUT_PROP, (long) READ_TIMEOUT_MS)
   }
 
   boolean testRedirects() {
@@ -88,6 +95,11 @@ class CxfClientTest extends JaxRsClientTest {
   }
 
   boolean testConnectionFailure() {
+    false
+  }
+
+  boolean testRemoteConnection() {
+    // FIXME: span not reported correctly.
     false
   }
 }

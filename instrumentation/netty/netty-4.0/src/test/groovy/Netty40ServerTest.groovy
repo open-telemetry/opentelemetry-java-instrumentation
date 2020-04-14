@@ -33,7 +33,6 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
-import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator
 import io.opentelemetry.auto.test.base.HttpServerTest
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
@@ -49,16 +48,20 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 
 class Netty40ServerTest extends HttpServerTest<EventLoopGroup> {
 
+  static final LoggingHandler LOGGING_HANDLER = new LoggingHandler(SERVER_LOGGER.name, LogLevel.DEBUG)
+
   @Override
   EventLoopGroup startServer(int port) {
     def eventLoopGroup = new NioEventLoopGroup()
 
     ServerBootstrap bootstrap = new ServerBootstrap()
       .group(eventLoopGroup)
-      .handler(new LoggingHandler(LogLevel.INFO))
+      .handler(LOGGING_HANDLER)
       .childHandler([
         initChannel: { ch ->
           ChannelPipeline pipeline = ch.pipeline()
+          pipeline.addFirst("logger", LOGGING_HANDLER)
+
           def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
           handlers.each { pipeline.addLast(it) }
           pipeline.addLast([
@@ -117,10 +120,5 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> {
   @Override
   void stopServer(EventLoopGroup server) {
     server?.shutdownGracefully()
-  }
-
-  @Override
-  String component() {
-    NettyHttpServerDecorator.DECORATE.getComponentName()
   }
 }

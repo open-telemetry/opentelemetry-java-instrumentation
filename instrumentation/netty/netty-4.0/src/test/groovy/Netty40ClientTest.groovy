@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.instrumentation.netty.v4_0.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
@@ -22,6 +20,7 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import org.asynchttpclient.Response
 import spock.lang.AutoCleanup
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -31,6 +30,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
+@Timeout(5)
 class Netty40ClientTest extends HttpClientTest {
 
   @Shared
@@ -55,11 +55,6 @@ class Netty40ClientTest extends HttpClientTest {
   }
 
   @Override
-  String component() {
-    return NettyHttpClientDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }
@@ -67,6 +62,11 @@ class Netty40ClientTest extends HttpClientTest {
   @Override
   boolean testConnectionFailure() {
     false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
   }
 
   def "connection error (unopened port)"() {
@@ -96,7 +96,6 @@ class Netty40ClientTest extends HttpClientTest {
             childOf span(0)
             errored true
             tags {
-              "$Tags.COMPONENT" "netty"
               Class errorClass = ConnectException
               try {
                 errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

@@ -15,12 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
-
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.ClassHierarchyIterable;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -46,7 +43,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-2.0");
 
-  private final WeakMap<Class, Map<Method, String>> resourceNames = newWeakMap();
+  private final WeakMap<Class<?>, Map<Method, String>> resourceNames =
+      WeakMap.Provider.newWeakMap();
 
   @Override
   protected String getComponentName() {
@@ -73,8 +71,6 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (span == null) {
       return;
     }
-    span.setAttribute(Tags.COMPONENT, "jax-rs");
-
     if (!resourceName.isEmpty()) {
       span.updateName(resourceName);
     }
@@ -86,7 +82,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
    *
    * @return The result can be an empty string but will never be {@code null}.
    */
-  private String getPathResourceName(final Class target, final Method method) {
+  private String getPathResourceName(final Class<?> target, final Method method) {
     Map<Method, String> classMap = resourceNames.get(target);
 
     if (classMap == null) {
@@ -143,7 +139,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return method.getAnnotation(Path.class);
   }
 
-  private Path findClassPath(final Class<Object> target) {
+  private Path findClassPath(final Class<?> target) {
     for (final Class<?> currentClass : new ClassHierarchyIterable(target)) {
       final Path annotation = currentClass.getAnnotation(Path.class);
       if (annotation != null) {

@@ -23,6 +23,7 @@ import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.AutoCleanup
+import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -40,6 +41,8 @@ import static org.junit.Assume.assumeTrue
 @Unroll
 abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
+  protected static final CONNECT_TIMEOUT_MS = 1000
+  protected static final READ_TIMEOUT_MS = 2000
 
   @AutoCleanup
   @Shared
@@ -70,17 +73,12 @@ abstract class HttpClientTest extends AgentTestRunner {
     }
   }
 
-  @Shared
-  String component = component()
-
   /**
    * Make the request and return the status code response
    * @param method
    * @return
    */
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
-
-  abstract String component()
 
   Integer statusOnRedirectError() {
     return null
@@ -96,7 +94,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     status == 200
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, tagQueryString, url)
+        clientSpan(it, 0, null, method, tagQueryString, url)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
       }
     }
@@ -125,7 +123,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
-        clientSpan(it, 1, span(0), method, false)
+        clientSpan(it, 1, span(0), method)
         serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
       }
     }
@@ -136,31 +134,10 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   //FIXME: add tests for POST with large/chunked data
 
-  def "basic #method request with split-by-domain"() {
-    when:
-    def status = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true") {
-      doRequest(method, server.address.resolve("/success"))
-    }
-
-    then:
-    status == 200
-    assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, true)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
-      }
-    }
-
-    where:
-    method = "HEAD"
-  }
-
   def "trace request without propagation"() {
     when:
-    def status = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      runUnderTrace("parent") {
-        doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"])
-      }
+    def status = runUnderTrace("parent") {
+      doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"])
     }
 
     then:
@@ -169,13 +146,12 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
-        clientSpan(it, 1, span(0), method, renameService)
+        clientSpan(it, 1, span(0), method)
       }
     }
 
     where:
     method = "GET"
-    renameService << [false, true]
   }
 
   def "trace request with callback and parent"() {
@@ -195,7 +171,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
-        clientSpan(it, 1, span(0), method, false)
+        clientSpan(it, 1, span(0), method)
         basicSpan(it, 2 + extraClientSpans(), "child", span(0))
       }
     }
@@ -216,7 +192,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     // only one trace (client).
     assertTraces(2) {
       trace(0, 1 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false)
+        clientSpan(it, 0, null, method)
       }
       trace(1, 1) {
         basicSpan(it, 0, "callback")
@@ -242,7 +218,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     status == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, false, uri)
+        clientSpan(it, 0, null, method, false, uri)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }
@@ -264,7 +240,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     status == 200
     assertTraces(1) {
       trace(0, 4 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, false, uri)
+        clientSpan(it, 0, null, method, false, uri)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 3 + extraClientSpans(), span(extraClientSpans()))
@@ -277,8 +253,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   def "basic #method request with circular redirects"() {
     given:
-    assumeTrue(testRedirects())
-    assumeTrue(testCircularRedirects())
+    assumeTrue(testRedirects() && testCircularRedirects())
     def uri = server.address.resolve("/circular-redirect")
 
     when:
@@ -291,7 +266,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     and:
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
-        clientSpan(it, 0, null, method, false, false, uri, statusOnRedirectError(), thrownException)
+        clientSpan(it, 0, null, method, false, uri, statusOnRedirectError(), thrownException)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }
@@ -319,7 +294,7 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, thrownException)
-        clientSpan(it, 1, span(0), method, false, false, uri, null, thrownException)
+        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
       }
     }
 
@@ -327,8 +302,79 @@ abstract class HttpClientTest extends AgentTestRunner {
     method = "GET"
   }
 
+  def "connection error dropped request"() {
+    given:
+    assumeTrue(testRemoteConnection())
+    // https://stackoverflow.com/a/100859
+    def uri = new URI("http://www.google.com:81/")
+
+    when:
+    runUnderTrace("parent") {
+      doRequest(method, uri)
+    }
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+    assertTraces(1) {
+      trace(0, 2 + extraClientSpans()) {
+        basicSpan(it, 0, "parent", null, thrownException)
+        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+      }
+    }
+
+    where:
+    method = "HEAD"
+  }
+
+  def "connection error non routable address"() {
+    given:
+    assumeTrue(testRemoteConnection())
+    def uri = new URI("https://192.0.2.1/")
+
+    when:
+    runUnderTrace("parent") {
+      doRequest(method, uri)
+    }
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+    assertTraces(1) {
+      trace(0, 2 + extraClientSpans()) {
+        basicSpan(it, 0, "parent", null, thrownException)
+        clientSpan(it, 1, span(0), method, false, uri, null, thrownException)
+      }
+    }
+
+    where:
+    method = "HEAD"
+  }
+
+  // IBM JVM has different protocol support for TLS
+  @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
+  def "test https request"() {
+    given:
+    assumeTrue(testRemoteConnection())
+    def uri = new URI("https://www.google.com/")
+
+    when:
+    def status = doRequest(method, uri)
+
+    then:
+    status == 200
+    assertTraces(1) {
+      trace(0, 1 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, false, uri)
+      }
+    }
+
+    where:
+    method = "HEAD"
+  }
+
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean renameService = false, boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
     trace.span(index) {
       if (parentSpan == null) {
         parent()
@@ -339,11 +385,9 @@ abstract class HttpClientTest extends AgentTestRunner {
       spanKind CLIENT
       errored exception != null
       tags {
-        "$MoreTags.SERVICE_NAME" renameService ? "localhost" : null
-        "$Tags.COMPONENT" component
-        "$MoreTags.NET_PEER_NAME" "localhost"
+        "$MoreTags.NET_PEER_NAME" uri.host
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$MoreTags.NET_PEER_PORT" uri.port
+        "$MoreTags.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 } // Optional
         "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "$Tags.HTTP_METHOD" method
         if (status) {
@@ -392,6 +436,10 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   boolean testConnectionFailure() {
+    true
+  }
+
+  boolean testRemoteConnection() {
     true
   }
 

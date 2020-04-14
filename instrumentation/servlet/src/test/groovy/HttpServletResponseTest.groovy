@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import spock.lang.Subject
 
@@ -74,21 +73,18 @@ class HttpServletResponseTest extends AgentTestRunner {
           operationName "HttpServletResponse.sendError"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
         span(2) {
           operationName "HttpServletResponse.sendError"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
         span(3) {
           operationName "HttpServletResponse.sendRedirect"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-response"
           }
         }
       }
@@ -127,7 +123,6 @@ class HttpServletResponseTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT" "java-web-servlet-response"
             errorTags(ex.class, ex.message)
           }
         }

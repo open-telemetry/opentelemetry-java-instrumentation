@@ -17,16 +17,19 @@ import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
 import com.sun.jersey.api.client.filter.LoggingFilter
-import io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import spock.lang.Shared
+import spock.lang.Timeout
 
+@Timeout(5)
 class JaxRsClientV1Test extends HttpClientTest {
 
   @Shared
   Client client = Client.create()
 
   def setupSpec() {
+    client.setConnectTimeout(CONNECT_TIMEOUT_MS)
+    client.setReadTimeout(READ_TIMEOUT_MS)
     // Add filters to ensure spans aren't duplicated.
     client.addFilter(new LoggingFilter())
     client.addFilter(new GZIPContentEncodingFilter())
@@ -41,11 +44,6 @@ class JaxRsClientV1Test extends HttpClientTest {
     callback?.call()
 
     return response.status
-  }
-
-  @Override
-  String component() {
-    return JaxRsClientV1Decorator.DECORATE.getComponentName()
   }
 
   boolean testCircularRedirects() {

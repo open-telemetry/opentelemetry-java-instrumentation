@@ -51,24 +51,6 @@ public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, 
   }
 
   @Override
-  protected String hostname(final HttpMethod httpMethod) {
-    try {
-      return httpMethod.getURI().getHost();
-    } catch (final URIException e) {
-      return null;
-    }
-  }
-
-  @Override
-  protected Integer port(final HttpMethod httpMethod) {
-    try {
-      return httpMethod.getURI().getPort();
-    } catch (final URIException e) {
-      return null;
-    }
-  }
-
-  @Override
   protected Integer status(final HttpMethod httpMethod) {
     final StatusLine statusLine = httpMethod.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();

@@ -20,9 +20,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracingHandler
-import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
@@ -30,6 +28,7 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import org.asynchttpclient.Response
 import spock.lang.Retry
 import spock.lang.Shared
+import spock.lang.Timeout
 
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -41,6 +40,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
 @Retry
+@Timeout(5)
 class Netty41ClientTest extends HttpClientTest {
 
   @Shared
@@ -64,11 +64,6 @@ class Netty41ClientTest extends HttpClientTest {
   }
 
   @Override
-  String component() {
-    return NettyHttpClientDecorator.DECORATE.getComponentName()
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }
@@ -76,6 +71,11 @@ class Netty41ClientTest extends HttpClientTest {
   @Override
   boolean testConnectionFailure() {
     false
+  }
+
+  @Override
+  boolean testRemoteConnection() {
+    return false
   }
 
   def "connection error (unopened port)"() {
@@ -106,7 +106,6 @@ class Netty41ClientTest extends HttpClientTest {
             childOf span(0)
             errored true
             tags {
-              "$Tags.COMPONENT" "netty"
               "error.type" AbstractChannel.AnnotatedConnectException.name
               "error.stack" String
               // slightly different message on windows

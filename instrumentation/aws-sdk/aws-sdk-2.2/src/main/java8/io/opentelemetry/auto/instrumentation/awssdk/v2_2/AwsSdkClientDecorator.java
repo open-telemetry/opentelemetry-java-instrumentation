@@ -107,16 +107,6 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   @Override
-  protected String hostname(final SdkHttpRequest request) {
-    return request.host();
-  }
-
-  @Override
-  protected Integer port(final SdkHttpRequest request) {
-    return request.port();
-  }
-
-  @Override
   protected Integer status(final SdkHttpResponse response) {
     return response.statusCode();
   }

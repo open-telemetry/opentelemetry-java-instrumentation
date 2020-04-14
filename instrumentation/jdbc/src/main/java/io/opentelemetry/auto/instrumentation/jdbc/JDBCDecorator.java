@@ -19,7 +19,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -102,9 +101,6 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
 
     span.setAttribute(Tags.DB_TYPE, "sql");
-    if (dbInfo != null) {
-      span.setAttribute(MoreTags.SERVICE_NAME, dbInfo.getType());
-    }
     return super.onConnection(span, dbInfo);
   }
 
@@ -117,15 +113,8 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     return sql == null ? DB_QUERY : sql;
   }
 
-  @Override
-  public Span onStatement(final Span span, final String statement) {
-    span.setAttribute(Tags.COMPONENT, "java-jdbc-statement");
-    return super.onStatement(span, statement);
-  }
-
   public Span onPreparedStatement(final Span span, final PreparedStatement statement) {
     final String sql = JDBCMaps.preparedStatements.get(statement);
-    span.setAttribute(Tags.COMPONENT, "java-jdbc-prepared_statement");
     return super.onStatement(span, sql);
   }
 }

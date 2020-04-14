@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 import io.grpc.Context
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.context.propagation.HttpTextFormat
 import io.opentelemetry.trace.propagation.HttpTraceContext
@@ -144,8 +142,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$MoreTags.SERVICE_NAME" "kafka"
-            "$Tags.COMPONENT" "java-kafka"
           }
         }
         // CONSUMER span 0
@@ -155,8 +151,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "kafka"
-            "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
             "offset" 0
           }
@@ -168,8 +162,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$MoreTags.SERVICE_NAME" "kafka"
-            "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
             "offset" 0
             "asdf" "testing"
@@ -182,8 +174,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           childOf span(2)
           tags {
-            "$MoreTags.SERVICE_NAME" "kafka"
-            "$Tags.COMPONENT" "java-kafka"
           }
         }
         // CONSUMER span 0
@@ -193,8 +183,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           childOf span(3)
           tags {
-            "$MoreTags.SERVICE_NAME" "kafka"
-            "$Tags.COMPONENT" "java-kafka"
             "partition" { it >= 0 }
             "offset" 0
             "testing" 123

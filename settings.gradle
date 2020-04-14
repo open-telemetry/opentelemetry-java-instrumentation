@@ -106,10 +106,12 @@ include ':instrumentation:mongo:mongo-3.1'
 include ':instrumentation:mongo:mongo-3.7'
 include ':instrumentation:mongo:mongo-async-3.3'
 include ':instrumentation:mongo:mongo-common'
+include ':instrumentation:netty:netty-3.8'
 include ':instrumentation:netty:netty-4.0'
 include ':instrumentation:netty:netty-4.1'
 include ':instrumentation:okhttp-3.0'
 include ':instrumentation:opentelemetry-api-0.3'
+include ':instrumentation:play:play-2.3'
 include ':instrumentation:play:play-2.4'
 include ':instrumentation:play:play-2.6'
 include ':instrumentation:play-ws:play-ws-1.0'
@@ -137,10 +139,14 @@ include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
 
+// exporter support
+include ':exporter-support'
+
 // exporter adapters
 include ":auto-exporters"
 include ":auto-exporters:jaeger"
 include ":auto-exporters:logging"
+include ":auto-exporters:otlp"
 
 // benchmark
 include ':benchmark'
@@ -162,3 +168,4 @@ project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
 project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporters-jaeger'
 project(':auto-exporters:logging').name = 'opentelemetry-auto-exporters-logging'
+project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporters-otlp'
