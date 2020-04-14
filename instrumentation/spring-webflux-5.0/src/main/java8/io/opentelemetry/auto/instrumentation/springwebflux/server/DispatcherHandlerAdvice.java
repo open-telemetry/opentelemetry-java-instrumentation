@@ -22,9 +22,7 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.reactor.ReactorCoreAdviceUtils;
 import io.opentelemetry.trace.Span;
-import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
-import org.reactivestreams.Publisher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -62,8 +60,6 @@ public class DispatcherHandlerAdvice {
       return;
     }
     if (throwable == null && mono != null) {
-      final Function<? super Mono<Object>, ? extends Publisher<Object>> function =
-          ReactorCoreAdviceUtils.finishSpanNextOrError();
       mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, spanWithScope.getSpan());
     } else if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);

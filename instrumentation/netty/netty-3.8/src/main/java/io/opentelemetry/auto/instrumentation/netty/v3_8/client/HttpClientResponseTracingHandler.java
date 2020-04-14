@@ -39,8 +39,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
   }
 
   @Override
-  public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent msg)
-      throws Exception {
+  public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent msg) {
     final ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 

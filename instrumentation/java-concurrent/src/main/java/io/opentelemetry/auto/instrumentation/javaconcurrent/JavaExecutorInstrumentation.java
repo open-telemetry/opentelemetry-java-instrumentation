@@ -113,7 +113,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.This final Executor executor,
         @Advice.Enter final State state,
         @Advice.Thrown final Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
 
@@ -137,7 +137,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.This final Executor executor,
         @Advice.Enter final State state,
         @Advice.Thrown final Throwable throwable) {
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
 
@@ -171,7 +171,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
 
@@ -205,7 +205,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
-      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
 

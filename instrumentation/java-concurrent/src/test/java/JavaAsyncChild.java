@@ -61,7 +61,7 @@ public class JavaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   }
 
   @Override
-  public Object call() throws Exception {
+  public Object call() {
     runImpl();
     return null;
   }

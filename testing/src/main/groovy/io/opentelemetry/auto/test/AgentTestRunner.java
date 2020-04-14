@@ -111,10 +111,6 @@ public abstract class AgentTestRunner extends AgentSpecification {
     return TEST_TRACER;
   }
 
-  protected static ListWriter getTestWriter() {
-    return TEST_WRITER;
-  }
-
   /**
    * Invoked when Bytebuddy encounters an instrumentation error. Fails the test by default.
    *
@@ -302,7 +298,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
     }
   }
 
-  protected static String getClassName(Class clazz) {
+  protected static String getClassName(final Class clazz) {
     String className = clazz.getSimpleName();
     if (className.isEmpty()) {
       className = clazz.getName();

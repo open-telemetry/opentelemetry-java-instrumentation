@@ -82,7 +82,7 @@ public class Agent {
      */
     if (isJavaBefore9WithJFR() && appUsingCustomLogManager) {
       log.debug("Custom logger detected. Delaying Agent Tracer initialization.");
-      registerLogManagerCallback(new InstallAgentTracerCallback(bootstrapURL));
+      registerLogManagerCallback(new InstallAgentTracerCallback());
     } else {
       installAgentTracer();
     }
@@ -101,12 +101,6 @@ public class Agent {
   }
 
   protected abstract static class ClassLoadCallBack implements Runnable {
-
-    final URL bootstrapURL;
-
-    ClassLoadCallBack(final URL bootstrapURL) {
-      this.bootstrapURL = bootstrapURL;
-    }
 
     @Override
     public void run() {
@@ -138,9 +132,6 @@ public class Agent {
   }
 
   protected static class InstallAgentTracerCallback extends ClassLoadCallBack {
-    InstallAgentTracerCallback(final URL bootstrapURL) {
-      super(bootstrapURL);
-    }
 
     @Override
     public String getName() {

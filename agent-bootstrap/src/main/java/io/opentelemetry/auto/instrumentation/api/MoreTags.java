@@ -16,10 +16,6 @@
 package io.opentelemetry.auto.instrumentation.api;
 
 public class MoreTags {
-  public static final String SERVICE_NAME = "service.name";
-  public static final String RESOURCE_NAME = "resource.name";
-  public static final String DB_STATEMENT = "sql.query";
-
   public static final String HTTP_QUERY = "http.query.string";
   public static final String HTTP_FRAGMENT = "http.fragment.string";
 

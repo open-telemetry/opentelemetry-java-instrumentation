@@ -85,14 +85,6 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
-  /**
-   * @param className binary name of class
-   * @return true if this loader has attempted to load the given class
-   */
-  public boolean hasLoadedClass(final String className) {
-    return findLoadedClass(className) != null;
-  }
-
   public BootstrapClassLoaderProxy getBootstrapProxy() {
     return bootstrapProxy;
   }

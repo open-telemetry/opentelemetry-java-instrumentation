@@ -87,12 +87,12 @@ public class InternalJarURLHandler extends URLStreamHandler {
     }
 
     @Override
-    public void connect() throws IOException {
+    public void connect() {
       connected = true;
     }
 
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() {
       return inputStream;
     }
 

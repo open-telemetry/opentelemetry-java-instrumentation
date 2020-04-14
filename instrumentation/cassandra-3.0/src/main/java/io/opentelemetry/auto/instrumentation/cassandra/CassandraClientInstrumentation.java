@@ -71,8 +71,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
      * @throws Exception
      */
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracingSession(@Advice.Return(readOnly = false) Session session)
-        throws Exception {
+    public static void injectTracingSession(@Advice.Return(readOnly = false) Session session) {
       // This should cover ours and OT's TracingSession
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
         return;

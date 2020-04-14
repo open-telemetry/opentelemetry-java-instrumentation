@@ -35,7 +35,7 @@ public class State {
 
   private State() {}
 
-  public boolean setParentSpan(final Span parentSpan) {
+  public void setParentSpan(final Span parentSpan) {
     final boolean result = parentSpanRef.compareAndSet(null, parentSpan);
     if (!result && parentSpanRef.get() != parentSpan) {
       log.debug(
@@ -44,7 +44,6 @@ public class State {
           parentSpan,
           parentSpanRef.get());
     }
-    return result;
   }
 
   public void clearParentSpan() {

@@ -639,7 +639,7 @@ class SpymemcachedTest extends AgentTestRunner {
       errored(error != null && error != "canceled")
 
       tags {
-        "$Tags.DB_TYPE" CompletionListener.DB_TYPE
+        "$Tags.DB_TYPE" "memcached"
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

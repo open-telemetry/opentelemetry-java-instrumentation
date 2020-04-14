@@ -76,12 +76,10 @@ public class ExecutorInstrumentationUtils {
   /**
    * Clean up after job submission method has exited.
    *
-   * @param executor the current executor
    * @param state task instrumentation state
    * @param throwable throwable that may have been thrown
    */
-  public static void cleanUpOnMethodExit(
-      final Executor executor, final State state, final Throwable throwable) {
+  public static void cleanUpOnMethodExit(final State state, final Throwable throwable) {
     if (null != state && null != throwable) {
       /*
       Note: this may potentially clear somebody else's parent span if we didn't set it

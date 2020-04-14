@@ -15,9 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.reactor;
 
-import static io.opentelemetry.auto.instrumentation.reactor.ReactorCoreDecorator.DECORATE;
 import static reactor.core.publisher.Operators.lift;
 
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import java.util.function.Function;
@@ -63,7 +63,7 @@ public class ReactorCoreAdviceUtils {
     if (span != null) {
       if (throwable != null) {
         span.setStatus(Status.UNKNOWN);
-        DECORATE.addThrowable(span, throwable);
+        BaseDecorator.addThrowable(span, throwable);
       }
       span.end();
     }

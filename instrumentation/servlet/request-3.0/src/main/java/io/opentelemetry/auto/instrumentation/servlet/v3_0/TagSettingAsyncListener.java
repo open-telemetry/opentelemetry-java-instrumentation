@@ -20,7 +20,6 @@ import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorat
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -36,7 +35,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   }
 
   @Override
-  public void onComplete(final AsyncEvent event) throws IOException {
+  public void onComplete(final AsyncEvent event) {
     if (activated.compareAndSet(false, true)) {
       DECORATE.onResponse(span, (HttpServletResponse) event.getSuppliedResponse());
       DECORATE.beforeFinish(span);
@@ -45,7 +44,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   }
 
   @Override
-  public void onTimeout(final AsyncEvent event) throws IOException {
+  public void onTimeout(final AsyncEvent event) {
     if (activated.compareAndSet(false, true)) {
       span.setStatus(Status.UNKNOWN);
       span.setAttribute("timeout", event.getAsyncContext().getTimeout());
@@ -55,7 +54,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   }
 
   @Override
-  public void onError(final AsyncEvent event) throws IOException {
+  public void onError(final AsyncEvent event) {
     if (event.getThrowable() != null && activated.compareAndSet(false, true)) {
       DECORATE.onResponse(span, (HttpServletResponse) event.getSuppliedResponse());
       if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
@@ -72,7 +71,7 @@ public class TagSettingAsyncListener implements AsyncListener {
 
   /** Transfer the listener over to the new context. */
   @Override
-  public void onStartAsync(final AsyncEvent event) throws IOException {
+  public void onStartAsync(final AsyncEvent event) {
     event.getAsyncContext().addListener(this);
   }
 }
