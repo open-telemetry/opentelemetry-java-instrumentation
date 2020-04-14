@@ -16,15 +16,12 @@
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
@@ -34,46 +31,12 @@ import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.Controller;
 
 @Slf4j
-public class SpringWebHttpServerDecorator
-    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
+public class SpringWebMvcDecorator extends BaseDecorator {
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webmvc-3.1");
-  public static final SpringWebHttpServerDecorator DECORATE = new SpringWebHttpServerDecorator();
+  public static final SpringWebMvcDecorator DECORATE = new SpringWebMvcDecorator();
 
-  @Override
-  protected String method(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getMethod();
-  }
-
-  @Override
-  protected URI url(final HttpServletRequest httpServletRequest) throws URISyntaxException {
-    return new URI(
-        httpServletRequest.getScheme(),
-        null,
-        httpServletRequest.getServerName(),
-        httpServletRequest.getServerPort(),
-        httpServletRequest.getRequestURI(),
-        httpServletRequest.getQueryString(),
-        null);
-  }
-
-  @Override
-  protected String peerHostIP(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRemoteAddr();
-  }
-
-  @Override
-  protected Integer peerPort(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRemotePort();
-  }
-
-  @Override
-  protected Integer status(final HttpServletResponse httpServletResponse) {
-    return httpServletResponse.getStatus();
-  }
-
-  @Override
   public Span onRequest(final Span span, final HttpServletRequest request) {
     if (request != null) {
       final Object bestMatchingPattern =
