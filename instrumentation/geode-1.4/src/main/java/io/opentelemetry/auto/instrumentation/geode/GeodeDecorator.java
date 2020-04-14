@@ -45,9 +45,4 @@ public class GeodeDecorator extends DatabaseClientDecorator<Region> {
   protected String service() {
     return "apache-geode";
   }
-
-  @Override
-  protected String getComponentName() {
-    return "apache-geode-client";
-  }
 }

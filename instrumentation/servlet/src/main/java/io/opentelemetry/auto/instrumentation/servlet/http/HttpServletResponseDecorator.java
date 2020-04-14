@@ -23,9 +23,4 @@ public class HttpServletResponseDecorator extends BaseDecorator {
   public static final HttpServletResponseDecorator DECORATE = new HttpServletResponseDecorator();
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
-
-  @Override
-  protected String getComponentName() {
-    return "java-web-servlet-response";
-  }
 }

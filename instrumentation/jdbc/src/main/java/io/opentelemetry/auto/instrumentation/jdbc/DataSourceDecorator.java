@@ -24,9 +24,4 @@ public class DataSourceDecorator extends BaseDecorator {
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jdbc");
-
-  @Override
-  protected String getComponentName() {
-    return "java-jdbc-connection";
-  }
 }

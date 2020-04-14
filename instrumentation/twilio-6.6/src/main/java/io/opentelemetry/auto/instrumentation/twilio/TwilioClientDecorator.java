@@ -38,11 +38,6 @@ public class TwilioClientDecorator extends ClientDecorator {
   static final String COMPONENT_NAME = "twilio-sdk";
 
   @Override
-  protected String getComponentName() {
-    return COMPONENT_NAME;
-  }
-
-  @Override
   protected String service() {
     return COMPONENT_NAME;
   }

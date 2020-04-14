@@ -172,11 +172,6 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     return new HttpServerDecorator<Map, Map, Map>() {
 
       @Override
-      protected String getComponentName() {
-        return "test-component"
-      }
-
-      @Override
       protected String method(Map m) {
         return m.method
       }

@@ -23,9 +23,4 @@ public class RequestDispatcherDecorator extends BaseDecorator {
   public static final RequestDispatcherDecorator DECORATE = new RequestDispatcherDecorator();
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
-
-  @Override
-  protected String getComponentName() {
-    return "java-web-servlet-dispatcher";
-  }
 }

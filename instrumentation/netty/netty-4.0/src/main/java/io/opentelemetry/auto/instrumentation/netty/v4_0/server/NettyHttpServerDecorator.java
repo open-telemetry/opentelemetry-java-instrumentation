@@ -38,11 +38,6 @@ public class NettyHttpServerDecorator
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-4.0");
 
   @Override
-  protected String getComponentName() {
-    return "netty";
-  }
-
-  @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
   }

@@ -37,11 +37,6 @@ public class JMSDecorator extends ClientDecorator {
     return "jms";
   }
 
-  @Override
-  protected String getComponentName() {
-    return "jms";
-  }
-
   public String spanNameForReceive(final Message message) {
     return toResourceName(message, null);
   }

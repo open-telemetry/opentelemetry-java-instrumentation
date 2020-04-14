@@ -19,9 +19,4 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class OnErrorDecorator extends BaseDecorator {
   public static final OnErrorDecorator DECORATE = new OnErrorDecorator();
-
-  @Override
-  protected String getComponentName() {
-    return "java-aws-sdk";
-  }
 }

@@ -38,11 +38,6 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-1.0");
 
-  @Override
-  protected String getComponentName() {
-    return "jax-rs-controller";
-  }
-
   public void onControllerStart(
       final Span span, final Span parent, final Class target, final Method method) {
     final String resourceName = getPathResourceName(target, method);

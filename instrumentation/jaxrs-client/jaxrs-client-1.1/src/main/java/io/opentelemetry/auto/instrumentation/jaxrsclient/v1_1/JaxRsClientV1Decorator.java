@@ -29,11 +29,6 @@ public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, C
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-client-1.1");
 
   @Override
-  protected String getComponentName() {
-    return "jax-rs.client";
-  }
-
-  @Override
   protected String method(final ClientRequest httpRequest) {
     return httpRequest.getMethod();
   }

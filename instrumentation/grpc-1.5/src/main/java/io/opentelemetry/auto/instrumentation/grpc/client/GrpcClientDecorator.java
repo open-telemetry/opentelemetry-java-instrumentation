@@ -27,11 +27,6 @@ public class GrpcClientDecorator extends ClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grpc-1.5");
 
   @Override
-  protected String getComponentName() {
-    return "grpc-client";
-  }
-
-  @Override
   protected String service() {
     return null;
   }

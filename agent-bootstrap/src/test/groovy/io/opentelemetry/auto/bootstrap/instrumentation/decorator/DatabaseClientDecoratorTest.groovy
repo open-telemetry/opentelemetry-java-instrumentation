@@ -112,11 +112,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       }
 
       @Override
-      protected String getComponentName() {
-        return "test-component"
-      }
-
-      @Override
       protected String dbType() {
         return "test-db"
       }

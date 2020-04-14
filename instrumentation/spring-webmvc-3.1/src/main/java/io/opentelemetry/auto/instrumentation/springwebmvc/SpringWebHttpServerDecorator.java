@@ -40,18 +40,6 @@ public class SpringWebHttpServerDecorator
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webmvc-3.1");
   public static final SpringWebHttpServerDecorator DECORATE = new SpringWebHttpServerDecorator();
-  public static final SpringWebHttpServerDecorator DECORATE_RENDER =
-      new SpringWebHttpServerDecorator() {
-        @Override
-        protected String getComponentName() {
-          return "spring-webmvc";
-        }
-      };
-
-  @Override
-  protected String getComponentName() {
-    return "spring-web-controller";
-  }
 
   @Override
   protected String method(final HttpServletRequest httpServletRequest) {

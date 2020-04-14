@@ -29,11 +29,6 @@ public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConne
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.http-url-connection");
 
   @Override
-  protected String getComponentName() {
-    return "http-url-connection";
-  }
-
-  @Override
   protected String method(final HttpURLConnection connection) {
     return connection.getRequestMethod();
   }

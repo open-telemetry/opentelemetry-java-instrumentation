@@ -34,11 +34,6 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-3.8");
 
   @Override
-  protected String getComponentName() {
-    return "netty-client";
-  }
-
-  @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.getMethod().getName();
   }

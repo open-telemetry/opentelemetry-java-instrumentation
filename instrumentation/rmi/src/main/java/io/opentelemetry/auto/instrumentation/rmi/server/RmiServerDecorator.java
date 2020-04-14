@@ -24,9 +24,4 @@ public class RmiServerDecorator extends ServerDecorator {
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rmi");
-
-  @Override
-  protected String getComponentName() {
-    return "rmi-server";
-  }
 }

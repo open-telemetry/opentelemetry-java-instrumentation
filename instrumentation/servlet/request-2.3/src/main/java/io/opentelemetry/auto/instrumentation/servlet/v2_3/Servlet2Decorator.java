@@ -31,11 +31,6 @@ public class Servlet2Decorator
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet-2.3");
 
   @Override
-  protected String getComponentName() {
-    return "java-web-servlet";
-  }
-
-  @Override
   protected String method(final HttpServletRequest httpServletRequest) {
     return httpServletRequest.getMethod();
   }

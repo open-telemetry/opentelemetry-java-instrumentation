@@ -36,11 +36,6 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
   }
 
   @Override
-  protected String getComponentName() {
-    return "elasticsearch-java";
-  }
-
-  @Override
   protected String dbType() {
     return "elasticsearch";
   }

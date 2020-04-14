@@ -43,9 +43,4 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
   protected Integer status(final Response response) {
     return response.getStatusCode();
   }
-
-  @Override
-  protected String getComponentName() {
-    return "play-ws";
-  }
 }

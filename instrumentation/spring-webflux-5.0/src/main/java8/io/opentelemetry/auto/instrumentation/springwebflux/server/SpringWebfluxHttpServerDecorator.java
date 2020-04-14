@@ -26,9 +26,4 @@ public class SpringWebfluxHttpServerDecorator extends ServerDecorator {
       new SpringWebfluxHttpServerDecorator();
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
-
-  @Override
-  protected String getComponentName() {
-    return "spring-webflux-controller";
-  }
 }

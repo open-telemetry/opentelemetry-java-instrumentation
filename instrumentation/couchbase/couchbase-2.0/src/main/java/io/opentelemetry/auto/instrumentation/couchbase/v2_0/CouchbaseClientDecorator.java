@@ -26,11 +26,6 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
   }
 
   @Override
-  protected String getComponentName() {
-    return "couchbase-client";
-  }
-
-  @Override
   protected String dbType() {
     return "couchbase";
   }

@@ -39,11 +39,6 @@ public class SpringWebfluxHttpClientDecorator
   }
 
   @Override
-  protected String getComponentName() {
-    return "spring-webflux-client";
-  }
-
-  @Override
   protected String method(final ClientRequest httpRequest) {
     return httpRequest.method().name();
   }

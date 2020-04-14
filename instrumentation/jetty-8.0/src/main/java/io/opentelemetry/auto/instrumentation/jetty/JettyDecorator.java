@@ -32,11 +32,6 @@ public class JettyDecorator
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jetty-8.0");
 
   @Override
-  protected String getComponentName() {
-    return "jetty-handler";
-  }
-
-  @Override
   protected String method(final HttpServletRequest httpServletRequest) {
     return httpServletRequest.getMethod();
   }

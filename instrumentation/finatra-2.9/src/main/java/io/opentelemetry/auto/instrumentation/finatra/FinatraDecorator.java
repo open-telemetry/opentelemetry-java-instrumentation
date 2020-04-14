@@ -29,11 +29,6 @@ public class FinatraDecorator extends HttpServerDecorator<Request, Request, Resp
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.finatra-2.9");
 
   @Override
-  protected String getComponentName() {
-    return "finatra";
-  }
-
-  @Override
   protected String method(final Request request) {
     return request.method().name();
   }

@@ -31,11 +31,6 @@ public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, 
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpclient-2.0");
 
   @Override
-  protected String getComponentName() {
-    return "apache-httpclient";
-  }
-
-  @Override
   protected String method(final HttpMethod httpMethod) {
     return httpMethod.getName();
   }

@@ -22,11 +22,6 @@ import io.opentelemetry.trace.Span;
 public class HystrixDecorator extends BaseDecorator {
   public static final HystrixDecorator DECORATE = new HystrixDecorator();
 
-  @Override
-  protected String getComponentName() {
-    return "hystrix";
-  }
-
   public void onCommand(
       final Span span, final HystrixInvokableInfo<?> command, final String methodName) {
     if (command != null) {

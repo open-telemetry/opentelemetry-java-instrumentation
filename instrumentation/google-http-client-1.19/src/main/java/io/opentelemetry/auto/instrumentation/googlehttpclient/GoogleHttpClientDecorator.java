@@ -47,9 +47,4 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
   }
-
-  @Override
-  protected String getComponentName() {
-    return "google-http-client";
-  }
 }

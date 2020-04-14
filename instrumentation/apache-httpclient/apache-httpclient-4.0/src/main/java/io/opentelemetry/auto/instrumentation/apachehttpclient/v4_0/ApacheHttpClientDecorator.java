@@ -29,11 +29,6 @@ public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriReques
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpclient-4.0");
 
   @Override
-  protected String getComponentName() {
-    return "apache-httpclient";
-  }
-
-  @Override
   protected String method(final HttpUriRequest httpRequest) {
     return httpRequest.getMethod();
   }

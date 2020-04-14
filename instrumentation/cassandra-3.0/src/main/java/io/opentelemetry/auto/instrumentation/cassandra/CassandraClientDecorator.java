@@ -30,11 +30,6 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   }
 
   @Override
-  protected String getComponentName() {
-    return "java-cassandra";
-  }
-
-  @Override
   protected String dbType() {
     return "cassandra";
   }

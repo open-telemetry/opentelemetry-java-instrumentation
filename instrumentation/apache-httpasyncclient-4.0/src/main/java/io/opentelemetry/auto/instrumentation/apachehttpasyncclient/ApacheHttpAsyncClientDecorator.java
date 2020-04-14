@@ -37,11 +37,6 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpasyncclient-4.0");
 
   @Override
-  protected String getComponentName() {
-    return "apache-httpasyncclient";
-  }
-
-  @Override
   protected String method(final HttpRequest request) {
     if (request instanceof HttpUriRequest) {
       return ((HttpUriRequest) request).getMethod();

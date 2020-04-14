@@ -33,11 +33,6 @@ public class KafkaDecorator extends ClientDecorator {
     return "kafka";
   }
 
-  @Override
-  protected String getComponentName() {
-    return "java-kafka";
-  }
-
   public String spanNameOnConsume(final ConsumerRecord record) {
     final String topic = record.topic();
     if (topic != null) {

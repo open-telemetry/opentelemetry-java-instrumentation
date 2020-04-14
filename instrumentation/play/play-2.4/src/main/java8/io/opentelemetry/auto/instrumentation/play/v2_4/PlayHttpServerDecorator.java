@@ -38,11 +38,6 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.play-2.4");
 
   @Override
-  protected String getComponentName() {
-    return "play-action";
-  }
-
-  @Override
   protected String method(final Request httpRequest) {
     return httpRequest.method();
   }
