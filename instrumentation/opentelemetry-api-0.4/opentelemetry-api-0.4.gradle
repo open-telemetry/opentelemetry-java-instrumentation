@@ -21,5 +21,15 @@ dependencies {
   // bootstrap class loader (as those references will later be shaded)
   compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
 
+  // this is needed for compilation because UnshadedSpanContext extends SpanContext
+  // which is annotated with @Immutable, otherwise compilation fails with
+  // "class file for javax.annotation.concurrent.Immutable not found"
+  compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+
+  // this is needed for compilation because UnshadedSpanContext extends SpanContext
+  // which is annotated with @AutoValue, otherwise compilation fails with
+  // "class file for com.google.auto.value.AutoValue not found"
+  compileOnly 'com.google.auto.value:auto-value-annotations:1.6.6'
+
   testCompile project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
 }

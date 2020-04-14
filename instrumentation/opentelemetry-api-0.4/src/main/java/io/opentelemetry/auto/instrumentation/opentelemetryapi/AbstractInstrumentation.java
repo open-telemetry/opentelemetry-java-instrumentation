@@ -86,6 +86,7 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
       packageName + ".trace.TracingContextUtils",
       packageName + ".trace.UnshadedSpan",
       packageName + ".trace.UnshadedSpan$Builder",
+      packageName + ".trace.UnshadedSpanContext",
       packageName + ".trace.UnshadedTracer",
       packageName + ".trace.UnshadedTracerProvider"
     };

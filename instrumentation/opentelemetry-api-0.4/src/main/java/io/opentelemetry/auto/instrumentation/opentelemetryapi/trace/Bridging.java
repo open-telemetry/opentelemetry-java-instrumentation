@@ -69,23 +69,13 @@ public class Bridging {
   }
 
   public static SpanContext toUnshaded(final io.opentelemetry.trace.SpanContext shadedContext) {
-    if (shadedContext.isRemote()) {
-      return SpanContext.createFromRemoteParent(
-          toUnshaded(shadedContext.getTraceId()),
-          toUnshaded(shadedContext.getSpanId()),
-          toUnshaded(shadedContext.getTraceFlags()),
-          toUnshaded(shadedContext.getTraceState()));
-    } else {
-      return SpanContext.create(
-          toUnshaded(shadedContext.getTraceId()),
-          toUnshaded(shadedContext.getSpanId()),
-          toUnshaded(shadedContext.getTraceFlags()),
-          toUnshaded(shadedContext.getTraceState()));
-    }
+    return new UnshadedSpanContext(shadedContext);
   }
 
   public static io.opentelemetry.trace.SpanContext toShaded(final SpanContext unshadedContext) {
-    if (unshadedContext.isRemote()) {
+    if (unshadedContext instanceof UnshadedSpanContext) {
+      return ((UnshadedSpanContext) unshadedContext).getShadedSpanContext();
+    } else if (unshadedContext.isRemote()) {
       return io.opentelemetry.trace.SpanContext.createFromRemoteParent(
           toShaded(unshadedContext.getTraceId()),
           toShaded(unshadedContext.getSpanId()),
@@ -163,23 +153,23 @@ public class Bridging {
         .build();
   }
 
-  private static TraceId toUnshaded(final io.opentelemetry.trace.TraceId shadedTraceId) {
+  public static TraceId toUnshaded(final io.opentelemetry.trace.TraceId shadedTraceId) {
     final byte[] bytes = getBuffer();
     shadedTraceId.copyBytesTo(bytes, 0);
     return TraceId.fromBytes(bytes, 0);
   }
 
-  private static SpanId toUnshaded(final io.opentelemetry.trace.SpanId shadedSpanId) {
+  public static SpanId toUnshaded(final io.opentelemetry.trace.SpanId shadedSpanId) {
     final byte[] bytes = getBuffer();
     shadedSpanId.copyBytesTo(bytes, 0);
     return SpanId.fromBytes(bytes, 0);
   }
 
-  private static TraceFlags toUnshaded(final io.opentelemetry.trace.TraceFlags shadedTraceFlags) {
+  public static TraceFlags toUnshaded(final io.opentelemetry.trace.TraceFlags shadedTraceFlags) {
     return TraceFlags.fromByte(shadedTraceFlags.getByte());
   }
 
-  private static TraceState toUnshaded(final io.opentelemetry.trace.TraceState shadedTraceState) {
+  public static TraceState toUnshaded(final io.opentelemetry.trace.TraceState shadedTraceState) {
     final TraceState.Builder builder = TraceState.builder();
     for (final io.opentelemetry.trace.TraceState.Entry entry : shadedTraceState.getEntries()) {
       builder.set(entry.getKey(), entry.getValue());
