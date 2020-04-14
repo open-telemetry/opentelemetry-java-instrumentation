@@ -102,9 +102,7 @@ class PlayServerTest extends HttpServerTest<Server> {
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Integer
-        if (endpoint == ERROR) {
-          "$Tags.ERROR" true
-        } else if (endpoint == EXCEPTION) {
+        if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
         if (endpoint.query) {
@@ -135,7 +133,6 @@ class PlayServerTest extends HttpServerTest<Server> {
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
         "$Tags.HTTP_METHOD" method
         if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }

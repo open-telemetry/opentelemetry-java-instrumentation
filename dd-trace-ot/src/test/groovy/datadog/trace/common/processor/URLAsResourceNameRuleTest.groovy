@@ -1,21 +1,21 @@
-package datadog.opentracing.decorators
+package datadog.trace.common.processor
 
-import datadog.opentracing.DDSpanContext
+
 import datadog.opentracing.DDTracer
-import datadog.opentracing.PendingTrace
-import datadog.trace.api.sampling.PrioritySampling
+import datadog.opentracing.SpanFactory
+import datadog.trace.common.processor.rule.URLAsResourceNameRule
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.Tags
 import spock.lang.Subject
 
-class URLAsResourceNameTest extends DDSpecification {
+class URLAsResourceNameRuleTest extends DDSpecification {
 
   def writer = new ListWriter()
   def tracer = DDTracer.builder().writer(writer).build()
 
   @Subject
-  def decorator = new URLAsResourceName()
+  def decorator = new URLAsResourceNameRule()
 
   def "pulls path from url #input"() {
     when:
@@ -104,37 +104,29 @@ class URLAsResourceNameTest extends DDSpecification {
   }
 
   def "sets the resource name"() {
+    setup:
+    def span = SpanFactory.newSpanOf(0)
+    span.context.resourceName = null
+    meta.each {
+      span.setTag(it.key, (String) it.value)
+    }
+
     when:
-    final DDSpanContext context =
-      new DDSpanContext(
-        1G,
-        1G,
-        0G,
-        "fakeService",
-        "fakeOperation",
-        "fakeResource",
-        PrioritySampling.UNSET,
-        null,
-        [:],
-        false,
-        "fakeType",
-        tags,
-        new PendingTrace(tracer, 1G),
-        tracer,
-        [:])
+    decorator.processSpan(span, meta, [span])
 
     then:
-    decorator.shouldSetTag(context, Tags.HTTP_URL.getKey(), value)
-    context.resourceName == resourceName
+    span.resourceName == resourceName
 
     where:
-    value                       | resourceName        | tags
-    null                        | "fakeResource"      | [:]
+    value                       | resourceName        | meta
+    null                        | "fakeOperation"     | [:]
     " "                         | "/"                 | [:]
     "\t"                        | "/"                 | [:]
     "/path"                     | "/path"             | [:]
     "/ABC/a-1/b_2/c.3/d4d/5f/6" | "/ABC/?/?/?/?/?/?"  | [:]
-    "/not-found"                | "fakeResource"      | [(Tags.HTTP_STATUS.key): 404]
-    "/with-method"              | "Post /with-method" | [(Tags.HTTP_METHOD.key): "Post"]
+    "/not-found"                | "fakeOperation"     | [(Tags.HTTP_STATUS.key): "404"]
+    "/with-method"              | "POST /with-method" | [(Tags.HTTP_METHOD.key): "Post"]
+
+    ignore = meta.put(Tags.HTTP_URL.key, value)
   }
 }

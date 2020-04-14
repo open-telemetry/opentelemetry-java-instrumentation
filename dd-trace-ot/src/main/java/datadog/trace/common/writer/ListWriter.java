@@ -1,6 +1,7 @@
 package datadog.trace.common.writer;
 
 import datadog.opentracing.DDSpan;
+import datadog.trace.common.processor.TraceProcessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -10,6 +11,7 @@ import java.util.concurrent.TimeoutException;
 
 /** List writer used by tests mostly */
 public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Writer {
+  private final TraceProcessor processor = new TraceProcessor();
   private final List<CountDownLatch> latches = new ArrayList<>();
 
   public List<DDSpan> firstTrace() {
@@ -17,8 +19,9 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Wr
   }
 
   @Override
-  public void write(final List<DDSpan> trace) {
+  public void write(List<DDSpan> trace) {
     synchronized (latches) {
+      trace = processor.onTraceComplete(trace);
       add(trace);
       for (final CountDownLatch latch : latches) {
         if (size() >= latch.getCount()) {

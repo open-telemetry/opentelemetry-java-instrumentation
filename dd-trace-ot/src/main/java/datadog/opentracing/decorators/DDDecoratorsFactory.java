@@ -15,24 +15,15 @@ public class DDDecoratorsFactory {
 
     for (final AbstractDecorator decorator :
         Arrays.asList(
-            new AnalyticsSampleRateDecorator(),
-            new DBStatementAsResourceName(),
             new DBTypeDecorator(),
-            new ErrorFlag(),
             new ForceManualDropDecorator(),
             new ForceManualKeepDecorator(),
-            new OperationDecorator(),
             new PeerServiceDecorator(),
-            new ResourceNameDecorator(),
             new ServiceNameDecorator(),
             new ServiceNameDecorator("service", false),
-            new ServletContextDecorator(),
-            new SpanTypeDecorator(),
-            new Status404Decorator(),
-            new Status5XXDecorator(),
-            new URLAsResourceName())) {
+            new ServletContextDecorator())) {
 
-      if (Config.get().isDecoratorEnabled(decorator.getClass().getSimpleName())) {
+      if (Config.get().isRuleEnabled(decorator.getClass().getSimpleName())) {
         decorators.add(decorator);
       } else {
         log.debug("{} disabled", decorator.getClass().getSimpleName());

@@ -1,24 +1,29 @@
 package datadog.trace
 
+
+import datadog.opentracing.DDSpanContext
 import datadog.opentracing.SpanFactory
 import datadog.trace.api.DDTags
+import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.util.test.DDSpecification
 
 class DDSpanContextTest extends DDSpecification {
 
   def "null values for tags delete existing tags"() {
     setup:
-    def context = SpanFactory.newSpanOf(0).context
+    def span = SpanFactory.newSpanOf(0)
+    def context = span.context
     context.setTag("some.tag", "asdf")
     context.setTag(name, null)
     context.setErrorFlag(true)
+    span.finish()
 
     expect:
     context.getTags() == tags
     context.serviceName == "fakeService"
     context.resourceName == "fakeResource"
     context.spanType == "fakeType"
-    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource metrics={} *errored* tags={${extra}${tags.containsKey(DDTags.SPAN_TYPE) ? "span.type=${context.getSpanType()}, " : ""}thread.id=${Thread.currentThread().id}, thread.name=${Thread.currentThread().name}}"
+    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource metrics=${defaultMetrics()} *errored* tags={${extra}${tags.containsKey(DDTags.SPAN_TYPE) ? "span.type=${context.getSpanType()}, " : ""}thread.id=${Thread.currentThread().id}, thread.name=${Thread.currentThread().name}}"
 
     where:
     name                 | extra             | tags
@@ -30,12 +35,14 @@ class DDSpanContextTest extends DDSpecification {
 
   def "special tags set certain values"() {
     setup:
-    def context = SpanFactory.newSpanOf(0).context
+    def span = SpanFactory.newSpanOf(0)
+    def context = span.context
     context.setTag(name, value)
+    span.finish()
     def thread = Thread.currentThread()
 
     def expectedTags = [(DDTags.THREAD_NAME): thread.name, (DDTags.THREAD_ID): thread.id]
-    def expectedTrace = "DDSpan [ t_id=1, s_id=1, p_id=0] trace=$details metrics={} tags={thread.id=$thread.id, thread.name=$thread.name}"
+    def expectedTrace = "DDSpan [ t_id=1, s_id=1, p_id=0] trace=$details metrics=${defaultMetrics()} tags={thread.id=$thread.id, thread.name=$thread.name}"
 
     expect:
     context.getTags() == expectedTags
@@ -51,8 +58,10 @@ class DDSpanContextTest extends DDSpecification {
 
   def "tags can be added to the context"() {
     setup:
-    def context = SpanFactory.newSpanOf(0).context
+    def span = SpanFactory.newSpanOf(0)
+    def context = span.context
     context.setTag(name, value)
+    span.finish()
     def thread = Thread.currentThread()
 
     expect:
@@ -61,7 +70,7 @@ class DDSpanContextTest extends DDSpecification {
       (DDTags.THREAD_NAME): thread.name,
       (DDTags.THREAD_ID)  : thread.id
     ]
-    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource metrics={} tags={$name=$value, thread.id=$thread.id, thread.name=$thread.name}"
+    context.toString() == "DDSpan [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource metrics=${defaultMetrics()} tags={$name=$value, thread.id=$thread.id, thread.name=$thread.name}"
 
     where:
     name             | value
@@ -97,5 +106,12 @@ class DDSpanContextTest extends DDSpecification {
     Double  | 0.5f
     Double  | 0.5d
     Integer | 0x55
+  }
+
+  static String defaultMetrics() {
+    return [
+      (RateByServiceSampler.SAMPLING_AGENT_RATE): 1.0,
+      (DDSpanContext.PRIORITY_SAMPLING_KEY)     : 1,
+    ]
   }
 }

@@ -107,6 +107,12 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
   }
 
   @Override
+  boolean testNotFound() {
+    // resource name is set by instrumentation, so not changed to 404
+    false
+  }
+
+  @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       serviceName expectedServiceName()
@@ -122,9 +128,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Integer
-        if (endpoint == ERROR) {
-          "$Tags.ERROR" true
-        } else if (endpoint == EXCEPTION) {
+        if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
         if (endpoint.query) {

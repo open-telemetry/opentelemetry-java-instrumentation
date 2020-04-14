@@ -63,7 +63,6 @@ class TagsAssert {
   }
 
   def errorTags(Class<Throwable> errorType, message) {
-    tag("error", true)
     tag("error.type", errorType.name)
     tag("error.stack", String)
 

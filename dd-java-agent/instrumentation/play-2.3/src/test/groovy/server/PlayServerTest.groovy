@@ -10,7 +10,9 @@ import datadog.trace.instrumentation.netty38.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.play23.PlayHttpServerDecorator
 import play.api.test.TestServer
 
-import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.*
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class PlayServerTest extends HttpServerTest<TestServer> {
   @Override
@@ -62,9 +64,7 @@ class PlayServerTest extends HttpServerTest<TestServer> {
         "$Tags.HTTP_URL" String
         "$Tags.HTTP_METHOD" String
         "$Tags.HTTP_STATUS" Integer
-        if (endpoint == ERROR) {
-          "$Tags.ERROR" true
-        } else if (endpoint == EXCEPTION) {
+        if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
         if (endpoint.query) {

@@ -50,7 +50,7 @@ class DDTracerTest extends DDSpecification {
     tracer.writer instanceof DDAgentWriter
     tracer.writer.monitor instanceof Monitor.Noop
 
-    tracer.spanContextDecorators.size() == 15
+    !tracer.spanContextDecorators.isEmpty()
 
     tracer.injector instanceof HttpCodec.CompoundInjector
     tracer.extractor instanceof HttpCodec.CompoundExtractor

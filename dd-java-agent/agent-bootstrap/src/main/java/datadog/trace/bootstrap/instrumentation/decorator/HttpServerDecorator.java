@@ -108,10 +108,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
       final Integer status = status(response);
       if (status != null) {
         span.setTag(Tags.HTTP_STATUS, status);
-
-        if (Config.get().getHttpServerErrorStatuses().contains(status)) {
-          span.setError(true);
-        }
       }
     }
     return span;

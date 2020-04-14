@@ -29,7 +29,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
-    final AgentSpan span = startSpan("aws.command");
+    final AgentSpan span = startSpan("aws.http");
     try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.afterStart(span);
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);

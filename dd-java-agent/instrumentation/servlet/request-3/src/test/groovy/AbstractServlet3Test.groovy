@@ -96,7 +96,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         "servlet.path" { it == endpoint.path || it == "/dispatch$endpoint.path" }
         "span.origin.type" { it == servlet.name || it == ApplicationFilterChain.name }
         if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }

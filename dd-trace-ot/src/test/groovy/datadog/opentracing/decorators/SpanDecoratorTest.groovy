@@ -223,21 +223,10 @@ class SpanDecoratorTest extends DDSpecification {
     span.serviceName == "peer-service"
   }
 
-  def "set operation name"() {
-    when:
-    Tags.COMPONENT.set(span, component)
-
-    then:
-    span.getOperationName() == operationName
-
-    where:
-    component << OperationDecorator.MAPPINGS.keySet()
-    operationName << OperationDecorator.MAPPINGS.values()
-  }
-
   def "set resource name"() {
     when:
     span.setTag(DDTags.RESOURCE_NAME, name)
+    span.finish()
 
     then:
     span.getResourceName() == name
@@ -249,6 +238,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "set span type"() {
     when:
     span.setTag(DDTags.SPAN_TYPE, type)
+    span.finish()
 
     then:
     span.getSpanType() == type
@@ -283,28 +273,29 @@ class SpanDecoratorTest extends DDSpecification {
 
     when:
     span.setTag(ANALYTICS_SAMPLE_RATE, rate)
+    span.finish()
 
     then:
-    span.metrics == result
+    span.metrics.get(ANALYTICS_SAMPLE_RATE) == result
 
     where:
     rate  | result
-    00    | [(ANALYTICS_SAMPLE_RATE): 0]
-    1     | [(ANALYTICS_SAMPLE_RATE): 1]
-    0f    | [(ANALYTICS_SAMPLE_RATE): 0]
-    1f    | [(ANALYTICS_SAMPLE_RATE): 1]
-    0.1   | [(ANALYTICS_SAMPLE_RATE): 0.1]
-    1.1   | [(ANALYTICS_SAMPLE_RATE): 1.1]
-    -1    | [(ANALYTICS_SAMPLE_RATE): -1]
-    10    | [(ANALYTICS_SAMPLE_RATE): 10]
-    "00"  | [(ANALYTICS_SAMPLE_RATE): 0]
-    "1"   | [(ANALYTICS_SAMPLE_RATE): 1]
-    "1.0" | [(ANALYTICS_SAMPLE_RATE): 1]
-    "0"   | [(ANALYTICS_SAMPLE_RATE): 0]
-    "0.1" | [(ANALYTICS_SAMPLE_RATE): 0.1]
-    "1.1" | [(ANALYTICS_SAMPLE_RATE): 1.1]
-    "-1"  | [(ANALYTICS_SAMPLE_RATE): -1]
-    "str" | [:]
+    00    | 0
+    1     | 1
+    0f    | 0
+    1f    | 1
+    0.1   | 0.1
+    1.1   | 1.1
+    -1    | -1
+    10    | 10
+    "00"  | 0
+    "1"   | 1
+    "1.0" | 1
+    "0"   | 0
+    "0.1" | 0.1
+    "1.1" | 1.1
+    "-1"  | -1
+    "str" | null
   }
 
   def "set priority sampling via tag"() {
@@ -331,55 +322,24 @@ class SpanDecoratorTest extends DDSpecification {
 
   def "DBStatementAsResource should not interact on Mongo queries"() {
     when:
-    span.setResourceName("not-change-me")
-    Tags.COMPONENT.set(span, "java-mongo")
-    Tags.DB_STATEMENT.set(span, something)
+    span.setResourceName("existing")
+    Tags.COMPONENT.set(span, component)
+    Tags.DB_STATEMENT.set(span, statement)
+    span.finish()
 
     then:
-    span.getResourceName() == "not-change-me"
-
-
-    when:
-    span.setResourceName("change-me")
-    Tags.COMPONENT.set(span, "other-contrib")
-    Tags.DB_STATEMENT.set(span, something)
-
-    then:
-    span.getResourceName() == something
+    span.getResourceName() == resource
 
     where:
-    something = "fake-query"
-  }
-
-  def "set 404 as a resource on a 404 issue"() {
-    when:
-    Tags.HTTP_STATUS.set(span, 404)
-
-    then:
-    span.getResourceName() == "404"
-  }
-
-  def "set 5XX status code as an error"() {
-    when:
-    Tags.HTTP_STATUS.set(span, status)
-
-    then:
-    span.isError() == error
-
-    where:
-    status | error
-    400    | false
-    404    | false
-    499    | false
-    500    | true
-    550    | true
-    599    | true
-    600    | false
+    component    | statement    | resource
+    "java-mongo" | "some-query" | "existing"
+    "other"      | "some-query" | "some-query"
   }
 
   def "set error flag when error tag reported"() {
     when:
     Tags.ERROR.set(span, error)
+    span.finish()
 
     then:
     span.isError() == error
@@ -393,6 +353,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "#attribute decorators apply to builder too"() {
     setup:
     def span = tracer.buildSpan("decorator.test").withTag(name, value).start()
+    span.finish()
 
     expect:
     span.context()."$attribute" == value
@@ -407,6 +368,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "decorators apply to builder too"() {
     when:
     def span = tracer.buildSpan("decorator.test").withTag("sn.tag1", "some val").start()
+    span.finish()
 
     then:
     span.serviceName == "some val"
@@ -418,31 +380,15 @@ class SpanDecoratorTest extends DDSpecification {
     span.serviceName == "my-servlet"
 
     when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 404).start()
-
-    then:
-    span.resourceName == "404"
-
-    when:
     span = tracer.buildSpan("decorator.test").withTag("error", "true").start()
+    span.finish()
 
     then:
     span.error
-
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 500).start()
-
-    then:
-    span.error
-
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_URL.key, "http://example.com/path/number123/?param=true").start()
-
-    then:
-    span.resourceName == "/path/?/"
 
     when:
     span = tracer.buildSpan("decorator.test").withTag(Tags.DB_STATEMENT.key, "some-statement").start()
+    span.finish()
 
     then:
     span.resourceName == "some-statement"
@@ -451,7 +397,7 @@ class SpanDecoratorTest extends DDSpecification {
   def "disable decorator via config"() {
     setup:
     ConfigUtils.updateConfig {
-      System.setProperty("dd.trace.${decorator}.enabled", "false")
+      System.setProperty("dd.trace.${decorator}.enabled", "$enabled")
     }
 
     tracer = DDTracer.builder()
@@ -461,11 +407,11 @@ class SpanDecoratorTest extends DDSpecification {
       .build()
 
     when:
-    def span = tracer.buildSpan("some span").withTag(Tags.PEER_SERVICE.key, "peer-service").start()
+    def span = tracer.buildSpan("some span").withTag(DDTags.SERVICE_NAME, "other-service").start()
     span.finish()
 
     then:
-    span.getServiceName() == "some-service"
+    span.getServiceName() == enabled ? "other-service" : "some-service"
 
     cleanup:
     ConfigUtils.updateConfig {
@@ -473,9 +419,11 @@ class SpanDecoratorTest extends DDSpecification {
     }
 
     where:
-    decorator                                          | _
-    PeerServiceDecorator.getSimpleName().toLowerCase() | _
-    PeerServiceDecorator.getSimpleName()               | _
+    decorator                                          | enabled
+    ServiceNameDecorator.getSimpleName().toLowerCase() | true
+    ServiceNameDecorator.getSimpleName()               | true
+    ServiceNameDecorator.getSimpleName().toLowerCase() | false
+    ServiceNameDecorator.getSimpleName()               | false
   }
 
   def "disabling service decorator does not disable split by tags"() {

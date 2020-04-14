@@ -29,7 +29,7 @@ import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeSpan
 
-class AWSClientTest extends AgentTestRunner {
+class AWS0ClientTest extends AgentTestRunner {
 
   private static final CREDENTIALS_PROVIDER_CHAIN = new AWSCredentialsProviderChain(
     new EnvironmentVariableCredentialsProvider(),

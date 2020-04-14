@@ -52,6 +52,12 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
   }
 
   @Override
+  boolean testNotFound() {
+    // Resource name is set to "GET /notFound"
+    false
+  }
+
+  @Override
   void stopServer(HttpServer httpServer) {
     Await.ready(httpServer.close(), TIMEOUT)
   }
@@ -81,9 +87,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
 
         // Finatra doesn't propagate the stack trace or exception to the instrumentation
         // so the normal errorTags() method can't be used
-        if (errorEndpoint) {
-          "$Tags.ERROR" true
-        }
         defaultTags()
       }
     }

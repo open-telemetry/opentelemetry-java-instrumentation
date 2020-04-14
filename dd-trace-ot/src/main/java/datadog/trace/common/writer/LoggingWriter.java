@@ -3,14 +3,17 @@ package datadog.trace.common.writer;
 import static datadog.trace.common.serialization.JsonFormatWriter.TRACE_ADAPTER;
 
 import datadog.opentracing.DDSpan;
+import datadog.trace.common.processor.TraceProcessor;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LoggingWriter implements Writer {
+  private final TraceProcessor processor = new TraceProcessor();
 
   @Override
-  public void write(final List<DDSpan> trace) {
+  public void write(List<DDSpan> trace) {
+    trace = processor.onTraceComplete(trace);
     if (log.isInfoEnabled()) {
       try {
         log.info("write(trace): {}", toString(trace));

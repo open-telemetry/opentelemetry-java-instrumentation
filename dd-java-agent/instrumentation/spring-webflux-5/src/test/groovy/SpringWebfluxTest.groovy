@@ -210,7 +210,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          resourceName "404"
+          resourceName "GET /**"
           operationName "netty.request"
           spanType DDSpanTypes.HTTP_SERVER
           parent()
@@ -328,7 +328,6 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
-            "error" true
             defaultTags()
           }
         }

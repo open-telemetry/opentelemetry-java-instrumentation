@@ -5,6 +5,7 @@ import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_EXTRACT;
 import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT;
 import static java.util.Collections.singletonMap;
 
+import datadog.opentracing.DDSpan;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import datadog.trace.bootstrap.instrumentation.api.AgentPropagation.Getter;
@@ -165,7 +166,11 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public AgentSpan setError(final boolean error) {
-      Tags.ERROR.set(span, error);
+      if (span instanceof DDSpan) {
+        ((DDSpan) span).setError(error);
+      } else {
+        Tags.ERROR.set(span, error);
+      }
       return this;
     }
 
