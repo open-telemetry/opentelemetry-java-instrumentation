@@ -10,7 +10,9 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Servlet3Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final Servlet3Decorator DECORATE = new Servlet3Decorator();
@@ -78,11 +80,11 @@ public class Servlet3Decorator
       final AgentSpan span, final HttpServletRequest request, final ServletContext context) {
     final Object attribute = context.getAttribute("dd.dispatcher-filter");
     if (attribute instanceof Filter) {
-      final Filter filter = (Filter) attribute;
+      request.setAttribute(DD_SPAN_ATTRIBUTE, span);
       try {
-        request.setAttribute(DD_SPAN_ATTRIBUTE, span);
-        filter.doFilter(request, null, null);
+        ((Filter) attribute).doFilter(request, null, null);
       } catch (final IOException | ServletException e) {
+        log.debug("Exception unexpectedly thrown by filter", e);
       }
     }
   }

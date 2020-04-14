@@ -19,6 +19,8 @@ public interface AgentSpan {
 
   AgentSpan getLocalRootSpan();
 
+  boolean isSameTrace(AgentSpan otherSpan);
+
   Context context();
 
   void finish();

@@ -25,7 +25,7 @@ class AppConfig extends WebMvcConfigurerAdapter {
       .defaultContentTypeStrategy(new ContentNegotiationStrategy() {
         @Override
         List<MediaType> resolveMediaTypes(NativeWebRequest webRequest) throws HttpMediaTypeNotAcceptableException {
-          return [MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON]
+          return [MediaType.TEXT_PLAIN]
         }
       })
   }

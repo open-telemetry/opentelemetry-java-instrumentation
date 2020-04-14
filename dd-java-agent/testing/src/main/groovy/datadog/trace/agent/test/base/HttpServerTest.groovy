@@ -140,6 +140,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     final int status
     final String body
     final Boolean errored
+    final boolean hasPathParam
 
     ServerEndpoint(String uri, int status, String body) {
       def uriObj = URI.create(uri)
@@ -149,6 +150,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       this.status = status
       this.body = body
       this.errored = status >= 500
+      this.hasPathParam = body == "123"
     }
 
     String getPath() {
@@ -164,7 +166,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
 
     String resource(String method, URI address, String pathParam) {
-      return status == 404 ? "404" : "$method ${pathParam ? pathParam : resolve(address).path}"
+      return status == 404 ? "404" : "$method ${hasPathParam ? pathParam : resolve(address).path}"
     }
 
     private static final Map<String, ServerEndpoint> PATH_MAP = values().collectEntries { [it.path, it] }

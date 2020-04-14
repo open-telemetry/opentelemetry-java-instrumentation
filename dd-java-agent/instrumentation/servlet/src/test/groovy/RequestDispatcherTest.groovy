@@ -25,6 +25,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     dispatcher.include("")
 
     then:
+    2 * request.getAttribute(DD_SPAN_ATTRIBUTE)
     assertTraces(2) {
       trace(0, 1) {
         basicSpan(it, 0, "forward-child")
@@ -45,6 +46,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
+    1 * request.getAttribute(DD_SPAN_ATTRIBUTE)
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
@@ -97,6 +99,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     def th = thrown(ServletException)
     th == ex
 
+    1 * request.getAttribute(DD_SPAN_ATTRIBUTE)
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, ex)

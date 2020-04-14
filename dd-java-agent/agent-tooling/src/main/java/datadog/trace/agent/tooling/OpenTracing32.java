@@ -199,6 +199,20 @@ public final class OpenTracing32 implements TracerAPI {
     }
 
     @Override
+    public boolean isSameTrace(final AgentSpan otherAgentSpan) {
+      if (otherAgentSpan instanceof OT32Span) {
+        final Span otherSpan = ((OT32Span) otherAgentSpan).span;
+        if (span instanceof DDSpan && otherSpan instanceof DDSpan) {
+          // minor optimization to avoid BigInteger.toString()
+          return ((DDSpan) span).getTraceId().equals(((DDSpan) otherSpan).getTraceId());
+        } else {
+          return span.context().toTraceId().equals(otherSpan.context().toTraceId());
+        }
+      }
+      return false;
+    }
+
+    @Override
     public OT32Context context() {
       final SpanContext context = span.context();
       return new OT32Context(context);

@@ -1,5 +1,6 @@
 package test.filter
 
+import com.google.common.base.Charsets
 import datadog.trace.agent.test.base.HttpServerTest
 import org.apache.catalina.connector.Connector
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -7,7 +8,14 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory
 import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomizer
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpInputMessage
+import org.springframework.http.HttpOutputMessage
 import org.springframework.http.MediaType
+import org.springframework.http.converter.AbstractHttpMessageConverter
+import org.springframework.http.converter.HttpMessageConverter
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.http.converter.HttpMessageNotWritableException
+import org.springframework.util.StreamUtils
 import org.springframework.web.HttpMediaTypeNotAcceptableException
 import org.springframework.web.accept.ContentNegotiationStrategy
 import org.springframework.web.context.request.NativeWebRequest
@@ -42,7 +50,7 @@ class FilteredAppConfig extends WebMvcConfigurerAdapter {
       .defaultContentTypeStrategy(new ContentNegotiationStrategy() {
         @Override
         List<MediaType> resolveMediaTypes(NativeWebRequest webRequest) throws HttpMediaTypeNotAcceptableException {
-          return [MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON]
+          return [MediaType.TEXT_PLAIN]
         }
       })
   }
@@ -60,6 +68,27 @@ class FilteredAppConfig extends WebMvcConfigurerAdapter {
       })
 
     return factory
+  }
+
+  @Bean
+  HttpMessageConverter<Map<String, Object>> createPlainMapMessageConverter() {
+    return new AbstractHttpMessageConverter<Map<String, Object>>(MediaType.TEXT_PLAIN) {
+
+      @Override
+      protected boolean supports(Class<?> clazz) {
+        return Map.isAssignableFrom(clazz)
+      }
+
+      @Override
+      protected Map<String, Object> readInternal(Class<? extends Map<String, Object>> clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+        return null
+      }
+
+      @Override
+      protected void writeInternal(Map<String, Object> stringObjectMap, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+        StreamUtils.copy(stringObjectMap.get("message"), Charsets.UTF_8, outputMessage.getBody())
+      }
+    }
   }
 
   @Bean

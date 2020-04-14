@@ -96,6 +96,21 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
         }
         it.remove(renderSpan)
       }
+      def responseSpan = it.find {
+        it.operationName == "servlet.response"
+      }
+      if (responseSpan) {
+        SpanAssert.assertSpan(responseSpan) {
+          operationName "servlet.response"
+          resourceName { it == "HttpServletResponse.sendRedirect" || it == "HttpServletResponse.sendError" }
+          errored false
+          tags {
+            "$Tags.COMPONENT" "java-web-servlet-response"
+            defaultTags()
+          }
+        }
+        it.remove(responseSpan)
+      }
     }
 
     super.cleanAndAssertTraces(size, spec)

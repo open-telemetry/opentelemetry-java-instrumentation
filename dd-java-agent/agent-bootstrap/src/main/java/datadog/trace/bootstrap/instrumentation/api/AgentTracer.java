@@ -183,6 +183,12 @@ public class AgentTracer {
     }
 
     @Override
+    public boolean isSameTrace(final AgentSpan otherSpan) {
+      // Not sure if this is the best idea...
+      return otherSpan instanceof NoopAgentSpan;
+    }
+
+    @Override
     public Context context() {
       return NoopContext.INSTANCE;
     }
