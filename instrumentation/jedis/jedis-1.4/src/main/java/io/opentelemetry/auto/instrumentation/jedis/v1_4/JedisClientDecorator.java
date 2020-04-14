@@ -18,9 +18,9 @@ package io.opentelemetry.auto.instrumentation.jedis.v1_4;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.trace.Tracer;
-import redis.clients.jedis.Protocol;
+import redis.clients.jedis.Connection;
 
-public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Command> {
+public class JedisClientDecorator extends DatabaseClientDecorator<Connection> {
   public static final JedisClientDecorator DECORATE = new JedisClientDecorator();
 
   public static final Tracer TRACER =
@@ -37,12 +37,17 @@ public class JedisClientDecorator extends DatabaseClientDecorator<Protocol.Comma
   }
 
   @Override
-  protected String dbUser(final Protocol.Command session) {
+  protected String dbUser(final Connection connection) {
     return null;
   }
 
   @Override
-  protected String dbInstance(final Protocol.Command session) {
+  protected String dbInstance(final Connection connection) {
     return null;
+  }
+
+  @Override
+  protected String dbUrl(final Connection connection) {
+    return connection.getHost() + ":" + connection.getPort();
   }
 }

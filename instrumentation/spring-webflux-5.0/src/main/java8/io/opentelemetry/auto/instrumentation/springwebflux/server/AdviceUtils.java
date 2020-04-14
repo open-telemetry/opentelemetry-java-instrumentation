@@ -20,7 +20,6 @@ import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringW
 import io.opentelemetry.auto.instrumentation.reactor.ReactorCoreAdviceUtils;
 import io.opentelemetry.trace.Span;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -55,11 +54,5 @@ public class AdviceUtils {
       final ServerRequest serverRequest, final Throwable throwable) {
     ReactorCoreAdviceUtils.finishSpanIfPresent(
         (Span) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
-  }
-
-  public static void finishSpanIfPresent(
-      final ClientRequest clientRequest, final Throwable throwable) {
-    ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (Span) clientRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 }

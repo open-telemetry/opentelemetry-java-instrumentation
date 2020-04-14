@@ -17,7 +17,6 @@ package io.opentelemetry.auto.tooling.muzzle;
 
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.WeakHashMap;
 import net.bytebuddy.build.Plugin;
@@ -69,7 +68,7 @@ public class MuzzleGradlePlugin implements Plugin {
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() {}
 
   /** Compile-time Optimization used by gradle buildscripts. */
   public static class NoOp implements Plugin {
@@ -87,6 +86,6 @@ public class MuzzleGradlePlugin implements Plugin {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 }

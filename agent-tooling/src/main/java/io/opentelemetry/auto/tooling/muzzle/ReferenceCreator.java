@@ -49,23 +49,16 @@ public class ReferenceCreator extends ClassVisitor {
    */
   private static final String REFERENCE_CREATION_PACKAGE = "io.opentelemetry.auto.instrumentation.";
 
-  public static Map<String, Reference> createReferencesFrom(
-      final String entryPointClassName, final ClassLoader loader) {
-    return ReferenceCreator.createReferencesFrom(entryPointClassName, loader, true);
-  }
-
   /**
    * Generate all references reachable from a given class.
    *
    * @param entryPointClassName Starting point for generating references.
    * @param loader Classloader used to read class bytes.
-   * @param startFromMethodBodies if true only create refs from method bodies.
    * @return Map of [referenceClassName -> Reference]
    * @throws IllegalStateException if class is not found or unable to be loaded.
    */
-  private static Map<String, Reference> createReferencesFrom(
-      final String entryPointClassName, final ClassLoader loader, boolean startFromMethodBodies)
-      throws IllegalStateException {
+  public static Map<String, Reference> createReferencesFrom(
+      final String entryPointClassName, final ClassLoader loader) {
     final Set<String> visitedSources = new HashSet<>();
     final Map<String, Reference> references = new HashMap<>();
 
@@ -77,9 +70,8 @@ public class ReferenceCreator extends ClassVisitor {
       visitedSources.add(className);
       final InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
       try {
-        final ReferenceCreator cv = new ReferenceCreator(null, startFromMethodBodies);
+        final ReferenceCreator cv = new ReferenceCreator();
         // only start from method bodies on the first pass
-        startFromMethodBodies = false;
         final ClassReader reader = new ClassReader(in);
         reader.accept(cv, ClassReader.SKIP_FRAMES);
 
@@ -185,12 +177,9 @@ public class ReferenceCreator extends ClassVisitor {
   private final Map<String, Reference> references = new HashMap<>();
   private String refSourceClassName;
   private Type refSourceType;
-  private final boolean createFromMethodBodiesOnly;
 
-  private ReferenceCreator(
-      final ClassVisitor classVisitor, final boolean createFromMethodBodiesOnly) {
-    super(Opcodes.ASM7, classVisitor);
-    this.createFromMethodBodiesOnly = createFromMethodBodiesOnly;
+  private ReferenceCreator() {
+    super(Opcodes.ASM7);
   }
 
   public Map<String, Reference> getReferences() {

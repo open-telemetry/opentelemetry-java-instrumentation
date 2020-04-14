@@ -58,8 +58,7 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".ReactorCoreAdviceUtils",
-      packageName + ".ReactorCoreAdviceUtils$TracingSubscriber",
-      packageName + ".ReactorCoreDecorator"
+      packageName + ".ReactorCoreAdviceUtils$TracingSubscriber"
     };
   }
 

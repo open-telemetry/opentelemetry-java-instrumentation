@@ -35,16 +35,15 @@ public class State {
 
   private State() {}
 
-  public boolean setParentSpan(final Span parentSpan) {
+  public void setParentSpan(final Span parentSpan) {
     final boolean result = parentSpanRef.compareAndSet(null, parentSpan);
-    if (!result) {
+    if (!result && parentSpanRef.get() != parentSpan) {
       log.debug(
           "Failed to set parent span because another parent span is already set {}: new: {}, old: {}",
           this,
           parentSpan,
           parentSpanRef.get());
     }
-    return result;
   }
 
   public void clearParentSpan() {

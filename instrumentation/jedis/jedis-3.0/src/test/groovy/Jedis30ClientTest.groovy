@@ -64,6 +64,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_URL" "localhost:$port"
             "$Tags.DB_STATEMENT" "SET"
           }
         }
@@ -86,6 +87,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_URL" "localhost:$port"
             "$Tags.DB_STATEMENT" "SET"
           }
         }
@@ -96,6 +98,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_URL" "localhost:$port"
             "$Tags.DB_STATEMENT" "GET"
           }
         }
@@ -118,6 +121,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_URL" "localhost:$port"
             "$Tags.DB_STATEMENT" "SET"
           }
         }
@@ -128,6 +132,7 @@ class Jedis30ClientTest extends AgentTestRunner {
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
+            "$Tags.DB_URL" "localhost:$port"
             "$Tags.DB_STATEMENT" "RANDOMKEY"
           }
         }

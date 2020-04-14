@@ -21,7 +21,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 public class FinatraDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final FinatraDecorator DECORATE = new FinatraDecorator();
@@ -35,7 +34,7 @@ public class FinatraDecorator extends HttpServerDecorator<Request, Request, Resp
   }
 
   @Override
-  protected URI url(final Request request) throws URISyntaxException {
+  protected URI url(final Request request) {
     return URI.create(request.uri());
   }
 

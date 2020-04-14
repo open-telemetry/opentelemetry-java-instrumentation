@@ -66,7 +66,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
     final String configString = Config.get().getTraceAnnotations();
     if (configString == null) {
       additionalTraceAnnotations =
-          Collections.unmodifiableSet(Sets.<String>newHashSet(DEFAULT_ANNOTATIONS));
+          Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));
     } else if (configString.trim().isEmpty()) {
       additionalTraceAnnotations = Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
