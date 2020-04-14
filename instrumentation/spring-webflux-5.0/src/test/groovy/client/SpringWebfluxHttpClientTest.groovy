@@ -15,22 +15,13 @@
  */
 package client
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Timeout
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT
-
-// FIXME this instrumentation is not currently reliable and so is currently disabled
-// see DefaultWebClientInstrumentation and DefaultWebClientAdvice
-@Ignore
 @Timeout(5)
 class SpringWebfluxHttpClientTest extends HttpClientTest {
 
@@ -51,43 +42,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
     response.statusCode().value()
   }
 
-  @Override
-  // parent spanRef must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
-    super.clientSpan(trace, index, parentSpan, method, tagQueryString, uri, status, exception)
-    if (!exception) {
-      trace.span(index + 1) {
-        childOf(trace.span(index))
-        operationName "netty.client.request"
-        spanKind CLIENT
-        errored exception != null
-        tags {
-          "$MoreTags.NET_PEER_NAME" "localhost"
-          "$MoreTags.NET_PEER_PORT" uri.port
-          "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-          "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
-          "$Tags.HTTP_METHOD" method
-          if (status) {
-            "$Tags.HTTP_STATUS" status
-          }
-          if (tagQueryString) {
-            "$MoreTags.HTTP_QUERY" uri.query
-            "$MoreTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
-          }
-          if (exception) {
-            errorTags(exception.class, exception.message)
-          }
-        }
-      }
-    }
-  }
-
-  @Override
-  int extraClientSpans() {
-    // has netty-client span inside of spring-webflux-client
-    return 1
-  }
-
   boolean testRedirects() {
     false
   }
@@ -97,7 +51,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
   }
 
   boolean testRemoteConnection() {
-    // FIXME: figure out how to configure timeouts.
     false
   }
 }
