@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicReference
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.trace.Span.Kind.CLIENT
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class AWSClientTest extends AgentTestRunner {
 
@@ -151,7 +152,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "$service.$operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored false
           parent()
           tags {
@@ -238,7 +239,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "$service.$operation"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored true
           parent()
           tags {
@@ -297,7 +298,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "S3.HeadBucket"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored true
           parent()
           tags {
@@ -339,7 +340,7 @@ class AWSClientTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "S3.GetObject"
-          spanKind CLIENT
+          spanKind INTERNAL
           errored true
           parent()
           tags {
