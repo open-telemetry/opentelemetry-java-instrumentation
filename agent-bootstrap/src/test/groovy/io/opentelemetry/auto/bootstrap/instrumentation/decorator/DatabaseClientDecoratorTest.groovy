@@ -24,7 +24,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
   def "test afterStart"() {
     setup:
-    def decorator = newDecorator((String) serviceName)
+    def decorator = newDecorator()
 
     when:
     decorator.afterStart(span)
@@ -103,13 +103,8 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
   }
 
   @Override
-  def newDecorator(String serviceName = "test-service") {
+  def newDecorator() {
     return new DatabaseClientDecorator<Map>() {
-
-      @Override
-      protected String service() {
-        return serviceName
-      }
 
       @Override
       protected String dbType() {

@@ -31,11 +31,6 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.elasticsearch");
 
   @Override
-  protected String service() {
-    return "elasticsearch";
-  }
-
-  @Override
   protected String dbType() {
     return "elasticsearch";
   }

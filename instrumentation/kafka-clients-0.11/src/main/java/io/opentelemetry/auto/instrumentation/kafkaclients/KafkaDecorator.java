@@ -28,11 +28,6 @@ public class KafkaDecorator extends ClientDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.kafka-clients-0.11");
 
-  @Override
-  protected String service() {
-    return "kafka";
-  }
-
   public String spanNameOnConsume(final ConsumerRecord record) {
     final String topic = record.topic();
     if (topic != null) {

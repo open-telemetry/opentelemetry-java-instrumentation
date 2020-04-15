@@ -29,11 +29,6 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.lettuce-5.0");
 
   @Override
-  protected String service() {
-    return "redis";
-  }
-
-  @Override
   protected String dbType() {
     return "redis";
   }
