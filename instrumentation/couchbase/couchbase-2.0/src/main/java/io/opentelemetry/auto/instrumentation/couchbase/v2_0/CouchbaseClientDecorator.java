@@ -21,11 +21,6 @@ class CouchbaseClientDecorator extends DatabaseClientDecorator {
   public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
 
   @Override
-  protected String service() {
-    return "couchbase";
-  }
-
-  @Override
   protected String dbType() {
     return "couchbase";
   }

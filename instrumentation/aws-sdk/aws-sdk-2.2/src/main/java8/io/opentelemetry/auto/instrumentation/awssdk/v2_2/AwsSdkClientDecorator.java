@@ -87,11 +87,6 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   @Override
-  protected String service() {
-    return COMPONENT_NAME;
-  }
-
-  @Override
   protected String method(final SdkHttpRequest request) {
     return request.method().name();
   }

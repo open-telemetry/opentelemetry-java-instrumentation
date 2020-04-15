@@ -51,11 +51,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   def newDecorator(String serviceName) {
     return new ClientDecorator() {
-
-      @Override
-      protected String service() {
-        return serviceName
-      }
     }
   }
 }

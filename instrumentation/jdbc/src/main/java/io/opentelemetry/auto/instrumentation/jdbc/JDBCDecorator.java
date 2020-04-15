@@ -36,11 +36,6 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   private static final String DB_QUERY = "DB Query";
 
   @Override
-  protected String service() {
-    return "jdbc"; // Overridden by onConnection
-  }
-
-  @Override
   protected String dbType() {
     return "jdbc";
   }

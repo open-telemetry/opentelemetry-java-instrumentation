@@ -24,9 +24,4 @@ public class RmiClientDecorator extends ClientDecorator {
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rmi");
-
-  @Override
-  protected String service() {
-    return null;
-  }
 }

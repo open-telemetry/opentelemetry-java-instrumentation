@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.auto.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
@@ -49,8 +48,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span =
-        TRACER.spanBuilder(DECORATE.spanName(executionAttributes)).setSpanKind(CLIENT).startSpan();
+    final Span span = TRACER.spanBuilder(DECORATE.spanName(executionAttributes)).startSpan();
     try (final Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);

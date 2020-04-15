@@ -25,11 +25,6 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public static final CassandraClientDecorator DECORATE = new CassandraClientDecorator();
 
   @Override
-  protected String service() {
-    return "cassandra";
-  }
-
-  @Override
   protected String dbType() {
     return "cassandra";
   }

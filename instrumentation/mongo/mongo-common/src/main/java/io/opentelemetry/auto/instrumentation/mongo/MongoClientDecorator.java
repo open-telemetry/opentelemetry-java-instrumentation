@@ -40,11 +40,6 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.mongo");
 
   @Override
-  protected String service() {
-    return "mongo";
-  }
-
-  @Override
   protected String dbType() {
     return "mongo";
   }
