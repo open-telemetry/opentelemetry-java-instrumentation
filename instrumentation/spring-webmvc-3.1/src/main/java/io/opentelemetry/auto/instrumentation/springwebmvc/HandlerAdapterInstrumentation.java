@@ -16,8 +16,8 @@
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebHttpServerDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
@@ -60,7 +60,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".SpringWebHttpServerDecorator"};
+    return new String[] {packageName + ".SpringWebMvcDecorator"};
   }
 
   @Override
