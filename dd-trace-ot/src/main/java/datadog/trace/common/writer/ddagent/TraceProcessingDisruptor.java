@@ -3,7 +3,6 @@ package datadog.trace.common.writer.ddagent;
 import com.lmax.disruptor.EventHandler;
 import datadog.common.exec.DaemonThreadFactory;
 import datadog.opentracing.DDSpan;
-import datadog.opentracing.DDSpanContext;
 import datadog.trace.common.processor.TraceProcessor;
 import datadog.trace.common.writer.DDAgentWriter;
 import java.util.List;
@@ -64,12 +63,7 @@ public class TraceProcessingDisruptor extends AbstractDisruptor<List<DDSpan>> {
         final DisruptorEvent<List<DDSpan>> event, final long sequence, final boolean endOfBatch) {
       try {
         if (event.data != null) {
-          if (1 < event.representativeCount && !event.data.isEmpty()) {
-            // attempt to have agent scale the metrics properly
-            ((DDSpan) event.data.get(0).getLocalRootSpan())
-                .context()
-                .setMetric(DDSpanContext.SAMPLE_RATE_KEY, 1d / event.representativeCount);
-          }
+          // TODO populate `_sample_rate` metric in a way that accounts for lost/dropped traces
           try {
             event.data = processor.onTraceComplete(event.data);
             final byte[] serializedTrace = api.serializeTrace(event.data);
