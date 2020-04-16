@@ -90,7 +90,7 @@ class SpringTemplateJMS2Test extends AgentTestRunner {
     server.stop()
   }
 
-  def "sending a message to #jmsResourceName generates spans"() {
+  def "sending a message to #expectedSpanName generates spans"() {
     setup:
     template.convertAndSend(destination, messageText)
     TextMessage receivedMessage = template.receive(destination)

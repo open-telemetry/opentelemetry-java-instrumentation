@@ -33,51 +33,51 @@ import javax.ws.rs.Path;
 public class JaxRsAnnotationsDecorator extends BaseDecorator {
   public static final JaxRsAnnotationsDecorator DECORATE = new JaxRsAnnotationsDecorator();
 
-  private final WeakMap<Class<?>, Map<Method, String>> resourceNames = newWeakMap();
+  private final WeakMap<Class<?>, Map<Method, String>> spanNames = newWeakMap();
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-1.0");
 
   public void onControllerStart(
       final Span span, final Span parent, final Class target, final Method method) {
-    final String resourceName = getPathResourceName(target, method);
-    updateParent(parent, resourceName);
+    final String spanName = getPathSpanName(target, method);
+    updateParent(parent, spanName);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     final boolean isRootScope = !parent.getContext().isValid();
-    if (isRootScope && !resourceName.isEmpty()) {
-      span.updateName(resourceName);
+    if (isRootScope && !spanName.isEmpty()) {
+      span.updateName(spanName);
     } else {
       span.updateName(DECORATE.spanNameForClass(target) + "." + method.getName());
     }
   }
 
-  private void updateParent(final Span span, final String resourceName) {
+  private void updateParent(final Span span, final String spanName) {
     if (span == null) {
       return;
     }
-    if (!resourceName.isEmpty()) {
-      span.updateName(resourceName);
+    if (!spanName.isEmpty()) {
+      span.updateName(spanName);
     }
   }
 
   /**
-   * Returns the resource name given a JaxRS annotated method. Results are cached so this method can
-   * be called multiple times without significantly impacting performance.
+   * Returns the span name given a JaxRS annotated method. Results are cached so this method can be
+   * called multiple times without significantly impacting performance.
    *
    * @return The result can be an empty string but will never be {@code null}.
    */
-  private String getPathResourceName(final Class<?> target, final Method method) {
-    Map<Method, String> classMap = resourceNames.get(target);
+  private String getPathSpanName(final Class<?> target, final Method method) {
+    Map<Method, String> classMap = spanNames.get(target);
     if (classMap == null) {
-      resourceNames.putIfAbsent(target, new ConcurrentHashMap<Method, String>());
-      classMap = resourceNames.get(target);
+      spanNames.putIfAbsent(target, new ConcurrentHashMap<Method, String>());
+      classMap = spanNames.get(target);
       // classMap should not be null at this point because we have a
       // strong reference to target and don't manually clear the map.
     }
 
-    String resourceName = classMap.get(method);
-    if (resourceName == null) {
+    String spanName = classMap.get(method);
+    if (spanName == null) {
       String httpMethod = null;
       Path methodPath = null;
       final Path classPath = findClassPath(target);
@@ -102,11 +102,11 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
           }
         }
       }
-      resourceName = buildResourceName(httpMethod, classPath, methodPath);
-      classMap.put(method, resourceName);
+      spanName = buildSpanName(httpMethod, classPath, methodPath);
+      classMap.put(method, spanName);
     }
 
-    return resourceName;
+    return spanName;
   }
 
   private String locateHttpMethod(final Method method) {
@@ -161,20 +161,20 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return null;
   }
 
-  private String buildResourceName(
+  private String buildSpanName(
       final String httpMethod, final Path classPath, final Path methodPath) {
-    final String resourceName;
-    final StringBuilder resourceNameBuilder = new StringBuilder();
+    final String spanName;
+    final StringBuilder spanNameBuilder = new StringBuilder();
     if (httpMethod != null) {
-      resourceNameBuilder.append(httpMethod);
-      resourceNameBuilder.append(" ");
+      spanNameBuilder.append(httpMethod);
+      spanNameBuilder.append(" ");
     }
     boolean skipSlash = false;
     if (classPath != null) {
       if (!classPath.value().startsWith("/")) {
-        resourceNameBuilder.append("/");
+        spanNameBuilder.append("/");
       }
-      resourceNameBuilder.append(classPath.value());
+      spanNameBuilder.append(classPath.value());
       skipSlash = classPath.value().endsWith("/");
     }
 
@@ -185,12 +185,12 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
           path = path.length() == 1 ? "" : path.substring(1);
         }
       } else if (!path.startsWith("/")) {
-        resourceNameBuilder.append("/");
+        spanNameBuilder.append("/");
       }
-      resourceNameBuilder.append(path);
+      spanNameBuilder.append(path);
     }
 
-    resourceName = resourceNameBuilder.toString().trim();
-    return resourceName;
+    spanName = spanNameBuilder.toString().trim();
+    return spanName;
   }
 }

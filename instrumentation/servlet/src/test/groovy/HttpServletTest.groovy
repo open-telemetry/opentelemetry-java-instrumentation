@@ -61,7 +61,7 @@ class HttpServletTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "${expectedResourceName}.doGet"
+          operationName "${expectedSpanName}.doGet"
           childOf span(1)
           tags {
           }
@@ -76,7 +76,7 @@ class HttpServletTest extends AgentTestRunner {
       }
     }]
 
-    expectedResourceName = servlet.class.anonymousClass ? servlet.class.name : servlet.class.simpleName
+    expectedSpanName = servlet.class.anonymousClass ? servlet.class.name : servlet.class.simpleName
   }
 
   def "test service exception"() {
