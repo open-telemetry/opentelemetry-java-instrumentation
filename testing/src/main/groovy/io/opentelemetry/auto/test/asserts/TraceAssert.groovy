@@ -18,7 +18,7 @@ package io.opentelemetry.auto.test.asserts
 import com.google.common.base.Stopwatch
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.auto.test.ListWriter
+import io.opentelemetry.auto.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.TraceId
 
@@ -35,7 +35,7 @@ class TraceAssert {
     this.spans = spans
   }
 
-  static void assertTrace(ListWriter writer, TraceId traceId, int expectedSize,
+  static void assertTrace(InMemoryExporter writer, TraceId traceId, int expectedSize,
                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TraceAssert'])
                           @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def spans = getTrace(writer, traceId)
@@ -89,7 +89,7 @@ class TraceAssert {
     assert assertedIndexes.size() == spans.size()
   }
 
-  private static List<SpanData> getTrace(ListWriter writer, TraceId traceId) {
+  private static List<SpanData> getTrace(InMemoryExporter writer, TraceId traceId) {
     for (List<SpanData> trace : writer.getTraces()) {
       if (trace[0].traceId == traceId) {
         return trace

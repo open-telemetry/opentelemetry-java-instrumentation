@@ -18,7 +18,7 @@ package io.opentelemetry.auto.test.asserts
 import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.auto.test.ListWriter
+import io.opentelemetry.auto.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
@@ -27,25 +27,25 @@ import org.spockframework.runtime.model.TextPosition
 
 import static TraceAssert.assertTrace
 
-class ListWriterAssert {
+class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
-  private final ListWriter writer
+  private final InMemoryExporter writer
 
   private final Set<Integer> assertedIndexes = new HashSet<>()
 
-  private ListWriterAssert(List<List<SpanData>> traces, ListWriter writer) {
+  private InMemoryExporterAssert(List<List<SpanData>> traces, InMemoryExporter writer) {
     this.traces = traces
     this.writer = writer
   }
 
-  static void assertTraces(ListWriter writer, int expectedSize,
+  static void assertTraces(InMemoryExporter writer, int expectedSize,
                            final Predicate<List<SpanData>> excludes,
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.ListWriterAssert'])
-                           @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+                           @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
       def traces = writer.waitForTraces(expectedSize, excludes)
       assert traces.size() == expectedSize
-      def asserter = new ListWriterAssert(traces, writer)
+      def asserter = new InMemoryExporterAssert(traces, writer)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter
       clone.resolveStrategy = Closure.DELEGATE_FIRST
