@@ -71,7 +71,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName parentResourceName != null ? parentResourceName : "test.span"
+          operationName parentSpanName != null ? parentSpanName : "test.span"
           tags {
           }
         }
@@ -85,7 +85,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     }
 
     where:
-    resource           | abortNormal | abortPrematch | parentResourceName         | controllerName                 | expectedResponse
+    resource           | abortNormal | abortPrematch | parentSpanName             | controllerName                 | expectedResponse
     "/test/hello/bob"  | false       | false         | "POST /test/hello/{name}"  | "Test1.hello"                  | "Test1 bob!"
     "/test2/hello/bob" | false       | false         | "POST /test2/hello/{name}" | "Test2.hello"                  | "Test2 bob!"
     "/test3/hi/bob"    | false       | false         | "POST /test3/hi/{name}"    | "Test3.hello"                  | "Test3 bob!"

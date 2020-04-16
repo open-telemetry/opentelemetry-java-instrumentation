@@ -43,7 +43,7 @@ class JerseyTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName expectedResourceName
+          operationName expectedSpanName
           tags {
           }
         }
@@ -58,7 +58,7 @@ class JerseyTest extends AgentTestRunner {
     }
 
     where:
-    resource           | expectedResourceName       | controllerName | expectedResponse
+    resource           | expectedSpanName           | controllerName | expectedResponse
     "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
     "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
     "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"

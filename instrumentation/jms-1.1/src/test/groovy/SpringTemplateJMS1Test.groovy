@@ -58,7 +58,7 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     broker.stop()
   }
 
-  def "sending a message to #jmsResourceName generates spans"() {
+  def "sending a message to #expectedSpanName generates spans"() {
     setup:
     template.convertAndSend(destination, messageText)
     TextMessage receivedMessage = template.receive(destination)

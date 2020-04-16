@@ -53,7 +53,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
 
   def "span named '#name' from annotations on class when is not root span"() {
     setup:
-    def startingCacheSize = resourceNames.size()
+    def startingCacheSize = spanNames.size()
     runUnderTrace("test") {
       obj.call()
     }
@@ -75,8 +75,8 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
         }
       }
     }
-    resourceNames.size() == startingCacheSize + 1
-    resourceNames.get(obj.class).size() == 1
+    spanNames.size() == startingCacheSize + 1
+    spanNames.get(obj.class).size() == 1
 
     when: "multiple calls to the same method"
     runUnderTrace("test") {
@@ -85,8 +85,8 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
       }
     }
     then: "doesn't increase the cache size"
-    resourceNames.size() == startingCacheSize + 1
-    resourceNames.get(obj.class).size() == 1
+    spanNames.size() == startingCacheSize + 1
+    spanNames.get(obj.class).size() == 1
 
     where:
     name                 | obj
@@ -143,7 +143,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
 
     // JavaInterfaces classes are loaded on a different classloader, so we need to find the right cache instance.
     decorator = obj.class.classLoader.loadClass(JaxRsAnnotationsDecorator.name).getField("DECORATE").get(null)
-    resourceNames = (WeakMap<Class, Map<Method, String>>) decorator.resourceNames
+    spanNames = (WeakMap<Class, Map<Method, String>>) decorator.spanNames
   }
 
   def "no annotations has no effect"() {
