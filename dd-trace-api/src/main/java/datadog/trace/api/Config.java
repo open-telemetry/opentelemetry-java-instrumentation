@@ -1205,7 +1205,7 @@ public class Config {
       final Map<String, String> map, final String propName) {
     final String val = getSettingFromEnvironment(propName, null);
     if (val != null) {
-      return !val.equals(map.put(propertyNameToSystemPropertyName(propName), val));
+      return !val.equals(map.put(propName, val));
     }
     return false;
   }

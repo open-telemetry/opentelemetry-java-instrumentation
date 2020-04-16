@@ -1246,13 +1246,13 @@ class ConfigTest extends DDSpecification {
     setup:
     environmentVariables.set(DD_ENV_ENV, "test_env")
     environmentVariables.set(DD_VERSION_ENV, "1.2.3")
-    environmentVariables.set(DD_TAGS_ENV, "dd.env:production   ,    dd.version:3.2.1")
+    environmentVariables.set(DD_TAGS_ENV, "env:production   ,    version:3.2.1")
 
     when:
     Config config = new Config()
 
     then:
-    config.mergedSpanTags == ["dd.env": "test_env", "dd.version": "1.2.3"]
+    config.mergedSpanTags == ["env": "test_env", "version": "1.2.3"]
   }
 
   def "propertyNameToEnvironmentVariableName unit test"() {
