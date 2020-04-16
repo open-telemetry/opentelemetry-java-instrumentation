@@ -39,5 +39,11 @@ public interface Resource {
     public String hello(@PathParam("name") final String name) {
       return "Test3 " + name + "!";
     }
+
+    @POST
+    @Path("/nested")
+    public String nested() {
+      return hello("nested");
+    }
   }
 }

@@ -234,6 +234,14 @@ public final class OpenTracing32 implements TracerAPI {
       span.setOperationName(spanName);
     }
 
+    @Override
+    public boolean hasResourceName() {
+      if (span instanceof DDSpan) {
+        return ((DDSpan) span).context().hasResourceName();
+      }
+      return false;
+    }
+
     private Span getSpan() {
       return span;
     }

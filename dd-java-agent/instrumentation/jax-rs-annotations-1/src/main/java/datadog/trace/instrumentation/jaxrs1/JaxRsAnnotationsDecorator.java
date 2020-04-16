@@ -36,10 +36,11 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return "jax-rs-controller";
   }
 
-  public void onControllerStart(
+  public void onJaxRsSpan(
       final AgentSpan span, final AgentSpan parent, final Class<?> target, final Method method) {
+
     final String resourceName = getPathResourceName(target, method);
-    updateParent(parent, resourceName);
+    updateRootSpan(parent, resourceName);
 
     span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
 
@@ -48,19 +49,24 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (isRootScope && !resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
     } else {
-      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForClass(target) + "." + method.getName());
+      span.setTag(
+          DDTags.RESOURCE_NAME,
+          DECORATE.spanNameForClass(target) + (method == null ? "" : "." + method.getName()));
     }
   }
 
-  private void updateParent(AgentSpan span, final String resourceName) {
+  private void updateRootSpan(AgentSpan span, final String resourceName) {
     if (span == null) {
       return;
     }
     span = span.getLocalRootSpan();
-    span.setTag(Tags.COMPONENT, "jax-rs");
 
-    if (!resourceName.isEmpty()) {
-      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    if (!span.hasResourceName()) {
+      span.setTag(Tags.COMPONENT, "jax-rs");
+
+      if (!resourceName.isEmpty()) {
+        span.setTag(DDTags.RESOURCE_NAME, resourceName);
+      }
     }
   }
 
@@ -72,6 +78,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
    */
   private String getPathResourceName(final Class<?> target, final Method method) {
     Map<Method, String> classMap = resourceNames.get(target);
+
     if (classMap == null) {
       resourceNames.putIfAbsent(target, new ConcurrentHashMap<Method, String>());
       classMap = resourceNames.get(target);

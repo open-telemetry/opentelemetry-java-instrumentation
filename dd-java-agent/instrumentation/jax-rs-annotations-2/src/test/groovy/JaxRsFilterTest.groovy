@@ -96,6 +96,62 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     "/test3/hi/bob"    | false       | true          | "test.span"                | "PrematchRequestFilter.filter" | "Aborted Prematch"
   }
 
+  def "test nested call"() {
+    given:
+    simpleRequestFilter.abort = false
+    prematchRequestFilter.abort = false
+
+    when:
+    def responseText
+    def responseStatus
+
+    // start a trace because the test doesn't go through any servlet or other instrumentation.
+    runUnderTrace("test.span") {
+      (responseText, responseStatus) = makeRequest(resource)
+    }
+
+    then:
+    responseStatus == Response.Status.OK.statusCode
+    responseText == expectedResponse
+
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          operationName "test.span"
+          resourceName parentResourceName
+          tags {
+            "$Tags.COMPONENT" "jax-rs"
+            defaultTags()
+          }
+        }
+        span(1) {
+          childOf span(0)
+          operationName "jax-rs.request"
+          resourceName controller1Name
+          spanType DDSpanTypes.HTTP_SERVER
+          tags {
+            "$Tags.COMPONENT" "jax-rs-controller"
+            defaultTags()
+          }
+        }
+        span(2) {
+          childOf span(1)
+          operationName "jax-rs.request"
+          resourceName controller2Name
+          spanType DDSpanTypes.HTTP_SERVER
+          tags {
+            "$Tags.COMPONENT" "jax-rs-controller"
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    resource        | parentResourceName   | controller1Name | controller2Name | expectedResponse
+    "/test3/nested" | "POST /test3/nested" | "Test3.nested"  | "Test3.hello"   | "Test3 nested!"
+  }
+
   @Provider
   class SimpleRequestFilter implements ContainerRequestFilter {
     boolean abort = false

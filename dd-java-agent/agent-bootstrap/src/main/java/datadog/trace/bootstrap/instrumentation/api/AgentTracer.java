@@ -203,6 +203,11 @@ public class AgentTracer {
 
     @Override
     public void setSpanName(final String spanName) {}
+
+    @Override
+    public boolean hasResourceName() {
+      return false;
+    }
   }
 
   static class NoopAgentScope implements AgentScope {

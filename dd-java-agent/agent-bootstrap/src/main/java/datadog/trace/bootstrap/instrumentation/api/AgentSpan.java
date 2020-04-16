@@ -29,5 +29,7 @@ public interface AgentSpan {
 
   void setSpanName(String spanName);
 
+  boolean hasResourceName();
+
   interface Context {}
 }
