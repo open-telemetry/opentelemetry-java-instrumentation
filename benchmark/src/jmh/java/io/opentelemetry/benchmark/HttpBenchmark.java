@@ -5,7 +5,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.openjdk.jmh.annotations.*;
 
-
 public class HttpBenchmark {
 
   @State(Scope.Benchmark)
@@ -45,10 +44,10 @@ public class HttpBenchmark {
   }
 
   @Fork(
-    jvmArgsAppend = {
-      "-javaagent:/path/to/opentelemetry-auto-instr-java/java-agent/build/libs/opentelemetry-auto.jar",
-      "-javaagent:/path/to/opentelemetry-auto-instr-java/java-agent/build/libs/opentelemetry-auto.jar",
-      "-Dota.exporter.jar=/path/to/opentelemetry-auto-instr-java/auto-exporters/logging/build/libs/opentelemetry-auto-exporters-logging-or-other-exporter.jar"
-    })
+      jvmArgsAppend = {
+        "-javaagent:/path/to/opentelemetry-auto-instr-java/java-agent/build/libs/opentelemetry-auto.jar",
+        "-javaagent:/path/to/opentelemetry-auto-instr-java/java-agent/build/libs/opentelemetry-auto.jar",
+        "-Dota.exporter.jar=/path/to/opentelemetry-auto-instr-java/auto-exporters/logging/build/libs/opentelemetry-auto-exporters-logging-or-other-exporter.jar"
+      })
   public static class WithAgent extends ClassRetransformingBenchmark {}
 }
