@@ -25,7 +25,7 @@ jobs:
 
       - run:
           name: Build Project
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M" ./gradlew clean :opentelemetry-auto:shadowJar compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M" ./gradlew clean compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava :opentelemetry-auto:shadowJar :auto-exporters:opentelemetry-auto-exporters-jaeger:shadowJar :auto-exporters:opentelemetry-auto-exporters-otlp:shadowJar :auto-exporters:opentelemetry-auto-exporters-logging:shadowJar --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
       - run:
           name: Collect Libs

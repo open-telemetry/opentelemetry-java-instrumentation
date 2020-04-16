@@ -59,7 +59,7 @@ public final class TracingHandler implements Handler {
             response -> {
               try (final Scope ignored = currentContextWith(ratpackSpan)) {
                 if (nettySpan != null) {
-                  // Rename the netty span resource name with the ratpack route.
+                  // Rename the netty span name with the ratpack route.
                   DECORATE.onContext(nettySpan, ctx);
                 }
                 DECORATE.onResponse(ratpackSpan, response);

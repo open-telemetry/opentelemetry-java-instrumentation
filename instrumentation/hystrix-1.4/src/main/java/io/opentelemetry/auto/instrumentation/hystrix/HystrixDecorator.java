@@ -29,9 +29,9 @@ public class HystrixDecorator extends BaseDecorator {
       final String groupName = command.getCommandGroup().name();
       final boolean circuitOpen = command.isCircuitBreakerOpen();
 
-      final String resourceName = groupName + "." + commandName + "." + methodName;
+      final String spanName = groupName + "." + commandName + "." + methodName;
 
-      span.updateName(resourceName);
+      span.updateName(spanName);
       span.setAttribute("hystrix.command", commandName);
       span.setAttribute("hystrix.group", groupName);
       span.setAttribute("hystrix.circuit-open", circuitOpen);

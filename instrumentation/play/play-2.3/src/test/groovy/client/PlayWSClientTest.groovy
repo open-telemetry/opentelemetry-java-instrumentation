@@ -77,10 +77,9 @@ class PlayWSClientTest extends HttpClientTest {
 
   @Override
   boolean testRemoteConnection() {
-    // On connection failures the operation and resource names end up different from expected.
+    // On connection failures the operation and span names end up different from expected.
     // This would require a lot of changes to the base client test class to support
-    // span.operationName = "netty.connect"
-    // span.resourceName = "netty.connect"
+    // span.spanName = "netty.connect"
     false
   }
 }
