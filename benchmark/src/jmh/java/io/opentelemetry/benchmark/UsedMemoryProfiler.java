@@ -15,13 +15,16 @@
  */
 package io.opentelemetry.benchmark;
 
+import org.openjdk.jmh.infra.BenchmarkParams;
+import org.openjdk.jmh.infra.IterationParams;
+import org.openjdk.jmh.profile.InternalProfiler;
+import org.openjdk.jmh.results.AggregationPolicy;
+import org.openjdk.jmh.results.IterationResult;
+import org.openjdk.jmh.results.Result;
+import org.openjdk.jmh.results.ScalarResult;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import org.openjdk.jmh.*;
-import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.infra.*;
-import org.openjdk.jmh.profile.*;
-import org.openjdk.jmh.results.*;
 
 public class UsedMemoryProfiler implements InternalProfiler {
   private long totalHeapBefore;
@@ -33,7 +36,8 @@ public class UsedMemoryProfiler implements InternalProfiler {
   }
 
   @Override
-  public void beforeIteration(BenchmarkParams benchmarkParams, IterationParams iterationParams) {
+  public void beforeIteration(
+      final BenchmarkParams benchmarkParams, final IterationParams iterationParams) {
     System.gc();
     System.runFinalization();
 
@@ -43,24 +47,20 @@ public class UsedMemoryProfiler implements InternalProfiler {
 
   @Override
   public Collection<? extends Result> afterIteration(
-      BenchmarkParams benchmarkParams, IterationParams iterationParams, IterationResult result) {
+      final BenchmarkParams benchmarkParams,
+      final IterationParams iterationParams,
+      final IterationResult result) {
 
-    long totalHeap = Runtime.getRuntime().totalMemory();
-    long usedHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+    final long totalHeap = Runtime.getRuntime().totalMemory();
+    final long usedHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-    Collection<ScalarResult> results = new ArrayList<>();
+    final Collection<ScalarResult> results = new ArrayList<>();
     results.add(
-        new ScalarResult("·heap.total.before", totalHeapBefore, "bytes", AggregationPolicy.AVG));
+        new ScalarResult("heap.total.before", totalHeapBefore, "bytes", AggregationPolicy.AVG));
     results.add(
-        new ScalarResult("·heap.used.before", usedHeapBefore, "bytes", AggregationPolicy.AVG));
-    results.add(new ScalarResult("·heap.total.after", totalHeap, "bytes", AggregationPolicy.AVG));
-    results.add(new ScalarResult("·heap.used.after", usedHeap, "bytes", AggregationPolicy.AVG));
-    results.add(
-        new ScalarResult(
-            "·heap.total.change", totalHeap - totalHeapBefore, "bytes", AggregationPolicy.AVG));
-    results.add(
-        new ScalarResult(
-            "·heap.used.change", usedHeap - usedHeapBefore, "bytes", AggregationPolicy.AVG));
+        new ScalarResult("heap.used.before", usedHeapBefore, "bytes", AggregationPolicy.AVG));
+    results.add(new ScalarResult("heap.total.after", totalHeap, "bytes", AggregationPolicy.AVG));
+    results.add(new ScalarResult("heap.used.after", usedHeap, "bytes", AggregationPolicy.AVG));
 
     return results;
   }

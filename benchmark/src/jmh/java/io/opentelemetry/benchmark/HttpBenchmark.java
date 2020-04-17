@@ -18,7 +18,15 @@ package io.opentelemetry.benchmark;
 import io.opentelemetry.benchmark.classes.HttpClass;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+
+import java.io.IOException;
 
 public class HttpBenchmark {
 
@@ -33,7 +41,7 @@ public class HttpBenchmark {
         while (!AbstractLifeCycle.STARTED.equals(jettyServer.getState())) {
           Thread.sleep(500);
         }
-      } catch (Exception e) {
+      } catch (final Exception e) {
         throw new RuntimeException(e);
       }
     }
@@ -42,7 +50,7 @@ public class HttpBenchmark {
     public void doTearDown() {
       try {
         jettyServer.stop();
-      } catch (Exception e) {
+      } catch (final Exception e) {
         e.printStackTrace();
       } finally {
         jettyServer.destroy();
@@ -54,7 +62,7 @@ public class HttpBenchmark {
   }
 
   @Benchmark
-  public void testMakingRequest(BenchmarkState state) {
+  public void testMakingRequest(final BenchmarkState state) throws IOException {
     state.http.executeRequest();
   }
 
