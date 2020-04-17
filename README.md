@@ -58,6 +58,8 @@ to capture telemetry from a number of popular libraries and frameworks.
 
 ### Download and run
 
+#### Release builds
+
 Download the [latest release](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases).
 
 The instrumentation agent is enabled using the -javaagent flag to the JVM. Configuration parameters are passed 
@@ -69,6 +71,24 @@ java -javaagent:path/to/opentelemetry-auto-<version>.jar \
      -Dota.exporter.jaeger.endpoint=localhost:14250 \
      -Dota.exporter.jaeger.service.name=shopping \
      -jar myapp.jar
+```
+
+#### Snapshot builds
+
+For developers testing code changes before a release is complete,
+there are snapshot builds of the `master` branch. When a PR is
+merged to `master`, a circleci build is kicked off as a github
+action which shows up as a github check on the git commit on `master`
+branch, i.e. a green checkmark. Clicking on the green checkmark you
+can view the `build_test_deploy` workflow and the `build` job shows
+the artifacts hosted on circleci. The artifacts will be named like:
+
+```
+libs/exporter-support-<version>-SNAPSHOT.jar
+libs/opentelemetry-auto-<version>-SNAPSHOT.jar
+libs/opentelemetry-auto-exporters-jaeger-<version>-SNAPSHOT.jar
+libs/opentelemetry-auto-exporters-logging-<version>-SNAPSHOT.jar
+libs/opentelemetry-auto-exporters-otlp-<version>-SNAPSHOT.jar
 ```
 
 ### Configuration parameters (subject to change!)
