@@ -7,6 +7,11 @@ apply from: "${rootDir}/gradle/java.gradle"
 dependencies {
   jmh group: 'io.opentelemetry', name: 'opentelemetry-api', version: '0.3.0'
   jmh deps.bytebuddyagent
+
+  jmh 'javax.servlet:javax.servlet-api:4.0.1'
+  jmh 'com.google.http-client:google-http-client:1.19.0'
+  jmh 'org.eclipse.jetty:jetty-server:9.4.1.v20170120'
+  jmh 'org.eclipse.jetty:jetty-servlet:9.4.1.v20170120'
 }
 
 jmh {
@@ -25,6 +30,7 @@ jmh {
 
 //  profilers = ['stack:lines=5;detailLine=true;period=5;excludePackages=true']
   // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr]
+  profilers = ['io.opentelemetry.benchmark.UsedMemoryProfiler', 'gc']
 
 //  humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
 //  operationsPerInvocation = 10 // Operations per invocation.
