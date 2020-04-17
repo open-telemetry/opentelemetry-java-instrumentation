@@ -64,12 +64,6 @@ public class HttpClass {
       resp.setStatus(HttpServletResponse.SC_OK);
       resp.getWriter().println("{ \"status\": \"ok\"}");
     }
-
-    @Override
-    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp)
-        throws ServletException, IOException {
-      doGet(req, resp);
-    }
   }
 
   private HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
