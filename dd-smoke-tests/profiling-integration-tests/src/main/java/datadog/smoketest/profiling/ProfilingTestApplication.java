@@ -1,9 +1,13 @@
 package datadog.smoketest.profiling;
 
 import datadog.trace.api.Trace;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class ProfilingTestApplication {
+  private static final ThreadMXBean THREAD_MX_BEAN = ManagementFactory.getThreadMXBean();
 
   public static void main(final String[] args) throws InterruptedException {
     long exitDelay = -1;
@@ -23,6 +27,22 @@ public class ProfilingTestApplication {
   @Trace
   private static void tracedMethod() throws InterruptedException {
     System.out.println("Tracing");
-    Thread.sleep(100);
+    tracedBusyMethod();
+    Thread.sleep(50);
+  }
+
+  @Trace
+  private static void tracedBusyMethod() {
+    long startTime = THREAD_MX_BEAN.getCurrentThreadCpuTime();
+    Random random = new Random();
+    long accumulator = 0L;
+    while (true) {
+      accumulator += random.nextInt(113);
+      if (THREAD_MX_BEAN.getCurrentThreadCpuTime() - startTime > 10_000_000L) {
+        // looking for at least 10ms CPU time
+        break;
+      }
+    }
+    System.out.println("accumulated: " + accumulator);
   }
 }

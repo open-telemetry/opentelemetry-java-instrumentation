@@ -72,9 +72,9 @@ public class Agent {
      */
     if (appUsingCustomLogManager) {
       log.debug("Custom logger detected. Delaying JMXFetch initialization.");
-      registerLogManagerCallback(new StartJmxFetchCallback(bootstrapURL));
+      registerLogManagerCallback(new StartJmxCallback(bootstrapURL));
     } else {
-      startJmxFetch(bootstrapURL);
+      startJmx(bootstrapURL);
     }
 
     /*
@@ -151,8 +151,8 @@ public class Agent {
     public abstract void execute();
   }
 
-  protected static class StartJmxFetchCallback extends ClassLoadCallBack {
-    StartJmxFetchCallback(final URL bootstrapURL) {
+  protected static class StartJmxCallback extends ClassLoadCallBack {
+    StartJmxCallback(final URL bootstrapURL) {
       super(bootstrapURL);
     }
 
@@ -163,7 +163,7 @@ public class Agent {
 
     @Override
     public void execute() {
-      startJmxFetch(bootstrapURL);
+      startJmx(bootstrapURL);
     }
   }
 
@@ -259,6 +259,27 @@ public class Agent {
       logVersionInfoMethod.invoke(null);
     } catch (final Throwable ex) {
       log.error("Throwable thrown while installing the Datadog Tracer", ex);
+    }
+  }
+
+  private static synchronized void startJmx(final URL bootstrapURL) {
+    startJmxFetch(bootstrapURL);
+    initializeJmxThreadCpuTimeProvider();
+  }
+
+  /** Enable JMX based thread CPU time provider once it is safe to touch JMX */
+  private static synchronized void initializeJmxThreadCpuTimeProvider() {
+    log.info("Initializing JMX thread CPU time provider");
+    if (AGENT_CLASSLOADER == null) {
+      throw new IllegalStateException("Datadog agent should have been started already");
+    }
+    try {
+      final Class<?> tracerInstallerClass =
+          AGENT_CLASSLOADER.loadClass("datadog.trace.common.util.ThreadCpuTimeAccess");
+      final Method enableJmxMethod = tracerInstallerClass.getMethod("enableJmx");
+      enableJmxMethod.invoke(null);
+    } catch (final Throwable ex) {
+      log.error("Throwable thrown while initializing JMX thread CPU time provider", ex);
     }
   }
 

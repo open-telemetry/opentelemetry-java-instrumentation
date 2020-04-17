@@ -1,6 +1,6 @@
+package datadog.opentracing.jfr.openjdk
+
 import datadog.opentracing.jfr.DDNoopScopeEvent
-import datadog.opentracing.jfr.openjdk.ScopeEvent
-import datadog.opentracing.jfr.openjdk.ScopeEventFactory
 import spock.lang.Requires
 import spock.lang.Specification
 

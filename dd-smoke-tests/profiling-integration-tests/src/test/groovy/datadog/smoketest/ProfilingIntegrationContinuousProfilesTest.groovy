@@ -6,8 +6,11 @@ import net.jpountz.lz4.LZ4FrameInputStream
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
+import org.openjdk.jmc.common.item.Aggregators
+import org.openjdk.jmc.common.item.Attribute
 import org.openjdk.jmc.common.item.IItemCollection
 import org.openjdk.jmc.common.item.ItemFilters
+import org.openjdk.jmc.common.unit.UnitLookup
 import org.openjdk.jmc.flightrecorder.JfrLoaderToolkit
 
 import java.time.Instant
@@ -101,6 +104,14 @@ class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
     IItemCollection scopeEvents = events.apply(ItemFilters.type("datadog.Scope"))
 
     scopeEvents.size() > 0
-  }
 
+    def cpuTimeAttr = Attribute.attr("cpuTime", "cpuTime", UnitLookup.TIMESPAN)
+
+    // filter out scope events without CPU time data
+    def filteredScopeEvents = scopeEvents.apply(ItemFilters.more(cpuTimeAttr, UnitLookup.NANOSECOND.quantity(Long.MIN_VALUE)))
+    // make sure there is at least one scope event with CPU time data
+    filteredScopeEvents.size() > 0
+
+    filteredScopeEvents.getAggregate(Aggregators.min("datadog.Scope", cpuTimeAttr)).longValue() >= 10_000L
+  }
 }
