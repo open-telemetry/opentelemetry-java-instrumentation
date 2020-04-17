@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
@@ -175,8 +176,9 @@ public class Config {
         getBooleanSettingFromEnvironment(LOG_INJECTION_ENABLED, DEFAULT_LOG_INJECTION_ENABLED);
 
     experimentalLogCaptureThreshold =
-        getSettingFromEnvironment(
-            EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD);
+        toUpper(
+            getSettingFromEnvironment(
+                EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD));
 
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
@@ -229,8 +231,9 @@ public class Config {
         getPropertyBooleanValue(properties, LOG_INJECTION_ENABLED, parent.logInjectionEnabled);
 
     experimentalLogCaptureThreshold =
-        properties.getProperty(
-            EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, parent.experimentalLogCaptureThreshold);
+        toUpper(
+            properties.getProperty(
+                EXPERIMENTAL_LOG_CAPTURE_THRESHOLD, parent.experimentalLogCaptureThreshold));
 
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 
@@ -513,6 +516,10 @@ public class Config {
     }
 
     return properties;
+  }
+
+  private static String toUpper(final String str) {
+    return str == null ? null : str.toUpperCase(Locale.ENGLISH);
   }
 
   // This has to be placed after all other static fields to give them a chance to initialize
