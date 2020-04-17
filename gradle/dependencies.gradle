@@ -3,22 +3,23 @@ def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
 ext {
   versions = [
-    opentracing: '0.32.0',
+    opentracing   : '0.32.0',
 
-    slf4j      : "1.7.29",
-    guava      : "20.0", // Last version to support Java 7
-    okhttp     : "3.12.8", // 3.12.x is last version to support Java7)
+    slf4j         : "1.7.29",
+    guava         : "20.0", // Last version to support Java 7
+    okhttp        : "3.12.8", // 3.12.x is last version to support Java7)
 
-    spock      : "1.3-groovy-$spockGroovyVer",
-    groovy     : groovyVer,
-    junit5     : "5.5.2",
-    logback    : "1.2.3",
-    lombok     : "1.18.10",
-    bytebuddy  : "1.10.6",
-    scala      : "2.11.12",  // Last version to support Java 7 (2.12+ require Java 8+)
-    kotlin     : "1.3.61",
-    coroutines : "1.3.0",
-    dogstatsd  : "2.9.0"
+    spock         : "1.3-groovy-$spockGroovyVer",
+    groovy        : groovyVer,
+    junit5        : "5.5.2",
+    logback       : "1.2.3",
+    lombok        : "1.18.10",
+    bytebuddy     : "1.10.6",
+    scala         : "2.11.12",  // Last version to support Java 7 (2.12+ require Java 8+)
+    kotlin        : "1.3.61",
+    coroutines    : "1.3.0",
+    dogstatsd     : "2.9.0",
+    jnr_unixsocket: "0.28"
   ]
 
   deps = [
@@ -69,6 +70,7 @@ ext {
     // Shared between agent tooling and instrumentation and JMXFetch
     shared         : [
       dependencies.create(group: 'com.datadoghq', name: 'java-dogstatsd-client', version: "${versions.dogstatsd}"),
+      dependencies.create(group: 'com.github.jnr', name: 'jnr-unixsocket', version: "${versions.jnr_unixsocket}"),
       dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}")
     ],
 

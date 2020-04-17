@@ -45,7 +45,7 @@ dependencies {
   compile deps.okhttp
   compile group: 'org.msgpack', name: 'msgpack-core', version: '0.8.20'
   compile group: 'com.squareup.moshi', name: 'moshi', version: '1.9.2'
-  compile group: 'com.github.jnr', name: 'jnr-unixsocket', version: '0.28'
+  compile group: 'com.github.jnr', name: 'jnr-unixsocket', version: "${versions.jnr_unixsocket}"
   compile group: 'com.lmax', name: 'disruptor', version: '3.4.2'
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
