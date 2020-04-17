@@ -1,4 +1,4 @@
-def groovyVer = "2.5.10"
+def groovyVer = "2.5.11"
 def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
 ext {
