@@ -5,7 +5,7 @@ ext {
   versions = [
     opentracing: '0.32.0',
 
-    slf4j      : "1.7.29",
+    slf4j      : "1.7.30",
     guava      : "20.0", // Last version to support Java 7
     okhttp     : "3.12.10", // 3.12.x is last version to support Java7)
 
