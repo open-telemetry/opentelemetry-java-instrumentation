@@ -16,6 +16,7 @@
 package io.opentelemetry.benchmark;
 
 import io.opentelemetry.benchmark.classes.HttpClass;
+import java.io.IOException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -25,8 +26,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
-
-import java.io.IOException;
 
 public class HttpBenchmark {
 

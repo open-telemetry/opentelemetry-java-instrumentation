@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.benchmark;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import org.openjdk.jmh.infra.BenchmarkParams;
 import org.openjdk.jmh.infra.IterationParams;
 import org.openjdk.jmh.profile.InternalProfiler;
@@ -22,9 +24,6 @@ import org.openjdk.jmh.results.AggregationPolicy;
 import org.openjdk.jmh.results.IterationResult;
 import org.openjdk.jmh.results.Result;
 import org.openjdk.jmh.results.ScalarResult;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 public class UsedMemoryProfiler implements InternalProfiler {
   private long totalHeapBefore;

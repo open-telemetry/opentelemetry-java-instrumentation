@@ -19,7 +19,6 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.javanet.NetHttpTransport;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import javax.servlet.ServletException;
@@ -27,7 +26,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
@@ -51,7 +49,7 @@ public class HttpClass {
   public static class HttpClassServlet extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
-      throws ServletException, IOException {
+        throws ServletException, IOException {
       try {
         Thread.sleep(10);
       } catch (Exception e) {
