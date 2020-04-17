@@ -17,7 +17,7 @@ package io.opentelemetry.auto.test.server.http
 
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
-import io.opentelemetry.auto.test.asserts.ListWriterAssert
+import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
@@ -109,7 +109,7 @@ class TestHttpServer implements AutoCloseable {
     clone(handlers)
   }
 
-  static distributedRequestTrace(ListWriterAssert traces, int index, SpanData parentSpan = null) {
+  static distributedRequestTrace(InMemoryExporterAssert traces, int index, SpanData parentSpan = null) {
     traces.trace(index, 1) {
       distributedRequestSpan(it, 0, parentSpan)
     }

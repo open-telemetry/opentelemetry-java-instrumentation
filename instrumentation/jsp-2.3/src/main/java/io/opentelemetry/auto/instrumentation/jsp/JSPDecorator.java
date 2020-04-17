@@ -59,11 +59,11 @@ public class JSPDecorator extends BaseDecorator {
   public String spanNameOnRender(final HttpServletRequest req) {
     // get the JSP file name being rendered in an include action
     final Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
-    String resourceName = req.getServletPath();
+    String spanName = req.getServletPath();
     if (includeServletPath instanceof String) {
-      resourceName = includeServletPath.toString();
+      spanName = includeServletPath.toString();
     }
-    return "Render " + resourceName;
+    return "Render " + spanName;
   }
 
   public void onRender(final Span span, final HttpServletRequest req) {

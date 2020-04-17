@@ -25,7 +25,7 @@ import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.test.asserts.ListWriterAssert;
+import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.auto.tooling.AgentInstaller;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.auto.tooling.matcher.AdditionalLibraryIgnoresMatcher;
@@ -80,7 +80,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
    *
    * <p>Before the start of each test the reported traces will be reset.
    */
-  public static final ListWriter TEST_WRITER;
+  public static final InMemoryExporter TEST_WRITER;
 
   protected static final Tracer TEST_TRACER;
 
@@ -102,7 +102,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry.auto")).setLevel(Level.DEBUG);
 
-    TEST_WRITER = new ListWriter();
+    TEST_WRITER = new InMemoryExporter();
     OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
   }
@@ -202,9 +202,9 @@ public abstract class AgentTestRunner extends AgentSpecification {
       @ClosureParams(
               value = SimpleType.class,
               options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           final Closure spec) {
-    ListWriterAssert.assertTraces(
+    InMemoryExporterAssert.assertTraces(
         TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
   }
 
@@ -214,9 +214,9 @@ public abstract class AgentTestRunner extends AgentSpecification {
       @ClosureParams(
               value = SimpleType.class,
               options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           final Closure spec) {
-    ListWriterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
+    InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
 
   public static class TestRunnerListener implements AgentBuilder.Listener {

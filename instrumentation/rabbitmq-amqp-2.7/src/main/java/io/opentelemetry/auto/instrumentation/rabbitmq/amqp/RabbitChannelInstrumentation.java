@@ -173,7 +173,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
   public static class ChannelPublishAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void setResourceNameAddHeaders(
+    public static void setSpanNameAddHeaders(
         @Advice.Argument(0) final String exchange,
         @Advice.Argument(1) final String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
