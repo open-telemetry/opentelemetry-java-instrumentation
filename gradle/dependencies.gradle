@@ -17,7 +17,8 @@ ext {
     bytebuddy  : "1.10.6",
     scala      : "2.11.12",  // Last version to support Java 7 (2.12+ require Java 8+)
     kotlin     : "1.3.61",
-    coroutines : "1.3.0"
+    coroutines : "1.3.0",
+    dogstatsd  : "2.9.0"
   ]
 
   deps = [
@@ -67,9 +68,7 @@ ext {
 
     // Shared between agent tooling and instrumentation and JMXFetch
     shared         : [
-      dependencies.create(group: 'com.datadoghq', name: 'java-dogstatsd-client', version: '2.8'),
-      // "Explicit override jnr version because .22 caused issues" - mar-kolya
-      dependencies.create(group: 'com.github.jnr', name: 'jnr-unixsocket', version: '0.23'),
+      dependencies.create(group: 'com.datadoghq', name: 'java-dogstatsd-client', version: "${versions.dogstatsd}"),
       dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}")
     ],
 
