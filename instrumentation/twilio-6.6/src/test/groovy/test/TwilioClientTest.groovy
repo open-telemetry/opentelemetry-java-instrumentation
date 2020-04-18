@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 
 class TwilioClientTest extends AgentTestRunner {
   final static String ACCOUNT_SID = "abc"
@@ -120,6 +119,12 @@ class TwilioClientTest extends AgentTestRunner {
 
   def setupSpec() {
     Twilio.init(ACCOUNT_SID, AUTH_TOKEN)
+  }
+
+  def cleanup() {
+    Twilio.getExecutorService().shutdown()
+    Twilio.setExecutorService(null)
+    Twilio.setRestClient(null)
   }
 
   def "synchronous message"() {
@@ -340,7 +345,6 @@ class TwilioClientTest extends AgentTestRunner {
     }
 
     expect:
-
     message.body == "Hello, World!"
 
     assertTraces(1) {
@@ -436,7 +440,6 @@ class TwilioClientTest extends AgentTestRunner {
         .build()
 
     Message message = runUnderTrace("test") {
-
       ListenableFuture<Message> future = Message.creator(
         new PhoneNumber("+1 555 720 5913"),  // To number
         new PhoneNumber("+1 555 555 5215"),  // From number
@@ -452,7 +455,6 @@ class TwilioClientTest extends AgentTestRunner {
     }
 
     expect:
-
     message.body == "Hello, World!"
 
     assertTraces(1) {
@@ -524,31 +526,27 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = currentContextWith(testSpan)
-
     when:
-    Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).create(twilioRestClient)
+    runUnderTrace("test") {
+      Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).create(twilioRestClient)
+    }
 
     then:
     thrown(ApiException)
 
-    testSpan.end()
-    testScope.close()
-
     expect:
-
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "test"
-          errored false
+          errored true
           parent()
           tags {
+            errorTags(ApiException, "Testing Failure")
           }
         }
         span(1) {
@@ -677,25 +675,19 @@ class TwilioClientTest extends AgentTestRunner {
 
     1 * twilioRestClient.request(_) >> new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()), 500)
 
-    def testSpan = TEST_TRACER.spanBuilder("test").startSpan()
-    def testScope = currentContextWith(testSpan)
-
-    ListenableFuture<Message> future = Message.creator(
-      new PhoneNumber("+1 555 720 5913"),  // To number
-      new PhoneNumber("+1 555 555 5215"),  // From number
-      "Hello world!"                    // SMS body
-    ).createAsync(twilioRestClient)
-
-
     when:
-    Message message
-    try {
-      message = future.get(10, TimeUnit.SECONDS)
+    runUnderTrace("test") {
+      ListenableFuture<Message> future = Message.creator(
+        new PhoneNumber("+1 555 720 5913"),  // To number
+        new PhoneNumber("+1 555 555 5215"),  // From number
+        "Hello world!"                    // SMS body
+      ).createAsync(twilioRestClient)
 
-    } finally {
-      Thread.sleep(1000)
-      testSpan.end()
-      testScope.close()
+      try {
+        return future.get(10, TimeUnit.SECONDS)
+      } finally {
+        Thread.sleep(1000)
+      }
     }
 
     then:
@@ -707,9 +699,10 @@ class TwilioClientTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "test"
-          errored false
+          errored true
           parent()
           tags {
+            errorTags(ApiException, "Testing Failure")
           }
         }
         span(1) {
@@ -730,11 +723,6 @@ class TwilioClientTest extends AgentTestRunner {
         }
       }
     }
-
-    cleanup:
-    Twilio.getExecutorService().shutdown()
-    Twilio.setExecutorService(null)
-    Twilio.setRestClient(null)
   }
 
   String expectedOperationName(String method) {

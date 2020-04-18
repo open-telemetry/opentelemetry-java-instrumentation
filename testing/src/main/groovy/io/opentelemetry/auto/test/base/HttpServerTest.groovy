@@ -100,6 +100,14 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     false
   }
 
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    false
+  }
+
+  boolean hasErrorPageSpans(ServerEndpoint endpoint) {
+    false
+  }
+
   boolean redirectHasBody() {
     false
   }
@@ -360,6 +368,12 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       if (hasRenderSpan(endpoint)) {
         spanCount++
       }
+      if (hasResponseSpan(endpoint)) {
+        spanCount++
+      }
+      if (hasErrorPageSpans(endpoint)) {
+        spanCount += 2
+      }
     }
     assertTraces(size * 2) {
       (0..size - 1).each {
@@ -380,6 +394,13 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
             }
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
+            }
+            if (hasResponseSpan(endpoint)) {
+              responseSpan(it, spanIndex, span(spanIndex - 1), method, endpoint)
+              spanIndex++
+            }
+            if (hasErrorPageSpans(endpoint)) {
+              errorPageSpans(it, spanIndex, span(0), method, endpoint)
             }
           }
         }
@@ -406,6 +427,14 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     throw new UnsupportedOperationException("renderSpan not implemented in " + getClass().name)
+  }
+
+  void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    throw new UnsupportedOperationException("responseSpan not implemented in " + getClass().name)
+  }
+
+  void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    throw new UnsupportedOperationException("errorPageSpans not implemented in " + getClass().name)
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)

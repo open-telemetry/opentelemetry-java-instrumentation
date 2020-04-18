@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package test
+package test.filter
 
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.springframework.http.HttpStatus
@@ -52,6 +52,14 @@ class TestController {
     }
   }
 
+  @RequestMapping("/path/{id}/param")
+  @ResponseBody
+  String path_param(@PathVariable Integer id) {
+    HttpServerTest.controller(PATH_PARAM) {
+      "$id"
+    }
+  }
+
   @RequestMapping("/redirect")
   @ResponseBody
   RedirectView redirect() {
@@ -71,14 +79,6 @@ class TestController {
   ResponseEntity exception() {
     HttpServerTest.controller(EXCEPTION) {
       throw new Exception(EXCEPTION.body)
-    }
-  }
-
-  @RequestMapping("/path/{id}/param")
-  @ResponseBody
-  String path_param(@PathVariable("id") int id) {
-    HttpServerTest.controller(PATH_PARAM) {
-      id
     }
   }
 

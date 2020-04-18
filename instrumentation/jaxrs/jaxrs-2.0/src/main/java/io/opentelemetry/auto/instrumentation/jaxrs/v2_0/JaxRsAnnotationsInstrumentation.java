@@ -28,12 +28,14 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
+import javax.ws.rs.Path;
 import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -98,6 +100,10 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
         @Advice.This final Object target, @Advice.Origin final Method method) {
+      if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
+        return null;
+      }
+
       // Rename the parent span according to the path represented by these annotations.
       final Span parent = TRACER.getCurrentSpan();
 
@@ -113,6 +119,11 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
         @Advice.AllArguments final Object[] args) {
+      if (spanWithScope == null) {
+        return;
+      }
+      CallDepthThreadLocalMap.reset(Path.class);
+
       final Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);

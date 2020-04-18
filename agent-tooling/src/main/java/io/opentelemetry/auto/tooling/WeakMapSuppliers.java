@@ -19,6 +19,7 @@ import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
 import io.opentelemetry.auto.bootstrap.WeakMap;
+import io.opentelemetry.auto.common.exec.CommonTaskExecutor;
 import java.util.concurrent.TimeUnit;
 
 class WeakMapSuppliers {
@@ -46,24 +47,27 @@ class WeakMapSuppliers {
   static class WeakConcurrent implements WeakMap.Implementation {
 
     @VisibleForTesting static final long CLEAN_FREQUENCY_SECONDS = 1;
-    private final Cleaner cleaner;
-
-    WeakConcurrent(final Cleaner cleaner) {
-      this.cleaner = cleaner;
-    }
 
     @Override
     public <K, V> WeakMap<K, V> get() {
       final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false, true);
-      cleaner.scheduleCleaning(map, MapCleaner.CLEANER, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
+      CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(
+          MapCleaningTask.INSTANCE,
+          map,
+          CLEAN_FREQUENCY_SECONDS,
+          CLEAN_FREQUENCY_SECONDS,
+          TimeUnit.SECONDS,
+          "cleaner for " + map);
       return new Adapter<>(map);
     }
 
-    private static class MapCleaner implements Cleaner.Adapter<WeakConcurrentMap> {
-      private static final MapCleaner CLEANER = new MapCleaner();
+    // Important to use explicit class to avoid implicit hard references to target
+    private static class MapCleaningTask implements CommonTaskExecutor.Task<WeakConcurrentMap> {
+
+      static final MapCleaningTask INSTANCE = new MapCleaningTask();
 
       @Override
-      public void clean(final WeakConcurrentMap target) {
+      public void run(final WeakConcurrentMap target) {
         target.expungeStaleEntries();
       }
     }
