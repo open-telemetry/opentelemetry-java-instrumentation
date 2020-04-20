@@ -89,12 +89,31 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.This final RequestDispatcher dispatcher,
         @Advice.Local("_originalServletSpan") Object originalServletSpan,
         @Advice.Argument(0) final ServletRequest request) {
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
+      final Span parentSpan = TRACER.getCurrentSpan();
+
+      final Object servletSpanObject = request.getAttribute(SPAN_ATTRIBUTE);
+      final Span servletSpan = servletSpanObject instanceof Span ? (Span) servletSpanObject : null;
+
+      if (!parentSpan.getContext().isValid() && servletSpan == null) {
         // Don't want to generate a new top-level span
         return null;
       }
+      final Span parent;
+      if (servletSpan == null
+          || (parentSpan.getContext().isValid()
+              && servletSpan
+                  .getContext()
+                  .getTraceId()
+                  .equals(parentSpan.getContext().getTraceId()))) {
+        // Use the parentSpan if the servletSpan is null or part of the same trace.
+        parent = parentSpan;
+      } else {
+        // parentSpan is part of a different trace, so lets ignore it.
+        // This can happen with the way Tomcat does error handling.
+        parent = servletSpan;
+      }
 
-      final Span span = TRACER.spanBuilder("servlet." + method).startSpan();
+      final Span span = TRACER.spanBuilder("servlet." + method).setParent(parent).startSpan();
       DECORATE.afterStart(span);
 
       final String target =

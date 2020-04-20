@@ -53,7 +53,7 @@ import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
-class AwsClientTest extends AgentTestRunner {
+class Aws2ClientTest extends AgentTestRunner {
 
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER = StaticCredentialsProvider
     .create(AwsBasicCredentials.create("my-access-key", "my-secret-key"))

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package test
+package test.boot
 
 import org.apache.catalina.connector.Connector
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -40,7 +40,7 @@ class AppConfig extends WebMvcConfigurerAdapter {
       .defaultContentTypeStrategy(new ContentNegotiationStrategy() {
         @Override
         List<MediaType> resolveMediaTypes(NativeWebRequest webRequest) throws HttpMediaTypeNotAcceptableException {
-          return [MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON]
+          return [MediaType.TEXT_PLAIN]
         }
       })
   }

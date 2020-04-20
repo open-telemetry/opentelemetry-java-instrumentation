@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.tooling
+package io.opentelemetry.auto.common.exec
 
-import io.opentelemetry.auto.common.exec.CommonTaskExecutor
 import io.opentelemetry.auto.util.gc.GCUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
 import spock.lang.Retry
-import spock.lang.Subject
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
@@ -28,19 +26,15 @@ import java.util.concurrent.atomic.AtomicInteger
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 @Retry
-class CleanerTest extends AgentSpecification {
-
-  @Subject
-  def cleaner = new Cleaner()
+class PeriodicSchedulingTest extends AgentSpecification {
 
   def "test scheduling"() {
     setup:
     def latch = new CountDownLatch(2)
-    def target = new Object()
-    def action = new Cleaner.Adapter<Object>() {
+    def task = new CommonTaskExecutor.Task<CountDownLatch>() {
       @Override
-      void clean(Object t) {
-        latch.countDown()
+      void run(CountDownLatch target) {
+        target.countDown()
       }
     }
 
@@ -48,7 +42,7 @@ class CleanerTest extends AgentSpecification {
     !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
-    cleaner.scheduleCleaning(target, action, 10, MILLISECONDS)
+    CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(task, latch, 10, 10, MILLISECONDS, "test")
 
     then:
     latch.await(500, MILLISECONDS)
@@ -58,10 +52,10 @@ class CleanerTest extends AgentSpecification {
     setup:
     def callCount = new AtomicInteger()
     def target = new WeakReference(new Object())
-    def action = new Cleaner.Adapter<Object>() {
+    def task = new CommonTaskExecutor.Task<Object>() {
       @Override
-      void clean(Object t) {
-        callCount.incrementAndGet()
+      void run(Object t) {
+        callCount.countDown()
       }
     }
 
@@ -69,7 +63,7 @@ class CleanerTest extends AgentSpecification {
     !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
-    cleaner.scheduleCleaning(target.get(), action, 10, MILLISECONDS)
+    CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(task, target.get(), 10, 10, MILLISECONDS, "test")
     GCUtils.awaitGC(target)
     Thread.sleep(1)
     def snapshot = callCount.get()
@@ -82,10 +76,10 @@ class CleanerTest extends AgentSpecification {
   def "test null target"() {
     setup:
     def callCount = new AtomicInteger()
-    def action = new Cleaner.Adapter<Object>() {
+    def task = new CommonTaskExecutor.Task<Object>() {
       @Override
-      void clean(Object t) {
-        callCount.incrementAndGet()
+      void run(Object t) {
+        callCount.countDown()
       }
     }
 
@@ -93,7 +87,7 @@ class CleanerTest extends AgentSpecification {
     !CommonTaskExecutor.INSTANCE.isShutdown()
 
     when:
-    cleaner.scheduleCleaning(null, action, 10, MILLISECONDS)
+    CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(task, null, 10, 10, MILLISECONDS, "test")
     Thread.sleep(11)
 
     then:

@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.jaxrs.v2_0;
 
+import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
+
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
@@ -43,7 +45,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jaxrs-2.0");
 
-  private final WeakMap<Class<?>, Map<Method, String>> spanNames = WeakMap.Provider.newWeakMap();
+  private final WeakMap<Class<?>, Map<Method, String>> spanNames = newWeakMap();
 
   public void onJaxRsSpan(
       final Span span, final Span parent, final Class target, final Method method) {
