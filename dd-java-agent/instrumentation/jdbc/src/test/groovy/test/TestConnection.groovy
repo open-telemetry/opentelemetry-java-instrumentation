@@ -251,7 +251,7 @@ class TestConnection implements Connection {
 
   @Override
   Properties getClientInfo() throws SQLException {
-    throw new UnsupportedOperationException("Test 123")
+    throw new Throwable("Test 123")
   }
 
   @Override
