@@ -24,8 +24,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
-import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -57,22 +55,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("buildAsync")).and(takesArguments(0)),
-        CassandraClientInstrumentation.class.getName() + "$CassandraClientAdvice");
-  }
-
-  public static class CassandraClientAdvice {
-    /**
-     * Strategy: each time we build a connection to a Cassandra cluster, the
-     * com.datastax.oss.driver.api.core.session.SessionBuilder.buildAsync() method is called. The
-     * opentracing contribution is a simple wrapper, so we just have to wrap the new session.
-     *
-     * @param stage The fresh CompletionStage to patch. This stage produces session which is
-     *     replaced with new session
-     */
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracingSession(
-        @Advice.Return(readOnly = false) CompletionStage<?> stage) {
-      stage = stage.thenApply(new CompletionStageFunction());
-    }
+        // Cannot reference class directly here because it would lead to class load failure on Java7
+        packageName + ".CassandraClientAdvice");
   }
 }

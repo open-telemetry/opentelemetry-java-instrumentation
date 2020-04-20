@@ -279,28 +279,28 @@ public class TracingCqlSession implements CqlSession {
 
   private Span startSpan(final String query) {
     final Span span = TRACER.spanBuilder(query).setSpanKind(CLIENT).startSpan();
-    DECORATE.afterStart(span);
-    DECORATE.onConnection(span, session);
-    DECORATE.onStatement(span, query);
+    CassandraClientDecorator.DECORATE.afterStart(span);
+    CassandraClientDecorator.DECORATE.onConnection(span, session);
+    CassandraClientDecorator.DECORATE.onStatement(span, query);
     return span;
   }
 
   private static void beforeSpanFinish(final Span span, final ResultSet resultSet) {
     if (resultSet != null) {
-      DECORATE.onResponse(span, resultSet.getExecutionInfo());
+      CassandraClientDecorator.DECORATE.onResponse(span, resultSet.getExecutionInfo());
     }
-    DECORATE.beforeFinish(span);
+    CassandraClientDecorator.DECORATE.beforeFinish(span);
   }
 
   private static void beforeSpanFinish(final Span span, final Throwable e) {
-    DECORATE.onError(span, e);
-    DECORATE.beforeFinish(span);
+    CassandraClientDecorator.DECORATE.onError(span, e);
+    CassandraClientDecorator.DECORATE.beforeFinish(span);
   }
 
   private void beforeSpanFinish(Span span, AsyncResultSet asyncResultSet) {
     if (asyncResultSet != null) {
-      DECORATE.onResponse(span, asyncResultSet.getExecutionInfo());
+      CassandraClientDecorator.DECORATE.onResponse(span, asyncResultSet.getExecutionInfo());
     }
-    DECORATE.beforeFinish(span);
+    CassandraClientDecorator.DECORATE.beforeFinish(span);
   }
 }

@@ -16,9 +16,6 @@ muzzle {
   }
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 testSets {
   latestDepTest {
     dirName = 'test'
@@ -26,11 +23,10 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
+  main_java8CompileOnly group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
 
   testCompile group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
   testCompile group: 'org.cassandraunit', name: 'cassandra-unit', version: '4.3.1.0'
-
 
   latestDepTestCompile group: 'com.datastax.oss', name: 'java-driver-core', version: '4.+'
 }
