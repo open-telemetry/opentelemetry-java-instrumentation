@@ -1,0 +1,20 @@
+name: Create next milestone
+on:
+  milestone:
+    types: [closed]
+
+jobs:
+  create_next_milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get next minor version
+        id: semvers
+        uses: WyriHaximus/github-action-next-semvers@0.1.0
+        with:
+          version: ${{ github.event.milestone.title }}
+      - name: Create next milestone
+        uses: WyriHaximus/github-action-create-milestone@0.1.0
+        with:
+          title: ${{ steps.semvers.outputs.minor }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
