@@ -1,0 +1,42 @@
+name: Add milestone to pull requests
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
+
+jobs:
+  add_milestone_to_merged:
+    if: github.event.pull_request.merged && github.event.pull_request.milestone == null
+    name: Add milestone to merged pull requests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get project milestones
+        id: milestones
+        uses: actions/github-script@0.9.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const list = await github.issues.listMilestonesForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            })
+            // Need to manually sort because "sort by number" isn't part of the api
+            // highest number first
+            const milestones = list.data.sort((a,b) => (b.number - a.number))
+
+            return milestones.length == 0 ? null : milestones[0].number
+      - name: Update Pull Request
+        if: steps.milestones.outputs.result != null
+        uses: actions/github-script@0.9.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            // Confusingly, the issues api is used because pull requests are issues
+            await github.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.pull_request.number }},
+              milestone: ${{ steps.milestones.outputs.result }},
+            });
