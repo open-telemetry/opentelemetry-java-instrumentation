@@ -4,11 +4,10 @@ import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import java.net.URI;
 import java.net.URISyntaxException;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 public class Servlet2Decorator
-    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, ServletResponse> {
+    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
   public static final Servlet2Decorator DECORATE = new Servlet2Decorator();
 
   @Override
@@ -50,11 +49,10 @@ public class Servlet2Decorator
   }
 
   @Override
-  protected Integer status(final ServletResponse httpServletResponse) {
-    if (httpServletResponse instanceof StatusSavingHttpServletResponseWrapper) {
-      return ((StatusSavingHttpServletResponseWrapper) httpServletResponse).status;
+  protected Integer status(final HttpServletRequest httpServletRequest) {
+    if (httpServletRequest != null) {
+      return (Integer) httpServletRequest.getAttribute("dd.http-status");
     } else {
-      // HttpServletResponse doesn't have accessor for status code.
       return null;
     }
   }

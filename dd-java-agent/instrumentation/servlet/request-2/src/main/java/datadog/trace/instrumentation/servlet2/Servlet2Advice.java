@@ -28,8 +28,8 @@ public class Servlet2Advice {
   public static AgentScope onEnter(
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
-          ServletResponse response) {
+      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
+          final ServletResponse response) {
 
     final boolean hasServletTrace = request.getAttribute(DD_SPAN_ATTRIBUTE) instanceof AgentSpan;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
@@ -44,8 +44,7 @@ public class Servlet2Advice {
       // For use by HttpServletResponseInstrumentation:
       InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
           .put((HttpServletResponse) response, httpServletRequest);
-
-      response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
+      httpServletRequest.setAttribute("dd.http-status", HttpServletResponse.SC_OK);
     }
 
     final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
@@ -73,7 +72,6 @@ public class Servlet2Advice {
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(1) final ServletResponse response,
       @Advice.Enter final AgentScope scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
@@ -89,11 +87,11 @@ public class Servlet2Advice {
       return;
     }
     final AgentSpan span = scope.span();
-    DECORATE.onResponse(span, response);
+    if (request instanceof HttpServletRequest) {
+      DECORATE.onResponse(span, (HttpServletRequest) request);
+    }
     if (throwable != null) {
-      if (response instanceof StatusSavingHttpServletResponseWrapper
-          && ((StatusSavingHttpServletResponseWrapper) response).status
-              == HttpServletResponse.SC_OK) {
+      if ((Integer) request.getAttribute("dd.http-status") == HttpServletResponse.SC_OK) {
         // exception was thrown but status code wasn't set
         span.setTag(Tags.HTTP_STATUS, 500);
       }
