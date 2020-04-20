@@ -352,7 +352,7 @@ tasks.withType(Test).configureEach {
   }
 
   // All tests must complete within 15 minutes.
-  // This value is quite big because it lower values (3 mins) we were experiening large number of false positives
+  // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout = Duration.ofMinutes(15)
 
   // Disable all tests if skipTests property was specified
