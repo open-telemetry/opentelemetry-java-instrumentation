@@ -351,8 +351,9 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
   }
 
-  // All tests must complete within 3 minutes.
-  timeout = Duration.ofMinutes(3)
+  // All tests must complete within 15 minutes.
+  // This value is quite big because it lower values (3 mins) we were experiening large number of false positives
+  timeout = Duration.ofMinutes(15)
 
   // Disable all tests if skipTests property was specified
   onlyIf { !project.rootProject.hasProperty("skipTests") }
