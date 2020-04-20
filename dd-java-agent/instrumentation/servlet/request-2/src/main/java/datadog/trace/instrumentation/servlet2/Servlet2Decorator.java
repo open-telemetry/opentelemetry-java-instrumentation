@@ -7,7 +7,7 @@ import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 
 public class Servlet2Decorator
-    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
+    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, Integer> {
   public static final Servlet2Decorator DECORATE = new Servlet2Decorator();
 
   @Override
@@ -49,12 +49,8 @@ public class Servlet2Decorator
   }
 
   @Override
-  protected Integer status(final HttpServletRequest httpServletRequest) {
-    if (httpServletRequest != null) {
-      return (Integer) httpServletRequest.getAttribute("dd.http-status");
-    } else {
-      return null;
-    }
+  protected Integer status(final Integer status) {
+    return status;
   }
 
   @Override

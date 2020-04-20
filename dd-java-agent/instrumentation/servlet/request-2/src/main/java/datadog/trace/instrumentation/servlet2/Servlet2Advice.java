@@ -44,7 +44,9 @@ public class Servlet2Advice {
       // For use by HttpServletResponseInstrumentation:
       InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
           .put((HttpServletResponse) response, httpServletRequest);
-      httpServletRequest.setAttribute("dd.http-status", HttpServletResponse.SC_OK);
+
+      // Default value for checking for uncaught error later
+      InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 200);
     }
 
     final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
@@ -72,6 +74,7 @@ public class Servlet2Advice {
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
+      @Advice.Argument(1) final ServletResponse response,
       @Advice.Enter final AgentScope scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
@@ -87,11 +90,18 @@ public class Servlet2Advice {
       return;
     }
     final AgentSpan span = scope.span();
-    if (request instanceof HttpServletRequest) {
-      DECORATE.onResponse(span, (HttpServletRequest) request);
+
+    if (response instanceof HttpServletResponse) {
+      DECORATE.onResponse(
+          span, InstrumentationContext.get(ServletResponse.class, Integer.class).get(response));
+    } else {
+      DECORATE.onResponse(span, null);
     }
+
     if (throwable != null) {
-      if ((Integer) request.getAttribute("dd.http-status") == HttpServletResponse.SC_OK) {
+      if (response instanceof HttpServletResponse
+          && InstrumentationContext.get(ServletResponse.class, Integer.class).get(response)
+              == HttpServletResponse.SC_OK) {
         // exception was thrown but status code wasn't set
         span.setTag(Tags.HTTP_STATUS, 500);
       }

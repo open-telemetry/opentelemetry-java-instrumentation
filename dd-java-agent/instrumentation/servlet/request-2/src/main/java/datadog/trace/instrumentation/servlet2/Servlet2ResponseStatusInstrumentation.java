@@ -33,8 +33,7 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap(
-        "javax.servlet.http.HttpServletResponse", "javax.servlet.http.HttpServletRequest");
+    return singletonMap("javax.servlet.ServletResponse", Integer.class.getName());
   }
 
   /**
