@@ -37,8 +37,9 @@ class MuzzlePlugin implements Plugin<Project> {
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
   static {
     RemoteRepository central = new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build()
+    RemoteRepository jcenter = new RemoteRepository.Builder("jcenter", "default", "https://jcenter.bintray.com/").build()
     RemoteRepository typesafe = new RemoteRepository.Builder("typesafe", "default", "https://repo.typesafe.com/typesafe/releases").build()
-    MUZZLE_REPOS = new ArrayList<RemoteRepository>(Arrays.asList(central, typesafe))
+    MUZZLE_REPOS = new ArrayList<RemoteRepository>(Arrays.asList(central, jcenter, typesafe))
   }
 
   @Override
