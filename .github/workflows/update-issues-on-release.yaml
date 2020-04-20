@@ -13,13 +13,15 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const milestones = await github.issues.listMilestonesForRepo({
+            const options = github.issues.listMilestonesForRepo.endpoint.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'all'
             })
 
-            return milestones.data.find( milestone => milestone.title == "${{github.event.release.name}}" ).number
+            const milestones = await github.paginate(options)
+
+            return milestones.find( milestone => milestone.title == "${{github.event.release.name}}" ).number
       - name: Get issues for milestone
         id: issues
         uses: actions/github-script@0.9.0
