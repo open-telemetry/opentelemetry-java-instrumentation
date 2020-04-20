@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.java.concurrent;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.DDElementMatchers.extendsClass;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -64,11 +65,9 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+    return singletonMap(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
         ScalaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
-    return transformers;
   }
 
   public static class ForkJoinTaskAdvice {

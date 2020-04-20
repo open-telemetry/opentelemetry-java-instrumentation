@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.java.concurrent;
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -12,7 +13,6 @@ import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.ExecutorInstrumentationUtils;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -32,8 +32,7 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME, State.class.getName());
+    return singletonMap(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME, State.class.getName());
   }
 
   @Override

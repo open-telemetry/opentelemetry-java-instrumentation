@@ -11,7 +11,6 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
 import datadog.trace.api.Trace;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -155,9 +154,8 @@ public class TraceConfigInstrumentation implements Instrumenter {
         }
       }
 
-      final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(methodMatchers, packageName + ".TraceAdvice");
-      return transformers;
+      return Collections.<ElementMatcher<? super MethodDescription>, String>singletonMap(
+          methodMatchers, packageName + ".TraceAdvice");
     }
   }
 }
