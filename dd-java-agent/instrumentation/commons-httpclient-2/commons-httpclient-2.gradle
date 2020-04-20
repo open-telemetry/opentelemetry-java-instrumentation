@@ -3,6 +3,7 @@ muzzle {
     group = "commons-httpclient"
     module = "commons-httpclient"
     versions = "[2.0,]"
+    skipVersions += "3.1-jenkins-1" // odd version in jcenter
     assertInverse = true
   }
 }

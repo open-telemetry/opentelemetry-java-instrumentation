@@ -45,9 +45,8 @@ dependencies {
   testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.4.0'
 
   // TODO: The tests are incompatible with 7.x.  The instrumentation may be as well.
-  // FIXME: Lock to specific version due to bad deploy rollout.
-  latestDepTestCompile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.8.3'
-  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '6.8.3'
-  latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.8.3'
-  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.8.3'
+  latestDepTestCompile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.+'
+  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '6.+'
+  latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.+'
+  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.+'
 }

@@ -206,7 +206,7 @@ class MuzzlePlugin implements Plugin<Project> {
     rangeRequest.setArtifact(directiveArtifact)
     final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
-    final List<Artifact> allVersionArtifacts = filterVersion(rangeResult.versions).collect { version ->
+    final List<Artifact> allVersionArtifacts = filterVersion(rangeResult.versions, muzzleDirective.skipVersions).collect { version ->
       new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version.toString())
     }
 
@@ -237,7 +237,7 @@ class MuzzlePlugin implements Plugin<Project> {
     rangeRequest.setArtifact(directiveArtifact)
     final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
-    filterVersion(allRangeResult.versions).collect { version ->
+    filterVersion(allRangeResult.versions, muzzleDirective.skipVersions).collect { version ->
       if (!rangeResult.versions.contains(version)) {
         final MuzzleDirective inverseDirective = new MuzzleDirective()
         inverseDirective.group = muzzleDirective.group
@@ -351,7 +351,7 @@ class MuzzlePlugin implements Plugin<Project> {
   /**
    * Filter out snapshot-type builds from versions list.
    */
-  private static filterVersion(List<Version> list) {
+  private static filterVersion(List<Version> list, Set<String> skipVersions) {
     list.removeIf {
       def version = it.toString().toLowerCase()
       return version.contains("rc") ||
@@ -363,6 +363,7 @@ class MuzzlePlugin implements Plugin<Project> {
         version.contains("-m") ||
         version.contains("-dev") ||
         version.contains("public_draft") ||
+        skipVersions.contains(version) ||
         version.matches(GIT_SHA_PATTERN)
     }
     return list
@@ -388,6 +389,7 @@ class MuzzleDirective {
   String group
   String module
   String versions
+  Set<String> skipVersions = new HashSet<>()
   List<String> additionalDependencies = new ArrayList<>()
   boolean assertPass
   boolean assertInverse = false
@@ -443,6 +445,7 @@ class MuzzleExtension {
   void pass(Action<? super MuzzleDirective> action) {
     final MuzzleDirective pass = objectFactory.newInstance(MuzzleDirective)
     action.execute(pass)
+    postConstruct(pass)
     pass.assertPass = true
     directives.add(pass)
   }
@@ -450,7 +453,15 @@ class MuzzleExtension {
   void fail(Action<? super MuzzleDirective> action) {
     final MuzzleDirective fail = objectFactory.newInstance(MuzzleDirective)
     action.execute(fail)
+    postConstruct(fail)
     fail.assertPass = false
     directives.add(fail)
+  }
+
+  private postConstruct(MuzzleDirective directive) {
+    // Make skipVersions case insensitive.
+    directive.skipVersions = directive.skipVersions.collect {
+      it.toLowerCase()
+    }
   }
 }
