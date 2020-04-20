@@ -37,9 +37,14 @@ class MuzzlePlugin implements Plugin<Project> {
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
   static {
     RemoteRepository central = new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build()
+    RemoteRepository sonatype = new RemoteRepository.Builder("sonatype", "default", "https://oss.sonatype.org/content/repositories/releases/").build()
     RemoteRepository jcenter = new RemoteRepository.Builder("jcenter", "default", "https://jcenter.bintray.com/").build()
+    RemoteRepository spring = new RemoteRepository.Builder("spring", "default", "https://repo.spring.io/libs-release/").build()
+    RemoteRepository jboss = new RemoteRepository.Builder("jboss", "default", "https://repository.jboss.org/nexus/content/repositories/releases/").build()
     RemoteRepository typesafe = new RemoteRepository.Builder("typesafe", "default", "https://repo.typesafe.com/typesafe/releases").build()
-    MUZZLE_REPOS = new ArrayList<RemoteRepository>(Arrays.asList(central, jcenter, typesafe))
+    RemoteRepository akka = new RemoteRepository.Builder("akka", "default", "https://dl.bintray.com/akka/maven/").build()
+    RemoteRepository atlassian = new RemoteRepository.Builder("atlassian", "default", "https://maven.atlassian.com/content/repositories/atlassian-public/").build()
+    MUZZLE_REPOS = Arrays.asList(central, sonatype, jcenter, spring, jboss, typesafe, akka, atlassian)
   }
 
   @Override
@@ -206,6 +211,9 @@ class MuzzlePlugin implements Plugin<Project> {
     rangeRequest.setArtifact(directiveArtifact)
     final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
+//    println "Range Request: " + rangeRequest
+//    println "Range Result: " + rangeResult
+
     final List<Artifact> allVersionArtifacts = filterVersion(rangeResult.versions, muzzleDirective.skipVersions).collect { version ->
       new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version.toString())
     }
@@ -362,6 +370,8 @@ class MuzzlePlugin implements Plugin<Project> {
         version.contains(".m") ||
         version.contains("-m") ||
         version.contains("-dev") ||
+        version.contains("-ea") ||
+        version.contains("-atlassian-") ||
         version.contains("public_draft") ||
         skipVersions.contains(version) ||
         version.matches(GIT_SHA_PATTERN)
