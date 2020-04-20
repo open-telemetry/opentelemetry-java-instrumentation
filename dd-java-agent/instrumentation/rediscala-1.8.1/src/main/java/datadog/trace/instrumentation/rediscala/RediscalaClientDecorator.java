@@ -1,10 +1,16 @@
 package datadog.trace.instrumentation.rediscala;
 
-import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import redis.RedisCommand;
+import redis.protocol.RedisReply;
 
-public class RediscalaClientDecorator extends DatabaseClientDecorator<RedisCommand> {
+public class RediscalaClientDecorator
+    extends DatabaseClientDecorator<RedisCommand<? extends RedisReply, ?>> {
+
+  private static final String SERVICE_NAME = "redis";
+  private static final String COMPONENT_NAME = SERVICE_NAME + "-command";
+
   public static final RediscalaClientDecorator DECORATE = new RediscalaClientDecorator();
 
   @Override
@@ -14,12 +20,12 @@ public class RediscalaClientDecorator extends DatabaseClientDecorator<RedisComma
 
   @Override
   protected String service() {
-    return "redis";
+    return SERVICE_NAME;
   }
 
   @Override
   protected String component() {
-    return "redis-command";
+    return COMPONENT_NAME;
   }
 
   @Override
@@ -33,12 +39,12 @@ public class RediscalaClientDecorator extends DatabaseClientDecorator<RedisComma
   }
 
   @Override
-  protected String dbUser(final RedisCommand session) {
+  protected String dbUser(final RedisCommand<? extends RedisReply, ?> session) {
     return null;
   }
 
   @Override
-  protected String dbInstance(final RedisCommand session) {
+  protected String dbInstance(final RedisCommand<? extends RedisReply, ?> session) {
     return null;
   }
 }

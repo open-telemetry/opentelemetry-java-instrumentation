@@ -1,8 +1,9 @@
 import akka.actor.ActorSystem
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.instrumentation.api.Tags
+import datadog.trace.bootstrap.instrumentation.api.Tags
 import redis.ByteStringSerializerLowPriority
 import redis.ByteStringDeserializerDefault
 import redis.RedisClient
@@ -15,7 +16,8 @@ import spock.lang.Shared
 
 class RediscalaClientTest extends AgentTestRunner {
 
-  public static final int PORT = 6399
+  @Shared
+  int port = PortUtils.randomOpenPort()
 
   @Shared
   RedisServer redisServer = RedisServer.builder()
@@ -23,7 +25,7 @@ class RediscalaClientTest extends AgentTestRunner {
     .setting("bind 127.0.0.1")
   // set max memory to avoid problems in CI
     .setting("maxmemory 128M")
-    .port(PORT).build()
+    .port(port).build()
 
   @Shared
   ActorSystem system
@@ -34,7 +36,7 @@ class RediscalaClientTest extends AgentTestRunner {
   def setupSpec() {
     system = ActorSystem.create()
     redisClient = new RedisClient("localhost",
-      PORT,
+      port,
       Option.apply(null),
       Option.apply(null),
       "RedisClient",
@@ -81,8 +83,8 @@ class RediscalaClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }
@@ -113,8 +115,8 @@ class RediscalaClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }
@@ -127,8 +129,8 @@ class RediscalaClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }
