@@ -141,6 +141,11 @@ public class Config {
   public static final String PROFILING_PROXY_PORT = "profiling.proxy.port";
   public static final String PROFILING_PROXY_USERNAME = "profiling.proxy.username";
   public static final String PROFILING_PROXY_PASSWORD = "profiling.proxy.password";
+  public static final String PROFILING_EXCEPTION_SAMPLE_LIMIT = "profiling.exception.sample.limit";
+  public static final String PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS =
+      "profiling.exception.histogram.top-items";
+  public static final String PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE =
+      "profiling.exception.histogram.max-collection-size";
 
   public static final String RUNTIME_ID_TAG = "runtime-id";
   public static final String SERVICE = "service";
@@ -195,6 +200,9 @@ public class Config {
   public static final int DEFAULT_PROFILING_UPLOAD_TIMEOUT = 30; // seconds
   public static final String DEFAULT_PROFILING_UPLOAD_COMPRESSION = "on";
   public static final int DEFAULT_PROFILING_PROXY_PORT = 8080;
+  public static final int DEFAULT_PROFILING_EXCEPTION_SAMPLE_LIMIT = 10_000;
+  public static final int DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS = 50;
+  public static final int DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE = 10000;
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
@@ -318,6 +326,9 @@ public class Config {
   @Getter private final int profilingProxyPort;
   @Getter private final String profilingProxyUsername;
   @Getter private final String profilingProxyPassword;
+  @Getter private final int profilingExceptionSampleLimit;
+  @Getter private final int profilingExceptionHistogramTopItems;
+  @Getter private final int profilingExceptionHistogramMaxCollectionSize;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -520,6 +531,18 @@ public class Config {
     profilingProxyUsername = getSettingFromEnvironment(PROFILING_PROXY_USERNAME, null);
     profilingProxyPassword = getSettingFromEnvironment(PROFILING_PROXY_PASSWORD, null);
 
+    profilingExceptionSampleLimit =
+        getIntegerSettingFromEnvironment(
+            PROFILING_EXCEPTION_SAMPLE_LIMIT, DEFAULT_PROFILING_EXCEPTION_SAMPLE_LIMIT);
+    profilingExceptionHistogramTopItems =
+        getIntegerSettingFromEnvironment(
+            PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS,
+            DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS);
+    profilingExceptionHistogramMaxCollectionSize =
+        getIntegerSettingFromEnvironment(
+            PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE,
+            DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE);
+
     // Setting this last because we have a few places where this can come from
     apiKey = tmpApiKey;
 
@@ -687,6 +710,21 @@ public class Config {
         properties.getProperty(PROFILING_PROXY_USERNAME, parent.profilingProxyUsername);
     profilingProxyPassword =
         properties.getProperty(PROFILING_PROXY_PASSWORD, parent.profilingProxyPassword);
+
+    profilingExceptionSampleLimit =
+        getPropertyIntegerValue(
+            properties, PROFILING_EXCEPTION_SAMPLE_LIMIT, parent.profilingExceptionSampleLimit);
+
+    profilingExceptionHistogramTopItems =
+        getPropertyIntegerValue(
+            properties,
+            PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS,
+            parent.profilingExceptionHistogramTopItems);
+    profilingExceptionHistogramMaxCollectionSize =
+        getPropertyIntegerValue(
+            properties,
+            PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE,
+            parent.profilingExceptionHistogramMaxCollectionSize);
 
     log.debug("New instance: {}", this);
   }

@@ -28,6 +28,10 @@ public class ProfilingTestApplication {
   private static void tracedMethod() throws InterruptedException {
     System.out.println("Tracing");
     tracedBusyMethod();
+    try {
+      throw new IllegalStateException("test");
+    } catch (final IllegalStateException ignored) {
+    }
     Thread.sleep(50);
   }
 

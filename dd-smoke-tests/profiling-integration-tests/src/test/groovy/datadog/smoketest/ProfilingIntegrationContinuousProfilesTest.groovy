@@ -113,5 +113,8 @@ class ProfilingIntegrationContinuousProfilesTest extends AbstractSmokeTest {
     filteredScopeEvents.size() > 0
 
     filteredScopeEvents.getAggregate(Aggregators.min("datadog.Scope", cpuTimeAttr)).longValue() >= 10_000L
+
+    IItemCollection exceptionSampleEvents = events.apply(ItemFilters.type("datadog.ExceptionSample"))
+    exceptionSampleEvents.size() > 0
   }
 }

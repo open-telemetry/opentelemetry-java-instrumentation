@@ -1,0 +1,45 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_11
+  // Zulu has backported profiling support
+  forceJdk = ['ZULU8']
+  // By default tests with be compiled for `minJavaVersionForTests` version,
+  // but in this case we would like to avoid this since we would like to run with ZULU8
+  skipSettingTestJavaVersion = true
+  enableJunitPlatform = true
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: "idea"
+
+dependencies {
+  compile project(':dd-java-agent:agent-tooling')
+
+  testCompile deps.junit5
+  testCompile deps.jmc
+  testCompile deps.commonsMath
+  testCompile deps.mockito
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+// Must use Java 11 to build JFR enabled code - there is no JFR in OpenJDK 8 (revisit once JFR in Java 8 is available)
+[compileMain_java11Java, compileTestJava].each {
+  it.sourceCompatibility = JavaVersion.VERSION_1_8
+  it.targetCompatibility = JavaVersion.VERSION_1_8
+  it.doFirst {
+    // Disable '-processing' because some annotations are not claimed.
+    // Disable '-options' because we are compiling for java8 without specifying bootstrap - intentionally.
+    // Disable '-path' because we do not have some of the paths seem to be missing.
+    // Compile to 8 compatible byte code
+    options.compilerArgs.addAll(['-source', '8', '-target', '8', '-Xlint:all,-processing,-options,-path'])
+    options.fork = true
+    options.forkOptions.javaHome = file(System.env.JAVA_11_HOME)
+  }
+}
+
+idea {
+  module {
+    jdkName = '11'
+  }
+}

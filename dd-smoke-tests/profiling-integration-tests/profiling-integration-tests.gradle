@@ -6,7 +6,6 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_11
   // Zulu has backported profiling support
   forceJdk = ['ZULU8']
-  jmcVersion = '8.0.0-SNAPSHOT'
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
@@ -23,14 +22,11 @@ jar {
 
 dependencies {
   compile project(':dd-trace-api')
+  compile group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
 
   testCompile project(':dd-smoke-tests')
   testCompile project(':dd-java-agent:agent-profiling:profiling-testing')
-  testCompile "org.openjdk.jmc:common:$jmcVersion"
-  testCompile "org.openjdk.jmc:flightrecorder:$jmcVersion"
-  testCompile "org.openjdk.jmc:flightrecorder.rules:$jmcVersion"
-  testCompile "org.openjdk.jmc:flightrecorder.rules.jdk:$jmcVersion"
-  compile group: 'org.lz4', name: 'lz4-java', version: '1.7.1'
+  testCompile deps.jmc
 }
 
 tasks.withType(Test).configureEach {

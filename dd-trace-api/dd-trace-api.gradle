@@ -15,5 +15,6 @@ excludedClassesCoverage += [
 description = 'dd-trace-api'
 dependencies {
   compile deps.slf4j
+
   testCompile project(':utils:test-utils')
 }

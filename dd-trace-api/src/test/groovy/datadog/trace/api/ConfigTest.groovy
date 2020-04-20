@@ -13,6 +13,9 @@ import static datadog.trace.api.Config.API_KEY_FILE
 import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
+import static datadog.trace.api.Config.DEFAULT_PROFILING_EXCEPTION_SAMPLE_LIMIT
+import static datadog.trace.api.Config.DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE
+import static datadog.trace.api.Config.DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS
 import static datadog.trace.api.Config.GLOBAL_TAGS
 import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
@@ -37,6 +40,9 @@ import static datadog.trace.api.Config.PRIORITY_SAMPLING
 import static datadog.trace.api.Config.PROFILING_API_KEY_FILE_OLD
 import static datadog.trace.api.Config.PROFILING_API_KEY_FILE_VERY_OLD
 import static datadog.trace.api.Config.PROFILING_ENABLED
+import static datadog.trace.api.Config.PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE
+import static datadog.trace.api.Config.PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS
+import static datadog.trace.api.Config.PROFILING_EXCEPTION_SAMPLE_LIMIT
 import static datadog.trace.api.Config.PROFILING_PROXY_HOST
 import static datadog.trace.api.Config.PROFILING_PROXY_PASSWORD
 import static datadog.trace.api.Config.PROFILING_PROXY_PORT
@@ -152,6 +158,9 @@ class ConfigTest extends DDSpecification {
     config.profilingProxyPort == Config.DEFAULT_PROFILING_PROXY_PORT
     config.profilingProxyUsername == null
     config.profilingProxyPassword == null
+    config.profilingExceptionSampleLimit == DEFAULT_PROFILING_EXCEPTION_SAMPLE_LIMIT
+    config.profilingExceptionHistogramTopItems == DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS
+    config.profilingExceptionHistogramMaxCollectionSize == DEFAULT_PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE
 
     config.toString().contains("unnamed-java-app")
 
@@ -219,6 +228,9 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(PROFILING_PROXY_PORT, "1118")
     prop.setProperty(PROFILING_PROXY_USERNAME, "proxy-username")
     prop.setProperty(PROFILING_PROXY_PASSWORD, "proxy-password")
+    prop.setProperty(PROFILING_EXCEPTION_SAMPLE_LIMIT, "811")
+    prop.setProperty(PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS, "1121")
+    prop.setProperty(PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE, "1122")
 
     when:
     Config config = Config.get(prop)
@@ -276,6 +288,9 @@ class ConfigTest extends DDSpecification {
     config.profilingProxyPort == 1118
     config.profilingProxyUsername == "proxy-username"
     config.profilingProxyPassword == "proxy-password"
+    config.profilingExceptionSampleLimit == 811
+    config.profilingExceptionHistogramTopItems == 1121
+    config.profilingExceptionHistogramMaxCollectionSize == 1122
   }
 
   def "specify overrides via system properties"() {
@@ -333,6 +348,9 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + PROFILING_PROXY_PORT, "1118")
     System.setProperty(PREFIX + PROFILING_PROXY_USERNAME, "proxy-username")
     System.setProperty(PREFIX + PROFILING_PROXY_PASSWORD, "proxy-password")
+    System.setProperty(PREFIX + PROFILING_EXCEPTION_SAMPLE_LIMIT, "811")
+    System.setProperty(PREFIX + PROFILING_EXCEPTION_HISTOGRAM_TOP_ITEMS, "1121")
+    System.setProperty(PREFIX + PROFILING_EXCEPTION_HISTOGRAM_MAX_COLLECTION_SIZE, "1122")
 
     when:
     Config config = new Config()
@@ -390,6 +408,9 @@ class ConfigTest extends DDSpecification {
     config.profilingProxyPort == 1118
     config.profilingProxyUsername == "proxy-username"
     config.profilingProxyPassword == "proxy-password"
+    config.profilingExceptionSampleLimit == 811
+    config.profilingExceptionHistogramTopItems == 1121
+    config.profilingExceptionHistogramMaxCollectionSize == 1122
   }
 
   def "specify overrides via env vars"() {

@@ -27,10 +27,7 @@ dependencies {
 
   testCompile deps.junit5
   testCompile project(':dd-java-agent:agent-profiling:profiling-testing')
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
-  testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
-  testCompile deps.bytebuddy
-  testCompile deps.bytebuddyagent
+  testCompile deps.mockito
   testCompile group: 'com.squareup.okhttp3', name: 'mockwebserver', version: versions.okhttp
 }
 

@@ -20,7 +20,7 @@ public final class Constants {
     "datadog.trace.bootstrap",
     "datadog.trace.context",
     "datadog.trace.instrumentation.api",
-    "io.opentracing",
+    "io.opentracing"
   };
 
   // This is used in IntegrationTestUtils.java
