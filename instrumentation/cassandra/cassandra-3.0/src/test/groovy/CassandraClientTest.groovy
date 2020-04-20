@@ -62,11 +62,11 @@ class CassandraClientTest extends AgentTestRunner {
 
     expect:
     assertTraces(keyspace ? 2 : 1) {
-//      if (keyspace) {
-//        trace(0, 1) {
-//          cassandraSpan(it, 0, "USE $keyspace", null)
-//        }
-//      }
+      if (keyspace) {
+        trace(0, 1) {
+          cassandraSpan(it, 0, "USE $keyspace", null)
+        }
+      }
       trace(keyspace ? 1 : 0, 1) {
         cassandraSpan(it, 0, statement, keyspace)
       }

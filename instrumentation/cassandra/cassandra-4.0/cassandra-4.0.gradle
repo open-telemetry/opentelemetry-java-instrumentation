@@ -8,25 +8,16 @@ apply from: "${rootDir}/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
-
   pass {
     group = "com.datastax.oss"
     module = "java-driver-core"
     versions = cassandraDriverTestVersions
     assertInverse = true
   }
-
 }
 
-compileJava {
-  sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
-}
-
-compileTestJava {
-  sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
-}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 testSets {
   latestDepTest {
