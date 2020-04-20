@@ -15,9 +15,12 @@
  */
 package io.opentelemetry.auto.common.exec;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.Delayed;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,9 +43,56 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
     }
   }
 
-  public ScheduledFuture<?> scheduleAtFixedRate(
-      final Runnable command, final long initialDelay, final long period, final TimeUnit unit) {
-    return executorService.scheduleAtFixedRate(command, initialDelay, period, unit);
+  /**
+   * Run {@code task} periodically providing it with {@code target}
+   *
+   * <p>Important implementation detail here is that internally we do not hold any strong references
+   * to {@code target} which means it can be GCed even while periodic task is still scheduled.
+   *
+   * <p>If {@code target} is GCed periodic task is canceled.
+   *
+   * <p>This method should be able to schedule task in majority of cases. The only reasonable case
+   * when this would fail is when task is being scheduled during JVM shutdown. In this case this
+   * method will return 'fake' future that can still be canceled to avoid confusing callers.
+   *
+   * @param task task to run. Important: must not hold any strong references to target (or anything
+   *     else non static)
+   * @param target target object to pass to task
+   * @param initialDelay initialDelay, see {@link
+   *     ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)}
+   * @param period period, see {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long,
+   *     long, TimeUnit)}
+   * @param unit unit, see {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long,
+   *     TimeUnit)}
+   * @param name name to use in logs when task cannot be scheduled
+   * @return future that can be canceled
+   */
+  public <T> ScheduledFuture<?> scheduleAtFixedRate(
+      final Task<T> task,
+      final T target,
+      final long initialDelay,
+      final long period,
+      final TimeUnit unit,
+      final String name) {
+    if (CommonTaskExecutor.INSTANCE.isShutdown()) {
+      log.warn("Periodic task scheduler is shutdown. Will not run: {}", name);
+    } else {
+      try {
+        final PeriodicTask<T> periodicTask = new PeriodicTask<>(task, target);
+        final ScheduledFuture<?> future =
+            executorService.scheduleAtFixedRate(
+                new PeriodicTask<>(task, target), initialDelay, period, unit);
+        periodicTask.setFuture(future);
+        return future;
+      } catch (final RejectedExecutionException e) {
+        log.warn("Periodic task rejected. Will not run: {}", name);
+      }
+    }
+    /*
+     * Return a 'fake' unscheduled future to allow caller call 'cancel' on it if needed.
+     * We are using 'fake' object instead of null to avoid callers needing to deal with nulls.
+     */
+    return new UnscheduledFuture(name);
   }
 
   @Override
@@ -95,6 +145,81 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
       } catch (final InterruptedException e) {
         executorService.shutdownNow();
       }
+    }
+  }
+
+  public interface Task<T> {
+    void run(T target);
+  }
+
+  private static class PeriodicTask<T> implements Runnable {
+    private final WeakReference<T> target;
+    private final Task<T> task;
+    private volatile ScheduledFuture<?> future = null;
+
+    public PeriodicTask(final Task<T> task, final T target) {
+      this.target = new WeakReference<>(target);
+      this.task = task;
+    }
+
+    @Override
+    public void run() {
+      final T t = target.get();
+      if (t != null) {
+        task.run(t);
+      } else if (future != null) {
+        future.cancel(false);
+      }
+    }
+
+    public void setFuture(final ScheduledFuture<?> future) {
+      this.future = future;
+    }
+  }
+
+  // Unscheduled future
+  @Slf4j
+  private static class UnscheduledFuture implements ScheduledFuture<Object> {
+    private final String name;
+
+    public UnscheduledFuture(final String name) {
+      this.name = name;
+    }
+
+    @Override
+    public long getDelay(final TimeUnit unit) {
+      return 0;
+    }
+
+    @Override
+    public int compareTo(final Delayed o) {
+      return 0;
+    }
+
+    @Override
+    public boolean cancel(final boolean mayInterruptIfRunning) {
+      log.debug("Cancelling unscheduled future for: {}", name);
+      return false;
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return false;
+    }
+
+    @Override
+    public boolean isDone() {
+      return false;
+    }
+
+    @Override
+    public Object get() {
+      return null;
+    }
+
+    @Override
+    public Object get(final long timeout, final TimeUnit unit) {
+      return null;
     }
   }
 }

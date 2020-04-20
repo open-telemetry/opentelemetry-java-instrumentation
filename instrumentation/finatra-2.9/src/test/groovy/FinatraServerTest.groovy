@@ -69,6 +69,12 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
   }
 
   @Override
+  boolean testNotFound() {
+    // Resource name is set to "GET /notFound"
+    false
+  }
+
+  @Override
   void stopServer(HttpServer httpServer) {
     Await.ready(httpServer.close(), TIMEOUT)
   }

@@ -383,7 +383,6 @@ public class Config {
   private static <T> T valueOf(
       final String value, @NonNull final Class<T> tClass, final T defaultValue) {
     if (value == null || value.trim().isEmpty()) {
-      log.debug("valueOf: using defaultValue '{}' for '{}' of '{}' ", defaultValue, value, tClass);
       return defaultValue;
     }
     try {

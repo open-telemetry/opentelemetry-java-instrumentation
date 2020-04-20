@@ -14,35 +14,22 @@
  * limitations under the License.
  */
 import com.amazonaws.AmazonClientException
-import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.Request
 import com.amazonaws.SDKGlobalConfiguration
-import com.amazonaws.SdkClientException
 import com.amazonaws.auth.AWSCredentialsProviderChain
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.AnonymousAWSCredentials
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
 import com.amazonaws.auth.InstanceProfileCredentialsProvider
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.handlers.RequestHandler2
-import com.amazonaws.regions.Regions
 import com.amazonaws.retry.PredefinedRetryPolicies
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest
-import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
-import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder
-import com.amazonaws.services.kinesis.model.DeleteStreamRequest
-import com.amazonaws.services.rds.AmazonRDSClientBuilder
+import com.amazonaws.services.ec2.AmazonEC2Client
+import com.amazonaws.services.rds.AmazonRDSClient
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder
-import com.amazonaws.services.sqs.model.CreateQueueRequest
-import com.amazonaws.services.sqs.model.SendMessageRequest
+import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -59,7 +46,7 @@ import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
-class AWSClientTest extends AgentTestRunner {
+class AWS0ClientTest extends AgentTestRunner {
 
   private static final CREDENTIALS_PROVIDER_CHAIN = new AWSCredentialsProviderChain(
     new EnvironmentVariableCredentialsProvider(),
@@ -78,8 +65,6 @@ class AWSClientTest extends AgentTestRunner {
   }
 
   @Shared
-  def credentialsProvider = new AWSStaticCredentialsProvider(new AnonymousAWSCredentials())
-  @Shared
   def responseBody = new AtomicReference<String>()
   @AutoCleanup
   @Shared
@@ -89,28 +74,6 @@ class AWSClientTest extends AgentTestRunner {
         response.status(200).send(responseBody.get())
       }
     }
-  }
-  @Shared
-  def endpoint = new AwsClientBuilder.EndpointConfiguration("http://localhost:$server.address.port", "us-west-2")
-
-  def "request handler is hooked up with builder"() {
-    setup:
-    def builder = AmazonS3ClientBuilder.standard()
-      .withRegion(Regions.US_EAST_1)
-    if (addHandler) {
-      builder.withRequestHandlers(new RequestHandler2() {})
-    }
-    AmazonWebServiceClient client = builder.build()
-
-    expect:
-    client.requestHandler2s != null
-    client.requestHandler2s.size() == size
-    client.requestHandler2s.get(position).getClass().getSimpleName() == "TracingRequestHandler"
-
-    where:
-    addHandler | size | position
-    true       | 2    | 1
-    false      | 1    | 0
   }
 
   def "request handler is hooked up with constructor"() {
@@ -188,35 +151,17 @@ class AWSClientTest extends AgentTestRunner {
     server.lastRequest.headers.get("traceparent") == null
 
     where:
-    service      | operation           | method | path                  | handlerCount | client                                                                                                                                             | call                                                                            | additionalTags                    | body
-    "S3"         | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.createBucket("testbucket") }                                 | ["aws.bucket.name": "testbucket"] | ""
-    "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.getObject("someBucket", "someKey") }                         | ["aws.bucket.name": "someBucket"] | ""
-    "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | 1            | AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                            | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
-    "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | 1            | AmazonKinesisClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                             | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
-    "SQS"        | "CreateQueue"       | "POST" | "/"                   | 4            | AmazonSQSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { c -> c.createQueue(new CreateQueueRequest("somequeue")) }                     | ["aws.queue.name": "somequeue"]   | """
-        <CreateQueueResponse>
-            <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
-            <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
-        </CreateQueueResponse>
-      """
-    "SQS"        | "SendMessage"       | "POST" | "/someurl"            | 4            | AmazonSQSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { c -> c.sendMessage(new SendMessageRequest("someurl", "")) }                   | ["aws.queue.url": "someurl"]      | """
-        <SendMessageResponse>
-            <SendMessageResult>
-                <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
-                <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>
-                <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
-            </SendMessageResult>
-            <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
-        </SendMessageResponse>
-      """
-    "EC2"        | "AllocateAddress"   | "POST" | "/"                   | 4            | AmazonEC2ClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { client -> client.allocateAddress() }                                          | [:]                               | """
-        <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
-           <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
-           <publicIp>192.0.2.1</publicIp>
-           <domain>standard</domain>
-        </AllocateAddressResponse>
-      """
-    "RDS"        | "DeleteOptionGroup" | "POST" | "/"                   | 5            | AmazonRDSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }          | [:]                               | """
+    service | operation           | method | path                  | handlerCount | client                                                                      | additionalTags                    | call                                                                                                                                   | body
+    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")  | ["aws.bucket.name": "testbucket"] | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""
+    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")  | ["aws.bucket.name": "someBucket"] | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""
+    "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("http://localhost:$server.address.port") | [:]                               | { client -> client.allocateAddress() }                                                                                                 | """
+            <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
+               <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
+               <publicIp>192.0.2.1</publicIp>
+               <domain>standard</domain>
+            </AllocateAddressResponse>
+            """
+    "RDS"   | "DeleteOptionGroup" | "POST" | "/"                   | 1            | new AmazonRDSClient().withEndpoint("http://localhost:$server.address.port") | [:]                               | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                                 | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
@@ -233,7 +178,7 @@ class AWSClientTest extends AgentTestRunner {
     call.call(client)
 
     then:
-    thrown SdkClientException
+    thrown AmazonClientException
 
     assertTraces(1) {
       trace(0, 2) {
@@ -245,8 +190,8 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
-            "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" 61
+            "$MoreTags.NET_PEER_NAME" "localhost"
             "aws.service" { it.contains(service) }
             "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
             "aws.operation" "${operation}Request"
@@ -254,7 +199,7 @@ class AWSClientTest extends AgentTestRunner {
             for (def addedTag : additionalTags) {
               "$addedTag.key" "$addedTag.value"
             }
-            errorTags SdkClientException, ~/Unable to execute HTTP request/
+            errorTags AmazonClientException, ~/Unable to execute HTTP request/
           }
         }
         span(1) {
@@ -297,18 +242,19 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "S3.HeadBucket"
+          operationName "S3.GetObject"
           spanKind INTERNAL
           errored true
           parent()
           tags {
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
-            "$Tags.HTTP_METHOD" "HEAD"
+            "$Tags.HTTP_METHOD" "GET"
             "$MoreTags.NET_PEER_NAME" "s3.amazonaws.com"
             "aws.service" "Amazon S3"
             "aws.endpoint" "https://s3.amazonaws.com"
-            "aws.operation" "HeadBucketRequest"
+            "aws.operation" "GetObjectRequest"
             "aws.agent" "java-aws-sdk"
+            "aws.bucket.name" "someBucket"
             errorTags RuntimeException, "bad handler"
           }
         }
@@ -349,15 +295,11 @@ class AWSClientTest extends AgentTestRunner {
             "$MoreTags.NET_PEER_PORT" server.address.port
             "$MoreTags.NET_PEER_NAME" "localhost"
             "aws.service" "Amazon S3"
-            "aws.endpoint" "$server.address"
+            "aws.endpoint" "http://localhost:$server.address.port"
             "aws.operation" "GetObjectRequest"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            try {
-              errorTags AmazonClientException, ~/Unable to execute HTTP request/
-            } catch (AssertionError e) {
-              errorTags SdkClientException, "Unable to execute HTTP request: Request did not complete before the request timeout configuration."
-            }
+            errorTags AmazonClientException, ~/Unable to execute HTTP request/
           }
         }
         (1..4).each {

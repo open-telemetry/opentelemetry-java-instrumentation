@@ -18,23 +18,31 @@ package io.opentelemetry.auto.instrumentation.springwebmvc;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import javax.servlet.ServletContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.web.method.HandlerMethod;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @AutoService(Instrumenter.class)
@@ -50,8 +58,17 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   }
 
   @Override
+  public Map<String, String> contextStore() {
+    return singletonMap(
+        "org.springframework.web.servlet.DispatcherServlet",
+        packageName + ".HandlerMappingResourceNameFilter");
+  }
+
+  @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".SpringWebMvcDecorator"};
+    return new String[] {
+      packageName + ".SpringWebMvcDecorator", packageName + ".HandlerMappingResourceNameFilter"
+    };
   }
 
   @Override
@@ -60,9 +77,16 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     transformers.put(
         isMethod()
             .and(isProtected())
+            .and(named("onRefresh"))
+            .and(takesArgument(0, named("org.springframework.context.ApplicationContext")))
+            .and(takesArguments(1)),
+        DispatcherServletInstrumentation.class.getName() + "$HandlerMappingAdvice");
+    transformers.put(
+        isMethod()
+            .and(isProtected())
             .and(named("render"))
             .and(takesArgument(0, named("org.springframework.web.servlet.ModelAndView"))),
-        DispatcherServletInstrumentation.class.getName() + "$DispatcherAdvice");
+        DispatcherServletInstrumentation.class.getName() + "$RenderAdvice");
     transformers.put(
         isMethod()
             .and(isProtected())
@@ -72,7 +96,37 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     return transformers;
   }
 
-  public static class DispatcherAdvice {
+  /**
+   * This advice creates a filter that has reference to the handlerMappings from DispatcherServlet
+   * which allows the mappings to be evaluated at the beginning of the filter chain. This evaluation
+   * is done inside the Servlet3Decorator.onContext method.
+   */
+  public static class HandlerMappingAdvice {
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void afterRefresh(
+        @Advice.This final DispatcherServlet dispatcher,
+        @Advice.Argument(0) final ApplicationContext springCtx,
+        @Advice.FieldValue("handlerMappings") final List<HandlerMapping> handlerMappings,
+        @Advice.Thrown final Throwable throwable) {
+      final ServletContext servletContext = springCtx.getBean(ServletContext.class);
+      if (handlerMappings != null && servletContext != null) {
+        final ContextStore<DispatcherServlet, HandlerMappingResourceNameFilter> contextStore =
+            InstrumentationContext.get(
+                DispatcherServlet.class, HandlerMappingResourceNameFilter.class);
+        HandlerMappingResourceNameFilter filter = contextStore.get(dispatcher);
+        if (filter == null) {
+          filter = new HandlerMappingResourceNameFilter();
+          contextStore.put(dispatcher, filter);
+        }
+        filter.setHandlerMappings(handlerMappings);
+        servletContext.setAttribute(
+            "ota.dispatcher-filter", filter); // used by Servlet3Decorator.onContext
+      }
+    }
+  }
+
+  public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
@@ -90,11 +144,6 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
-    }
-
-    // Make this advice match consistently with HandlerAdapterInstrumentation
-    private void muzzleCheck(final HandlerMethod method) {
-      method.getMethod();
     }
   }
 

@@ -32,6 +32,7 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 @Unroll
 abstract class JaxRsFilterTest extends AgentTestRunner {
@@ -100,6 +101,46 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     "/test/hello/bob"  | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
     "/test2/hello/bob" | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
     "/test3/hi/bob"    | false       | true          | null                       | "PrematchRequestFilter.filter" | "Aborted Prematch"
+  }
+
+  def "test nested call"() {
+    given:
+    simpleRequestFilter.abort = false
+    prematchRequestFilter.abort = false
+
+    when:
+    def responseText
+    def responseStatus
+
+    // start a trace because the test doesn't go through any servlet or other instrumentation.
+    runUnderTrace("test.span") {
+      (responseText, responseStatus) = makeRequest(resource)
+    }
+
+    then:
+    responseStatus == Response.Status.OK.statusCode
+    responseText == expectedResponse
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName parentResourceName
+          tags {
+          }
+        }
+        span(1) {
+          childOf span(0)
+          operationName controller1Name
+          spanKind INTERNAL
+          tags {
+          }
+        }
+      }
+    }
+
+    where:
+    resource        | parentResourceName   | controller1Name | expectedResponse
+    "/test3/nested" | "POST /test3/nested" | "Test3.nested"  | "Test3 nested!"
   }
 
   @Provider

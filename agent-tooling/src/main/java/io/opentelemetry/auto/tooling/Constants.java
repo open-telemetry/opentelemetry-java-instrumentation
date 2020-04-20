@@ -29,6 +29,7 @@ public final class Constants {
    * io.opentelemetry.auto.test.SpockRunner#BOOTSTRAP_PACKAGE_PREFIXES_COPY
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
+    "io.opentelemetry.auto.common.exec",
     "io.opentelemetry.auto.slf4j",
     "io.opentelemetry.auto.config",
     "io.opentelemetry.auto.bootstrap",
@@ -39,6 +40,7 @@ public final class Constants {
   // This is used in IntegrationTestUtils.java
   public static final String[] AGENT_PACKAGE_PREFIXES = {
     "io.opentelemetry.auto",
+    "io.opentelemetry.auto.common.exec",
     "io.opentelemetry.auto.instrumentation",
     // guava
     "com.google.auto",

@@ -37,14 +37,6 @@ class FinatraController extends Controller {
     })
   }
 
-  any(NOT_FOUND.getPath) { request: Request =>
-    controller(NOT_FOUND, new Closure[Response](null) {
-      override def call(): Response = {
-        response.notFound(NOT_FOUND.getBody)
-      }
-    })
-  }
-
   any(QUERY_PARAM.getPath) { request: Request =>
     controller(QUERY_PARAM, new Closure[Response](null) {
       override def call(): Response = {

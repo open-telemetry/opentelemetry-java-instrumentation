@@ -86,7 +86,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
 
   def "test exception exit"() {
     setup:
-
     Throwable error = null
     try {
       SayTracedHello.sayERROR()

@@ -19,12 +19,17 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.servlet.Filter;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Servlet3Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final Tracer TRACER =
@@ -68,16 +73,33 @@ public class Servlet3Decorator
   public Span onRequest(final Span span, final HttpServletRequest request) {
     assert span != null;
     if (request != null) {
-      final String sc = request.getContextPath();
-      if (sc != null && !sc.isEmpty()) {
-        span.setAttribute("servlet.context", sc);
-      }
-      final String sp = request.getServletPath();
-      if (sp != null && !sp.isEmpty()) {
-        span.setAttribute("servlet.path", sp);
-      }
+      span.setAttribute("servlet.path", request.getServletPath());
+      span.setAttribute("servlet.context", request.getContextPath());
+      onContext(span, request, request.getServletContext());
     }
     return super.onRequest(span, request);
+  }
+
+  /**
+   * This method executes the filter created by
+   * io.opentelemetry.auto.instrumentation.springwebmvc.DispatcherServletInstrumentation$HandlerMappingAdvice.
+   * This was easier and less "hacky" than other ways to add the filter to the front of the filter
+   * chain.
+   */
+  private void onContext(
+      final Span span, final HttpServletRequest request, final ServletContext context) {
+    final Object attribute = context.getAttribute("ota.dispatcher-filter");
+    if (attribute instanceof Filter) {
+      final Object priorAttr = request.getAttribute(SPAN_ATTRIBUTE);
+      request.setAttribute(SPAN_ATTRIBUTE, span);
+      try {
+        ((Filter) attribute).doFilter(request, null, null);
+      } catch (final IOException | ServletException e) {
+        log.debug("Exception unexpectedly thrown by filter", e);
+      } finally {
+        request.setAttribute(SPAN_ATTRIBUTE, priorAttr);
+      }
+    }
   }
 
   @Override
