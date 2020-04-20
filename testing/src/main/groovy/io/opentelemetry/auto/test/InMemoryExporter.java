@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ListWriter implements SpanProcessor {
+public class InMemoryExporter implements SpanProcessor {
 
   private final List<List<SpanData>> traces = new ArrayList<>(); // guarded by tracesLock
 

@@ -564,8 +564,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           // serviceName jspWebappContext
           operationName expectedOperationName("GET")
           spanKind SERVER
-          // FIXME: this is not a great resource name for serving static content.
-          // resourceName "GET /$jspWebappContext/$staticFile"
+          // FIXME: this is not a great span name for serving static content.
+          // spanName "GET /$jspWebappContext/$staticFile"
           errored false
           tags {
             "$MoreTags.NET_PEER_IP" "127.0.0.1"

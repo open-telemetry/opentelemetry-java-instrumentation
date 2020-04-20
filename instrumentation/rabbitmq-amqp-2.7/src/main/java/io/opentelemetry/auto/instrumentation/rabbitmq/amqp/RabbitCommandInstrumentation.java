@@ -75,7 +75,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
 
   public static class CommandConstructorAdvice {
     @Advice.OnMethodExit
-    public static void setResourceNameAddHeaders(@Advice.This final Command command) {
+    public static void setSpanNameAddHeaders(@Advice.This final Command command) {
 
       final Span span = CURRENT_RABBIT_SPAN.get();
       if (span != null && command.getMethod() != null) {
