@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.cassandra;
+package io.opentelemetry.auto.instrumentation.cassandra.v3_0;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
-import static io.opentelemetry.auto.instrumentation.cassandra.CassandraClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.cassandra.v3_0.CassandraClientDecorator.DECORATE;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
