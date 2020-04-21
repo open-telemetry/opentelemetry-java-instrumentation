@@ -25,7 +25,6 @@ import com.google.common.collect.Sets;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -169,9 +168,8 @@ public class TraceConfigInstrumentation implements Instrumenter {
         }
       }
 
-      final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(methodMatchers, packageName + ".TraceAdvice");
-      return transformers;
+      return Collections.<ElementMatcher<? super MethodDescription>, String>singletonMap(
+          methodMatchers, packageName + ".TraceAdvice");
     }
   }
 }
