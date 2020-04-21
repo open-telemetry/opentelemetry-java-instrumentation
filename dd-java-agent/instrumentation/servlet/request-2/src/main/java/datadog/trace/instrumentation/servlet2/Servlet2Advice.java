@@ -28,8 +28,8 @@ public class Servlet2Advice {
   public static AgentScope onEnter(
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
-          ServletResponse response) {
+      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
+          final ServletResponse response) {
 
     final boolean hasServletTrace = request.getAttribute(DD_SPAN_ATTRIBUTE) instanceof AgentSpan;
     final boolean invalidRequest = !(request instanceof HttpServletRequest);
@@ -45,7 +45,8 @@ public class Servlet2Advice {
       InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
           .put((HttpServletResponse) response, httpServletRequest);
 
-      response = new StatusSavingHttpServletResponseWrapper((HttpServletResponse) response);
+      // Default value for checking for uncaught error later
+      InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 200);
     }
 
     final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
@@ -89,10 +90,17 @@ public class Servlet2Advice {
       return;
     }
     final AgentSpan span = scope.span();
-    DECORATE.onResponse(span, response);
+
+    if (response instanceof HttpServletResponse) {
+      DECORATE.onResponse(
+          span, InstrumentationContext.get(ServletResponse.class, Integer.class).get(response));
+    } else {
+      DECORATE.onResponse(span, null);
+    }
+
     if (throwable != null) {
-      if (response instanceof StatusSavingHttpServletResponseWrapper
-          && ((StatusSavingHttpServletResponseWrapper) response).status
+      if (response instanceof HttpServletResponse
+          && InstrumentationContext.get(ServletResponse.class, Integer.class).get(response)
               == HttpServletResponse.SC_OK) {
         // exception was thrown but status code wasn't set
         span.setTag(Tags.HTTP_STATUS, 500);
