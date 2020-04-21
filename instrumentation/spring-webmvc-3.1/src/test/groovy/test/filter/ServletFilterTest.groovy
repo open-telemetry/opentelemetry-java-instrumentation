@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package test
+package test.filter
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -23,8 +23,8 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.web.servlet.view.RedirectView
 
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -33,11 +33,11 @@ import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 import static java.util.Collections.singletonMap
 
-class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext> {
+class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
 
   @Override
   ConfigurableApplicationContext startServer(int port) {
-    def app = new SpringApplication(AppConfig)
+    def app = new SpringApplication(FilteredAppConfig)
     app.setDefaultProperties(singletonMap("server.port", port))
     def context = app.run()
     return context
@@ -50,12 +50,27 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
   @Override
   boolean hasHandlerSpan() {
+    false
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT || endpoint == ERROR
+  }
+
+  @Override
+  boolean hasErrorPageSpans(ServerEndpoint endpoint) {
+    endpoint == ERROR || endpoint == EXCEPTION
+  }
+
+  @Override
+  boolean testPathParam() {
     true
   }
 
   @Override
-  boolean hasRenderSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT
+  boolean testExceptionBody() {
+    false
   }
 
   @Override
@@ -66,18 +81,13 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  boolean testPathParam() {
-    true
-  }
-
-  @Override
-  void renderSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName "Render RedirectView"
+      operationName endpoint == REDIRECT ? "HttpServletResponse.sendRedirect" : "HttpServletResponse.sendError"
       spanKind INTERNAL
       errored false
+      childOf((SpanData) parent)
       tags {
-        "view.type" RedirectView.name
       }
     }
   }
@@ -125,6 +135,27 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         if (endpoint.query) {
           "$MoreTags.HTTP_QUERY" endpoint.query
         }
+      }
+    }
+  }
+
+  @Override
+  void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      operationName "/error"
+      spanKind INTERNAL
+      errored false
+      childOf((SpanData) parent)
+      tags {
+        "dispatcher.target" "/error"
+      }
+    }
+    trace.span(index + 1) {
+      operationName "BasicErrorController.error"
+      spanKind INTERNAL
+      errored false
+      childOf trace.spans[index]
+      tags {
       }
     }
   }
