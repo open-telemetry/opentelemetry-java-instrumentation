@@ -19,6 +19,7 @@ import org.junit.ClassRule
 import spock.lang.Shared
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class JerseyTest extends AgentTestRunner {
 
@@ -62,5 +63,38 @@ class JerseyTest extends AgentTestRunner {
     "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
     "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
     "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
+  }
+
+  def "test nested call"() {
+
+    when:
+    // start a trace because the test doesn't go through any servlet or other instrumentation.
+    def response = runUnderTrace("test.span") {
+      resources.client().resource(resource).post(String)
+    }
+
+    then:
+    response == expectedResponse
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName expectedSpanName
+          tags {
+          }
+        }
+        span(1) {
+          childOf span(0)
+          operationName controller1Name
+          spanKind INTERNAL
+          tags {
+          }
+        }
+      }
+    }
+
+    where:
+    resource        | expectedSpanName     | controller1Name | expectedResponse
+    "/test3/nested" | "POST /test3/nested" | "Test3.nested"  | "Test3 nested!"
   }
 }
