@@ -6,7 +6,7 @@ muzzle {
   pass {
     group = "com.github.etaty"
     module = "rediscala_2.11"
-    versions = "[1.8.0,)"
+    versions = "[1.5.0,)"
     assertInverse = true
   }
 
