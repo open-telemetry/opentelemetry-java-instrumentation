@@ -13,28 +13,32 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const milestones = await github.issues.listMilestonesForRepo({
+            const options = github.issues.listMilestonesForRepo.endpoint.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'all'
             })
 
-            return milestones.data.find( milestone => milestone.title == "${{github.event.release.name}}" ).number
+            const milestones = await github.paginate(options)
+
+            return milestones.find( milestone => milestone.title == "${{github.event.release.name}}" ).number
       - name: Get issues for milestone
         id: issues
         uses: actions/github-script@0.9.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const list = await github.issues.listForRepo({
+            const options = github.issues.listForRepo.endpoint.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'all',
               milestone: ${{steps.milestone.outputs.result}}
             })
 
+            const issues = await github.paginate(options)
+
             // Pull requests are issues so filter them out
-            return list.data.filter( issue => !issue["pull_request"] )
+            return issues.filter( issue => !issue["pull_request"] )
       - name: Comment and close issues
         uses: actions/github-script@0.9.0
         with:
