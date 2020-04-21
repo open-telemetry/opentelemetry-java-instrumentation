@@ -28,7 +28,6 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -107,9 +106,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> map = new HashMap<>();
-    map.put(Future.class.getName(), State.class.getName());
-    return Collections.unmodifiableMap(map);
+    return singletonMap(Future.class.getName(), State.class.getName());
   }
 
   @Override

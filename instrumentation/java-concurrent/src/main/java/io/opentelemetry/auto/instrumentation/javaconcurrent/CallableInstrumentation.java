@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.javaconcurrent;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -27,8 +28,6 @@ import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUti
 import io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.State;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
@@ -53,18 +52,14 @@ public final class CallableInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> map = new HashMap<>();
-    map.put(Callable.class.getName(), State.class.getName());
-    return Collections.unmodifiableMap(map);
+    return singletonMap(Callable.class.getName(), State.class.getName());
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+    return singletonMap(
         named("call").and(takesArguments(0)).and(isPublic()),
         CallableInstrumentation.class.getName() + "$CallableAdvice");
-    return transformers;
   }
 
   public static class CallableAdvice {
