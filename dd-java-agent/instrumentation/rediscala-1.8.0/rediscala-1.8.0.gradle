@@ -4,21 +4,21 @@ ext {
 
 muzzle {
   pass {
-    group = "com.github.Ma27"
+    group = "com.github.etaty"
     module = "rediscala_2.11"
-    versions = "[1.8.1,)"
+    versions = "[1.8.0,)"
     assertInverse = true
   }
 
   pass {
-    group = "com.github.Ma27"
+    group = "com.github.etaty"
     module = "rediscala_2.12"
-    versions = "[1.8.1,)"
+    versions = "[1.8.0,)"
     assertInverse = true
   }
 
   pass {
-    group = "com.github.Ma27"
+    group = "com.github.etaty"
     module = "rediscala_2.13"
     versions = "[1.9.0,)"
     assertInverse = true
@@ -36,10 +36,10 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'com.github.Ma27', name: 'rediscala_2.11', version: '1.8.1'
+  compileOnly group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
 
-  testCompile group: 'com.github.Ma27', name: 'rediscala_2.11', version: '1.8.1'
+  testCompile group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
 
-  latestDepTestCompile group: 'com.github.Ma27', name: 'rediscala_2.11', version: '+'
+  latestDepTestCompile group: 'com.github.etaty', name: 'rediscala_2.11', version: '+'
 }
