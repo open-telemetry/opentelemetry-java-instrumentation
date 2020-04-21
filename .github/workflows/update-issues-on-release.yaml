@@ -1,0 +1,62 @@
+name: Update issues on release
+on:
+  release:
+    types: [published]
+
+jobs:
+  update_issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get milestone for release
+        id: milestone
+        uses: actions/github-script@0.9.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const options = github.issues.listMilestonesForRepo.endpoint.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all'
+            })
+
+            const milestones = await github.paginate(options)
+
+            return milestones.find( milestone => milestone.title == "${{github.event.release.name}}" ).number
+      - name: Get issues for milestone
+        id: issues
+        uses: actions/github-script@0.9.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const options = github.issues.listForRepo.endpoint.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              milestone: ${{steps.milestone.outputs.result}}
+            })
+
+            const issues = await github.paginate(options)
+
+            // Pull requests are issues so filter them out
+            return issues.filter( issue => !issue["pull_request"] )
+      - name: Comment and close issues
+        uses: actions/github-script@0.9.0
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            for (let issue of ${{ steps.issues.outputs.result }}) {
+              // This can be parallelized better by moving the await but it might trip rate limits
+              await github.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: ':robot: This issue has been addressed in the latest release.  See full details in the [Release Notes]( ${{ github.event.release.html_url }}).'
+              })
+
+              await github.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              })
+            }
