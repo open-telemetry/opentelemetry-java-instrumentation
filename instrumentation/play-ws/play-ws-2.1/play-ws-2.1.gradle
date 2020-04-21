@@ -13,45 +13,27 @@ testSets {
 }
 
 muzzle {
-  // 2.0.5 was a bad release
 
   fail {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.11'
-    versions = '[,2.0.4]'
-  }
-  fail {
-    group = 'com.typesafe.play'
-    module = 'play-ahc-ws-standalone_2.11'
-    versions = '[2.0.6,)'
+    versions = '[,]'
   }
 
-  fail {
-    group = 'com.typesafe.play'
-    module = 'play-ahc-ws-standalone_2.12'
-    versions = '[,2.0.4]'
-  }
-  fail {
-    group = 'com.typesafe.play'
-    module = 'play-ahc-ws-standalone_2.12'
-    versions = '[2.0.6,2.1.0)'
-  }
   pass {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.12'
     versions = '[2.1.0,]'
+    skipVersions += '2.0.5' // Bad release
+    assertInverse = true
   }
 
-  // No Scala 2.13 versions below 2.0.6 exist
-  fail {
-    group = 'com.typesafe.play'
-    module = 'play-ahc-ws-standalone_2.13'
-    versions = '[2.0.6,2.1.0)'
-  }
   pass {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.13'
     versions = '[2.1.0,]'
+    skipVersions += '2.0.5' // Bad release
+    assertInverse = true
   }
 }
 

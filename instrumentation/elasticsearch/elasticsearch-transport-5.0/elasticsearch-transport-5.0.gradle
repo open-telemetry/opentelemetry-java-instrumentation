@@ -10,8 +10,7 @@ muzzle {
     group = "org.elasticsearch.client"
     module = "transport"
     versions = "[5.0.0,5.3.0)"
-    // Work around for a bad release of 6.8.4
-//    assertInverse = true
+    assertInverse = true
   }
   pass {
     group = "org.elasticsearch"
