@@ -142,10 +142,20 @@ jobs:
     environment:
       - TEST_TASK: testJava13
 
+  test_zulu13:
+    <<: *default_test_job
+    environment:
+      - TEST_TASK: testJavaZULU13
+
   test_14:
     <<: *default_test_job
     environment:
       - TEST_TASK: testJava14
+
+  test_zulu14:
+    <<: *default_test_job
+    environment:
+      - TEST_TASK: testJavaZULU14
 
   agent_integration_tests:
     <<: *defaults
@@ -339,7 +349,19 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - test_zulu13:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
       - test_14:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - test_zulu14:
           requires:
             - build
           filters:
@@ -389,7 +411,9 @@ workflows:
             - test_zulu11
             - test_12
             - test_13
+            - test_zulu13
             - test_14
+            - test_zulu14
             - agent_integration_tests
             - check
           filters:
@@ -411,7 +435,9 @@ workflows:
             - test_zulu11
             - test_12
             - test_13
+            - test_zulu13
             - test_14
+            - test_zulu14
             - agent_integration_tests
             - check
           filters:
