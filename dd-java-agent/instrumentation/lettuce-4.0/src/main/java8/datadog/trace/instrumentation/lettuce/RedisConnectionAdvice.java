@@ -7,12 +7,13 @@ import net.bytebuddy.asm.Advice;
 public class RedisConnectionAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static AgentScope onEnter(@Advice.Argument(1) RedisURI redisURI) {
-    return InstrumentationPoints.onEnter(redisURI);
+  public static AgentScope onEnter(@Advice.Argument(1) final RedisURI redisURI) {
+    return InstrumentationPoints.beforeConnect(redisURI);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void onReturn(@Advice.Enter AgentScope scope, @Advice.Thrown Throwable throwable) {
-    InstrumentationPoints.onReturn(scope, throwable);
+  public static void onExit(@Advice.Enter final AgentScope scope,
+                            @Advice.Thrown final Throwable throwable) {
+    InstrumentationPoints.afterConnect(scope, throwable);
   }
 }

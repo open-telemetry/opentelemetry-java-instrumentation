@@ -25,7 +25,7 @@ import java.util.function.Function
 
 import com.lambdaworks.redis.RedisConnectionException
 
-import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
+import static datadog.trace.instrumentation.lettuce.InstrumentationPoints.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceAsyncClientTest extends AgentTestRunner {
   public static final String HOST = "127.0.0.1"

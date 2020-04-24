@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.lettuce;
 
-import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.getCommandResourceName;
+import static datadog.trace.instrumentation.lettuce.InstrumentationPoints.getCommandResourceName;
 
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.protocol.RedisCommand;
@@ -40,37 +40,38 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   }
 
   @Override
-  protected String dbUser(final RedisURI connection) {
+  protected String dbUser(RedisURI connection) {
     return null;
   }
 
   @Override
-  protected String dbInstance(final RedisURI connection) {
+  protected String dbInstance(RedisURI connection) {
     return null;
   }
 
   @Override
-  public AgentSpan onConnection(final AgentSpan span, final RedisURI connection) {
+  public AgentSpan onConnection(AgentSpan span, RedisURI connection) {
     if (connection != null) {
       span.setTag(Tags.PEER_HOSTNAME, connection.getHost());
       span.setTag(Tags.PEER_PORT, connection.getPort());
       span.setTag("db.redis.dbIndex", connection.getDatabase());
-      span.setTag(
-          DDTags.RESOURCE_NAME,
-          "CONNECT:"
-              + connection.getHost()
-              + ":"
-              + connection.getPort()
-              + "/"
-              + connection.getDatabase());
+      span.setTag(DDTags.RESOURCE_NAME, resourceName(connection));
     }
     return super.onConnection(span, connection);
   }
 
-  @SuppressWarnings("rawtypes")
-  public AgentSpan onCommand(final AgentSpan span, final RedisCommand command) {
-      span.setTag(DDTags.RESOURCE_NAME,
+  public AgentSpan onCommand(AgentSpan span, RedisCommand<?, ?, ?> command) {
+    span.setTag(DDTags.RESOURCE_NAME,
         null == command ? "Redis Command" : getCommandResourceName(command.getType()));
     return span;
+  }
+
+  private static String resourceName(RedisURI connection) {
+    return "CONNECT:"
+      + connection.getHost()
+      + ":"
+      + connection.getPort()
+      + "/"
+      + connection.getDatabase();
   }
 }
