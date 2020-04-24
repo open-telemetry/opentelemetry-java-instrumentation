@@ -2,6 +2,7 @@ package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.DDTracer;
+import datadog.opentracing.StringCachingBigInteger;
 import datadog.trace.api.Config;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
@@ -117,7 +118,7 @@ public class HttpCodec {
    */
   static BigInteger validateUInt64BitsID(final String value, final int radix)
       throws IllegalArgumentException {
-    final BigInteger parsedValue = new BigInteger(value, radix);
+    final BigInteger parsedValue = new StringCachingBigInteger(value, radix);
     if (parsedValue.compareTo(DDTracer.TRACE_ID_MIN) < 0
         || parsedValue.compareTo(DDTracer.TRACE_ID_MAX) > 0) {
       throw new IllegalArgumentException(
