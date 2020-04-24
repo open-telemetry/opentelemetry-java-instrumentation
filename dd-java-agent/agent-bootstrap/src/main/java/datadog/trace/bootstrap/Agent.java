@@ -321,7 +321,8 @@ public class Agent {
       Profiling is compiled for Java8. Loading it on Java7 results in ClassFormatError
       (more specifically UnsupportedClassVersionError). Just ignore and continue when this happens.
       */
-      log.error("Cannot start profiling agent ", e);
+      log.error("Profiling requires OpenJDK 8 or above - skipping");
+      log.debug("Cannot start profiling agent ", e);
     } catch (final Throwable ex) {
       log.error("Throwable thrown while starting profiling agent", ex);
     } finally {
