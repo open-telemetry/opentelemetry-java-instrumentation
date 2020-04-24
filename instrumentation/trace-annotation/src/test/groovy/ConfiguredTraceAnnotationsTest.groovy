@@ -34,7 +34,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     System.clearProperty("ota.trace.annotations")
   }
 
-  def "test disabled nr annotation"() {
+  def "method with disabled NewRelic annotation should be ignored"() {
     setup:
     SayTracedHello.fromCallableWhenDisabled()
 
@@ -42,7 +42,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     TEST_WRITER.traces == []
   }
 
-  def "test custom annotation based trace"() {
+  def "method with custom annotation should be traced"() {
     expect:
     new AnnotationTracedCallable().call() == "Hello!"
 

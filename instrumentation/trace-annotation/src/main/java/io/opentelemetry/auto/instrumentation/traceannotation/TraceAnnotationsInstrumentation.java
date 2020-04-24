@@ -52,8 +52,11 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
       new String[] {
         "com.newrelic.api.agent.Trace",
         "kamon.annotation.Trace",
+        "kamon.annotation.api.Trace",
         "com.tracelytics.api.ext.LogMethod",
+        "com.appoptics.api.ext.LogMethod",
         "io.opentracing.contrib.dropwizard.Trace",
+        "com.signalfx.tracing.api.Trace",
         "org.springframework.cloud.sleuth.annotation.NewSpan"
       };
 
