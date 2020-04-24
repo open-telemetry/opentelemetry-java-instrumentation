@@ -28,7 +28,8 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".LettuceClientDecorator",
       packageName + ".LettuceInstrumentationUtil",
-      packageName + ".InstrumentationPoints"
+      packageName + ".InstrumentationPoints",
+      packageName + ".LettuceAsyncBiFunction"
     };
   }
 

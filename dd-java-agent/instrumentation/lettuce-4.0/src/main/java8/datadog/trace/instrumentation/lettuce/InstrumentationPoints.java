@@ -3,23 +3,22 @@ package datadog.trace.instrumentation.lettuce;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
-import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.doFinishSpanEarly;
+import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.finishSpanEarly;
 
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
-import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("rawtypes")
-public class InstrumentationPoints {
+public final class InstrumentationPoints {
 
   public static AgentScope onEnter(RedisCommand command) {
     AgentSpan span = startSpan("redis.query");
     DECORATE.afterStart(span);
     DECORATE.onCommand(span, command);
-    return activateSpan(span, doFinishSpanEarly(command));
+    return activateSpan(span, finishSpanEarly(command));
   }
 
   public static void onReturn(RedisCommand command,
@@ -31,7 +30,7 @@ public class InstrumentationPoints {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.finish();
-      } else if (!doFinishSpanEarly(command)) {
+      } else if (!finishSpanEarly(command)) {
         asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
       }
       scope.close();
