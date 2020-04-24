@@ -113,8 +113,8 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
           spanBuilder.addLink(spanContext);
         }
       }
-      final Span span = spanBuilder.startSpan();
-      span.setAttribute("span.origin.type", consumer.getClass().getName());
+      final Span span =
+          spanBuilder.setAttribute("span.origin.type", consumer.getClass().getName()).startSpan();
 
       try (final Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);

@@ -92,9 +92,13 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
-      final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(method.getName())
+              .setSpanKind(CLIENT)
+              .setAttribute(Tags.DB_INSTANCE, thiz.getName())
+              .startSpan();
       DECORATE.afterStart(span);
-      span.setAttribute(Tags.DB_INSTANCE, thiz.getName());
       return new SpanWithScope(span, currentContextWith(span));
     }
 
@@ -125,10 +129,14 @@ public class GeodeInstrumentation extends Instrumenter.Default {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return null;
       }
-      final Span span = TRACER.spanBuilder(method.getName()).setSpanKind(CLIENT).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(method.getName())
+              .setSpanKind(CLIENT)
+              .setAttribute(Tags.DB_INSTANCE, thiz.getName())
+              .setAttribute(Tags.DB_STATEMENT, query)
+              .startSpan();
       DECORATE.afterStart(span);
-      span.setAttribute(Tags.DB_INSTANCE, thiz.getName());
-      span.setAttribute(Tags.DB_STATEMENT, query);
       return new SpanWithScope(span, currentContextWith(span));
     }
 
