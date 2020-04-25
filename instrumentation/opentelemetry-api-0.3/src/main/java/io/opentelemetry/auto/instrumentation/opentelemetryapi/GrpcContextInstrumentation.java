@@ -24,6 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.ContextUtils;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,6 +58,12 @@ public class GrpcContextInstrumentation extends AbstractInstrumentation {
       final ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
       contextStore.put(context, io.grpc.Context.current());
+    }
+
+    // this is to make muzzle think we need ContextUtils to make sure we do not apply this
+    // instrumentation when ContextUtils would not work
+    public static Object muzzleCheck() {
+      return ContextUtils.class;
     }
   }
 }
