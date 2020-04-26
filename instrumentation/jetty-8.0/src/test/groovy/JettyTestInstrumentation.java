@@ -26,21 +26,7 @@ public class JettyTestInstrumentation implements Instrumenter {
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
     return agentBuilder
-        // Jetty 8.0
-        .type(named("org.eclipse.jetty.server.HttpConnection"))
-        .transform(
-            new AgentBuilder.Transformer.ForAdvice()
-                .advice(
-                    named("handleRequest"), HttpServerTestAdvice.ServerEntryAdvice.class.getName()))
-        // Jetty 8.?
-        .type(named("org.eclipse.jetty.server.AbstractHttpConnection"))
-        .transform(
-            new AgentBuilder.Transformer.ForAdvice()
-                .advice(
-                    named("headerComplete"),
-                    HttpServerTestAdvice.ServerEntryAdvice.class.getName()))
-        // Jetty 9
-        .type(named("org.eclipse.jetty.server.HttpChannel"))
+        .type(named("org.eclipse.jetty.server.Server"))
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(named("handle"), HttpServerTestAdvice.ServerEntryAdvice.class.getName()));
