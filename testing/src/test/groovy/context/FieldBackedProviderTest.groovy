@@ -15,7 +15,6 @@
  */
 package context
 
-import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ClasspathUtils
 import io.opentelemetry.auto.util.gc.GCUtils
@@ -205,7 +204,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
  * Unfortunately we cannot set system properties here early enough for AgentTestRunner to see.
  * Instead we have to configure this via Gradle. Ideally we should not have to do this.
  */
-@Requires({ "true" == System.getProperty(Config.PREFIX + Config.RUNTIME_CONTEXT_FIELD_INJECTION) })
+@Requires({ "false" == System.getProperty("ota.trace.runtime.context.field.injection") })
 class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
   def "Check that structure is not modified when structure modification is disabled"() {
     setup:
