@@ -57,12 +57,6 @@ dependencies {
 }
 
 // See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here
-tasks.withType(Test).configureEach {
-  if (name != "testDisabledFieldInjection") {
-    exclude "context/FieldBackedProviderFieldInjectionDisabledTest.class"
-  }
-}
-
 tasks.register("testDisabledFieldInjection", Test) {
   systemProperties "ota.trace.runtime.context.field.injection": "false"
   include "context/FieldBackedProviderFieldInjectionDisabledTest.class"
