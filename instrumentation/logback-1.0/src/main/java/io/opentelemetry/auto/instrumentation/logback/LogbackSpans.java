@@ -48,10 +48,13 @@ public class LogbackSpans {
       t = ((ThrowableProxy) throwableProxy).getThrowable();
     }
 
-    final Span span = TRACER.spanBuilder("log.message").startSpan();
-    span.setAttribute("message", event.getFormattedMessage());
-    span.setAttribute("level", level.toString());
-    span.setAttribute("loggerName", event.getLoggerName());
+    final Span span =
+        TRACER
+            .spanBuilder("log.message")
+            .setAttribute("message", event.getFormattedMessage())
+            .setAttribute("level", level.toString())
+            .setAttribute("loggerName", event.getLoggerName())
+            .startSpan();
     if (t != null) {
       span.setAttribute("error.stack", toString(t));
     }

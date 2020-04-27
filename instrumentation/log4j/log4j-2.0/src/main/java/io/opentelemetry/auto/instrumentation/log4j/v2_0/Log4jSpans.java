@@ -39,10 +39,13 @@ public class Log4jSpans {
       return;
     }
 
-    final Span span = TRACER.spanBuilder("log.message").startSpan();
-    span.setAttribute("message", message.getFormattedMessage());
-    span.setAttribute("level", level.toString());
-    span.setAttribute("loggerName", logger.getName());
+    final Span span =
+        TRACER
+            .spanBuilder("log.message")
+            .setAttribute("message", message.getFormattedMessage())
+            .setAttribute("level", level.toString())
+            .setAttribute("loggerName", logger.getName())
+            .startSpan();
     if (t != null) {
       span.setAttribute("error.stack", toString(t));
     }

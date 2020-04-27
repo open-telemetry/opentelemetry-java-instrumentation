@@ -84,11 +84,11 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
           TRACER
               .spanBuilder(DECORATE.spanNameOnPreparedStatement(statement))
               .setSpanKind(CLIENT)
+              .setAttribute("span.origin.type", statement.getClass().getName())
               .startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onPreparedStatement(span, statement);
-      span.setAttribute("span.origin.type", statement.getClass().getName());
       return new SpanWithScope(span, currentContextWith(span));
     }
 

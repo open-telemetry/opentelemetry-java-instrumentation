@@ -39,12 +39,8 @@ public abstract class HttpServerTestAdvice {
         // Skip if not running the HttpServerTest.
         return null;
       }
-      if (TRACER.getCurrentSpan().getContext().isValid()) {
-        return null;
-      } else {
-        final Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
-        return new SpanWithScope(span, currentContextWith(span));
-      }
+      final Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
+      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

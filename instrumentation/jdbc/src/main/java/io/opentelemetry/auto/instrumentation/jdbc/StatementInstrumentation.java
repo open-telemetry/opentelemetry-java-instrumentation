@@ -82,11 +82,14 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       }
 
       final Span span =
-          TRACER.spanBuilder(DECORATE.spanNameOnStatement(sql)).setSpanKind(CLIENT).startSpan();
+          TRACER
+              .spanBuilder(DECORATE.spanNameOnStatement(sql))
+              .setSpanKind(CLIENT)
+              .setAttribute("span.origin.type", statement.getClass().getName())
+              .startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onStatement(span, sql);
-      span.setAttribute("span.origin.type", statement.getClass().getName());
       return new SpanWithScope(span, currentContextWith(span));
     }
 
