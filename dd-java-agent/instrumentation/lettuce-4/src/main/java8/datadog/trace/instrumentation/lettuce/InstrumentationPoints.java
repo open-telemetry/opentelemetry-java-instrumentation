@@ -102,18 +102,10 @@ public final class InstrumentationPoints {
     return keyword == SEGFAULT;
   }
 
-  // Workaround to keep trace agent from crashing
-  // Currently the commands in AGENT_CRASHING_COMMANDS_WORDS will crash the trace agent and
-  // traces with these commands as the resource name will not be processed by the trace agent
-  // https://github.com/DataDog/datadog-trace-agent/blob/master/quantizer/redis.go#L18 has
-  // list of commands that will currently fail at the trace agent level.
-
   /**
    * Workaround to keep trace agent from crashing Currently the commands in
-   * AGENT_CRASHING_COMMANDS_WORDS will crash the trace agent and traces with these commands as the
+   * AGENT_CRASHING_COMMANDS will crash the trace agent and traces with these commands as the
    * resource name will not be processed by the trace agent
-   * https://github.com/DataDog/datadog-trace-agent/blob/master/quantizer/redis.go#L18 has list of
-   * commands that will currently fail at the trace agent level.
    *
    * @param keyword the actual redis command
    * @return the redis command with a prefix if it is a command that will crash the trace agent,
