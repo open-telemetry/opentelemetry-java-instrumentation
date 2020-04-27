@@ -77,8 +77,8 @@ public class Servlet3Advice {
     final Span.Builder builder =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
     builder.setParent(extract(httpServletRequest, GETTER));
-    final Span span = builder.startSpan();
-    span.setAttribute("span.origin.type", servlet.getClass().getName());
+    final Span span =
+        builder.setAttribute("span.origin.type", servlet.getClass().getName()).startSpan();
 
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, httpServletRequest);

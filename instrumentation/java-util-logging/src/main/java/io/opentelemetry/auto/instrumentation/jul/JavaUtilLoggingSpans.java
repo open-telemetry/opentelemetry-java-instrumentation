@@ -47,10 +47,13 @@ public class JavaUtilLoggingSpans {
     }
 
     final Throwable t = logRecord.getThrown();
-    final Span span = TRACER.spanBuilder("log.message").startSpan();
-    span.setAttribute("message", FORMATTER.formatMessage(logRecord));
-    span.setAttribute("level", level.getName());
-    span.setAttribute("loggerName", logger.getName());
+    final Span span =
+        TRACER
+            .spanBuilder("log.message")
+            .setAttribute("message", FORMATTER.formatMessage(logRecord))
+            .setAttribute("level", level.getName())
+            .setAttribute("loggerName", logger.getName())
+            .startSpan();
     if (t != null) {
       span.setAttribute("error.stack", toString(t));
     }

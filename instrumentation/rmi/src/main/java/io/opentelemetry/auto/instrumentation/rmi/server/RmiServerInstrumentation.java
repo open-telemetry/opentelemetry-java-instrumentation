@@ -82,8 +82,10 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       } else {
         spanBuilder.setNoParent();
       }
-      final Span span = spanBuilder.startSpan();
-      span.setAttribute("span.origin.type", thiz.getClass().getCanonicalName());
+      final Span span =
+          spanBuilder
+              .setAttribute("span.origin.type", thiz.getClass().getCanonicalName())
+              .startSpan();
 
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));

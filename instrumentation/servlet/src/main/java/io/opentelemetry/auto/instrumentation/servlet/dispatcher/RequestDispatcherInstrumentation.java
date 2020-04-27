@@ -113,12 +113,15 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         parent = servletSpan;
       }
 
-      final Span span = TRACER.spanBuilder("servlet." + method).setParent(parent).startSpan();
-      DECORATE.afterStart(span);
-
       final String target =
           InstrumentationContext.get(RequestDispatcher.class, String.class).get(dispatcher);
-      span.setAttribute("dispatcher.target", target);
+      final Span span =
+          TRACER
+              .spanBuilder("servlet." + method)
+              .setParent(parent)
+              .setAttribute("dispatcher.target", target)
+              .startSpan();
+      DECORATE.afterStart(span);
 
       // save the original servlet span before overwriting the request attribute, so that it can be
       // restored on method exit
