@@ -7,6 +7,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import com.google.common.net.HostAndPort;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import java.util.Map;
@@ -61,9 +62,12 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
       segment = ActionWrapper.wrapIfNeeded(segment, span);
     }
 
-    public void muzzleCheck(final PathBinding binding) {
+    public void muzzleCheck(final PathBinding binding, final HostAndPort host) {
       // This was added in 1.4.  Added here to ensure consistency with other instrumentation.
       binding.getDescription();
+
+      // This is available in Guava 20 which was required starting in 1.5
+      host.getHost();
     }
   }
 }
