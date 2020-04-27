@@ -124,12 +124,6 @@ public abstract class AgentTestRunner extends AgentSpecification {
       final JavaModule module,
       final boolean loaded,
       final Throwable throwable) {
-    if (throwable.getMessage().startsWith("Cannot resolve type description")) {
-      // this can happen on dynamically generated classes
-      // e.g. things like org.mozilla.javascript.gen.map_5 and springdata.Doc_Accessor_yj53u0
-      // because there is no .class file for ByteBuddy to find
-      return false;
-    }
     log.error(
         "Unexpected instrumentation error when instrumenting {} on {}",
         typeName,
