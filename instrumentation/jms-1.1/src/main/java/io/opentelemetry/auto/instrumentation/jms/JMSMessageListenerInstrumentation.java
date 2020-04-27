@@ -84,8 +84,8 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
           TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
       spanBuilder.setParent(extract(message, GETTER));
 
-      final Span span = spanBuilder.startSpan();
-      span.setAttribute("span.origin.type", listener.getClass().getName());
+      final Span span =
+          spanBuilder.setAttribute("span.origin.type", listener.getClass().getName()).startSpan();
       DECORATE.afterStart(span);
 
       return new SpanWithScope(span, currentContextWith(span));

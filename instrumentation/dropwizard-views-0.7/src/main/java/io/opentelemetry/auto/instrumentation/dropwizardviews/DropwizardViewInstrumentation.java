@@ -82,8 +82,11 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
-      final Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
-      span.setAttribute("span.origin.type", obj.getClass().getSimpleName());
+      final Span span =
+          TRACER
+              .spanBuilder("Render " + view.getTemplateName())
+              .setAttribute("span.origin.type", obj.getClass().getSimpleName())
+              .startSpan();
       return new SpanWithScope(span, currentContextWith(span));
     }
 
