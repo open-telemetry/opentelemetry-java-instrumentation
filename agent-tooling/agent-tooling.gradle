@@ -3,7 +3,8 @@ apply from: "${rootDir}/gradle/java.gradle"
 minimumBranchCoverage = 0.6
 minimumInstructionCoverage = 0.8
 excludedClassesCoverage += [
-  'io.opentelemetry.auto.tooling.*'
+  'io.opentelemetry.auto.tooling.*',
+  'io.opentelemetry.auto.typed.*'
 ]
 
 configurations {
