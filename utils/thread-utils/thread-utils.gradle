@@ -2,7 +2,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 // TODO: add more tests
 excludedClassesCoverage += [
-  'datadog.common.exec*'
+  'io.opentelemetry.auto.common.exec.*'
 ]
 
 dependencies {

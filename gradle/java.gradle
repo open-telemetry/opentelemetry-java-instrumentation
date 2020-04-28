@@ -10,7 +10,7 @@ apply from: "$rootDir/gradle/spotbugs.gradle"
 
 def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
-    project.path == ":java-agent" ||
+    project.path == ":opentelemetry-auto" ||
     project.path == ":load-generator" ||
     project.path.startsWith(":benchmark") ||
     project.path.startsWith(":instrumentation"))
