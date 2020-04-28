@@ -229,12 +229,12 @@ workflows:
           filters:
             tags:
               only: /.*/
-      # - test_8:
-      #     requires:
-      #     - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
+      - test_8:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
       - test_latest8:
           requires:
             - build
