@@ -11,13 +11,9 @@ muzzle {
   pass {
     group = "io.ratpack"
     module = 'ratpack-core'
-    versions = "[1.4.0,)"
-  }
-  // Some maven dependencies are missing for pre 1.0 ratpack, so we can't assertInverse.
-  fail {
-    group = "io.ratpack"
-    module = 'ratpack-core'
-    versions = "[1.0,1.4.0)"
+    versions = "[1.5.0,)"
+    skipVersions += ["0.9.12", "0.9.13", "0.9.14",]
+    assertInverse = true
   }
 }
 
@@ -28,9 +24,9 @@ testSets {
 }
 
 dependencies {
-  main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
+  main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.5.0'
 
   testCompile project(':instrumentation:netty:netty-4.1')
-  testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
+  testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.5.0'
   latestDepTestCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
 }

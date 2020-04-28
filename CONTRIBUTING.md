@@ -17,10 +17,6 @@ Other source files (Groovy, Scala, etc) should ideally be formatted by Intellij 
 
 ### Intellij IDEA
 
-Compiler settings:
-* OpenJDK 11 must be installed to build the entire project.  Under `SDKs` it must have the name `11`.
-* Under `Build, Execution, Deployment > Compiler > Java Compiler` disable `Use '--release' option for cross-compilation`
-
 Required plugins:
 * [Lombok](https://plugins.jetbrains.com/plugin/6317-lombok-plugin)
 

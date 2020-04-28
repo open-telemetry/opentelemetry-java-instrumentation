@@ -90,9 +90,11 @@ public class TracedDelegatingConsumer implements Consumer {
         spanBuilder.setNoParent();
       }
 
-      span = spanBuilder.startSpan();
-      span.setAttribute("message.size", body == null ? 0 : body.length);
-      span.setAttribute("span.origin.type", delegate.getClass().getName());
+      span =
+          spanBuilder
+              .setAttribute("message.size", body == null ? 0 : body.length)
+              .setAttribute("span.origin.type", delegate.getClass().getName())
+              .startSpan();
       DECORATE.afterStart(span);
       DECORATE.onDeliver(span, envelope);
 
