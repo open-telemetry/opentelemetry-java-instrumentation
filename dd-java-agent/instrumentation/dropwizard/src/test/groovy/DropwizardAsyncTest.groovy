@@ -2,13 +2,13 @@ import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
+
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Response
-
 import java.util.concurrent.Executors
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -60,9 +60,11 @@ class DropwizardAsyncTest extends DropwizardTest {
 
     @GET
     @Path("query")
-    Response query_param(@QueryParam("some") String param) {
-      controller(QUERY_PARAM) {
-        Response.status(QUERY_PARAM.status).entity("some=$param".toString()).build()
+    Response query_param(@QueryParam("some") String param, @Suspended final AsyncResponse asyncResponse) {
+      executor.execute {
+        controller(QUERY_PARAM) {
+          asyncResponse.resume(Response.status(QUERY_PARAM.status).entity("some=$param".toString()).build())
+        }
       }
     }
 
