@@ -140,11 +140,11 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         return;
       }
 
+      if (asyncResponse != null && !asyncResponse.isSuspended()) {
+        // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
+        InstrumentationContext.get(AsyncResponse.class, AgentSpan.class).put(asyncResponse, null);
+      }
       if (asyncResponse == null || !asyncResponse.isSuspended()) {
-        if (asyncResponse != null && !asyncResponse.isSuspended()) {
-          // Clear span from the asyncResponse
-          InstrumentationContext.get(AsyncResponse.class, AgentSpan.class).put(asyncResponse, null);
-        }
         DECORATE.beforeFinish(span);
         span.finish();
       }
