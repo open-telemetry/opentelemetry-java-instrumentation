@@ -12,60 +12,20 @@ jar {
   }
 }
 
-// If the current JDK version (the one running gradle) is < 9, we need to find a version >= 9
-// to compile this project.  java.gradle creates a map of java executables 
-// called "javaExecutableVersionCache" pulled from the environment.
-// This loops over the cache to find a usable jdk.
-// Since this project is the only one that requires a version above Java 8
-// it's special cased here instead of putting a generic version matcher in java.gradle
-if (JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) > 0) {
-  def targetJavaHome
-
-  // Find a compatible version in the cache
-  ext.javaExecutableVersionCache.find { key, value ->
-    if (JavaVersion.VERSION_1_9.compareTo(value) <= 0) {
-      // JAVA_HOME/bin/java -> JAVA_HOME
-      targetJavaHome = file(key).parentFile.parentFile
-      return true
-    }
-
-    return false
-  }
-
-  if (targetJavaHome != null) {
-    // if we found a compatible jdk, compile the src/main/java9 folder with it
-    compileMain_java9Java {
-      options.fork = true
-      options.forkOptions.javaHome = targetJavaHome
-      options.compilerArgs = ['--module-path', classpath.asPath]
-      options.sourcepath = files(sourceSets.main_java9.java.srcDirs)
-    }
-  } else {
-    compileMain_java9Java {
-      enabled = false
-    }
-  }
+compileMain_java9Java {
+  options.fork = true
+  options.compilerArgs = ['--module-path', classpath.asPath]
+  enabled = JavaVersion.current().isCompatibleWith(minJavaVersionForTests)
 }
 
-// java.gradle generates a test task per jdk and assigns the test task its own java executable
-// For each Test task, this loop creates a jlink image using the test's executable
-// At the end, we have 1 jlink image per JVM: each one used by a testXXXGenerated task
-tasks.withType(Test).each {
-  def javaExecutable = it.executable
-  def javaVersion = getJavaExecutableVersion(javaExecutable)
-
-  // Only Java 9 and above have jlink
-  if (JavaVersion.VERSION_1_9.compareTo(javaVersion) > 0) {
-    return
-  }
-
-  // JAVA_HOME/bin/java -> JAVA_HOME
-  def specificJDKHome = file(javaExecutable).parentFile.parent
+//This test will be automatically disabled by `java.gradle` if tried to run on java earlier than 9
+test {
+  def specificJDKHome = file(executable).parentFile.parent
   def jlinkExecutable = specificJDKHome + "/bin/jlink"
   def jdkModulesPath = specificJDKHome + "/jmods"
   def generatedImageDir = "${buildDir}/${it.name}image"
+  doFirst {
 
-  it.doFirst {
     delete generatedImageDir
 
     // Run the jlink command to create the image
@@ -75,9 +35,8 @@ tasks.withType(Test).each {
         "--module-path", "${jdkModulesPath}:" + jar.archiveFile.get().toString(), "--output", generatedImageDir
     }
   }
-
-  it.jvmArgs "-Dio.opentelemetry.smoketest.module.image=${generatedImageDir}"
-  it.dependsOn jar
+  jvmArgs "-Dio.opentelemetry.smoketest.module.image=${generatedImageDir}"
+  dependsOn jar
 }
 
 dependencies {
