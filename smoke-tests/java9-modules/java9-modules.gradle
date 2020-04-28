@@ -14,17 +14,19 @@ jar {
 
 compileMain_java9Java {
   options.fork = true
+  options.forkOptions.javaHome = file(findJavaHome(JavaVersion.VERSION_1_9))
+
   options.compilerArgs = ['--module-path', classpath.asPath]
-  enabled = JavaVersion.current().isCompatibleWith(minJavaVersionForTests)
+  options.sourcepath = files(sourceSets.main_java9.java.srcDirs)
 }
 
 //This test will be automatically disabled by `java.gradle` if tried to run on java earlier than 9
 test {
-  def specificJDKHome = file(executable).parentFile.parent
-  def jlinkExecutable = specificJDKHome + "/bin/jlink"
-  def jdkModulesPath = specificJDKHome + "/jmods"
-  def generatedImageDir = "${buildDir}/${it.name}image"
   doFirst {
+    def specificJDKHome = file(executable).parentFile.parent
+    def jlinkExecutable = specificJDKHome + "/bin/jlink"
+    def jdkModulesPath = specificJDKHome + "/jmods"
+    def generatedImageDir = "${buildDir}/${it.name}image"
 
     delete generatedImageDir
 
@@ -34,8 +36,9 @@ test {
         '--add-modules', 'java.instrument,io.opentelemetry.smoketest.moduleapp',
         "--module-path", "${jdkModulesPath}:" + jar.archiveFile.get().toString(), "--output", generatedImageDir
     }
+
+    jvmArgs "-Dio.opentelemetry.smoketest.module.image=${generatedImageDir}"
   }
-  jvmArgs "-Dio.opentelemetry.smoketest.module.image=${generatedImageDir}"
   dependsOn jar
 }
 

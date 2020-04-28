@@ -10,7 +10,8 @@ apply from: "$rootDir/gradle/spotbugs.gradle"
 
 def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
-    project.path == ":java-agent" ||
+    //TODO why some tests fail on java 11 if jacoco is present?
+    project.path == ":opentelemetry-auto" ||
     project.path == ":load-generator" ||
     project.path.startsWith(":benchmark") ||
     project.path.startsWith(":instrumentation"))
@@ -278,14 +279,6 @@ def isJavaVersionAllowed(JavaVersion version) {
   return true
 }
 
-static String currentJavaHome() {
-  def currentJavaHome = new File(System.getProperty("java.home")).toPath().toRealPath()
-  if (currentJavaHome.endsWith("jre")) {
-    currentJavaHome = currentJavaHome.parent
-  }
-  return currentJavaHome
-}
-
 /**
  * For a given java home return the location of java executable
  */
@@ -305,15 +298,19 @@ String findJavaHome(JavaVersion version) {
   return version == foundVersion ? javaHome : null
 }
 
+ext {
+  findJavaHome = this.&findJavaHome
+}
+
 def addTestRule(String testTaskName) {
   def prefix = testTaskName + "Java"
   tasks.addRule("Pattern: $prefix<Version>: Runs tests using given java version") { String taskName ->
     if (taskName.startsWith(prefix)) {
-      def requestJavaVersion = JavaVersion.toVersion(taskName - prefix)
-      def gradleJavaVersion = getJavaHomeVersion(currentJavaHome())
+      def requestedJavaVersion = JavaVersion.toVersion(taskName - prefix)
+      def gradleJavaVersion = JavaVersion.current()
 
-      if (gradleJavaVersion != requestJavaVersion) {
-        def javaHomeForTests = findJavaHome(requestJavaVersion)
+      if (gradleJavaVersion != requestedJavaVersion) {
+        def javaHomeForTests = findJavaHome(requestedJavaVersion)
         if (javaHomeForTests != null) {
 
           tasks.withType(Test).all {
@@ -325,14 +322,14 @@ def addTestRule(String testTaskName) {
               return
             }
             executable = toExecutable(javaHomeForTests)
-            enabled = isJavaVersionAllowed(requestJavaVersion)
-            if (requestJavaVersion.isJava7()) {
+            enabled = isJavaVersionAllowed(requestedJavaVersion)
+            if (requestedJavaVersion.isJava7()) {
               // Disable JIT for this method. Sometimes Java7 JVM crashes trying to compile it.
               jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
             }
           }
         } else {
-          throw new BuildCancelledException("Requested java version $requestJavaVersion not found")
+          throw new BuildCancelledException("Requested java version $requestedJavaVersion not found")
         }
       }
 
