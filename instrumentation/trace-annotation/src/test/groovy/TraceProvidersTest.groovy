@@ -54,7 +54,7 @@ class TraceProvidersTest extends AgentTestRunner {
     }
 
     where:
-    provider << ["Dropwizard", "NewRelic", "SignalFx", "KamonOld", "KamonNew", "AppOptics", "Tracelytics", "Sleuth"]
+    provider << ["AppOptics", "Datadog", "Dropwizard", "KamonOld", "KamonNew", "NewRelic", "SignalFx", "Sleuth", "Tracelytics"]
   }
 
 }
