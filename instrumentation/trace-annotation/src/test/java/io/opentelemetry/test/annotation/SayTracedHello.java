@@ -24,15 +24,39 @@ public class SayTracedHello {
   private static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
-  @io.opentracing.contrib.dropwizard.Trace
-  public String dropwizard() {
-    TRACER.getCurrentSpan().setAttribute("providerAttr", "Dropwizard");
+  @com.appoptics.api.ext.LogMethod
+  public String appoptics() {
+    TRACER.getCurrentSpan().setAttribute("providerAttr", "AppOptics");
     return "hello!";
   }
 
   @com.newrelic.api.agent.Trace
   public String newrelic() {
     TRACER.getCurrentSpan().setAttribute("providerAttr", "NewRelic");
+    return "hello!";
+  }
+
+  @com.signalfx.tracing.api.Trace
+  public String signalfx() {
+    TRACER.getCurrentSpan().setAttribute("providerAttr", "SignalFx");
+    return "hello!";
+  }
+
+  @com.tracelytics.api.ext.LogMethod
+  public String tracelytics() {
+    TRACER.getCurrentSpan().setAttribute("providerAttr", "Tracelytics");
+    return "hello!";
+  }
+
+  @datadog.trace.api.Trace
+  public String datadog() {
+    TRACER.getCurrentSpan().setAttribute("providerAttr", "Datadog");
+    return "hello!";
+  }
+
+  @io.opentracing.contrib.dropwizard.Trace
+  public String dropwizard() {
+    TRACER.getCurrentSpan().setAttribute("providerAttr", "Dropwizard");
     return "hello!";
   }
 
@@ -45,24 +69,6 @@ public class SayTracedHello {
   @kamon.annotation.api.Trace
   public String kamonnew() {
     TRACER.getCurrentSpan().setAttribute("providerAttr", "KamonNew");
-    return "hello!";
-  }
-
-  @com.appoptics.api.ext.LogMethod
-  public String appoptics() {
-    TRACER.getCurrentSpan().setAttribute("providerAttr", "AppOptics");
-    return "hello!";
-  }
-
-  @com.tracelytics.api.ext.LogMethod
-  public String tracelytics() {
-    TRACER.getCurrentSpan().setAttribute("providerAttr", "Tracelytics");
-    return "hello!";
-  }
-
-  @com.signalfx.tracing.api.Trace
-  public String signalfx() {
-    TRACER.getCurrentSpan().setAttribute("providerAttr", "SignalFx");
     return "hello!";
   }
 
