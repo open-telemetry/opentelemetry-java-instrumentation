@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.okhttp;
+package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
 
+import com.squareup.okhttp.Request;
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import okhttp3.Request;
 
-/**
- * Helper class to inject span context into request headers.
- *
- * @author Pavol Loffay
- */
 public class RequestBuilderInjectAdapter implements HttpTextFormat.Setter<Request.Builder> {
-
   public static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
 
   @Override
