@@ -89,7 +89,7 @@ public class InMemoryExporter implements SpanProcessor {
       if (!spanOrders.containsKey(span.getSpanId())) {
         // this happens on some tests where there are sporadic background traces,
         // e.g. Elasticsearch "RefreshAction"
-        log.debug("span ended that was started prior to ListWriter clear(): {}", span);
+        log.debug("span ended that was started prior to clear(): {}", span);
         return;
       }
       boolean found = false;

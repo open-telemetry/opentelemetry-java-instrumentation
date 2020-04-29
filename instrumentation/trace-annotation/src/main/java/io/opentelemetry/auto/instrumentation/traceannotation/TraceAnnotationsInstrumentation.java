@@ -50,13 +50,14 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
 
   private static final String[] DEFAULT_ANNOTATIONS =
       new String[] {
+        "com.appoptics.api.ext.LogMethod",
         "com.newrelic.api.agent.Trace",
+        "com.signalfx.tracing.api.Trace",
+        "com.tracelytics.api.ext.LogMethod",
+        "datadog.trace.api.Trace",
+        "io.opentracing.contrib.dropwizard.Trace",
         "kamon.annotation.Trace",
         "kamon.annotation.api.Trace",
-        "com.tracelytics.api.ext.LogMethod",
-        "com.appoptics.api.ext.LogMethod",
-        "io.opentracing.contrib.dropwizard.Trace",
-        "com.signalfx.tracing.api.Trace",
         "org.springframework.cloud.sleuth.annotation.NewSpan"
       };
 
