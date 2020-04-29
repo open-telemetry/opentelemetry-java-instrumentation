@@ -10,6 +10,7 @@ apply from: "$rootDir/gradle/spotbugs.gradle"
 
 def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
+    //TODO why some tests fail on java 11 if jacoco is present?
     project.path == ":opentelemetry-auto" ||
     project.path == ":load-generator" ||
     project.path.startsWith(":benchmark") ||
@@ -234,21 +235,22 @@ if (project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
   }
 }
 
-if (project.parent && project.parent.ext.has("javaExecutableVersionCache")) {
-  project.ext.javaExecutableVersionCache = project.parent.ext.javaExecutableVersionCache
-} else {
-  project.ext.javaExecutableVersionCache = [:]
+
+if (!rootProject.ext.has("javaExecutableVersionCache")) {
+  rootProject.ext.javaExecutableVersionCache = [:]
 }
 
-JavaVersion getJavaExecutableVersion(String path) {
-  def cache = project.ext.javaExecutableVersionCache
-
-  if (cache.containsKey(path)) {
-    return cache.get(path)
+/**
+ * Returns version of java from a given java home.
+ */
+JavaVersion getJavaHomeVersion(String javaHome) {
+  def cache = rootProject.ext.javaExecutableVersionCache
+  if (cache.containsKey(javaHome)) {
+    return cache.get(javaHome)
   }
   new ByteArrayOutputStream().withStream { stream ->
     exec {
-      commandLine = [path, "-version"]
+      commandLine = [toExecutable(javaHome), "-version"]
       errorOutput = stream
     }
     def output = stream.toString()
@@ -257,18 +259,14 @@ JavaVersion getJavaExecutableVersion(String path) {
       def matcher = line =~ /^(?:java|openjdk) version "([^"]+)"/
       if (matcher) {
         def version = JavaVersion.toVersion(matcher.group(1))
-        cache.put(path, version)
+        cache.put(javaHome, version)
         return version
       }
     }
 
     // Getting here means we didn't find a line matching the version pattern.
-    throw new GradleScriptException("Cannot determine java version. Executable: ${path}, output: ${output}", null)
+    throw new GradleScriptException("Cannot determine java version. Executable: ${javaHome}, output: ${output}", null)
   }
-}
-
-ext {
-  getJavaExecutableVersion = this.&getJavaExecutableVersion
 }
 
 def isJavaVersionAllowed(JavaVersion version) {
@@ -281,77 +279,67 @@ def isJavaVersionAllowed(JavaVersion version) {
   return true
 }
 
-def isJdkForced(String javaName) {
-  return (project.hasProperty('forceJdk') && project.getProperty('forceJdk').contains(javaName))
+/**
+ * For a given java home return the location of java executable
+ */
+static String toExecutable(String javaHome) {
+  return Objects.requireNonNull(javaHome) + "/bin/java"
 }
 
-// Disable default test tasks if current JVM doesn't match version requirements
-tasks.withType(Test).configureEach {
-  if (name.endsWith("Generated")) {
-    return
+/**
+ * Returns java home for a given version or {@code null} if not found
+ */
+String findJavaHome(JavaVersion version) {
+  def javaHome = System.getenv("JAVA_${version.majorVersion}_HOME")
+  if (javaHome == null) {
+    return null
   }
-
-  // Always run all tests that are runnable on JVM used for compilation
-  onlyIf { isJavaVersionAllowed(JavaVersion.current()) }
+  def foundVersion = getJavaHomeVersion(javaHome)
+  return version == foundVersion ? javaHome : null
 }
 
-// Generate tests tasks for all provided JVMs
-for (def env : System.getenv().entrySet()) {
-  def matcher = env.key =~ /JAVA_([^_]+)_HOME/
-  if (!matcher) {
-    continue
-  }
-  def javaName = matcher.group(1)
-  def javaHome = env.value
-  def javaPath = "$javaHome/bin/java"
-  def javaVersion = getJavaExecutableVersion(javaPath)
+ext {
+  findJavaHome = this.&findJavaHome
+}
 
-  // This is slightly complicated because we need to dereference symlinks to make sure
-  // we are considering same JVM implementation
-  def currentJavaHome = new File(System.getProperty("java.home")).toPath().toRealPath()
-  if (currentJavaHome.endsWith("jre")) {
-    currentJavaHome = currentJavaHome.parent
-  }
-  if (currentJavaHome == new File(javaHome).toPath().toRealPath()) {
-    // Skip JVM implementation we are running gradle on
-    continue
-  }
+def addTestRule(String testTaskName) {
+  def prefix = testTaskName + "Java"
+  tasks.addRule("Pattern: $prefix<Version>: Runs tests using given java version") { String taskName ->
+    if (taskName.startsWith(prefix)) {
+      def requestedJavaVersion = JavaVersion.toVersion(taskName - prefix)
+      def gradleJavaVersion = JavaVersion.current()
 
-  def parentTask = task "testJava${javaName}"() {
-    group = 'Verification'
-    description = "Run tests for Java ${javaName}"
-  }
-  tasks.check.dependsOn parentTask
+      if (gradleJavaVersion != requestedJavaVersion) {
+        def javaHomeForTests = findJavaHome(requestedJavaVersion)
+        if (javaHomeForTests != null) {
 
-  tasks.withType(Test).all {
-    //if (name.endsWith("Generated")) {
-    if (!name.equals("test")) {
-      // The way we're copying the test doesn't currently work with "test-sets" generated tests.
-      return
-    }
-
-    def clonedTask = it
-    def newTask = task "${clonedTask.name}Java${javaName}Generated"(type: clonedTask.class) {
-      description "Runs $clonedTask.name under java ${javaName}"
-      executable = javaPath
-
-      if (javaName == "7") {
-        // Disable JIT for this method. Sometimes Java7 JVM crashes trying to compile it.
-        jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
-      }
-
-      onlyIf { isJavaVersionAllowed(javaVersion) || isJdkForced(javaName) }
-      if (applyCodeCoverage) {
-        jacoco {
-          // Disable jacoco for additional JVM tests to speed things up a bit
-          enabled = false
+          tasks.withType(Test).all {
+            // minJavaVersionForTests property, which specifies java version requirements for tests,
+            // currently does not work with custom source sets created by org.unbroken-dome.test-sets plugin.
+            // Thus we are forced to ignore all of them
+            // TODO solve this problem. We want to run custom test sets with all java versions as well
+            if (name != testTaskName) {
+              return
+            }
+            executable = toExecutable(javaHomeForTests)
+            enabled = isJavaVersionAllowed(requestedJavaVersion)
+            if (requestedJavaVersion.isJava7()) {
+              // Disable JIT for this method. Sometimes Java7 JVM crashes trying to compile it.
+              jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
+            }
+          }
+        } else {
+          throw new BuildCancelledException("Requested java version $requestedJavaVersion not found")
         }
       }
-    }
 
-    parentTask.dependsOn newTask
+      task(taskName, dependsOn: testTaskName)
+    }
   }
 }
+
+addTestRule("test")
+addTestRule("latestDepTest")
 
 tasks.withType(Test).configureEach {
   if (project.findProperty("enableJunitPlatform") == true) {
@@ -362,8 +350,9 @@ tasks.withType(Test).configureEach {
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout = Duration.ofMinutes(15)
 
+  // Disable all tests if current JVM doesn't match version requirements
   // Disable all tests if skipTests property was specified
-  onlyIf { !project.rootProject.hasProperty("skipTests") }
+  enabled = isJavaVersionAllowed(JavaVersion.current()) && !project.rootProject.hasProperty("skipTests")
 }
 
 plugins.withType(BasePlugin) {
