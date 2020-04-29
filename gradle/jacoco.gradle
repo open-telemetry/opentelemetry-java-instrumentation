@@ -60,5 +60,5 @@ afterEvaluate {
   }
 
   jacocoTestCoverageVerification.dependsOn jacocoTestReport
-//  check.dependsOn jacocoTestCoverageVerification
+  check.dependsOn jacocoTestCoverageVerification
 }
