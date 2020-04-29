@@ -48,6 +48,14 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".JDBCMaps",
+      packageName + ".JDBCUtils",
+      packageName + ".normalizer.ParseException",
+      packageName + ".normalizer.SimpleCharStream",
+      packageName + ".normalizer.SqlNormalizer",
+      packageName + ".normalizer.SqlNormalizerConstants",
+      packageName + ".normalizer.SqlNormalizerTokenManager",
+      packageName + ".normalizer.Token",
+      packageName + ".normalizer.TokenMgrError",
     };
   }
 
@@ -65,7 +73,10 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
         @Advice.Argument(0) final String sql, @Advice.Return final PreparedStatement statement) {
-      JDBCMaps.preparedStatements.put(statement, sql);
+      final String normalizedSql = JDBCUtils.normalizeSql(sql);
+      if (normalizedSql != null) {
+        JDBCMaps.preparedStatements.put(statement, normalizedSql);
+      }
     }
   }
 }

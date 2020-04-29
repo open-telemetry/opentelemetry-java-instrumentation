@@ -17,6 +17,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
@@ -187,7 +188,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -197,7 +198,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" url
             "span.origin.type" String
           }
@@ -244,7 +245,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -254,7 +255,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" url
             "span.origin.type" String
           }
@@ -293,7 +294,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -303,7 +304,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" url
             "span.origin.type" String
           }
@@ -342,7 +343,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -352,7 +353,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" url
             "span.origin.type" String
           }
@@ -391,7 +392,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -401,7 +402,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" url
             "span.origin.type" String
           }
@@ -443,7 +444,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -453,7 +454,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" url
             "span.origin.type" String
           }
@@ -507,7 +508,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
@@ -520,7 +521,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             if (username != null) {
               "$Tags.DB_USER" username
             }
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" url
             "span.origin.type" String
           }
@@ -614,13 +615,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           childOf span(0)
           errored false
           tags {
             "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" "testdb://localhost"
             "span.origin.type" TestStatement.name
           }
@@ -676,14 +677,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     assertTraces(5) {
       trace(0, 1) {
         span(0) {
-          operationName query
+          operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           errored false
           tags {
             "$Tags.DB_TYPE" "sql"
             "$Tags.DB_INSTANCE" dbName.toLowerCase()
             "$Tags.DB_USER" "SA"
-            "$Tags.DB_STATEMENT" query
+            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
             "$Tags.DB_URL" "hsqldb:mem:"
             "span.origin.type" String
           }
@@ -692,14 +693,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       for (int i = 1; i < numQueries; ++i) {
         trace(i, 1) {
           span(0) {
-            operationName query
+            operationName JDBCUtils.normalizeSql(query)
             spanKind CLIENT
             errored false
             tags {
               "$Tags.DB_TYPE" "sql"
               "$Tags.DB_INSTANCE" dbName.toLowerCase()
               "$Tags.DB_USER" "SA"
-              "$Tags.DB_STATEMENT" query
+              "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
               "$Tags.DB_URL" "hsqldb:mem:"
               "span.origin.type" String
             }

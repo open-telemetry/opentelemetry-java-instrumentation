@@ -96,6 +96,9 @@ public class Config {
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
 
+  public static final String DISABLE_SQL_NORMALIZER = "disable.sql.normalizer";
+  public static final boolean DEFAULT_DISABLE_SQL_NORMALIZER = false;
+
   @Getter private final String exporterJar;
   @Getter private final String serviceName;
   @Getter private final boolean traceEnabled;
@@ -132,6 +135,8 @@ public class Config {
 
   @Getter private final boolean traceExecutorsAll;
   @Getter private final List<String> traceExecutors;
+
+  @Getter private final boolean disableSqlNormalizer;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -189,6 +194,9 @@ public class Config {
 
     traceExecutors = getListSettingFromEnvironment(TRACE_EXECUTORS, DEFAULT_TRACE_EXECUTORS);
 
+    disableSqlNormalizer =
+        getBooleanSettingFromEnvironment(DISABLE_SQL_NORMALIZER, DEFAULT_DISABLE_SQL_NORMALIZER);
+
     log.debug("New instance: {}", this);
   }
 
@@ -242,6 +250,9 @@ public class Config {
     traceExecutorsAll =
         getPropertyBooleanValue(properties, TRACE_EXECUTORS_ALL, parent.traceExecutorsAll);
     traceExecutors = getPropertyListValue(properties, TRACE_EXECUTORS, parent.traceExecutors);
+
+    disableSqlNormalizer =
+        getPropertyBooleanValue(properties, DISABLE_SQL_NORMALIZER, DEFAULT_DISABLE_SQL_NORMALIZER);
 
     log.debug("New instance: {}", this);
   }
