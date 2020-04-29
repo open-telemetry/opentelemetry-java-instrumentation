@@ -74,7 +74,7 @@ public abstract class JDBCUtils {
 
   /** @return null if the sql could not be normalized for any reason */
   public static String normalizeSql(String sql) {
-    if (Config.get().isDisableSqlNormalizer()) {
+    if (!Config.get().isSqlNormalizerEnabled()) {
       return sql;
     }
     try {
