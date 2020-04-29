@@ -17,4 +17,6 @@ dependencies {
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
   testCompile project(':testing')
+  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
+  testCompile group: 'org.assertj', name: 'assertj-core', version: '1.7.1'
 }
