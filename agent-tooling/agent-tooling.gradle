@@ -1,5 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
+// TODO this is not the desired state, only reflects current reality
 minimumBranchCoverage = 0
 minimumInstructionCoverage = 0
 
@@ -33,5 +34,4 @@ dependencies {
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile
 }
-
 
