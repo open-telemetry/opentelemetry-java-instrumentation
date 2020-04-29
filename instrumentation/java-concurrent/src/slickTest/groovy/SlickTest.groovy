@@ -42,7 +42,7 @@ class SlickTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName SlickUtils.TestQuery()
+          operationName JDBCUtils.normalizeSql(SlickUtils.TestQuery())
           spanKind CLIENT
           childOf span(0)
           errored false
