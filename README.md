@@ -44,7 +44,7 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [Play WS](https://github.com/playframework/play-ws)                                                                                   | 1.0+                           |
 | [Project Reactor](https://github.com/reactor/reactor-core)                                                                            | 3.1+                           |
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
-| [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
+| [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.5+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
 | [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
 | [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.3+                           |
