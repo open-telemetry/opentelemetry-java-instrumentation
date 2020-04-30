@@ -3,7 +3,7 @@ apply plugin: 'com.diffplug.gradle.spotless'
 spotless {
   java {
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
-    targetExclude '**/generated/**'
+    targetExclude 'build/generated/**'
   }
   groovy {
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
