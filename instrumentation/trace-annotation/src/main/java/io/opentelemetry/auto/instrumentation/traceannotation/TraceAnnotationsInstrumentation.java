@@ -67,7 +67,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
       };
 
   private final Set<String> additionalTraceAnnotations;
-  private final ElementMatcher.Junction<NamedElement> annotationMatcher;
+  private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
   /*
   This matcher matches all methods that should be excluded from transformation
    */
@@ -99,7 +99,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
     }
 
     if (additionalTraceAnnotations.isEmpty()) {
-      annotationMatcher = none();
+      traceAnnotationMatcher = none();
     } else {
       ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
       for (final String annotationName : additionalTraceAnnotations) {
@@ -109,7 +109,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
           methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
         }
       }
-      this.annotationMatcher = methodTraceMatcher;
+      this.traceAnnotationMatcher = methodTraceMatcher;
     }
 
     excludedMethodsMatcher = configureExcludedMethods();
@@ -155,7 +155,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(declaresMethod(isAnnotatedWith(annotationMatcher)));
+    return safeHasSuperType(declaresMethod(isAnnotatedWith(traceAnnotationMatcher)));
   }
 
   @Override
@@ -168,7 +168,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isAnnotatedWith(annotationMatcher).and(not(excludedMethodsMatcher)),
+        isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)),
         packageName + ".TraceAdvice");
   }
 }

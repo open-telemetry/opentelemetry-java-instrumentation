@@ -11,6 +11,7 @@ minimumInstructionCoverage = 0.0
 
 dependencies {
   compile deps.opentelemetryApi
+  compile deps.opentelemetryApiAutoAnnotations
   compile project(':utils:thread-utils')
   compile deps.slf4j
   compile group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j

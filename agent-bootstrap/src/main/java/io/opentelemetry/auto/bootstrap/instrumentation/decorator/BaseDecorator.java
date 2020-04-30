@@ -21,6 +21,7 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.contrib.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
@@ -92,6 +93,11 @@ public abstract class BaseDecorator {
    * @return
    */
   public String spanNameForMethod(final Method method) {
+    WithSpan annotation = method.getAnnotation(WithSpan.class);
+    if (annotation != null && !annotation.value().isEmpty()) {
+      return annotation.value();
+    }
+
     return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
   }
 
