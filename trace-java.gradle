@@ -3,7 +3,7 @@ plugins {
 
   id 'com.jfrog.artifactory' version '4.8.1'
   id 'com.jfrog.bintray' version '1.8.4'
-  id 'org.unbroken-dome.test-sets' version '2.2.1'
+  id 'org.unbroken-dome.test-sets' version '3.0.1'
   id 'com.github.ben-manes.versions' version '0.27.0'
 
   // Not applying google java format by default because it gets confused by stray java build
