@@ -82,7 +82,7 @@ public interface Instrumenter {
       instrumentationPrimaryName = instrumentationName;
 
       enabled = Config.get().isIntegrationEnabled(instrumentationNames, defaultEnabled());
-      if (contextStore().size() > 0) {
+      if (!contextStore().isEmpty()) {
         contextProvider = new FieldBackedProvider(this);
       } else {
         contextProvider = NoopContextProvider.INSTANCE;
