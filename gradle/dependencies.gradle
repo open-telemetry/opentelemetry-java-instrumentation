@@ -1,6 +1,10 @@
 def groovyVer = "2.5.11"
 def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
+configurations.all {
+  resolutionStrategy.cacheChangingModulesFor 12, 'hours'
+}
+
 ext {
   versions = [
     opentelemetry: '0.4.0-SNAPSHOT',
