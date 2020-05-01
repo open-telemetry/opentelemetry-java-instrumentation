@@ -26,6 +26,6 @@ dependencies {
   testCompile group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
   testCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
 
-  latestDepTestCompile group: 'io.reactivex', name: 'rxjava', version: '+'
+  latestDepTestCompile group: 'io.reactivex', name: 'rxjava', version: '1.+'
   latestDepTestCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
 }

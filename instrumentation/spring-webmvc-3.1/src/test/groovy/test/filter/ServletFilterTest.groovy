@@ -127,6 +127,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
         "$Tags.HTTP_STATUS" endpoint.status
         "span.origin.type" ApplicationFilterChain.name
         "servlet.path" endpoint.path
+        "servlet.context" ""
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }

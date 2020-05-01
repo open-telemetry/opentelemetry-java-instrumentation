@@ -137,6 +137,9 @@ repositories {
   maven {
     url "https://repo.typesafe.com/typesafe/releases"
   }
+  maven {
+    url "https://oss.jfrog.org/artifactory/oss-snapshot-local"
+  }
 }
 
 dependencies {
