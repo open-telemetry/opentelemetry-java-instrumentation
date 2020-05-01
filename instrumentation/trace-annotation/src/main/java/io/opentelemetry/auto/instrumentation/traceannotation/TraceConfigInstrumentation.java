@@ -50,7 +50,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     classMethodsToTrace = MethodsConfigurationParser.parse(Config.get().getTraceMethods());
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(Config.get().getExcludedMethods());
+        MethodsConfigurationParser.parse(Config.get().getTraceMethodsExclude());
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       Set<String> tracedMethods = classMethodsToTrace.get(entry.getKey());
       if (tracedMethods != null) {

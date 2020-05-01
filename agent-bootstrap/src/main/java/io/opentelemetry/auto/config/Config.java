@@ -96,7 +96,7 @@ public class Config {
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
-  private static final String DEFAULT_EXCLUDED_METHODS = null;
+  private static final String DEFAULT_TRACE_METHODS_EXCLUDE = null;
 
   @Getter private final String exporterJar;
   @Getter private final String serviceName;
@@ -131,7 +131,7 @@ public class Config {
   @Getter private final String traceAnnotations;
 
   @Getter private final String traceMethods;
-  @Getter private final String excludedMethods;
+  @Getter private final String traceMethodsExclude;
 
   @Getter private final boolean traceExecutorsAll;
   @Getter private final List<String> traceExecutors;
@@ -186,7 +186,7 @@ public class Config {
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
     traceMethods = getSettingFromEnvironment(TRACE_METHODS, DEFAULT_TRACE_METHODS);
-    excludedMethods = getSettingFromEnvironment(TRACE_METHODS_EXCLUDE, DEFAULT_EXCLUDED_METHODS);
+    traceMethodsExclude = getSettingFromEnvironment(TRACE_METHODS_EXCLUDE, DEFAULT_TRACE_METHODS_EXCLUDE);
 
     traceExecutorsAll =
         getBooleanSettingFromEnvironment(TRACE_EXECUTORS_ALL, DEFAULT_TRACE_EXECUTORS_ALL);
@@ -242,7 +242,7 @@ public class Config {
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 
     traceMethods = properties.getProperty(TRACE_METHODS, parent.traceMethods);
-    excludedMethods = properties.getProperty(TRACE_METHODS_EXCLUDE, parent.excludedMethods);
+    traceMethodsExclude = properties.getProperty(TRACE_METHODS_EXCLUDE, parent.traceMethodsExclude);
 
     traceExecutorsAll =
         getPropertyBooleanValue(properties, TRACE_EXECUTORS_ALL, parent.traceExecutorsAll);

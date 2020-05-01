@@ -119,7 +119,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(Config.get().getExcludedMethods());
+        MethodsConfigurationParser.parse(Config.get().getTraceMethodsExclude());
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =
