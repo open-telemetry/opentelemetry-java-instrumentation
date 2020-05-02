@@ -1,6 +1,7 @@
 def groovyVer = "2.5.11"
 def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
+// this is only needed for the working against unreleased otel-java snapshots
 configurations.all {
   resolutionStrategy.cacheChangingModulesFor 12, 'hours'
 }
