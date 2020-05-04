@@ -30,6 +30,7 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".context.ContextUtils",
       packageName + ".context.UnshadedScope",
+      packageName + ".context.NoopScope",
       packageName + ".context.propagation.UnshadedContextPropagators",
       packageName + ".context.propagation.UnshadedHttpTextFormat",
       packageName + ".context.propagation.UnshadedHttpTextFormat$UnshadedSetter",
