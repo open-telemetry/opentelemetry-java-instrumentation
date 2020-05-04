@@ -33,7 +33,7 @@ testSets {
 }
 
 dependencies {
-  main_java8Compile group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
+  compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
   testCompile project(':instrumentation:netty:netty-4.0')
   testCompile project(':instrumentation:netty:netty-4.1')

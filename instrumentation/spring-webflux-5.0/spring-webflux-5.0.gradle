@@ -24,8 +24,8 @@ testSets {
 
 dependencies {
   // We use helpers from this project
-  main_java8CompileOnly project(':instrumentation:reactor-3.1')
-  main_java8CompileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
+  compileOnly project(':instrumentation:reactor-3.1')
+  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
 
   // We are using utils class from reactor instrumentation.
   // TODO: It is unclear why we need to use `compile` here (instead of 'compileOnly')

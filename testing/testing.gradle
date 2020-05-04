@@ -63,4 +63,5 @@ tasks.register("testDisabledFieldInjection", Test) {
 }
 test.dependsOn(testDisabledFieldInjection)
 
+javadoc.enabled = false
 test.forkEvery = 1

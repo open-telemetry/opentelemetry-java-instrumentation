@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.integration.muzzle
 
+import io.opentelemetry.auto.bootstrap.instrumentation.Utils
 import io.opentelemetry.auto.test.IntegrationTestUtils
 import spock.lang.Specification
 
@@ -28,7 +29,7 @@ class MuzzleBytecodeTransformTest extends Specification {
     List<Class> unMuzzledClasses = []
     List<Class> nonLazyFields = []
     List<Class> unInitFields = []
-    for (Object instrumenter : ServiceLoader.load(IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.auto.tooling.Instrumenter"), IntegrationTestUtils.getAgentClassLoader())) {
+    for (Object instrumenter : Utils.safeLoadServices(IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.auto.tooling.Instrumenter"), IntegrationTestUtils.getAgentClassLoader())) {
       if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
         // TraceConfigInstrumentation doesn't do muzzle checks
         // check on TracerClassInstrumentation instead
