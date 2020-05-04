@@ -161,7 +161,7 @@ jobs:
 
       - run:
           name: Build Project
-          command: GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+          command: GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M" ./gradlew build -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
       - run:
           name: Collect Reports

@@ -39,8 +39,6 @@ repositories {
 
 description = 'trace-java'
 
-tasks.register("latestDepTest")
-
 wrapper {
   distributionType = Wrapper.DistributionType.ALL
 }
