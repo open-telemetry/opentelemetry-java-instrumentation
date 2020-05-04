@@ -1,10 +1,31 @@
+plugins {
+    id 'com.intershop.gradle.javacc' version '4.0.0'
+}
+
 apply from: "${rootDir}/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
+
 
 muzzle {
   pass {
     coreJdk()
   }
+}
+
+javacc {
+  configs {
+    template {
+      inputFile = file('src/main/javacc/SqlNormalizer.jj')
+      packageName = 'io.opentelemetry.auto.instrumentation.jdbc.normalizer'
+    }
+  }
+}
+
+tasks.withType(com.github.sherter.googlejavaformatgradleplugin.VerifyGoogleJavaFormat).configureEach {
+  exclude '**/jdbc/normalizer/*.java'
+}
+tasks.withType(Checkstyle).configureEach {
+  exclude '**/jdbc/normalizer/*.java'
 }
 
 testSets {
@@ -34,3 +55,4 @@ dependencies {
   latestDepTestCompile group: 'com.zaxxer', name: 'HikariCP', version: '+'
   latestDepTestCompile group: 'com.mchange', name: 'c3p0', version: '+'
 }
+
