@@ -20,8 +20,6 @@ import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatche
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
@@ -46,66 +44,18 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class TraceConfigInstrumentation implements Instrumenter {
 
-  static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.\\$]+";
-  private static final String METHOD_LIST_REGEX = "\\s*(?:\\w+\\s*,)*\\s*(?:\\w+\\s*,?)\\s*";
-  private static final String CONFIG_FORMAT =
-      "(?:\\s*"
-          + PACKAGE_CLASS_NAME_REGEX
-          + "\\["
-          + METHOD_LIST_REGEX
-          + "\\]\\s*;)*\\s*"
-          + PACKAGE_CLASS_NAME_REGEX
-          + "\\["
-          + METHOD_LIST_REGEX
-          + "\\]";
-
   private final Map<String, Set<String>> classMethodsToTrace;
 
-  private boolean validateConfigString(final String configString) {
-    for (final String segment : configString.split(";")) {
-      if (!segment.trim().matches(CONFIG_FORMAT)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   public TraceConfigInstrumentation() {
-    final String configString = Config.get().getTraceMethods();
-    if (configString == null || configString.trim().isEmpty()) {
-      classMethodsToTrace = Collections.emptyMap();
+    classMethodsToTrace = MethodsConfigurationParser.parse(Config.get().getTraceMethods());
 
-    } else if (!validateConfigString(configString)) {
-      log.warn(
-          "Invalid trace method config '{}'. Must match 'package.Class$Name[method1,method2];*'.",
-          configString);
-      classMethodsToTrace = Collections.emptyMap();
-
-    } else {
-      final Map<String, Set<String>> toTrace = Maps.newHashMap();
-      final String[] classMethods = configString.split(";", -1);
-      for (final String classMethod : classMethods) {
-        if (classMethod.trim().isEmpty()) {
-          continue;
-        }
-        final String[] splitClassMethod = classMethod.split("\\[", -1);
-        final String className = splitClassMethod[0];
-        final String method = splitClassMethod[1].trim();
-        final String methodNames = method.substring(0, method.length() - 1);
-        final String[] splitMethodNames = methodNames.split(",", -1);
-        final Set<String> trimmedMethodNames =
-            Sets.newHashSetWithExpectedSize(splitMethodNames.length);
-        for (final String methodName : splitMethodNames) {
-          final String trimmedMethodName = methodName.trim();
-          if (!trimmedMethodName.isEmpty()) {
-            trimmedMethodNames.add(trimmedMethodName);
-          }
-        }
-        if (!trimmedMethodNames.isEmpty()) {
-          toTrace.put(className.trim(), trimmedMethodNames);
-        }
+    Map<String, Set<String>> excludedMethods =
+        MethodsConfigurationParser.parse(Config.get().getTraceMethodsExclude());
+    for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
+      Set<String> tracedMethods = classMethodsToTrace.get(entry.getKey());
+      if (tracedMethods != null) {
+        tracedMethods.removeAll(entry.getValue());
       }
-      classMethodsToTrace = Collections.unmodifiableMap(toTrace);
     }
   }
 

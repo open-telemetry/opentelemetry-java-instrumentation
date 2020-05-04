@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import io.opentelemetry.auto.instrumentation.traceannotation.TraceConfigInstrumentation
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 
@@ -54,35 +53,5 @@ class TraceConfigTest extends AgentTestRunner {
         }
       }
     }
-  }
-
-  def "test configuration #value"() {
-    setup:
-    ConfigUtils.updateConfig {
-      if (value) {
-        System.properties.setProperty("ota.trace.methods", value)
-      } else {
-        System.clearProperty("ota.trace.methods")
-      }
-    }
-
-    expect:
-    new TraceConfigInstrumentation().classMethodsToTrace == expected
-
-    cleanup:
-    System.clearProperty("ota.trace.methods")
-
-    where:
-    value                                                           | expected
-    null                                                            | [:]
-    " "                                                             | [:]
-    "some.package.ClassName"                                        | [:]
-    "some.package.ClassName[ , ]"                                   | [:]
-    "some.package.ClassName[ , method]"                             | [:]
-    "some.package.Class\$Name[ method , ]"                          | ["some.package.Class\$Name": ["method"].toSet()]
-    "ClassName[ method1,]"                                          | ["ClassName": ["method1"].toSet()]
-    "ClassName[method1 , method2]"                                  | ["ClassName": ["method1", "method2"].toSet()]
-    "Class\$1[method1 ] ; Class\$2[ method2];"                      | ["Class\$1": ["method1"].toSet(), "Class\$2": ["method2"].toSet()]
-    "Duplicate[method1] ; Duplicate[method2]  ;Duplicate[method3];" | ["Duplicate": ["method3"].toSet()]
   }
 }

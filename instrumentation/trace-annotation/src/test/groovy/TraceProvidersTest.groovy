@@ -25,6 +25,7 @@ class TraceProvidersTest extends AgentTestRunner {
   static {
     ConfigUtils.updateConfig {
       System.clearProperty("ota.trace.annotations")
+      //Don't bother to instrument inner closures of this test class
       System.setProperty("ota.trace.classes.exclude", TraceProvidersTest.name + "*")
     }
   }
