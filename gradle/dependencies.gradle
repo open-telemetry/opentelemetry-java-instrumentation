@@ -8,7 +8,7 @@ configurations.all {
 
 ext {
   versions = [
-    opentelemetry: '0.4.0-SNAPSHOT',
+    opentelemetry: '0.4.0',
 
     slf4j        : "1.7.30",
     guava        : "20.0", // Last version to support Java 7
