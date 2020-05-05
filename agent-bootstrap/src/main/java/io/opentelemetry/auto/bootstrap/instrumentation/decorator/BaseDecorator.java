@@ -93,12 +93,22 @@ public abstract class BaseDecorator {
    * @return
    */
   public String spanNameForMethod(final Method method) {
+    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
+  }
+
+  /**
+   * This method is used to generate an acceptable span (operation) name based on a given method
+   * reference. It first checks for existence of {@link WithSpan} annotation. If it is present, then
+   * tries to derive name from its {@code value} attribute. Otherwise delegates to {@link
+   * #spanNameForMethod(Method)}.
+   */
+  public String spanNameForMethodWithAnnotation(final Method method) {
     WithSpan annotation = method.getAnnotation(WithSpan.class);
     if (annotation != null && !annotation.value().isEmpty()) {
       return annotation.value();
     }
 
-    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
+    return spanNameForMethod(method);
   }
 
   /**
