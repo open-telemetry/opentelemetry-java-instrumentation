@@ -70,6 +70,7 @@ public final class InstrumentationPoints {
           });
     }
     spanWithScope.closeScope();
+    // span may be finished by handleAsync call above.
   }
 
   public static SpanWithScope beforeConnect(final RedisURI redisURI) {

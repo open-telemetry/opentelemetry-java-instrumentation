@@ -62,5 +62,6 @@ public class LettuceAsyncCommandsAdvice {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
     }
     spanWithScope.closeScope();
+    // span finished by LettuceAsyncBiFunction
   }
 }

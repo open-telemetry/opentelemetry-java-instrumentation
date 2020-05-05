@@ -150,6 +150,7 @@ public class Servlet3Advice {
           DECORATE.beforeFinish(span);
           span.end(); // Finish the span manually since finishSpanOnClose was false
         }
+        // else span finished in TagSettingAsyncListener
       }
       spanWithScope.closeScope();
     }
