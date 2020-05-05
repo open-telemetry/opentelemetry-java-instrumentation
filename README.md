@@ -128,6 +128,12 @@ These parameter names are very likely to change over time, so please check back 
 
 Please report any bugs or unexpected behavior you may find.
 
+## Troubleshooting
+
+To turn on the agent's internal debug logging:
+
+`-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
+
 ## Building from source
 
 Build using Java 8:
