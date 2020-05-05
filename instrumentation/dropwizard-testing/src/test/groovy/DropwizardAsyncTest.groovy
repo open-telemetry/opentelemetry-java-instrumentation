@@ -71,9 +71,11 @@ class DropwizardAsyncTest extends DropwizardTest {
 
     @GET
     @Path("query")
-    Response query_param(@QueryParam("some") String param) {
-      controller(QUERY_PARAM) {
-        Response.status(QUERY_PARAM.status).entity("some=$param".toString()).build()
+    Response query_param(@QueryParam("some") String param, @Suspended final AsyncResponse asyncResponse) {
+      executor.execute {
+        controller(QUERY_PARAM) {
+          asyncResponse.resume(Response.status(QUERY_PARAM.status).entity("some=$param".toString()).build())
+        }
       }
     }
 

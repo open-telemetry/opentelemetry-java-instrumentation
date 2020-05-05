@@ -76,7 +76,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
           if (url != null) {
             try {
               dbInfo = JDBCConnectionUrlParser.parse(url, connection.getClientInfo());
-            } catch (final Exception ex) {
+            } catch (final Throwable ex) {
               // getClientInfo is likely not allowed.
               dbInfo = JDBCConnectionUrlParser.parse(url, null);
             }

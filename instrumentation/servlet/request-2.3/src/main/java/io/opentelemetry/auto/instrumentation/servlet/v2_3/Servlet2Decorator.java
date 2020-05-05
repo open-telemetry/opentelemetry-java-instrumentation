@@ -21,11 +21,10 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 public class Servlet2Decorator
-    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, ServletResponse> {
+    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, Integer> {
   public static final Servlet2Decorator DECORATE = new Servlet2Decorator();
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet-2.3");
@@ -59,13 +58,8 @@ public class Servlet2Decorator
   }
 
   @Override
-  protected Integer status(final ServletResponse httpServletResponse) {
-    if (httpServletResponse instanceof StatusSavingHttpServletResponseWrapper) {
-      return ((StatusSavingHttpServletResponseWrapper) httpServletResponse).status;
-    } else {
-      // HttpServletResponse doesn't have accessor for status code.
-      return null;
-    }
+  protected Integer status(final Integer status) {
+    return status;
   }
 
   @Override
