@@ -16,6 +16,8 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
 import io.opentelemetry.auto.bootstrap.ExceptionLogger;
+import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.instrumentation.jdbc.normalizer.SqlNormalizer;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -68,5 +70,18 @@ public abstract class JDBCUtils {
       return null;
     }
     return connection;
+  }
+
+  /** @return null if the sql could not be normalized for any reason */
+  public static String normalizeSql(String sql) {
+    if (!Config.get().isSqlNormalizerEnabled()) {
+      return sql;
+    }
+    try {
+      return SqlNormalizer.normalize(sql);
+    } catch (Exception e) {
+      ExceptionLogger.LOGGER.debug("Could not normalize sql", e);
+      return null;
+    }
   }
 }

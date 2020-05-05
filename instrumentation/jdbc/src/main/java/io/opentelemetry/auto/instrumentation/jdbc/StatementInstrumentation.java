@@ -55,7 +55,16 @@ public final class StatementInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JDBCMaps", packageName + ".JDBCUtils", packageName + ".JDBCDecorator",
+      packageName + ".normalizer.Token",
+      packageName + ".normalizer.ParseException",
+      packageName + ".normalizer.SimpleCharStream",
+      packageName + ".normalizer.SqlNormalizerConstants",
+      packageName + ".normalizer.TokenMgrError",
+      packageName + ".normalizer.SqlNormalizerTokenManager",
+      packageName + ".normalizer.SqlNormalizer",
+      packageName + ".JDBCMaps",
+      packageName + ".JDBCUtils",
+      packageName + ".JDBCDecorator",
     };
   }
 
@@ -80,16 +89,17 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       if (callDepth > 0) {
         return null;
       }
+      final String normalizedSql = JDBCUtils.normalizeSql(sql);
 
       final Span span =
           TRACER
-              .spanBuilder(DECORATE.spanNameOnStatement(sql))
+              .spanBuilder(DECORATE.spanNameOnStatement(normalizedSql))
               .setSpanKind(CLIENT)
               .setAttribute("span.origin.type", statement.getClass().getName())
               .startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
-      DECORATE.onStatement(span, sql);
+      DECORATE.onStatement(span, normalizedSql);
       return new SpanWithScope(span, currentContextWith(span));
     }
 
