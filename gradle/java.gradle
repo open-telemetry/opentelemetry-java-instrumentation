@@ -128,7 +128,6 @@ tasks.register("packageSources", Jar) {
 artifacts.archives packageSources
 
 repositories {
-  mavenLocal()
   jcenter()
   mavenCentral()
   maven {
@@ -137,6 +136,14 @@ repositories {
   maven {
     url "https://repo.typesafe.com/typesafe/releases"
   }
+  // this is only needed for the working against unreleased otel-java snapshots
+  maven {
+    url "https://oss.jfrog.org/artifactory/oss-snapshot-local"
+    content {
+      includeGroup "io.opentelemetry"
+    }
+  }
+  mavenLocal()
 }
 
 dependencies {

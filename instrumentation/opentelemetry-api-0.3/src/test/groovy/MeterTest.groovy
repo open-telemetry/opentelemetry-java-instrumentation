@@ -38,7 +38,6 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setLabelKeys(["a", "b"]) // TODO how to validate these?
       .setConstantLabels(["m": "n", "o": "p"])
       .setMonotonic(monotonic)
       .build()
@@ -93,7 +92,6 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setLabelKeys(["a", "b"]) // TODO what are label keys and how to validate them in metric data?
       .setConstantLabels(["m": "n", "o": "p"])
       .build()
     if (bind) {
@@ -144,7 +142,6 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setLabelKeys(["a", "b"]) // TODO what are label keys and how to validate them in metric data?
       .setConstantLabels(["m": "n", "o": "p"])
       .setMonotonic(monotonic)
       .build()
@@ -200,13 +197,11 @@ class MeterTest extends AgentTestRunner {
     def longCounter = meter.longCounterBuilder("test")
       .setDescription("d")
       .setUnit("u")
-      .setLabelKeys(["a", "b"]) // TODO what are label keys and how to validate them in metric data?
       .setConstantLabels(["m": "n", "o": "p"])
       .build()
     def doubleMeasure = meter.doubleMeasureBuilder("test2")
       .setDescription("d")
       .setUnit("u")
-      .setLabelKeys(["a", "b"]) // TODO what are label keys and how to validate them in metric data?
       .setConstantLabels(["m": "n", "o": "p"])
       .build()
 

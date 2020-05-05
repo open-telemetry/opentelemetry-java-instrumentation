@@ -142,10 +142,20 @@ jobs:
     environment:
       - TEST_TASK: testJava13
 
+  test_zulu13:
+    <<: *default_test_job
+    environment:
+      - TEST_TASK: testJavaZULU13
+
   test_14:
     <<: *default_test_job
     environment:
       - TEST_TASK: testJava14
+
+  test_zulu14:
+    <<: *default_test_job
+    environment:
+      - TEST_TASK: testJavaZULU14
 
   check:
     <<: *defaults
@@ -243,25 +253,25 @@ workflows:
               only: /.*/
       # - test_ibm8:
       #     requires:
-      #     - build
+      #       - build
       #     filters:
       #       tags:
       #         only: /.*/
       # - test_zulu8:
       #     requires:
-      #     - build
+      #       - build
       #     filters:
       #       tags:
       #         only: /.*/
       # - test_9:
       #     requires:
-      #     - build
+      #       - build
       #     filters:
       #       tags:
       #         only: /.*/
       # - test_10:
       #     requires:
-      #     - build
+      #       - build
       #     filters:
       #       tags:
       #         only: /.*/
@@ -273,17 +283,23 @@ workflows:
               only: /.*/
       # - test_zulu11:
       #     requires:
-      #     - build
+      #       - build
       #     filters:
       #       tags:
       #         only: /.*/
       # - test_12:
       #     requires:
-      #     - build
+      #       - build
       #     filters:
       #       tags:
       #         only: /.*/
       # - test_13:
+      #     requires:
+      #       - build
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      # - test_zulu13:
       #     requires:
       #       - build
       #     filters:
@@ -295,6 +311,12 @@ workflows:
           filters:
             tags:
               only: /.*/
+      # - test_zulu14:
+      #     requires:
+      #       - build
+      #     filters:
+      #       tags:
+      #         only: /.*/
 
       - check:
           requires:
@@ -323,7 +345,9 @@ workflows:
             # - test_zulu11
             # - test_12
             # - test_13
+            # - test_zulu13
             - test_14
+            # - test_zulu14
             - check
           filters:
             branches:
@@ -344,10 +368,22 @@ workflows:
             # - test_zulu11
             # - test_12
             # - test_13
+            # - test_zulu13
             - test_14
+            # - test_zulu14
             - check
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v.*/
+  nightly_snapshot:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - depends-on-otel-java-snapshot
+    jobs:
+      - test_8

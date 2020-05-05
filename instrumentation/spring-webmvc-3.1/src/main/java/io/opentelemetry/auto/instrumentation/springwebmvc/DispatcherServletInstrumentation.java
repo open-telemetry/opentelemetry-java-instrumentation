@@ -120,8 +120,8 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
           contextStore.put(dispatcher, filter);
         }
         filter.setHandlerMappings(handlerMappings);
-        servletContext.setAttribute(
-            "ota.dispatcher-filter", filter); // used by Servlet3Decorator.onContext
+        // attribute used by Servlet3Decorator.onContext
+        servletContext.setAttribute("io.opentelemetry.auto.dispatcher-filter", filter);
       }
     }
   }

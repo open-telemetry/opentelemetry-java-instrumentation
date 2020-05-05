@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi.context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.grpc.Context;
-import unshaded.io.opentelemetry.context.NoopScope;
 import unshaded.io.opentelemetry.context.Scope;
 
 @Slf4j

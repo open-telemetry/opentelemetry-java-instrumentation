@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(includeFieldNames = true)
 public class Config {
+  private static final MethodHandles.Lookup PUBLIC_LOOKUP = MethodHandles.publicLookup();
 
   /** Config keys below */
   private static final String PREFIX = "ota.";
@@ -62,6 +63,7 @@ public class Config {
   public static final String TRACE_EXECUTORS_ALL = "trace.executors.all";
   public static final String TRACE_EXECUTORS = "trace.executors";
   public static final String TRACE_METHODS = "trace.methods";
+  public static final String TRACE_METHODS_EXCLUDE = "trace.methods.exclude";
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
@@ -95,6 +97,10 @@ public class Config {
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
+  private static final String DEFAULT_TRACE_METHODS_EXCLUDE = null;
+
+  public static final String SQL_NORMALIZER_ENABLED = "sql.normalizer.enabled";
+  public static final boolean DEFAULT_SQL_NORMALIZER_ENABLED = true;
 
   @Getter private final String exporterJar;
   @Getter private final String serviceName;
@@ -129,9 +135,12 @@ public class Config {
   @Getter private final String traceAnnotations;
 
   @Getter private final String traceMethods;
+  @Getter private final String traceMethodsExclude;
 
   @Getter private final boolean traceExecutorsAll;
   @Getter private final List<String> traceExecutors;
+
+  @Getter private final boolean sqlNormalizerEnabled;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -183,11 +192,16 @@ public class Config {
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
     traceMethods = getSettingFromEnvironment(TRACE_METHODS, DEFAULT_TRACE_METHODS);
+    traceMethodsExclude =
+        getSettingFromEnvironment(TRACE_METHODS_EXCLUDE, DEFAULT_TRACE_METHODS_EXCLUDE);
 
     traceExecutorsAll =
         getBooleanSettingFromEnvironment(TRACE_EXECUTORS_ALL, DEFAULT_TRACE_EXECUTORS_ALL);
 
     traceExecutors = getListSettingFromEnvironment(TRACE_EXECUTORS, DEFAULT_TRACE_EXECUTORS);
+
+    sqlNormalizerEnabled =
+        getBooleanSettingFromEnvironment(SQL_NORMALIZER_ENABLED, DEFAULT_SQL_NORMALIZER_ENABLED);
 
     log.debug("New instance: {}", this);
   }
@@ -238,10 +252,14 @@ public class Config {
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 
     traceMethods = properties.getProperty(TRACE_METHODS, parent.traceMethods);
+    traceMethodsExclude = properties.getProperty(TRACE_METHODS_EXCLUDE, parent.traceMethodsExclude);
 
     traceExecutorsAll =
         getPropertyBooleanValue(properties, TRACE_EXECUTORS_ALL, parent.traceExecutorsAll);
     traceExecutors = getPropertyListValue(properties, TRACE_EXECUTORS, parent.traceExecutors);
+
+    sqlNormalizerEnabled =
+        getPropertyBooleanValue(properties, SQL_NORMALIZER_ENABLED, DEFAULT_SQL_NORMALIZER_ENABLED);
 
     log.debug("New instance: {}", this);
   }
@@ -387,7 +405,7 @@ public class Config {
     }
     try {
       return (T)
-          MethodHandles.publicLookup()
+          PUBLIC_LOOKUP
               .findStatic(tClass, "valueOf", MethodType.methodType(tClass, String.class))
               .invoke(value);
     } catch (final NumberFormatException e) {

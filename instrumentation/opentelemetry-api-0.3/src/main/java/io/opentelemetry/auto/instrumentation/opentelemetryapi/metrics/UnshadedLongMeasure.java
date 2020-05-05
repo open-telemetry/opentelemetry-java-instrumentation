@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.List;
 import java.util.Map;
 import unshaded.io.opentelemetry.metrics.LongMeasure;
 
@@ -78,12 +77,6 @@ class UnshadedLongMeasure implements LongMeasure {
     @Override
     public LongMeasure.Builder setUnit(final String unit) {
       shadedBuilder.setUnit(unit);
-      return this;
-    }
-
-    @Override
-    public LongMeasure.Builder setLabelKeys(final List<String> labelKeys) {
-      shadedBuilder.setLabelKeys(labelKeys);
       return this;
     }
 

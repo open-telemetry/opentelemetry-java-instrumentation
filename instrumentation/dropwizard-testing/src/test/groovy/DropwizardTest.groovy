@@ -124,6 +124,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         "span.origin.type" ServletHandler.CachedChain.name
+        "servlet.context" ""
+        "servlet.path" ""
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
