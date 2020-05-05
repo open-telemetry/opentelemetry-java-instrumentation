@@ -58,5 +58,10 @@ public class LoggingExporter implements SpanExporter {
   }
 
   @Override
+  public ResultCode flush() {
+    return ResultCode.SUCCESS;
+  }
+
+  @Override
   public void shutdown() {}
 }

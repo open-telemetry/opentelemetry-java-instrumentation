@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.List;
 import java.util.Map;
 import unshaded.io.opentelemetry.metrics.DoubleCounter;
 
@@ -79,12 +78,6 @@ class UnshadedDoubleCounter implements DoubleCounter {
     @Override
     public DoubleCounter.Builder setUnit(final String unit) {
       shadedBuilder.setUnit(unit);
-      return this;
-    }
-
-    @Override
-    public DoubleCounter.Builder setLabelKeys(final List<String> labelKeys) {
-      shadedBuilder.setLabelKeys(labelKeys);
       return this;
     }
 

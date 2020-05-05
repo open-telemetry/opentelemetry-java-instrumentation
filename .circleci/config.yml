@@ -351,3 +351,13 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v.*/
+  nightly_snapshot:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - depends-on-otel-java-snapshot
+    jobs:
+      - test_8

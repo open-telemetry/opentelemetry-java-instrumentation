@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.List;
 import java.util.Map;
 import unshaded.io.opentelemetry.metrics.DoubleObserver;
 
@@ -82,12 +81,6 @@ class UnshadedDoubleObserver implements DoubleObserver {
     @Override
     public DoubleObserver.Builder setUnit(final String unit) {
       shadedBuilder.setUnit(unit);
-      return this;
-    }
-
-    @Override
-    public DoubleObserver.Builder setLabelKeys(final List<String> labelKeys) {
-      shadedBuilder.setLabelKeys(labelKeys);
       return this;
     }
 

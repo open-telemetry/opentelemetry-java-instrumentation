@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.List;
 import java.util.Map;
 import unshaded.io.opentelemetry.metrics.DoubleMeasure;
 
@@ -79,12 +78,6 @@ class UnshadedDoubleMeasure implements DoubleMeasure {
     @Override
     public DoubleMeasure.Builder setUnit(final String unit) {
       shadedBuilder.setUnit(unit);
-      return this;
-    }
-
-    @Override
-    public DoubleMeasure.Builder setLabelKeys(final List<String> labelKeys) {
-      shadedBuilder.setLabelKeys(labelKeys);
       return this;
     }
 
