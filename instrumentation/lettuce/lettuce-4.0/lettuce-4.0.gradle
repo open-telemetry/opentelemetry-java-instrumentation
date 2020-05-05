@@ -1,0 +1,32 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = "biz.paluch.redis"
+    module = "lettuce"
+    versions = "[4.0.Final,)"
+    assertInverse = true
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
+  main_java8CompileOnly group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
+
+  testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  testCompile group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
+
+  latestDepTestCompile group: 'biz.paluch.redis', name: 'lettuce', version: '4.+'
+}

@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(includeFieldNames = true)
 public class Config {
+  private static final MethodHandles.Lookup PUBLIC_LOOKUP = MethodHandles.publicLookup();
 
   /** Config keys below */
   private static final String PREFIX = "ota.";
@@ -404,7 +405,7 @@ public class Config {
     }
     try {
       return (T)
-          MethodHandles.publicLookup()
+          PUBLIC_LOOKUP
               .findStatic(tClass, "valueOf", MethodType.methodType(tClass, String.class))
               .invoke(value);
     } catch (final NumberFormatException e) {
