@@ -197,12 +197,11 @@ public class Agent {
   }
 
   /**
-   * Create the agent classloader. This must be called after the bootstrap jar has been appened to
+   * Create the agent classloader. This must be called after the bootstrap jar has been appended to
    * the bootstrap classpath.
    *
    * @param innerJarFilename Filename of internal jar to use for the classpath of the agent
    *     classloader
-   * @param bootstrapURL
    * @return Agent Classloader
    */
   private static ClassLoader createAgentClassLoader(
