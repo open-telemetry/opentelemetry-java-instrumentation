@@ -1,8 +1,8 @@
 plugins {
   id 'io.franzbecker.gradle-lombok' version '1.14' // Last to support Java 7
 
-  id 'com.jfrog.artifactory' version '4.8.1'
-  id 'com.jfrog.bintray' version '1.8.4'
+  id 'com.jfrog.artifactory' version '4.15.2'
+  id 'com.jfrog.bintray' version '1.8.5'
   id 'org.unbroken-dome.test-sets' version '3.0.1'
   id 'com.github.ben-manes.versions' version '0.27.0'
 
