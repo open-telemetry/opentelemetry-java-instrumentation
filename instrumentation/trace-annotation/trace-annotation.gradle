@@ -24,5 +24,4 @@ dependencies {
   testCompile(group: 'org.springframework.cloud', name: 'spring-cloud-sleuth-core', version: '+') {
     transitive = false
   }
-  testCompile group: 'io.opentelemetry', name: 'opentelemetry-contrib-auto-annotations', version: '+'
 }
