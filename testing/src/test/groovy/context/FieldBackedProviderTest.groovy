@@ -215,6 +215,17 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
     System.setProperty("ota.integration.context-test-instrumentation.enabled", "true")
   }
 
+  @Override
+  boolean onInstrumentationError(
+      final String typeName,
+      final ClassLoader classLoader,
+      final JavaModule module,
+      final boolean loaded,
+      final Throwable throwable) {
+    // Incorrect* classes assert on incorrect api usage. Error expected.
+    return !(typeName.startsWith(ContextTestInstrumentation.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
+  }
+
   def "Check that structure is not modified when structure modification is disabled"() {
     setup:
     def keyClass = ContextTestInstrumentation.DisabledKeyClass
