@@ -15,12 +15,12 @@
  */
 package io.opentelemetry.auto.instrumentation.traceannotation;
 
+import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.configureExcludedMethods;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -33,12 +33,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 @Slf4j
 @AutoService(Instrumenter.class)
@@ -113,27 +111,6 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
     }
 
     excludedMethodsMatcher = configureExcludedMethods();
-  }
-
-  private ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
-    ElementMatcher.Junction<MethodDescription> result = none();
-
-    Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(Config.get().getTraceMethodsExclude());
-    for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
-      String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> classMather =
-          isDeclaredBy(ElementMatchers.<TypeDescription>named(className));
-
-      ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher = none();
-      for (String methodName : entry.getValue()) {
-        excludedMethodsMatcher = excludedMethodsMatcher.or(ElementMatchers.named(methodName));
-      }
-
-      result = result.or(classMather.and(excludedMethodsMatcher));
-    }
-
-    return result;
   }
 
   @Override

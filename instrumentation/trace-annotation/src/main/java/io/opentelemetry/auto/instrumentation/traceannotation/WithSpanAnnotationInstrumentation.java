@@ -15,15 +15,16 @@
  */
 package io.opentelemetry.auto.instrumentation.traceannotation;
 
+import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.configureExcludedMethods;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.contrib.auto.annotations.WithSpan;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -35,15 +36,19 @@ import net.bytebuddy.matcher.ElementMatcher;
  * provide full support for all its attributes, as opposed to bare minimum functionality of {@link
  * TraceAnnotationsInstrumentation} for third party annotations.
  */
-@Slf4j
 @AutoService(Instrumenter.class)
 public final class WithSpanAnnotationInstrumentation extends Instrumenter.Default {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
+  /*
+  This matcher matches all methods that should be excluded from transformation
+   */
+  private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   public WithSpanAnnotationInstrumentation() {
-    super("api-contrib");
+    super("trace", "with-span-annotation");
     annotatedMethodMatcher = isAnnotatedWith(WithSpan.class);
+    excludedMethodsMatcher = configureExcludedMethods();
   }
 
   @Override
@@ -60,6 +65,7 @@ public final class WithSpanAnnotationInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(annotatedMethodMatcher, packageName + ".WithSpanAdvice");
+    return singletonMap(
+        annotatedMethodMatcher.and(not(excludedMethodsMatcher)), packageName + ".WithSpanAdvice");
   }
 }

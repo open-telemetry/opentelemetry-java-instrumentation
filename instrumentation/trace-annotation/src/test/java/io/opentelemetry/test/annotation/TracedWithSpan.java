@@ -24,7 +24,7 @@ public class TracedWithSpan {
   private static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
-  @WithSpan()
+  @WithSpan
   public String otel() {
     TRACER.getCurrentSpan().setAttribute("providerAttr", "Otel");
     return "hello!";
@@ -32,6 +32,12 @@ public class TracedWithSpan {
 
   @WithSpan("manualName")
   public String namedOtel() {
+    TRACER.getCurrentSpan().setAttribute("providerAttr", "Otel");
+    return "hello!";
+  }
+
+  @WithSpan
+  public String ignored() {
     TRACER.getCurrentSpan().setAttribute("providerAttr", "Otel");
     return "hello!";
   }

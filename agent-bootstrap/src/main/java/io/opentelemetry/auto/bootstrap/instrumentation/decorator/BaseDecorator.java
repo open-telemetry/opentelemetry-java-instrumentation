@@ -21,7 +21,6 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import io.opentelemetry.contrib.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
@@ -88,35 +87,14 @@ public abstract class BaseDecorator {
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
-   *
-   * @param method
-   * @return
    */
   public String spanNameForMethod(final Method method) {
     return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
   }
 
   /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. It first checks for existence of {@link WithSpan} annotation. If it is present, then
-   * tries to derive name from its {@code value} attribute. Otherwise delegates to {@link
-   * #spanNameForMethod(Method)}.
-   */
-  public String spanNameForMethodWithAnnotation(final Method method) {
-    WithSpan annotation = method.getAnnotation(WithSpan.class);
-    if (annotation != null && !annotation.value().isEmpty()) {
-      return annotation.value();
-    }
-
-    return spanNameForMethod(method);
-  }
-
-  /**
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
-   *
-   * @param clazz
-   * @return
    */
   public String spanNameForClass(final Class clazz) {
     if (!clazz.isAnonymousClass()) {

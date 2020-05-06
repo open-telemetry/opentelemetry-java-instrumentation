@@ -24,14 +24,15 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
 
   static {
     ConfigUtils.updateConfig {
-      System.clearProperty("ota.trace.annotations")
       System.setProperty("ota.trace.classes.exclude", WithSpanInstrumentationTest.name + "*")
+      System.setProperty("ota.trace.methods.exclude", "${TracedWithSpan.name}[ignored]")
     }
   }
 
   def specCleanup() {
     ConfigUtils.updateConfig {
       System.clearProperty("ota.trace.classes.exclude")
+      System.clearProperty("ota.trace.methods.exclude")
     }
   }
 
@@ -72,4 +73,14 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
       }
     }
   }
+
+  def "should ignore method excluded by trace.methods.exclude configuration"() {
+    setup:
+    new TracedWithSpan().ignored()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+  }
+
 }
