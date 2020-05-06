@@ -56,13 +56,11 @@ dependencies {
   testImplementation deps.autoservice
 }
 
-tasks.withType(Test) {
-  forkEvery = 1
-}
-
 // See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here
 tasks.register("testDisabledFieldInjection", Test) {
   systemProperties "ota.trace.runtime.context.field.injection": "false"
   include "context/FieldBackedProviderFieldInjectionDisabledTest.class"
 }
 test.dependsOn(testDisabledFieldInjection)
+
+test.forkEvery = 1

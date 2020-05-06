@@ -40,6 +40,10 @@ import static context.ContextTestInstrumentation.UntransformableKeyClass
 
 class FieldBackedProviderTest extends AgentTestRunner {
 
+  static {
+    System.setProperty("ota.integration.context-test-instrumentation.enabled", "true")
+  }
+
   @Override
   boolean onInstrumentationError(
     final String typeName,
@@ -206,6 +210,11 @@ class FieldBackedProviderTest extends AgentTestRunner {
  */
 @Requires({ "false" == System.getProperty("ota.trace.runtime.context.field.injection") })
 class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
+
+  static {
+    System.setProperty("ota.integration.context-test-instrumentation.enabled", "true")
+  }
+
   def "Check that structure is not modified when structure modification is disabled"() {
     setup:
     def keyClass = ContextTestInstrumentation.DisabledKeyClass
