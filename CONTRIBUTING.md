@@ -9,14 +9,14 @@ In order to fully build and test this whole repository you need the following:
 * Defined environment variables `JAVA_8_HOME` and `JAVA_9_HOME` which point to the corresponding java homes. 
 
 ### Plugin structure
-Open Telemetry Auto Instrumentation java agent's jar can logically be divided into 3 parts.
+OpenTelemetry Auto Instrumentation java agent's jar can logically be divided into 3 parts.
 
 #### `java-agent` module
 This module consists of single class `io.opentelemetry.auto.bootstrap.AgentBootstrap` 
 which implements [Java instrumentation agent](https://docs.oracle.com/javase/7/docs/api/java/lang/instrument/package-summary.html).
 This class is loaded during application startup by application classloader. 
-His sole responsibility is to push agent's classes into JVM's bootstrap classloader 
-and immediately delegate to `io.opentelemetry.auto.bootstrap.Agent` class from there.
+Its sole responsibility is to push agent's classes into JVM's bootstrap classloader 
+and immediately delegate to `io.opentelemetry.auto.bootstrap.Agent` (now in the bootstrap class loader) class from there.
 
 #### `agent-bootstrap` module
 This module contains support classes for actual instrumentations to be loaded later and separately. 
@@ -35,10 +35,10 @@ This is achieved in the following way:
 and `agent-tooling` module into a separate folder inside final jar file, called `auto-tooling-and-instrumentation.isolated`. 
 In addition, the extension of all class files is changed from `class` to `classdata`. 
 This ensures that general classloaders cannot find nor load these classes.
-* When `io.opentelemetry.auto.bootstrap.Agent` starts instrumentation agent, 
+* When `io.opentelemetry.auto.bootstrap.Agent` starts up, 
 it creates an instance of `io.opentelemetry.auto.bootstrap.AgentClassLoader`, 
 loads an `io.opentelemetry.auto.tooling.AgentInstaller` from that `AgentClassLoader` 
-and lets it install all instrumentations with the help of ByteBuddy.
+and then passes control on to the `AgentInstaller` (now in the `AgentClassLoader`). The `AgentInstaller` then installs all of the instrumentations with the help of ByteBuddy.
 
 The complicated process above ensures that the majority of auto-instrumentation agent's classes
 are totally isolated from application classes, 
@@ -49,10 +49,10 @@ If you now look inside `java-agent/build/libs/opentelemetry-auto-<version>.jar`,
 you will see the following "clusters" of classes:
 * `auto-tooling-and-instrumentation.isolated/` - contains `agent-tooling` module and 
 `instrumentation` submodules, loaded and isolated inside `AgentClassLoader`. 
-Including Open Telemetry SDK.
+Including OpenTelemetry SDK.
 * `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and available in
 bootstrap classloader.
-* `io/opentelemetry/auto/shaded/` - contains Open Telemetry API and its dependencies. 
+* `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its dependencies. 
 Shaded during creation of `java-agent` jar file by Shadow Gradle plugin.
 
 ### Testing
