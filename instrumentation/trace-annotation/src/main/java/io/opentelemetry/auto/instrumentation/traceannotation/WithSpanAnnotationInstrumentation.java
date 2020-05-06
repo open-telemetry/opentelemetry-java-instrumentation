@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.traceannotation;
 
-import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.configureExcludedMethods;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -37,7 +36,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  * TraceAnnotationsInstrumentation} for third party annotations.
  */
 @AutoService(Instrumenter.class)
-public final class WithSpanAnnotationInstrumentation extends Instrumenter.Default {
+public final class WithSpanAnnotationInstrumentation
+    extends AbstractTraceAnnotationInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   /*

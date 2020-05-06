@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.traceannotation;
 
-import static io.opentelemetry.auto.instrumentation.traceannotation.TraceDecorator.configureExcludedMethods;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -40,7 +39,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class TraceAnnotationsInstrumentation extends Instrumenter.Default {
+public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotationInstrumentation {
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 
