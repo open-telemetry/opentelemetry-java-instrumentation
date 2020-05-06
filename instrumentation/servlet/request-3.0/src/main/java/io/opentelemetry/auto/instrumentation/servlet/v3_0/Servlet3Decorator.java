@@ -88,7 +88,7 @@ public class Servlet3Decorator
    */
   private void onContext(
       final Span span, final HttpServletRequest request, final ServletContext context) {
-    final Object attribute = context.getAttribute("ota.dispatcher-filter");
+    final Object attribute = context.getAttribute("io.opentelemetry.auto.dispatcher-filter");
     if (attribute instanceof Filter) {
       final Object priorAttr = request.getAttribute(SPAN_ATTRIBUTE);
       request.setAttribute(SPAN_ATTRIBUTE, span);

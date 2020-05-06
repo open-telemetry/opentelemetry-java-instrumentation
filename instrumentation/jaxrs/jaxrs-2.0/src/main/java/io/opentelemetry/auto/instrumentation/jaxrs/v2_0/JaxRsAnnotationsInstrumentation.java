@@ -29,6 +29,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -99,7 +100,28 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope nameSpan(
-        @Advice.This final Object target, @Advice.Origin final Method method) {
+        @Advice.This final Object target,
+        @Advice.Origin final Method method,
+        @Advice.AllArguments final Object[] args,
+        @Advice.Local("asyncResponse") AsyncResponse asyncResponse) {
+      ContextStore<AsyncResponse, Span> contextStore = null;
+      for (final Object arg : args) {
+        if (arg instanceof AsyncResponse) {
+          asyncResponse = (AsyncResponse) arg;
+          contextStore = InstrumentationContext.get(AsyncResponse.class, Span.class);
+          if (contextStore.get(asyncResponse) != null) {
+            /**
+             * We are probably in a recursive call and don't want to start a new span because it
+             * would replace the existing span in the asyncResponse and cause it to never finish. We
+             * could work around this by using a list instead, but we likely don't want the extra
+             * span anyway.
+             */
+            return null;
+          }
+          break;
+        }
+      }
+
       if (CallDepthThreadLocalMap.incrementCallDepth(Path.class) > 0) {
         return null;
       }
@@ -111,6 +133,10 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       DECORATE.onJaxRsSpan(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
+      if (contextStore != null && asyncResponse != null) {
+        contextStore.put(asyncResponse, span);
+      }
+
       return new SpanWithScope(span, currentContextWith(span));
     }
 
@@ -118,7 +144,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable,
-        @Advice.AllArguments final Object[] args) {
+        @Advice.Local("asyncResponse") final AsyncResponse asyncResponse) {
       if (spanWithScope == null) {
         return;
       }
@@ -133,16 +159,11 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         return;
       }
 
-      AsyncResponse asyncResponse = null;
-      for (final Object arg : args) {
-        if (arg instanceof AsyncResponse) {
-          asyncResponse = (AsyncResponse) arg;
-          break;
-        }
+      if (asyncResponse != null && !asyncResponse.isSuspended()) {
+        // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
+        InstrumentationContext.get(AsyncResponse.class, Span.class).put(asyncResponse, null);
       }
-      if (asyncResponse != null && asyncResponse.isSuspended()) {
-        InstrumentationContext.get(AsyncResponse.class, Span.class).put(asyncResponse, span);
-      } else {
+      if (asyncResponse == null || !asyncResponse.isSuspended()) {
         DECORATE.beforeFinish(span);
         span.end();
       }
