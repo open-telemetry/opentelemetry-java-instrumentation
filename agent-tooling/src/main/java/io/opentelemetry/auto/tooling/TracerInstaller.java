@@ -48,6 +48,10 @@ public class TracerInstaller {
     } else {
       log.info("Tracing is disabled.");
     }
+
+    if (Config.get().getPropagators() != null) {
+      PropagatorsInitializer.initializePropagators(Config.get().getPropagators());
+    }
   }
 
   @VisibleForTesting
