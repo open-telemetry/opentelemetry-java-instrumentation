@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.Ad
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
@@ -59,7 +60,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        named("execute").and(takesArgument(0, Runnable.class)),
+        named("execute").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
         JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
     transformers.put(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),

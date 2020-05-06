@@ -34,17 +34,18 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
-| [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 5.0+                           |
+| [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
 | [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
 | [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
-| [Netty](https://github.com/netty/netty)                                                                                               | 4.0+                           |
+| [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
-| [Play](https://github.com/playframework/playframework)                                                                                | 2.4+ (not including 2.8.x yet) |
+| [Play](https://github.com/playframework/playframework)                                                                                | 2.3+ (not including 2.8.x yet) |
 | [Play WS](https://github.com/playframework/play-ws)                                                                                   | 1.0+                           |
-| [Project Reactor](https://github.com/reactor/reactor-core)                                                                            | 3.1+                           |
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.5+                           |
+| [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
+| [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
 | [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
 | [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.3+                           |
@@ -126,6 +127,12 @@ for testing and debugging.
 These parameter names are very likely to change over time, so please check back here when trying out a new version!
 
 Please report any bugs or unexpected behavior you may find.
+
+## Troubleshooting
+
+To turn on the agent's internal debug logging:
+
+`-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
 
 ## Building from source
 
