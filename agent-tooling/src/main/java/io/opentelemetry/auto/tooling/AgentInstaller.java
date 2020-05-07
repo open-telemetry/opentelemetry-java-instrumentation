@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.Utils;
+import io.opentelemetry.auto.bootstrap.instrumentation.SafeServiceLoader;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.tooling.context.FieldBackedProvider;
 import java.lang.instrument.Instrumentation;
@@ -124,7 +124,7 @@ public class AgentInstaller {
     }
     int numInstrumenters = 0;
     for (Instrumenter instrumenter :
-        Utils.safeLoadServices(Instrumenter.class, AgentInstaller.class.getClassLoader())) {
+        SafeServiceLoader.load(Instrumenter.class, AgentInstaller.class.getClassLoader())) {
       log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
       try {
         agentBuilder = instrumenter.instrument(agentBuilder);
