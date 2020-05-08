@@ -70,6 +70,11 @@ abstract class AbstractSmokeTest extends Specification {
     processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
     processBuilder.environment().put("DD_API_KEY", API_KEY)
 
+//    // Setting configuration variables of batch span processor through env vars
+//    // This config is to immediately flush a batch of 1 span with delay of 10ms
+    processBuilder.environment().put("OTEL_BSP_MAX_EXPORT_BATCH", "1")
+    processBuilder.environment().put("OTEL_BSP_SCHEDULE_DELAY", "10")
+
     processBuilder.redirectErrorStream(true)
     logfile = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")
     processBuilder.redirectOutput(ProcessBuilder.Redirect.to(logfile))
