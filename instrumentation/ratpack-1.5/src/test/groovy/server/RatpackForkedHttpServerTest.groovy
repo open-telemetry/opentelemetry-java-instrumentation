@@ -33,6 +33,7 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
     def ratpack = GroovyEmbeddedApp.ratpack {
       serverConfig {
         port bindPort
+        address InetAddress.getByName('localhost')
       }
       bindings {
         bind TestErrorHandler
