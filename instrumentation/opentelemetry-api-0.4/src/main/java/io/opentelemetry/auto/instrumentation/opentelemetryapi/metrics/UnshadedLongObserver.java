@@ -43,7 +43,6 @@ class UnshadedLongObserver implements LongObserver {
 
     @Override
     public void update(final io.opentelemetry.metrics.LongObserver.ResultLongObserver result) {
-      System.out.println(result.getClass());
       metricUpdater.update(new UnshadedResultLongObserver(result));
     }
   }
