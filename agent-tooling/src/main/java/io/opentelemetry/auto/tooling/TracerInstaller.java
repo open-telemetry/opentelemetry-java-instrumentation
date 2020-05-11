@@ -71,10 +71,7 @@ public class TracerInstaller {
       OpenTelemetrySdk.getTracerProvider()
           .addSpanProcessor(
               BatchSpansProcessor.create(
-                  spanExporter,
-                  BatchSpansProcessor.Config
-                      .loadFromDefaultSources())); // Loads configuration for SpansProcessor from
-                                                   // env vars if exists.
+                  spanExporter, BatchSpansProcessor.Config.loadFromDefaultSources()));
       log.info("Installed span exporter: " + spanExporter.getClass().getName());
     } else {
       log.warn("No matching providers in jar " + exporterJar);
