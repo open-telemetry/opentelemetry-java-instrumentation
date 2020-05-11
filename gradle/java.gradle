@@ -267,6 +267,7 @@ String findJavaHome(JavaVersion version) {
 
 ext {
   findJavaHome = this.&findJavaHome
+  toExecutable = this.&toExecutable
 }
 
 def addTestRule(String testTaskName) {
@@ -281,13 +282,6 @@ def addTestRule(String testTaskName) {
         if (javaHomeForTests != null) {
 
           tasks.withType(Test).all {
-            // minJavaVersionForTests property, which specifies java version requirements for tests,
-            // currently does not work with custom source sets created by org.unbroken-dome.test-sets plugin.
-            // Thus we are forced to ignore all of them
-            // TODO solve this problem. We want to run custom test sets with all java versions as well
-            if (name != testTaskName) {
-              return
-            }
             executable = toExecutable(javaHomeForTests)
             enabled = isJavaVersionAllowed(requestedJavaVersion)
             if (requestedJavaVersion.isJava7()) {
