@@ -71,6 +71,55 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
+  /**
+   * http://jtds.sourceforge.net/faq.html#urlFormat
+   * jdbc:jtds:<server_type>://<server>[:<port>][/<database>][;<property>=<value>[;...]]
+   */
+  JTDS_URL_LIKE() {
+    @Override
+    DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
+      String serverName = "";
+      Integer port = null;
+
+      final int hostIndex = jdbcUrl.indexOf("jtds:sqlserver://");
+      if (hostIndex < 0) {
+        return builder;
+      }
+
+      final String[] split = jdbcUrl.split(";", 2);
+      if (split.length > 1) {
+        final Map<String, String> props = splitQuery(split[1], ";");
+        populateStandardProperties(builder, props);
+        if (props.containsKey("instance")) {
+          builder.instance(props.get("instance"));
+        }
+      }
+
+      final String urlServerName = split[0].substring(hostIndex + 17);
+      if (!urlServerName.isEmpty()) {
+        serverName = urlServerName;
+      }
+
+      final int databaseLoc = serverName.indexOf("/");
+      if (databaseLoc > 1) {
+        builder.db(serverName.substring(databaseLoc + 1));
+        serverName = serverName.substring(0, databaseLoc);
+      }
+
+      final int portLoc = serverName.indexOf(":");
+      if (portLoc > 1) {
+        builder.port(Integer.parseInt(serverName.substring(portLoc + 1)));
+        serverName = serverName.substring(0, portLoc);
+      }
+
+      if (!serverName.isEmpty()) {
+        builder.host(serverName);
+      }
+
+      return builder;
+    }
+  },
+
   MODIFIED_URL_LIKE() {
     @Override
     DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
@@ -78,7 +127,6 @@ public enum JDBCConnectionUrlParser {
       String serverName = "";
       Integer port = null;
       String instanceName = null;
-      final String user = null;
 
       final int hostIndex = jdbcUrl.indexOf("://");
 
@@ -142,10 +190,6 @@ public enum JDBCConnectionUrlParser {
 
       if (port != null) {
         builder.port(port);
-      }
-
-      if (user != null) {
-        builder.user(user);
       }
 
       return builder.type(type);
@@ -307,18 +351,12 @@ public enum JDBCConnectionUrlParser {
     }
   },
 
-  MSSQLSERVER("microsoft", "sqlserver") {
+  MSSQLSERVER("microsoft", "sqlserver", "jtds") {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 1433;
 
     @Override
     DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
-      if (jdbcUrl.startsWith("microsoft:")) {
-        jdbcUrl = jdbcUrl.substring("microsoft:".length());
-      }
-      if (!jdbcUrl.startsWith("sqlserver://")) {
-        return builder;
-      }
       builder.type("sqlserver");
       final DBInfo dbInfo = builder.build();
       if (dbInfo.getHost() == null) {
@@ -327,6 +365,16 @@ public enum JDBCConnectionUrlParser {
       if (dbInfo.getPort() == null) {
         builder.port(DEFAULT_PORT);
       }
+
+      if (jdbcUrl.startsWith("microsoft:")) {
+        jdbcUrl = jdbcUrl.substring("microsoft:".length());
+      } else if (jdbcUrl.startsWith("jtds:")) {
+        return JTDS_URL_LIKE.doParse(jdbcUrl, builder);
+      }
+      if (!jdbcUrl.startsWith("sqlserver://")) {
+        return builder;
+      }
+
       return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
     }
   },
@@ -729,7 +777,6 @@ public enum JDBCConnectionUrlParser {
     }
 
     final String baseType = jdbcUrl.substring(0, typeLoc);
-
     final DBInfo.Builder parsedProps = DEFAULT.toBuilder().type(baseType);
     populateStandardProperties(parsedProps, props);
 
