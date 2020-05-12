@@ -1,0 +1,28 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = 'khttp'
+    module = 'khttp'
+    versions = "(,)"
+    assertInverse = true
+  }
+}
+
+
+testSets {
+  latestDepTest
+}
+
+dependencies {
+  compileOnly group: 'khttp', name: 'khttp', version: '0.1.0'
+
+  testCompile group: 'khttp', name: 'khttp', version: '0.1.0'
+
+  latestDepTestCompile group: 'khttp', name: 'khttp', version: '+'
+}

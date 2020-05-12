@@ -34,6 +34,7 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
+| [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1.0+                         |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
 | [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
