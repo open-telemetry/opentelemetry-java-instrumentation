@@ -81,6 +81,8 @@ shadowJar {
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
 
+  duplicatesStrategy = DuplicatesStrategy.FAIL
+
   dependencies {
     exclude(project(':auto-bootstrap'))
   }
