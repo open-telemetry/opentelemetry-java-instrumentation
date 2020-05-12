@@ -73,6 +73,8 @@ public class Config {
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
+  public static final String KAFKA_CLIENT_PROPAGATION_ENABLED = "kafka.client.propagation.enabled";
+
   public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
   public static final String EXPERIMENTAL_LOG_CAPTURE_THRESHOLD =
       "experimental.log.capture.threshold";
@@ -92,6 +94,8 @@ public class Config {
 
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
   public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
+
+  public static final boolean DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED = true;
 
   private static final String DEFAULT_TRACE_ANNOTATIONS = null;
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
@@ -141,6 +145,8 @@ public class Config {
   @Getter private final List<String> traceExecutors;
 
   @Getter private final boolean sqlNormalizerEnabled;
+
+  @Getter private final boolean kafkaClientPropagationEnabled;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -203,6 +209,10 @@ public class Config {
     sqlNormalizerEnabled =
         getBooleanSettingFromEnvironment(SQL_NORMALIZER_ENABLED, DEFAULT_SQL_NORMALIZER_ENABLED);
 
+    kafkaClientPropagationEnabled =
+        getBooleanSettingFromEnvironment(
+            KAFKA_CLIENT_PROPAGATION_ENABLED, DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED);
+
     log.debug("New instance: {}", this);
   }
 
@@ -261,6 +271,10 @@ public class Config {
 
     sqlNormalizerEnabled =
         getPropertyBooleanValue(properties, SQL_NORMALIZER_ENABLED, parent.sqlNormalizerEnabled);
+
+    kafkaClientPropagationEnabled =
+        getPropertyBooleanValue(
+            properties, KAFKA_CLIENT_PROPAGATION_ENABLED, parent.kafkaClientPropagationEnabled);
 
     log.debug("New instance: {}", this);
   }
