@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.khttp;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -36,6 +37,11 @@ public class KHttpInstrumentation extends Instrumenter.Default {
 
   public KHttpInstrumentation() {
     super("khttp");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("khttp.KHttp");
   }
 
   @Override

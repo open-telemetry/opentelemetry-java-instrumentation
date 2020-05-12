@@ -28,15 +28,6 @@ public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.khttp-0.1.0");
 
-  public static Class emptyMap;
-
-  static {
-    try {
-      emptyMap = Class.forName("kotlin.collections.EmptyMap");
-    } catch (ClassNotFoundException e) {
-    }
-  }
-
   @Override
   protected String method(RequestWrapper requestWrapper) {
     return requestWrapper.method;

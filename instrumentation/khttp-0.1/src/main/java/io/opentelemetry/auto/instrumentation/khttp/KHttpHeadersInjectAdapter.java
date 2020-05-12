@@ -16,9 +16,29 @@
 package io.opentelemetry.auto.instrumentation.khttp;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
+import java.util.HashMap;
 import java.util.Map;
 
 public class KHttpHeadersInjectAdapter implements HttpTextFormat.Setter<Map<String, String>> {
+
+  private static Class emptyMap;
+
+  static {
+    try {
+      emptyMap = Class.forName("kotlin.collections.EmptyMap");
+    } catch (ClassNotFoundException e) {
+    }
+  }
+
+  public static Map<String, String> asWritable(Map<String, String> headers) {
+    // EmptyMap is read-only so we have to substitute it with writable instance to be able to inject
+    // headers
+    if (emptyMap != null && emptyMap.isInstance(headers)) {
+      return new HashMap<>();
+    } else {
+      return headers;
+    }
+  }
 
   public static final KHttpHeadersInjectAdapter SETTER = new KHttpHeadersInjectAdapter();
 

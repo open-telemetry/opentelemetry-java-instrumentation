@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.khttp;
 import static io.opentelemetry.auto.instrumentation.khttp.KHttpDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.khttp.KHttpDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.khttp.KHttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.auto.instrumentation.khttp.KHttpHeadersInjectAdapter.asWritable;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
@@ -27,7 +28,6 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import java.util.HashMap;
 import java.util.Map;
 import khttp.KHttp;
 import khttp.responses.Response;
@@ -58,17 +58,8 @@ public class KHttpAdvice {
     DECORATE.onRequest(span, new RequestWrapper(method, uri));
 
     final Context context = withSpan(span, Context.current());
-    final boolean awsClientCall = headers.containsKey("amz-sdk-invocation-id");
-    // AWS calls are often signed, so we can't add headers without breaking the signature.
-    if (!awsClientCall) {
-      Class emptyMap = KHttpDecorator.emptyMap;
-      if (emptyMap != null && emptyMap.isInstance(headers)) {
-        // EmptyMap is read-only so we need to overwrite default arg for header injection
-        headers = new HashMap<>();
-      }
 
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
-    }
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, asWritable(headers), SETTER);
     return new SpanWithScope(span, withScopedContext(context));
   }
 
