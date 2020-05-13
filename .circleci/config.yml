@@ -44,7 +44,7 @@ jobs:
             - workspace
 
       - save_cache:
-          key: trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+          key: trace-java-v1-{{ .Branch }}-{{ .Revision }}
           paths: ~/.gradle
 
 
