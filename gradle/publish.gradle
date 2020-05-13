@@ -1,0 +1,93 @@
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'com.jfrog.bintray'
+
+publishing {
+  repositories {
+    maven {
+      url = "$rootDir/build/repo"
+    }
+  }
+  publications {
+    maven(MavenPublication) {
+      artifact javadocJar
+      artifact sourcesJar
+      artifact shadowJar
+
+      pom {
+        name = 'OpenTelemetry Auto-Instrumentation for Java'
+        packaging = 'jar'
+        url = 'https://github.com/open-telemetry/opentelemetry-auto-instr-java'
+
+        licenses {
+          license {
+            name = 'The Apache License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+
+        developers {
+          developer {
+            id = 'opentelemetry'
+            name = 'OpenTelemetry Gitter'
+            url = 'https://gitter.im/open-telemetry/opentelemetry-auto-instr-java'
+          }
+        }
+
+        scm {
+          connection = 'scm:git:git@github.com:open-telemetry/opentelemetry-auto-instr-java.git'
+          developerConnection = 'scm:git:git@github.com:open-telemetry/opentelemetry-auto-instr-java.git'
+          url = 'git@github.com:open-telemetry/opentelemetry-auto-instr-java.git'
+        }
+
+        afterEvaluate {
+          // description is not available until evaluated.
+          description = project.description
+        }
+      }
+
+    }
+  }
+}
+
+bintray {
+  user = System.getenv('BINTRAY_USER')
+  key = System.getenv('BINTRAY_KEY')
+  publications = ['maven']
+  pkg {
+    repo = 'maven'
+    name = 'opentelemetry-auto-instr-java'
+    licenses = ['Apache-2.0']
+    vcsUrl = 'https://github.com/open-telemetry/opentelemetry-auto-instr-java'
+    userOrg = 'open-telemetry'
+
+    githubRepo = 'open-telemetry/opentelemetry-auto-instr-java'
+
+    version {
+      gpg {
+        sign = true
+      }
+
+      mavenCentralSync {
+        user = System.getenv("SONATYPE_USER")
+        password = System.getenv("SONATYPE_KEY")
+      }
+    }
+  }
+}
+
+// Snapshot publishing.
+artifactory {
+  contextUrl = 'https://oss.jfrog.org'
+  publish {
+    repository {
+      repoKey = 'oss-snapshot-local'
+      username = System.getenv("BINTRAY_USER")
+      password = System.getenv("BINTRAY_KEY")
+    }
+  }
+}
+
+artifactoryPublish {
+  publications ('maven')
+}

@@ -3,6 +3,7 @@ plugins {
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/publish.gradle"
 
 dependencies {
   compileOnly deps.opentelemetrySdk
