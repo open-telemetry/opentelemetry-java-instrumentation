@@ -9,11 +9,11 @@ defaults: &defaults
         JAVA_HOME: /usr/local/openjdk-11
 
 cache_keys: &cache_keys
-  # Reset the cache approx every release
   keys:
-    - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-    - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}
-    - trace-java-{{ checksum "trace-java.gradle" }}
+    # Rev the version when the cache gets too big
+    - trace-java-v1-{{ .Branch }}-{{ .Revision }}
+    - trace-java-v1-{{ .Branch }}
+    # - dd-trace-java-v1-
 
 jobs:
   build:
@@ -189,16 +189,18 @@ jobs:
       - checkout
 
       - restore_cache:
-          # Reset the cache approx every release
           keys:
-            - trace-java-muzzle-{{ checksum "trace-java.gradle" }}
+            # Rev the version when the cache gets too big
+            - trace-java-muzzle-v1-{{ .Branch }}-{{ .Revision }}
+            - trace-java-muzzle-v1-{{ .Branch }}
+            # - dd-trace-java-muzzle-v1-
 
       - run:
           name: Verify Muzzle
           command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
 
       - save_cache:
-          key: trace-java-muzzle-{{ checksum "trace-java.gradle" }}
+          key: trace-java-muzzle-v1-{{ .Branch }}-{{ .Revision }}
           paths: ~/.gradle
 
   publish: &publish
