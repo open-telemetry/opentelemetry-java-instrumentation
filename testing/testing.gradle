@@ -62,3 +62,5 @@ tasks.register("testDisabledFieldInjection", Test) {
   include "context/FieldBackedProviderFieldInjectionDisabledTest.class"
 }
 test.dependsOn(testDisabledFieldInjection)
+
+test.forkEvery = 1

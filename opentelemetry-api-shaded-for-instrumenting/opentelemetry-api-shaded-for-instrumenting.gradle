@@ -9,7 +9,7 @@ dependencies {
 }
 
 // OpenTelemetry API shaded so that it can be used in opentelemetry-api instrumentation, and then its usage can be
-// unshaded after OpenTelemetry API is shaded (see more explanation in opentelemetry-api-0.3.gradle)
+// unshaded after OpenTelemetry API is shaded (see more explanation in opentelemetry-api-0.4.gradle)
 shadowJar {
 
   relocate "io.opentelemetry", "unshaded.io.opentelemetry"

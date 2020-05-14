@@ -20,7 +20,6 @@ import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatche
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -33,16 +32,14 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class TraceAnnotationsInstrumentation extends Instrumenter.Default {
+public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotationInstrumentation {
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 
@@ -67,7 +64,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
       };
 
   private final Set<String> additionalTraceAnnotations;
-  private final ElementMatcher.Junction<NamedElement> annotationMatcher;
+  private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
   /*
   This matcher matches all methods that should be excluded from transformation
    */
@@ -99,7 +96,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
     }
 
     if (additionalTraceAnnotations.isEmpty()) {
-      annotationMatcher = none();
+      traceAnnotationMatcher = none();
     } else {
       ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
       for (final String annotationName : additionalTraceAnnotations) {
@@ -109,31 +106,10 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
           methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
         }
       }
-      this.annotationMatcher = methodTraceMatcher;
+      this.traceAnnotationMatcher = methodTraceMatcher;
     }
 
     excludedMethodsMatcher = configureExcludedMethods();
-  }
-
-  private ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
-    ElementMatcher.Junction<MethodDescription> result = none();
-
-    Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(Config.get().getTraceMethodsExclude());
-    for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
-      String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> classMather =
-          isDeclaredBy(ElementMatchers.<TypeDescription>named(className));
-
-      ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher = none();
-      for (String methodName : entry.getValue()) {
-        excludedMethodsMatcher = excludedMethodsMatcher.or(ElementMatchers.named(methodName));
-      }
-
-      result = result.or(classMather.and(excludedMethodsMatcher));
-    }
-
-    return result;
   }
 
   @Override
@@ -155,7 +131,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(declaresMethod(isAnnotatedWith(annotationMatcher)));
+    return safeHasSuperType(declaresMethod(isAnnotatedWith(traceAnnotationMatcher)));
   }
 
   @Override
@@ -168,7 +144,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isAnnotatedWith(annotationMatcher).and(not(excludedMethodsMatcher)),
+        isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)),
         packageName + ".TraceAdvice");
   }
 }
