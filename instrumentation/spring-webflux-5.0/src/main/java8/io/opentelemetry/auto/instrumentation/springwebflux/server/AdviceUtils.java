@@ -16,12 +16,24 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 
-import io.opentelemetry.auto.instrumentation.reactor.ReactorCoreAdviceUtils;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
+import java.util.Map;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.CoreSubscriber;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Operators;
+import reactor.util.context.Context;
 
 @Slf4j
 public class AdviceUtils {
@@ -44,15 +56,100 @@ public class AdviceUtils {
     return operationName;
   }
 
+  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final Span span) {
+    return mono.<T>transform(finishSpanNextOrError(span));
+  }
+
+  /**
+   * Idea for this has been lifted from https://github.com/reactor/reactor-core/issues/947. Newer
+   * versions of reactor-core have easier way to access context but we want to support older
+   * versions.
+   */
+  public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> finishSpanNextOrError(
+      final Span span) {
+    return Operators.lift(
+        (scannable, subscriber) -> new SpanFinishingSubscriber<>(subscriber, span));
+  }
+
   public static void finishSpanIfPresent(
       final ServerWebExchange exchange, final Throwable throwable) {
-    ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (Span) exchange.getAttributes().remove(SPAN_ATTRIBUTE), throwable);
+    if (exchange != null) {
+      finishSpanIfPresentInAttributes(exchange.getAttributes(), throwable);
+    }
   }
 
   public static void finishSpanIfPresent(
       final ServerRequest serverRequest, final Throwable throwable) {
-    ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (Span) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
+    if (serverRequest != null) {
+      finishSpanIfPresentInAttributes(serverRequest.attributes(), throwable);
+    }
+  }
+
+  public static void finishSpanIfPresent(
+      final ClientRequest clientRequest, final Throwable throwable) {
+    if (clientRequest != null) {
+      finishSpanIfPresentInAttributes(clientRequest.attributes(), throwable);
+    }
+  }
+
+  private static void finishSpanIfPresentInAttributes(
+      final Map<String, Object> attributes, final Throwable throwable) {
+
+    final Span span = (Span) attributes.remove(SPAN_ATTRIBUTE);
+    finishSpanIfPresent(span, throwable);
+  }
+
+  static void finishSpanIfPresent(final Span span, final Throwable throwable) {
+    if (span != null) {
+      if (throwable != null) {
+        span.setStatus(Status.UNKNOWN);
+        BaseDecorator.addThrowable(span, throwable);
+      }
+      span.end();
+    }
+  }
+
+  public static class SpanFinishingSubscriber<T> implements CoreSubscriber<T> {
+
+    private final CoreSubscriber<? super T> subscriber;
+    private final Span span;
+    private final Context context;
+
+    public SpanFinishingSubscriber(final CoreSubscriber<? super T> subscriber, final Span span) {
+      this.subscriber = subscriber;
+      this.span = span;
+      context = subscriber.currentContext().put(Span.class, span);
+    }
+
+    @Override
+    public void onSubscribe(final Subscription s) {
+      try (final Scope scope = TRACER.withSpan(span)) {
+        subscriber.onSubscribe(s);
+      }
+    }
+
+    @Override
+    public void onNext(final T t) {
+      try (final Scope scope = TRACER.withSpan(span)) {
+        subscriber.onNext(t);
+      }
+    }
+
+    @Override
+    public void onError(final Throwable t) {
+      finishSpanIfPresent(span, t);
+      subscriber.onError(t);
+    }
+
+    @Override
+    public void onComplete() {
+      finishSpanIfPresent(span, null);
+      subscriber.onComplete();
+    }
+
+    @Override
+    public Context currentContext() {
+      return context;
+    }
   }
 }

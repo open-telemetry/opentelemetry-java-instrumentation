@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.netty.v4_0.server;
 
 import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator.TRACER;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -23,6 +24,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.AttributeKeys;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
@@ -35,18 +37,20 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       return;
     }
 
-    final HttpResponse response = (HttpResponse) msg;
+    try (final Scope scope = TRACER.withSpan(span)) {
+      final HttpResponse response = (HttpResponse) msg;
 
-    try {
-      ctx.write(msg, prm);
-    } catch (final Throwable throwable) {
-      DECORATE.onError(span, throwable);
-      span.setAttribute(Tags.HTTP_STATUS, 500);
+      try {
+        ctx.write(msg, prm);
+      } catch (final Throwable throwable) {
+        DECORATE.onError(span, throwable);
+        span.setAttribute(Tags.HTTP_STATUS, 500);
+        span.end(); // Finish the span manually since finishSpanOnClose was false
+        throw throwable;
+      }
+      DECORATE.onResponse(span, response);
+      DECORATE.beforeFinish(span);
       span.end(); // Finish the span manually since finishSpanOnClose was false
-      throw throwable;
     }
-    DECORATE.onResponse(span, response);
-    DECORATE.beforeFinish(span);
-    span.end(); // Finish the span manually since finishSpanOnClose was false
   }
 }

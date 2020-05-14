@@ -6,7 +6,7 @@ spotless {
     target 'src/**/*.java'
   }
   groovy {
-    licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
+    licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|class)'
   }
   scala {
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
