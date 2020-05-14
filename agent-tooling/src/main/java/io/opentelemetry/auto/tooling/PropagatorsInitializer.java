@@ -37,7 +37,8 @@ public class PropagatorsInitializer {
 
   /** Initialize OpenTelemetry global Propagators with propagator list, if any. */
   public static void initializePropagators(List<String> propagators) {
-    if (propagators == null) {
+    /* Only override the default propagators *if* the user specified any. */
+    if (propagators.size() == 0) {
       return;
     }
 
