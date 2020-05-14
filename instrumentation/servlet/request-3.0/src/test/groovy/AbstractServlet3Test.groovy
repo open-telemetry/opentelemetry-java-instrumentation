@@ -86,7 +86,9 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
-        "servlet.context" "/$context"
+        if (context) {
+          "servlet.context" "/$context"
+        }
         "servlet.path" { it == endpoint.path || it == "/dispatch$endpoint.path" }
         "span.origin.type" String
         if (endpoint.errored) {

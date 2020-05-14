@@ -5,6 +5,8 @@ defaults: &defaults
   resource_class: xlarge
   docker:
     - image: &default_container datadog/dd-trace-java-docker-build:latest
+      environment:
+        JAVA_HOME: /usr/local/openjdk-11
 
 cache_keys: &cache_keys
   # Reset the cache approx every release
@@ -51,6 +53,8 @@ jobs:
 
     docker:
       - image: *default_container
+        environment:
+          JAVA_HOME: /usr/local/openjdk-11
         # This is used by spymemcached instrumentation tests
       - image: memcached
         # This is used by rabbitmq instrumentation tests
@@ -93,13 +97,11 @@ jobs:
   test_8:
     <<: *default_test_job
     environment:
-      # We are building on Java8, this is our default JVM so no need to set more homes
-      - TEST_TASK: test jacocoTestReport jacocoTestCoverageVerification
+      - TEST_TASK: testJava8
 
-  test_latest8:
+  test_latest:
     <<: *default_test_job
     environment:
-      # We are building on Java8, this is our default JVM so no need to set more homes
       - TEST_TASK: latestDepTest
 
   test_ibm8:
@@ -125,7 +127,7 @@ jobs:
   test_11:
     <<: *default_test_job
     environment:
-      - TEST_TASK: testJava11
+      - TEST_TASK: testJava11 jacocoTestReport jacocoTestCoverageVerification
 
   test_zulu11:
     <<: *default_test_job
@@ -245,7 +247,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - test_latest8:
+      - test_latest:
           requires:
             - build
           filters:
@@ -336,7 +338,7 @@ workflows:
           requires:
             - test_7
             # - test_8
-            - test_latest8
+            - test_latest
             # - test_ibm8
             # - test_zulu8
             # - test_9
@@ -359,7 +361,7 @@ workflows:
           requires:
             - test_7
             # - test_8
-            - test_latest8
+            - test_latest
             # - test_ibm8
             # - test_zulu8
             # - test_9

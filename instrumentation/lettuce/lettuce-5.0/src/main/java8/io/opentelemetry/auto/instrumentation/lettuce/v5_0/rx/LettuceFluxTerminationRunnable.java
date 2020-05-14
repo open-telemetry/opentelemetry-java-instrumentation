@@ -56,8 +56,8 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
-              "Failed to finish this.span, LettuceFluxTerminationRunnable cannot find this.span because "
-                  + "it probably wasn't started.");
+              "Failed to finish this.span, LettuceFluxTerminationRunnable cannot find this.span "
+                  + "because it probably wasn't started.");
     }
   }
 
@@ -78,8 +78,8 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
-              "Failed to finish this.span to indicate cancellation, LettuceFluxTerminationRunnable cannot find this.span because "
-                  + "it probably wasn't started.");
+              "Failed to finish this.span to indicate cancellation, LettuceFluxTerminationRunnable"
+                  + " cannot find this.span because it probably wasn't started.");
     }
   }
 

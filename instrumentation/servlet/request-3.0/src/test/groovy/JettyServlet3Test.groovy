@@ -38,9 +38,7 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
   Server startServer(int port) {
     def jettyServer = new Server(port)
     jettyServer.connectors.each {
-      if (it.hasProperty("resolveNames")) {
-        it.resolveNames = true  // get localhost instead of 127.0.0.1
-      }
+      it.setHost('localhost')
     }
 
     ServletContextHandler servletContext = new ServletContextHandler(null, "/$context")

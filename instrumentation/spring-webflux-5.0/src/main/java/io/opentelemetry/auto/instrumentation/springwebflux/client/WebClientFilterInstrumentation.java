@@ -21,7 +21,6 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
@@ -31,22 +30,16 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 // FIXME this instrumentation is not currently reliable, see DefaultWebClientAdvice
 // @AutoService(Instrumenter.class)
-public class DefaultWebClientInstrumentation extends Instrumenter.Default {
+public class WebClientFilterInstrumentation extends Instrumenter.Default {
 
-  public DefaultWebClientInstrumentation() {
+  public WebClientFilterInstrumentation() {
     super("spring-webflux", "spring-webflux-client");
   }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed("org.springframework.web.reactive.function.client.ExchangeFunction");
-  }
-
-  @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return implementsInterface(
-        named("org.springframework.web.reactive.function.client.ExchangeFunction"));
+    return hasClassesNamed("org.springframework.web.reactive.function.client.WebClient");
   }
 
   @Override
@@ -54,21 +47,19 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".SpringWebfluxHttpClientDecorator",
       packageName + ".HttpHeadersInjectAdapter",
-      packageName + ".TracingClientResponseSubscriber",
-      packageName + ".TracingClientResponseSubscriber$1",
-      packageName + ".TracingClientResponseMono",
+      packageName + ".WebClientTracingFilter",
     };
+  }
+
+  @Override
+  public ElementMatcher<? super TypeDescription> typeMatcher() {
+    return implementsInterface(
+        named("org.springframework.web.reactive.function.client.WebClient$Builder"));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod()
-            .and(isPublic())
-            .and(named("exchange"))
-            .and(
-                takesArgument(
-                    0, named("org.springframework.web.reactive.function.client.ClientRequest"))),
-        packageName + ".DefaultWebClientAdvice");
+        isMethod().and(isPublic()).and(named("build")), packageName + ".WebClientFilterAdvice");
   }
 }

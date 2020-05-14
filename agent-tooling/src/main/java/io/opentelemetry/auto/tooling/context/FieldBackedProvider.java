@@ -340,7 +340,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     // TODO: Better to pass through the context of the Instrumenter
     return new AgentBuilder.Transformer() {
       final HelperInjector injector =
-          HelperInjector.forDynamicTypes(this.getClass().getSimpleName(), helpers);
+          HelperInjector.forDynamicTypes(getClass().getSimpleName(), helpers);
 
       @Override
       public DynamicType.Builder<?> transform(
@@ -407,7 +407,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                   .type(safeHasSuperType(named(entry.getKey())), instrumenter.classLoaderMatcher())
                   .and(safeToInjectFieldsMatcher())
                   .and(Default.NOT_DECORATOR_MATCHER)
-                  .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
+                  .transform(NoOpTransformer.INSTANCE);
 
           /*
            * We inject helpers here as well as when instrumentation is applied to ensure that
@@ -1058,5 +1058,19 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private static String getContextSetterName(final String key) {
     return "set" + getContextFieldName(key);
+  }
+
+  // Originally found in AgentBuilder.Transformer.NoOp, but removed in 1.10.7
+  enum NoOpTransformer implements AgentBuilder.Transformer {
+    INSTANCE;
+
+    @Override
+    public DynamicType.Builder<?> transform(
+        final DynamicType.Builder<?> builder,
+        final TypeDescription typeDescription,
+        final ClassLoader classLoader,
+        final JavaModule module) {
+      return builder;
+    }
   }
 }

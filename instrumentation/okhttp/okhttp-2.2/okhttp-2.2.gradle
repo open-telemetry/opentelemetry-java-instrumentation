@@ -1,0 +1,35 @@
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+/*
+Note: The Interceptor class for OkHttp was not introduced until 2.2+, so we need to make sure the
+instrumentation is not loaded unless the dependency is 2.2+.
+*/
+muzzle {
+  pass {
+    group = "com.squareup.okhttp"
+    module = "okhttp"
+    versions = "[2.2,3)"
+    assertInverse = true
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly(group: 'com.squareup.okhttp', name: 'okhttp', version: '2.2.0')
+
+  compile project(':auto-tooling')
+
+  testCompile project(':testing')
+  testCompile project(':instrumentation:java-concurrent')
+  testCompile group: 'com.squareup.okhttp', name: 'okhttp', version: '2.2.0'
+
+  latestDepTestCompile group: 'com.squareup.okhttp', name: 'okhttp', version: '[2.6,3)'
+}
+
+
