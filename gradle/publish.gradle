@@ -76,6 +76,8 @@ bintray {
   }
 }
 
+bintrayUpload.enabled = !version.toString().contains('SNAPSHOT')
+
 // Snapshot publishing.
 artifactory {
   contextUrl = 'https://oss.jfrog.org'
