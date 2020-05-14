@@ -23,7 +23,7 @@ testSets {
 }
 
 dependencies {
-  main_java8CompileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+  compileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 
   testCompile project(':instrumentation:trace-annotation')
 
