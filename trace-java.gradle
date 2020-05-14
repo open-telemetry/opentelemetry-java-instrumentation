@@ -19,6 +19,10 @@ plugins {
   id "com.github.spotbugs" version "4.0.1"
 }
 
+release {
+  defaultVersionStrategy = nebula.plugin.release.git.opinion.Strategies.SNAPSHOT
+}
+
 def isCI = System.getenv("CI") != null
 
 allprojects {
@@ -51,3 +55,4 @@ allprojects {
     jvmArgs "-XX:ErrorFile=/tmp/hs_err_pid%p.log"
   }
 }
+
