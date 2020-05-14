@@ -24,12 +24,12 @@ public class CassandraClientAdvice {
    * com.datastax.oss.driver.api.core.session.SessionBuilder.buildAsync() method is called. The
    * opentracing contribution is a simple wrapper, so we just have to wrap the new session.
    *
-   * @param stage The fresh CompletionStage to patch. This stage produces session which is
-   *     replaced with new session
+   * @param stage The fresh CompletionStage to patch. This stage produces session which is replaced
+   *     with new session
    */
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void injectTracingSession(
-    @Advice.Return(readOnly = false) CompletionStage<?> stage) {
+      @Advice.Return(readOnly = false) CompletionStage<?> stage) {
     stage = stage.thenApply(new CompletionStageFunction());
   }
 }

@@ -51,3 +51,11 @@ dependencies {
 }
 
 test.dependsOn resteasy31Test
+
+// Until custom source sets can use minJavaVersionForTests separately from other tests
+// force this one test to run on java8 only
+resteasy31Test {
+  onlyIf {
+    executable == toExecutable(findJavaHome(JavaVersion.VERSION_1_8))
+  }
+}

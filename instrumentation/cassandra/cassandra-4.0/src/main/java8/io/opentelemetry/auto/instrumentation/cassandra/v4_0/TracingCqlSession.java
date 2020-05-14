@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.auto.instrumentation.cassandra.v4_0.CassandraClientDecorator.DECORATE;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
