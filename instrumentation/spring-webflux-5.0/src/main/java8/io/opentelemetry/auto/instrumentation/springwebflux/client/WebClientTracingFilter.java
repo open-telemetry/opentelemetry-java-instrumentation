@@ -46,7 +46,6 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     try (final Scope scope = TRACER.withSpan(span)) {
       final ClientRequest mutatedRequest =
           ClientRequest.from(request)
-              .attribute(Span.class.getName(), span)
               .headers(
                   httpHeaders ->
                       OpenTelemetry.getPropagators()

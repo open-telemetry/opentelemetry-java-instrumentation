@@ -85,13 +85,6 @@ public class AdviceUtils {
     }
   }
 
-  public static void finishSpanIfPresent(
-      final ClientRequest clientRequest, final Throwable throwable) {
-    if (clientRequest != null) {
-      finishSpanIfPresentInAttributes(clientRequest.attributes(), throwable);
-    }
-  }
-
   private static void finishSpanIfPresentInAttributes(
       final Map<String, Object> attributes, final Throwable throwable) {
 
