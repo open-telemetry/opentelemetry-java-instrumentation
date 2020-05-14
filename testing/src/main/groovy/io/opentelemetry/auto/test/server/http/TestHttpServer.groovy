@@ -61,6 +61,9 @@ class TestHttpServer implements AutoCloseable {
 
   private TestHttpServer() {
     internalServer = new Server(0)
+    internalServer.connectors.each {
+      it.setHost('localhost')
+    }
   }
 
   def start() {

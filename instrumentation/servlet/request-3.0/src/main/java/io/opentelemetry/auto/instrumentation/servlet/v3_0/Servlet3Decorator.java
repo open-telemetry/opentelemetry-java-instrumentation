@@ -88,6 +88,10 @@ public class Servlet3Decorator
    */
   private void onContext(
       final Span span, final HttpServletRequest request, final ServletContext context) {
+    if (context == null) {
+      // some frameworks (jetty) may return a null context.
+      return;
+    }
     final Object attribute = context.getAttribute("io.opentelemetry.auto.dispatcher-filter");
     if (attribute instanceof Filter) {
       final Object priorAttr = request.getAttribute(SPAN_ATTRIBUTE);

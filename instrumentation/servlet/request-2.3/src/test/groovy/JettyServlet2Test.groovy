@@ -38,7 +38,9 @@ class JettyServlet2Test extends HttpServerTest<Server> {
   @Override
   Server startServer(int port) {
     def jettyServer = new Server(port)
-    jettyServer.connectors.each { it.resolveNames = true } // get localhost instead of 127.0.0.1
+    jettyServer.connectors.each {
+      it.setHost('localhost')
+    }
     ServletContextHandler servletContext = new ServletContextHandler(null, "/$CONTEXT")
     servletContext.errorHandler = new ErrorHandler() {
       protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
