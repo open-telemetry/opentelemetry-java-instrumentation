@@ -33,6 +33,7 @@ class RatpackAsyncHttpServerTest extends RatpackHttpServerTest {
     def ratpack = GroovyEmbeddedApp.ratpack {
       serverConfig {
         port bindPort
+        address InetAddress.getByName('localhost')
       }
       bindings {
         bind TestErrorHandler
@@ -109,6 +110,7 @@ class RatpackAsyncHttpServerTest extends RatpackHttpServerTest {
     ratpack.server.start()
 
     assert ratpack.address.port == bindPort
+    assert ratpack.server.bindHost == 'localhost'
     return ratpack
   }
 }

@@ -28,7 +28,7 @@ dependencies {
 
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
+  testCompile project(':instrumentation:reactor-3.1')
 
-  // FIXME: Tests need to be updated to support 5.1+
-  latestDepTestCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.0.+'
+  latestDepTestCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.+'
 }

@@ -15,9 +15,13 @@
  */
 package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
 
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerDecorator.TRACER;
+
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -45,18 +49,20 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
       return;
     }
 
-    final HttpResponse response = (HttpResponse) msg.getMessage();
+    try (final Scope scope = TRACER.withSpan(span)) {
+      final HttpResponse response = (HttpResponse) msg.getMessage();
 
-    try {
-      ctx.sendDownstream(msg);
-    } catch (final Throwable throwable) {
-      NettyHttpServerDecorator.DECORATE.onError(span, throwable);
-      span.setAttribute(Tags.HTTP_STATUS, 500);
+      try {
+        ctx.sendDownstream(msg);
+      } catch (final Throwable throwable) {
+        DECORATE.onError(span, throwable);
+        span.setAttribute(Tags.HTTP_STATUS, 500);
+        span.end(); // Finish the span manually since finishSpanOnClose was false
+        throw throwable;
+      }
+      DECORATE.onResponse(span, response);
+      DECORATE.beforeFinish(span);
       span.end(); // Finish the span manually since finishSpanOnClose was false
-      throw throwable;
     }
-    NettyHttpServerDecorator.DECORATE.onResponse(span, response);
-    NettyHttpServerDecorator.DECORATE.beforeFinish(span);
-    span.end(); // Finish the span manually since finishSpanOnClose was false
   }
 }

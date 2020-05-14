@@ -33,6 +33,7 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.common.exec.DaemonThreadFactory;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -45,7 +46,10 @@ public class TracingSession implements Session {
   private static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.cassandra-3.0");
 
-  private final ExecutorService executorService = Executors.newCachedThreadPool();
+  private static final ExecutorService EXECUTOR_SERVICE =
+      Executors.newCachedThreadPool(
+          new DaemonThreadFactory("opentelemetry-cassandra-session-executor"));
+
   private final Session session;
 
   public TracingSession(final Session session) {
@@ -149,7 +153,7 @@ public class TracingSession implements Session {
     final Span span = startSpan(query);
     try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(query);
-      future.addListener(createListener(span, future), executorService);
+      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
 
       return future;
     }
@@ -160,7 +164,7 @@ public class TracingSession implements Session {
     final Span span = startSpan(query);
     try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(query, values);
-      future.addListener(createListener(span, future), executorService);
+      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
 
       return future;
     }
@@ -171,7 +175,7 @@ public class TracingSession implements Session {
     final Span span = startSpan(query);
     try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(query, values);
-      future.addListener(createListener(span, future), executorService);
+      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
 
       return future;
     }
@@ -183,7 +187,7 @@ public class TracingSession implements Session {
     final Span span = startSpan(query);
     try (final Scope scope = currentContextWith(span)) {
       final ResultSetFuture future = session.executeAsync(statement);
-      future.addListener(createListener(span, future), executorService);
+      future.addListener(createListener(span, future), EXECUTOR_SERVICE);
 
       return future;
     }
