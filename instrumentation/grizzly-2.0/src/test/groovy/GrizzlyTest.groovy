@@ -33,10 +33,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 
 class GrizzlyTest extends HttpServerTest<HttpServer> {
 
-  static {
-    System.setProperty("ota.integration.grizzly.enabled", "true")
-  }
-
   @Override
   HttpServer startServer(int port) {
     ResourceConfig rc = new ResourceConfig()

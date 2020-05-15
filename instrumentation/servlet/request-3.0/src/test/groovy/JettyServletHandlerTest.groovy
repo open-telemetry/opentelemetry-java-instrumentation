@@ -22,6 +22,11 @@ import javax.servlet.http.HttpServletRequest
 
 class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
 
+  static {
+    //We want to test spans produced by servlet instrumentation, not those of jetty
+    System.setProperty("ota.integration.jetty.enabled", "false")
+  }
+
   @Override
   Server startServer(int port) {
     Server server = new Server(port)

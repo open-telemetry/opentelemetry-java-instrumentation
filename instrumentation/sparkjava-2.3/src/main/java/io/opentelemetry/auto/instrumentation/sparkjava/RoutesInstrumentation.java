@@ -42,11 +42,6 @@ public class RoutesInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("spark.route.Routes");
   }

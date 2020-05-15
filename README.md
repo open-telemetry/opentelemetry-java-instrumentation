@@ -128,6 +128,15 @@ These parameter names are very likely to change over time, so please check back 
 
 Please report any bugs or unexpected behavior you may find.
 
+## Disabled instrumentations
+Some instrumentations can produce too many spans and make traces very noisy.
+For this reason the following instrumentations are disabled by default:
+- `jdbc-datasource` which creates spans whenever `java.sql.DataSource#getConnection` method is called.
+- `servlet-filter` which creates spans around Servlet Filter methods.
+- `servlet-service` which creates spans around Servlet methods.
+ 
+To enable them, add `ota.integration.<name>.enabled` system property:
+`-Dota.integration.jdbc-datasource.enabled=true`
 ## Troubleshooting
 
 To turn on the agent's internal debug logging:
