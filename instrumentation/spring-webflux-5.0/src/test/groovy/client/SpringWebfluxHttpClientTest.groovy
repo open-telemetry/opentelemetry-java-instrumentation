@@ -22,7 +22,6 @@ import io.opentelemetry.auto.test.base.HttpClientTest
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
-import spock.lang.Ignore
 import spock.lang.Timeout
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
