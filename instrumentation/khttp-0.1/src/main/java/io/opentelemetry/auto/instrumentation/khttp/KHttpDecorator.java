@@ -26,7 +26,7 @@ public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response
   public static final KHttpDecorator DECORATE = new KHttpDecorator();
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.khttp-0.1.0");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.khttp-0.1");
 
   @Override
   protected String method(RequestWrapper requestWrapper) {
