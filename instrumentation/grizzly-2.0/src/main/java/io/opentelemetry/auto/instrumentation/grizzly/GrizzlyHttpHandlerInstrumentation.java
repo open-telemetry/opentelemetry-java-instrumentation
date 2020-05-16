@@ -47,6 +47,11 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.glassfish.grizzly.http.server.HttpHandler");
   }

@@ -20,7 +20,7 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
-| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+                           |
+| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default, see below)                           |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
@@ -137,6 +137,15 @@ For this reason the following instrumentations are disabled by default:
  
 To enable them, add `ota.integration.<name>.enabled` system property:
 `-Dota.integration.jdbc-datasource.enabled=true`
+
+### Grizzly instrumentation
+Whenever you use [Grizzly]((https://javaee.github.io/grizzly/httpserverframework.html)) 
+for Servlet-based applications, you get better experience from Servlet-specific support.
+As these two instrumentations conflict with each other, more generic instrumentation for Grizzly
+http server is disabled by default.
+If needed, you can enable it by add the following system property:
+`-Dota.integration.grizzly.enabled=true`
+
 ## Troubleshooting
 
 To turn on the agent's internal debug logging:
