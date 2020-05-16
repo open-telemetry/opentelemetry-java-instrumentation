@@ -45,7 +45,7 @@ class PlaySmokeTest extends AbstractServerSmokeTest {
     setup:
     def spanCounter = new SpanCounter(logfile, [
       (HTTP_REQUEST_SPAN): 2,
-    ], 30000)
+    ], 10000)
     String url = "http://localhost:$httpPort/welcome?id=$n"
     def request = new Request.Builder().url(url).get().build()
 

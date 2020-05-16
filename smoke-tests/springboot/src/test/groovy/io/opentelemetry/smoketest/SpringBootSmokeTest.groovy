@@ -39,7 +39,7 @@ class SpringBootSmokeTest extends AbstractServerSmokeTest {
     def spanCounter = new SpanCounter(logfile, [
       (HANDLER_SPAN): 1,
       (SERVLET_SPAN): 1,
-    ], 30000)
+    ], 10000)
     String url = "http://localhost:${httpPort}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
