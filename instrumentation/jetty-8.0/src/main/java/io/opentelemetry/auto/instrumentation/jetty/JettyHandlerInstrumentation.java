@@ -38,11 +38,6 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
     return hasClassesNamed("org.eclipse.jetty.server.Handler");

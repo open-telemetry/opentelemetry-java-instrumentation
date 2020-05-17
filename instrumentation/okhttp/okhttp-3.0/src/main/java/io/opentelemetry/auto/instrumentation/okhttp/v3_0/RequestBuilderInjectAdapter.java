@@ -13,28 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.okhttp;
+package io.opentelemetry.auto.instrumentation.okhttp.v3_0;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import java.net.URI;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 import okhttp3.Request;
-import okhttp3.Response;
 
-public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final OkHttpClientDecorator DECORATE = new OkHttpClientDecorator();
+/**
+ * Helper class to inject span context into request headers.
+ *
+ * @author Pavol Loffay
+ */
+public class RequestBuilderInjectAdapter implements HttpTextFormat.Setter<Request.Builder> {
 
-  @Override
-  protected String method(final Request httpRequest) {
-    return httpRequest.method();
-  }
-
-  @Override
-  protected URI url(final Request httpRequest) {
-    return httpRequest.url().uri();
-  }
+  public static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
 
   @Override
-  protected Integer status(final Response httpResponse) {
-    return httpResponse.code();
+  public void set(final Request.Builder carrier, final String key, final String value) {
+    carrier.addHeader(key, value);
   }
 }

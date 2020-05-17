@@ -70,7 +70,7 @@ muzzle {
 }
 
 dependencies {
-  main_java8CompileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
+  compileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
 
   compile project(':auto-tooling')
   compile deps.autoservice
@@ -103,4 +103,15 @@ compileVersion101TestGroovy {
 compileLatestDepTestGroovy {
   classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
   dependsOn compileLatestDepTestScala
+}
+
+// Lagom test supports running only on java 8 for now.
+// To run it on java 11 requires some complicated juggling of scala dependencies
+// At the same time, "minJavaVersionForTests"/"maxJavaVersionForTests" functionality
+// does not work currently with custom source sets.
+// They all use the same constraints as the main test source set.
+lagomTest {
+  onlyIf {
+    executable == toExecutable(findJavaHome(JavaVersion.VERSION_1_8))
+  }
 }
