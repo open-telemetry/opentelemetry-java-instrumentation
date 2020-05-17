@@ -139,7 +139,7 @@ To enable them, add `ota.integration.<name>.enabled` system property:
 `-Dota.integration.jdbc-datasource.enabled=true`
 
 ### Grizzly instrumentation
-Whenever you use [Grizzly]((https://javaee.github.io/grizzly/httpserverframework.html)) 
+Whenever you use [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)
 for Servlet-based applications, you get better experience from Servlet-specific support.
 As these two instrumentations conflict with each other, more generic instrumentation for Grizzly
 http server is disabled by default.
