@@ -63,13 +63,11 @@ public class KHttpInstrumentation extends Instrumenter.Default {
     return singletonMap(
         isMethod()
             .and(not(isAbstract()))
-            .and(
-                named("request")
-                    .and(takesArgument(0, named("java.lang.String")))
-                    .and(takesArgument(1, named("java.lang.String")))
-                    .and(
-                        takesArgument(2, named("java.util.Map"))
-                            .and(returns(named("khttp.responses.Response"))))),
+            .and(named("request"))
+            .and(takesArgument(0, named("java.lang.String")))
+            .and(takesArgument(1, named("java.lang.String")))
+            .and(takesArgument(2, named("java.util.Map")))
+            .and(returns(named("khttp.responses.Response"))),
         packageName + ".KHttpAdvice");
   }
 }
