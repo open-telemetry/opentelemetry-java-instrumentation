@@ -32,7 +32,8 @@ class ClassLoaderMatcherTest extends AgentSpecification {
 
   def "skips exporter classloader"() {
     setup:
-    final URLClassLoader exporterLoader = new ExporterClassLoader(new URL[0], null)
+    URL url = new URL("file://")
+    final URLClassLoader exporterLoader = new ExporterClassLoader(url, null)
     expect:
     ClassLoaderMatcher.skipClassLoader().matches(exporterLoader)
   }

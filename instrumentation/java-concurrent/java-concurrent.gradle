@@ -40,6 +40,7 @@ test.dependsOn slickTest
 // force this one test to run on java8 only
 slickTest {
   onlyIf {
-    executable == toExecutable(findJavaHome(JavaVersion.VERSION_1_8))
+    String java8Home = findJavaHome(JavaVersion.VERSION_1_8)
+    java8Home != null && executable == toExecutable(java8Home)
   }
 }
