@@ -27,7 +27,6 @@ import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
-import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.CoreSubscriber;
