@@ -29,6 +29,11 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 
 abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
+  static {
+    //We want to test spans produced by servlet instrumentation, not those of jetty
+    System.setProperty("ota.integration.jetty.enabled", "false")
+  }
+
   @Override
   boolean testNotFound() {
     false

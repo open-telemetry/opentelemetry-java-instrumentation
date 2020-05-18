@@ -37,10 +37,6 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class JettyHandlerTest extends HttpServerTest<Server> {
 
-  static {
-    System.setProperty("ota.integration.jetty.enabled", "true")
-  }
-
   static errorHandler = new ErrorHandler() {
     @Override
     protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
