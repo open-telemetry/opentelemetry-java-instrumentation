@@ -22,14 +22,10 @@ import io.opentelemetry.auto.test.base.HttpClientTest
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
-import spock.lang.Ignore
 import spock.lang.Timeout
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-// FIXME this instrumentation is not currently reliable and so is currently disabled
-// see DefaultWebClientInstrumentation and DefaultWebClientAdvice
-@Ignore
 @Timeout(5)
 class SpringWebfluxHttpClientTest extends HttpClientTest {
 
@@ -54,7 +50,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
     if (!exception) {
       trace.span(index + 1) {
         childOf(trace.span(index))
-        operationName "netty.client.request"
+        operationName "HTTP $method"
         spanKind CLIENT
         errored exception != null
         tags {

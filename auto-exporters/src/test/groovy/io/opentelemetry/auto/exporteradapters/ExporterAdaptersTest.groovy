@@ -53,8 +53,7 @@ class ExporterAdaptersTest extends Specification {
     def file = new File(exporter)
     println "Attempting to load ${file.toString()} for ${classname}"
     assert file.exists(): "${file.toString()} does not exist"
-    URL[] urls = [file.toURI().toURL()]
-    def classLoader = new ExporterClassLoader(urls, this.getClass().getClassLoader())
+    def classLoader = new ExporterClassLoader(file.toURI().toURL(), this.getClass().getClassLoader())
     def serviceLoader = ServiceLoader.load(SpanExporterFactory, classLoader)
 
     when:
