@@ -19,7 +19,7 @@ testSets {
 }
 
 dependencies {
-  main_java8CompileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
+  compileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')

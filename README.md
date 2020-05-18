@@ -20,7 +20,7 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
-| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+                           |
+| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default, see below)                           |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
@@ -34,6 +34,7 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
+| [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1.0+                         |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
 | [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
@@ -127,6 +128,24 @@ for testing and debugging.
 These parameter names are very likely to change over time, so please check back here when trying out a new version!
 
 Please report any bugs or unexpected behavior you may find.
+
+## Disabled instrumentations
+Some instrumentations can produce too many spans and make traces very noisy.
+For this reason the following instrumentations are disabled by default:
+- `jdbc-datasource` which creates spans whenever `java.sql.DataSource#getConnection` method is called.
+- `servlet-filter` which creates spans around Servlet Filter methods.
+- `servlet-service` which creates spans around Servlet methods.
+ 
+To enable them, add `ota.integration.<name>.enabled` system property:
+`-Dota.integration.jdbc-datasource.enabled=true`
+
+### Grizzly instrumentation
+Whenever you use [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)
+for Servlet-based applications, you get better experience from Servlet-specific support.
+As these two instrumentations conflict with each other, more generic instrumentation for Grizzly
+http server is disabled by default.
+If needed, you can enable it by add the following system property:
+`-Dota.integration.grizzly.enabled=true`
 
 ## Troubleshooting
 

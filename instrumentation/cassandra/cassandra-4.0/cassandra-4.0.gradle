@@ -24,7 +24,7 @@ testSets {
 }
 
 dependencies {
-  main_java8CompileOnly group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
+  compileOnly group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
 
   testCompile group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
   testCompile group: 'org.cassandraunit', name: 'cassandra-unit', version: '4.3.1.0'
