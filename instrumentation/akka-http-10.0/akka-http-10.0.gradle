@@ -112,6 +112,7 @@ compileLatestDepTestGroovy {
 // They all use the same constraints as the main test source set.
 lagomTest {
   onlyIf {
-    executable == toExecutable(findJavaHome(JavaVersion.VERSION_1_8))
+    String java8Home = findJavaHome(JavaVersion.VERSION_1_8)
+    java8Home != null && executable == toExecutable(java8Home)
   }
 }
