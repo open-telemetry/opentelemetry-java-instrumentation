@@ -1,0 +1,1 @@
+io.opentelemetry.auto.exporters.zipkin.ZipkinExporterFactory
