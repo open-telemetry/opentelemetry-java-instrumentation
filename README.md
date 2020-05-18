@@ -110,6 +110,14 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently onl
 | ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
 | ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
 
+#### Zipkin exporter
+A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
+
+| System property                  | Environment variable             | Purpose                                                              |
+|----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter.zipkin.endpoint     | OTA_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
+| ota.exporter.zipkin.service.name | OTA_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance                                |
+
 #### OTLP exporter
 A simple wrapper for the OTLP exporter of opentelemetry-java.
 

@@ -16,20 +16,26 @@
 package io.opentelemetry.auto.exporters.zipkin;
 
 import io.opentelemetry.exporters.zipkin.ZipkinExporterConfiguration;
+import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.contrib.auto.config.Config;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class ZipkinExporterFactory implements SpanExporterFactory {
+  private static final String ZIPKIN_ENDPOINT = "zipkin.endpoint";
+  private static final String DEFAULT_ZIPKIN_ENDPOINT = "http://localhost:9411/api/v2/spans";
+
+  private static final String ZIPKIN_SERVICE_NAME = "zipkin.service.name";
+  private static final String DEFAULT_ZIPKIN_SERVICE_NAME = "(unknown service)";
+
   @Override
   public SpanExporter fromConfig(Config config) {
-    ZipkinExporterConfiguration configuration =
+    final String zipkinEndpoint = config.getString(ZIPKIN_ENDPOINT, DEFAULT_ZIPKIN_ENDPOINT);
+    final String serviceName = config.getString(ZIPKIN_SERVICE_NAME, DEFAULT_ZIPKIN_SERVICE_NAME);
+    return ZipkinSpanExporter.create(
         ZipkinExporterConfiguration.builder()
-            .setEndpoint("http://localhost/api/v2/spans")
-            .setServiceName("my-service")
-            .build();
-
-    ZipkinSpanExporter exporter = ZipkinSpanExporter.create(configuration);
-    return null;
+            .setEndpoint(zipkinEndpoint)
+            .setServiceName(serviceName)
+            .build());
   }
 }
