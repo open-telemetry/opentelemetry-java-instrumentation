@@ -3,10 +3,9 @@
 Pull requests for bug fixes are welcome, but before submitting new features or changes to current functionality [open an issue](https://github.com/open-telemetry/opentelemetry-auto-instr-java/issues/new)
 and discuss your ideas or propose the changes you wish to make. After a resolution is reached a PR can be submitted for review.
 
-In order to fully build and test this whole repository you need the following:
-* Installed both JDK 8 and 9.
-* Java 8 should be set as default: `java -version` should give you version 8.
-* Defined environment variables `JAVA_8_HOME` and `JAVA_9_HOME` which point to the corresponding java homes. 
+In order to build and test this whole repository you need JDK 11+.
+Some instrumentations and tests may put constraints on which java versions they support.
+See [Executing tests with specific java version](#Executing tests with specific java version) below.
 
 ### Plugin structure
 OpenTelemetry Auto Instrumentation java agent's jar can logically be divided into 3 parts.
