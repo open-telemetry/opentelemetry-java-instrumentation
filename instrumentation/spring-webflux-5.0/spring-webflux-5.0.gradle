@@ -13,6 +13,14 @@ muzzle {
     module = "spring-webflux"
     versions = "[5.0.0.RELEASE,)"
     assertInverse = true
+    extraDependency "io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE"
+  }
+
+  pass {
+    group = "io.projectreactor.ipc"
+    module = "reactor-netty"
+    versions = "[0.7.0.RELEASE,)"
+    extraDependency "org.springframework:spring-webflux:5.0.0.RELEASE"
   }
 }
 
@@ -23,13 +31,8 @@ testSets {
 }
 
 dependencies {
-  // We use helpers from this project
-  main_java8CompileOnly project(':instrumentation:reactor-3.1')
-  main_java8CompileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
-
-  // We are using utils class from reactor instrumentation.
-  // TODO: It is unclear why we need to use `compile` here (instead of 'compileOnly')
-  compile project(':instrumentation:reactor-3.1')
+  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
+  compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
 
   testCompile project(':instrumentation:trace-annotation')
   testCompile project(':instrumentation:netty:netty-4.1')
@@ -40,7 +43,7 @@ dependencies {
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
   testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
 
-  // FIXME: Tests need to be updated to support 2.1+
+  // FIXME: reactor-netty packages have changed so test imports are failing
   latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.+'
   latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'
   latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.+'

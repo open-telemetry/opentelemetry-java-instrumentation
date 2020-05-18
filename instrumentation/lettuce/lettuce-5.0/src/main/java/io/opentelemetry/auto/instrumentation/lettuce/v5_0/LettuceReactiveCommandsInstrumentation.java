@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -63,15 +64,14 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(named("createMono"))
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        // Cannot reference class directly here because it would lead to class load failure on Java7
         packageName + ".rx.LettuceMonoCreationAdvice");
     transformers.put(
         isMethod()
             .and(nameStartsWith("create"))
             .and(nameEndsWith("Flux"))
+            .and(isPublic())
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Flux"))),
-        // Cannot reference class directly here because it would lead to class load failure on Java7
         packageName + ".rx.LettuceFluxCreationAdvice");
 
     return transformers;

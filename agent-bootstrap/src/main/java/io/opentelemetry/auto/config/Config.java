@@ -56,6 +56,7 @@ public class Config {
 
   public static final String EXPORTER_JAR = "exporter.jar";
   public static final String SERVICE = "service";
+  public static final String PROPAGATORS = "propagators";
   public static final String CONFIGURATION_FILE = "trace.config";
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
@@ -104,6 +105,7 @@ public class Config {
 
   @Getter private final String exporterJar;
   @Getter private final String serviceName;
+  @Getter private final List<String> propagators;
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final List<String> excludedClasses;
@@ -150,6 +152,7 @@ public class Config {
   Config() {
     propertiesFromConfigFile = loadConfigurationFile();
 
+    propagators = getListSettingFromEnvironment(PROPAGATORS, null);
     exporterJar = getSettingFromEnvironment(EXPORTER_JAR, null);
     serviceName = getSettingFromEnvironment(SERVICE, "(unknown)");
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
@@ -210,6 +213,8 @@ public class Config {
   private Config(final Properties properties, final Config parent) {
     exporterJar = properties.getProperty(EXPORTER_JAR, parent.exporterJar);
     serviceName = properties.getProperty(SERVICE, parent.serviceName);
+
+    propagators = getPropertyListValue(properties, PROPAGATORS, parent.propagators);
 
     traceEnabled = getPropertyBooleanValue(properties, TRACE_ENABLED, parent.traceEnabled);
     integrationsEnabled =
