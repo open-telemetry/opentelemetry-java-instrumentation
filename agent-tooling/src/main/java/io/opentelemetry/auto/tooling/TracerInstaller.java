@@ -64,7 +64,7 @@ public class TracerInstaller {
     }
     final DefaultExporterConfig config = new DefaultExporterConfig("exporter");
     final ExporterClassLoader exporterLoader =
-        new ExporterClassLoader(new URL[] {url}, TracerInstaller.class.getClassLoader());
+        new ExporterClassLoader(url, TracerInstaller.class.getClassLoader());
 
     final SpanExporterFactory spanExporterFactory =
         getExporterFactory(SpanExporterFactory.class, exporterLoader);
