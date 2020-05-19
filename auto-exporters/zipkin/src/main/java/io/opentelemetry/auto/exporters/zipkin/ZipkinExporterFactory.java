@@ -20,6 +20,7 @@ import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.contrib.auto.config.Config;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import zipkin2.reporter.okhttp3.OkHttpSender;
 
 public class ZipkinExporterFactory implements SpanExporterFactory {
   private static final String ZIPKIN_ENDPOINT = "zipkin.endpoint";
@@ -34,7 +35,7 @@ public class ZipkinExporterFactory implements SpanExporterFactory {
     final String serviceName = config.getString(ZIPKIN_SERVICE_NAME, DEFAULT_ZIPKIN_SERVICE_NAME);
     return ZipkinSpanExporter.create(
         ZipkinExporterConfiguration.builder()
-            .setEndpoint(zipkinEndpoint)
+            .setSender(OkHttpSender.create(zipkinEndpoint))
             .setServiceName(serviceName)
             .build());
   }

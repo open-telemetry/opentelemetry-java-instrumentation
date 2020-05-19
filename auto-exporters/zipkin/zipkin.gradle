@@ -9,6 +9,7 @@ dependencies {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
   compileOnly deps.opentelemetrySdkAutoConfig
+  compile group: 'io.zipkin.reporter2', name: 'zipkin-sender-okhttp3', version: '2.12.2'
 }
 
 shadowJar {
