@@ -101,7 +101,7 @@ libs/opentelemetry-auto-exporters-otlp-<version>-SNAPSHOT.jar
 
 #### Building from source
 
-Build using Java 8:
+Build using Java 11:
 
 ```gradle assemble```
 
