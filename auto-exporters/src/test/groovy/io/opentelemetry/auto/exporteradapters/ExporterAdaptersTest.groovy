@@ -35,6 +35,9 @@ class ExporterAdaptersTest extends Specification {
   def loggingExporterJar = System.getProperty("loggingExporterJar")
 
   @Shared
+  def zipkinExporterJar = System.getProperty("zipkinExporterJar")
+
+  @Shared
   def jaegerDir = new File("${adapterRoot}/jaeger-adapter/build/libs")
 
   def "test jars exist"() {
@@ -45,7 +48,7 @@ class ExporterAdaptersTest extends Specification {
     file != null
 
     where:
-    exporter << [otlpExporterJar, jaegerExporterJar, loggingExporterJar]
+    exporter << [otlpExporterJar, jaegerExporterJar, loggingExporterJar, zipkinExporterJar]
   }
 
   def "test exporter load"() {
@@ -70,5 +73,6 @@ class ExporterAdaptersTest extends Specification {
     otlpExporterJar    | 'io.opentelemetry.auto.exporters.otlp.OtlpSpanExporterFactory'
     jaegerExporterJar  | 'io.opentelemetry.auto.exporters.jaeger.JaegerExporterFactory'
     loggingExporterJar | 'io.opentelemetry.auto.exporters.logging.LoggingExporterFactory'
+    zipkinExporterJar  | 'io.opentelemetry.auto.exporters.zipkin.ZipkinExporterFactory'
   }
 }
