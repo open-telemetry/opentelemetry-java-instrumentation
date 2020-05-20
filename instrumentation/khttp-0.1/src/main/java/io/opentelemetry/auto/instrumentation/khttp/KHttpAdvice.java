@@ -39,7 +39,7 @@ public class KHttpAdvice {
   public static SpanWithScope methodEnter(
       @Advice.Argument(value = 0) String method,
       @Advice.Argument(value = 1) String uri,
-      @Advice.Argument(value = 2) Map<String, String> headers) {
+      @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers) {
 
     final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(KHttp.class);
     if (callDepth > 0) {
@@ -53,7 +53,8 @@ public class KHttpAdvice {
 
     final Context context = withSpan(span, Context.current());
 
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, asWritable(headers), SETTER);
+    headers = asWritable(headers);
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
     return new SpanWithScope(span, withScopedContext(context));
   }
 
