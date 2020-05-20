@@ -2,26 +2,24 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply from: "${rootDir}/gradle/java.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
-
-muzzle {
-  pass {
-    group = "software.amazon.awssdk"
-    module = "aws-core"
-    versions = "[2.2.0,)"
-    assertInverse = true
-  }
-}
 
 testSets {
   latestDepTest
 }
 
 dependencies {
-  compile project(':instrumentation-core:aws-sdk:aws-sdk-2.2-core')
+  // TODO(anuraaga): We currently include common instrumentation logic like decorators in the
+  // bootstrap, but we need to move it out so manual instrumentation does not depend on code from
+  // the agent, like Agent.
+  api project(':auto-bootstrap')
 
-  compileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
+  api deps.opentelemetryApi
+
+  api group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
+
+  testCompile project(':testing')
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')

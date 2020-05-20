@@ -15,21 +15,45 @@
  */
 package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.auto.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import io.opentelemetry.trace.Span;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.function.Consumer;
+import org.reactivestreams.Publisher;
+import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
-import software.amazon.awssdk.core.interceptor.Context;
-import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
+import software.amazon.awssdk.core.interceptor.Context.AfterExecution;
+import software.amazon.awssdk.core.interceptor.Context.AfterMarshalling;
+import software.amazon.awssdk.core.interceptor.Context.AfterTransmission;
+import software.amazon.awssdk.core.interceptor.Context.AfterUnmarshalling;
+import software.amazon.awssdk.core.interceptor.Context.BeforeExecution;
+import software.amazon.awssdk.core.interceptor.Context.BeforeMarshalling;
+import software.amazon.awssdk.core.interceptor.Context.BeforeTransmission;
+import software.amazon.awssdk.core.interceptor.Context.BeforeUnmarshalling;
+import software.amazon.awssdk.core.interceptor.Context.FailedExecution;
+import software.amazon.awssdk.core.interceptor.Context.ModifyHttpRequest;
+import software.amazon.awssdk.core.interceptor.Context.ModifyHttpResponse;
+import software.amazon.awssdk.core.interceptor.Context.ModifyRequest;
+import software.amazon.awssdk.core.interceptor.Context.ModifyResponse;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
-/** AWS request execution interceptor */
+/**
+ * {@link ExecutionInterceptor} that delegates to {@link AwsSdk}, augmenting {@link
+ * #beforeTransmission(BeforeTransmission, ExecutionAttributes)} to make sure the span is set to the
+ * current context to allow downstream instrumentation like Netty to pick it up.
+ */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   public static class ScopeHolder {
@@ -40,65 +64,14 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   // need to inject helper for it.
   private static final Consumer<ClientOverrideConfiguration.Builder>
       OVERRIDE_CONFIGURATION_CONSUMER =
-          builder -> builder.addExecutionInterceptor(new TracingExecutionInterceptor());
+          builder ->
+              builder.addExecutionInterceptor(
+                  new TracingExecutionInterceptor(AwsSdk.newInterceptor()));
 
-  private static final ExecutionAttribute<Span> SPAN_ATTRIBUTE =
-      new ExecutionAttribute<>("io.opentelemetry.auto.Span");
+  private final ExecutionInterceptor delegate;
 
-  @Override
-  public void beforeExecution(
-      final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = TRACER.spanBuilder(DECORATE.spanName(executionAttributes)).startSpan();
-    try (final Scope scope = currentContextWith(span)) {
-      DECORATE.afterStart(span);
-      executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
-    }
-  }
-
-  @Override
-  public void afterMarshalling(
-      final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-
-    DECORATE.onRequest(span, context.httpRequest());
-    DECORATE.onSdkRequest(span, context.request());
-    DECORATE.onAttributes(span, executionAttributes);
-  }
-
-  @Override
-  public void beforeTransmission(
-      final Context.BeforeTransmission context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-
-    // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
-    // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-    ScopeHolder.CURRENT.set(currentContextWith(span));
-  }
-
-  @Override
-  public void afterExecution(
-      final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    if (span != null) {
-      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
-      // Call onResponse on both types of responses:
-      DECORATE.onResponse(span, context.response());
-      DECORATE.onResponse(span, context.httpResponse());
-      DECORATE.beforeFinish(span);
-      span.end();
-    }
-  }
-
-  @Override
-  public void onExecutionFailure(
-      final Context.FailedExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    if (span != null) {
-      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
-      DECORATE.onError(span, context.exception());
-      DECORATE.beforeFinish(span);
-      span.end();
-    }
+  private TracingExecutionInterceptor(ExecutionInterceptor delegate) {
+    this.delegate = delegate;
   }
 
   /**
@@ -111,5 +84,114 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   public static void muzzleCheck() {
     // Noop
+  }
+
+  @Override
+  public void beforeExecution(BeforeExecution context, ExecutionAttributes executionAttributes) {
+    delegate.beforeExecution(context, executionAttributes);
+  }
+
+  @Override
+  public SdkRequest modifyRequest(ModifyRequest context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyRequest(context, executionAttributes);
+  }
+
+  @Override
+  public void beforeMarshalling(
+      BeforeMarshalling context, ExecutionAttributes executionAttributes) {
+    delegate.beforeMarshalling(context, executionAttributes);
+  }
+
+  @Override
+  public void afterMarshalling(AfterMarshalling context, ExecutionAttributes executionAttributes) {
+    delegate.afterMarshalling(context, executionAttributes);
+  }
+
+  @Override
+  public SdkHttpRequest modifyHttpRequest(
+      ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyHttpRequest(context, executionAttributes);
+  }
+
+  @Override
+  public Optional<RequestBody> modifyHttpContent(
+      ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyHttpContent(context, executionAttributes);
+  }
+
+  @Override
+  public Optional<AsyncRequestBody> modifyAsyncHttpContent(
+      ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyAsyncHttpContent(context, executionAttributes);
+  }
+
+  @Override
+  public void beforeTransmission(
+      BeforeTransmission context, ExecutionAttributes executionAttributes) {
+    delegate.beforeTransmission(context, executionAttributes);
+    final Span span = AwsSdk.getSpanFromAttributes(executionAttributes);
+    if (span != null) {
+      // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
+      // doesn't provide a way to run code in the same thread after transmission has been scheduled.
+      ScopeHolder.CURRENT.set(currentContextWith(span));
+    }
+  }
+
+  @Override
+  public void afterTransmission(
+      AfterTransmission context, ExecutionAttributes executionAttributes) {
+    delegate.afterTransmission(context, executionAttributes);
+  }
+
+  @Override
+  public SdkHttpResponse modifyHttpResponse(
+      ModifyHttpResponse context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyHttpResponse(context, executionAttributes);
+  }
+
+  @Override
+  public Optional<Publisher<ByteBuffer>> modifyAsyncHttpResponseContent(
+      ModifyHttpResponse context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyAsyncHttpResponseContent(context, executionAttributes);
+  }
+
+  @Override
+  public Optional<InputStream> modifyHttpResponseContent(
+      ModifyHttpResponse context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyHttpResponseContent(context, executionAttributes);
+  }
+
+  @Override
+  public void beforeUnmarshalling(
+      BeforeUnmarshalling context, ExecutionAttributes executionAttributes) {
+    delegate.beforeUnmarshalling(context, executionAttributes);
+  }
+
+  @Override
+  public void afterUnmarshalling(
+      AfterUnmarshalling context, ExecutionAttributes executionAttributes) {
+    delegate.afterUnmarshalling(context, executionAttributes);
+  }
+
+  @Override
+  public SdkResponse modifyResponse(
+      ModifyResponse context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyResponse(context, executionAttributes);
+  }
+
+  @Override
+  public void afterExecution(AfterExecution context, ExecutionAttributes executionAttributes) {
+    delegate.afterExecution(context, executionAttributes);
+  }
+
+  @Override
+  public Throwable modifyException(
+      FailedExecution context, ExecutionAttributes executionAttributes) {
+    return delegate.modifyException(context, executionAttributes);
+  }
+
+  @Override
+  public void onExecutionFailure(FailedExecution context, ExecutionAttributes executionAttributes) {
+    delegate.onExecutionFailure(context, executionAttributes);
   }
 }
