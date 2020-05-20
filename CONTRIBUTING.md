@@ -6,10 +6,9 @@ issue](https://github.com/open-telemetry/opentelemetry-auto-instr-java/issues/ne
 and discuss your ideas or propose the changes you wish to make. After a
 resolution is reached a PR can be submitted for review.
 
-In order to build and test this whole repository you need JDK 11+. Some
-instrumentations and tests may put constraints on which java versions they
-support. See [Executing tests with specific java version](#Executing tests
-with specific java version) below.
+In order to build and test this whole repository you need JDK 11+.
+Some instrumentations and tests may put constraints on which java versions they support.
+See [Executing tests with specific java version](#Executing tests with specific java version) below.
 
 ### Plugin structure
 
