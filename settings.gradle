@@ -152,6 +152,7 @@ include ":auto-exporters"
 include ":auto-exporters:jaeger"
 include ":auto-exporters:logging"
 include ":auto-exporters:otlp"
+include ":auto-exporters:zipkin"
 
 // benchmark
 include ':benchmark'
@@ -174,3 +175,4 @@ project(':java-agent').name = 'opentelemetry-auto'
 project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporters-jaeger'
 project(':auto-exporters:logging').name = 'opentelemetry-auto-exporters-logging'
 project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporters-otlp'
+project(':auto-exporters:zipkin').name = 'opentelemetry-auto-exporters-zipkin'
