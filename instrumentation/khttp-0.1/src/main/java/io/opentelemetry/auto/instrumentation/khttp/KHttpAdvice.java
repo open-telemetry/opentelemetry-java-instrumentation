@@ -32,7 +32,6 @@ import java.util.Map;
 import khttp.KHttp;
 import khttp.responses.Response;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 
 public class KHttpAdvice {
 
@@ -40,8 +39,7 @@ public class KHttpAdvice {
   public static SpanWithScope methodEnter(
       @Advice.Argument(value = 0) String method,
       @Advice.Argument(value = 1) String uri,
-      @Advice.Argument(value = 2, typing = Typing.DYNAMIC, readOnly = false)
-          Map<String, String> headers) {
+      @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers) {
 
     final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(KHttp.class);
     if (callDepth > 0) {
