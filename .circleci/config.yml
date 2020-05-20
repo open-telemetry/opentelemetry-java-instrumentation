@@ -178,20 +178,12 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          keys:
-            # Rev the version when the cache gets too big
-            - trace-java-muzzle-v1-{{ .Branch }}-{{ .Revision }}
-            - trace-java-muzzle-v1-{{ .Branch }}
-            # - dd-trace-java-muzzle-v1-
+      # We are not running with a cache here because it gets very big and ends up taking more time
+      # restoring/saving than the actual increase in time it takes just downloading the artifacts each time.
 
       - run:
           name: Verify Muzzle
           command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
-
-      - save_cache:
-          key: trace-java-muzzle-v1-{{ .Branch }}-{{ .Revision }}
-          paths: ~/.gradle
 
   publish: &publish
     <<: *defaults
