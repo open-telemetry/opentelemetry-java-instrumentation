@@ -115,6 +115,7 @@ class KafkaClientTest extends AgentTestRunner {
           tags {
             "partition" { it >= 0 }
             "offset" 0
+            "record.queue_time_ms" { it >= 0 }
           }
         }
       }
@@ -168,7 +169,7 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "kafka.partition" { it >= 0 }
+            "partition" { it >= 0 }
           }
         }
         span(1) {
@@ -179,6 +180,7 @@ class KafkaClientTest extends AgentTestRunner {
           tags {
             "partition" { it >= 0 }
             "offset" 0
+            "record.queue_time_ms" { it >= 0 }
           }
         }
       }
