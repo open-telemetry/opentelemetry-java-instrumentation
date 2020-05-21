@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.InstrumentationTestRunner
+import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
@@ -49,10 +54,9 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
-class Aws2ClientTest {
+class Aws2ClientCoreTest extends InstrumentationTestRunner {
 
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER = StaticCredentialsProvider
     .create(AwsBasicCredentials.create("my-access-key", "my-secret-key"))
@@ -76,6 +80,9 @@ class Aws2ClientTest {
       .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
+      .overrideConfiguration(ClientOverrideConfiguration.builder()
+        .addExecutionInterceptor(AwsSdk.newInterceptor())
+        .build())
       .build()
     responseBody.set(body)
     def response = call.call(client)
@@ -89,7 +96,7 @@ class Aws2ClientTest {
     response.class.simpleName.startsWith(operation) || response instanceof ResponseInputStream
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
           spanKind INTERNAL
@@ -116,19 +123,6 @@ class Aws2ClientTest {
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
-          }
-        }
-        span(1) {
-          operationName expectedOperationName(method)
-          spanKind CLIENT
-          errored false
-          childOf span(0)
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
-            "$Tags.HTTP_METHOD" "$method"
-            "$Tags.HTTP_STATUS" 200
           }
         }
       }
@@ -177,6 +171,9 @@ class Aws2ClientTest {
       .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
+      .overrideConfiguration(ClientOverrideConfiguration.builder()
+        .addExecutionInterceptor(AwsSdk.newInterceptor())
+        .build())
       .build()
     responseBody.set(body)
     def response = call.call(client)
@@ -188,7 +185,7 @@ class Aws2ClientTest {
     expect:
     response != null
 
-    assertTraces(2) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
@@ -216,23 +213,6 @@ class Aws2ClientTest {
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
-          }
-        }
-      }
-      // TODO: this should be part of the same trace but netty instrumentation doesn't cooperate
-      trace(1, 1) {
-        span(0) {
-          operationName expectedOperationName(method)
-          spanKind CLIENT
-          errored false
-          parent()
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
-            "$Tags.HTTP_METHOD" "$method"
-            "$Tags.HTTP_STATUS" 200
           }
         }
       }
@@ -276,7 +256,10 @@ class Aws2ClientTest {
         """
   }
 
-  def "timeout and retry errors captured"() {
+  // TODO(anuraaga): Without AOP instrumentation of the HTTP client, we cannot model retries as
+  // spans because of https://github.com/aws/aws-sdk-java-v2/issues/1741. We should at least tweak
+  // the instrumentation to add Events for retries instead.
+  def "timeout and retry errors not captured"() {
     setup:
     def server = httpServer {
       handlers {
@@ -290,6 +273,9 @@ class Aws2ClientTest {
       .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
+      .overrideConfiguration(ClientOverrideConfiguration.builder()
+        .addExecutionInterceptor(AwsSdk.newInterceptor())
+        .build())
       .httpClientBuilder(ApacheHttpClient.builder().socketTimeout(Duration.ofMillis(50)))
       .build()
 
@@ -300,7 +286,7 @@ class Aws2ClientTest {
     thrown SdkClientException
 
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 1) {
         span(0) {
           operationName "S3.GetObject"
           spanKind INTERNAL
@@ -316,21 +302,6 @@ class Aws2ClientTest {
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
             errorTags SdkClientException, "Unable to execute HTTP request: Read timed out"
-          }
-        }
-        (1..4).each {
-          span(it) {
-            operationName expectedOperationName("GET")
-            spanKind CLIENT
-            errored true
-            childOf span(0)
-            tags {
-              "$MoreTags.NET_PEER_NAME" "localhost"
-              "$MoreTags.NET_PEER_PORT" server.address.port
-              "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
-              "$Tags.HTTP_METHOD" "GET"
-              errorTags SocketTimeoutException, "Read timed out"
-            }
           }
         }
       }

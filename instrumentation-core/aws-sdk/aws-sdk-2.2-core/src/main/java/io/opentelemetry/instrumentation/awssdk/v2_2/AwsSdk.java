@@ -28,15 +28,13 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
  * ExecutionInterceptor} returned by {@link #newInterceptor()} with an SDK client to have all
  * requests traced.
  *
- * <p>For example, {@code
- *
+ * <pre>{@code
  * DynamoDbClient dynamoDb = DynamoDbClient.builder()
  *     .overrideConfiguration(ClientOverrideConfiguration.builder()
  *         .addExecutionInterceptor(AwsSdk.newInterceptor())
  *         .build())
  *     .build();
- *
- * }
+ * }</pre>
  */
 public class AwsSdk {
 
