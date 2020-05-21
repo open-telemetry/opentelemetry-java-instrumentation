@@ -19,6 +19,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInter
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
@@ -48,10 +49,22 @@ public class AwsSdk {
 
   /**
    * Returns an {@link ExecutionInterceptor} that can be used with an {@link
-   * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests.
+   * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests. Spans are created with the
+   * kind {@link Kind#CLIENT}. If you also instrument the HTTP calls made by the SDK, e.g., by
+   * adding Apache HTTP client or Netty instrumentation, you may want to use
+   * {@link #newInterceptor(Kind)} with {@link Kind#INTERNAL} instead.
    */
   public static ExecutionInterceptor newInterceptor() {
-    return new TracingExecutionInterceptor();
+    return newInterceptor(Kind.CLIENT);
+  }
+
+  /**
+   * Returns an {@link ExecutionInterceptor} that can be used with an {@link
+   * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests. Spans are created with the
+   * provided
+   */
+  public static ExecutionInterceptor newInterceptor(Kind kind) {
+    return new TracingExecutionInterceptor(kind);
   }
 
   /**

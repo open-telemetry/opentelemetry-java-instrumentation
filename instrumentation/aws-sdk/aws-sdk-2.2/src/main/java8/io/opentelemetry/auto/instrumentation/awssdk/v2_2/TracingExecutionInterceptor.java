@@ -20,6 +20,7 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -66,7 +67,8 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
       OVERRIDE_CONFIGURATION_CONSUMER =
           builder ->
               builder.addExecutionInterceptor(
-                  new TracingExecutionInterceptor(AwsSdk.newInterceptor()));
+                  // Agent will trace HTTP calls too so use INTERNAL kind.
+                  new TracingExecutionInterceptor(AwsSdk.newInterceptor(Kind.INTERNAL)));
 
   private final ExecutionInterceptor delegate;
 

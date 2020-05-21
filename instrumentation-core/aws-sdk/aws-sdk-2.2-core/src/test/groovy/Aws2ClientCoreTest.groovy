@@ -54,7 +54,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class Aws2ClientCoreTest extends InstrumentationTestRunner {
 
@@ -99,7 +99,7 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -189,7 +189,7 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -289,7 +289,7 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "S3.GetObject"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored true
           parent()
           tags {
