@@ -15,37 +15,37 @@ import spock.lang.Specification
  */
 abstract class InstrumentationTestRunner extends Specification {
 
-  protected static final InMemoryExporter TEST_WRITER;
+  protected static final InMemoryExporter TEST_WRITER
 
   static {
-    TEST_WRITER = new InMemoryExporter();
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER);
+    TEST_WRITER = new InMemoryExporter()
+    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(TEST_WRITER)
   }
 
   @Before
-  public void beforeTest() {
-    TEST_WRITER.clear();
+  void beforeTest() {
+    TEST_WRITER.clear()
   }
 
   protected void assertTraces(
       final int size,
       @ClosureParams(
-          value = SimpleType.class,
+          value = SimpleType,
           options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+      @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
       final Closure spec) {
     InMemoryExporterAssert.assertTraces(
-        TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
+        TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec)
   }
 
   protected void assertTracesWithFilter(
       final int size,
       final Predicate<List<SpanData>> excludes,
       @ClosureParams(
-          value = SimpleType.class,
+          value = SimpleType,
           options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+      @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
       final Closure spec) {
-    InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
+    InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec)
   }
 }
