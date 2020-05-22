@@ -61,7 +61,7 @@ public class AwsSdk {
   /**
    * Returns an {@link ExecutionInterceptor} that can be used with an {@link
    * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests. Spans are created with the
-   * provided
+   * provided {@link Kind}.
    */
   public static ExecutionInterceptor newInterceptor(Kind kind) {
     return new TracingExecutionInterceptor(kind);
