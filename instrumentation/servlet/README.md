@@ -29,22 +29,32 @@ Everything starts when HTTP request processing reaches the first class from Serv
 In the example above this is `ApplicationFilterChain.doFilter(ServletRequest, ServletResponse)` method.
 Let us call this first servlet specific method an "entry point".
 This is the main target for `Servlet3Instrumentation` and `Servlet2Instrumentation` instrumenters:
-`public void javax.servlet.FilterChain#doFilter(ServletRequest, ServletResponse)` or 
+
+`public void javax.servlet.FilterChain#doFilter(ServletRequest, ServletResponse)` 
+
 `public void javax.servlet.http.HttpServlet#service(ServletRequest, ServletResponse)`.
+
 For example, Jetty Servlet container does not have default filter chain and in many cases will have
 the second method as instrumentation entry point.
 These instrumentations are located in two separate submodules `request-3.0` and `request-2.3`, respectively,
 because they and corresponding tests depend on different versions of servlet specification.
 
 Next, request passes several other methods from Servlet specification, such as 
+
 `protected void javax.servlet.http.HttpServlet#service(HttpServletRequest, HttpServletResponse)` or
+
 `protected void org.springframework.web.servlet.FrameworkServlet#doGet(HttpServletRequest, HttpServletResponse)`.
+
 They are the targets for `HttpServletInstrumentation`.
 From the observability point of view nothing of interest usually happens inside these methods.
 Thus it usually does not make sense to create spans from them, as they would only add useless noise.
 For this reason `HttpServletInstrumentation` is disabled by default.
 In rare cases when you need it, you can enable it using configuration property `ota.integration.servlet-service.enabled`.
 
+In exactly the same situation are all other Servlet filters beyond the initial entry point.
+Usually unimportant, they may be sometimes of interest during troubleshooting.
+They are instrumented by `FilterInstrumentation` which is too disabled by default.
+You can enable it with the configuration property `ota.integration.servlet-filter.enabled`.
 At last, request processing may reach the specific framework that you application uses.
 In this case Spring MVC and `OwnerController.initCreationForm`.
 

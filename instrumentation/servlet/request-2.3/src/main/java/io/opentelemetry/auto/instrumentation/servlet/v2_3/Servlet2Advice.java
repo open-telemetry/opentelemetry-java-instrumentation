@@ -29,31 +29,35 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
+import java.lang.reflect.Method;
 import java.security.Principal;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 public class Servlet2Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(
       @Advice.This final Object servlet,
+      @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
-          final ServletResponse response) {
+      @Advice.Argument(1) final ServletResponse response) {
+    if (!(request instanceof HttpServletRequest)) {
+      return null;
+    }
+
     final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
-    final boolean invalidRequest = !(request instanceof HttpServletRequest);
-    if (invalidRequest || hasServletTrace) {
+    if (hasServletTrace) {
       // Tracing might already be applied by the FilterChain or a parent request (forward/include).
       return null;
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
+    // TODO this logic should be moved to Servle2 specific Decorator
     if (response instanceof HttpServletResponse) {
       // For use by HttpServletResponseInstrumentation:
       InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
@@ -64,9 +68,8 @@ public class Servlet2Advice {
     }
 
     final Span.Builder builder =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
+        TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(SERVER);
     builder.setParent(extract(httpServletRequest, GETTER));
-
     final Span span =
         builder.setAttribute("span.origin.type", servlet.getClass().getName()).startSpan();
 
@@ -99,6 +102,7 @@ public class Servlet2Advice {
     if (spanWithScope == null) {
       return;
     }
+
     final Span span = spanWithScope.getSpan();
 
     if (response instanceof HttpServletResponse) {
