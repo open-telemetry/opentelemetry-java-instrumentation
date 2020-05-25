@@ -50,27 +50,10 @@ public class LettuceInstrumentationUtil {
   public static String getCommandName(final RedisCommand command) {
     String commandName = "Redis Command";
     if (command != null) {
-      /*
-      // Disable command argument capturing for now to avoid leak of sensitive data
-      // get the arguments passed into the redis command
-      if (command.getArgs() != null) {
-        // standardize to null instead of using empty string
-        commandArgs = command.getArgs().toCommandString();
-        if ("".equals(commandArgs)) {
-          commandArgs = null;
-        }
-      }
-      */
 
       // get the redis command name (i.e. GET, SET, HMSET, etc)
       if (command.getType() != null) {
         commandName = command.getType().name().trim();
-        /*
-        // if it is an AUTH command, then remove the extracted command arguments since it is the password
-        if ("AUTH".equals(commandName)) {
-          commandArgs = null;
-        }
-        */
       }
     }
     return commandName;

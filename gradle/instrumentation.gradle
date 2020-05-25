@@ -26,12 +26,6 @@ afterEvaluate {
     }
   }
 
-  String jdkCompile = null
-  if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests') != JavaVersion.VERSION_1_7) {
-    def version = JavaVersion.toVersion(project.getProperty('minJavaVersionForTests'))
-    def name = "java$version.majorVersion"
-    jdkCompile = "main_${name}Compile"
-  }
   dependencies {
     // Apply common dependencies for instrumentation.
     compile(project(':auto-tooling')) {
@@ -40,14 +34,6 @@ afterEvaluate {
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
     }
     compile deps.bytebuddy
-    if (jdkCompile) {
-      "$jdkCompile"(project(':auto-tooling')) {
-        // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
-        // is brought in for tests by project(:testing) below
-        exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
-      }
-      "$jdkCompile" deps.bytebuddy
-    }
     annotationProcessor deps.autoservice
     implementation deps.autoservice
 

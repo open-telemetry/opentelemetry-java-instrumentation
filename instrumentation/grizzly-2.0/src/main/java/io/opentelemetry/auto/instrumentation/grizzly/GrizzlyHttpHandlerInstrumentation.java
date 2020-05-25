@@ -47,7 +47,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public boolean defaultEnabled() {
+  protected boolean defaultEnabled() {
     return false;
   }
 

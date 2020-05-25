@@ -13,3 +13,22 @@ task "rmic", dependsOn: testClasses {
 }
 
 test.dependsOn "rmic"
+
+def java7Home = findJavaHome(JavaVersion.VERSION_1_7)
+tasks.withType(JavaCompile) {
+  options.compilerArgs = []
+  //We don't want to force every developer to have java7 installed, so this module should build
+  //and run with any java version.
+  //But CI has must have java7 and there we want to force correct API level checks.
+  if (java7Home != null) {
+    //We cannot use "--release 7" javac option here because that will forbid importing "sun.rmi" package.
+    //But we still want to ensure that we don't use java8+ APIs.
+    //Thus we forcibly set bootstrap classloader to that of java7
+    options.fork = true
+    options.bootstrapClasspath = fileTree(include: ['*.jar'], dir: "${System.env.JAVA_7_HOME}/jre/lib/")
+    options.extensionDirs = "${System.env.JAVA_7_HOME}/jre/lib/ext/"
+  }
+}
+tasks.withType(GroovyCompile) {
+  options.compilerArgs = []
+}

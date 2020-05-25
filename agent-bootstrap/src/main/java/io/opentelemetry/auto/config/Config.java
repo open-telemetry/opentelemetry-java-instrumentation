@@ -55,7 +55,7 @@ public class Config {
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
   public static final String EXPORTER_JAR = "exporter.jar";
-  public static final String SERVICE = "service";
+  public static final String PROPAGATORS = "propagators";
   public static final String CONFIGURATION_FILE = "trace.config";
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
@@ -103,7 +103,7 @@ public class Config {
   public static final boolean DEFAULT_SQL_NORMALIZER_ENABLED = true;
 
   @Getter private final String exporterJar;
-  @Getter private final String serviceName;
+  @Getter private final List<String> propagators;
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final List<String> excludedClasses;
@@ -150,8 +150,8 @@ public class Config {
   Config() {
     propertiesFromConfigFile = loadConfigurationFile();
 
+    propagators = getListSettingFromEnvironment(PROPAGATORS, null);
     exporterJar = getSettingFromEnvironment(EXPORTER_JAR, null);
-    serviceName = getSettingFromEnvironment(SERVICE, "(unknown)");
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     integrationsEnabled =
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
@@ -209,7 +209,8 @@ public class Config {
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
     exporterJar = properties.getProperty(EXPORTER_JAR, parent.exporterJar);
-    serviceName = properties.getProperty(SERVICE, parent.serviceName);
+
+    propagators = getPropertyListValue(properties, PROPAGATORS, parent.propagators);
 
     traceEnabled = getPropertyBooleanValue(properties, TRACE_ENABLED, parent.traceEnabled);
     integrationsEnabled =
@@ -259,7 +260,7 @@ public class Config {
     traceExecutors = getPropertyListValue(properties, TRACE_EXECUTORS, parent.traceExecutors);
 
     sqlNormalizerEnabled =
-        getPropertyBooleanValue(properties, SQL_NORMALIZER_ENABLED, DEFAULT_SQL_NORMALIZER_ENABLED);
+        getPropertyBooleanValue(properties, SQL_NORMALIZER_ENABLED, parent.sqlNormalizerEnabled);
 
     log.debug("New instance: {}", this);
   }

@@ -62,7 +62,7 @@ public class HibernateDecorator extends OrmClientDecorator {
     } else if (annotations.contains("javax.persistence.Entity")) {
       // We were given an instance of an entity.
       name = entity.getClass().getName();
-    } else if (entity instanceof List && ((List) entity).size() > 0) {
+    } else if (entity instanceof List && !((List) entity).isEmpty()) {
       // We have a list of entities.
       name = entityName(((List) entity).get(0));
     }

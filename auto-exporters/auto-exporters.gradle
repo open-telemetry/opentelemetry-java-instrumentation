@@ -6,17 +6,20 @@ dependencies {
   testCompile project(':auto-exporters:opentelemetry-auto-exporters-otlp')
   testCompile project(':auto-exporters:opentelemetry-auto-exporters-jaeger')
   testCompile project(':auto-exporters:opentelemetry-auto-exporters-logging')
+  testCompile project(':auto-exporters:opentelemetry-auto-exporters-zipkin')
 }
 
 tasks.withType(Test).configureEach() {
   dependsOn ':auto-exporters:opentelemetry-auto-exporters-otlp:shadowJar'
   dependsOn ':auto-exporters:opentelemetry-auto-exporters-jaeger:shadowJar'
   dependsOn ':auto-exporters:opentelemetry-auto-exporters-logging:shadowJar'
+  dependsOn ':auto-exporters:opentelemetry-auto-exporters-zipkin:shadowJar'
   doFirst {
     systemProperty 'projectVersion', allprojects.version[0]
     systemProperty 'adapterRoot', "${rootDir}/auto-exporters"
     systemProperty 'otlpExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-otlp').tasks.shadowJar.archivePath
     systemProperty 'jaegerExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-jaeger').tasks.shadowJar.archivePath
     systemProperty 'loggingExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-logging').tasks.shadowJar.archivePath
+    systemProperty 'zipkinExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-zipkin').tasks.shadowJar.archivePath
   }
 }

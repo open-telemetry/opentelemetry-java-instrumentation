@@ -21,12 +21,14 @@ import io.lettuce.core.api.sync.RedisCommands
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import reactor.core.scheduler.Schedulers
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
 import java.util.function.Consumer
 
+import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class LettuceReactiveClientTest extends AgentTestRunner {
@@ -79,6 +81,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
   def cleanup() {
     connection.close()
+    redisClient.shutdown()
     redisServer.stop()
   }
 
@@ -287,4 +290,121 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     }
   }
 
+  def "blocking subscriber"() {
+    when:
+    runUnderTrace("test-parent") {
+      reactiveCommands.set("a", "1")
+        .then(reactiveCommands.get("a"))
+        .block()
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          operationName "test-parent"
+          errored false
+          tags {
+          }
+        }
+        span(1) {
+          operationName "SET"
+          spanKind CLIENT
+          errored false
+          childOf span(0)
+          tags {
+            "$Tags.DB_TYPE" "redis"
+          }
+        }
+        span(2) {
+          operationName "GET"
+          spanKind CLIENT
+          errored false
+          childOf span(0)
+          tags {
+            "$Tags.DB_TYPE" "redis"
+          }
+        }
+      }
+    }
+  }
+
+  def "async subscriber"() {
+    when:
+    runUnderTrace("test-parent") {
+      reactiveCommands.set("a", "1")
+        .then(reactiveCommands.get("a"))
+        .subscribe()
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          operationName "test-parent"
+          errored false
+          tags {
+          }
+        }
+        span(1) {
+          operationName "SET"
+          spanKind CLIENT
+          errored false
+          childOf span(0)
+          tags {
+            "$Tags.DB_TYPE" "redis"
+          }
+        }
+        span(2) {
+          operationName "GET"
+          spanKind CLIENT
+          errored false
+          childOf span(0)
+          tags {
+            "$Tags.DB_TYPE" "redis"
+          }
+        }
+      }
+    }
+  }
+
+  def "async subscriber with specific thread pool"() {
+    when:
+    runUnderTrace("test-parent") {
+      reactiveCommands.set("a", "1")
+        .then(reactiveCommands.get("a"))
+        .subscribeOn(Schedulers.elastic())
+        .subscribe()
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          operationName "test-parent"
+          errored false
+          tags {
+          }
+        }
+        span(1) {
+          operationName "SET"
+          spanKind CLIENT
+          errored false
+          childOf span(0)
+          tags {
+            "$Tags.DB_TYPE" "redis"
+          }
+        }
+        span(2) {
+          operationName "GET"
+          spanKind CLIENT
+          errored false
+          childOf span(0)
+          tags {
+            "$Tags.DB_TYPE" "redis"
+          }
+        }
+      }
+    }
+  }
 }

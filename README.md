@@ -1,8 +1,75 @@
 # OpenTelemetry Auto-Instrumentation for Java
 
 ## Introduction
-This project provides a Java agent that can be attached to any Java 7+ application and dynamically injects bytecode
-to capture telemetry from a number of popular libraries and frameworks.
+
+This project provides a Java agent JAR that can be attached to any Java 7+
+application and dynamically injects bytecode to capture telemetry from a
+number of popular libraries and frameworks. The telemetry data can exported
+in a variety of formats each provided as their own independent JAR. In
+addition, the agent and exporter can be configured via command line arguments
+or environment variables. The net result is the ability to gather telemetry
+data from a Java application without code changes.
+
+## Getting Started
+
+Download the [latest
+release](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases)
+of the Java agent and available exporters.
+
+The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
+Configuration parameters are passed as Java system properties (`-D` flags) or
+as environment variables. Both the Java agent and exporter configuration must
+be defined before the application JAR. For example:
+
+```
+java -javaagent:path/to/opentelemetry-auto-<version>.jar \
+     -Dota.exporter.jar=path/to/opentelemetry-auto-exporters-jaeger-<version>.jar \
+     -Dota.exporter.jaeger.endpoint=localhost:14250 \
+     -Dota.exporter.jaeger.service.name=shopping \
+     -jar myapp.jar
+```
+
+### Configuration parameters (subject to change!)
+
+Note: These parameter names are very likely to change over time, so please check
+back here when trying out a new version! Please report any bugs or unexpected
+behavior you may find.
+
+#### Jaeger exporter
+
+A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently
+only supports gRPC as its communications protocol.
+
+| System property                  | Environment variable             | Purpose                                                              |
+|----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
+| ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
+
+#### Zipkin exporter
+A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
+
+| System property                  | Environment variable             | Purpose                                                              |
+|----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter.zipkin.endpoint     | OTA_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
+| ota.exporter.zipkin.service.name | OTA_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance    
+
+#### OTLP exporter
+
+A simple wrapper for the OTLP exporter of opentelemetry-java.
+
+| System property                  | Environment variable             | Purpose                                                              |
+|----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter.jar                 | OTA_EXPORTER_JAR                 | Path to the exporter fat-jar that you want to use                    |
+| ota.exporter.otlp.endpoint       | OTA_EXPORTER_OTLP_ENDPOINT       | The OTLP endpoint to connect to.                                     |
+
+#### Logging Exporter
+
+The logging exporter simply prints the name of the span along with its
+attributes to stdout. It is used manly for testing and debugging.
+
+| System property             | Environment variable        | Purpose                                                                      |
+|-----------------------------|-----------------------------|------------------------------------------------------------------------------|
+| ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
 
 ## Supported Java libraries and frameworks
 
@@ -20,7 +87,7 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
-| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+                           |
+| [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default, see below)                           |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
@@ -34,6 +101,7 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
+| [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1.0+                         |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
 | [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |
@@ -57,76 +125,69 @@ to capture telemetry from a number of popular libraries and frameworks.
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+                           |
 
-### Download and run
+### Disabled instrumentations
 
-#### Release builds
+Some instrumentations can produce too many spans and make traces very noisy.
+For this reason the following instrumentations are disabled by default:
+- `jdbc-datasource` which creates spans whenever `java.sql.DataSource#getConnection` method is called.
+- `servlet-filter` which creates spans around Servlet Filter methods.
+- `servlet-service` which creates spans around Servlet methods.
+ 
+To enable them, add `ota.integration.<name>.enabled` system property:
+`-Dota.integration.jdbc-datasource.enabled=true`
 
-Download the [latest release](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases).
+#### Grizzly instrumentation
 
-The instrumentation agent is enabled using the -javaagent flag to the JVM. Configuration parameters are passed 
-as Java system properties (-D flags) or as environment variables. This is an example:
+Whenever you use
+[Grizzly](https://javaee.github.io/grizzly/httpserverframework.html) for
+Servlet-based applications, you get better experience from Servlet-specific
+support. As these two instrumentations conflict with each other, more generic
+instrumentation for Grizzly http server is disabled by default. If needed,
+you can enable it by add the following system property:
+`-Dota.integration.grizzly.enabled=true`
 
+## Manually instrumenting
+
+You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
+manually instrument your Java application.
+
+### Configure the OpenTelemetry getTracer
+
+OpenTelemetry offers a tracer to easily enable custom instrumentation
+throughout your application. See the [OpenTelemetry Java
+QuickStart](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md#tracing)
+for an example of how to configure it.
+
+### Configure a WithSpan annotation
+
+If you want to configure custom instrumentation and don't want to use the
+OpenTelemetry `getTracer` and API directly, configure a `@WithSpan`
+annotation. Add the trace annotation to your application's code:
+
+```java
+import io.opentelemetry.contrib.auto.annotations.WithSpan;
+
+public class MyClass {
+  @WithSpan
+  public void MyLogic() {
+      <...>
+  }
+}
 ```
-java -javaagent:path/to/opentelemetry-auto-<version>.jar \
-     -Dota.exporter.jar=path/to/opentelemetry-auto-exporters-jaeger-<version>.jar \
-     -Dota.exporter.jaeger.endpoint=localhost:14250 \
-     -Dota.exporter.jaeger.service.name=shopping \
-     -jar myapp.jar
-```
 
-#### Snapshot builds
+Each time the application invokes the annotated method, it creates a span
+that denote its duration and provides any thrown exceptions.
 
-For developers testing code changes before a release is complete,
-there are snapshot builds of the `master` branch. When a PR is
-merged to `master`, a circleci build is kicked off as a github
-action which shows up as a github check on the git commit on `master`
-branch, i.e. a green checkmark. Clicking on the green checkmark you
-can view the `build_test_deploy` workflow and the `build` job shows
-the artifacts hosted on circleci. The artifacts will be named like:
+#### Configuration
 
-```
-libs/exporter-support-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-jaeger-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-logging-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-otlp-<version>-SNAPSHOT.jar
-```
-
-### Configuration parameters (subject to change!)
-| System property  | Environment variable | Purpose                                           |
-|------------------|----------------------|---------------------------------------------------|
-| ota.exporter.jar | OTA_EXPORTER_JAR     | Path to the exporter fat-jar that you want to use |
-
-### Available exporters
-There are three exporters available under
-[releases](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases).
-
-#### Jaeger exporter
-A simple wrapper for the Jaeger exporter of opentelemetry-java. It currently only supports gRPC as its communications protocol.
+The `@WithSpan` annotation requires code changes to implement. You can
+disable the annotation at runtime via the exclude configuration or
+environment variables:
 
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
-| ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
-| ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
-
-#### OTLP exporter
-A simple wrapper for the OTLP exporter of opentelemetry-java.
-
-| System property                  | Environment variable             | Purpose                                                              |
-|----------------------------------|----------------------------------|----------------------------------------------------------------------|
-| ota.exporter.otlp.endpoint       | OTA_EXPORTER_OTLP_ENDPOINT       | The OTLP endpoint to connect to.                                     |
-
-#### Logging Exporter
-The logging exporter simply prints the name of the span along with its attributes to stdout. It is used manly
-for testing and debugging.
-
-| System property             | Environment variable        | Purpose                                                                      |
-|-----------------------------|-----------------------------|------------------------------------------------------------------------------|
-| ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
-
-These parameter names are very likely to change over time, so please check back here when trying out a new version!
-
-Please report any bugs or unexpected behavior you may find.
+| trace.classes.exclude            | TRACE_CLASSES_EXCLUDE            | Exclude classes with the `@WithSpan` annotation                      |
+| trace.methods.exclude            | TRACE_METHODS_EXCLUDE            | Exclude methods with the `@WithSpan` annotation                      |
 
 ## Troubleshooting
 
@@ -134,10 +195,5 @@ To turn on the agent's internal debug logging:
 
 `-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug`
 
-## Building from source
-
-Build using Java 8:
-
-```gradle assemble```
-
-and then you can find the java agent artifact at `java-agent/build/lib/opentelemetry-auto-<version>.jar`.
+Note these logs are extremely verbose. Enable debug logging only when needed.
+Debug logging negatively impacts the performance of your application.

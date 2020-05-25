@@ -9,84 +9,52 @@ apply from: "$rootDir/gradle/codenarc.gradle"
 apply from: "$rootDir/gradle/spotbugs.gradle"
 
 def applyCodeCoverage = !(
-  project.path.startsWith(":smoke-tests") ||
-    //TODO why some tests fail on java 11 if jacoco is present?
-    project.path == ":opentelemetry-auto" ||
-    project.path == ":load-generator" ||
-    project.path.startsWith(":benchmark") ||
-    project.path.startsWith(":instrumentation"))
+    project.path.startsWith(":smoke-tests") ||
+        //TODO why some tests fail on java 11 if jacoco is present?
+        project.path == ":opentelemetry-auto" ||
+        project.path == ":load-generator" ||
+        project.path.startsWith(":benchmark") ||
+        project.path.startsWith(":instrumentation"))
 
 if (applyCodeCoverage) {
   apply from: "$rootDir/gradle/jacoco.gradle"
 }
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
-if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests') != JavaVersion.VERSION_1_7) {
-  def version = JavaVersion.toVersion(project.getProperty('minJavaVersionForTests'))
-  def name = "java$version.majorVersion"
-  sourceSets {
-    "main_$name" {
-      java.srcDirs "${project.projectDir}/src/main/$name"
-    }
-  }
-
-  "compileMain_${name}Java" {
-    sourceCompatibility = version
-    targetCompatibility = version
-  }
-
-  // Note: ideally lombok plugin would do this for us, but currently it doesn't support custom
-  // source sets. See https://github.com/franzbecker/gradle-lombok/issues/17.
-  dependencies {
-    compileOnly sourceSets."main_$name".compileClasspath
-    compile sourceSets."main_$name".output
-
-    "main_${name}CompileOnly" "org.projectlombok:lombok:${project.lombok.version}" transitive false
-    "main_${name}AnnotationProcessor" "org.projectlombok:lombok:${project.lombok.version}" transitive false
-  }
-
-  jar {
-    from sourceSets."main_$name".output
-  }
-
-  // In some cases we would like to avoid setting java version to `minJavaVersionForTests`.
-  // For example we would like to be able to run profiling tests with ZULU8, but we cannot run it with other JDK8 implementations at the moment
-  def skipSettingTestJavaVersion = project.hasProperty('skipSettingTestJavaVersion') && project.getProperty('skipSettingTestJavaVersion')
-  if (!skipSettingTestJavaVersion) {
-    tasks.withType(JavaCompile).configureEach {
-      if (it.name.toLowerCase().contains("test")) {
-        sourceCompatibility = version
-        targetCompatibility = version
-      }
-    }
-  }
+if (project.hasProperty("minJavaVersionForTests")) {
+  project.ext.release = project.getProperty("minJavaVersionForTests")
+} else {
+  project.ext.release = JavaVersion.VERSION_1_7
 }
 
 java {
+  sourceCompatibility = JavaVersion.toVersion(project.ext.release)
+  targetCompatibility = JavaVersion.toVersion(project.ext.release)
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
   disableAutoTargetJvm()
   withJavadocJar()
   withSourcesJar()
 }
 
-[JavaCompile, ScalaCompile].each { type ->
-  tasks.withType(type) {
-    doFirst {
-      // We do this specifically for Java7 bytecode generation because we would like to be able to compile
-      // with Java8+ compiler. This likely would require some modifications when we switch to java11 compiler.
-      // Using proper Java7 bootstrap and extensions allows to be sure our code will run on real Java7.
-      if (JavaVersion.toVersion(sourceCompatibility) == JavaVersion.VERSION_1_7
-        && JavaVersion.current() != JavaVersion.VERSION_1_7
-        && System.env.JAVA_7_HOME != null) {
-        options.fork = true
-        options.bootstrapClasspath = fileTree(include: ['*.jar'], dir: "${System.env.JAVA_7_HOME}/jre/lib/")
-        options.extensionDirs = "${System.env.JAVA_7_HOME}/jre/lib/ext/"
-      }
+sourceSets {
+  main {
+    java {
+      srcDir 'src/main/java'
+      srcDir 'src/main/java8'
+      srcDir 'src/main/java9'
     }
   }
 }
+
+tasks.withType(JavaCompile) {
+  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+}
+tasks.withType(GroovyCompile) {
+  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+}
+tasks.withType(ScalaCompile) {
+  options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
+}
+
 
 apply plugin: "io.franzbecker.gradle-lombok"
 
@@ -154,19 +122,15 @@ dependencies {
 jar {
   manifest {
     attributes(
-      "Implementation-Title": project.name,
-      "Implementation-Version": project.version,
-      "Implementation-Vendor": "OpenTelemetry",
-      "Implementation-URL": "https://github.com/open-telemetry/opentelemetry-auto-instr-java",
+        "Implementation-Title": project.name,
+        "Implementation-Version": project.version,
+        "Implementation-Vendor": "OpenTelemetry",
+        "Implementation-URL": "https://github.com/open-telemetry/opentelemetry-auto-instr-java",
     )
   }
 }
 
-tasks.withType(Javadoc).configureEach {
-  options.encoding = "utf-8"
-  options.docEncoding = "utf-8"
-  options.charSet = "utf-8"
-
+javadoc {
   options.addStringOption('Xdoclint:none', '-quiet')
 
   doFirst {
@@ -174,13 +138,14 @@ tasks.withType(Javadoc).configureEach {
       options.links(*project.apiLinks)
     }
   }
-}
-
-javadoc {
   source = sourceSets.main.allJava
   classpath = configurations.compileClasspath
 
   options {
+    encoding = "utf-8"
+    docEncoding = "utf-8"
+    charSet = "utf-8"
+
     setMemberLevel JavadocMemberLevel.PUBLIC
     setAuthor true
 
@@ -272,6 +237,7 @@ String findJavaHome(JavaVersion version) {
 
 ext {
   findJavaHome = this.&findJavaHome
+  toExecutable = this.&toExecutable
 }
 
 def addTestRule(String testTaskName) {
@@ -286,13 +252,6 @@ def addTestRule(String testTaskName) {
         if (javaHomeForTests != null) {
 
           tasks.withType(Test).all {
-            // minJavaVersionForTests property, which specifies java version requirements for tests,
-            // currently does not work with custom source sets created by org.unbroken-dome.test-sets plugin.
-            // Thus we are forced to ignore all of them
-            // TODO solve this problem. We want to run custom test sets with all java versions as well
-            if (name != testTaskName) {
-              return
-            }
             executable = toExecutable(javaHomeForTests)
             enabled = isJavaVersionAllowed(requestedJavaVersion)
             if (requestedJavaVersion.isJava7()) {
@@ -305,7 +264,11 @@ def addTestRule(String testTaskName) {
         }
       }
 
-      task(taskName, dependsOn: testTaskName)
+      task(taskName) {
+        if (project.tasks.findByName(testTaskName) != null) {
+          dependsOn testTaskName
+        }
+      }
     }
   }
 }

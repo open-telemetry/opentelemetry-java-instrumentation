@@ -12,14 +12,6 @@ jar {
   }
 }
 
-compileMain_java9Java {
-  options.fork = true
-  options.forkOptions.javaHome = file(findJavaHome(JavaVersion.VERSION_1_9))
-
-  options.compilerArgs = ['--module-path', classpath.asPath]
-  options.sourcepath = files(sourceSets.main_java9.java.srcDirs)
-}
-
 //This test will be automatically disabled by `java.gradle` if tried to run on java earlier than 9
 test {
   doFirst {
@@ -45,3 +37,5 @@ test {
 dependencies {
   testCompile project(':smoke-tests')
 }
+
+javadoc.enabled = false

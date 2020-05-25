@@ -19,6 +19,7 @@ dependencies {
   compile deps.opentelemetryApi
   compile deps.opentelemetrySdk
   compile deps.opentelemetrySdkAutoConfig
+  compile deps.opentelemetryTraceProps
 
   // TODO: move the interface in exporter-support into opentelemetry-sdk-contrib-auto-config
   compile project(':exporter-support')

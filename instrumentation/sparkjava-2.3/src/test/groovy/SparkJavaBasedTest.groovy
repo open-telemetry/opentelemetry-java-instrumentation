@@ -27,11 +27,6 @@ import static io.opentelemetry.trace.Span.Kind.SERVER
 
 class SparkJavaBasedTest extends AgentTestRunner {
 
-  static {
-    System.setProperty("ota.integration.jetty.enabled", "true")
-    System.setProperty("ota.integration.sparkjava.enabled", "true")
-  }
-
   @Shared
   int port
 

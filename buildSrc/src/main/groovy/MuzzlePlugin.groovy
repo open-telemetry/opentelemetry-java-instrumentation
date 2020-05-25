@@ -16,6 +16,7 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.version.Version
 import org.gradle.api.Action
 import org.gradle.api.GradleException
+import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -179,7 +180,7 @@ class MuzzlePlugin implements Plugin<Project> {
       project.getLogger().info('--' + f)
       userUrls.add(f.toURI().toURL())
     }
-    return new URLClassLoader(userUrls.toArray(new URL[0]), (ClassLoader) null)
+    return new URLClassLoader(userUrls.toArray(new URL[0]), ClassLoader.platformClassLoader)
   }
 
   /**
@@ -198,7 +199,7 @@ class MuzzlePlugin implements Plugin<Project> {
       project.getLogger().info("-- Added to instrumentation bootstrap classpath: $f")
       userUrls.add(f.toURI().toURL())
     }
-    return new URLClassLoader(userUrls.toArray(new URL[0]), (ClassLoader) null)
+    return new URLClassLoader(userUrls.toArray(new URL[0]), ClassLoader.platformClassLoader)
   }
 
   /**

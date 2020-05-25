@@ -5,6 +5,8 @@ defaults: &defaults
   resource_class: xlarge
   docker:
     - image: &default_container datadog/dd-trace-java-docker-build:latest
+      environment:
+        JAVA_HOME: /usr/local/openjdk-11
 
 cache_keys: &cache_keys
   # Reset the cache approx every release
@@ -25,7 +27,7 @@ jobs:
 
       - run:
           name: Build Project
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M" ./gradlew clean compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava :opentelemetry-auto:shadowJar :auto-exporters:opentelemetry-auto-exporters-jaeger:shadowJar :auto-exporters:opentelemetry-auto-exporters-otlp:shadowJar :auto-exporters:opentelemetry-auto-exporters-logging:shadowJar --build-cache --parallel --stacktrace --no-daemon --max-workers=8
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M" ./gradlew clean compileTestGroovy compileLatestDepTestGroovy compileTestScala compileLatestDepTestScala compileTestJava compileLatestDepTestJava :opentelemetry-auto:shadowJar :auto-exporters:opentelemetry-auto-exporters-jaeger:shadowJar :auto-exporters:opentelemetry-auto-exporters-otlp:shadowJar :auto-exporters:opentelemetry-auto-exporters-logging:shadowJar :auto-exporters:opentelemetry-auto-exporters-zipkin:shadowJar --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
       - run:
           name: Collect Libs
@@ -51,6 +53,8 @@ jobs:
 
     docker:
       - image: *default_container
+        environment:
+          JAVA_HOME: /usr/local/openjdk-11
         # This is used by spymemcached instrumentation tests
       - image: memcached
         # This is used by rabbitmq instrumentation tests
@@ -90,10 +94,10 @@ jobs:
     environment:
       - TEST_TASK: testJava7
 
-  test_11:
+  test_8:
     <<: *default_test_job
     environment:
-      - TEST_TASK: test jacocoTestReport jacocoTestCoverageVerification
+      - TEST_TASK: testJava8
 
   test_latest:
     <<: *default_test_job
@@ -120,10 +124,10 @@ jobs:
     environment:
       - TEST_TASK: testJava10
 
-  test_8:
+  test_11:
     <<: *default_test_job
     environment:
-      - TEST_TASK: testJava8
+      - TEST_TASK: testJava11 jacocoTestReport jacocoTestCoverageVerification
 
   test_zulu11:
     <<: *default_test_job

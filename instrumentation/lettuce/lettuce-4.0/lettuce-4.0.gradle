@@ -23,7 +23,6 @@ testSets {
 
 dependencies {
   compileOnly group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
-  main_java8CompileOnly group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
 
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
