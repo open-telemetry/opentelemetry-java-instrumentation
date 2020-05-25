@@ -18,9 +18,11 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.metrics.BatchRecorder;
 import unshaded.io.opentelemetry.metrics.DoubleCounter;
-import unshaded.io.opentelemetry.metrics.DoubleMeasure;
+import unshaded.io.opentelemetry.metrics.DoubleUpDownCounter;
+import unshaded.io.opentelemetry.metrics.DoubleValueRecorder;
 import unshaded.io.opentelemetry.metrics.LongCounter;
-import unshaded.io.opentelemetry.metrics.LongMeasure;
+import unshaded.io.opentelemetry.metrics.LongUpDownCounter;
+import unshaded.io.opentelemetry.metrics.LongValueRecorder;
 
 @Slf4j
 class UnshadedBatchRecorder implements BatchRecorder {
@@ -32,9 +34,9 @@ class UnshadedBatchRecorder implements BatchRecorder {
   }
 
   @Override
-  public BatchRecorder put(final LongMeasure measure, final long value) {
-    if (measure instanceof UnshadedLongMeasure) {
-      shadedBatchRecorder.put(((UnshadedLongMeasure) measure).getShadedLongMeasure(), value);
+  public BatchRecorder put(final LongValueRecorder measure, final long value) {
+    if (measure instanceof UnshadedLongValueRecorder) {
+      shadedBatchRecorder.put(((UnshadedLongValueRecorder) measure).getShadedLongValueRecorder(), value);
     } else {
       log.debug("unexpected measure: {}", measure);
     }
@@ -42,9 +44,9 @@ class UnshadedBatchRecorder implements BatchRecorder {
   }
 
   @Override
-  public BatchRecorder put(final DoubleMeasure measure, final double value) {
-    if (measure instanceof UnshadedDoubleMeasure) {
-      shadedBatchRecorder.put(((UnshadedDoubleMeasure) measure).getShadedDoubleMeasure(), value);
+  public BatchRecorder put(final DoubleValueRecorder measure, final double value) {
+    if (measure instanceof UnshadedDoubleValueRecorder) {
+      shadedBatchRecorder.put(((UnshadedDoubleValueRecorder) measure).getShadedDoubleValueRecorder(), value);
     } else {
       log.debug("unexpected measure: {}", measure);
     }
@@ -69,6 +71,16 @@ class UnshadedBatchRecorder implements BatchRecorder {
       log.debug("unexpected counter: {}", counter);
     }
     return this;
+  }
+
+  @Override
+  public BatchRecorder put(LongUpDownCounter longUpDownCounter, long l) {
+    return null;
+  }
+
+  @Override
+  public BatchRecorder put(DoubleUpDownCounter doubleUpDownCounter, double v) {
+    return null;
   }
 
   @Override
