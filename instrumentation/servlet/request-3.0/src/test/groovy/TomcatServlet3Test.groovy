@@ -96,6 +96,11 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   }
 
   @Override
+  protected String entryPointName() {
+    return 'ApplicationFilterChain.doFilter'
+  }
+
+  @Override
   void addServlet(Context servletContext, String path, Class<Servlet> servlet) {
     String name = UUID.randomUUID()
     Tomcat.addServlet(servletContext, name, servlet.newInstance())

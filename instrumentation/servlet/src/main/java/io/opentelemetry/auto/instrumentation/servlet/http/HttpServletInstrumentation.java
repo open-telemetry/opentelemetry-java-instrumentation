@@ -31,6 +31,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -38,6 +39,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+// Please read README.md of this subproject to understand what is this instrumentation.
 @AutoService(Instrumenter.class)
 public final class HttpServletInstrumentation extends Instrumenter.Default {
   public HttpServletInstrumentation() {
@@ -93,7 +95,10 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       }
 
       // Here we use the Method instead of "this.class.name" to distinguish calls to "super".
-      final Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
+      final Span span =
+          TRACER
+              .spanBuilder(DECORATE.spanNameForMethod(method))
+              .startSpan();
       DECORATE.afterStart(span);
 
       return new SpanWithScope(span, currentContextWith(span));
