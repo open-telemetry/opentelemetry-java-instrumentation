@@ -39,7 +39,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-// Please read README.md to understand what is this instrumentation.
+// Please read README.md of this subproject to understand what is this instrumentation.
 @AutoService(Instrumenter.class)
 public final class HttpServletInstrumentation extends Instrumenter.Default {
   public HttpServletInstrumentation() {
@@ -98,7 +98,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       final Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameForMethod(method))
-              .setSpanKind(Kind.SERVER)
+              .setSpanKind(Kind.INTERNAL)
               .startSpan();
       DECORATE.afterStart(span);
 

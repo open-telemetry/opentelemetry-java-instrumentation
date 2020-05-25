@@ -57,7 +57,7 @@ public class Servlet2Advice {
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    // TODO this logic should be moved to Servle2 specific Decorator
+    // TODO this logic should be moved to Servlet2 specific Decorator
     if (response instanceof HttpServletResponse) {
       // For use by HttpServletResponseInstrumentation:
       InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
