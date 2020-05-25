@@ -90,16 +90,14 @@ jobs:
     environment:
       - TEST_TASK: testJava7
 
-  test_8:
+  test_11:
     <<: *default_test_job
     environment:
-      # We are building on Java8, this is our default JVM so no need to set more homes
       - TEST_TASK: test jacocoTestReport jacocoTestCoverageVerification
 
-  test_latest8:
+  test_latest:
     <<: *default_test_job
     environment:
-      # We are building on Java8, this is our default JVM so no need to set more homes
       - TEST_TASK: latestDepTest
 
   test_ibm8:
@@ -122,10 +120,10 @@ jobs:
     environment:
       - TEST_TASK: testJava10
 
-  test_11:
+  test_8:
     <<: *default_test_job
     environment:
-      - TEST_TASK: testJava11
+      - TEST_TASK: testJava8
 
   test_zulu11:
     <<: *default_test_job
@@ -217,12 +215,60 @@ jobs:
               -PbintrayUser=${BINTRAY_USER} \
               -PbintrayApiKey=${BINTRAY_API_KEY} \
               -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-              artifactoryPublish --max-workers=1 --build-cache --stacktrace --no-daemon
+              snapshot --max-workers=1 --build-cache --stacktrace --no-daemon
 
   publish_master:
     <<: *publish
   publish_tag:
     <<: *publish
+
+  release:
+    <<: *defaults
+    steps:
+      - add_ssh_keys:
+            fingerprints:
+              - "f2:fe:62:e0:a3:e8:74:9d:78:6f:4a:f6:12:0e:2b:e8"
+
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - restore_cache:
+          <<: *cache_keys
+
+      - run:
+          # Create and push new branch with name equal to tag name without 'v' prefix
+          command: |
+            BRANCH_NAME=$(echo $CIRCLE_TAG | sed s/v// | sed s/0$/x/)
+            git checkout -b $BRANCH_NAME
+            git push origin $BRANCH_NAME
+            echo "$BRANCH_NAME created and pushed"
+
+      - run: ./gradlew -Prelease.useLastTag=true final
+
+  patch_release:
+    <<: *defaults
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "f2:fe:62:e0:a3:e8:74:9d:78:6f:4a:f6:12:0e:2b:e8"
+
+      - checkout
+      - run: |
+          if [[ $(git tag --points-at HEAD | grep "^v") ]]; then
+              echo "Don't make patch release on commit which already has version tag"
+              circleci-agent step halt
+          fi
+
+      - attach_workspace:
+          at: .
+
+      - restore_cache:
+          <<: *cache_keys
+
+      - run: ./gradlew -Prelease.scope=patch final
+
 
 workflows:
   version: 2
@@ -232,7 +278,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-
       - test_7:
           requires:
             - build
@@ -245,78 +290,24 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - test_latest8:
+      - test_latest:
           requires:
             - build
           filters:
             tags:
               only: /.*/
-      # - test_ibm8:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_zulu8:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_9:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_10:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
       - test_11:
           requires:
             - build
           filters:
             tags:
               only: /.*/
-      # - test_zulu11:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_12:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_13:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_zulu13:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
       - test_14:
           requires:
             - build
           filters:
             tags:
               only: /.*/
-      # - test_zulu14:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
 
       - check:
           requires:
@@ -335,19 +326,9 @@ workflows:
       - publish_master:
           requires:
             - test_7
-            # - test_8
-            - test_latest8
-            # - test_ibm8
-            # - test_zulu8
-            # - test_9
-            # - test_10
+            - test_latest
             - test_11
-            # - test_zulu11
-            # - test_12
-            # - test_13
-            # - test_zulu13
             - test_14
-            # - test_zulu14
             - check
           filters:
             branches:
@@ -358,19 +339,9 @@ workflows:
       - publish_tag:
           requires:
             - test_7
-            # - test_8
-            - test_latest8
-            # - test_ibm8
-            # - test_zulu8
-            # - test_9
-            # - test_10
+            - test_latest
             - test_11
-            # - test_zulu11
-            # - test_12
-            # - test_13
-            # - test_zulu13
             - test_14
-            # - test_zulu14
             - check
           filters:
             branches:
@@ -386,4 +357,17 @@ workflows:
               only:
                 - depends-on-otel-java-snapshot
     jobs:
-      - test_8
+      - test_11
+  release:
+    jobs:
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              # Only for major and minor releases
+              only: /^v.*\.0$/
+      - patch_release:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/

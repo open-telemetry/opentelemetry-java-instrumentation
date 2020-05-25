@@ -3,7 +3,7 @@
 OpenTelemetry Auto-Instrumentation for Java uses [SemVer standard](https://semver.org) for versioning of its artifacts.
 
 Instead of manually specifying project version (and by extension the version of built artifacts)
-int gradle build scripts, we use [nebula-release-plugin](https://github.com/nebula-plugins/nebula-release-plugin)
+in gradle build scripts, we use [nebula-release-plugin](https://github.com/nebula-plugins/nebula-release-plugin)
 to calculate the current version based on git tags. This plugin looks for the latest tag of the form
 `vX.Y.Z` on the current branch and calculates the current project version as `vX.Y.(Z+1)-SNAPSHOT`.
 
@@ -16,8 +16,7 @@ This means version `vX.(Y+1).0-SNAPSHOT`.
 All major and minor public releases are initiated by creating a git tag with a version to be released.
 Do the following:
 - Checkout a branch that you want to release.
-- Tag a commit on which you want to base the release by executing `git tag vX.Y.0` 
-with the expected version string.
+- Tag a commit on which you want to base the release by executing `git tag vX.Y.0` with the expected version string.
 - Push new tag to upstream repo.
 
 On new tag creation a CI will start a new release build.
