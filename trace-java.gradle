@@ -3,7 +3,7 @@ plugins {
 
   id "com.jfrog.artifactory" version "4.15.2" apply false
   id 'com.jfrog.bintray' version '1.8.5' apply false
-  id "nebula.release" version "15.0.0"
+  id "nebula.release" version "15.0.1"
 
   id 'org.unbroken-dome.test-sets' version '2.2.1'
   id 'com.github.ben-manes.versions' version '0.27.0'
