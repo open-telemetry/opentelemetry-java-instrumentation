@@ -98,7 +98,6 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       final Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameForMethod(method))
-              .setSpanKind(Kind.INTERNAL)
               .startSpan();
       DECORATE.afterStart(span);
 
