@@ -15,8 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
+
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import reactor.core.publisher.Mono;
@@ -35,7 +36,7 @@ public class LettuceMonoCreationAdvice {
   public static void monitorSpan(
       @Advice.Enter final RedisCommand command,
       @Advice.Return(readOnly = false) Mono<?> publisher) {
-    final boolean finishSpanOnClose = LettuceInstrumentationUtil.doFinishSpanEarly(command);
+    final boolean finishSpanOnClose = !expectsResponse(command);
     final LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(command, finishSpanOnClose);
     publisher = publisher.doOnSubscribe(mdc);
     // register the call back to close the span only if necessary

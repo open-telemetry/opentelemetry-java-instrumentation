@@ -30,7 +30,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class LettuceClientInstrumentation extends Instrumenter.Default {
 
   public LettuceClientInstrumentation() {
-    super("lettuce");
+    super("lettuce", "lettuce-4");
   }
 
   @Override

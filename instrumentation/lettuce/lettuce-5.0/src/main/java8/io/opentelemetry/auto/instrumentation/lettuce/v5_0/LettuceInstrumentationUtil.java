@@ -34,11 +34,11 @@ public class LettuceInstrumentationUtil {
    * we must close the span early in order to provide info for the users
    *
    * @param command
-   * @return true if finish the span early (the command will not have a return value)
+   * @return false if the span should finish early (the command will not have a return value)
    */
-  public static boolean doFinishSpanEarly(final RedisCommand command) {
+  public static boolean expectsResponse(final RedisCommand command) {
     final String commandName = LettuceInstrumentationUtil.getCommandName(command);
-    return nonInstrumentingCommands.contains(commandName);
+    return !nonInstrumentingCommands.contains(commandName);
   }
 
   /**

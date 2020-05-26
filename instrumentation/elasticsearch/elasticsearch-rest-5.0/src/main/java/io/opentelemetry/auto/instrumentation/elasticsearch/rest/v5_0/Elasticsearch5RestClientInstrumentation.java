@@ -94,6 +94,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
         span.end();
       }
       spanWithScope.closeScope();
+      // span finished by RestResponseListener
     }
   }
 }

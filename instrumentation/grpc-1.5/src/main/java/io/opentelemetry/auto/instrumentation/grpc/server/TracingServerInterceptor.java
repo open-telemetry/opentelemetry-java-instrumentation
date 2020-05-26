@@ -81,6 +81,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
         throw e;
       }
     }
+    // span finished by TracingServerCall
 
     // This ensures the server implementation can see the span in scope
     return new TracingServerCallListener<>(span, result);

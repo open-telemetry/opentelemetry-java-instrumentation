@@ -72,6 +72,7 @@ public class PlayAdvice {
       playControllerSpan.end();
     }
     playControllerScope.closeScope();
+    // span finished in RequestCompleteCallback
 
     final Span rootSpan = TRACER.getCurrentSpan();
     // set the span name on the upstream akka/netty span

@@ -76,6 +76,7 @@ public class HandlerAdapterAdvice {
     }
     if (spanWithScope != null) {
       spanWithScope.closeScope();
+      // span finished in SpanFinishingSubscriber
     }
   }
 }

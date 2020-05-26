@@ -35,7 +35,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default {
 
   public LettuceReactiveCommandsInstrumentation() {
-    super("lettuce", "lettuce-5-rx");
+    super("lettuce", "lettuce-5", "lettuce-5-rx");
   }
 
   @Override
