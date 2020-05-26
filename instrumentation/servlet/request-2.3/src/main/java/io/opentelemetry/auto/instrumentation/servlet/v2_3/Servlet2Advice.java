@@ -53,16 +53,20 @@ public class Servlet2Advice {
       @Advice.Argument(1) final ServletResponse response,
       @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
-
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+      TRACER.setPrincipal((HttpServletRequest) request);
+
       Integer responseStatus = InstrumentationContext
           .get(ServletResponse.class, Integer.class)
           .get(response);
-      TRACER.stopSpan(
-          (HttpServletRequest) request,
-          new ResponseWithStatus((HttpServletResponse) response, responseStatus),
-          spanWithScope,
-          throwable);
+      ResponseWithStatus responseWithStatus = new ResponseWithStatus((HttpServletResponse) response,
+          responseStatus);
+
+      if (throwable == null) {
+        TRACER.end(spanWithScope, responseWithStatus);
+      } else {
+        TRACER.endExceptionally(spanWithScope, throwable, responseWithStatus);
+      }
     }
   }
 }

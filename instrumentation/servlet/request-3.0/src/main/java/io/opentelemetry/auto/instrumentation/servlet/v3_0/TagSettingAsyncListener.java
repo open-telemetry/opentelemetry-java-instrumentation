@@ -35,27 +35,27 @@ public class TagSettingAsyncListener implements AsyncListener {
 
   @Override
   public void onComplete(final AsyncEvent event) {
-    servletHttpServerTracer
-        .onResponse(
-            (HttpServletResponse) event.getSuppliedResponse(),
-            null,
-            span,
-            responseHandled);
+    if (responseHandled.compareAndSet(false, true)) {
+      servletHttpServerTracer.end(span, (HttpServletResponse) event.getSuppliedResponse());
+    }
   }
 
   @Override
   public void onTimeout(final AsyncEvent event) {
-    servletHttpServerTracer.onTimeout(responseHandled, span, event.getAsyncContext().getTimeout());
+    if (responseHandled.compareAndSet(false, true)) {
+      servletHttpServerTracer.onTimeout(span, event.getAsyncContext().getTimeout());
+    }
   }
 
   @Override
   public void onError(final AsyncEvent event) {
-    servletHttpServerTracer
-        .onResponse(
-            (HttpServletResponse) event.getSuppliedResponse(),
-            event.getThrowable(),
-            span,
-            responseHandled);
+    if (responseHandled.compareAndSet(false, true)) {
+      servletHttpServerTracer
+          .endExceptionally(
+              span,
+              event.getThrowable(),
+              (HttpServletResponse) event.getSuppliedResponse());
+    }
   }
 
   /** Transfer the listener over to the new context. */

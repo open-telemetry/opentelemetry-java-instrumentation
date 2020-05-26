@@ -15,13 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.grizzly;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,9 +32,12 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.http.server.AfterServiceListener;
 import org.glassfish.grizzly.http.server.Request;
+import org.glassfish.grizzly.http.server.Response;
 
 @AutoService(Instrumenter.class)
 public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
+
+  public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
   public GrizzlyHttpHandlerInstrumentation() {
     super("grizzly");
@@ -59,9 +56,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GrizzlyDecorator",
-      packageName + ".GrizzlyRequestExtractAdapter",
-      getClass().getName() + "$SpanClosingListener"
+        packageName + ".GrizzlyDecorator",
+        packageName + ".GrizzlyRequestExtractAdapter",
+        getClass().getName() + "$SpanClosingListener"
     };
   }
 
@@ -79,40 +76,20 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(@Advice.Argument(0) final Request request) {
-      if (request.getAttribute(SPAN_ATTRIBUTE) != null) {
-        return null;
-      }
-
-      final Span.Builder spanBuilder =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-      spanBuilder.setParent(extract(request, GETTER));
-      final Span span = spanBuilder.startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, request);
-      DECORATE.onRequest(span, request);
-
-      request.setAttribute(SPAN_ATTRIBUTE, span);
-      request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
-      request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
-      return new SpanWithScope(span, currentContextWith(span));
+      return TRACER.startSpan(request, null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
-      if (spanWithScope == null) {
-        return;
-      }
+        @Advice.Argument(1) final Response response,
+        @Advice.Enter final SpanWithScope spanWithScope,
+        @Advice.Thrown final Throwable throwable) {
 
       if (throwable != null) {
-        final Span span = spanWithScope.getSpan();
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.endExceptionally(spanWithScope, throwable, response);
       }
-      spanWithScope.closeScope();
     }
   }
 
@@ -124,10 +101,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
       if (spanAttr instanceof Span) {
         request.removeAttribute(SPAN_ATTRIBUTE);
-        final Span span = (Span) spanAttr;
-        DECORATE.onResponse(span, request.getResponse());
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.end((Span) spanAttr, request.getResponse());
       }
     }
   }

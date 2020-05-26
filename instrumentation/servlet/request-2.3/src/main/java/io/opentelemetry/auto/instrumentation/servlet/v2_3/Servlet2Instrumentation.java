@@ -51,13 +51,6 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".Servlet2Decorator", packageName + ".HttpServletRequestExtractAdapter",
-    };
-  }
-
-  @Override
   public Map<String, String> contextStore() {
     final Map<String, String> contextStores = new HashMap<>();
     contextStores.put(
