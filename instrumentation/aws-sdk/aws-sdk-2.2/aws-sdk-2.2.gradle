@@ -9,7 +9,7 @@ muzzle {
   pass {
     group = "software.amazon.awssdk"
     module = "aws-core"
-    versions = "[2.2.0,)"
+    versions = "[2.1.4,)"
     assertInverse = true
   }
 }
