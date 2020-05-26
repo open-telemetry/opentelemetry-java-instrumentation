@@ -13,9 +13,9 @@ byteBuddy {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-tasks.withType(Test) {
-  forkEvery = 1
-}
+//tasks.withType(Test) {
+//  forkEvery = 1
+//}
 
 afterEvaluate {
   byteBuddy {

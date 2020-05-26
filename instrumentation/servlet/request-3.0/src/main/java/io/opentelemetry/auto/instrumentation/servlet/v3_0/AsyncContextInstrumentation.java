@@ -16,7 +16,6 @@
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
@@ -55,11 +54,6 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".Servlet3Decorator"};
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("dispatch")),
@@ -72,6 +66,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
    * TagSettingAsyncListener#onStartAsync}
    */
   public static class DispatchAdvice {
+    public static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static boolean enter(

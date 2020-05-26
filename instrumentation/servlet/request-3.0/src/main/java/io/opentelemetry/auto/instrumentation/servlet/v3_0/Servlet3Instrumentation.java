@@ -50,8 +50,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".Servlet3Decorator",
-      packageName + ".HttpServletRequestExtractAdapter",
       packageName + ".TagSettingAsyncListener"
     };
   }

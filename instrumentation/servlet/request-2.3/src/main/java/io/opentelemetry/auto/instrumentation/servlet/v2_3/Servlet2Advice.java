@@ -15,21 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletRequestExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2Decorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
-import java.security.Principal;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -38,47 +25,26 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 public class Servlet2Advice {
+  public static final Servlet2HttpServerTracer TRACER = new Servlet2HttpServerTracer();
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
-          final ServletResponse response) {
-    final boolean hasServletTrace = request.getAttribute(SPAN_ATTRIBUTE) instanceof Span;
-    final boolean invalidRequest = !(request instanceof HttpServletRequest);
-    if (invalidRequest || hasServletTrace) {
-      // Tracing might already be applied by the FilterChain or a parent request (forward/include).
+      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) final ServletResponse response) {
+
+    if (!(request instanceof HttpServletRequest)) {
       return null;
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    if (response instanceof HttpServletResponse) {
-      // For use by HttpServletResponseInstrumentation:
-      InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
-          .put((HttpServletResponse) response, httpServletRequest);
+    // For use by HttpServletResponseInstrumentation:
+    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
+        .put((HttpServletResponse) response, httpServletRequest);
 
-      // Default value for checking for uncaught error later
-      InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 200);
-    }
+    return TRACER.startSpan(httpServletRequest, servlet.getClass().getName());
 
-    final Span.Builder builder =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
-    builder.setParent(extract(httpServletRequest, GETTER));
-
-    final Span span =
-        builder.setAttribute("span.origin.type", servlet.getClass().getName()).startSpan();
-
-    DECORATE.afterStart(span);
-    DECORATE.onConnection(span, httpServletRequest);
-    DECORATE.onRequest(span, httpServletRequest);
-
-    httpServletRequest.setAttribute(SPAN_ATTRIBUTE, span);
-    httpServletRequest.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
-    httpServletRequest.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
-
-    return new SpanWithScope(span, currentContextWith(span));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -87,39 +53,16 @@ public class Servlet2Advice {
       @Advice.Argument(1) final ServletResponse response,
       @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
-    // Set user.principal regardless of who created this span.
-    final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-    if (spanAttr instanceof Span && request instanceof HttpServletRequest) {
-      final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
-      if (principal != null) {
-        ((Span) spanAttr).setAttribute(MoreTags.USER_NAME, principal.getName());
-      }
-    }
 
-    if (spanWithScope == null) {
-      return;
+    if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+      Integer responseStatus = InstrumentationContext
+          .get(ServletResponse.class, Integer.class)
+          .get(response);
+      TRACER.stopSpan(
+          (HttpServletRequest) request,
+          new ResponseWithStatus((HttpServletResponse) response, responseStatus),
+          spanWithScope,
+          throwable);
     }
-    final Span span = spanWithScope.getSpan();
-
-    if (response instanceof HttpServletResponse) {
-      DECORATE.onResponse(
-          span, InstrumentationContext.get(ServletResponse.class, Integer.class).get(response));
-    } else {
-      DECORATE.onResponse(span, null);
-    }
-
-    if (throwable != null) {
-      if (response instanceof HttpServletResponse
-          && InstrumentationContext.get(ServletResponse.class, Integer.class).get(response)
-              == HttpServletResponse.SC_OK) {
-        // exception was thrown but status code wasn't set
-        span.setAttribute(Tags.HTTP_STATUS, 500);
-        span.setStatus(Status.UNKNOWN);
-      }
-      DECORATE.onError(span, throwable);
-    }
-    DECORATE.beforeFinish(span);
-    span.end();
-    spanWithScope.closeScope();
   }
 }

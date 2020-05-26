@@ -15,58 +15,47 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3Decorator.DECORATE;
-
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
-  private final AtomicBoolean activated;
+  private final AtomicBoolean responseHandled;
   private final Span span;
+  private final Servlet3HttpServerTracer servletHttpServerTracer;
 
-  public TagSettingAsyncListener(final AtomicBoolean activated, final Span span) {
-    this.activated = activated;
+  public TagSettingAsyncListener(final AtomicBoolean responseHandled, final Span span,
+      Servlet3HttpServerTracer servletHttpServerTracer) {
+    this.responseHandled = responseHandled;
     this.span = span;
+    this.servletHttpServerTracer = servletHttpServerTracer;
   }
 
   @Override
   public void onComplete(final AsyncEvent event) {
-    if (activated.compareAndSet(false, true)) {
-      DECORATE.onResponse(span, (HttpServletResponse) event.getSuppliedResponse());
-      DECORATE.beforeFinish(span);
-      span.end();
-    }
+    servletHttpServerTracer
+        .onResponse(
+            (HttpServletResponse) event.getSuppliedResponse(),
+            null,
+            span,
+            responseHandled);
   }
 
   @Override
   public void onTimeout(final AsyncEvent event) {
-    if (activated.compareAndSet(false, true)) {
-      span.setStatus(Status.UNKNOWN);
-      span.setAttribute("timeout", event.getAsyncContext().getTimeout());
-      DECORATE.beforeFinish(span);
-      span.end();
-    }
+    servletHttpServerTracer.onTimeout(responseHandled, span, event.getAsyncContext().getTimeout());
   }
 
   @Override
   public void onError(final AsyncEvent event) {
-    if (event.getThrowable() != null && activated.compareAndSet(false, true)) {
-      DECORATE.onResponse(span, (HttpServletResponse) event.getSuppliedResponse());
-      if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
-          == HttpServletResponse.SC_OK) {
-        // exception is thrown in filter chain, but status code is incorrect
-        span.setAttribute(Tags.HTTP_STATUS, 500);
-        span.setStatus(Status.UNKNOWN);
-      }
-      DECORATE.onError(span, event.getThrowable());
-      DECORATE.beforeFinish(span);
-      span.end();
-    }
+    servletHttpServerTracer
+        .onResponse(
+            (HttpServletResponse) event.getSuppliedResponse(),
+            event.getThrowable(),
+            span,
+            responseHandled);
   }
 
   /** Transfer the listener over to the new context. */
