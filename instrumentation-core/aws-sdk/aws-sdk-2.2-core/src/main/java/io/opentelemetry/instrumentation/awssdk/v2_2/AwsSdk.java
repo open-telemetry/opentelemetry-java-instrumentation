@@ -51,8 +51,8 @@ public class AwsSdk {
    * Returns an {@link ExecutionInterceptor} that can be used with an {@link
    * software.amazon.awssdk.http.SdkHttpClient} to trace SDK requests. Spans are created with the
    * kind {@link Kind#CLIENT}. If you also instrument the HTTP calls made by the SDK, e.g., by
-   * adding Apache HTTP client or Netty instrumentation, you may want to use
-   * {@link #newInterceptor(Kind)} with {@link Kind#INTERNAL} instead.
+   * adding Apache HTTP client or Netty instrumentation, you may want to use {@link
+   * #newInterceptor(Kind)} with {@link Kind#INTERNAL} instead.
    */
   public static ExecutionInterceptor newInterceptor() {
     return newInterceptor(Kind.CLIENT);
