@@ -65,7 +65,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
     }
   }
 
-  public SpanWithScope startSpan(REQUEST request, String originType) {
+  public SpanWithScope startSpan(REQUEST request, Method origin, String originType) {
     final Span existingSpan = findExistingSpan(request);
     if (existingSpan != null) {
       /*
@@ -91,7 +91,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
       }
     }
 
-    final Span.Builder builder = tracer.spanBuilder(getSpanName(request))
+    final Span.Builder builder = tracer.spanBuilder(spanNameForMethod(origin))
         .setSpanKind(SERVER)
         .setParent(extract(request, getGetter()))
         //TODO Where span.origin.type is defined?

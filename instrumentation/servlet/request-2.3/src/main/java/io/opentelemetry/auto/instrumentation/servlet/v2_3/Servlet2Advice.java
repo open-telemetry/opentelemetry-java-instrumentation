@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import java.lang.reflect.Method;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -30,6 +31,7 @@ public class Servlet2Advice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(
       @Advice.This final Object servlet,
+      @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) final ServletResponse response) {
 
@@ -43,7 +45,7 @@ public class Servlet2Advice {
     InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
         .put((HttpServletResponse) response, httpServletRequest);
 
-    return TRACER.startSpan(httpServletRequest, servlet.getClass().getName());
+    return TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
 
   }
 

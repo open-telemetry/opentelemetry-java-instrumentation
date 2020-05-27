@@ -25,6 +25,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -75,10 +76,12 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(@Advice.Argument(0) final Request request) {
+    public static SpanWithScope methodEnter(
+        @Advice.Origin final Method method,
+        @Advice.Argument(0) final Request request) {
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
-      return TRACER.startSpan(request, null);
+      return TRACER.startSpan(request, method, null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
