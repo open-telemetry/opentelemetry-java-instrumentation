@@ -64,6 +64,9 @@ bintray {
     githubRepo = 'open-telemetry/opentelemetry-auto-instr-java'
 
     version {
+      name = project.version
+      released = new Date()
+
       gpg {
         sign = true
       }

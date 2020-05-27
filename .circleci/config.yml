@@ -223,16 +223,10 @@ jobs:
 
   publish_master:
     <<: *publish
-  publish_tag:
-    <<: *publish
 
   release:
     <<: *defaults
     steps:
-      - add_ssh_keys:
-            fingerprints:
-              - "f2:fe:62:e0:a3:e8:74:9d:78:6f:4a:f6:12:0e:2b:e8"
-
       - checkout
 
       - attach_workspace:
@@ -241,23 +235,11 @@ jobs:
       - restore_cache:
           <<: *cache_keys
 
-      - run:
-          # Create and push new branch with name equal to tag name without 'v' prefix
-          command: |
-            BRANCH_NAME=$(echo $CIRCLE_TAG | sed s/v// | sed s/0$/x/)
-            git checkout -b $BRANCH_NAME
-            git push origin $BRANCH_NAME
-            echo "$BRANCH_NAME created and pushed"
-
       - run: ./gradlew -Prelease.useLastTag=true final
 
   patch_release:
     <<: *defaults
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "f2:fe:62:e0:a3:e8:74:9d:78:6f:4a:f6:12:0e:2b:e8"
-
       - checkout
       - run: |
           if [[ $(git tag --points-at HEAD | grep "^v") ]]; then
@@ -340,18 +322,6 @@ workflows:
             tags:
               ignore: /.*/
 
-      - publish_tag:
-          requires:
-            - test_7
-            - test_latest
-            - test_11
-            - test_14
-            - check
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
   nightly_snapshot:
     triggers:
       - schedule:
@@ -371,7 +341,34 @@ workflows:
             tags:
               # Only for major and minor releases
               only: /^v.*\.0$/
+  patch_release:
+    jobs:
+      - build:
+      - test_7:
+          requires:
+            - build
+      - test_8:
+          requires:
+            - build
+      - test_11:
+          requires:
+            - build
+      - test_14:
+          requires:
+            - build
+      - check:
+          requires:
+            - build
+      - muzzle:
+          requires:
+            - build
       - patch_release:
+          requires:
+            - test_7
+            - test_11
+            - test_14
+            - check
+            - muzzle
           filters:
             branches:
               only: /\d+\.\d+\.x$/
