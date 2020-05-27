@@ -19,6 +19,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -35,6 +36,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.trace.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.net.BindException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -175,6 +177,22 @@ public abstract class AgentTestRunner extends AgentSpecification {
   @AfterClass
   public void cleanUpAfterTests() {
     TEST_LISTENER.deactivateTest(this);
+  }
+
+  public static void withRetryOnBindException(final Closure<?> closure) {
+    withRetryOnBindException(closure, 3);
+  }
+
+  private static void withRetryOnBindException(final Closure<?> closure, final int numRetries) {
+    try {
+      closure.call();
+    } catch (final Throwable t) {
+      if (numRetries == 0 || !(Throwables.getRootCause(t) instanceof BindException)) {
+        throw t;
+      }
+      log.debug("retrying due to bind exception: {}", t.getMessage(), t);
+      withRetryOnBindException(closure, numRetries - 1);
+    }
   }
 
   @AfterClass
