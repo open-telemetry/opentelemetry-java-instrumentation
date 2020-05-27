@@ -179,6 +179,14 @@ public abstract class AgentTestRunner extends AgentSpecification {
     TEST_LISTENER.deactivateTest(this);
   }
 
+  /**
+   * This is used by setupSpec() methods to auto-retry setup that depends on finding and then using
+   * an available free port, because that kind of setup can fail sporadically with
+   * "java.net.BindException: Address already in use" if the available port gets re-used between
+   * when we find the available port and when we use it.
+   *
+   * @param closure the groovy closure to run with retry
+   */
   public static void withRetryOnBindException(final Closure<?> closure) {
     withRetryOnBindException(closure, 3);
   }
