@@ -344,22 +344,43 @@ workflows:
   patch_release:
     jobs:
       - build:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
       - test_7:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
           requires:
             - build
       - test_8:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
           requires:
             - build
       - test_11:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
           requires:
             - build
       - test_14:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
           requires:
             - build
       - check:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
           requires:
             - build
       - muzzle:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
           requires:
             - build
       - patch_release:
