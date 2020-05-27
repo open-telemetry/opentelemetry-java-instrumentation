@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0.rx;
 
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.doFinishSpanEarly;
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 
 import io.lettuce.core.protocol.RedisCommand;
 import java.util.function.Supplier;
@@ -36,7 +36,7 @@ public class LettuceFluxCreationAdvice {
       @Advice.Enter final RedisCommand command,
       @Advice.Return(readOnly = false) Flux<?> publisher) {
 
-    final boolean finishSpanOnClose = doFinishSpanEarly(command);
+    final boolean finishSpanOnClose = !expectsResponse(command);
     final LettuceFluxTerminationRunnable handler =
         new LettuceFluxTerminationRunnable(command, finishSpanOnClose);
     publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());

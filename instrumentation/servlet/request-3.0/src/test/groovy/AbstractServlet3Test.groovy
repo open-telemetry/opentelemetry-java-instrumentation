@@ -71,7 +71,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName(method)
+      operationName entryPointName()
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
@@ -101,5 +101,12 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         }
       }
     }
+  }
+
+  //Simple class name plus method name of the entry point of the given servlet container.
+  //"Entry point" here means the first filter or servlet that accepts incoming requests.
+  //This will serve as a default name of the SERVER span created for this request.
+  protected String entryPointName() {
+    'HttpServlet.service'
   }
 }

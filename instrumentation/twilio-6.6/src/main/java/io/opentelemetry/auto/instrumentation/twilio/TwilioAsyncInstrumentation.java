@@ -160,6 +160,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
         }
       } finally {
         spanWithScope.closeScope();
+        // span finished in SpanFinishingCallback
       }
     }
   }

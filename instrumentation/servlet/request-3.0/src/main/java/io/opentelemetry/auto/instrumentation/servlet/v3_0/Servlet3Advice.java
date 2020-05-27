@@ -29,6 +29,7 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
+import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
@@ -42,6 +43,7 @@ public class Servlet3Advice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(
       @Advice.This final Object servlet,
+      @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response) {
     if (!(request instanceof HttpServletRequest)) {
@@ -75,7 +77,7 @@ public class Servlet3Advice {
         .put((HttpServletResponse) response, httpServletRequest);
 
     final Span.Builder builder =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(httpServletRequest)).setSpanKind(SERVER);
+        TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(SERVER);
     builder.setParent(extract(httpServletRequest, GETTER));
     final Span span =
         builder.setAttribute("span.origin.type", servlet.getClass().getName()).startSpan();
@@ -148,6 +150,7 @@ public class Servlet3Advice {
           DECORATE.beforeFinish(span);
           span.end(); // Finish the span manually since finishSpanOnClose was false
         }
+        // else span finished in TagSettingAsyncListener
       }
       spanWithScope.closeScope();
     }

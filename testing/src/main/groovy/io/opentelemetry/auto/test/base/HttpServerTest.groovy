@@ -124,6 +124,10 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     true
   }
 
+  boolean testException() {
+    true
+  }
+
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, "/redirected"),
@@ -304,6 +308,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test exception"() {
     setup:
+    assumeTrue(testException())
     def request = request(EXCEPTION, method, body).build()
     def response = client.newCall(request).execute()
 

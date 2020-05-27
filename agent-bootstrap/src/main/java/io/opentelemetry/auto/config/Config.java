@@ -55,7 +55,6 @@ public class Config {
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
   public static final String EXPORTER_JAR = "exporter.jar";
-  public static final String SERVICE = "service";
   public static final String PROPAGATORS = "propagators";
   public static final String CONFIGURATION_FILE = "trace.config";
   public static final String TRACE_ENABLED = "trace.enabled";
@@ -73,6 +72,8 @@ public class Config {
   public static final String SCOPE_DEPTH_LIMIT = "trace.scope.depth.limit";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
+
+  public static final String KAFKA_CLIENT_PROPAGATION_ENABLED = "kafka.client.propagation.enabled";
 
   public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
   public static final String EXPERIMENTAL_LOG_CAPTURE_THRESHOLD =
@@ -94,6 +95,8 @@ public class Config {
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
   public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
 
+  public static final boolean DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED = true;
+
   private static final String DEFAULT_TRACE_ANNOTATIONS = null;
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
@@ -104,7 +107,6 @@ public class Config {
   public static final boolean DEFAULT_SQL_NORMALIZER_ENABLED = true;
 
   @Getter private final String exporterJar;
-  @Getter private final String serviceName;
   @Getter private final List<String> propagators;
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
@@ -144,6 +146,8 @@ public class Config {
 
   @Getter private final boolean sqlNormalizerEnabled;
 
+  @Getter private final boolean kafkaClientPropagationEnabled;
+
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
 
@@ -154,7 +158,6 @@ public class Config {
 
     propagators = getListSettingFromEnvironment(PROPAGATORS, null);
     exporterJar = getSettingFromEnvironment(EXPORTER_JAR, null);
-    serviceName = getSettingFromEnvironment(SERVICE, "(unknown)");
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     integrationsEnabled =
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
@@ -206,13 +209,16 @@ public class Config {
     sqlNormalizerEnabled =
         getBooleanSettingFromEnvironment(SQL_NORMALIZER_ENABLED, DEFAULT_SQL_NORMALIZER_ENABLED);
 
+    kafkaClientPropagationEnabled =
+        getBooleanSettingFromEnvironment(
+            KAFKA_CLIENT_PROPAGATION_ENABLED, DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED);
+
     log.debug("New instance: {}", this);
   }
 
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
     exporterJar = properties.getProperty(EXPORTER_JAR, parent.exporterJar);
-    serviceName = properties.getProperty(SERVICE, parent.serviceName);
 
     propagators = getPropertyListValue(properties, PROPAGATORS, parent.propagators);
 
@@ -264,7 +270,11 @@ public class Config {
     traceExecutors = getPropertyListValue(properties, TRACE_EXECUTORS, parent.traceExecutors);
 
     sqlNormalizerEnabled =
-        getPropertyBooleanValue(properties, SQL_NORMALIZER_ENABLED, DEFAULT_SQL_NORMALIZER_ENABLED);
+        getPropertyBooleanValue(properties, SQL_NORMALIZER_ENABLED, parent.sqlNormalizerEnabled);
+
+    kafkaClientPropagationEnabled =
+        getPropertyBooleanValue(
+            properties, KAFKA_CLIENT_PROPAGATION_ENABLED, parent.kafkaClientPropagationEnabled);
 
     log.debug("New instance: {}", this);
   }
