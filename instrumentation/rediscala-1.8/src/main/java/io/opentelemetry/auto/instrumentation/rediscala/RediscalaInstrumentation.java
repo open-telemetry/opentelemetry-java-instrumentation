@@ -107,6 +107,7 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
         span.end();
       }
       scope.closeScope();
+      // span finished in OnCompleteHandler
     }
   }
 

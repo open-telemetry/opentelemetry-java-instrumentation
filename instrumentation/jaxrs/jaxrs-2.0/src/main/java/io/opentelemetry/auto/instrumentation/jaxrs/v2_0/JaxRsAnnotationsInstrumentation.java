@@ -168,6 +168,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         span.end();
       }
       spanWithScope.closeScope();
+      // else span finished by AsyncResponseAdvice
     }
   }
 }

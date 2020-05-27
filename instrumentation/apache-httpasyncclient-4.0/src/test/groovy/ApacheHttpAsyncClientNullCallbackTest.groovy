@@ -55,7 +55,7 @@ class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest {
     if (callback != null) {
       callback()
     }
-    return 200
+    return future.get().statusLine.statusCode
   }
 
   @Override

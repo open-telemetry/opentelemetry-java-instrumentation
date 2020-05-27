@@ -22,13 +22,30 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
+import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Class <code>javax.servlet.http.HttpServletResponse</code> got method <code>getStatus</code> only
+ * in Servlet specification version 3.0. This means that we cannot set {@link
+ * io.opentelemetry.auto.instrumentation.api.Tags#HTTP_STATUS} attribute on the created span using
+ * just response object.
+ *
+ * <p>This instrumentation intercepts status setting methods from Servlet 2.0 specification and
+ * stores that status into context store. Then {@link Servlet2Advice#stopSpan(ServletRequest,
+ * ServletResponse, SpanWithScope, Throwable)} can get it from context and set required span
+ * attribute.
+ */
 @AutoService(Instrumenter.class)
 public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.Default {
   public Servlet2ResponseStatusInstrumentation() {
@@ -51,16 +68,27 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
     return singletonMap("javax.servlet.ServletResponse", Integer.class.getName());
   }
 
-  /**
-   * Unlike Servlet2Instrumentation it doesn't matter if the HttpServletResponseInstrumentation
-   * applies first
-   */
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        named("sendError").or(named("setStatus")), packageName + ".Servlet2ResponseStatusAdvice");
-    transformers.put(named("sendRedirect"), packageName + ".Servlet2ResponseRedirectAdvice");
+        named("sendError").or(named("setStatus")), Servlet2ResponseStatusAdvice.class.getName());
+    transformers.put(named("sendRedirect"), Servlet2ResponseRedirectAdvice.class.getName());
     return transformers;
+  }
+
+  public static class Servlet2ResponseRedirectAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(@Advice.This final HttpServletResponse response) {
+      InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 302);
+    }
+  }
+
+  public static class Servlet2ResponseStatusAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.This final HttpServletResponse response, @Advice.Argument(0) final Integer status) {
+      InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, status);
+    }
   }
 }

@@ -9,11 +9,11 @@ defaults: &defaults
         JAVA_HOME: /usr/local/openjdk-11
 
 cache_keys: &cache_keys
-  # Reset the cache approx every release
   keys:
-    - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-    - trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}
-    - trace-java-{{ checksum "trace-java.gradle" }}
+    # Rev the version when the cache gets too big
+    - trace-java-v1-{{ .Branch }}-{{ .Revision }}
+    - trace-java-v1-{{ .Branch }}
+    # - dd-trace-java-v1-
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
             - workspace
 
       - save_cache:
-          key: trace-java-{{ checksum "trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+          key: trace-java-v1-{{ .Branch }}-{{ .Revision }}
           paths: ~/.gradle
 
 
@@ -114,16 +114,6 @@ jobs:
     environment:
       - TEST_TASK: testJavaZULU8
 
-  test_9:
-    <<: *default_test_job
-    environment:
-      - TEST_TASK: testJava9
-
-  test_10:
-    <<: *default_test_job
-    environment:
-      - TEST_TASK: testJava10
-
   test_11:
     <<: *default_test_job
     environment:
@@ -188,18 +178,12 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          # Reset the cache approx every release
-          keys:
-            - trace-java-muzzle-{{ checksum "trace-java.gradle" }}
+      # We are not running with a cache here because it gets very big and ends up taking more time
+      # restoring/saving than the actual increase in time it takes just downloading the artifacts each time.
 
       - run:
           name: Verify Muzzle
           command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
-
-      - save_cache:
-          key: trace-java-muzzle-{{ checksum "trace-java.gradle" }}
-          paths: ~/.gradle
 
   publish: &publish
     <<: *defaults

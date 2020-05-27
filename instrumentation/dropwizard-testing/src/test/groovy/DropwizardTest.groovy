@@ -44,7 +44,7 @@ import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
 // Work around for: address already in use
-@Retry
+@Retry(count = 5, delay = 100)
 class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
 
   @Override
