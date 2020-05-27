@@ -56,9 +56,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        packageName + ".GrizzlyDecorator",
-        packageName + ".GrizzlyRequestExtractAdapter",
-        getClass().getName() + "$SpanClosingListener"
+      packageName + ".GrizzlyDecorator",
+      packageName + ".GrizzlyRequestExtractAdapter",
+      getClass().getName() + "$SpanClosingListener"
     };
   }
 

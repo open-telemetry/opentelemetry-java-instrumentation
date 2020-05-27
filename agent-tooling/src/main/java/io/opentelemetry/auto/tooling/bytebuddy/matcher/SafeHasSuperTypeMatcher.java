@@ -119,11 +119,13 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
         interfaceTypes.add(interfaceIter.next());
       }
     } catch (final Exception e) {
-      log.debug(
-          "{} trying to get interfaces for target {}: {}",
-          e.getClass().getSimpleName(),
-          safeTypeDefinitionName(typeDefinition),
-          e.getMessage());
+      if (log.isDebugEnabled()) {
+        log.debug(
+            "{} trying to get interfaces for target {}: {}",
+            e.getClass().getSimpleName(),
+            safeTypeDefinitionName(typeDefinition),
+            e.getMessage());
+      }
     }
     return interfaceTypes;
   }
@@ -132,11 +134,13 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
     try {
       return typeDefinition.getSuperClass();
     } catch (final Exception e) {
-      log.debug(
-          "{} trying to get super class for target {}: {}",
-          e.getClass().getSimpleName(),
-          safeTypeDefinitionName(typeDefinition),
-          e.getMessage());
+      if (log.isDebugEnabled()) {
+        log.debug(
+            "{} trying to get super class for target {}: {}",
+            e.getClass().getSimpleName(),
+            safeTypeDefinitionName(typeDefinition),
+            e.getMessage());
+      }
       return null;
     }
   }

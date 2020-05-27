@@ -20,7 +20,7 @@ import okhttp3.Request
 import spock.lang.Retry
 import spock.lang.Shared
 
-@Retry(delay = 20)
+@Retry(delay = 1000)
 class WildflySmokeTest extends AbstractServerSmokeTest {
 
   @Shared

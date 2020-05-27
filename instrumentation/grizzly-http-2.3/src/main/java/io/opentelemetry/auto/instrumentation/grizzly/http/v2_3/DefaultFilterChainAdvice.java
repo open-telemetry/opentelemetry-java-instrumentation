@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.servlet.v2_3;
+package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
 
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
+import org.glassfish.grizzly.filterchain.FilterChainContext;
 
-public class Servlet2ResponseStatusAdvice {
+public class DefaultFilterChainAdvice {
+
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onEnter(
-      @Advice.This final HttpServletResponse response, @Advice.Argument(0) final Integer status) {
-    InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, status);
+  public static void onFail(
+      @Advice.Argument(0) final FilterChainContext ctx,
+      @Advice.Argument(1) final Throwable throwable) {
+    GrizzlyDecorator.onFilterChainFail(ctx, throwable);
   }
 }

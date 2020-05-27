@@ -110,6 +110,7 @@ public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.D
         span.end();
       }
       spanWithScope.closeScope();
+      // span finished by TransportActionListener
     }
   }
 }

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import com.google.common.io.Files
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -34,6 +33,7 @@ import spock.lang.Unroll
 
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
+//TODO should this be HttpServerTest?
 class JSPInstrumentationBasicTests extends AgentTestRunner {
 
   static {
@@ -106,7 +106,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName expectedOperationName("GET")
+          operationName expectedOperationName()
           spanKind SERVER
           errored false
           tags {
@@ -168,7 +168,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName expectedOperationName("GET")
+          operationName expectedOperationName()
           spanKind SERVER
           errored false
           tags {
@@ -227,7 +227,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName expectedOperationName("POST")
+          operationName expectedOperationName()
           spanKind SERVER
           errored false
           tags {
@@ -283,7 +283,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName expectedOperationName("GET")
+          operationName expectedOperationName()
           spanKind SERVER
           errored true
           tags {
@@ -358,7 +358,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          operationName expectedOperationName("GET")
+          operationName expectedOperationName()
           spanKind SERVER
           errored false
           tags {
@@ -413,7 +413,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           parent()
-          operationName expectedOperationName("GET")
+          operationName expectedOperationName()
           spanKind SERVER
           errored false
           tags {
@@ -508,7 +508,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           parent()
-          operationName expectedOperationName("GET")
+          operationName expectedOperationName()
           spanKind SERVER
           errored true
           tags {
@@ -562,7 +562,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         span(0) {
           parent()
           // serviceName jspWebappContext
-          operationName expectedOperationName("GET")
+          operationName expectedOperationName()
           spanKind SERVER
           // FIXME: this is not a great span name for serving static content.
           // spanName "GET /$jspWebappContext/$staticFile"
@@ -588,7 +588,10 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     staticFile = "common/hello.html"
   }
 
-  String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
+  //Simple class name plus method name of the entry point of the given servlet container.
+  //"Entry point" here means the first filter or servlet that accepts incoming requests.
+  //This will serve as a default name of the SERVER span created for this request.
+  protected String expectedOperationName() {
+    'ApplicationFilterChain.doFilter'
   }
 }

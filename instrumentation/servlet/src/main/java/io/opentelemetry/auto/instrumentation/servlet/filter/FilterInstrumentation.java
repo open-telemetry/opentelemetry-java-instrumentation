@@ -36,6 +36,11 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Instruments all filter invocations in filter chain.
+ *
+ * <p>See README.md for more information about different servlet instrumentations.
+ */
 @AutoService(Instrumenter.class)
 public final class FilterInstrumentation extends Instrumenter.Default {
   public FilterInstrumentation() {
