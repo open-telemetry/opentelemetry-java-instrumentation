@@ -1,6 +1,10 @@
 import java.time.Duration
 
-apply plugin: 'java'
+if (project.path.startsWith(":instrumentation-core")) {
+  apply plugin: 'java-library'
+} else {
+  apply plugin: 'java'
+}
 apply plugin: 'groovy'
 
 apply from: "$rootDir/gradle/spotless.gradle"
