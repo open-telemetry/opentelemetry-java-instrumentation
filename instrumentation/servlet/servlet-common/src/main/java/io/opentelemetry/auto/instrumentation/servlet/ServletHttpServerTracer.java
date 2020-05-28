@@ -1,10 +1,10 @@
 package io.opentelemetry.auto.instrumentation.servlet;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpan;
+import io.opentelemetry.auto.typed.server.http.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,13 +39,13 @@ public abstract class ServletHttpServerTracer<RESPONSE> extends
   }
 
   @Override
-  protected Span findExistingSpan(HttpServletRequest request) {
+  protected HttpServerSpan findExistingSpan(HttpServletRequest request) {
     Object span = request.getAttribute(SPAN_ATTRIBUTE);
-    return span instanceof Span ? (Span) span : null;
+    return span instanceof HttpServerSpan ? (HttpServerSpan) span : null;
   }
 
   @Override
-  protected void persistSpanToRequest(Span span, HttpServletRequest request) {
+  protected void persistSpanToRequest(HttpServerSpan span, HttpServletRequest request) {
     request.setAttribute(SPAN_ATTRIBUTE, span);
   }
 
@@ -65,10 +65,11 @@ public abstract class ServletHttpServerTracer<RESPONSE> extends
     return request.getMethod();
   }
 
-  public void onRequest(Span span, HttpServletRequest request) {
+  @Override
+  public void onRequest(HttpServerSpan span, HttpServletRequest request) {
     //TODO why?
-    request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
-    request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
+    request.setAttribute("traceId", span.getTraceId().toLowerBase16());
+    request.setAttribute("spanId", span.getSpanId().toLowerBase16());
 
     //TODO why? they are not in semantic convention, right?
     span.setAttribute("servlet.path", request.getServletPath());
@@ -100,7 +101,7 @@ public abstract class ServletHttpServerTracer<RESPONSE> extends
   }
 
   public void setPrincipal(HttpServletRequest request) {
-    final Span existingSpan = findExistingSpan(request);
+    final HttpServerSpan existingSpan = findExistingSpan(request);
     if (existingSpan != null) {
       final Principal principal = request.getUserPrincipal();
       if (principal != null) {

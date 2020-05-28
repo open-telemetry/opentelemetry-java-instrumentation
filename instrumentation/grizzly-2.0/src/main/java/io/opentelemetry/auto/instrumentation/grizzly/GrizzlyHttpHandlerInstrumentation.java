@@ -22,12 +22,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpan;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpanWithScope;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.Argument;
+import net.bytebuddy.asm.Advice.Origin;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -57,9 +59,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GrizzlyDecorator",
-      packageName + ".GrizzlyRequestExtractAdapter",
-      getClass().getName() + "$SpanClosingListener"
+        packageName + ".GrizzlyDecorator",
+        packageName + ".GrizzlyRequestExtractAdapter",
+        getClass().getName() + "$SpanClosingListener"
     };
   }
 
@@ -76,9 +78,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
-        @Advice.Origin final Method method,
-        @Advice.Argument(0) final Request request) {
+    public static HttpServerSpanWithScope methodEnter(
+        @Origin final Method method,
+        @Argument(0) final Request request) {
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       return TRACER.startSpan(request, method, null);
@@ -87,7 +89,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(1) final Response response,
-        @Advice.Enter final SpanWithScope spanWithScope,
+        @Advice.Enter final HttpServerSpanWithScope spanWithScope,
         @Advice.Thrown final Throwable throwable) {
 
       if (throwable != null) {
@@ -102,9 +104,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
     @Override
     public void onAfterService(final Request request) {
       final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      if (spanAttr instanceof Span) {
+      if (spanAttr instanceof HttpServerSpan) {
         request.removeAttribute(SPAN_ATTRIBUTE);
-        TRACER.end((Span) spanAttr, request.getResponse());
+        TRACER.end((HttpServerSpan) spanAttr, request.getResponse());
       }
     }
   }

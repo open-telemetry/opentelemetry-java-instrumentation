@@ -16,8 +16,8 @@
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpan;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpanWithScope;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
@@ -25,16 +25,19 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.Argument;
+import net.bytebuddy.asm.Advice.Origin;
+import net.bytebuddy.asm.Advice.This;
 
 public class Servlet3Advice {
   public static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(
-      @Advice.This final Object servlet,
-      @Advice.Origin final Method method,
-      @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(1) final ServletResponse response) {
+  public static HttpServerSpanWithScope onEnter(
+      @This final Object servlet,
+      @Origin final Method method,
+      @Argument(0) final ServletRequest request,
+      @Argument(1) final ServletResponse response) {
     if (!(request instanceof HttpServletRequest)) {
       return null;
     }
@@ -52,7 +55,7 @@ public class Servlet3Advice {
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanWithScope spanWithScope,
+      @Advice.Enter final HttpServerSpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
     if (spanWithScope == null) {
       return;
@@ -69,7 +72,7 @@ public class Servlet3Advice {
       //Usually Tracer takes care of this checks and of closing scopes.
       //But in case of async response processing we have to handle scope in this thread,
       //not in some arbitrary thread that may later take care of actual response.
-      Span span = spanWithScope.getSpan();
+      HttpServerSpan span = spanWithScope.getSpan();
       if(span == null){
         spanWithScope.closeScope();
         return;

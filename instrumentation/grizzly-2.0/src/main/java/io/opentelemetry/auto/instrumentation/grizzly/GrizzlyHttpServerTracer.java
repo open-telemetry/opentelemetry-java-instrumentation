@@ -2,7 +2,8 @@ package io.opentelemetry.auto.instrumentation.grizzly;
 
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpan;
+import io.opentelemetry.auto.typed.server.http.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
@@ -32,7 +33,7 @@ public class GrizzlyHttpServerTracer extends HttpServerTracer<Request, Response>
   }
 
   @Override
-  protected void persistSpanToRequest(Span span, Request request) {
+  protected void persistSpanToRequest(HttpServerSpan span, Request request) {
     request.setAttribute(SPAN_ATTRIBUTE, span);
   }
 
@@ -64,14 +65,14 @@ public class GrizzlyHttpServerTracer extends HttpServerTracer<Request, Response>
   }
 
   @Override
-  protected Span findExistingSpan(Request request) {
+  protected HttpServerSpan findExistingSpan(Request request) {
     Object span = request.getAttribute(SPAN_ATTRIBUTE);
-    return span instanceof Span ? (Span) span : null;
+    return span instanceof Span ? (HttpServerSpan) span : null;
   }
 
-  public void onRequest(Span span, Request request) {
-    request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
-    request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
+  public void onRequest(HttpServerSpan span, Request request) {
+    request.setAttribute("traceId", span.getTraceId().toLowerBase16());
+    request.setAttribute("spanId", span.getSpanId().toLowerBase16());
     super.onRequest(span, request);
   }
 }

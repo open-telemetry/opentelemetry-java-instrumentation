@@ -16,24 +16,27 @@
 package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpanWithScope;
 import java.lang.reflect.Method;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import net.bytebuddy.asm.Advice.Argument;
+import net.bytebuddy.asm.Advice.Origin;
+import net.bytebuddy.asm.Advice.This;
+import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 
 public class Servlet2Advice {
   public static final Servlet2HttpServerTracer TRACER = new Servlet2HttpServerTracer();
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(
-      @Advice.This final Object servlet,
-      @Advice.Origin final Method method,
-      @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) final ServletResponse response) {
+  public static HttpServerSpanWithScope onEnter(
+      @This final Object servlet,
+      @Origin final Method method,
+      @Argument(0) final ServletRequest request,
+      @Argument(value = 1, typing = Typing.DYNAMIC) final ServletResponse response) {
 
     if (!(request instanceof HttpServletRequest)) {
       return null;
@@ -53,7 +56,7 @@ public class Servlet2Advice {
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanWithScope spanWithScope,
+      @Advice.Enter final HttpServerSpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable) {
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
       TRACER.setPrincipal((HttpServletRequest) request);

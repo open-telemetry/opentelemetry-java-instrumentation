@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Deprecated
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
   public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.span";
   public static final String RESPONSE_ATTRIBUTE = "io.opentelemetry.auto.response";

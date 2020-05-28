@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.auto.typed.server.http.HttpServerSpan;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -23,10 +23,10 @@ import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
   private final AtomicBoolean responseHandled;
-  private final Span span;
+  private final HttpServerSpan span;
   private final Servlet3HttpServerTracer servletHttpServerTracer;
 
-  public TagSettingAsyncListener(final AtomicBoolean responseHandled, final Span span,
+  public TagSettingAsyncListener(final AtomicBoolean responseHandled, final HttpServerSpan span,
       Servlet3HttpServerTracer servletHttpServerTracer) {
     this.responseHandled = responseHandled;
     this.span = span;
