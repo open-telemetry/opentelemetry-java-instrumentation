@@ -32,6 +32,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
   DocRepository repo = applicationContext.getBean(DocRepository)
 
   def setup() {
+    repo.refresh()
     TEST_WRITER.clear()
     runUnderTrace("delete") {
       repo.deleteAll()
