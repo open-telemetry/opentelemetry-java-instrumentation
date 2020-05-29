@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.servlet.v2_3;
+package io.opentelemetry.auto.instrumentation.grizzly.client;
 
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.asm.Advice;
+import com.ning.http.client.Request;
+import io.opentelemetry.context.propagation.HttpTextFormat;
 
-public class Servlet2ResponseRedirectAdvice {
-  @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onEnter(@Advice.This final HttpServletResponse response) {
-    InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 302);
+public class InjectAdapter implements HttpTextFormat.Setter<Request> {
+
+  public static final InjectAdapter SETTER = new InjectAdapter();
+
+  @Override
+  public void set(final Request carrier, final String key, final String value) {
+    carrier.getHeaders().replaceWith(key, value);
   }
 }

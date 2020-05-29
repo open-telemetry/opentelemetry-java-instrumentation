@@ -229,11 +229,13 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     final String keyClassName = ((Type) stack[1]).getClassName();
                     final TypeDescription contextStoreImplementationClass =
                         getContextStoreImplementation(keyClassName, contextClassName);
-                    log.debug(
-                        "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
-                        instrumenter.getClass().getName(),
-                        keyClassName,
-                        contextClassName);
+                    if (log.isDebugEnabled()) {
+                      log.debug(
+                          "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
+                          instrumenter.getClass().getName(),
+                          keyClassName,
+                          contextClassName);
+                    }
                     if (contextStoreImplementationClass == null) {
                       throw new IllegalStateException(
                           String.format(

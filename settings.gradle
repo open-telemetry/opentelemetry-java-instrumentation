@@ -65,6 +65,8 @@ include ':instrumentation:finatra-2.9'
 include ':instrumentation:geode-1.4'
 include ':instrumentation:google-http-client-1.19'
 include ':instrumentation:grizzly-2.0'
+include ':instrumentation:grizzly-client-1.9'
+include ':instrumentation:grizzly-http-2.3'
 include ':instrumentation:grpc-1.5'
 include ':instrumentation:hibernate:hibernate-3.3'
 include ':instrumentation:hibernate:hibernate-4.0'
@@ -143,6 +145,8 @@ include ':instrumentation:spymemcached-2.12'
 include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
+
+include ':instrumentation-core:aws-sdk:aws-sdk-2.2-core'
 
 // exporter support
 include ':exporter-support'

@@ -50,6 +50,12 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
   TransportClient client
 
   def setupSpec() {
+    withRetryOnBindException({
+      setupSpecUnderRetry()
+    })
+  }
+
+  def setupSpecUnderRetry() {
     httpPort = PortUtils.randomOpenPort()
     tcpPort = PortUtils.randomOpenPort()
 

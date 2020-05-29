@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
@@ -56,11 +57,13 @@ public class LettuceAsyncCommandsAdvice {
     }
 
     // close spans on error or normal completion
-    if (LettuceInstrumentationUtil.doFinishSpanEarly(command)) {
-      span.end();
-    } else {
+    if (expectsResponse(command)) {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
+    } else {
+      LettuceClientDecorator.DECORATE.beforeFinish(span);
+      span.end();
     }
     spanWithScope.closeScope();
+    // span may be finished by LettuceAsyncBiFunction
   }
 }

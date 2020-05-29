@@ -54,9 +54,7 @@ public final class InstrumentationPoints {
       LettuceClientDecorator.DECORATE.onError(span, throwable);
       LettuceClientDecorator.DECORATE.beforeFinish(span);
       span.end();
-    } else if (finishSpanEarly(command)) {
-      span.end();
-    } else {
+    } else if (expectsResponse(command)) {
       asyncCommand.handleAsync(
           (value, ex) -> {
             if (ex instanceof CancellationException) {
@@ -68,8 +66,13 @@ public final class InstrumentationPoints {
             span.end();
             return null;
           });
+    } else {
+      // No response is expected, so we must finish the span now.
+      LettuceClientDecorator.DECORATE.beforeFinish(span);
+      span.end();
     }
     spanWithScope.closeScope();
+    // span may be finished by handleAsync call above.
   }
 
   public static SpanWithScope beforeConnect(final RedisURI redisURI) {
@@ -96,11 +99,11 @@ public final class InstrumentationPoints {
    * we must close the span early in order to provide info for the users
    *
    * @param command
-   * @return true if finish the span early (the command will not have a return value)
+   * @return false if the span should finish early (the command will not have a return value)
    */
-  public static boolean finishSpanEarly(final RedisCommand<?, ?, ?> command) {
+  public static boolean expectsResponse(final RedisCommand<?, ?, ?> command) {
     final ProtocolKeyword keyword = command.getType();
-    return isNonInstrumentingCommand(keyword) || isNonInstrumentingKeyword(keyword);
+    return !(isNonInstrumentingCommand(keyword) || isNonInstrumentingKeyword(keyword));
   }
 
   private static boolean isNonInstrumentingCommand(final ProtocolKeyword keyword) {

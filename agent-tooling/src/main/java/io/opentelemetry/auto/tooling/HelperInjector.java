@@ -142,12 +142,14 @@ public class HelperInjector implements Transformer {
             helperModules.add(new WeakReference<>(javaModule.unwrap()));
           }
         } catch (final Exception e) {
-          log.error(
-              "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
-              typeDescription,
-              requestingName,
-              classLoader,
-              e);
+          if (log.isErrorEnabled()) {
+            log.error(
+                "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
+                typeDescription,
+                requestingName,
+                classLoader,
+                e);
+          }
           throw new RuntimeException(e);
         }
 
@@ -166,7 +168,7 @@ public class HelperInjector implements Transformer {
     // a reference count -- but for now, starting simple.
 
     // Failures to create a tempDir are propagated as IOException and handled by transform
-    File tempDir = createTempDir();
+    final File tempDir = createTempDir();
     try {
       return ClassInjector.UsingInstrumentation.of(
               tempDir,
@@ -206,15 +208,15 @@ public class HelperInjector implements Transformer {
     }
   }
 
-  private static final File createTempDir() throws IOException {
+  private static File createTempDir() throws IOException {
     return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
   }
 
-  private static final void deleteTempDir(final File file) {
+  private static void deleteTempDir(final File file) {
     // Not using Files.delete for deleting the directory because failures
     // create Exceptions which may prove expensive.  Instead using the
     // older File API which simply returns a boolean.
-    boolean deleted = file.delete();
+    final boolean deleted = file.delete();
     if (!deleted) {
       file.deleteOnExit();
     }

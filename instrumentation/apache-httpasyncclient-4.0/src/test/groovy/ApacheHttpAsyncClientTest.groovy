@@ -49,7 +49,8 @@ class ApacheHttpAsyncClientTest extends HttpClientTest {
       request.addHeader(new BasicHeader(it.key, it.value))
     }
 
-    def latch = callback == null ? null : new CountDownLatch(1)
+    def latch = new CountDownLatch(callback == null ? 0 : 1)
+
     def handler = callback == null ? null : new FutureCallback<HttpResponse>() {
 
       @Override
@@ -72,10 +73,7 @@ class ApacheHttpAsyncClientTest extends HttpClientTest {
     def future = client.execute(request, handler)
     def response = future.get()
     response.entity?.content?.close() // Make sure the connection is closed.
-    if (callback != null) {
-      // need to wait for callback to complete in case test is expecting span from it
-      latch.await()
-    }
+    latch.await()
     response.statusLine.statusCode
   }
 

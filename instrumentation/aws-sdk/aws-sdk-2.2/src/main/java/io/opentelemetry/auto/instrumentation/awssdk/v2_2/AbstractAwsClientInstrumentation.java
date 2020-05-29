@@ -27,9 +27,10 @@ public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Defa
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".AwsSdkClientDecorator",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkClientDecorator",
       packageName + ".TracingExecutionInterceptor",
-      packageName + ".TracingExecutionInterceptor$ScopeHolder"
+      packageName + ".TracingExecutionInterceptor$ScopeHolder",
     };
   }
 }

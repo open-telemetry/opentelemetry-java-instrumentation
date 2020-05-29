@@ -60,5 +60,6 @@ public class DispatcherHandlerAdvice {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
     spanWithScope.closeScope();
+    // span finished in SpanFinishingSubscriber
   }
 }

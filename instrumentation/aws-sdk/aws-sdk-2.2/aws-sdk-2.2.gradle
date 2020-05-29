@@ -10,7 +10,6 @@ muzzle {
     group = "software.amazon.awssdk"
     module = "aws-core"
     versions = "[2.2.0,)"
-    assertInverse = true
   }
 }
 
@@ -19,6 +18,8 @@ testSets {
 }
 
 dependencies {
+  compile project(':instrumentation-core:aws-sdk:aws-sdk-2.2-core')
+
   compileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.

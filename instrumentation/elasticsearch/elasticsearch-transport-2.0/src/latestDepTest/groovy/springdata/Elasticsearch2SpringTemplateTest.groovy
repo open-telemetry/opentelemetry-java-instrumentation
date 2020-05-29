@@ -53,6 +53,12 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   ElasticsearchTemplate template
 
   def setupSpec() {
+    withRetryOnBindException({
+      setupSpecUnderRetry()
+    })
+  }
+
+  def setupSpecUnderRetry() {
     httpPort = PortUtils.randomOpenPort()
     tcpPort = PortUtils.randomOpenPort()
 

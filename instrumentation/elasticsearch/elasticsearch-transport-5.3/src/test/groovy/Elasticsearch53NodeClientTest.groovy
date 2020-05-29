@@ -45,6 +45,12 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
   def client = testNode.client()
 
   def setupSpec() {
+    withRetryOnBindException({
+      setupSpecUnderRetry()
+    })
+  }
+
+  def setupSpecUnderRetry() {
     httpPort = PortUtils.randomOpenPort()
     tcpPort = PortUtils.randomOpenPort()
 
