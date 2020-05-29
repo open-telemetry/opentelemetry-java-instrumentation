@@ -81,7 +81,18 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
    * compiling this for instrumentation code that should load into Java7.
    */
   public static void overrideConfiguration(final SdkClientBuilder client) {
-    client.overrideConfiguration(OVERRIDE_CONFIGURATION_CONSUMER);
+    // We intercept calls to overrideConfiguration to make sure when a user overrides the
+    // configuration, we join their configuration. This means all we need to do is call the method
+    // here and we will intercept the builder and add our interceptor.
+    client.overrideConfiguration(builder -> {});
+  }
+
+  /**
+   * We keep this method here because it references Java8 classes and we would like to avoid
+   * compiling this for instrumentation code that should load into Java7.
+   */
+  public static void overrideConfiguration(final ClientOverrideConfiguration.Builder builder) {
+    OVERRIDE_CONFIGURATION_CONSUMER.accept(builder);
   }
 
   public static void muzzleCheck() {

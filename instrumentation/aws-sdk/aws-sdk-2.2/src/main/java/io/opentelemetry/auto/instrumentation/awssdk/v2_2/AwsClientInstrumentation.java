@@ -15,16 +15,19 @@
  */
 package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -35,6 +38,8 @@ import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 /** AWS SDK v2 instrumentation */
 @AutoService(Instrumenter.class)
 public final class AwsClientInstrumentation extends AbstractAwsClientInstrumentation {
+
+  public static final WeakMap<SdkClientBuilder, Boolean> OVERRIDDEN = newWeakMap();
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -52,16 +57,35 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
+
+    transformers.put(
         isMethod().and(isPublic()).and(named("build")),
-        AwsClientInstrumentation.class.getName() + "$AwsBuilderAdvice");
+        AwsClientInstrumentation.class.getName() + "$AwsSdkClientBuilderBuildAdvice");
+
+    transformers.put(
+        isMethod().and(isPublic()).and(named("overrideConfiguration")),
+        AwsClientInstrumentation.class.getName()
+            + "$AwsSdkClientBuilderOverrideConfigurationAdvice");
+
+    return Collections.unmodifiableMap(transformers);
   }
 
-  public static class AwsBuilderAdvice {
+  public static class AwsSdkClientBuilderOverrideConfigurationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final SdkClientBuilder thiz) {
-      TracingExecutionInterceptor.overrideConfiguration(thiz);
+      OVERRIDDEN.put(thiz, true);
+    }
+  }
+
+  public static class AwsSdkClientBuilderBuildAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(@Advice.This final SdkClientBuilder thiz) {
+      if (!Boolean.TRUE.equals(OVERRIDDEN.get(thiz))) {
+        TracingExecutionInterceptor.overrideConfiguration(thiz);
+      }
     }
   }
 }
