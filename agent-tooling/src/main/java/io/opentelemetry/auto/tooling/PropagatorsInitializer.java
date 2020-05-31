@@ -33,7 +33,7 @@ public class PropagatorsInitializer {
   private static final Map<String, HttpTextFormat> TEXTMAP_PROPAGATORS =
       ImmutableMap.of(
           TRACE_CONTEXT, new HttpTraceContext(),
-          B3, new B3Propagator());
+          B3, B3Propagator.getMultipleHeaderPropagator());
 
   /** Initialize OpenTelemetry global Propagators with propagator list, if any. */
   public static void initializePropagators(List<String> propagators) {

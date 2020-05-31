@@ -23,7 +23,7 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
 
   private final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver;
 
-  UnshadedDoubleValueObserver(final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver) {
+  protected UnshadedDoubleValueObserver(final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver) {
     this.shadedDoubleValueObserver = shadedDoubleValueObserver;
   }
 
@@ -32,13 +32,13 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
     shadedDoubleValueObserver.setCallback(new ShadedResultDoubleValueObserver(metricUpdater));
   }
 
-  private static class ShadedResultDoubleValueObserver
+  static class ShadedResultDoubleValueObserver
       implements AsynchronousInstrument.Callback<
           io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver> {
 
     private final Callback<ResultDoubleValueObserver> metricUpdater;
 
-    ShadedResultDoubleValueObserver(final Callback<ResultDoubleValueObserver> metricUpdater) {
+    protected ShadedResultDoubleValueObserver(final Callback<ResultDoubleValueObserver> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
@@ -48,12 +48,12 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
     }
   }
 
-  private static class UnshadedResultDoubleValueObserver implements ResultDoubleValueObserver {
+  static class UnshadedResultDoubleValueObserver implements ResultDoubleValueObserver {
 
     private final io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver
         shadedResultDoubleValueObserver;
 
-    UnshadedResultDoubleValueObserver(
+    public UnshadedResultDoubleValueObserver(
         final io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver
             shadedResultDoubleValueObserver) {
       this.shadedResultDoubleValueObserver = shadedResultDoubleValueObserver;
@@ -69,7 +69,7 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
 
     private final io.opentelemetry.metrics.DoubleValueObserver.Builder shadedBuilder;
 
-    Builder(final io.opentelemetry.metrics.DoubleValueObserver.Builder shadedBuilder) {
+    protected Builder(final io.opentelemetry.metrics.DoubleValueObserver.Builder shadedBuilder) {
       this.shadedBuilder = shadedBuilder;
     }
 

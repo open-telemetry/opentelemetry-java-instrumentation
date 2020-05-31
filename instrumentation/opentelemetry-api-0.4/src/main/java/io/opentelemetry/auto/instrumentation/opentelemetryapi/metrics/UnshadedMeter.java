@@ -15,14 +15,13 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics.UnshadedDoubleValueObserver.Builder;
 import unshaded.io.opentelemetry.metrics.BatchRecorder;
 import unshaded.io.opentelemetry.metrics.DoubleCounter;
 import unshaded.io.opentelemetry.metrics.DoubleSumObserver;
 import unshaded.io.opentelemetry.metrics.DoubleUpDownCounter;
 import unshaded.io.opentelemetry.metrics.DoubleUpDownSumObserver;
-import unshaded.io.opentelemetry.metrics.DoubleValueRecorder;
 import unshaded.io.opentelemetry.metrics.DoubleValueObserver;
+import unshaded.io.opentelemetry.metrics.DoubleValueRecorder;
 import unshaded.io.opentelemetry.metrics.LongCounter;
 import unshaded.io.opentelemetry.metrics.LongSumObserver;
 import unshaded.io.opentelemetry.metrics.LongUpDownCounter;
@@ -91,7 +90,7 @@ class UnshadedMeter implements Meter {
 
   @Override
   public DoubleValueObserver.Builder doubleValueObserverBuilder(final String name) {
-    return new Builder(shadedMeter.doubleValueObserverBuilder(name));
+    return new UnshadedDoubleValueObserver.Builder(shadedMeter.doubleValueObserverBuilder(name));
   }
 
   @Override

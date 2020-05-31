@@ -22,11 +22,11 @@ class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
 
   private final io.opentelemetry.metrics.DoubleValueRecorder shadedDoubleValueRecorder;
 
-  UnshadedDoubleValueRecorder(final io.opentelemetry.metrics.DoubleValueRecorder shadedDoubleValueRecorder) {
+  protected UnshadedDoubleValueRecorder(final io.opentelemetry.metrics.DoubleValueRecorder shadedDoubleValueRecorder) {
     this.shadedDoubleValueRecorder = shadedDoubleValueRecorder;
   }
 
-  io.opentelemetry.metrics.DoubleValueRecorder getShadedDoubleValueRecorder() {
+  protected io.opentelemetry.metrics.DoubleValueRecorder getShadedDoubleValueRecorder() {
     return shadedDoubleValueRecorder;
   }
 
@@ -45,7 +45,7 @@ class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
     private final io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
         shadedBoundDoubleMeasure;
 
-    BoundInstrument(
+    public BoundInstrument(
         final io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder shadedBoundDoubleMeasure) {
       this.shadedBoundDoubleMeasure = shadedBoundDoubleMeasure;
     }
@@ -65,7 +65,7 @@ class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
 
     private final io.opentelemetry.metrics.DoubleValueRecorder.Builder shadedBuilder;
 
-    Builder(final io.opentelemetry.metrics.DoubleValueRecorder.Builder shadedBuilder) {
+    public Builder(final io.opentelemetry.metrics.DoubleValueRecorder.Builder shadedBuilder) {
       this.shadedBuilder = shadedBuilder;
     }
 

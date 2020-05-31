@@ -22,7 +22,7 @@ class UnshadedLongValueObserver implements LongValueObserver {
 
   private final io.opentelemetry.metrics.LongValueObserver shadedLongValueObserver;
 
-  UnshadedLongValueObserver(
+  public UnshadedLongValueObserver(
       final io.opentelemetry.metrics.LongValueObserver shadedLongValueObserver) {
     this.shadedLongValueObserver = shadedLongValueObserver;
   }
@@ -32,13 +32,13 @@ class UnshadedLongValueObserver implements LongValueObserver {
     shadedLongValueObserver.setCallback(new ShadedResultLongValueObserver(metricUpdater));
   }
 
-  private static class ShadedResultLongValueObserver
+  public static class ShadedResultLongValueObserver
       implements io.opentelemetry.metrics.AsynchronousInstrument.Callback<
       io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver> {
 
     private final Callback<ResultLongValueObserver> metricUpdater;
 
-    ShadedResultLongValueObserver(final Callback<ResultLongValueObserver> metricUpdater) {
+    public ShadedResultLongValueObserver(final Callback<ResultLongValueObserver> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
@@ -48,11 +48,11 @@ class UnshadedLongValueObserver implements LongValueObserver {
     }
   }
 
-  private static class UnshadedResultLongValueObserver implements ResultLongValueObserver {
+  public static class UnshadedResultLongValueObserver implements ResultLongValueObserver {
 
     private final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver shadedResultLongValueObserver;
 
-    UnshadedResultLongValueObserver(
+    public UnshadedResultLongValueObserver(
         final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver shadedResultLongValueObserver) {
       this.shadedResultLongValueObserver = shadedResultLongValueObserver;
     }
@@ -67,7 +67,7 @@ class UnshadedLongValueObserver implements LongValueObserver {
 
     private final io.opentelemetry.metrics.LongValueObserver.Builder shadedBuilder;
 
-    Builder(final io.opentelemetry.metrics.LongValueObserver.Builder shadedBuilder) {
+    public Builder(final io.opentelemetry.metrics.LongValueObserver.Builder shadedBuilder) {
       this.shadedBuilder = shadedBuilder;
     }
 
