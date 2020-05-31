@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -24,7 +23,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,8 +36,6 @@ import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 /** AWS SDK v2 instrumentation */
 @AutoService(Instrumenter.class)
 public final class AwsClientInstrumentation extends AbstractAwsClientInstrumentation {
-
-  public static final WeakMap<SdkClientBuilder, Boolean> OVERRIDDEN = newWeakMap();
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
@@ -75,7 +71,7 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final SdkClientBuilder thiz) {
-      OVERRIDDEN.put(thiz, true);
+      TracingExecutionInterceptor.OVERRIDDEN.put(thiz, true);
     }
   }
 
@@ -83,7 +79,7 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final SdkClientBuilder thiz) {
-      if (!Boolean.TRUE.equals(OVERRIDDEN.get(thiz))) {
+      if (!Boolean.TRUE.equals(TracingExecutionInterceptor.OVERRIDDEN.get(thiz))) {
         TracingExecutionInterceptor.overrideConfiguration(thiz);
       }
     }

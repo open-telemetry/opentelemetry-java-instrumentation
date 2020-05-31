@@ -15,8 +15,10 @@
  */
 package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import io.opentelemetry.trace.Span;
@@ -56,6 +58,10 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  * current context to allow downstream instrumentation like Netty to pick it up.
  */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
+
+  // Keeps track of SDK clients that have been overridden by the user and don't need to be
+  // overridden by us.
+  public static final WeakMap<SdkClientBuilder, Boolean> OVERRIDDEN = newWeakMap();
 
   public static class ScopeHolder {
     public static final ThreadLocal<Scope> CURRENT = new ThreadLocal<>();
