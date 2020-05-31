@@ -22,7 +22,8 @@ class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
 
   private final io.opentelemetry.metrics.DoubleValueRecorder shadedDoubleValueRecorder;
 
-  protected UnshadedDoubleValueRecorder(final io.opentelemetry.metrics.DoubleValueRecorder shadedDoubleValueRecorder) {
+  protected UnshadedDoubleValueRecorder(
+      final io.opentelemetry.metrics.DoubleValueRecorder shadedDoubleValueRecorder) {
     this.shadedDoubleValueRecorder = shadedDoubleValueRecorder;
   }
 
@@ -46,7 +47,8 @@ class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
         shadedBoundDoubleMeasure;
 
     public BoundInstrument(
-        final io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder shadedBoundDoubleMeasure) {
+        final io.opentelemetry.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
+            shadedBoundDoubleMeasure) {
       this.shadedBoundDoubleMeasure = shadedBoundDoubleMeasure;
     }
 

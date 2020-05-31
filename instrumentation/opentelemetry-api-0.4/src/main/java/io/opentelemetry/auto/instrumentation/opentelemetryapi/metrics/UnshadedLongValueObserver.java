@@ -34,7 +34,7 @@ class UnshadedLongValueObserver implements LongValueObserver {
 
   public static class ShadedResultLongValueObserver
       implements io.opentelemetry.metrics.AsynchronousInstrument.Callback<
-      io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver> {
+          io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver> {
 
     private final Callback<ResultLongValueObserver> metricUpdater;
 
@@ -43,17 +43,20 @@ class UnshadedLongValueObserver implements LongValueObserver {
     }
 
     @Override
-    public void update(final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver result) {
+    public void update(
+        final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver result) {
       metricUpdater.update(new UnshadedResultLongValueObserver(result));
     }
   }
 
   public static class UnshadedResultLongValueObserver implements ResultLongValueObserver {
 
-    private final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver shadedResultLongValueObserver;
+    private final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver
+        shadedResultLongValueObserver;
 
     public UnshadedResultLongValueObserver(
-        final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver shadedResultLongValueObserver) {
+        final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver
+            shadedResultLongValueObserver) {
       this.shadedResultLongValueObserver = shadedResultLongValueObserver;
     }
 

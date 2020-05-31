@@ -36,7 +36,8 @@ class UnshadedBatchRecorder implements BatchRecorder {
   @Override
   public BatchRecorder put(final LongValueRecorder measure, final long value) {
     if (measure instanceof UnshadedLongValueRecorder) {
-      shadedBatchRecorder.put(((UnshadedLongValueRecorder) measure).getShadedLongValueRecorder(), value);
+      shadedBatchRecorder.put(
+          ((UnshadedLongValueRecorder) measure).getShadedLongValueRecorder(), value);
     } else {
       log.debug("unexpected measure: {}", measure);
     }
@@ -46,7 +47,8 @@ class UnshadedBatchRecorder implements BatchRecorder {
   @Override
   public BatchRecorder put(final DoubleValueRecorder measure, final double value) {
     if (measure instanceof UnshadedDoubleValueRecorder) {
-      shadedBatchRecorder.put(((UnshadedDoubleValueRecorder) measure).getShadedDoubleValueRecorder(), value);
+      shadedBatchRecorder.put(
+          ((UnshadedDoubleValueRecorder) measure).getShadedDoubleValueRecorder(), value);
     } else {
       log.debug("unexpected measure: {}", measure);
     }

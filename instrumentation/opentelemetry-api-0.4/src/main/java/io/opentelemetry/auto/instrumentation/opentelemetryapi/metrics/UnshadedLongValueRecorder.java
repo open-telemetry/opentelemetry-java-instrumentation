@@ -22,7 +22,8 @@ class UnshadedLongValueRecorder implements LongValueRecorder {
 
   private final io.opentelemetry.metrics.LongValueRecorder shadedLongValueRecorder;
 
-  protected UnshadedLongValueRecorder(final io.opentelemetry.metrics.LongValueRecorder shadedLongValueRecorder) {
+  protected UnshadedLongValueRecorder(
+      final io.opentelemetry.metrics.LongValueRecorder shadedLongValueRecorder) {
     this.shadedLongValueRecorder = shadedLongValueRecorder;
   }
 
@@ -42,10 +43,12 @@ class UnshadedLongValueRecorder implements LongValueRecorder {
 
   static class BoundInstrument implements LongValueRecorder.BoundLongValueRecorder {
 
-    private final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder shadedBoundLongValueRecorder;
+    private final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
+        shadedBoundLongValueRecorder;
 
     protected BoundInstrument(
-        final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder shadedBoundLongValueRecorder) {
+        final io.opentelemetry.metrics.LongValueRecorder.BoundLongValueRecorder
+            shadedBoundLongValueRecorder) {
       this.shadedBoundLongValueRecorder = shadedBoundLongValueRecorder;
     }
 

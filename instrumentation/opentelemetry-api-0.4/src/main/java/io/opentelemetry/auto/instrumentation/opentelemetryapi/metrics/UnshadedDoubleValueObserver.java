@@ -23,7 +23,8 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
 
   private final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver;
 
-  protected UnshadedDoubleValueObserver(final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver) {
+  protected UnshadedDoubleValueObserver(
+      final io.opentelemetry.metrics.DoubleValueObserver shadedDoubleValueObserver) {
     this.shadedDoubleValueObserver = shadedDoubleValueObserver;
   }
 
@@ -38,12 +39,14 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
 
     private final Callback<ResultDoubleValueObserver> metricUpdater;
 
-    protected ShadedResultDoubleValueObserver(final Callback<ResultDoubleValueObserver> metricUpdater) {
+    protected ShadedResultDoubleValueObserver(
+        final Callback<ResultDoubleValueObserver> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(final io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver result) {
+    public void update(
+        final io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver result) {
       metricUpdater.update(new UnshadedResultDoubleValueObserver(result));
     }
   }
