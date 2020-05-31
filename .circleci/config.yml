@@ -296,6 +296,7 @@ workflows:
       - publish_master:
           requires:
             - test_7
+            - test_8
             - test_latest
             - test_11
             - test_14
