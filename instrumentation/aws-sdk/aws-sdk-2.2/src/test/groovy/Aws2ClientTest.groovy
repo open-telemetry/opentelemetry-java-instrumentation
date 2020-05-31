@@ -263,7 +263,8 @@ class Aws2ClientTest extends AgentTestRunner {
         """
   }
 
-  def "timeout and retry errors captured"() {
+  // TODO(anuraaga): Add events for retries.
+  def "timeout and retry errors not captured"() {
     setup:
     def server = httpServer {
       handlers {
