@@ -49,6 +49,12 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
   RestClient client
 
   def setupSpec() {
+    withRetryOnBindException({
+      setupSpecUnderRetry()
+    })
+  }
+
+  def setupSpecUnderRetry() {
     httpPort = PortUtils.randomOpenPort()
     tcpPort = PortUtils.randomOpenPort()
 

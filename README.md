@@ -13,7 +13,7 @@ data from a Java application without code changes.
 ## Getting Started
 
 Download the [latest
-release](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases)
+release](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases)
 of the Java agent and available exporters.
 
 The instrumentation agent is enabled using the `-javaagent` flag to the JVM.

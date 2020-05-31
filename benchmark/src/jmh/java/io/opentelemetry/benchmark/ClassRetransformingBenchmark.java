@@ -48,6 +48,6 @@ public class ClassRetransformingBenchmark {
 
   @Fork(
       jvmArgsAppend =
-          "-javaagent:/path/to/opentelemetry-auto-instr-java/java-agent/build/libs/opentelemetry-auto.jar")
+          "-javaagent:/path/to/opentelemetry-java-instrumentation/java-agent/build/libs/opentelemetry-auto.jar")
   public static class WithAgent extends ClassRetransformingBenchmark {}
 }

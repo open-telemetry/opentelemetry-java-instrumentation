@@ -18,7 +18,7 @@ import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.TracedWithSpan
 
 /**
- * This test verifies that auto-instr supports {@link io.opentelemetry.contrib.auto.annotations.WithSpan} contrib annotation.
+ * This test verifies that auto instrumentation supports {@link io.opentelemetry.contrib.auto.annotations.WithSpan} contrib annotation.
  */
 class WithSpanInstrumentationTest extends AgentTestRunner {
 
