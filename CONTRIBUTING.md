@@ -2,7 +2,7 @@
 
 Pull requests for bug fixes are welcome, but before submitting new features
 or changes to current functionality [open an
-issue](https://github.com/open-telemetry/opentelemetry-auto-instr-java/issues/new)
+issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
 and discuss your ideas or propose the changes you wish to make. After a
 resolution is reached a PR can be submitted for review.
 
