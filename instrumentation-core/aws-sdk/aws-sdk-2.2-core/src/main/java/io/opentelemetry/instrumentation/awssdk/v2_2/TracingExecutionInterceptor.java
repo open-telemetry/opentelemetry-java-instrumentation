@@ -40,10 +40,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
     final Span span =
-        AwsSdk.tracer()
-            .spanBuilder(DECORATE.spanName(executionAttributes))
-            .setSpanKind(kind)
-            .startSpan();
+        DECORATE.getOrCreateSpan(DECORATE.spanName(executionAttributes), AwsSdk.tracer());
     DECORATE.afterStart(span);
     executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
   }

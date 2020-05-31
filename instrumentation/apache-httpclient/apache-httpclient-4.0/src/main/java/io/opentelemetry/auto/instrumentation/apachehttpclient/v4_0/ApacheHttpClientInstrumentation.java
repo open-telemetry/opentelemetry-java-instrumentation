@@ -21,7 +21,6 @@ import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHe
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -172,18 +171,13 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class HelperMethods {
     public static SpanWithScope doMethodEnter(final HttpUriRequest request) {
-      final Span span =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
+      final Span span = DECORATE.getOrCreateSpan(request, TRACER);
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
       final Context context = withSpan(span, Context.current());
-      final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
-      // AWS calls are often signed, so we can't add headers without breaking the signature.
-      if (!awsClientCall) {
-        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
-      }
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
       final Scope scope = withScopedContext(context);
 
       return new SpanWithScope(span, scope);
