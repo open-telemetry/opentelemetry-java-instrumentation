@@ -197,3 +197,22 @@ To turn on the agent's internal debug logging:
 
 Note these logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
+
+## Roadmap to 1.0
+
+High-level roadmap as we work towards a 1.0 release:
+
+* Keep up with the specifications, including but not limited to:
+  * Implement all applicable semantic attributes
+    * Clearly document any additional attributes that are set
+        which are not defined by semantic conventions
+  * Standard metrics (still TBD, e.g.
+      [opentelemetry-specification#522](https://github.com/open-telemetry/opentelemetry-specification/issues/522))
+* Build out manual instrumentation for all existing auto-instrumentation
+  * Share code and tests between manual and auto-instrumentation
+* Good support for vendors to extend the agent
+  * Including ability for any user to write their own auto-instrumentation
+* Better smoke test harness and more smoke tests
+* Benchmarking and tuning (both runtime and startup)
+* Address all sporadic test failures
+  * Also, speed up CI tests
