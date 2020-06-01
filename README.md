@@ -65,7 +65,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 #### Logging Exporter
 
 The logging exporter simply prints the name of the span along with its
-attributes to stdout. It is used manly for testing and debugging.
+attributes to stdout. It is used mainly for testing and debugging.
 
 | System property             | Environment variable        | Purpose                                                                      |
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
