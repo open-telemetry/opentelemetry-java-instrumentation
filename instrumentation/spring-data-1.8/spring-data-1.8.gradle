@@ -1,6 +1,6 @@
 // This file includes software developed at SignalFx
 
-apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {

@@ -29,11 +29,11 @@ allprojects {
   group = 'io.opentelemetry.auto'
 
   if (isCI) {
-    buildDir = "${rootDir}/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
+    buildDir = "$rootDir/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
   }
 
-  apply from: "${rootDir}/gradle/dependencies.gradle"
-  apply from: "${rootDir}/gradle/util.gradle"
+  apply from: "$rootDir/gradle/dependencies.gradle"
+  apply from: "$rootDir/gradle/util.gradle"
 }
 
 repositories {
