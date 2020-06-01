@@ -106,6 +106,9 @@ public class Config {
   public static final String SQL_NORMALIZER_ENABLED = "sql.normalizer.enabled";
   public static final boolean DEFAULT_SQL_NORMALIZER_ENABLED = true;
 
+  public static final String AWS_SPAN_KIND = "aws.span.kind";
+  public static final String DEFAULT_AWS_SPAN_KIND = "INTERNAL";
+
   @Getter private final String exporterJar;
   @Getter private final List<String> propagators;
   @Getter private final boolean traceEnabled;
@@ -147,6 +150,8 @@ public class Config {
   @Getter private final boolean sqlNormalizerEnabled;
 
   @Getter private final boolean kafkaClientPropagationEnabled;
+
+  @Getter private final String awsSpanKind;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -213,6 +218,8 @@ public class Config {
         getBooleanSettingFromEnvironment(
             KAFKA_CLIENT_PROPAGATION_ENABLED, DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED);
 
+    awsSpanKind = getSettingFromEnvironment(AWS_SPAN_KIND, DEFAULT_AWS_SPAN_KIND);
+
     log.debug("New instance: {}", this);
   }
 
@@ -275,6 +282,8 @@ public class Config {
     kafkaClientPropagationEnabled =
         getPropertyBooleanValue(
             properties, KAFKA_CLIENT_PROPAGATION_ENABLED, parent.kafkaClientPropagationEnabled);
+
+    awsSpanKind = properties.getProperty(AWS_SPAN_KIND, parent.awsSpanKind);
 
     log.debug("New instance: {}", this);
   }

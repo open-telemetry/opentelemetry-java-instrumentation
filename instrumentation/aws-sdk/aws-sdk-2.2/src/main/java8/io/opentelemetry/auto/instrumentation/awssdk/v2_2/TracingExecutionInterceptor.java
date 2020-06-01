@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.bootstrap.WeakMap;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import io.opentelemetry.trace.Span;
@@ -67,6 +68,15 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
     public static final ThreadLocal<Scope> CURRENT = new ThreadLocal<>();
   }
 
+  private static Kind spanKind() {
+    final String configKind = Config.get().getAwsSpanKind().toUpperCase();
+    try {
+      return Kind.valueOf(configKind);
+    } catch (IllegalArgumentException e) {
+      return Kind.INTERNAL;
+    }
+  }
+
   // Note: it looks like this lambda doesn't get generated as a separate class file so we do not
   // need to inject helper for it.
   private static final Consumer<ClientOverrideConfiguration.Builder>
@@ -74,7 +84,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
           builder ->
               builder.addExecutionInterceptor(
                   // Agent will trace HTTP calls too so use INTERNAL kind.
-                  new TracingExecutionInterceptor(AwsSdk.newInterceptor(Kind.INTERNAL)));
+                  new TracingExecutionInterceptor(AwsSdk.newInterceptor(spanKind())));
 
   private final ExecutionInterceptor delegate;
 

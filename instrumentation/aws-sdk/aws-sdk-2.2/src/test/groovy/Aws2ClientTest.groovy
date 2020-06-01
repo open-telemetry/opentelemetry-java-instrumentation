@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
+import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -50,6 +51,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
+import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
@@ -297,6 +299,42 @@ class Aws2ClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {}
         span(1) {}
+      }
+    }
+    server.lastRequest.headers.get("x-name") == "value"
+
+    cleanup:
+    server.close()
+  }
+
+  def "kind override"() {
+    setup:
+    def client = withConfigOverride(Config.AWS_SPAN_KIND, "CLIENT") {
+      DynamoDbClient.builder()
+        .endpointOverride(server.address)
+        .region(Region.AP_NORTHEAST_1)
+        .credentialsProvider(CREDENTIALS_PROVIDER)
+        .overrideConfiguration {
+          it.putHeader("x-name", "value")
+        }
+        .build()
+    }
+
+    when:
+    responseBody.set("")
+    client.createTable(CreateTableRequest.builder().tableName("sometable").build())
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          spanKind CLIENT
+        }
+        // Users will generally want to disable HTTP client instrumentation when setting this config
+        // or end up with two client spans like this test demonstrates.
+        span(1) {
+          spanKind CLIENT
+        }
       }
     }
     server.lastRequest.headers.get("x-name") == "value"
