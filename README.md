@@ -198,9 +198,12 @@ To turn on the agent's internal debug logging:
 Note these logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
 
-## Roadmap to 1.0
+## Roadmap to 1.0 (GA)
 
-High-level roadmap as we work towards a 1.0 release:
+It is our goal to release 1.0 (GA) of the auto-instrumentation agent during the first wave of
+OpenTelemetry 1.0 (GA) releases, along with as many manual instrumentation libraries as possible.
+
+High-level roadmap:
 
 * Keep up with the specifications, including but not limited to:
   * Implement all applicable semantic attributes
@@ -208,7 +211,9 @@ High-level roadmap as we work towards a 1.0 release:
         which are not defined by semantic conventions
   * Standard metrics (still TBD, e.g.
       [opentelemetry-specification#522](https://github.com/open-telemetry/opentelemetry-specification/issues/522))
-* Build out manual instrumentation for all existing auto-instrumentation
+* Simple (and well-documented) configuration for common needs, including but not limited to:
+  * Exporters, propagators, samplers
+* Build out manual instrumentation libraries for existing auto-instrumentation
   * Share code and tests between manual and auto-instrumentation
 * Good support for vendors to extend the agent
   * Including ability for any user to write their own auto-instrumentation
