@@ -107,9 +107,7 @@ class RabbitMQTest extends AgentTestRunner {
       channel.exchangeDeclare(exchangeName, "direct", false)
       String queueName = channel.queueDeclare().getQueue()
       channel.queueBind(queueName, exchangeName, routingKey)
-
       channel.basicPublish(exchangeName, routingKey, null, "Hello, world!".getBytes())
-
       return channel.basicGet(queueName, true)
     }
 
@@ -140,9 +138,7 @@ class RabbitMQTest extends AgentTestRunner {
   def "test rabbit publish/get default exchange"() {
     setup:
     String queueName = channel.queueDeclare().getQueue()
-
     channel.basicPublish("", queueName, null, "Hello, world!".getBytes())
-
     GetResponse response = channel.basicGet(queueName, true)
 
     expect:
@@ -182,7 +178,13 @@ class RabbitMQTest extends AgentTestRunner {
     channel.basicConsume(queueName, callback)
 
     (1..messageCount).each {
-      channel.basicPublish(exchangeName, "", null, "msg $it".getBytes())
+      if (setTimestamp) {
+        channel.basicPublish(exchangeName, "",
+          new AMQP.BasicProperties.Builder().timestamp(new Date()).build(),
+          "msg $it".getBytes())
+      } else {
+        channel.basicPublish(exchangeName, "", null, "msg $it".getBytes())
+      }
     }
     def resource = messageCount % 2 == 0 ? "<generated>" : queueName
 
@@ -203,7 +205,7 @@ class RabbitMQTest extends AgentTestRunner {
       (1..messageCount).each {
         trace(3 + it, 2) {
           rabbitSpan(it, 0, "$exchangeName -> <all>")
-          rabbitSpan(it, 1, resource, span(0))
+          rabbitSpan(it, 1, resource, span(0), null, null, null, setTimestamp)
         }
       }
     }
@@ -211,8 +213,15 @@ class RabbitMQTest extends AgentTestRunner {
     deliveries == (1..messageCount).collect { "msg $it" }
 
     where:
-    exchangeName = "some-exchange"
-    messageCount << (1..4)
+    exchangeName    | messageCount | setTimestamp
+    "some-exchange" | 1            | false
+    "some-exchange" | 2            | false
+    "some-exchange" | 3            | false
+    "some-exchange" | 4            | false
+    "some-exchange" | 1            | true
+    "some-exchange" | 2            | true
+    "some-exchange" | 3            | true
+    "some-exchange" | 4            | true
   }
 
   def "test rabbit consume error"() {
@@ -319,9 +328,10 @@ class RabbitMQTest extends AgentTestRunner {
     Object parentSpan = null,
     Object linkSpan = null,
     Throwable exception = null,
-    String errorMsg = null
+    String errorMsg = null,
+    Boolean expectTimestamp = false
   ) {
-    rabbitSpan(trace, 0, resource, parentSpan, linkSpan, exception, errorMsg)
+    rabbitSpan(trace, 0, resource, parentSpan, linkSpan, exception, errorMsg, expectTimestamp)
   }
 
   def rabbitSpan(
@@ -331,7 +341,8 @@ class RabbitMQTest extends AgentTestRunner {
     Object parentSpan = null,
     Object linkSpan = null,
     Throwable exception = null,
-    String errorMsg = null
+    String errorMsg = null,
+    Boolean expectTimestamp = false
   ) {
     trace.span(index) {
       operationName resource
@@ -366,6 +377,9 @@ class RabbitMQTest extends AgentTestRunner {
         "$MoreTags.NET_PEER_NAME" { it == null || it instanceof String }
         "$MoreTags.NET_PEER_IP" { "127.0.0.1" }
         "$MoreTags.NET_PEER_PORT" { it == null || it instanceof Long }
+        if (expectTimestamp) {
+          "record.queue_time_ms" { it instanceof Long && it >= 0 }
+        }
 
         switch (tag("amqp.command")?.stringValue) {
           case "basic.publish":
