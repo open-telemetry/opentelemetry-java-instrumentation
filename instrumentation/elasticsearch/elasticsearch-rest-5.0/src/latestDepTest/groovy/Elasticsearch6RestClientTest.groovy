@@ -18,7 +18,6 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils
@@ -27,6 +26,8 @@ import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
+import org.elasticsearch.common.transport.TransportAddress
+import org.elasticsearch.http.HttpServerTransport
 import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty4Plugin
@@ -37,26 +38,18 @@ import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class Elasticsearch6RestClientTest extends AgentTestRunner {
   @Shared
-  int httpPort
-  @Shared
-  int tcpPort
+  TransportAddress httpTransportAddress
   @Shared
   Node testNode
   @Shared
   File esWorkingDir
+  @Shared
+  String clusterName = UUID.randomUUID().toString()
 
   @Shared
   RestClient client
 
   def setupSpec() {
-    withRetryOnBindException({
-      setupSpecUnderRetry()
-    })
-  }
-
-  def setupSpecUnderRetry() {
-    httpPort = PortUtils.randomOpenPort()
-    tcpPort = PortUtils.randomOpenPort()
 
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
@@ -64,14 +57,13 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
 
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
-      .put("http.port", httpPort)
-      .put("transport.tcp.port", tcpPort)
-      .put("cluster.name", "test-cluster")
+      .put("cluster.name", clusterName)
       .build()
     testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
     testNode.start()
+    httpTransportAddress = testNode.injector().getInstance(HttpServerTransport).boundAddress().publishAddress()
 
-    client = RestClient.builder(new HttpHost("localhost", httpPort))
+    client = RestClient.builder(new HttpHost(httpTransportAddress.address, httpTransportAddress.port))
       .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
         @Override
@@ -107,8 +99,8 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           spanKind INTERNAL
           parent()
           tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" httpPort
+            "$MoreTags.NET_PEER_NAME" httpTransportAddress.address
+            "$MoreTags.NET_PEER_PORT" httpTransportAddress.port
             "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.DB_TYPE" "elasticsearch"

@@ -18,7 +18,6 @@ package springdata
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -42,26 +41,16 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
   @Shared
-  int httpPort
-  @Shared
-  int tcpPort
-  @Shared
   Node testNode
   @Shared
   File esWorkingDir
+  @Shared
+  String clusterName = UUID.randomUUID().toString()
 
   @Shared
   ElasticsearchTemplate template
 
   def setupSpec() {
-    withRetryOnBindException({
-      setupSpecUnderRetry()
-    })
-  }
-
-  def setupSpecUnderRetry() {
-    httpPort = PortUtils.randomOpenPort()
-    tcpPort = PortUtils.randomOpenPort()
 
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
@@ -71,10 +60,8 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
       .put("path.home", esWorkingDir.path)
     // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
       .put("threadpool.listener.size", 1)
-      .put("http.port", httpPort)
-      .put("transport.tcp.port", tcpPort)
       .build()
-    testNode = NodeBuilder.newInstance().local(true).clusterName("test-cluster").settings(settings).build()
+    testNode = NodeBuilder.newInstance().local(true).clusterName(clusterName).settings(settings).build()
     testNode.start()
 
     template = new ElasticsearchTemplate(testNode.client())
