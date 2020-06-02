@@ -67,7 +67,7 @@ public interface WeakMap<K, V> {
 
       @Override
       public <K, V> WeakMap<K, V> get() {
-        log.warn("WeakMap.Supplier not registered. Returning a synchronized WeakHashMap.");
+        log.debug("WeakMap.Supplier not registered. Returning a synchronized WeakHashMap.");
         return new MapAdapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));
       }
     }

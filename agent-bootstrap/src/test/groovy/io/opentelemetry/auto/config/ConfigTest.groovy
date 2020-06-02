@@ -43,8 +43,8 @@ class ConfigTest extends AgentSpecification {
 
     then:
     config.traceEnabled == true
-    config.httpServerErrorStatuses == (500..599).toSet()
-    config.httpClientErrorStatuses == (400..599).toSet()
+    config.httpServerErrorStatuses == toBitSet((500..599))
+    config.httpClientErrorStatuses == toBitSet((400..599))
     config.runtimeContextFieldInjection == true
     config.toString().contains("traceEnabled=true")
 
@@ -71,8 +71,8 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == false
     config.traceMethods == "mypackage.MyClass[myMethod]"
-    config.httpServerErrorStatuses == (122..457).toSet()
-    config.httpClientErrorStatuses == (111..111).toSet()
+    config.httpServerErrorStatuses == toBitSet((122..457))
+    config.httpClientErrorStatuses == toBitSet((111..111))
     config.runtimeContextFieldInjection == false
   }
 
@@ -90,8 +90,8 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == false
     config.traceMethods == "mypackage.MyClass[myMethod]"
-    config.httpServerErrorStatuses == (122..457).toSet()
-    config.httpClientErrorStatuses == (111..111).toSet()
+    config.httpServerErrorStatuses == toBitSet((122..457))
+    config.httpClientErrorStatuses == toBitSet((111..111))
     config.runtimeContextFieldInjection == false
   }
 
@@ -134,8 +134,8 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == true
     config.traceMethods == " "
-    config.httpServerErrorStatuses == (500..599).toSet()
-    config.httpClientErrorStatuses == (400..599).toSet()
+    config.httpServerErrorStatuses == toBitSet((500..599))
+    config.httpClientErrorStatuses == toBitSet((400..599))
   }
 
   def "sys props override properties"() {
@@ -152,8 +152,8 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == false
     config.traceMethods == "mypackage.MyClass[myMethod]"
-    config.httpServerErrorStatuses == (122..457).toSet()
-    config.httpClientErrorStatuses == (111..111).toSet()
+    config.httpServerErrorStatuses == toBitSet((122..457))
+    config.httpClientErrorStatuses == toBitSet((111..111))
   }
 
   def "override null properties"() {
@@ -235,10 +235,10 @@ class ConfigTest extends AgentSpecification {
 
     then:
     if (expected) {
-      assert config.httpServerErrorStatuses == expected.toSet()
-      assert config.httpClientErrorStatuses == expected.toSet()
-      assert propConfig.httpServerErrorStatuses == expected.toSet()
-      assert propConfig.httpClientErrorStatuses == expected.toSet()
+      assert config.httpServerErrorStatuses == toBitSet(expected)
+      assert config.httpClientErrorStatuses == toBitSet(expected)
+      assert propConfig.httpServerErrorStatuses == toBitSet(expected)
+      assert propConfig.httpClientErrorStatuses == toBitSet(expected)
     } else {
       assert config.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
       assert config.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
@@ -319,5 +319,13 @@ class ConfigTest extends AgentSpecification {
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
+  }
+
+  static BitSet toBitSet(Collection<Integer> set) {
+    BitSet bs = new BitSet()
+    for (Integer i : set) {
+      bs.set(i)
+    }
+    return bs
   }
 }
