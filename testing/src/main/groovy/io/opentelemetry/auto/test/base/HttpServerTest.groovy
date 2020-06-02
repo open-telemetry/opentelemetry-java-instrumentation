@@ -61,17 +61,25 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   @Shared
   OkHttpClient client = OkHttpUtils.client()
   @Shared
-  int port = PortUtils.randomOpenPort()
+  int port
   @Shared
-  URI address = buildAddress()
+  URI address
+
+  def setupSpec() {
+    withRetryOnBindException({
+      setupSpecUnderRetry()
+    })
+  }
+
+  def setupSpecUnderRetry() {
+    port = PortUtils.randomOpenPort()
+    address = buildAddress()
+    server = startServer(port)
+    println getClass().name + " http server started at: http://localhost:$port/"
+  }
 
   URI buildAddress() {
     return new URI("http://localhost:$port/")
-  }
-
-  def setupSpec() {
-    server = startServer(port)
-    println getClass().name + " http server started at: http://localhost:$port/"
   }
 
   abstract SERVER startServer(int port)

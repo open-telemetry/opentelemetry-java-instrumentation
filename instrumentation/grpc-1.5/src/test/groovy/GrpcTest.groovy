@@ -45,11 +45,6 @@ class GrpcTest extends AgentTestRunner {
         final Helloworld.Request req, final StreamObserver<Helloworld.Response> responseObserver) {
         final Helloworld.Response reply = Helloworld.Response.newBuilder().setMessage("Hello $req.name").build()
         CommonTaskExecutor.INSTANCE.execute {
-          println "=================================="
-          println "=================================="
-          println "VALID????????? " + testTracer.getCurrentSpan().getContext().isValid()
-          println "=================================="
-          println "=================================="
           if (!testTracer.getCurrentSpan().getContext().isValid()) {
             responseObserver.onError(new IllegalStateException("no active span"))
           } else {

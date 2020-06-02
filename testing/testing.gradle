@@ -7,6 +7,7 @@ excludedClassesCoverage += [
   'io.opentelemetry.auto.test.base.*',
   'io.opentelemetry.auto.test.log.*',
   'io.opentelemetry.auto.test.AgentTestRunner',
+  'io.opentelemetry.auto.test.InstrumentationTestRunner',
   'io.opentelemetry.auto.test.InMemoryExporter.*',
   'io.opentelemetry.auto.test.utils.*',
   // Avoid applying jacoco instrumentation to classes instrumented by tested agent
@@ -23,10 +24,11 @@ dependencies {
   compile deps.testLogging
   compile deps.guava
 
-  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0' // Last version to support Java7
+  // okhttp 3.12.x is the last version to support Java7
+  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.12.12'
+  compile group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '3.12.12'
 
   compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
-  compile group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: versions.okhttp
 
   compile(project(':auto-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead

@@ -13,7 +13,7 @@ data from a Java application without code changes.
 ## Getting Started
 
 Download the [latest
-release](https://github.com/open-telemetry/opentelemetry-auto-instr-java/releases)
+release](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases)
 of the Java agent and available exporters.
 
 The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
@@ -65,7 +65,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 #### Logging Exporter
 
 The logging exporter simply prints the name of the span along with its
-attributes to stdout. It is used manly for testing and debugging.
+attributes to stdout. It is used mainly for testing and debugging.
 
 | System property             | Environment variable        | Purpose                                                                      |
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|

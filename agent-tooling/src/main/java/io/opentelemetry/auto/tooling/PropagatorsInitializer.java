@@ -44,11 +44,18 @@ public class PropagatorsInitializer {
 
     DefaultContextPropagators.Builder propagatorsBuilder = DefaultContextPropagators.builder();
 
+    boolean addedPropagator = false;
     for (String propagatorId : propagators) {
       HttpTextFormat textPropagator = TEXTMAP_PROPAGATORS.get(propagatorId.trim().toLowerCase());
       if (textPropagator != null) {
+        if (addedPropagator) {
+          log.warn(
+              "Only one propagator per concern can be added, " + textPropagator + " is ignored");
+          continue;
+        }
         propagatorsBuilder.addHttpTextFormat(textPropagator);
         log.info("Added " + textPropagator + " propagator");
+        addedPropagator = true;
       } else {
         log.warn("No matching propagator for " + propagatorId);
       }

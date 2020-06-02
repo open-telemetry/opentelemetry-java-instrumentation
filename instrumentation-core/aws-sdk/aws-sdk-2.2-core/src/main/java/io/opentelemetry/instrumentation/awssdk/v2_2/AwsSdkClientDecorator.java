@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
+package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkRequest;
@@ -28,15 +26,12 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, SdkHttpResponse> {
-  public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.aws-sdk-2.2");
+final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, SdkHttpResponse> {
+  static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
-  public Span onSdkRequest(final Span span, final SdkRequest request) {
+  Span onSdkRequest(final Span span, final SdkRequest request) {
     // S3
     request
         .getValueForField("Bucket", String.class)
@@ -59,14 +54,14 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     return span;
   }
 
-  public String spanName(final ExecutionAttributes attributes) {
+  String spanName(final ExecutionAttributes attributes) {
     final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
     return awsServiceName + "." + awsOperation;
   }
 
-  public Span onAttributes(final Span span, final ExecutionAttributes attributes) {
+  Span onAttributes(final Span span, final ExecutionAttributes attributes) {
 
     final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
@@ -79,7 +74,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   // Not overriding the super.  Should call both with each type of response.
-  public Span onResponse(final Span span, final SdkResponse response) {
+  Span onSdkResponse(final Span span, final SdkResponse response) {
     if (response instanceof AwsResponse) {
       span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
     }
