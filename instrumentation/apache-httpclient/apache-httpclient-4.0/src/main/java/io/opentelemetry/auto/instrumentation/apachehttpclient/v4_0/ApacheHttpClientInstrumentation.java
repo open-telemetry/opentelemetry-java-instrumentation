@@ -21,7 +21,6 @@ import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHe
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -33,6 +32,7 @@ import com.google.auto.service.AutoService;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -176,8 +176,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
-      final Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+      final Context context = ClientDecorator.withSpan(span, Context.current());
+      // TODO(anuraaga): Seems like a bug that invalid context still gets injected by the injector.
+      if (span.getContext().isValid()) {
+        OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+      }
       final Scope scope = withScopedContext(context);
 
       return new SpanWithScope(span, scope);

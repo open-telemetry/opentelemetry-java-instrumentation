@@ -15,32 +15,49 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
-import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
-
-import io.opentelemetry.auto.bootstrap.WeakMap;
+import io.grpc.Context;
+import io.opentelemetry.context.ContextUtils;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 
 public abstract class ClientDecorator extends BaseDecorator {
 
-  // Work around the fact that we cannot read the kind of currentSpan by keeping track of the spans
-  // we created.
-  private static final WeakMap<Span, Boolean> CLIENT_SPANS = newWeakMap();
+  // Keeps track of the client span in a subtree corresponding to a client request.
+  private static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
+      Context.key("opentelemetry-trace-auto-client-span-key");
+
+  public static Scope currentContextWith(final Span clientSpan) {
+    if (!clientSpan.getContext().isValid()) {
+      return TracingContextUtils.currentContextWith(clientSpan);
+    }
+    return ContextUtils.withScopedContext(
+        TracingContextUtils.withSpan(
+            clientSpan, Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan)));
+  }
+
+  public static Context withSpan(final Span clientSpan, final Context context) {
+    if (!clientSpan.getContext().isValid()) {
+      return TracingContextUtils.withSpan(clientSpan, context);
+    }
+    return TracingContextUtils.withSpan(
+        clientSpan, Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan));
+  }
 
   public Span getOrCreateSpan(String name, Tracer tracer) {
-    final Span current = tracer.getCurrentSpan();
+    final Context context = Context.current();
+    final Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
 
-    if (Boolean.TRUE.equals(CLIENT_SPANS.get(current))) {
+    if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
       return DefaultSpan.getInvalid();
     }
 
-    final Span clientSpan =
-        tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
-    CLIENT_SPANS.put(clientSpan, true);
-    return clientSpan;
+    final Span current = TracingContextUtils.getSpan(context);
+    return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
   }
 
   @Override
