@@ -33,7 +33,8 @@ public class Servlet2Advice {
       @Advice.This final Object servlet,
       @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) final ServletResponse response) {
+      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
+          final ServletResponse response) {
 
     if (!(request instanceof HttpServletRequest)) {
       return null;
@@ -46,7 +47,6 @@ public class Servlet2Advice {
         .put((HttpServletResponse) response, httpServletRequest);
 
     return TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
-
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -58,16 +58,13 @@ public class Servlet2Advice {
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
       TRACER.setPrincipal((HttpServletRequest) request);
 
-      Integer responseStatus = InstrumentationContext
-          .get(ServletResponse.class, Integer.class)
-          .get(response);
-      ResponseWithStatus responseWithStatus = new ResponseWithStatus((HttpServletResponse) response,
-          responseStatus);
+      Integer responseStatus =
+          InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
 
       if (throwable == null) {
-        TRACER.end(spanWithScope, responseWithStatus);
+        TRACER.end(spanWithScope, responseStatus);
       } else {
-        TRACER.endExceptionally(spanWithScope, throwable, responseWithStatus);
+        TRACER.endExceptionally(spanWithScope, throwable, responseStatus);
       }
     }
   }

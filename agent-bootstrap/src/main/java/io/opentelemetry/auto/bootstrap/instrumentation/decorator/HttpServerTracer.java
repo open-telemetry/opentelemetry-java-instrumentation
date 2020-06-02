@@ -40,11 +40,10 @@ import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 import lombok.extern.slf4j.Slf4j;
 
+// TODO In search for a better home package
 @Slf4j
-public abstract class HttpServerTracer<REQUEST, RESPONSE> {
+public abstract class HttpServerTracer<REQUEST> {
   public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.span";
-
-  protected static final String DEFAULT_SPAN_NAME = "HTTP request";
 
   protected final Tracer tracer;
 
@@ -52,21 +51,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 
-  protected abstract String getVersion();
-
-  protected abstract String getInstrumentationName();
-
-  protected void onConnection(REQUEST request, Span span) {
-    SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(request));
-    final Integer port = peerPort(request);
-    // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
-    if (port != null && port > 0) {
-      SemanticAttributes.NET_PEER_PORT.set(span, port);
-    }
-  }
-
   public SpanWithScope startSpan(REQUEST request, Method origin, String originType) {
-    final Span existingSpan = findExistingSpan(request);
+    final Span existingSpan = getAttachedSpan(request);
     if (existingSpan != null) {
       /*
       Given request already has a span associated with it.
@@ -82,45 +68,52 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
       */
       final boolean spanContextWasLost = !sameTrace(tracer.getCurrentSpan(), existingSpan);
       if (spanContextWasLost) {
-        //Put span from request attribute into current context.
-        //We did not create a new span here, so return null instead
+        // Put span from request attribute into current context.
+        // We did not create a new span here, so return null instead
         return new SpanWithScope(null, currentContextWith(existingSpan));
       } else {
-        //We are inside nested servlet/filter, don't create new span
+        // We are inside nested servlet/filter, don't create new span
         return null;
       }
     }
 
-    final Span.Builder builder = tracer.spanBuilder(spanNameForMethod(origin))
-        .setSpanKind(SERVER)
-        .setParent(extract(request, getGetter()))
-        //TODO Where span.origin.type is defined?
-        .setAttribute("span.origin.type", originType);
+    final Span.Builder builder =
+        tracer
+            .spanBuilder(spanNameForMethod(origin))
+            .setSpanKind(SERVER)
+            .setParent(extract(request, getGetter()))
+            // TODO Where span.origin.type is defined?
+            .setAttribute("span.origin.type", originType);
 
     Span span = builder.startSpan();
-    //TODO fix parameter order
-    onConnection(request, span);
+    onConnection(span, request);
     onRequest(span, request);
 
     return new SpanWithScope(span, currentContextWith(span));
   }
 
-  protected Span findExistingSpan(REQUEST request) {
-    return null;
+  protected abstract String getVersion();
+
+  protected abstract String getInstrumentationName();
+
+  protected void onConnection(Span span, REQUEST request) {
+    SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(request));
+    final Integer port = peerPort(request);
+    // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
+    if (port != null && port > 0) {
+      SemanticAttributes.NET_PEER_PORT.set(span, port);
+    }
   }
 
   private boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
   }
 
-  protected abstract Integer peerPort(REQUEST request);
+  // TODO use semantic attributes
 
-  protected abstract String peerHostIP(REQUEST request);
-
-  //TODO use semantic attributes
-  public void onRequest(final Span span, final REQUEST request) {
-    persistSpanToRequest(span, request);
-    span.setAttribute(Tags.HTTP_METHOD, method(request));
+  protected void onRequest(final Span span, final REQUEST request) {
+    attachedSpanToRequest(span, request);
+    SemanticAttributes.HTTP_METHOD.set(span, method(request));
 
     // Copy of HttpClientDecorator url handling
     try {
@@ -165,26 +158,11 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
     }
     // TODO set resource name from URL.
   }
-
-  protected abstract void persistSpanToRequest(Span span, REQUEST request);
-
-  protected abstract URI url(REQUEST request) throws URISyntaxException;
-
-  private String getSpanName(REQUEST request) {
-    if (request == null) {
-      return DEFAULT_SPAN_NAME;
-    }
-    final String method = method(request);
-    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
-  }
-
-  protected abstract String method(REQUEST request);
-
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
    */
-  public String spanNameForMethod(final Method method) {
+  protected String spanNameForMethod(final Method method) {
     return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
   }
 
@@ -210,7 +188,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
     addThrowable(span, unwrapThrowable(throwable));
   }
 
-  //TODO semantic attributes
+  // TODO semantic attributes
   public static void addThrowable(final Span span, final Throwable throwable) {
     span.setAttribute(MoreTags.ERROR_MSG, throwable.getMessage());
     span.setAttribute(MoreTags.ERROR_TYPE, throwable.getClass().getName());
@@ -224,47 +202,45 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
     return tracer.getCurrentSpan();
   }
 
-  protected abstract HttpTextFormat.Getter<REQUEST> getGetter();
+  // TODO should end methods remove SPAN attribute from request as well?
 
-  //TODO should end methods remove SPAN attribute from request as well?
-  public void end(SpanWithScope spanWithScope, RESPONSE response){
+  public void end(SpanWithScope spanWithScope, int responseCode) {
     if (spanWithScope == null) {
       return;
     }
 
     final Span span = spanWithScope.getSpan();
     if (span != null) {
-      end(span, response);
+      end(span, responseCode);
     }
 
     spanWithScope.closeScope();
   }
 
-  public void end(Span span, RESPONSE response){
-    int responseStatus = status(response);
+  public void end(Span span, int responseStatus) {
     setStatus(span, responseStatus);
     span.end();
   }
 
-  public void endExceptionally(SpanWithScope spanWithScope, Throwable throwable, RESPONSE response){
+  public void endExceptionally(
+      SpanWithScope spanWithScope, Throwable throwable, int responseStatus) {
     if (spanWithScope == null) {
       return;
     }
 
     final Span span = spanWithScope.getSpan();
     if (span != null) {
-      endExceptionally(span, throwable, response);
+      endExceptionally(span, throwable, responseStatus);
     }
 
     spanWithScope.closeScope();
   }
 
-  public void endExceptionally(Span span, Throwable throwable, RESPONSE response){
-    int responseStatus = status(response);
+  public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
     if (responseStatus == 200) {
-      //TODO I think this is wrong.
-      //We must report that response status that was actually sent to end user
-      //We may change span status, but not http_status attribute
+      // TODO I think this is wrong.
+      // We must report that response status that was actually sent to end user
+      // We may change span status, but not http_status attribute
       responseStatus = 500;
     }
     setStatus(span, responseStatus);
@@ -272,13 +248,11 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
     span.end();
   }
 
-  protected abstract int status(RESPONSE response);
-
   protected Throwable unwrapThrowable(Throwable throwable) {
     return throwable instanceof ExecutionException ? throwable.getCause() : throwable;
   }
 
-  public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
+  private <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
     final Context context =
         getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
     final Span span = getSpan(context);
@@ -287,9 +261,23 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE> {
 
   private void setStatus(Span span, int status) {
     SemanticAttributes.HTTP_STATUS_CODE.set(span, status);
-    //TODO status_message
+    // TODO status_message
     if (Config.get().getHttpServerErrorStatuses().contains(status)) {
       span.setStatus(Status.UNKNOWN);
     }
   }
+
+  protected abstract Integer peerPort(REQUEST request);
+
+  protected abstract String peerHostIP(REQUEST request);
+
+  protected abstract HttpTextFormat.Getter<REQUEST> getGetter();
+
+  protected abstract URI url(REQUEST request) throws URISyntaxException;
+
+  protected abstract String method(REQUEST request);
+
+  protected abstract void attachedSpanToRequest(Span span, REQUEST request);
+
+  protected abstract Span getAttachedSpan(REQUEST request);
 }

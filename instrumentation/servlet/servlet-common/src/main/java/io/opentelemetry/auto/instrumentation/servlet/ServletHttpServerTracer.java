@@ -1,3 +1,18 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.opentelemetry.auto.instrumentation.servlet;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
@@ -5,7 +20,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
@@ -14,15 +28,14 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ServletHttpServerTracer<RESPONSE> extends
-    HttpServerTracer<HttpServletRequest, RESPONSE> {
+public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServletRequest> {
 
   protected String getVersion() {
     return null;
   }
 
   @Override
-  //TODO this violates convention
+  // TODO this violates convention
   protected URI url(HttpServletRequest httpServletRequest) throws URISyntaxException {
     return new URI(
         httpServletRequest.getScheme(),
@@ -34,18 +47,14 @@ public abstract class ServletHttpServerTracer<RESPONSE> extends
         null);
   }
 
-  private String getSpanName(Method method) {
-    return spanNameForMethod(method);
-  }
-
   @Override
-  protected Span findExistingSpan(HttpServletRequest request) {
+  protected Span getAttachedSpan(HttpServletRequest request) {
     Object span = request.getAttribute(SPAN_ATTRIBUTE);
     return span instanceof Span ? (Span) span : null;
   }
 
   @Override
-  protected void persistSpanToRequest(Span span, HttpServletRequest request) {
+  protected void attachedSpanToRequest(Span span, HttpServletRequest request) {
     request.setAttribute(SPAN_ATTRIBUTE, span);
   }
 
@@ -66,15 +75,13 @@ public abstract class ServletHttpServerTracer<RESPONSE> extends
   }
 
   public void onRequest(Span span, HttpServletRequest request) {
-    //TODO why?
+    // TODO why?
     request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
 
-    //TODO why? they are not in semantic convention, right?
+    // TODO why? they are not in semantic convention, right?
     span.setAttribute("servlet.path", request.getServletPath());
     span.setAttribute("servlet.context", request.getContextPath());
-    //TODO what does the following line do?
-//    DECORATE.onContext(span, request, request.getServletContext());
     super.onRequest(span, request);
   }
 
@@ -83,8 +90,8 @@ public abstract class ServletHttpServerTracer<RESPONSE> extends
     return new HttpServletRequestGetter();
   }
 
-  public static class HttpServletRequestGetter implements
-      HttpTextFormat.Getter<HttpServletRequest> {
+  public static class HttpServletRequestGetter
+      implements HttpTextFormat.Getter<HttpServletRequest> {
     @Override
     public String get(HttpServletRequest carrier, String key) {
       return carrier.getHeader(key);
@@ -100,7 +107,7 @@ public abstract class ServletHttpServerTracer<RESPONSE> extends
   }
 
   public void setPrincipal(HttpServletRequest request) {
-    final Span existingSpan = findExistingSpan(request);
+    final Span existingSpan = getAttachedSpan(request);
     if (existingSpan != null) {
       final Principal principal = request.getUserPrincipal();
       if (principal != null) {

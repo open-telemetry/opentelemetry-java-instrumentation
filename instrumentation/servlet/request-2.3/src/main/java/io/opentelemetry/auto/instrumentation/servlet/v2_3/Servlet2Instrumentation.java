@@ -59,6 +59,15 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
     return contextStores;
   }
 
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer",
+      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer$HttpServletRequestGetter",
+      packageName + ".Servlet2HttpServerTracer"
+    };
+  }
+
   /**
    * Here we are instrumenting the public method for HttpServlet. This should ensure that this
    * advice is always called before HttpServletInstrumentation which is instrumenting the protected

@@ -26,7 +26,9 @@ public class TagSettingAsyncListener implements AsyncListener {
   private final Span span;
   private final Servlet3HttpServerTracer servletHttpServerTracer;
 
-  public TagSettingAsyncListener(final AtomicBoolean responseHandled, final Span span,
+  public TagSettingAsyncListener(
+      final AtomicBoolean responseHandled,
+      final Span span,
       Servlet3HttpServerTracer servletHttpServerTracer) {
     this.responseHandled = responseHandled;
     this.span = span;
@@ -36,7 +38,8 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onComplete(final AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
-      servletHttpServerTracer.end(span, (HttpServletResponse) event.getSuppliedResponse());
+      servletHttpServerTracer.end(
+          span, ((HttpServletResponse) event.getSuppliedResponse()).getStatus());
     }
   }
 
@@ -50,11 +53,10 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onError(final AsyncEvent event) {
     if (responseHandled.compareAndSet(false, true)) {
-      servletHttpServerTracer
-          .endExceptionally(
-              span,
-              event.getThrowable(),
-              (HttpServletResponse) event.getSuppliedResponse());
+      servletHttpServerTracer.endExceptionally(
+          span,
+          event.getThrowable(),
+          ((HttpServletResponse) event.getSuppliedResponse()).getStatus());
     }
   }
 

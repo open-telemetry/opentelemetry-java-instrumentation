@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
+
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
@@ -27,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 public class Servlet3Advice {
-  public static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(
@@ -62,22 +63,23 @@ public class Servlet3Advice {
       TRACER.setPrincipal((HttpServletRequest) request);
 
       if (throwable != null) {
-        TRACER.endExceptionally(spanWithScope, throwable, (HttpServletResponse) response);
+        TRACER.endExceptionally(
+            spanWithScope, throwable, ((HttpServletResponse) response).getStatus());
         return;
       }
 
-      //Usually Tracer takes care of this checks and of closing scopes.
-      //But in case of async response processing we have to handle scope in this thread,
-      //not in some arbitrary thread that may later take care of actual response.
+      // Usually Tracer takes care of this checks and of closing scopes.
+      // But in case of async response processing we have to handle scope in this thread,
+      // not in some arbitrary thread that may later take care of actual response.
       Span span = spanWithScope.getSpan();
-      if(span == null){
+      if (span == null) {
         spanWithScope.closeScope();
         return;
       }
 
       final AtomicBoolean responseHandled = new AtomicBoolean(false);
 
-      //In case of async servlets wait for the actual response to be ready
+      // In case of async servlets wait for the actual response to be ready
       if (request.isAsyncStarted()) {
         try {
           request
@@ -91,7 +93,7 @@ public class Servlet3Advice {
 
       // Check again in case the request finished before adding the listener.
       if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-        TRACER.end(span, (HttpServletResponse) response);
+        TRACER.end(span, ((HttpServletResponse) response).getStatus());
       }
     }
   }

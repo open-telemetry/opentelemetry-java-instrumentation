@@ -38,8 +38,6 @@ import org.glassfish.grizzly.http.server.Response;
 @AutoService(Instrumenter.class)
 public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
-  public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
-
   public GrizzlyHttpHandlerInstrumentation() {
     super("grizzly");
   }
@@ -57,7 +55,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GrizzlyDecorator",
+      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer",
+      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer$HttpServletRequestGetter",
+      packageName + ".GrizzlyHttpServerTracer",
       packageName + ".GrizzlyRequestExtractAdapter",
       getClass().getName() + "$SpanClosingListener"
     };
@@ -74,11 +74,11 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   }
 
   public static class HandleAdvice {
+    public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
-        @Advice.Origin final Method method,
-        @Advice.Argument(0) final Request request) {
+        @Advice.Origin final Method method, @Advice.Argument(0) final Request request) {
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       return TRACER.startSpan(request, method, null);
@@ -91,20 +91,21 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
         @Advice.Thrown final Throwable throwable) {
 
       if (throwable != null) {
-        TRACER.endExceptionally(spanWithScope, throwable, response);
+        TRACER.endExceptionally(spanWithScope, throwable, response.getStatus());
       }
     }
   }
 
   public static class SpanClosingListener implements AfterServiceListener {
     public static final SpanClosingListener LISTENER = new SpanClosingListener();
+    public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
     @Override
     public void onAfterService(final Request request) {
       final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
       if (spanAttr instanceof Span) {
         request.removeAttribute(SPAN_ATTRIBUTE);
-        TRACER.end((Span) spanAttr, request.getResponse());
+        TRACER.end((Span) spanAttr, request.getResponse().getStatus());
       }
     }
   }

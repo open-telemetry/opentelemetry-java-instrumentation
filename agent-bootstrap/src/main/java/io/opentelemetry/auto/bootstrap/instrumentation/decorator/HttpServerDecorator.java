@@ -24,6 +24,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
 
+/** @deprecated use {@link HttpServerTracer} instead. */
+@Deprecated
 @Slf4j
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
   public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.span";
