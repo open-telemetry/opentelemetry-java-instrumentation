@@ -153,6 +153,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.contains("javassist")
         || name.contains(".asm.")
         || name.contains("$__sisu")
+        || name.contains("$$EnhancerByProxool$$")
         || name.startsWith("org.springframework.core.$Proxy")) {
       return true;
     }
