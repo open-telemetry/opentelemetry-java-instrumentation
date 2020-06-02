@@ -205,19 +205,33 @@ OpenTelemetry 1.0 (GA) releases, along with as many manual instrumentation libra
 
 High-level roadmap:
 
-* Keep up with the specifications, including but not limited to:
+* Conform with all OpenTelemetry specifications
   * Implement all applicable semantic attributes
-    * Clearly document any additional attributes that are set
-        which are not defined by semantic conventions
-  * Standard metrics (still TBD, e.g.
+    * Clearly document additional attributes not defined in specification
+  * Support standard configuration properties (e.g. exporters, propagators, samplers)
+  * Capture standard metrics (still TBD, e.g.
       [opentelemetry-specification#522](https://github.com/open-telemetry/opentelemetry-specification/issues/522))
-* Simple (and well-documented) configuration for common needs, including but not limited to:
-  * Exporters, propagators, samplers
+  * See issues with label
+    [specification](https://github.com/open-telemetry/opentelemetry-java-instrumentation/labels/specification)
+* Simpler exporter configuration
+  * See issue
+    [#370](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/370)
+* Great documentation
+  * See issues with label
+    [documentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/labels/documentation)
 * Build out manual instrumentation libraries for existing auto-instrumentation
   * Share code and tests between manual and auto-instrumentation
+  * See issue
+    [#45](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/45)
 * Good support for vendors to extend the agent
   * Including ability for any user to write their own auto-instrumentation
+  * See issues with label
+    [packaging](https://github.com/open-telemetry/opentelemetry-java-instrumentation/labels/packaging)
 * Better smoke test harness and more smoke tests
+  * See issue
+    [#298](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/298)
 * Benchmarking and tuning (both runtime and startup)
-* Address all sporadic test failures
-  * Also, speed up CI tests
+* Address sporadic test failures
+  * See issues with label
+    [sporadic test failure](https://github.com/open-telemetry/opentelemetry-java-instrumentation/labels/sporadic%20test%20failure)
+* Speed up CI build feedback
