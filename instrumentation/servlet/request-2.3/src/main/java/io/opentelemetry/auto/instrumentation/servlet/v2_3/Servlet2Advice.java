@@ -33,7 +33,8 @@ public class Servlet2Advice {
       @Advice.This final Object servlet,
       @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) final ServletResponse response) {
+      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
+          final ServletResponse response) {
 
     if (!(request instanceof HttpServletRequest)) {
       return null;

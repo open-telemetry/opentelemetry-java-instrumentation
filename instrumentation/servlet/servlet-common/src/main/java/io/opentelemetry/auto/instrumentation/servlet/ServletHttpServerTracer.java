@@ -17,7 +17,6 @@ package io.opentelemetry.auto.instrumentation.servlet;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
@@ -87,15 +86,7 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
 
   @Override
   protected Getter<HttpServletRequest> getGetter() {
-    return new HttpServletRequestGetter();
-  }
-
-  public static class HttpServletRequestGetter
-      implements HttpTextFormat.Getter<HttpServletRequest> {
-    @Override
-    public String get(HttpServletRequest carrier, String key) {
-      return carrier.getHeader(key);
-    }
+    return HttpServletRequestGetter.GETTER;
   }
 
   protected Throwable unwrapThrowable(Throwable throwable) {
