@@ -22,12 +22,11 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
 import lombok.Getter;
@@ -84,9 +83,9 @@ public class Config {
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
-  private static final Set<Integer> DEFAULT_HTTP_SERVER_ERROR_STATUSES =
+  private static final BitSet DEFAULT_HTTP_SERVER_ERROR_STATUSES =
       parseIntegerRangeSet("500-599", "default");
-  private static final Set<Integer> DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
+  private static final BitSet DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
       parseIntegerRangeSet("400-599", "default");
   private static final boolean DEFAULT_HTTP_SERVER_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
@@ -111,8 +110,8 @@ public class Config {
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final List<String> excludedClasses;
-  @Getter private final Set<Integer> httpServerErrorStatuses;
-  @Getter private final Set<Integer> httpClientErrorStatuses;
+  @Getter private final BitSet httpServerErrorStatuses;
+  @Getter private final BitSet httpClientErrorStatuses;
   @Getter private final boolean httpServerTagQueryString;
   @Getter private final boolean httpClientTagQueryString;
   @Getter private final Integer scopeDepthLimit;
@@ -368,8 +367,8 @@ public class Config {
     }
   }
 
-  private static Set<Integer> getIntegerRangeSettingFromEnvironment(
-      final String name, final Set<Integer> defaultValue) {
+  private static BitSet getIntegerRangeSettingFromEnvironment(
+      final String name, final BitSet defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
     try {
       return value == null ? defaultValue : parseIntegerRangeSet(value, name);
@@ -450,8 +449,8 @@ public class Config {
     return valueOf(properties.getProperty(name), Integer.class, defaultValue);
   }
 
-  private static Set<Integer> getPropertyIntegerRangeValue(
-      final Properties properties, final String name, final Set<Integer> defaultValue) {
+  private static BitSet getPropertyIntegerRangeValue(
+      final Properties properties, final String name, final BitSet defaultValue) {
     final String value = properties.getProperty(name);
     try {
       return value == null ? defaultValue : parseIntegerRangeSet(value, name);
@@ -462,7 +461,7 @@ public class Config {
   }
 
   @NonNull
-  private static Set<Integer> parseIntegerRangeSet(@NonNull String str, final String settingName)
+  private static BitSet parseIntegerRangeSet(@NonNull String str, final String settingName)
       throws NumberFormatException {
     str = str.replaceAll("\\s", "");
     if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
@@ -473,24 +472,23 @@ public class Config {
       throw new NumberFormatException();
     }
 
+    final int lastSeparator = Math.max(str.lastIndexOf(','), str.lastIndexOf('-'));
+    final int maxValue = Integer.parseInt(str.substring(lastSeparator + 1));
+    final BitSet set = new BitSet(maxValue);
     final String[] tokens = str.split(",", -1);
-    final Set<Integer> set = new HashSet<>();
-
     for (final String token : tokens) {
-      final String[] range = token.split("-", -1);
-      if (range.length == 1) {
-        set.add(Integer.parseInt(range[0]));
-      } else if (range.length == 2) {
-        final int left = Integer.parseInt(range[0]);
-        final int right = Integer.parseInt(range[1]);
+      final int separator = token.indexOf('-');
+      if (separator == -1) {
+        set.set(Integer.parseInt(token));
+      } else if (separator > 0) {
+        final int left = Integer.parseInt(token.substring(0, separator));
+        final int right = Integer.parseInt(token.substring(separator + 1));
         final int min = Math.min(left, right);
         final int max = Math.max(left, right);
-        for (int i = min; i <= max; i++) {
-          set.add(i);
-        }
+        set.set(min, max + 1);
       }
     }
-    return Collections.unmodifiableSet(set);
+    return set;
   }
 
   @NonNull

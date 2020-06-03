@@ -119,7 +119,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
       if (status != null) {
         span.setAttribute(Tags.HTTP_STATUS, status);
 
-        if (Config.get().getHttpServerErrorStatuses().contains(status)) {
+        if (Config.get().getHttpServerErrorStatuses().get(status)) {
           span.setStatus(Status.UNKNOWN);
         }
       }
