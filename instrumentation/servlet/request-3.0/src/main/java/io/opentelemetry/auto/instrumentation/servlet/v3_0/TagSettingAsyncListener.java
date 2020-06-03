@@ -22,17 +22,15 @@ import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
+  private static final Servlet3HttpServerTracer servletHttpServerTracer =
+      new Servlet3HttpServerTracer();
+
   private final AtomicBoolean responseHandled;
   private final Span span;
-  private final Servlet3HttpServerTracer servletHttpServerTracer;
 
-  public TagSettingAsyncListener(
-      final AtomicBoolean responseHandled,
-      final Span span,
-      Servlet3HttpServerTracer servletHttpServerTracer) {
+  public TagSettingAsyncListener(final AtomicBoolean responseHandled, final Span span) {
     this.responseHandled = responseHandled;
     this.span = span;
-    this.servletHttpServerTracer = servletHttpServerTracer;
   }
 
   @Override

@@ -75,7 +75,7 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   }
 
   public void onRequest(Span span, HttpServletRequest request) {
-    // TODO why?
+    // we do this e.g. so that servlet containers can use these values in their access logs
     request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
 

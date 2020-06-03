@@ -55,8 +55,6 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer",
-      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer$HttpServletRequestGetter",
       packageName + ".GrizzlyHttpServerTracer",
       packageName + ".GrizzlyRequestExtractAdapter",
       getClass().getName() + "$SpanClosingListener"

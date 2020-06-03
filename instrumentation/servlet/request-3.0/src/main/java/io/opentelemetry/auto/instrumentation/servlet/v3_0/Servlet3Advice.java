@@ -82,9 +82,7 @@ public class Servlet3Advice {
       // In case of async servlets wait for the actual response to be ready
       if (request.isAsyncStarted()) {
         try {
-          request
-              .getAsyncContext()
-              .addListener(new TagSettingAsyncListener(responseHandled, span, TRACER));
+          request.getAsyncContext().addListener(new TagSettingAsyncListener(responseHandled, span));
         } catch (final IllegalStateException e) {
           // org.eclipse.jetty.server.Request may throw an exception here if request became
           // finished after check above. We just ignore that exception and move on.
