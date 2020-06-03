@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -72,8 +73,6 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   }
 
   public static class HandleAdvice {
-    public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
-
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
         @Advice.Origin final Method method, @Advice.Argument(0) final Request request) {

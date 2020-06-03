@@ -25,6 +25,8 @@ import java.net.URISyntaxException;
 import org.glassfish.grizzly.http.server.Request;
 
 public class GrizzlyHttpServerTracer extends HttpServerTracer<Request> {
+  public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
+
   @Override
   protected String getVersion() {
     return null;
