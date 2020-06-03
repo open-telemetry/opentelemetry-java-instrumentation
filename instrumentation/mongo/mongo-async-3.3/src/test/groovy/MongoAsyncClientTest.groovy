@@ -84,6 +84,31 @@ class MongoAsyncClientTest extends MongoBaseTest {
     collectionName = "testCollection"
   }
 
+  def "test create collection with already built ClientSettings"() {
+    setup:
+    def clientSettings = client.settings
+    def newClientSettings = MongoClientSettings.builder(clientSettings).build()
+    MongoDatabase db = MongoClients.create(newClientSettings).getDatabase(dbName)
+
+    when:
+    db.createCollection(collectionName, toCallback {})
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        mongoSpan(it, 0) {
+          assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
+            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
+      }
+    }
+
+    where:
+    dbName = "test_db"
+    collectionName = "testCollection"
+  }
+
   def "test create collection no description"() {
     setup:
     MongoDatabase db = MongoClients.create("mongodb://localhost:$port").getDatabase(dbName)

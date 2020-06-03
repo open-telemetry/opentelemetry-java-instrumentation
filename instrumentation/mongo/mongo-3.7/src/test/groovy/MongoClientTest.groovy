@@ -72,6 +72,33 @@ class MongoClientTest extends MongoBaseTest {
     collectionName = "testCollection"
   }
 
+  def "test create collection with already built ClientSettings"() {
+    setup:
+    def clientSettings = MongoClientSettings.builder()
+      .applyToClusterSettings({ builder ->
+        builder.hosts(Arrays.asList(
+          new ServerAddress("localhost", port)))
+          .description("some-description")
+      })
+      .build()
+    def newClientSettings = MongoClientSettings.builder(clientSettings).build()
+    MongoDatabase db = MongoClients.create(newClientSettings).getDatabase(dbName)
+
+    when:
+    db.createCollection(collectionName)
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
+      }
+    }
+
+    where:
+    dbName = "test_db"
+    collectionName = "testCollection"
+  }
+
   def "test create collection no description"() {
     setup:
     MongoDatabase db = MongoClients.create("mongodb://localhost:" + port).getDatabase(dbName)
