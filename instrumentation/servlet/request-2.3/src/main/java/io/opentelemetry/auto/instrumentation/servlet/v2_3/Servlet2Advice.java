@@ -15,6 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
+import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2HttpServerTracer.TRACER;
+
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import java.lang.reflect.Method;
@@ -26,15 +28,12 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 public class Servlet2Advice {
-  public static final Servlet2HttpServerTracer TRACER = new Servlet2HttpServerTracer();
-
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(
       @Advice.This final Object servlet,
       @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
-          final ServletResponse response) {
+      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) final ServletResponse response) {
 
     if (!(request instanceof HttpServletRequest)) {
       return null;

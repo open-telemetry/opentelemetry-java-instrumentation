@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 import io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer;
 
 public class Servlet2HttpServerTracer extends ServletHttpServerTracer {
+  public static final Servlet2HttpServerTracer TRACER = new Servlet2HttpServerTracer();
 
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.servlet-2.3";
