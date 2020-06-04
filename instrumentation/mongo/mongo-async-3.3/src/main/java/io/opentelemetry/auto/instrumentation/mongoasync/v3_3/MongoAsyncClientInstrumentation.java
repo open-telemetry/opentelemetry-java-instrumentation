@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.mongoasync.v3_3;
 
 import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -56,7 +57,8 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
                                 Modifier.PUBLIC,
                                 null,
                                 Collections.<TypeDescription.Generic>emptyList())))
-                    .and(isPublic())));
+                    .and(isPublic())))
+        .and(declaresField(named("commandListeners")));
   }
 
   @Override
@@ -85,8 +87,7 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
           return;
         }
       }
-      final TracingCommandListener listener = new TracingCommandListener();
-      builder.addCommandListener(listener);
+      builder.addCommandListener(new TracingCommandListener());
     }
   }
 }

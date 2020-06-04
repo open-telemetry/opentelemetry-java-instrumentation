@@ -85,8 +85,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
           return;
         }
       }
-      final TracingCommandListener listener = new TracingCommandListener();
-      builder.addCommandListener(listener);
+      builder.addCommandListener(new TracingCommandListener());
     }
   }
 }

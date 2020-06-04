@@ -68,7 +68,10 @@ class MongoClientTest extends MongoBaseTest {
     collectionName = "testCollection"
   }
 
-  def "test create collection with already built ClientSettings"() {
+  // Tests the fix for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/457
+  // TracingCommandListener might get added multiple times if clientOptions are built using existing clientOptions or when calling  a build method twice.
+  // This test asserts that duplicate traces are not created in those cases.
+  def "test create collection with already built ClientOptions"() {
     setup:
     def clientOptions = client.mongoClientOptions
     def newClientOptions = MongoClientOptions.builder(clientOptions).build()
