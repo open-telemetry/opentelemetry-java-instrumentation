@@ -50,6 +50,11 @@ public class AgentInstaller {
     return INSTRUMENTATION;
   }
 
+  static {
+    // WeakMap is used by other classes below, so we need to register the provider first.
+    AgentTooling.registerWeakMapProvider();
+  }
+
   public static void installBytebuddyAgent(final Instrumentation inst) {
     if (Config.get().isTraceEnabled()) {
       installBytebuddyAgent(inst, false, new AgentBuilder.Listener[0]);

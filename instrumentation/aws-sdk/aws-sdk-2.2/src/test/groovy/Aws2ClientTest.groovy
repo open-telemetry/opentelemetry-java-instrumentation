@@ -277,6 +277,34 @@ class Aws2ClientTest extends AgentTestRunner {
         """
   }
 
+  def "client can be customized by user"() {
+    setup:
+    def client = DynamoDbClient.builder()
+      .endpointOverride(server.address)
+      .region(Region.AP_NORTHEAST_1)
+      .credentialsProvider(CREDENTIALS_PROVIDER)
+      .overrideConfiguration {
+        it.putHeader("x-name", "value")
+      }
+      .build()
+
+    when:
+    responseBody.set("")
+    client.createTable(CreateTableRequest.builder().tableName("sometable").build())
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {}
+        span(1) {}
+      }
+    }
+    server.lastRequest.headers.get("x-name") == "value"
+
+    cleanup:
+    server.close()
+  }
+
   def "timeout and retry errors captured"() {
     setup:
     def server = httpServer {

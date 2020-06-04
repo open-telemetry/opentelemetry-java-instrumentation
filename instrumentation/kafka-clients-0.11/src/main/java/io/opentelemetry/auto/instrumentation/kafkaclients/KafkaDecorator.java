@@ -21,6 +21,7 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.record.TimestampType;
 
 public class KafkaDecorator extends ClientDecorator {
   public static final KafkaDecorator DECORATE = new KafkaDecorator();
@@ -47,16 +48,23 @@ public class KafkaDecorator extends ClientDecorator {
     return "destination";
   }
 
-  public void onConsume(final Span span, final ConsumerRecord record) {
+  public void onConsume(final Span span, final long startTimeMillis, final ConsumerRecord record) {
     span.setAttribute("partition", record.partition());
     span.setAttribute("offset", record.offset());
+    // don't record a duration if the message was sent from an old Kafka client
+    if (record.timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {
+      final long produceTime = record.timestamp();
+      // this attribute shows how much time elapsed between the producer and the consumer of this
+      // message, which can be helpful for identifying queue bottlenecks
+      span.setAttribute("record.queue_time_ms", Math.max(0L, startTimeMillis - produceTime));
+    }
   }
 
   public void onProduce(final Span span, final ProducerRecord record) {
     if (record != null) {
       final Integer partition = record.partition();
       if (partition != null) {
-        span.setAttribute("kafka.partition", partition);
+        span.setAttribute("partition", partition);
       }
     }
   }

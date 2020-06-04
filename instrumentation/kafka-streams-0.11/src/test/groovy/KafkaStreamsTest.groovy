@@ -153,6 +153,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           tags {
             "partition" { it >= 0 }
             "offset" 0
+            "record.queue_time_ms" { it >= 0 }
           }
         }
         // STREAMING span 1
@@ -185,6 +186,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           tags {
             "partition" { it >= 0 }
             "offset" 0
+            "record.queue_time_ms" { it >= 0 }
             "testing" 123
           }
         }
