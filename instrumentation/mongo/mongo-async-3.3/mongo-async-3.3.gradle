@@ -37,4 +37,6 @@ dependencies {
 
   testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.3.0'
   latestDepTestCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '+'
+
+  testCompile project(':instrumentation:mongo:mongo-3.7')
 }
