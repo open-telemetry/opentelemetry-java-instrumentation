@@ -97,6 +97,7 @@ attributes to stdout. It is used manly for testing and debugging.
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
 | [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
+| [Jersey](https://eclipse-ee4j.github.io/jersey/)                                                                                      | 2.1+ (disabled by default, see below)                          |
 | [Jetty](https://www.eclipse.org/jetty/)                                                                                               | 8.0+                           |
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
@@ -132,6 +133,7 @@ For this reason the following instrumentations are disabled by default:
 - `jdbc-datasource` which creates spans whenever `java.sql.DataSource#getConnection` method is called.
 - `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
+- `jersey` which creates server spans in front of JAX-RS resources.
  
 To enable them, add `ota.integration.<name>.enabled` system property:
 `-Dota.integration.jdbc-datasource.enabled=true`
