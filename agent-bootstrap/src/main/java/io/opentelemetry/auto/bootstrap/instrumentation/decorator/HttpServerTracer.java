@@ -132,6 +132,10 @@ public abstract class HttpServerTracer<REQUEST> {
     // TODO set resource name from URL.
   }
 
+  public boolean sameTrace(Span oneSpan, Span otherSpan) {
+    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
+  }
+
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.

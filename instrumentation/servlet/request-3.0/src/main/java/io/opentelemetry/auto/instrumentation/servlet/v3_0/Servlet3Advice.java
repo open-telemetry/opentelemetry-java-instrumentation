@@ -58,7 +58,7 @@ public class Servlet3Advice {
 
       In this case we have to put the span from the request into current context before continuing.
       */
-      final boolean spanContextWasLost = !sameTrace(TRACER.getCurrentSpan(), existingSpan);
+      final boolean spanContextWasLost = !TRACER.sameTrace(TRACER.getCurrentSpan(), existingSpan);
       if (spanContextWasLost) {
         // Put span from request attribute into current context.
         // We did not create a new span here, so return null instead
@@ -74,10 +74,6 @@ public class Servlet3Advice {
 
     span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
     scope = TRACER.newScope(span);
-  }
-
-  public static boolean sameTrace(Span oneSpan, Span otherSpan) {
-    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
