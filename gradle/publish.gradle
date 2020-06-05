@@ -15,9 +15,9 @@ publishing {
       artifact shadowJar
 
       pom {
-        name = 'OpenTelemetry Auto-Instrumentation for Java'
+        name = 'OpenTelemetry Instrumentation for Java'
         packaging = 'jar'
-        url = 'https://github.com/open-telemetry/opentelemetry-auto-instr-java'
+        url = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation'
 
         licenses {
           license {
@@ -30,13 +30,13 @@ publishing {
           developer {
             id = 'opentelemetry'
             name = 'OpenTelemetry Gitter'
-            url = 'https://gitter.im/open-telemetry/opentelemetry-auto-instr-java'
+            url = 'https://gitter.im/open-telemetry/opentelemetry-java-instrumentation'
           }
         }
 
         scm {
-          connection = 'scm:git:git@github.com:open-telemetry/opentelemetry-auto-instr-java.git'
-          developerConnection = 'scm:git:git@github.com:open-telemetry/opentelemetry-auto-instr-java.git'
+          connection = 'scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git'
+          developerConnection = 'scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git'
           url = 'git@github.com:open-telemetry/opentelemetry-auto-instr-java.git'
         }
 
@@ -54,14 +54,17 @@ bintray {
   user = System.getenv('BINTRAY_USER')
   key = System.getenv('BINTRAY_KEY')
   publications = ['maven']
+  publish = true
   pkg {
     repo = 'maven'
-    name = 'opentelemetry-auto-instr-java'
+    name = 'opentelemetry-java-instrumentation'
     licenses = ['Apache-2.0']
-    vcsUrl = 'https://github.com/open-telemetry/opentelemetry-auto-instr-java'
+    websiteUrl = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation'
+    issueTrackerUrl = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues'
+    vcsUrl = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation.git'
     userOrg = 'open-telemetry'
 
-    githubRepo = 'open-telemetry/opentelemetry-auto-instr-java'
+    githubRepo = 'open-telemetry/opentelemetry-java-instrumentation'
 
     version {
       name = project.version
