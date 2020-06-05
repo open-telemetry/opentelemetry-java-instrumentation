@@ -40,6 +40,6 @@ class CliApplicationSmokeTest extends AbstractSmokeTest {
   @Timeout(value = TIMEOUT_SECS, unit = TimeUnit.SECONDS)
   def "Cli application process ends before timeout"() {
     expect:
-    assert serverProcess.waitFor() == 0
+    assert testedProcess.waitFor() == 0
   }
 }

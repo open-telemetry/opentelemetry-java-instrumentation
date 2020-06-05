@@ -33,7 +33,7 @@ abstract class AbstractServerSmokeTest extends AbstractSmokeTest {
 
   def setupSpec() {
     try {
-      PortUtils.waitForPortToOpen(httpPort, 240, TimeUnit.SECONDS, serverProcess)
+      PortUtils.waitForPortToOpen(httpPort, 240, TimeUnit.SECONDS, testedProcess)
     } catch (e) {
       System.err.println(logfile.text)
       throw e
