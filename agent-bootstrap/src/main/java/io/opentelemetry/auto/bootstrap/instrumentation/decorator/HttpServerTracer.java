@@ -180,7 +180,7 @@ public abstract class HttpServerTracer<REQUEST> {
     return tracer.getCurrentSpan();
   }
 
-  public Scope newScope(Span span) {
+  public Scope withSpan(Span span) {
     return tracer.withSpan(span);
   }
 
