@@ -255,8 +255,7 @@ public abstract class HttpServerTracer<REQUEST> {
 
   protected abstract String method(REQUEST request);
 
-  protected void attachSpanToRequest(Span span, REQUEST request) {
-  }
+  protected void attachSpanToRequest(Span span, REQUEST request) {}
 
   protected Span getAttachedSpan(REQUEST request) {
     return null;

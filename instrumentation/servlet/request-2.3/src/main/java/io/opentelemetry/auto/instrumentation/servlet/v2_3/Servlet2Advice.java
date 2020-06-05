@@ -49,7 +49,7 @@ public class Servlet2Advice {
         .put((HttpServletResponse) response, httpServletRequest);
 
     span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
-    scope = TRACER.newScope(span);
+    scope = TRACER.withSpan(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
