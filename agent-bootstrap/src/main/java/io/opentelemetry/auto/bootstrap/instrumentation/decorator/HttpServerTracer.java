@@ -17,15 +17,14 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -51,30 +50,9 @@ public abstract class HttpServerTracer<REQUEST> {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 
-  public SpanWithScope startSpan(REQUEST request, Method origin, String originType) {
-    final Span existingSpan = getAttachedSpan(request);
-    if (existingSpan != null) {
-      /*
-      Given request already has a span associated with it.
-      As there should not be nested spans of kind SERVER, we should NOT create a new span here.
-
-      But it may happen that there is no span in current Context or it is from a different trace.
-      E.g. in case of async servlet request processing we create span for incoming request in one thread,
-      but actual request continues processing happens in another thread.
-      Depending on servlet container implementation, this processing may again arrive into this method.
-      E.g. Jetty handles async requests in a way that calls HttpServlet.service method twice.
-
-      In this case we have to put the span from the request into current context before continuing.
-      */
-      final boolean spanContextWasLost = !sameTrace(tracer.getCurrentSpan(), existingSpan);
-      if (spanContextWasLost) {
-        // Put span from request attribute into current context.
-        // We did not create a new span here, so return null instead
-        return new SpanWithScope(null, currentContextWith(existingSpan));
-      } else {
-        // We are inside nested servlet/filter, don't create new span
-        return null;
-      }
+  public Span startSpan(REQUEST request, Method origin, String originType) {
+    if (getAttachedSpan(request) != null) {
+      return null;
     }
 
     final Span.Builder builder =
@@ -89,7 +67,7 @@ public abstract class HttpServerTracer<REQUEST> {
     onConnection(span, request);
     onRequest(span, request);
 
-    return new SpanWithScope(span, currentContextWith(span));
+    return span;
   }
 
   protected abstract String getVersion();
@@ -105,14 +83,9 @@ public abstract class HttpServerTracer<REQUEST> {
     }
   }
 
-  private boolean sameTrace(Span oneSpan, Span otherSpan) {
-    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
-  }
-
   // TODO use semantic attributes
-
   protected void onRequest(final Span span, final REQUEST request) {
-    attachedSpanToRequest(span, request);
+    attachSpanToRequest(span, request);
     SemanticAttributes.HTTP_METHOD.set(span, method(request));
 
     // Copy of HttpClientDecorator url handling
@@ -158,6 +131,7 @@ public abstract class HttpServerTracer<REQUEST> {
     }
     // TODO set resource name from URL.
   }
+
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
@@ -202,19 +176,21 @@ public abstract class HttpServerTracer<REQUEST> {
     return tracer.getCurrentSpan();
   }
 
-  // TODO should end methods remove SPAN attribute from request as well?
+  public Scope newScope(Span span) {
+    return tracer.withSpan(span);
+  }
 
-  public void end(SpanWithScope spanWithScope, int responseCode) {
-    if (spanWithScope == null) {
+  // TODO should end methods remove SPAN attribute from request as well?
+  public void end(Span span, Scope scope, int responseCode) {
+    if (scope == null) {
       return;
     }
 
-    final Span span = spanWithScope.getSpan();
     if (span != null) {
       end(span, responseCode);
     }
 
-    spanWithScope.closeScope();
+    scope.close();
   }
 
   public void end(Span span, int responseStatus) {
@@ -222,18 +198,16 @@ public abstract class HttpServerTracer<REQUEST> {
     span.end();
   }
 
-  public void endExceptionally(
-      SpanWithScope spanWithScope, Throwable throwable, int responseStatus) {
-    if (spanWithScope == null) {
+  public void endExceptionally(Span span, Scope scope, Throwable throwable, int responseStatus) {
+    if (scope == null) {
       return;
     }
 
-    final Span span = spanWithScope.getSpan();
     if (span != null) {
       endExceptionally(span, throwable, responseStatus);
     }
 
-    spanWithScope.closeScope();
+    scope.close();
   }
 
   public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
@@ -277,7 +251,7 @@ public abstract class HttpServerTracer<REQUEST> {
 
   protected abstract String method(REQUEST request);
 
-  protected abstract void attachedSpanToRequest(Span span, REQUEST request);
+  protected abstract void attachSpanToRequest(Span span, REQUEST request);
 
   protected abstract Span getAttachedSpan(REQUEST request);
 }

@@ -47,13 +47,13 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   }
 
   @Override
-  protected Span getAttachedSpan(HttpServletRequest request) {
+  public Span getAttachedSpan(HttpServletRequest request) {
     Object span = request.getAttribute(SPAN_ATTRIBUTE);
     return span instanceof Span ? (Span) span : null;
   }
 
   @Override
-  protected void attachedSpanToRequest(Span span, HttpServletRequest request) {
+  protected void attachSpanToRequest(Span span, HttpServletRequest request) {
     request.setAttribute(SPAN_ATTRIBUTE, span);
   }
 

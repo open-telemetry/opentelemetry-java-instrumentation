@@ -48,7 +48,7 @@ public class GrizzlyHttpServerTracer extends HttpServerTracer<Request> {
   }
 
   @Override
-  protected void attachedSpanToRequest(Span span, Request request) {
+  protected void attachSpanToRequest(Span span, Request request) {
     request.setAttribute(SPAN_ATTRIBUTE, span);
   }
 

@@ -16,9 +16,10 @@
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,31 +32,62 @@ import net.bytebuddy.asm.Advice;
 public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(
+  public static void onEnter(
       @Advice.This final Object servlet,
       @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(1) final ServletResponse response) {
+      @Advice.Argument(1) final ServletResponse response,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
     if (!(request instanceof HttpServletRequest)) {
-      return null;
+      return;
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+    final Span existingSpan = TRACER.getAttachedSpan(httpServletRequest);
+    if (existingSpan != null) {
+      /*
+      Given request already has a span associated with it.
+      As there should not be nested spans of kind SERVER, we should NOT create a new span here.
+
+      But it may happen that there is no span in current Context or it is from a different trace.
+      E.g. in case of async servlet request processing we create span for incoming request in one thread,
+      but actual request continues processing happens in another thread.
+      Depending on servlet container implementation, this processing may again arrive into this method.
+      E.g. Jetty handles async requests in a way that calls HttpServlet.service method twice.
+
+      In this case we have to put the span from the request into current context before continuing.
+      */
+      final boolean spanContextWasLost = !sameTrace(TRACER.getCurrentSpan(), existingSpan);
+      if (spanContextWasLost) {
+        // Put span from request attribute into current context.
+        // We did not create a new span here, so return null instead
+        scope = currentContextWith(existingSpan);
+      }
+      // We are inside nested servlet/filter, don't create new span
+      return;
+    }
 
     // For use by HttpServletResponseInstrumentation:
     InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
         .put((HttpServletResponse) response, httpServletRequest);
 
-    return TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
+    span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
+    scope = TRACER.newScope(span);
+  }
+
+  public static boolean sameTrace(Span oneSpan, Span otherSpan) {
+    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanWithScope spanWithScope,
-      @Advice.Thrown final Throwable throwable) {
-    if (spanWithScope == null) {
+      @Advice.Thrown final Throwable throwable,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    if (scope == null) {
       return;
     }
 
@@ -64,16 +96,15 @@ public class Servlet3Advice {
 
       if (throwable != null) {
         TRACER.endExceptionally(
-            spanWithScope, throwable, ((HttpServletResponse) response).getStatus());
+            span, scope, throwable, ((HttpServletResponse) response).getStatus());
         return;
       }
 
       // Usually Tracer takes care of this checks and of closing scopes.
       // But in case of async response processing we have to handle scope in this thread,
       // not in some arbitrary thread that may later take care of actual response.
-      Span span = spanWithScope.getSpan();
       if (span == null) {
-        spanWithScope.closeScope();
+        scope.close();
         return;
       }
 

@@ -18,7 +18,8 @@ package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 import static io.opentelemetry.auto.instrumentation.servlet.v2_3.Servlet2HttpServerTracer.TRACER;
 
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -29,15 +30,16 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 public class Servlet2Advice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(
+  public static void onEnter(
       @Advice.This final Object servlet,
       @Advice.Origin final Method method,
       @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC)
-          final ServletResponse response) {
+      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) final ServletResponse response,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
 
     if (!(request instanceof HttpServletRequest)) {
-      return null;
+      return;
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -46,15 +48,17 @@ public class Servlet2Advice {
     InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
         .put((HttpServletResponse) response, httpServletRequest);
 
-    return TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
+    span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
+    scope = TRACER.newScope(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final SpanWithScope spanWithScope,
-      @Advice.Thrown final Throwable throwable) {
+      @Advice.Thrown final Throwable throwable,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
       TRACER.setPrincipal((HttpServletRequest) request);
 
@@ -62,9 +66,9 @@ public class Servlet2Advice {
           InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
 
       if (throwable == null) {
-        TRACER.end(spanWithScope, responseStatus);
+        TRACER.end(span, scope, responseStatus);
       } else {
-        TRACER.endExceptionally(spanWithScope, throwable, responseStatus);
+        TRACER.endExceptionally(span, scope, throwable, responseStatus);
       }
     }
   }

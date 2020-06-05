@@ -23,8 +23,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -74,21 +74,26 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
   public static class HandleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
-        @Advice.Origin final Method method, @Advice.Argument(0) final Request request) {
+    public static void methodEnter(
+        @Advice.Origin final Method method,
+        @Advice.Argument(0) final Request request,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
-      return TRACER.startSpan(request, method, null);
+      span = TRACER.startSpan(request, method, null);
+      scope = TRACER.newScope(span);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(1) final Response response,
-        @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
       if (throwable != null) {
-        TRACER.endExceptionally(spanWithScope, throwable, response.getStatus());
+        TRACER.endExceptionally(span, scope, throwable, response.getStatus());
       }
     }
   }
