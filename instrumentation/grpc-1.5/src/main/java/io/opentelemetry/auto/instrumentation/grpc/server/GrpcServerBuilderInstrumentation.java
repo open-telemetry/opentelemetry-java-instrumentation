@@ -44,7 +44,8 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".GrpcServerDecorator",
+      packageName + ".GrpcServerSpan",
+      packageName + ".GrpcServerTracer",
       packageName + ".GrpcExtractAdapter",
       packageName + ".TracingServerInterceptor",
       packageName + ".TracingServerInterceptor$TracingServerCall",

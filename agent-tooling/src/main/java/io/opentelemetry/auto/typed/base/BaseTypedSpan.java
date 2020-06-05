@@ -15,8 +15,10 @@
  */
 package io.opentelemetry.auto.typed.base;
 
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 
 public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingSpan {
 
@@ -25,8 +27,15 @@ public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingS
   }
 
   public void end(Throwable throwable) {
-    // add error details to the span.
+    assert throwable != null;
+    setThrowable(throwable);
     super.end();
+  }
+
+  protected void setThrowable(Throwable throwable) {
+    assert throwable != null;
+    setStatus(Status.UNKNOWN);
+    BaseDecorator.addThrowable(this, throwable);
   }
 
   /** The end(Throwable), or end(RESPONSE) methods should be used instead. */

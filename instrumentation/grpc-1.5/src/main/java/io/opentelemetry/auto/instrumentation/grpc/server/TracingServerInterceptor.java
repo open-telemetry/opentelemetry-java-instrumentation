@@ -15,29 +15,19 @@
  */
 package io.opentelemetry.auto.instrumentation.grpc.server;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.auto.instrumentation.grpc.server.GrpcServerTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
-import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
-import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
-import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.auto.bootstrap.instrumentation.api.Pair;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.Map;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TracingServerInterceptor implements ServerInterceptor {
@@ -53,15 +43,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       final ServerCallHandler<ReqT, RespT> next) {
 
     final String methodName = call.getMethodDescriptor().getFullMethodName();
-    final Span.Builder spanBuilder = TRACER.spanBuilder(methodName).setSpanKind(SERVER);
-    spanBuilder.setParent(extract(headers, GETTER));
-    final Span span = spanBuilder.startSpan();
-    final SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
-    final InetSocketAddress iAddr =
-        addr instanceof InetSocketAddress ? (InetSocketAddress) addr : null;
-    GrpcHelper.prepareSpan(span, methodName, iAddr, true);
-
-    DECORATE.afterStart(span);
+    final GrpcServerSpan span = TRACER.startSpan(Pair.<ServerCall, Metadata>of(call, headers));
 
     final ServerCall.Listener<ReqT> result;
     try (final Scope scope = currentContextWith(span)) {
@@ -75,9 +57,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
         // call other interceptors
         result = next.startCall(tracingServerCall, headers);
       } catch (final Throwable e) {
-        DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
-        span.end();
+        span.end(e);
         throw e;
       }
     }
@@ -89,20 +69,20 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
   static final class TracingServerCall<ReqT, RespT>
       extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
-    final Span span;
+    final GrpcServerSpan span;
 
-    TracingServerCall(final Span span, final ServerCall<ReqT, RespT> delegate) {
+    TracingServerCall(final GrpcServerSpan span, final ServerCall<ReqT, RespT> delegate) {
       super(delegate);
       this.span = span;
     }
 
     @Override
     public void close(final Status status, final Metadata trailers) {
-      DECORATE.onClose(span, status);
+      span.onResponse(status);
       try (final Scope scope = currentContextWith(span)) {
         delegate().close(status, trailers);
       } catch (final Throwable e) {
-        DECORATE.onError(span, e);
+        span.onError(e);
         throw e;
       }
     }
@@ -110,20 +90,17 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
   static final class TracingServerCallListener<ReqT>
       extends ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT> {
-    private final Span span;
+    private final GrpcServerSpan span;
     private final AtomicInteger messageId = new AtomicInteger();
 
-    TracingServerCallListener(final Span span, final ServerCall.Listener<ReqT> delegate) {
+    TracingServerCallListener(final GrpcServerSpan span, final ServerCall.Listener<ReqT> delegate) {
       super(delegate);
       this.span = span;
     }
 
     @Override
     public void onMessage(final ReqT message) {
-      final Map<String, AttributeValue> attributes = new HashMap<>();
-      attributes.put("message.type", AttributeValue.stringAttributeValue("RECEIVED"));
-      attributes.put("message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
-      span.addEvent("message", attributes);
+      span.onMessage(messageId.incrementAndGet());
       try (final Scope scope = currentContextWith(span)) {
         delegate().onMessage(message);
       }
@@ -134,9 +111,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       try (final Scope scope = currentContextWith(span)) {
         delegate().onHalfClose();
       } catch (final Throwable e) {
-        DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
-        span.end();
+        span.end(e);
         throw e;
       }
     }
@@ -148,12 +123,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
         delegate().onCancel();
         span.setAttribute("canceled", true);
       } catch (final Throwable e) {
-        DECORATE.onError(span, e);
+        span.end(e);
         throw e;
-      } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
       }
+      span.end();
     }
 
     @Override
@@ -162,12 +135,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
       try (final Scope scope = currentContextWith(span)) {
         delegate().onComplete();
       } catch (final Throwable e) {
-        DECORATE.onError(span, e);
+        span.end(e);
         throw e;
-      } finally {
-        DECORATE.beforeFinish(span);
-        span.end();
       }
+      span.end();
     }
 
     @Override
@@ -175,9 +146,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       try (final Scope scope = currentContextWith(span)) {
         delegate().onReady();
       } catch (final Throwable e) {
-        DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
-        span.end();
+        span.end(e);
         throw e;
       }
     }
