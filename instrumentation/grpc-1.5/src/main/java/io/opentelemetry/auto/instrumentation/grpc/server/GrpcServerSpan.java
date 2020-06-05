@@ -21,7 +21,7 @@ import io.grpc.ServerCall;
 import io.grpc.Status;
 import io.opentelemetry.auto.bootstrap.instrumentation.api.Pair;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
-import io.opentelemetry.auto.typed.server.ServerTypedSpan;
+import io.opentelemetry.auto.semantic.server.ServerSemanticSpan;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.trace.Span;
 
@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GrpcServerSpan
-    extends ServerTypedSpan<GrpcServerSpan, Pair<ServerCall, Metadata>, Status> {
+    extends ServerSemanticSpan<GrpcServerSpan, Pair<ServerCall, Metadata>, Status> {
   public GrpcServerSpan(Span delegate) {
     super(delegate);
   }

@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed;
+package io.opentelemetry.auto.semantic;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
-import io.opentelemetry.auto.typed.client.SampleHttpClientTypedSpan;
-import io.opentelemetry.auto.typed.client.SampleHttpClientTypedTracer;
-import io.opentelemetry.auto.typed.server.SampleHttpServerTypedSpan;
-import io.opentelemetry.auto.typed.server.SampleHttpServerTypedTracer;
+import io.opentelemetry.auto.semantic.client.SampleHttpClientSemanticSpan;
+import io.opentelemetry.auto.semantic.client.SampleHttpClientSemanticTracer;
+import io.opentelemetry.auto.semantic.server.SampleHttpServerSemanticSpan;
+import io.opentelemetry.auto.semantic.server.SampleHttpServerSemanticTracer;
 import io.opentelemetry.context.Scope;
 
 class TypedTracerDemonstration {
 
   private void serverDemonstration() {
-    final SampleHttpServerTypedTracer tracer = new SampleHttpServerTypedTracer();
+    final SampleHttpServerSemanticTracer tracer = new SampleHttpServerSemanticTracer();
 
-    final SampleHttpServerTypedSpan span = tracer.startSpan("request instance");
+    final SampleHttpServerSemanticSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
     try (final Scope scope = currentContextWith(span)) {
@@ -43,9 +43,9 @@ class TypedTracerDemonstration {
   }
 
   private void clientDemonstration() {
-    final SampleHttpClientTypedTracer tracer = new SampleHttpClientTypedTracer();
+    final SampleHttpClientSemanticTracer tracer = new SampleHttpClientSemanticTracer();
 
-    final SampleHttpClientTypedSpan span = tracer.startSpan("request instance");
+    final SampleHttpClientSemanticSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
     try (final Scope scope = currentContextWith(span)) {

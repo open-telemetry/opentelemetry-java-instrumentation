@@ -18,11 +18,12 @@ package io.opentelemetry.auto.instrumentation.grpc.client;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
-import io.opentelemetry.auto.typed.client.ClientTypedTracer;
+import io.opentelemetry.auto.semantic.client.ClientSemanticTracer;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 
-public class GrpcClientTracer extends ClientTypedTracer<GrpcClientSpan, MethodDescriptor, Status> {
+public class GrpcClientTracer extends
+    ClientSemanticTracer<GrpcClientSpan, MethodDescriptor, Status> {
   public static final GrpcClientTracer TRACER = new GrpcClientTracer();
 
   @Override

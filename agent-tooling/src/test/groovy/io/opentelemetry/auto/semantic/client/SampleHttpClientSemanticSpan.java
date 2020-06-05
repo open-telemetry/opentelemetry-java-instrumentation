@@ -13,32 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.server;
+package io.opentelemetry.auto.semantic.client;
 
-import io.opentelemetry.auto.typed.server.http.HttpServerTypedSpan;
+import io.opentelemetry.auto.semantic.client.http.HttpClientSemanticSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 
-public class SampleHttpServerTypedSpan
-    extends HttpServerTypedSpan<SampleHttpServerTypedSpan, String, String> {
-  public SampleHttpServerTypedSpan(Span delegate) {
+public class SampleHttpClientSemanticSpan
+    extends HttpClientSemanticSpan<SampleHttpClientSemanticSpan, String, String> {
+  public SampleHttpClientSemanticSpan(Span delegate) {
     super(delegate);
   }
 
   @Override
-  protected SampleHttpServerTypedSpan onRequest(String o) {
+  protected SampleHttpClientSemanticSpan onRequest(String o) {
     delegate.setAttribute("requested", true);
     return this;
   }
 
   @Override
-  protected SampleHttpServerTypedSpan onResponse(String o) {
+  protected SampleHttpClientSemanticSpan onResponse(String o) {
     delegate.setStatus(Status.OK);
     return this;
   }
 
   @Override
-  protected SampleHttpServerTypedSpan self() {
+  protected SampleHttpClientSemanticSpan self() {
     return this;
   }
 }

@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.server.http;
+package io.opentelemetry.auto.semantic.server.http;
 
-import io.opentelemetry.auto.typed.server.ServerTypedSpan;
+import io.opentelemetry.auto.semantic.server.ServerSemanticSpan;
 import io.opentelemetry.trace.Span;
 
-public abstract class HttpServerTypedSpan<T extends HttpServerTypedSpan, REQUEST, RESPONSE>
-    extends ServerTypedSpan<T, REQUEST, RESPONSE> {
+public abstract class HttpServerSemanticSpan<T extends HttpServerSemanticSpan, REQUEST, RESPONSE>
+    extends ServerSemanticSpan<T, REQUEST, RESPONSE> {
 
-  public HttpServerTypedSpan(Span delegate) {
+  public HttpServerSemanticSpan(Span delegate) {
     super(delegate);
   }
 }

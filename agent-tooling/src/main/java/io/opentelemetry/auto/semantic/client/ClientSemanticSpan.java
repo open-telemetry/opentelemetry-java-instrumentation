@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.client;
+package io.opentelemetry.auto.semantic.client;
 
-import io.opentelemetry.auto.typed.base.BaseTypedSpan;
+import io.opentelemetry.auto.semantic.base.BaseSemanticSpan;
 import io.opentelemetry.trace.Span;
 
-public abstract class ClientTypedSpan<T extends ClientTypedSpan, REQUEST, RESPONSE>
-    extends BaseTypedSpan<T> {
+public abstract class ClientSemanticSpan<T extends ClientSemanticSpan, REQUEST, RESPONSE>
+    extends BaseSemanticSpan<T> {
 
-  public ClientTypedSpan(Span delegate) {
+  public ClientSemanticSpan(Span delegate) {
     super(delegate);
   }
 

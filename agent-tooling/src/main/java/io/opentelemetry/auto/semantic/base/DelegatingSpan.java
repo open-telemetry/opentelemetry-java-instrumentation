@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.base;
+package io.opentelemetry.auto.semantic.base;
 
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.trace.EndSpanOptions;

@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.client.http;
+package io.opentelemetry.auto.semantic.client.http;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.typed.client.ClientTypedTracer;
+import io.opentelemetry.auto.semantic.client.ClientSemanticTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.TracingContextUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class HttpClientTypedTracer<
-        T extends HttpClientTypedSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>
-    extends ClientTypedTracer<T, REQUEST, RESPONSE> {
+public abstract class HttpClientSemanticTracer<
+        T extends HttpClientSemanticSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>
+    extends ClientSemanticTracer<T, REQUEST, RESPONSE> {
 
   @Override
   protected T startSpan(final REQUEST request, final T span) {

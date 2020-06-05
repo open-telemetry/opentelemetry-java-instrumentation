@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.base;
+package io.opentelemetry.auto.semantic.base;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 
-public abstract class BaseTypedSpan<T extends BaseTypedSpan> extends DelegatingSpan {
+public abstract class BaseSemanticSpan<T extends BaseSemanticSpan> extends DelegatingSpan {
 
-  public BaseTypedSpan(Span delegate) {
+  public BaseSemanticSpan(Span delegate) {
     super(delegate);
   }
 

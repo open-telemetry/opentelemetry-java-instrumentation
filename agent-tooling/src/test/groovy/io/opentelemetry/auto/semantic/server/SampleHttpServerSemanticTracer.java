@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.client;
+package io.opentelemetry.auto.semantic.server;
 
-import io.opentelemetry.auto.typed.client.http.HttpClientTypedTracer;
+import io.opentelemetry.auto.semantic.server.http.HttpServerSemanticTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 
-public class SampleHttpClientTypedTracer
-    extends HttpClientTypedTracer<SampleHttpClientTypedSpan, String, String> {
+public class SampleHttpServerSemanticTracer
+    extends HttpServerSemanticTracer<SampleHttpServerSemanticSpan, String, String> {
   @Override
   protected String getInstrumentationName() {
     return "test";
@@ -32,20 +32,22 @@ public class SampleHttpClientTypedTracer
   }
 
   @Override
-  protected String getSpanName(final String o) {
+  protected String getSpanName(String o) {
     return "test-span";
   }
 
   @Override
-  protected HttpTextFormat.Setter<String> getSetter() {
-    return new HttpTextFormat.Setter<String>() {
-      @Override
-      public void set(final String carrier, final String key, final String value) {}
-    };
+  protected SampleHttpServerSemanticSpan wrapSpan(Span span) {
+    return new SampleHttpServerSemanticSpan(span);
   }
 
   @Override
-  protected SampleHttpClientTypedSpan wrapSpan(final Span span) {
-    return new SampleHttpClientTypedSpan(span);
+  protected HttpTextFormat.Getter<String> getGetter() {
+    return new HttpTextFormat.Getter<String>() {
+      @Override
+      public String get(String carrier, String key) {
+        return null;
+      }
+    };
   }
 }

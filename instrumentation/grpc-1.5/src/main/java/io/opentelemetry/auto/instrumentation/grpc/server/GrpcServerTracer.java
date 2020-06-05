@@ -19,13 +19,13 @@ import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.Status;
 import io.opentelemetry.auto.bootstrap.instrumentation.api.Pair;
-import io.opentelemetry.auto.typed.server.ServerTypedTracer;
+import io.opentelemetry.auto.semantic.server.ServerSemanticTracer;
 import io.opentelemetry.trace.Span;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 
 public class GrpcServerTracer
-    extends ServerTypedTracer<GrpcServerSpan, Pair<ServerCall, Metadata>, Status> {
+    extends ServerSemanticTracer<GrpcServerSpan, Pair<ServerCall, Metadata>, Status> {
   public static final GrpcServerTracer TRACER = new GrpcServerTracer();
 
   @Override

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.base;
+package io.opentelemetry.auto.semantic.base;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
@@ -23,11 +23,11 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
-public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
+public abstract class BaseSemanticTracer<T extends BaseSemanticSpan, INSTANCE> {
 
   protected final Tracer tracer;
 
-  protected BaseTypedTracer() {
+  protected BaseSemanticTracer() {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 

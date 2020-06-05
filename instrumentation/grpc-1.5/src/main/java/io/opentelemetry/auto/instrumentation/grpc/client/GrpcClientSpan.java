@@ -20,15 +20,14 @@ import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
-import io.opentelemetry.auto.typed.client.ClientTypedSpan;
+import io.opentelemetry.auto.semantic.client.ClientSemanticSpan;
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.TracingContextUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GrpcClientSpan extends ClientTypedSpan<GrpcClientSpan, MethodDescriptor, Status> {
+public class GrpcClientSpan extends ClientSemanticSpan<GrpcClientSpan, MethodDescriptor, Status> {
   public GrpcClientSpan(Span delegate) {
     super(delegate);
   }

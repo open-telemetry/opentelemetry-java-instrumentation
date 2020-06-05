@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.client;
+package io.opentelemetry.auto.semantic.server;
 
-import io.opentelemetry.auto.typed.base.BaseTypedTracer;
+import io.opentelemetry.auto.semantic.base.BaseSemanticTracer;
 import io.opentelemetry.trace.Span;
 
-public abstract class ClientTypedTracer<
-        T extends ClientTypedSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>
-    extends BaseTypedTracer<T, REQUEST> {
+public abstract class ServerSemanticTracer<
+        T extends ServerSemanticSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>
+    extends BaseSemanticTracer<T, REQUEST> {
+
   @Override
   protected Span.Kind getSpanKind() {
-    return Span.Kind.CLIENT;
+    return Span.Kind.SERVER;
   }
 
   @Override
