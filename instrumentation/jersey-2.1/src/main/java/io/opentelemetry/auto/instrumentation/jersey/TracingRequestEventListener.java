@@ -39,10 +39,12 @@ public class TracingRequestEventListener implements RequestEventListener {
   public TracingRequestEventListener(ContainerRequest request, SpanContext remoteContext) {
     // We are the first who tried to extract remote context
     // This means we are the entry point of a remote request in this JVM.
-    final Span span = TRACER.spanBuilder(DECORATE.spanNameForRequest(request))
-        .setParent(remoteContext)
-        .setSpanKind(Kind.SERVER)
-        .startSpan();
+    final Span span =
+        TRACER
+            .spanBuilder(DECORATE.spanNameForRequest(request))
+            .setParent(remoteContext)
+            .setSpanKind(Kind.SERVER)
+            .startSpan();
 
     DECORATE.onConnection(span, request);
     DECORATE.onRequest(span, request);
