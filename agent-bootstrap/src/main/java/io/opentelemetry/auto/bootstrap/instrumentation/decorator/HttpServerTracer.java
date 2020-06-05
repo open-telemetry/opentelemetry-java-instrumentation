@@ -240,7 +240,7 @@ public abstract class HttpServerTracer<REQUEST> {
   private void setStatus(Span span, int status) {
     SemanticAttributes.HTTP_STATUS_CODE.set(span, status);
     // TODO status_message
-    if (Config.get().getHttpServerErrorStatuses().contains(status)) {
+    if (Config.get().getHttpServerErrorStatuses().get(status)) {
       span.setStatus(Status.UNKNOWN);
     }
   }
