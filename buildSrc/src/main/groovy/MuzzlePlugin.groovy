@@ -33,7 +33,7 @@ class MuzzlePlugin implements Plugin<Project> {
   /**
    * Select a random set of versions to test
    */
-  private static final int RANGE_COUNT_LIMIT = 10
+  private static final int RANGE_COUNT_LIMIT = 25
   /**
    * Remote repositories used to query version ranges and fetch dependencies
    */
