@@ -22,7 +22,6 @@ Do the following:
 On new tag creation a CI will start a new release build.
 It will do the following:
 - Checkout requested tag.
-- Create new maintenance branch `X.Y.0`.
 - Run `./gradlew -Prelease.useLastTag=true final`. 
 This signals Nebula plugin to build `X.Y.0` version and to publish it to [Bintray repository](https://bintray.com/open-telemetry/maven).
 
