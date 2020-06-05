@@ -109,7 +109,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       if (status != null) {
         span.setAttribute(Tags.HTTP_STATUS, status);
 
-        if (Config.get().getHttpClientErrorStatuses().contains(status)) {
+        if (Config.get().getHttpClientErrorStatuses().get(status)) {
           span.setStatus(Status.UNKNOWN);
         }
       }

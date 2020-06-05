@@ -15,6 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
+
+import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
@@ -55,6 +58,10 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
+  // Keeps track of SDK clients that have been overridden by the user and don't need to be
+  // overridden by us.
+  public static final WeakMap<SdkClientBuilder, Boolean> OVERRIDDEN = newWeakMap();
+
   public static class ScopeHolder {
     public static final ThreadLocal<Scope> CURRENT = new ThreadLocal<>();
   }
@@ -78,7 +85,18 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
    * compiling this for instrumentation code that should load into Java7.
    */
   public static void overrideConfiguration(final SdkClientBuilder client) {
-    client.overrideConfiguration(OVERRIDE_CONFIGURATION_CONSUMER);
+    // We intercept calls to overrideConfiguration to make sure when a user overrides the
+    // configuration, we join their configuration. This means all we need to do is call the method
+    // here and we will intercept the builder and add our interceptor.
+    client.overrideConfiguration(builder -> {});
+  }
+
+  /**
+   * We keep this method here because it references Java8 classes and we would like to avoid
+   * compiling this for instrumentation code that should load into Java7.
+   */
+  public static void overrideConfiguration(final ClientOverrideConfiguration.Builder builder) {
+    OVERRIDE_CONFIGURATION_CONSUMER.accept(builder);
   }
 
   public static void muzzleCheck() {
