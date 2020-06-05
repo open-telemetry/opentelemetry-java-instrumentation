@@ -29,7 +29,7 @@ import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.SUMMA
 
 class MeterTest extends AgentTestRunner {
 
-  //Add support for up-down metrics from otel-java 0.5.0
+  //TODO Add support for up-down metrics from otel-java 0.5.0
   def "test #builderMethod monotonic=#monotonic bound=#bind"() {
     given:
     // meters are global, and no way to unregister them, so tests use random name to avoid each other

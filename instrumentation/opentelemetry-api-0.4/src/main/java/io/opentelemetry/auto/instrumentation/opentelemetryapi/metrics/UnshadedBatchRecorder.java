@@ -77,11 +77,13 @@ class UnshadedBatchRecorder implements BatchRecorder {
 
   @Override
   public BatchRecorder put(LongUpDownCounter longUpDownCounter, long l) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 
   @Override
   public BatchRecorder put(DoubleUpDownCounter doubleUpDownCounter, double v) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 

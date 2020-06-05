@@ -50,11 +50,13 @@ class UnshadedMeter implements Meter {
 
   @Override
   public DoubleUpDownCounter.Builder doubleUpDownCounterBuilder(String s) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 
   @Override
   public LongUpDownCounter.Builder longUpDownCounterBuilder(String s) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 
@@ -70,21 +72,25 @@ class UnshadedMeter implements Meter {
 
   @Override
   public DoubleSumObserver.Builder doubleSumObserverBuilder(String s) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 
   @Override
   public LongSumObserver.Builder longSumObserverBuilder(String s) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 
   @Override
   public DoubleUpDownSumObserver.Builder doubleUpDownSumObserverBuilder(String s) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 
   @Override
   public LongUpDownSumObserver.Builder longUpDownSumObserverBuilder(String s) {
+    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
     return null;
   }
 
