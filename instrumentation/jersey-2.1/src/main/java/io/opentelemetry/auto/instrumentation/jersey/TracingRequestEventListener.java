@@ -21,7 +21,6 @@ import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Span.Builder;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.SpanContext;
 import javax.ws.rs.NotFoundException;
@@ -40,11 +39,10 @@ public class TracingRequestEventListener implements RequestEventListener {
   public TracingRequestEventListener(ContainerRequest request, SpanContext remoteContext) {
     // We are the first who tried to extract remote context
     // This means we are the entry point of a remote request in this JVM.
-    Builder builder = TRACER.spanBuilder(DECORATE.spanNameForRequest(request));
-    builder.setParent(remoteContext);
-    builder.setSpanKind(Kind.SERVER);
-
-    final Span span = builder.startSpan();
+    final Span span = TRACER.spanBuilder(DECORATE.spanNameForRequest(request))
+        .setParent(remoteContext)
+        .setSpanKind(Kind.SERVER)
+        .startSpan();
 
     DECORATE.onConnection(span, request);
     DECORATE.onRequest(span, request);
