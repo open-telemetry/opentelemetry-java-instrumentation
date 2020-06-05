@@ -88,12 +88,6 @@ class UnshadedDoubleCounter implements DoubleCounter {
     }
 
     @Override
-    public DoubleCounter.Builder setMonotonic(final boolean monotonic) {
-      shadedBuilder.setMonotonic(monotonic);
-      return this;
-    }
-
-    @Override
     public DoubleCounter build() {
       return new UnshadedDoubleCounter(shadedBuilder.build());
     }

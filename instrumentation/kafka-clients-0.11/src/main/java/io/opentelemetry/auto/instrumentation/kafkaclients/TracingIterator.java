@@ -25,6 +25,7 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -81,9 +82,11 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
             spanBuilder.addLink(spanContext);
           }
         }
+        final long startTimeMillis = System.currentTimeMillis();
+        spanBuilder.setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis));
         final Span span = spanBuilder.startSpan();
         decorator.afterStart(span);
-        decorator.onConsume(span, next);
+        decorator.onConsume(span, startTimeMillis, next);
         currentSpanWithScope = new SpanWithScope(span, currentContextWith(span));
       }
     } catch (final Exception e) {

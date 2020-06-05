@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.mongoasync.v3_3;
 
 import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -24,10 +25,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import com.mongodb.async.client.MongoClientSettings;
+import com.mongodb.event.CommandListener;
 import io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -54,7 +57,8 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
                                 Modifier.PUBLIC,
                                 null,
                                 Collections.<TypeDescription.Generic>emptyList())))
-                    .and(isPublic())));
+                    .and(isPublic())))
+        .and(declaresField(named("commandListeners")));
   }
 
   @Override
@@ -75,7 +79,14 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
   public static class MongoAsyncClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void injectTraceListener(@Advice.This final MongoClientSettings.Builder builder) {
+    public static void injectTraceListener(
+        @Advice.This final MongoClientSettings.Builder builder,
+        @Advice.FieldValue("commandListeners") final List<CommandListener> commandListeners) {
+      for (final CommandListener commandListener : commandListeners) {
+        if (commandListener instanceof TracingCommandListener) {
+          return;
+        }
+      }
       builder.addCommandListener(new TracingCommandListener());
     }
   }

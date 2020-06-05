@@ -24,10 +24,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.event.CommandListener;
 import io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -75,9 +77,15 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
   public static class MongoClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void injectTraceListener(@Advice.This final MongoClientSettings.Builder builder) {
-      final TracingCommandListener listener = new TracingCommandListener();
-      builder.addCommandListener(listener);
+    public static void injectTraceListener(
+        @Advice.This final MongoClientSettings.Builder builder,
+        @Advice.FieldValue("commandListeners") final List<CommandListener> commandListeners) {
+      for (final CommandListener commandListener : commandListeners) {
+        if (commandListener instanceof TracingCommandListener) {
+          return;
+        }
+      }
+      builder.addCommandListener(new TracingCommandListener());
     }
   }
 }

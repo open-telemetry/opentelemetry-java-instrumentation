@@ -130,7 +130,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       final Span span = spanWithScope.getSpan();
 
       // Don't use DECORATE.onResponse because this is the controller span
-      if (Config.get().getHttpServerErrorStatuses().contains(DECORATE.status(response))) {
+      if (Config.get().getHttpServerErrorStatuses().get(DECORATE.status(response))) {
         span.setStatus(Status.UNKNOWN);
       }
 
