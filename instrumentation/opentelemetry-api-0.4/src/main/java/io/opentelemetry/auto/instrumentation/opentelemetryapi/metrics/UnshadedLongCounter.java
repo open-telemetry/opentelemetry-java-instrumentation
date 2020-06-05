@@ -40,7 +40,7 @@ class UnshadedLongCounter implements LongCounter {
     return new BoundInstrument(shadedLongCounter.bind(labelKeyValuePairs));
   }
 
-  class BoundInstrument implements LongCounter.BoundLongCounter {
+  static class BoundInstrument implements LongCounter.BoundLongCounter {
 
     private final io.opentelemetry.metrics.LongCounter.BoundLongCounter shadedBoundLongCounter;
 
@@ -83,12 +83,6 @@ class UnshadedLongCounter implements LongCounter {
     @Override
     public LongCounter.Builder setConstantLabels(final Map<String, String> constantLabels) {
       shadedBuilder.setConstantLabels(constantLabels);
-      return this;
-    }
-
-    @Override
-    public LongCounter.Builder setMonotonic(final boolean monotonic) {
-      shadedBuilder.setMonotonic(monotonic);
       return this;
     }
 
