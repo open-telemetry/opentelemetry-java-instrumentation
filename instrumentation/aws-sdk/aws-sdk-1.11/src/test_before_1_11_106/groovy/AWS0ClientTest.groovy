@@ -34,8 +34,6 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import org.apache.http.conn.HttpHostConnectException
-import org.apache.http.impl.execchain.RequestAbortedException
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -44,7 +42,6 @@ import java.util.concurrent.atomic.AtomicReference
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class AWS0ClientTest extends AgentTestRunner {
 
@@ -112,10 +109,10 @@ class AWS0ClientTest extends AgentTestRunner {
     client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -131,19 +128,6 @@ class AWS0ClientTest extends AgentTestRunner {
             for (def addedTag : additionalTags) {
               "$addedTag.key" "$addedTag.value"
             }
-          }
-        }
-        span(1) {
-          operationName expectedOperationName(method)
-          spanKind CLIENT
-          errored false
-          childOf span(0)
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "${server.address}${path}"
-            "$Tags.HTTP_METHOD" "$method"
-            "$Tags.HTTP_STATUS" 200
           }
         }
       }
@@ -181,10 +165,10 @@ class AWS0ClientTest extends AgentTestRunner {
     thrown AmazonClientException
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -200,19 +184,6 @@ class AWS0ClientTest extends AgentTestRunner {
               "$addedTag.key" "$addedTag.value"
             }
             errorTags AmazonClientException, ~/Unable to execute HTTP request/
-          }
-        }
-        span(1) {
-          operationName expectedOperationName(method)
-          spanKind CLIENT
-          errored true
-          childOf span(0)
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
-            "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
-            "$Tags.HTTP_METHOD" "$method"
-            errorTags HttpHostConnectException, ~/Connection refused/
           }
         }
       }
@@ -243,7 +214,7 @@ class AWS0ClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "S3.GetObject"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -262,7 +233,8 @@ class AWS0ClientTest extends AgentTestRunner {
     }
   }
 
-  def "timeout and retry errors captured"() {
+  // TODO(anuraaga): Add events for retries.
+  def "timeout and retry errors not captured"() {
     setup:
     def server = httpServer {
       handlers {
@@ -283,10 +255,10 @@ class AWS0ClientTest extends AgentTestRunner {
     thrown AmazonClientException
 
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 1) {
         span(0) {
           operationName "S3.GetObject"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -300,29 +272,6 @@ class AWS0ClientTest extends AgentTestRunner {
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
             errorTags AmazonClientException, ~/Unable to execute HTTP request/
-          }
-        }
-        (1..4).each {
-          span(it) {
-            operationName expectedOperationName("GET")
-            spanKind CLIENT
-            errored true
-            childOf span(0)
-            tags {
-              "$MoreTags.NET_PEER_NAME" "localhost"
-              "$MoreTags.NET_PEER_PORT" server.address.port
-              "$Tags.HTTP_URL" "$server.address/someBucket/someKey"
-              "$Tags.HTTP_METHOD" "GET"
-              try {
-                errorTags SocketException, "Socket closed"
-              } catch (AssertionError e) {
-                try {
-                  errorTags SocketException, "Socket Closed" // windows
-                } catch (AssertionError f) {
-                  errorTags RequestAbortedException, "Request aborted"
-                }
-              }
-            }
           }
         }
       }

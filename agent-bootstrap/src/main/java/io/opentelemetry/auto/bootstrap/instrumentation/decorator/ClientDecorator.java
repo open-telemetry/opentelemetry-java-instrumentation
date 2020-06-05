@@ -30,15 +30,18 @@ public abstract class ClientDecorator extends BaseDecorator {
   private static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
       Context.key("opentelemetry-trace-auto-client-span-key");
 
+  /**
+   * Creates a {@link Context} with the provided {@link Span} and sets it as the current {@link
+   * Context}
+   *
+   * @return a {@link Scope} that will restore the previous context. All callers of this method must
+   *     also call {@link Scope#close()} when this next context is no longer needed.
+   */
   public static Scope currentContextWith(final Span clientSpan) {
-    if (!clientSpan.getContext().isValid()) {
-      return TracingContextUtils.currentContextWith(clientSpan);
-    }
-    return ContextUtils.withScopedContext(
-        TracingContextUtils.withSpan(
-            clientSpan, Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan)));
+    return ContextUtils.withScopedContext(withSpan(clientSpan, Context.current()));
   }
 
+  /** Returns a new {@link Context} forked from {@code context} with the {@link Span} set. */
   public static Context withSpan(final Span clientSpan, final Context context) {
     if (!clientSpan.getContext().isValid()) {
       return TracingContextUtils.withSpan(clientSpan, context);
@@ -47,6 +50,10 @@ public abstract class ClientDecorator extends BaseDecorator {
         clientSpan, Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan));
   }
 
+  /**
+   * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
+   * Context}, or an invalid {@link Span} otherwise.
+   */
   public Span getOrCreateSpan(String name, Tracer tracer) {
     final Context context = Context.current();
     final Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
