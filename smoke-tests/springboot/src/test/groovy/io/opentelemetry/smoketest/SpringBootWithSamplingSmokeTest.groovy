@@ -21,9 +21,11 @@ class SpringBootWithSamplingSmokeTest extends AbstractServerSmokeTest {
 
   static final HANDLER_SPAN = "LOGGED_SPAN WebController.greeting"
   static final SERVLET_SPAN = "LOGGED_SPAN /greeting"
-  static final String SAMPLER_PROBABILITY = "0.1"
+  static final double SAMPLER_PROBABILITY = 0.2
   static final int NUM_TRIES = 1000
-  static final int spanCountTarget = (Integer)((Double.parseDouble(SAMPLER_PROBABILITY)/NUM_TRIES) + (0.1 * NUM_TRIES))
+  static final int ALLOWED_DEVIATION = 0.1 * NUM_TRIES
+  static final int SPAN_COUNT_TARGET = (SAMPLER_PROBABILITY + 0.1) * NUM_TRIES
+
 
   @Override
   ProcessBuilder createProcessBuilder() {
@@ -34,16 +36,16 @@ class SpringBootWithSamplingSmokeTest extends AbstractServerSmokeTest {
     command.addAll(defaultJavaProperties)
     command.addAll((String[]) ["-Dota.exporter.jar=${exporterPath}", "-Dota.exporter.logging.prefix=LOGGED_SPAN", "-jar", springBootShadowJar, "--server.port=${httpPort}"])
     ProcessBuilder processBuilder = new ProcessBuilder(command)
-    processBuilder.environment().put("OTEL_CONFIG_SAMPLER_PROBABILITY", SAMPLER_PROBABILITY)
+    processBuilder.environment().put("OTEL_CONFIG_SAMPLER_PROBABILITY", "${SAMPLER_PROBABILITY}")
     processBuilder.directory(new File(buildDirectory))
   }
 
-  def "default home page #n th time with probability sampling enabled"() {
+  def "default home page with probability sampling enabled"() {
     setup:
     def spanCounter = new SpanCounter(logfile, [
-      (HANDLER_SPAN): spanCountTarget,
-      (SERVLET_SPAN): spanCountTarget,
-    ], 1000)
+      (HANDLER_SPAN): SPAN_COUNT_TARGET,
+      (SERVLET_SPAN): SPAN_COUNT_TARGET,
+    ], 10000)
     String url = "http://localhost:${httpPort}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
@@ -52,15 +54,9 @@ class SpringBootWithSamplingSmokeTest extends AbstractServerSmokeTest {
       client.newCall(request).execute()
     }
     def spans = spanCounter.countSpans()
-    def handlerSpanProportion = spans[HANDLER_SPAN]/NUM_TRIES
-    def servletSpanProportion = spans[SERVLET_SPAN]/NUM_TRIES
 
     then:
-    // +/- 0.1 as allowed deviation from the configured sampling probability.
-    Math.abs(handlerSpanProportion - Double.parseDouble(SAMPLER_PROBABILITY)) <= 0.1
-    Math.abs(servletSpanProportion - Double.parseDouble(SAMPLER_PROBABILITY)) <= 0.1
-
-    where:
-    n << (1..10)
+    Math.abs(spans[HANDLER_SPAN] - (SAMPLER_PROBABILITY * NUM_TRIES)) <= ALLOWED_DEVIATION
+    Math.abs(spans[SERVLET_SPAN] - (SAMPLER_PROBABILITY * NUM_TRIES)) <= ALLOWED_DEVIATION
   }
 }
