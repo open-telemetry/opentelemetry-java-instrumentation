@@ -42,9 +42,11 @@ class SpringBootWithSamplingSmokeTest extends AbstractServerSmokeTest {
 
   def "default home page with probability sampling enabled"() {
     setup:
+    // since sampling is enabled, not really expecting to receive NUM_TRIES spans,
+    // instead giving it 10 seconds and then checking below how many spans were received
     def spanCounter = new SpanCounter(logfile, [
-      (HANDLER_SPAN): SPAN_COUNT_TARGET,
-      (SERVLET_SPAN): SPAN_COUNT_TARGET,
+      (HANDLER_SPAN): NUM_TRIES,
+      (SERVLET_SPAN): NUM_TRIES,
     ], 10000)
     String url = "http://localhost:${httpPort}/greeting"
     def request = new Request.Builder().url(url).get().build()
