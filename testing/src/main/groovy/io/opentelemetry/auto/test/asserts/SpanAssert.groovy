@@ -55,11 +55,11 @@ class SpanAssert {
   }
 
   void event(int index, @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.EventAssert']) @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    if (index >= span.timedEvents.size()) {
+    if (index >= span.events.size()) {
       throw new ArrayIndexOutOfBoundsException(index)
     }
     assertedEventIndexes.add(index)
-    assertEvent(span.timedEvents.get(index), spec)
+    assertEvent(span.events.get(index), spec)
   }
 
   def assertSpanNameContains(String spanName, String... shouldContainArr) {
@@ -114,7 +114,7 @@ class SpanAssert {
   }
 
   def hasLink(SpanData linked) {
-    def found
+    def found = false
     for (def link : span.links) {
       if (link.context.traceId == linked.traceId && link.context.spanId == linked.spanId) {
         found = true
@@ -150,6 +150,6 @@ class SpanAssert {
   }
 
   void assertEventsAllVerified() {
-    assert assertedEventIndexes.size() == span.timedEvents.size()
+    assert assertedEventIndexes.size() == span.events.size()
   }
 }

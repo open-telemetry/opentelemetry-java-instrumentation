@@ -22,7 +22,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import io.opentelemetry.sdk.trace.export.BatchSpansProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -70,10 +70,12 @@ public class TracerInstaller {
         getExporterFactory(SpanExporterFactory.class, exporterLoader);
     if (spanExporterFactory != null) {
       final SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-      OpenTelemetrySdk.getTracerProvider()
-          .addSpanProcessor(
-              BatchSpansProcessor.create(
-                  spanExporter, BatchSpansProcessor.Config.loadFromDefaultSources()));
+      BatchSpanProcessor spanProcessor =
+          BatchSpanProcessor.newBuilder(spanExporter)
+              .readEnvironmentVariables()
+              .readSystemProperties()
+              .build();
+      OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
       log.info("Installed span exporter: " + spanExporter.getClass().getName());
     } else {
       log.warn("No matching providers in jar " + exporterJar);

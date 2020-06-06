@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.exporters.zipkin;
 
-import io.opentelemetry.exporters.zipkin.ZipkinExporterConfiguration;
 import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.contrib.auto.config.Config;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
@@ -33,10 +32,9 @@ public class ZipkinExporterFactory implements SpanExporterFactory {
   public SpanExporter fromConfig(Config config) {
     final String zipkinEndpoint = config.getString(ZIPKIN_ENDPOINT, DEFAULT_ZIPKIN_ENDPOINT);
     final String serviceName = config.getString(ZIPKIN_SERVICE_NAME, DEFAULT_ZIPKIN_SERVICE_NAME);
-    return ZipkinSpanExporter.create(
-        ZipkinExporterConfiguration.builder()
-            .setSender(OkHttpSender.create(zipkinEndpoint))
-            .setServiceName(serviceName)
-            .build());
+    return ZipkinSpanExporter.newBuilder()
+        .setSender(OkHttpSender.create(zipkinEndpoint))
+        .setServiceName(serviceName)
+        .build();
   }
 }
