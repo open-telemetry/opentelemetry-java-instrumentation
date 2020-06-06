@@ -59,16 +59,25 @@ public class Servlet2Advice {
       @Advice.Thrown final Throwable throwable,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
+    if (scope == null) {
+      return;
+    }
+    scope.close();
+
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
       TRACER.setPrincipal((HttpServletRequest) request);
+
+      if (span == null) {
+        return;
+      }
 
       Integer responseStatus =
           InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
 
       if (throwable == null) {
-        TRACER.end(span, scope, responseStatus);
+        TRACER.end(span, responseStatus);
       } else {
-        TRACER.endExceptionally(span, scope, throwable, responseStatus);
+        TRACER.endExceptionally(span, throwable, responseStatus);
       }
     }
   }

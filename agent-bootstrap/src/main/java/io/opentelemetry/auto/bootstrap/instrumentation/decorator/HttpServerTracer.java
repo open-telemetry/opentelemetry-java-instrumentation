@@ -185,33 +185,9 @@ public abstract class HttpServerTracer<REQUEST> {
   }
 
   // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, Scope scope, int responseCode) {
-    if (scope == null) {
-      return;
-    }
-
-    if (span != null) {
-      end(span, responseCode);
-    }
-
-    scope.close();
-  }
-
   public void end(Span span, int responseStatus) {
     setStatus(span, responseStatus);
     span.end();
-  }
-
-  public void endExceptionally(Span span, Scope scope, Throwable throwable, int responseStatus) {
-    if (scope == null) {
-      return;
-    }
-
-    if (span != null) {
-      endExceptionally(span, throwable, responseStatus);
-    }
-
-    scope.close();
   }
 
   public void endExceptionally(Span span, Throwable throwable, int responseStatus) {

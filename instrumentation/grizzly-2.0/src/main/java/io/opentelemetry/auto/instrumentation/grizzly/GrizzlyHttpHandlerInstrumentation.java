@@ -91,9 +91,17 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
         @Advice.Thrown final Throwable throwable,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+
+      if (span == null) {
+        return;
+      }
 
       if (throwable != null) {
-        TRACER.endExceptionally(span, scope, throwable, response.getStatus());
+        TRACER.endExceptionally(span, throwable, response.getStatus());
       }
     }
   }

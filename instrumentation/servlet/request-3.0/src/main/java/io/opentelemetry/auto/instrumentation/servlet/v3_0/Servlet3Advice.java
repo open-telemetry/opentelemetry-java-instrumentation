@@ -86,21 +86,17 @@ public class Servlet3Advice {
     if (scope == null) {
       return;
     }
+    scope.close();
 
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
       TRACER.setPrincipal((HttpServletRequest) request);
 
       if (throwable != null) {
-        TRACER.endExceptionally(
-            span, scope, throwable, ((HttpServletResponse) response).getStatus());
+        TRACER.endExceptionally(span, throwable, ((HttpServletResponse) response).getStatus());
         return;
       }
 
-      // Usually Tracer takes care of this checks and of closing scopes.
-      // But in case of async response processing we have to handle scope in this thread,
-      // not in some arbitrary thread that may later take care of actual response.
       if (span == null) {
-        scope.close();
         return;
       }
 
