@@ -280,9 +280,8 @@ class Aws2ClientTest extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {}
-        span(1) {}
       }
     }
     server.lastRequest.headers.get("x-name") == "value"
