@@ -46,6 +46,7 @@ class SpanCounter {
       while (System.currentTimeMillis() < expiration) {
         line = reader.readLine()
         if (line) {
+          println line
           for (def key : counters.keySet()) {
             if (line.startsWith(key)) {
               counters[key]++
