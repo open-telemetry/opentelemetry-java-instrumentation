@@ -20,6 +20,7 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,10 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   protected abstract URI url(REQUEST request) throws URISyntaxException;
 
   protected abstract Integer status(RESPONSE response);
+
+  public Span getOrCreateSpan(REQUEST request, Tracer tracer) {
+    return getOrCreateSpan(spanNameForRequest(request), tracer);
+  }
 
   public String spanNameForRequest(final REQUEST request) {
     if (request == null) {

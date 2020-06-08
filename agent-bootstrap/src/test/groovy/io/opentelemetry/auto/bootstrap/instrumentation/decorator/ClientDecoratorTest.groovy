@@ -15,9 +15,16 @@
  */
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
+import io.grpc.Context
+import io.opentelemetry.OpenTelemetry
+import io.opentelemetry.context.ContextUtils
 import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.Tracer
+import io.opentelemetry.trace.TracingContextUtils
 
 class ClientDecoratorTest extends BaseDecoratorTest {
+
+  private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
   def span = Mock(Span)
 
@@ -42,6 +49,60 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
     then:
     0 * _
+  }
+
+  def "test getOrCreateSpan when no existing client span"() {
+    when:
+    def span = ClientDecorator.getOrCreateSpan("test", TRACER)
+
+    then:
+    assert span.getContext().isValid()
+  }
+
+  def "test getOrCreateSpan when existing client span"() {
+    setup:
+    def existing = ClientDecorator.getOrCreateSpan("existing", TRACER)
+    def scope = ContextUtils.withScopedContext(ClientDecorator.currentContextWith(existing))
+
+    when:
+    def span = ClientDecorator.getOrCreateSpan("test", TRACER)
+
+    then:
+    assert !span.getContext().isValid()
+
+    cleanup:
+    scope.close()
+  }
+
+  def "test getOrCreateSpan internal after client span"() {
+    setup:
+    def client = ClientDecorator.getOrCreateSpan("existing", TRACER)
+    def scope = ContextUtils.withScopedContext(ClientDecorator.currentContextWith(client))
+
+    when:
+    def internal = TRACER.spanBuilder("internal").setSpanKind(Span.Kind.INTERNAL).startSpan()
+    def scope2 = TracingContextUtils.currentContextWith(internal)
+
+    then:
+    assert internal.getContext().isValid()
+    assert ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(Context.current()) == client
+    assert TracingContextUtils.getSpan(Context.current()) == internal
+
+    cleanup:
+    scope2.close()
+    scope.close()
+  }
+
+  def "test currentContextWith"() {
+    setup:
+    def span = ClientDecorator.getOrCreateSpan("test", TRACER)
+
+    when:
+    def context = ClientDecorator.currentContextWith(span)
+
+    then:
+    assert ClientDecorator.CONTEXT_CLIENT_SPAN_KEY.get(context) == span
+    assert TracingContextUtils.getSpan(context) == span
   }
 
   @Override
