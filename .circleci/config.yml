@@ -200,8 +200,6 @@ jobs:
           name: Publish master to Artifactory
           command: |
             ./gradlew \
-              -PbintrayUser=${BINTRAY_USER} \
-              -PbintrayApiKey=${BINTRAY_API_KEY} \
               -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
               snapshot --max-workers=1 --build-cache --stacktrace --no-daemon
 
