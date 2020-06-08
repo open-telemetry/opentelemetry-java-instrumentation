@@ -76,14 +76,7 @@ public class TracerInstaller {
               .readEnvironmentVariables()
               .readSystemProperties()
               .build();
-      TraceConfig activeTraceConfig = OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
-      OpenTelemetrySdk.getTracerProvider()
-          .updateActiveTraceConfig(
-              activeTraceConfig
-                  .toBuilder()
-                  .readEnvironmentVariables()
-                  .readSystemProperties()
-                  .build());
+      configure();
       OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
       log.info("Installed span exporter: " + spanExporter.getClass().getName());
     } else {
@@ -118,6 +111,18 @@ public class TracerInstaller {
       return factory;
     }
     return null;
+  }
+
+  private static void configure() {
+    /** Update trace config from env vars or sys props */
+    TraceConfig activeTraceConfig = OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
+    OpenTelemetrySdk.getTracerProvider()
+        .updateActiveTraceConfig(
+            activeTraceConfig
+                .toBuilder()
+                .readEnvironmentVariables()
+                .readSystemProperties()
+                .build());
   }
 
   public static void logVersionInfo() {

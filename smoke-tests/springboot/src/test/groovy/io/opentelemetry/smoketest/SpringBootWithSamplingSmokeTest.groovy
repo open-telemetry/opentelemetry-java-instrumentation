@@ -24,8 +24,6 @@ class SpringBootWithSamplingSmokeTest extends AbstractServerSmokeTest {
   static final double SAMPLER_PROBABILITY = 0.2
   static final int NUM_TRIES = 1000
   static final int ALLOWED_DEVIATION = 0.1 * NUM_TRIES
-  static final int SPAN_COUNT_TARGET = (SAMPLER_PROBABILITY + 0.1) * NUM_TRIES
-
 
   @Override
   ProcessBuilder createProcessBuilder() {
