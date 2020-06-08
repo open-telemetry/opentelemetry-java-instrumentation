@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 import com.google.common.io.Files
+import javax.servlet.Servlet
+import javax.servlet.ServletException
 import org.apache.catalina.AccessLog
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
@@ -26,9 +28,6 @@ import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import javax.servlet.Servlet
-import javax.servlet.ServletException
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -125,6 +124,10 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
     and:
     assertTraces(count * 2) {
+      assert accessLogValue.loggedIds.size() == count
+      def loggedTraces = accessLogValue.loggedIds*.first
+      def loggedSpans = accessLogValue.loggedIds*.second
+
       (0..count - 1).each {
         trace(it * 2, 1) {
           basicSpan(it, 0, "TEST_SPAN")
@@ -134,9 +137,8 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
           controllerSpan(it, 1, span(0))
         }
 
-        def (String traceId, String spanId) = accessLogValue.loggedIds[it]
-        assert traces[it * 2 + 1][0].traceId.toLowerBase16() == traceId
-        assert traces[it * 2 + 1][0].spanId.toLowerBase16() == spanId
+        assert loggedTraces.contains(traces[it * 2 + 1][0].traceId.toLowerBase16())
+        assert loggedSpans.contains(traces[it * 2 + 1][0].spanId.toLowerBase16())
       }
     }
 

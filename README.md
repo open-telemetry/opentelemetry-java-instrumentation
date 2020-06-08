@@ -71,6 +71,17 @@ attributes to stdout. It is used mainly for testing and debugging.
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
 
+##### Customizing the OpenTelemetry SDK
+
+*This is highly advanced behavior and still in the prototyping phase. It may change drastically or be removed completely. Use
+with caution*
+
+The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/blob/master/api/src/main/java/io/opentelemetry/trace/spi/TracerProviderFactory.java) 
+for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
+
+Because the auto instrumentation runs in a separate classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can
+provide the path to a JAR file including an SPI implementation using the system property `ota.initializer.jar`. Note that this JAR will need to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you will have to specify the `io.opentelemetry.auto.shaded.io.opentelemetry.trace.spi.TraceProvider` to the name of the class that implements the SPI.
+
 ## Supported Java libraries and frameworks
 
 | Library/Framework                                                                                                                     | Versions                       |
@@ -188,6 +199,7 @@ environment variables:
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | trace.classes.exclude            | TRACE_CLASSES_EXCLUDE            | Exclude classes with the `@WithSpan` annotation                      |
 | trace.methods.exclude            | TRACE_METHODS_EXCLUDE            | Exclude methods with the `@WithSpan` annotation                      |
+
 
 ## Troubleshooting
 

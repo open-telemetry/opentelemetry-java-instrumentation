@@ -22,7 +22,8 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import io.opentelemetry.sdk.trace.export.BatchSpansProcessor;
+import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -38,6 +39,7 @@ public class TracerInstaller {
   public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
 
+      configure();
       // Try to create an exporter
       final String exporterJar = Config.get().getExporterJar();
       if (exporterJar != null) {
@@ -70,10 +72,12 @@ public class TracerInstaller {
         getExporterFactory(SpanExporterFactory.class, exporterLoader);
     if (spanExporterFactory != null) {
       final SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-      OpenTelemetrySdk.getTracerProvider()
-          .addSpanProcessor(
-              BatchSpansProcessor.create(
-                  spanExporter, BatchSpansProcessor.Config.loadFromDefaultSources()));
+      BatchSpanProcessor spanProcessor =
+          BatchSpanProcessor.newBuilder(spanExporter)
+              .readEnvironmentVariables()
+              .readSystemProperties()
+              .build();
+      OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
       log.info("Installed span exporter: " + spanExporter.getClass().getName());
     } else {
       log.warn("No matching providers in jar " + exporterJar);
@@ -107,6 +111,18 @@ public class TracerInstaller {
       return factory;
     }
     return null;
+  }
+
+  private static void configure() {
+    /** Update trace config from env vars or sys props */
+    TraceConfig activeTraceConfig = OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
+    OpenTelemetrySdk.getTracerProvider()
+        .updateActiveTraceConfig(
+            activeTraceConfig
+                .toBuilder()
+                .readEnvironmentVariables()
+                .readSystemProperties()
+                .build());
   }
 
   public static void logVersionInfo() {
