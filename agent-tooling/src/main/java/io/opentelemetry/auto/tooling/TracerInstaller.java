@@ -39,6 +39,7 @@ public class TracerInstaller {
   public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
 
+      configure();
       // Try to create an exporter
       final String exporterJar = Config.get().getExporterJar();
       if (exporterJar != null) {
@@ -76,7 +77,6 @@ public class TracerInstaller {
               .readEnvironmentVariables()
               .readSystemProperties()
               .build();
-      configure();
       OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
       log.info("Installed span exporter: " + spanExporter.getClass().getName());
     } else {
