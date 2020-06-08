@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import io.opentelemetry.trace.Span;
@@ -150,7 +151,8 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (span != null) {
       // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
       // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-      ScopeHolder.CURRENT.set(ClientDecorator.currentContextWith(span));
+      ScopeHolder.CURRENT.set(
+          ContextUtils.withScopedContext(ClientDecorator.currentContextWith(span)));
     }
   }
 

@@ -176,8 +176,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
-      final Context context = ClientDecorator.withSpan(span, Context.current());
-      // TODO(anuraaga): Seems like a bug that invalid context still gets injected by the injector.
+      final Context context = ClientDecorator.currentContextWith(span);
       if (span.getContext().isValid()) {
         OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
       }

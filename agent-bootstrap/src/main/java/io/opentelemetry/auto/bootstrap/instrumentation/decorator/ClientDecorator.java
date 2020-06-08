@@ -16,8 +16,6 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.grpc.Context;
-import io.opentelemetry.context.ContextUtils;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.DefaultSpan;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
@@ -32,23 +30,15 @@ public abstract class ClientDecorator extends BaseDecorator {
       Context.key("opentelemetry-trace-auto-client-span-key");
 
   /**
-   * Creates a {@link Context} with the provided {@link Span} and sets it as the current {@link
-   * Context}
-   *
-   * @return a {@link Scope} that will restore the previous context. All callers of this method must
-   *     also call {@link Scope#close()} when this next context is no longer needed.
+   * Returns a new {@link Context} forked from the {@linkplain Context#current()} current context}
+   * with the {@link Span} set.
    */
-  public static Scope currentContextWith(final Span clientSpan) {
-    return ContextUtils.withScopedContext(withSpan(clientSpan, Context.current()));
-  }
-
-  /** Returns a new {@link Context} forked from {@code context} with the {@link Span} set. */
-  public static Context withSpan(final Span clientSpan, final Context context) {
-    if (!clientSpan.getContext().isValid()) {
-      return TracingContextUtils.withSpan(clientSpan, context);
+  public static Context currentContextWith(final Span clientSpan) {
+    Context context = Context.current();
+    if (clientSpan.getContext().isValid()) {
+      context = context.withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan);
     }
-    return TracingContextUtils.withSpan(
-        clientSpan, context.withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan));
+    return TracingContextUtils.withSpan(clientSpan, context);
   }
 
   /**

@@ -25,6 +25,7 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
@@ -52,7 +53,8 @@ public class TracingRequestHandler extends RequestHandler2 {
     decorate.onRequest(span, request);
     request.addHandlerContext(
         SPAN_SCOPE_PAIR_CONTEXT_KEY,
-        new SpanWithScope(span, ClientDecorator.currentContextWith(span)));
+        new SpanWithScope(
+            span, ContextUtils.withScopedContext(ClientDecorator.currentContextWith(span))));
   }
 
   @Override
