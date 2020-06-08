@@ -17,6 +17,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkClientDecorator.DECORATE;
 
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import software.amazon.awssdk.core.interceptor.Context;
@@ -40,10 +41,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
     final Span span =
-        AwsSdk.tracer()
-            .spanBuilder(DECORATE.spanName(executionAttributes))
-            .setSpanKind(kind)
-            .startSpan();
+        ClientDecorator.getOrCreateSpan(DECORATE.spanName(executionAttributes), AwsSdk.tracer());
     DECORATE.afterStart(span);
     executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
   }

@@ -23,6 +23,7 @@ testSets {
 
 dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  compile(project(':instrumentation:servlet:servlet-common'))
 
   testCompile(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'

@@ -51,7 +51,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.trace.Span.Kind.CLIENT
-import static io.opentelemetry.trace.Span.Kind.INTERNAL
 
 class Aws2ClientTest extends AgentTestRunner {
 
@@ -90,10 +89,10 @@ class Aws2ClientTest extends AgentTestRunner {
     response.class.simpleName.startsWith(operation) || response instanceof ResponseInputStream
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -117,19 +116,6 @@ class Aws2ClientTest extends AgentTestRunner {
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
-          }
-        }
-        span(1) {
-          operationName expectedOperationName(method)
-          spanKind CLIENT
-          errored false
-          childOf span(0)
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
-            "$Tags.HTTP_METHOD" "$method"
-            "$Tags.HTTP_STATUS" 200
           }
         }
       }
@@ -193,7 +179,7 @@ class Aws2ClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored false
           parent()
           tags {
@@ -294,9 +280,8 @@ class Aws2ClientTest extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {}
-        span(1) {}
       }
     }
     server.lastRequest.headers.get("x-name") == "value"
@@ -305,7 +290,8 @@ class Aws2ClientTest extends AgentTestRunner {
     server.close()
   }
 
-  def "timeout and retry errors captured"() {
+  // TODO(anuraaga): Add events for retries.
+  def "timeout and retry errors not captured"() {
     setup:
     def server = httpServer {
       handlers {
@@ -329,10 +315,10 @@ class Aws2ClientTest extends AgentTestRunner {
     thrown SdkClientException
 
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 1) {
         span(0) {
           operationName "S3.GetObject"
-          spanKind INTERNAL
+          spanKind CLIENT
           errored true
           parent()
           tags {
@@ -345,21 +331,6 @@ class Aws2ClientTest extends AgentTestRunner {
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
             errorTags SdkClientException, "Unable to execute HTTP request: Read timed out"
-          }
-        }
-        (1..4).each {
-          span(it) {
-            operationName expectedOperationName("GET")
-            spanKind CLIENT
-            errored true
-            childOf span(0)
-            tags {
-              "$MoreTags.NET_PEER_NAME" "localhost"
-              "$MoreTags.NET_PEER_PORT" server.address.port
-              "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
-              "$Tags.HTTP_METHOD" "GET"
-              errorTags SocketTimeoutException, "Read timed out"
-            }
           }
         }
       }
