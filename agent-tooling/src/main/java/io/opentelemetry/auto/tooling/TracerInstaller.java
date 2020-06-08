@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
@@ -38,6 +39,7 @@ public class TracerInstaller {
   public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
 
+      configure();
       // Try to create an exporter
       final String exporterJar = Config.get().getExporterJar();
       if (exporterJar != null) {
@@ -109,6 +111,18 @@ public class TracerInstaller {
       return factory;
     }
     return null;
+  }
+
+  private static void configure() {
+    /** Update trace config from env vars or sys props */
+    TraceConfig activeTraceConfig = OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
+    OpenTelemetrySdk.getTracerProvider()
+        .updateActiveTraceConfig(
+            activeTraceConfig
+                .toBuilder()
+                .readEnvironmentVariables()
+                .readSystemProperties()
+                .build());
   }
 
   public static void logVersionInfo() {
