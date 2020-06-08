@@ -27,7 +27,8 @@ import io.opentelemetry.trace.TracingContextUtils;
 public abstract class ClientDecorator extends BaseDecorator {
 
   // Keeps track of the client span in a subtree corresponding to a client request.
-  private static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
+  // Visible for testing
+  static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
       Context.key("opentelemetry-trace-auto-client-span-key");
 
   /**
@@ -47,14 +48,14 @@ public abstract class ClientDecorator extends BaseDecorator {
       return TracingContextUtils.withSpan(clientSpan, context);
     }
     return TracingContextUtils.withSpan(
-        clientSpan, Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan));
+        clientSpan, context.withValue(CONTEXT_CLIENT_SPAN_KEY, clientSpan));
   }
 
   /**
    * Returns a new client {@link Span} if there is no client {@link Span} in the current {@link
    * Context}, or an invalid {@link Span} otherwise.
    */
-  public Span getOrCreateSpan(String name, Tracer tracer) {
+  public static Span getOrCreateSpan(String name, Tracer tracer) {
     final Context context = Context.current();
     final Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
 
