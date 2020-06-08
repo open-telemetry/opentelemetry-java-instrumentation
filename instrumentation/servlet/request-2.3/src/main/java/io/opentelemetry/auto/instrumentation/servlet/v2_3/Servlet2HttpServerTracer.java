@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.servlet.v3_0;
+package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
-import javax.servlet.http.HttpServletRequest;
+import io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer;
 
-public class HttpServletRequestExtractAdapter implements HttpTextFormat.Getter<HttpServletRequest> {
+public class Servlet2HttpServerTracer extends ServletHttpServerTracer {
+  public static final Servlet2HttpServerTracer TRACER = new Servlet2HttpServerTracer();
 
-  public static final HttpServletRequestExtractAdapter GETTER =
-      new HttpServletRequestExtractAdapter();
-
-  @Override
-  public String get(final HttpServletRequest carrier, final String key) {
-    return carrier.getHeader(key);
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.servlet-2.3";
   }
 }
