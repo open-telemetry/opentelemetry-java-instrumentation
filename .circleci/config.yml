@@ -200,15 +200,43 @@ jobs:
           name: Publish master to Artifactory
           command: |
             ./gradlew \
-              -PbintrayUser=${BINTRAY_USER} \
-              -PbintrayApiKey=${BINTRAY_API_KEY} \
               -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-              artifactoryPublish --max-workers=1 --build-cache --stacktrace --no-daemon
+              snapshot --max-workers=1 --build-cache --stacktrace --no-daemon
 
   publish_master:
     <<: *publish
-  publish_tag:
-    <<: *publish
+
+  release:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - restore_cache:
+          <<: *cache_keys
+
+      - run: ./gradlew -Prelease.useLastTag=true final
+
+  patch_release:
+    <<: *defaults
+    steps:
+      - checkout
+      - run: |
+          if [[ $(git tag --points-at HEAD | grep "^v") ]]; then
+              echo "Don't make patch release on commit which already has version tag"
+              circleci-agent step halt
+          fi
+
+      - attach_workspace:
+          at: .
+
+      - restore_cache:
+          <<: *cache_keys
+
+      - run: ./gradlew -Prelease.scope=patch final
+
 
 workflows:
   version: 2
@@ -218,7 +246,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-
       - test_7:
           requires:
             - build
@@ -237,60 +264,18 @@ workflows:
           filters:
             tags:
               only: /.*/
-      # - test_ibm8:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_zulu8:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
       - test_11:
           requires:
             - build
           filters:
             tags:
               only: /.*/
-      # - test_zulu11:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_12:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_13:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      # - test_zulu13:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
       - test_14:
           requires:
             - build
           filters:
             tags:
               only: /.*/
-      # - test_zulu14:
-      #     requires:
-      #       - build
-      #     filters:
-      #       tags:
-      #         only: /.*/
 
       - check:
           requires:
@@ -309,17 +294,10 @@ workflows:
       - publish_master:
           requires:
             - test_7
-            # - test_8
+            - test_8
             - test_latest
-            # - test_ibm8
-            # - test_zulu8
             - test_11
-            # - test_zulu11
-            # - test_12
-            # - test_13
-            # - test_zulu13
             - test_14
-            # - test_zulu14
             - check
           filters:
             branches:
@@ -327,26 +305,6 @@ workflows:
             tags:
               ignore: /.*/
 
-      - publish_tag:
-          requires:
-            - test_7
-            # - test_8
-            - test_latest
-            # - test_ibm8
-            # - test_zulu8
-            - test_11
-            # - test_zulu11
-            # - test_12
-            # - test_13
-            # - test_zulu13
-            - test_14
-            # - test_zulu14
-            - check
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
   nightly_snapshot:
     triggers:
       - schedule:
@@ -356,4 +314,65 @@ workflows:
               only:
                 - depends-on-otel-java-snapshot
     jobs:
-      - test_8
+      - test_11
+  release:
+    jobs:
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              # Only for major and minor releases
+              only: /^v.*\.0$/
+  patch_release:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+      - test_7:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+          requires:
+            - build
+      - test_8:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+          requires:
+            - build
+      - test_11:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+          requires:
+            - build
+      - test_14:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+          requires:
+            - build
+      - check:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+          requires:
+            - build
+      - muzzle:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+          requires:
+            - build
+      - patch_release:
+          requires:
+            - test_7
+            - test_11
+            - test_14
+            - check
+            - muzzle
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/

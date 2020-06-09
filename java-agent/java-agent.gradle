@@ -6,6 +6,7 @@ description = 'opentelemetry-auto'
 
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/version.gradle"
+apply from: "${rootDir}/gradle/publish.gradle"
 
 configurations {
   shadowInclude
@@ -23,8 +24,6 @@ processResources {
 }
 
 jar {
-  archiveClassifier = 'unbundled'
-
   manifest {
     attributes(
       "Main-Class": "io.opentelemetry.auto.bootstrap.AgentBootstrap",

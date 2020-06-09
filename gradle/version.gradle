@@ -10,7 +10,7 @@ def getGitHash = { ->
 tasks.register("writeVersionNumberFile") {
 
   def versionFile = file("${sourceSets.main.output.resourcesDir}/${project.name}.version")
-  inputs.property "version", project.version
+  inputs.property "version", project.version.toString()
   outputs.file versionFile
 
   doFirst {

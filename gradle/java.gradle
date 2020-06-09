@@ -35,6 +35,8 @@ java {
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
   disableAutoTargetJvm()
+  withJavadocJar()
+  withSourcesJar()
 }
 
 sourceSets {
@@ -156,22 +158,6 @@ javadoc {
   }
 }
 
-tasks.register("sourceJar", Jar) {
-  from sourceSets.main.allJava
-  classifier = 'sources'
-}
-
-tasks.register("javaDocJar", Jar) {
-  from javadoc.destinationDir
-  classifier = 'javadoc'
-  dependsOn javadoc
-}
-
-artifacts {
-  archives sourceJar
-  archives javaDocJar
-}
-
 project.afterEvaluate {
   if (project.plugins.hasPlugin('org.unbroken-dome.test-sets') && configurations.hasProperty("latestDepTestRuntime")) {
     tasks.withType(Test).configureEach {
@@ -181,22 +167,6 @@ project.afterEvaluate {
         assert testArtifacts != latestTestArtifacts: "latestDepTest dependencies are identical to test"
       }
     }
-  }
-}
-
-if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
-  // Remove the no-deps jar from the archives to prevent publication
-  configurations.archives.with {
-    artifacts.remove artifacts.find {
-      if (it.hasProperty("delegate")) {
-        it.delegate.archiveTask.is jar
-      } else {
-        it.archiveTask.is jar
-      }
-    }
-  }
-  artifacts {
-    archives shadowJar
   }
 }
 
