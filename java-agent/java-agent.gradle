@@ -10,17 +10,22 @@ apply from: "${rootDir}/gradle/publish.gradle"
 
 configurations {
   shadowInclude
+  isolated
+}
+
+dependencies {
+  isolated project(path: ':instrumentation', configuration: 'shadow')
+  isolated project(path: ':auto-exporters', configuration: 'shadow')
 }
 
 processResources {
-  from(zipTree(project(':instrumentation').tasks.shadowJar.archiveFile)) {
+  dependsOn = [':instrumentation:shadowJar', ':auto-exporters:shadowJar']
+  from(configurations.isolated.collect { zipTree(it) }) {
     into 'auto-tooling-and-instrumentation.isolated'
     rename '(^.*)\\.class$', '$1.classdata'
     // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
     rename '^LICENSE$', 'LICENSE.renamed'
   }
-
-  dependsOn project(':instrumentation').tasks.shadowJar
 }
 
 jar {

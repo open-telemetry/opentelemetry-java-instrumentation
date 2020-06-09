@@ -21,10 +21,6 @@ import spock.lang.Specification
 
 abstract class AbstractSmokeTest extends Specification {
 
-  public static final API_KEY = "some-api-key"
-  public static final PROFILING_START_DELAY_SECONDS = 1
-  public static final int PROFILING_RECORDING_UPLOAD_PERIOD_SECONDS = 5
-
   @Shared
   protected String workingDirectory = System.getProperty("user.dir")
   @Shared
@@ -68,7 +64,6 @@ abstract class AbstractSmokeTest extends Specification {
     ProcessBuilder processBuilder = createProcessBuilder()
 
     processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
-    processBuilder.environment().put("DD_API_KEY", API_KEY)
 
     // Setting configuration variables of batch span processor through env vars
     // This config is to immediately flush a batch of 1 span with delay of 10ms
