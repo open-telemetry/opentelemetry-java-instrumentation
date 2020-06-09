@@ -61,9 +61,6 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       RediscalaInstrumentation.class.getName() + "$OnCompleteHandler",
-      "io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator",
-      "io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator",
-      "io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator",
       packageName + ".RediscalaClientDecorator",
     };
   }
@@ -83,10 +80,10 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand cmd) {
-      final Span span =
-          TRACER.spanBuilder(cmd.getClass().getName()).setSpanKind(CLIENT).startSpan();
+      String statement = DECORATE.spanNameForClass(cmd.getClass());
+      final Span span = TRACER.spanBuilder(statement).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
-      DECORATE.onStatement(span, cmd.getClass().getName());
+      DECORATE.onStatement(span, statement);
       return new SpanWithScope(span, currentContextWith(span));
     }
 

@@ -58,8 +58,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (isRootScope && !spanName.isEmpty()) {
       span.updateName(spanName);
     } else {
-      span.updateName(
-          DECORATE.spanNameForClass(target) + (method == null ? "" : "." + method.getName()));
+      span.updateName(DECORATE.spanNameForMethod(target, method));
     }
   }
 
