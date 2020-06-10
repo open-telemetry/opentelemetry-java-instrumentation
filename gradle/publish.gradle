@@ -91,11 +91,12 @@ artifactory {
     repository {
       repoKey = 'oss-snapshot-local'
       username = System.getenv("BINTRAY_USER")
-      password = System.getenv("BINTRAY_KEY")
+      password = System.getenv("BINTRAY_API_KEY")
     }
   }
 }
 
 artifactoryPublish {
   publications ('maven')
+  enabled = false
 }
