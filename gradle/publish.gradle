@@ -98,5 +98,4 @@ artifactory {
 
 artifactoryPublish {
   publications ('maven')
-  enabled = false
 }
