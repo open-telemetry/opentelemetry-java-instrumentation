@@ -33,9 +33,9 @@ configurations {
 }
 
 dependencies {
-  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-jaeger', configuration: 'shadow')
   shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-logging', configuration: 'shadow')
   shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-otlp', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-jaeger', configuration: 'shadow')
   shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-zipkin', configuration: 'shadow')
 }
 
@@ -48,6 +48,11 @@ shadowJar {
   mergeServiceFiles()
 
   exclude '**/module-info.class'
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
 
   // relocate OpenTelemetry API usage
   relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"
