@@ -46,12 +46,7 @@ public class TracerInstaller {
         installExportersFromJar(exporterJar);
       } else {
         // Try to create embedded exporter
-        final String exporter = Config.get().getExporter();
-        if (exporter != null) {
-          installExporters(exporter);
-        } else {
-          log.warn("No exporter is enabled. Tracing will run but spans are dropped");
-        }
+        installExporters(Config.get().getExporter());
       }
     } else {
       log.info("Tracing is disabled.");
@@ -114,8 +109,6 @@ public class TracerInstaller {
         getExporterFactory(MetricExporterFactory.class, exporterLoader);
     if (metricExporterFactory != null) {
       installExporter(metricExporterFactory, config);
-    } else {
-      log.warn("No metric exporter found in {}. All metrics are dropped", exporterJar);
     }
   }
 
