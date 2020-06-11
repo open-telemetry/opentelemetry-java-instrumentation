@@ -57,21 +57,21 @@ public class Servlet2Advice {
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
       @Advice.Thrown final Throwable throwable,
-      @Advice.Local("otelSpan") Span span,
-      @Advice.Local("otelScope") Scope scope) {
+      @Advice.Local("otelSpan") final Span span,
+      @Advice.Local("otelScope") final Scope scope) {
     if (scope == null) {
       return;
     }
     scope.close();
 
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-      TRACER.setPrincipal((HttpServletRequest) request);
+      TRACER.setPrincipal(span, (HttpServletRequest) request);
 
       if (span == null) {
         return;
       }
 
-      Integer responseStatus =
+      final Integer responseStatus =
           InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
 
       if (throwable == null) {

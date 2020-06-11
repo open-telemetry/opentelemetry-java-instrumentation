@@ -81,15 +81,15 @@ public class Servlet3Advice {
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
       @Advice.Thrown final Throwable throwable,
-      @Advice.Local("otelSpan") Span span,
-      @Advice.Local("otelScope") Scope scope) {
+      @Advice.Local("otelSpan") final Span span,
+      @Advice.Local("otelScope") final Scope scope) {
     if (scope == null) {
       return;
     }
     scope.close();
 
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-      TRACER.setPrincipal((HttpServletRequest) request);
+      TRACER.setPrincipal(span, (HttpServletRequest) request);
 
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable, ((HttpServletResponse) response).getStatus());

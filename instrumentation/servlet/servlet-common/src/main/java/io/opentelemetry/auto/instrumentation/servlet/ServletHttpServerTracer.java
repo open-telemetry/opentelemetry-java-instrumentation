@@ -29,13 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServletRequest> {
 
+  @Override
   protected String getVersion() {
     return null;
   }
 
   @Override
   // TODO this violates convention
-  protected URI url(HttpServletRequest httpServletRequest) throws URISyntaxException {
+  protected URI url(final HttpServletRequest httpServletRequest) throws URISyntaxException {
     return new URI(
         httpServletRequest.getScheme(),
         null,
@@ -47,33 +48,34 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   }
 
   @Override
-  public Span getAttachedSpan(HttpServletRequest request) {
-    Object span = request.getAttribute(SPAN_ATTRIBUTE);
+  public Span getAttachedSpan(final HttpServletRequest request) {
+    final Object span = request.getAttribute(SPAN_ATTRIBUTE);
     return span instanceof Span ? (Span) span : null;
   }
 
   @Override
-  protected void attachSpanToRequest(Span span, HttpServletRequest request) {
+  protected void attachSpanToRequest(final Span span, final HttpServletRequest request) {
     request.setAttribute(SPAN_ATTRIBUTE, span);
   }
 
   @Override
-  protected Integer peerPort(HttpServletRequest request) {
+  protected Integer peerPort(final HttpServletRequest request) {
     // HttpServletResponse doesn't have accessor for remote port prior to Servlet spec 3.0
     return null;
   }
 
   @Override
-  protected String peerHostIP(HttpServletRequest request) {
+  protected String peerHostIP(final HttpServletRequest request) {
     return request.getRemoteAddr();
   }
 
   @Override
-  protected String method(HttpServletRequest request) {
+  protected String method(final HttpServletRequest request) {
     return request.getMethod();
   }
 
-  public void onRequest(Span span, HttpServletRequest request) {
+  @Override
+  public void onRequest(final Span span, final HttpServletRequest request) {
     // we do this e.g. so that servlet containers can use these values in their access logs
     request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
@@ -89,7 +91,8 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return HttpServletRequestGetter.GETTER;
   }
 
-  protected Throwable unwrapThrowable(Throwable throwable) {
+  @Override
+  protected Throwable unwrapThrowable(final Throwable throwable) {
     Throwable result = throwable;
     if (throwable instanceof ServletException && throwable.getCause() != null) {
       result = throwable.getCause();
@@ -97,13 +100,10 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return super.unwrapThrowable(result);
   }
 
-  public void setPrincipal(HttpServletRequest request) {
-    final Span existingSpan = getAttachedSpan(request);
-    if (existingSpan != null) {
-      final Principal principal = request.getUserPrincipal();
-      if (principal != null) {
-        existingSpan.setAttribute(MoreTags.USER_NAME, principal.getName());
-      }
+  public void setPrincipal(final Span span, final HttpServletRequest request) {
+    final Principal principal = request.getUserPrincipal();
+    if (principal != null) {
+      span.setAttribute(MoreTags.USER_NAME, principal.getName());
     }
   }
 }
