@@ -79,6 +79,10 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final Request request,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
+      if (TRACER.getAttachedSpan(request) != null) {
+        return;
+      }
+
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       span = TRACER.startSpan(request, method, null);
@@ -96,10 +100,6 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       }
       scope.close();
 
-      if (span == null) {
-        return;
-      }
-
       if (throwable != null) {
         TRACER.endExceptionally(span, throwable, response.getStatus());
       }
@@ -108,7 +108,6 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
   public static class SpanClosingListener implements AfterServiceListener {
     public static final SpanClosingListener LISTENER = new SpanClosingListener();
-    public static final GrizzlyHttpServerTracer TRACER = new GrizzlyHttpServerTracer();
 
     @Override
     public void onAfterService(final Request request) {

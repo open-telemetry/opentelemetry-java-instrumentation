@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServletRequest> {
 
+  @Override
   protected String getVersion() {
     return null;
   }
@@ -73,6 +74,7 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return request.getMethod();
   }
 
+  @Override
   public void onRequest(Span span, HttpServletRequest request) {
     // we do this e.g. so that servlet containers can use these values in their access logs
     request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
@@ -89,6 +91,7 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return HttpServletRequestGetter.GETTER;
   }
 
+  @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
     Throwable result = throwable;
     if (throwable instanceof ServletException && throwable.getCause() != null) {

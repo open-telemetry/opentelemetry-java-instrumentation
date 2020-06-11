@@ -51,10 +51,6 @@ public abstract class HttpServerTracer<REQUEST> {
   }
 
   public Span startSpan(REQUEST request, Method origin, String originType) {
-    if (getAttachedSpan(request) != null) {
-      return null;
-    }
-
     final Span.Builder builder =
         tracer
             .spanBuilder(spanNameForMethod(origin))
@@ -130,10 +126,6 @@ public abstract class HttpServerTracer<REQUEST> {
       log.debug("Error tagging url", e);
     }
     // TODO set resource name from URL.
-  }
-
-  public boolean sameTrace(Span oneSpan, Span otherSpan) {
-    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
   }
 
   /**

@@ -80,6 +80,7 @@ public class GrizzlyHttpServerTracer extends HttpServerTracer<Request> {
     return span instanceof Span ? (Span) span : null;
   }
 
+  @Override
   public void onRequest(Span span, Request request) {
     request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     request.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());

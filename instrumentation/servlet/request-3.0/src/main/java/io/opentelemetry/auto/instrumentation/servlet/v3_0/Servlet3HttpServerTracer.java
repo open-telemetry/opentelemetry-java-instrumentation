@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
   public static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
+  @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.auto.servlet-3.0";
   }
@@ -42,6 +43,22 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
     span.setStatus(Status.DEADLINE_EXCEEDED);
     span.setAttribute("timeout", timeout);
     span.end();
+  }
+
+  /*
+  Given request already has a span associated with it.
+  As there should not be nested spans of kind SERVER, we should NOT create a new span here.
+
+  But it may happen that there is no span in current Context or it is from a different trace.
+  E.g. in case of async servlet request processing we create span for incoming request in one thread,
+  but actual request continues processing happens in another thread.
+  Depending on servlet container implementation, this processing may again arrive into this method.
+  E.g. Jetty handles async requests in a way that calls HttpServlet.service method twice.
+
+  In this case we have to put the span from the request into current context before continuing.
+  */
+  public boolean needsRescoping(Span attachedSpan) {
+    return !sameTrace(tracer.getCurrentSpan(), attachedSpan);
   }
 
   @Override
@@ -74,5 +91,9 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
         request.setAttribute(SPAN_ATTRIBUTE, priorAttr);
       }
     }
+  }
+
+  private static boolean sameTrace(final Span oneSpan, final Span otherSpan) {
+    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
   }
 }
