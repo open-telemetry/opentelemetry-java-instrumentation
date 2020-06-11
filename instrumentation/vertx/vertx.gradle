@@ -16,7 +16,7 @@ testSets {
 ext.vertxVersion = '3.5.0'
 
 dependencies {
-  compileOnly group: 'io.vertx', name: 'vertx-core', version: vertxVersion
+  compileOnly group: 'io.vertx', name: 'vertx-web', version: vertxVersion
 
   testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:jdbc')

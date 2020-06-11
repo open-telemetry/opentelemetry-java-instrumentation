@@ -1,9 +1,9 @@
-package io.opentelemetry.auto.instrumentation.vertx;
+package io.opentelemetry.auto.instrumentation.vertx.reactive;
 
-import io.opentelemetry.OpenTelemetry;
+import static io.opentelemetry.auto.instrumentation.vertx.VertxDecorator.TRACER;
+
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import java.util.function.Consumer;
@@ -12,9 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<?>>> {
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.vertx");
-
   private final Consumer<Handler<AsyncResult<?>>> delegate;
   private final Span parentSpan;
 

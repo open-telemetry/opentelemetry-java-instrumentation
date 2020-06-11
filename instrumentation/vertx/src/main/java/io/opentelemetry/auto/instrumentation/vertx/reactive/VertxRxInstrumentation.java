@@ -1,13 +1,15 @@
 // Modified by SignalFx
-package io.opentelemetry.auto.instrumentation.vertx;
+package io.opentelemetry.auto.instrumentation.vertx.reactive;
 
-import static io.opentelemetry.auto.instrumentation.vertx.AsyncResultConsumerWrapper.TRACER;
+import static io.opentelemetry.auto.instrumentation.vertx.VertxDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.instrumentation.vertx.reactive.AsyncResultConsumerWrapper;
+import io.opentelemetry.auto.instrumentation.vertx.reactive.AsyncResultHandlerWrapper;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -20,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * This instrumentation allows span context propagation across Vert.x reactive java framework.
+ * This instrumentation allows span context propagation across Vert.x reactive executions.
  */
 @AutoService(Instrumenter.class)
 public class VertxRxInstrumentation extends Instrumenter.Default {
