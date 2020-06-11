@@ -100,13 +100,10 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return super.unwrapThrowable(result);
   }
 
-  public void setPrincipal(HttpServletRequest request) {
-    final Span existingSpan = getAttachedSpan(request);
-    if (existingSpan != null) {
-      final Principal principal = request.getUserPrincipal();
-      if (principal != null) {
-        existingSpan.setAttribute(MoreTags.USER_NAME, principal.getName());
-      }
+  public void setPrincipal(Span span, HttpServletRequest request) {
+    final Principal principal = request.getUserPrincipal();
+    if (principal != null) {
+      span.setAttribute(MoreTags.USER_NAME, principal.getName());
     }
   }
 }

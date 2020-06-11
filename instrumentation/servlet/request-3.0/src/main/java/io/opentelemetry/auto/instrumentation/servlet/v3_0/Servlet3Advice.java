@@ -80,7 +80,7 @@ public class Servlet3Advice {
       return;
     }
 
-    TRACER.setPrincipal((HttpServletRequest) request);
+    TRACER.setPrincipal(span, (HttpServletRequest) request);
 
     if (throwable != null) {
       TRACER.endExceptionally(span, throwable, ((HttpServletResponse) response).getStatus());

@@ -68,7 +68,7 @@ public class Servlet2Advice {
     }
     scope.close();
 
-    TRACER.setPrincipal((HttpServletRequest) request);
+    TRACER.setPrincipal(span, (HttpServletRequest) request);
 
     Integer responseStatus =
         InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
