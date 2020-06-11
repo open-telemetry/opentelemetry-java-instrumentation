@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   id "com.github.johnrengelman.shadow"
 }
@@ -12,17 +14,6 @@ configurations {
   shadowInclude
 }
 
-processResources {
-  from(zipTree(project(':instrumentation').tasks.shadowJar.archiveFile)) {
-    into 'auto-tooling-and-instrumentation.isolated'
-    rename '(^.*)\\.class$', '$1.classdata'
-    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-    rename '^LICENSE$', 'LICENSE.renamed'
-  }
-
-  dependsOn project(':instrumentation').tasks.shadowJar
-}
-
 jar {
   manifest {
     attributes(
@@ -35,12 +26,49 @@ jar {
   }
 }
 
+CopySpec isolateSpec(Collection<Task> sourceTasks) {
+  return copySpec {
+    from(sourceTasks.collect { zipTree(it.archiveFile) }) {
+      into 'auto-tooling-and-instrumentation.isolated'
+      rename '(^.*)\\.class$', '$1.classdata'
+      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+      rename '^LICENSE$', 'LICENSE.renamed'
+    }
+  }
+}
+
 shadowJar {
-  configurations = [project.configurations.shadowInclude]
+  archiveClassifier = 'no-exporters'
 
+  def sourceTasks = [project(':instrumentation').tasks.shadowJar]
+  dependsOn sourceTasks
+  with isolateSpec(sourceTasks)
+}
+
+task embedExporters(type: ShadowJar) {
   archiveClassifier = ''
+  from sourceSets.main.output
 
+  def sourceTasks = [project(':instrumentation').tasks.shadowJar, project(':auto-exporters').tasks.shadowJar]
+  dependsOn sourceTasks
+  with isolateSpec(sourceTasks)
+}
+assemble.dependsOn embedExporters
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      artifact embedExporters
+    }
+  }
+}
+tasks.withType(ShadowJar).configureEach {
+  configurations = [project.configurations.shadowInclude]
   mergeServiceFiles()
+
+  manifest {
+    inheritFrom project.tasks.jar.manifest
+  }
 
   exclude '**/module-info.class'
 

@@ -1,3 +1,7 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
@@ -22,4 +26,43 @@ tasks.withType(Test).configureEach() {
     systemProperty 'loggingExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-logging').tasks.shadowJar.archivePath
     systemProperty 'zipkinExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-zipkin').tasks.shadowJar.archivePath
   }
+}
+
+configurations {
+  shadowInclude
+}
+
+dependencies {
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-logging', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-otlp', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-jaeger', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-zipkin', configuration: 'shadow')
+}
+
+
+shadowJar {
+  configurations = [project.configurations.shadowInclude]
+
+  archiveClassifier = ''
+
+  mergeServiceFiles()
+
+  exclude '**/module-info.class'
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.auto.bootstrap.PatchLogger'
+
+  // relocate OpenTelemetry API usage
+  relocate "io.opentelemetry.OpenTelemetry", "io.opentelemetry.auto.shaded.io.opentelemetry.OpenTelemetry"
+  relocate "io.opentelemetry.common", "io.opentelemetry.auto.shaded.io.opentelemetry.common"
+  relocate "io.opentelemetry.context", "io.opentelemetry.auto.shaded.io.opentelemetry.context"
+  relocate "io.opentelemetry.correlationcontext", "io.opentelemetry.auto.shaded.io.opentelemetry.correlationcontext"
+  relocate "io.opentelemetry.internal", "io.opentelemetry.auto.shaded.io.opentelemetry.internal"
+  relocate "io.opentelemetry.metrics", "io.opentelemetry.auto.shaded.io.opentelemetry.metrics"
+  relocate "io.opentelemetry.trace", "io.opentelemetry.auto.shaded.io.opentelemetry.trace"
+
+  // relocate OpenTelemetry API dependency usage
+  relocate "io.grpc", "io.opentelemetry.auto.shaded.io.grpc"
 }

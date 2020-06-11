@@ -54,6 +54,7 @@ public class Config {
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
   public static final String EXPORTER_JAR = "exporter.jar";
+  public static final String EXPORTER = "exporter";
   public static final String PROPAGATORS = "propagators";
   public static final String CONFIGURATION_FILE = "trace.config";
   public static final String TRACE_ENABLED = "trace.enabled";
@@ -106,6 +107,7 @@ public class Config {
   public static final boolean DEFAULT_SQL_NORMALIZER_ENABLED = true;
 
   @Getter private final String exporterJar;
+  @Getter private final String exporter;
   @Getter private final List<String> propagators;
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
@@ -157,6 +159,7 @@ public class Config {
 
     propagators = getListSettingFromEnvironment(PROPAGATORS, null);
     exporterJar = getSettingFromEnvironment(EXPORTER_JAR, null);
+    exporter = getSettingFromEnvironment(EXPORTER, "otlp");
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     integrationsEnabled =
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
@@ -218,6 +221,7 @@ public class Config {
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
     exporterJar = properties.getProperty(EXPORTER_JAR, parent.exporterJar);
+    exporter = properties.getProperty(EXPORTER, parent.exporter);
 
     propagators = getPropertyListValue(properties, PROPAGATORS, parent.propagators);
 
