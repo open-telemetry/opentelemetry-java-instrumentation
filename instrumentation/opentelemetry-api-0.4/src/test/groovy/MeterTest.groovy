@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
-import spock.lang.Ignore
 import unshaded.io.opentelemetry.OpenTelemetry
 import unshaded.io.opentelemetry.metrics.AsynchronousInstrument
+import unshaded.io.opentelemetry.metrics.DoubleSumObserver
+import unshaded.io.opentelemetry.metrics.DoubleUpDownSumObserver
 import unshaded.io.opentelemetry.metrics.DoubleValueObserver
+import unshaded.io.opentelemetry.metrics.LongSumObserver
+import unshaded.io.opentelemetry.metrics.LongUpDownSumObserver
 import unshaded.io.opentelemetry.metrics.LongValueObserver
 
 import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_DOUBLE
@@ -29,8 +33,7 @@ import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.SUMMA
 
 class MeterTest extends AgentTestRunner {
 
-  //TODO Add support for up-down metrics from otel-java 0.5.0
-  def "test #builderMethod monotonic=#monotonic bound=#bind"() {
+  def "test counter #builderMethod bound=#bind"() {
     given:
     // meters are global, and no way to unregister them, so tests use random name to avoid each other
     def instrumentationName = "test" + new Random().nextLong()
@@ -72,18 +75,18 @@ class MeterTest extends AgentTestRunner {
     point.value == expectedValue
 
     where:
-    builderMethod          | bind  | value1 | value2 | expectedValue | expectedType
-    "longCounterBuilder"   | false | 5      | 6      | 11            | MONOTONIC_LONG
-//    "longUpDownCounterBuilder"   | false | 5      | 6      | 11            | NON_MONOTONIC_LONG
-    "longCounterBuilder"   | true  | 5      | 6      | 11            | MONOTONIC_LONG
-//    "longUpDownCounterBuilder"   | true  | 5      | 6      | 11            | NON_MONOTONIC_LONG
-    "doubleCounterBuilder" | false | 5.5    | 6.6    | 12.1          | MONOTONIC_DOUBLE
-//    "doubleUpDownCounterBuilder" | false | 5.5    | 6.6    | 12.1          | NON_MONOTONIC_DOUBLE
-    "doubleCounterBuilder" | true  | 5.5    | 6.6    | 12.1          | MONOTONIC_DOUBLE
-//    "doubleUpDownCounterBuilder" | true  | 5.5    | 6.6    | 12.1          | NON_MONOTONIC_DOUBLE
+    builderMethod                | bind  | value1 | value2 | expectedValue | expectedType
+    "longCounterBuilder"         | false | 5      | 6      | 11            | MONOTONIC_LONG
+    "longCounterBuilder"         | true  | 5      | 6      | 11            | MONOTONIC_LONG
+    "longUpDownCounterBuilder"   | false | 5      | 6      | 11            | NON_MONOTONIC_LONG
+    "longUpDownCounterBuilder"   | true  | 5      | 6      | 11            | NON_MONOTONIC_LONG
+    "doubleCounterBuilder"       | false | 5.5    | 6.6    | 12.1          | MONOTONIC_DOUBLE
+    "doubleCounterBuilder"       | true  | 5.5    | 6.6    | 12.1          | MONOTONIC_DOUBLE
+    "doubleUpDownCounterBuilder" | false | 5.5    | 6.6    | 12.1          | NON_MONOTONIC_DOUBLE
+    "doubleUpDownCounterBuilder" | true  | 5.5    | 6.6    | 12.1          | NON_MONOTONIC_DOUBLE
   }
 
-  def "test #builderMethod bound=#bind"() {
+  def "test recorder #builderMethod bound=#bind"() {
     given:
     // meters are global, and no way to unregister them, so tests use random name to avoid each other
     def instrumentationName = "test" + new Random().nextLong()
@@ -133,9 +136,7 @@ class MeterTest extends AgentTestRunner {
     "doubleValueRecorderBuilder" | true  | 5.5    | 6.6    | 12.1
   }
 
-  //TODO Add support for sum observers
-  @Ignore
-  def "test #builderMethod"() {
+  def "test observer #builderMethod"() {
     given:
     // meters are global, and no way to unregister them, so tests use random name to avoid each other
     def instrumentationName = "test" + new Random().nextLong()
@@ -146,16 +147,43 @@ class MeterTest extends AgentTestRunner {
       .setDescription("d")
       .setUnit("u")
       .setConstantLabels(["m": "n", "o": "p"])
-      .setMonotonic(monotonic)
       .build()
-    if (builderMethod.startsWith("long")) {
+    if (builderMethod == "longSumObserverBuilder") {
+      instrument.setCallback(new AsynchronousInstrument.Callback<LongSumObserver.ResultLongSumObserver>() {
+        @Override
+        void update(LongSumObserver.ResultLongSumObserver resultLongSumObserver) {
+          resultLongSumObserver.observe(123, "q", "r")
+        }
+      })
+    } else if (builderMethod == "longUpDownSumObserverBuilder") {
+      instrument.setCallback(new AsynchronousInstrument.Callback<LongUpDownSumObserver.ResultLongUpDownSumObserver>() {
+        @Override
+        void update(LongUpDownSumObserver.ResultLongUpDownSumObserver resultLongUpDownSumObserver) {
+          resultLongUpDownSumObserver.observe(123, "q", "r")
+        }
+      })
+    } else if (builderMethod == "longValueObserverBuilder") {
       instrument.setCallback(new AsynchronousInstrument.Callback<LongValueObserver.ResultLongValueObserver>() {
         @Override
         void update(LongValueObserver.ResultLongValueObserver resultLongObserver) {
           resultLongObserver.observe(123, "q", "r")
         }
       })
-    } else {
+    } else if (builderMethod == "doubleSumObserverBuilder") {
+      instrument.setCallback(new AsynchronousInstrument.Callback<DoubleSumObserver.ResultDoubleSumObserver>() {
+        @Override
+        void update(DoubleSumObserver.ResultDoubleSumObserver resultDoubleSumObserver) {
+          resultDoubleSumObserver.observe(1.23, "q", "r")
+        }
+      })
+    } else if (builderMethod == "doubleUpDownSumObserverBuilder") {
+      instrument.setCallback(new AsynchronousInstrument.Callback<DoubleUpDownSumObserver.ResultDoubleUpDownSumObserver>() {
+        @Override
+        void update(DoubleUpDownSumObserver.ResultDoubleUpDownSumObserver resultDoubleUpDownSumObserver) {
+          resultDoubleUpDownSumObserver.observe(1.23, "q", "r")
+        }
+      })
+    } else if (builderMethod == "doubleValueObserverBuilder") {
       instrument.setCallback(new AsynchronousInstrument.Callback<DoubleValueObserver.ResultDoubleValueObserver>() {
         @Override
         void update(DoubleValueObserver.ResultDoubleValueObserver resultDoubleObserver) {
@@ -177,17 +205,19 @@ class MeterTest extends AgentTestRunner {
     def point = metricData.points.iterator().next()
     point.labels == ["q": "r"]
     if (builderMethod.startsWith("long")) {
-      point.value == 123
+      point."$valueMethod" == 123
     } else {
-      point.value == 1.23
+      point."$valueMethod" == 1.23
     }
 
     where:
-    builderMethod                    | expectedType
-    "longSumObserverBuilder"         | MONOTONIC_LONG
-    "longUpDownSumObserverBuilder"   | NON_MONOTONIC_LONG
-    "doubleSumObserverBuilder"       | MONOTONIC_DOUBLE
-    "doubleUpDownSumObserverBuilder" | NON_MONOTONIC_DOUBLE
+    builderMethod                    | valueMethod | expectedType
+    "longSumObserverBuilder"         | "value"     | MONOTONIC_LONG
+    "longUpDownSumObserverBuilder"   | "value"     | NON_MONOTONIC_LONG
+    "longValueObserverBuilder"       | "sum"       | SUMMARY
+    "doubleSumObserverBuilder"       | "value"     | MONOTONIC_DOUBLE
+    "doubleUpDownSumObserverBuilder" | "value"     | NON_MONOTONIC_DOUBLE
+    "doubleValueObserverBuilder"     | "sum"       | SUMMARY
   }
 
   def "test batch recorder"() {
