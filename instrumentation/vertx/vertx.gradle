@@ -12,20 +12,22 @@ testSets {
   }
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+//First vert.x version to have vertx-rx-java2
+ext.vertxVersion = '3.5.0'
 
 dependencies {
-//  compileOnly group: 'io.vertx', name: 'vertx-web', version: '3.5.0'
+  compileOnly group: 'io.vertx', name: 'vertx-core', version: vertxVersion
 
   testCompile project(':instrumentation:netty:netty-4.1')
+  testCompile project(':instrumentation:jdbc')
   testCompile project(':instrumentation:trace-annotation')
 
-  // Tests seem to fail before 3.5... maybe a problem with some of the tests?
-  testCompile group: 'io.vertx', name: 'vertx-web', version: '3.5.0'
-  testCompile group: 'io.vertx', name: 'vertx-web-client', version: '3.5.0'
-  testCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.5.0'
-  testCompile group: 'io.vertx', name: 'vertx-rx-java2', version: '3.5.0'
+  testCompile group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
+  testCompile 'org.hsqldb:hsqldb:2.3.4'
 
   // Vert.x 4.0 is incompatible with our tests.
   latestDepTestCompile group: 'io.vertx', name: 'vertx-web', version: '3.+'
