@@ -3,7 +3,7 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 // FIXME: Improve test coverage.
 minimumBranchCoverage = 0.0

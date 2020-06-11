@@ -16,18 +16,18 @@
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.InetSocketTransportAddress
+import org.elasticsearch.common.transport.TransportAddress
 import org.elasticsearch.env.Environment
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty3Plugin
 import org.elasticsearch.transport.RemoteTransportException
+import org.elasticsearch.transport.TransportService
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
 
@@ -39,9 +39,8 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
   @Shared
-  int httpPort
-  @Shared
-  int tcpPort
+  TransportAddress tcpPublishAddress
+
   @Shared
   Node testNode
   @Shared
@@ -49,16 +48,10 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
 
   @Shared
   TransportClient client
+  @Shared
+  String clusterName = UUID.randomUUID().toString()
 
   def setupSpec() {
-    withRetryOnBindException({
-      setupSpecUnderRetry()
-    })
-  }
-
-  def setupSpecUnderRetry() {
-    httpPort = PortUtils.randomOpenPort()
-    tcpPort = PortUtils.randomOpenPort()
 
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
@@ -66,23 +59,22 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
 
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
-      .put("http.port", httpPort)
-      .put("transport.tcp.port", tcpPort)
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
-      .put(CLUSTER_NAME_SETTING.getKey(), "test-cluster")
+      .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
+    tcpPublishAddress = testNode.injector().getInstance(TransportService).boundAddress().publishAddress()
 
     client = new PreBuiltTransportClient(
       Settings.builder()
       // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
         .put("thread_pool.listener.size", 1)
-        .put(CLUSTER_NAME_SETTING.getKey(), "test-cluster")
+        .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
         .build()
     )
-    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), tcpPort))
+    client.addTransportAddress(tcpPublishAddress)
     runUnderTrace("setup") {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.
@@ -114,9 +106,9 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
           operationName "ClusterHealthAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" tcpPublishAddress.host
+            "$MoreTags.NET_PEER_IP" tcpPublishAddress.address
+            "$MoreTags.NET_PEER_PORT" tcpPublishAddress.port
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
@@ -209,9 +201,9 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
           operationName "CreateIndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" tcpPublishAddress.host
+            "$MoreTags.NET_PEER_IP" tcpPublishAddress.address
+            "$MoreTags.NET_PEER_PORT" tcpPublishAddress.port
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
@@ -224,9 +216,9 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" tcpPublishAddress.host
+            "$MoreTags.NET_PEER_IP" tcpPublishAddress.address
+            "$MoreTags.NET_PEER_PORT" tcpPublishAddress.port
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
@@ -253,9 +245,9 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
           operationName "IndexAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" tcpPublishAddress.host
+            "$MoreTags.NET_PEER_IP" tcpPublishAddress.address
+            "$MoreTags.NET_PEER_PORT" tcpPublishAddress.port
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
@@ -274,9 +266,9 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
           operationName "GetAction"
           spanKind CLIENT
           tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" tcpPort
+            "$MoreTags.NET_PEER_NAME" tcpPublishAddress.host
+            "$MoreTags.NET_PEER_IP" tcpPublishAddress.address
+            "$MoreTags.NET_PEER_PORT" tcpPublishAddress.port
             "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"

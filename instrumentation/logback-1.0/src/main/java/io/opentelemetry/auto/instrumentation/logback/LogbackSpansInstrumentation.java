@@ -67,7 +67,8 @@ public class LogbackSpansInstrumentation extends Instrumenter.Default {
     public static boolean methodEnter(@Advice.Argument(0) final ILoggingEvent event) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      final boolean topLevel = CallDepthThreadLocalMap.incrementCallDepth("logger") == 0;
+      final boolean topLevel =
+          CallDepthThreadLocalMap.incrementCallDepth(java.util.logging.Logger.class) == 0;
       if (topLevel) {
         LogbackSpans.capture(event);
       }
@@ -77,7 +78,7 @@ public class LogbackSpansInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Enter final boolean topLevel) {
       if (topLevel) {
-        CallDepthThreadLocalMap.reset("logger");
+        CallDepthThreadLocalMap.reset(java.util.logging.Logger.class);
       }
     }
   }

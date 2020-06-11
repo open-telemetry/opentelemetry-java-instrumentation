@@ -15,9 +15,6 @@
  */
 package io.opentelemetry.auto.bootstrap;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Utility to track nested instrumentation.
  *
@@ -25,27 +22,39 @@ import java.util.Map;
  * #incrementCallDepth at the beginning of each constructor.
  */
 public class CallDepthThreadLocalMap {
-  private static final ThreadLocal<Map<Object, Integer>> TLS =
-      new ThreadLocal<Map<Object, Integer>>() {
+
+  private static final ClassValue<ThreadLocalDepth> TLS =
+      new ClassValue<ThreadLocalDepth>() {
         @Override
-        public Map<Object, Integer> initialValue() {
-          return new HashMap<>();
+        protected ThreadLocalDepth computeValue(Class<?> type) {
+          return new ThreadLocalDepth();
         }
       };
 
-  public static int incrementCallDepth(final Object k) {
-    final Map<Object, Integer> map = TLS.get();
-    Integer depth = map.get(k);
-    if (depth == null) {
-      depth = 0;
-    } else {
-      depth += 1;
-    }
-    map.put(k, depth);
-    return depth;
+  public static int incrementCallDepth(final Class<?> k) {
+    return TLS.get(k).get().increment();
   }
 
-  public static void reset(final Object k) {
-    TLS.get().remove(k);
+  public static void reset(final Class<?> k) {
+    TLS.get(k).get().depth = 0;
+  }
+
+  private static final class Depth {
+    private int depth;
+
+    private Depth() {
+      this.depth = 0;
+    }
+
+    private int increment() {
+      return this.depth++;
+    }
+  }
+
+  private static final class ThreadLocalDepth extends ThreadLocal<Depth> {
+    @Override
+    protected Depth initialValue() {
+      return new Depth();
+    }
   }
 }

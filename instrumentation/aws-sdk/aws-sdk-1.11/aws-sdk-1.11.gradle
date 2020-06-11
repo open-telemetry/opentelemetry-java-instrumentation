@@ -1,4 +1,4 @@
-apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 // compiling against 1.11.0, but instrumentation should work against 1.10.33 with varying effects,
