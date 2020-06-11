@@ -21,9 +21,6 @@ dependencies {
   compile deps.opentelemetrySdkAutoConfig
   compile deps.opentelemetryTraceProps
 
-  // TODO: move the interface in exporter-support into opentelemetry-sdk-contrib-auto-config
-  compile project(':exporter-support')
-
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy
   compile deps.bytebuddyagent
