@@ -149,9 +149,6 @@ include ':instrumentation:vertx-testing'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2-core'
 
-// exporter support
-include ':exporter-support'
-
 // exporter adapters
 include ":auto-exporters"
 include ":auto-exporters:jaeger"

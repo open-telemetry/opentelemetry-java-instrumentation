@@ -16,8 +16,8 @@
 package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.exportersupport.MetricExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.contrib.auto.config.MetricExporterFactory;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
@@ -126,7 +126,7 @@ public class TracerInstaller {
   private static void installExporter(
       SpanExporterFactory spanExporterFactory, DefaultExporterConfig config) {
     final SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-    BatchSpanProcessor spanProcessor =
+    final BatchSpanProcessor spanProcessor =
         BatchSpanProcessor.newBuilder(spanExporter)
             .readEnvironmentVariables()
             .readSystemProperties()
@@ -153,7 +153,8 @@ public class TracerInstaller {
 
   private static void configure() {
     /* Update trace config from env vars or sys props */
-    TraceConfig activeTraceConfig = OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
+    final TraceConfig activeTraceConfig =
+        OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
     OpenTelemetrySdk.getTracerProvider()
         .updateActiveTraceConfig(
             activeTraceConfig
