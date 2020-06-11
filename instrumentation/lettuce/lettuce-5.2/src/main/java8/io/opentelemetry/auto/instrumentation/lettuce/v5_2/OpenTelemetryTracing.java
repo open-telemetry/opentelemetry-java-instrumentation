@@ -1,3 +1,5 @@
+package io.opentelemetry.auto.instrumentation.lettuce.v5_2;
+
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,7 +93,7 @@ public class OpenTelemetryTracing implements Tracing
     }
 
     @Override
-    public Span nextSpan(TraceContext traceContext)
+    public io.opentelemetry.trace.Span nextSpan(TraceContext traceContext)
     {
       return new SpanRedisAdapter(traceContext);
     }

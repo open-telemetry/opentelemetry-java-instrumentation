@@ -11,7 +11,7 @@ muzzle {
   pass {
     group = "io.lettuce"
     module = "lettuce-core"
-    versions = "[5.1.0.RELEASE,)"
+    versions = "[5.2.0.RELEASE,)"
     assertInverse = true
   }
 }
@@ -23,11 +23,11 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
-  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
+  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
+  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
 
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
-  testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
+  testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
   testCompile project(':instrumentation:reactor-3.1')
 
   latestDepTestCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.+'

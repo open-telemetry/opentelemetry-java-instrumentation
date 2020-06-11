@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
+package io.opentelemetry.auto.instrumentation.lettuce.v5_2;
 
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.OpenTelemetry;
