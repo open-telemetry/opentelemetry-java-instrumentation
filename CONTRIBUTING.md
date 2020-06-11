@@ -91,7 +91,6 @@ on the green checkmark you can view the `build_test_deploy` workflow and the
 named like:
 
 ```
-libs/exporter-support-<version>-SNAPSHOT.jar
 libs/opentelemetry-auto-<version>-SNAPSHOT.jar
 libs/opentelemetry-auto-exporters-jaeger-<version>-SNAPSHOT.jar
 libs/opentelemetry-auto-exporters-logging-<version>-SNAPSHOT.jar

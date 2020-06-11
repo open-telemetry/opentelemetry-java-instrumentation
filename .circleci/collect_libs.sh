@@ -11,4 +11,3 @@ mkdir -p $LIBS_DIR >/dev/null 2>&1
 
 cp workspace/java-agent/build/libs/*.jar $LIBS_DIR/
 cp workspace/auto-exporters/*/build/libs/*.jar $LIBS_DIR/
-cp workspace/exporter-support/build/libs/*.jar $LIBS_DIR/
