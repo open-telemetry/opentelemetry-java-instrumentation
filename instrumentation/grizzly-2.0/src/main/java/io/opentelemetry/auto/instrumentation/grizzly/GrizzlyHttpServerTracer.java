@@ -75,7 +75,7 @@ public class GrizzlyHttpServerTracer extends HttpServerTracer<Request> {
   }
 
   @Override
-  protected Span getAttachedSpan(Request request) {
+  public Span getAttachedSpan(Request request) {
     Object span = request.getAttribute(SPAN_ATTRIBUTE);
     return span instanceof Span ? (Span) span : null;
   }
