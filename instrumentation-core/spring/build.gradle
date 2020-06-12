@@ -11,12 +11,6 @@ apply from: "$rootDir/gradle/java.gradle"
 
 sourceCompatibility = '8'
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
-
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
