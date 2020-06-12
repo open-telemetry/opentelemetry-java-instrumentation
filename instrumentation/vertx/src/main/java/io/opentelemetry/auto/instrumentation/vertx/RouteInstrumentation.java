@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.vertx;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -41,6 +42,11 @@ public final class RouteInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("io.vertx.ext.web.Route");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface()).and(safeHasSuperType(named("io.vertx.ext.web.Route")));
   }
@@ -49,6 +55,7 @@ public final class RouteInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".RoutingContextHandlerWrapper",
+      packageName + ".VertxDecorator",
     };
   }
 

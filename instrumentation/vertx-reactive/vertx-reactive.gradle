@@ -5,6 +5,14 @@ ext {
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
+muzzle {
+  pass {
+    group = 'io.vertx'
+    module = 'vertx-web'
+    versions = "[3.5.0,)"
+  }
+}
+
 testSets {
   latestDepTest {
     dirName = 'test'
@@ -16,6 +24,7 @@ ext.vertxVersion = '3.5.0'
 
 dependencies {
   compileOnly group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+  compileOnly group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
 
   testCompile project(':instrumentation:jdbc')
   //We need both version as different versions of Vert.x use different versions of Netty
