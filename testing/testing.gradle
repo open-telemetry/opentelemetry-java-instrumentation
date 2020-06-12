@@ -1,4 +1,4 @@
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.5

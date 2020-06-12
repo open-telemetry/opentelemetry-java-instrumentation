@@ -15,13 +15,14 @@
  */
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
-import io.opentelemetry.auto.test.utils.PortUtils
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
+import org.elasticsearch.common.transport.TransportAddress
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
+import org.elasticsearch.transport.TransportService
 import spock.lang.Shared
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -31,25 +32,17 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
   @Shared
-  int httpPort
-  @Shared
-  int tcpPort
+  TransportAddress tcpPublishAddress
   @Shared
   Node testNode
   @Shared
   File esWorkingDir
+  @Shared
+  String clusterName = UUID.randomUUID().toString()
 
   def client = testNode.client()
 
   def setupSpec() {
-    withRetryOnBindException({
-      setupSpecUnderRetry()
-    })
-  }
-
-  def setupSpecUnderRetry() {
-    httpPort = PortUtils.randomOpenPort()
-    tcpPort = PortUtils.randomOpenPort()
 
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
@@ -59,11 +52,10 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       .put("path.home", esWorkingDir.path)
     // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
       .put("threadpool.listener.size", 1)
-      .put("http.port", httpPort)
-      .put("transport.tcp.port", tcpPort)
       .build()
-    testNode = NodeBuilder.newInstance().local(true).clusterName("test-cluster").settings(settings).build()
+    testNode = NodeBuilder.newInstance().local(true).clusterName(clusterName).settings(settings).build()
     testNode.start()
+    tcpPublishAddress = testNode.injector().getInstance(TransportService).boundAddress().publishAddress()
     runUnderTrace("setup") {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.

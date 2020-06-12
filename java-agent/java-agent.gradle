@@ -6,9 +6,9 @@ plugins {
 
 description = 'opentelemetry-auto'
 
-apply from: "${rootDir}/gradle/java.gradle"
-apply from: "${rootDir}/gradle/version.gradle"
-apply from: "${rootDir}/gradle/publish.gradle"
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/version.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 configurations {
   shadowInclude

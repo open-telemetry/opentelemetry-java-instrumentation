@@ -149,6 +149,7 @@ include ':instrumentation:vertx'
 include ':instrumentation:vertx-reactive'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2-core'
+include ':instrumentation-core:spring'
 
 // exporter adapters
 include ":auto-exporters"

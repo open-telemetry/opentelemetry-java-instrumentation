@@ -1,5 +1,5 @@
-apply from: "${rootDir}/gradle/instrumentation.gradle"
-apply from: "${rootDir}/gradle/test-with-scala.gradle"
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/test-with-scala.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 // This won't work until the akka and scala integrations are split into separate projects.

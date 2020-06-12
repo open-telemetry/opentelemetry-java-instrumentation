@@ -201,7 +201,7 @@ class CacheProviderTest extends AgentSpecification {
 
     then:
     // cache will start to proactively free slots & size calc is approximate
-    poolStrat.approximateSize() > 0.8 * capacity
+    poolStrat.approximateSize() >= 0.75 * capacity
 
     when:
     10.times {

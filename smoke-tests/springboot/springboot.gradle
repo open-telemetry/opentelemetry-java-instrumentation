@@ -1,7 +1,7 @@
 plugins {
   id "com.github.johnrengelman.shadow"
 }
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 description = 'SpringBoot Smoke Tests.'
 
 // The standard spring-boot plugin doesn't play nice with our project

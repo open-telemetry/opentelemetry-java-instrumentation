@@ -1,4 +1,4 @@
-apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
   // this instrumentation needs to be able to be able to reference both the OpenTelemetry API
