@@ -48,12 +48,12 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> {
       future.complete(null)
     }
 
-    future.get(2, TimeUnit.SECONDS)
+    future.get(30, TimeUnit.SECONDS)
     return server
   }
 
   protected Class<? extends AbstractVerticle> verticle() {
-    return VertxWebTestServer.class
+    return VertxWebServer
   }
 
   @Override

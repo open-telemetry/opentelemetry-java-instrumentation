@@ -146,6 +146,7 @@ include ':instrumentation:spymemcached-2.12'
 include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx'
+include ':instrumentation:vertx-reactive'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2-core'
 

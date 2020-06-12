@@ -13,27 +13,80 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package server
-
-
+import io.opentelemetry.auto.test.base.HttpServerTest
+import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
+import io.vertx.core.Vertx
+import io.vertx.core.VertxOptions
+import io.vertx.core.json.JsonObject
 import io.vertx.reactivex.core.AbstractVerticle
 import io.vertx.reactivex.ext.web.Router
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
+import lombok.SneakyThrows
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class VertxRxHttpServerTest extends VertxHttpServerTest {
+class VertxRxHttpServerTest extends HttpServerTest<Vertx> {
+  public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
 
+  @SneakyThrows
   @Override
-  protected Class<AbstractVerticle> verticle() {
-    return VertxRxWebTestServer
+  Vertx startServer(int port) {
+    Vertx server = Vertx.vertx(new VertxOptions()
+    // Useful for debugging:
+    // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
+      .setClusterPort(port))
+    final CompletableFuture<Void> future = new CompletableFuture<>()
+    server.deployVerticle(verticle().getName(),
+      new DeploymentOptions()
+        .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
+        .setInstances(3)) { res ->
+      if (!res.succeeded()) {
+        throw new RuntimeException("Cannot deploy server Verticle", res.cause())
+      }
+      future.complete(null)
+    }
+
+    future.get(30, TimeUnit.SECONDS)
+    return server
   }
 
-  static class VertxRxWebTestServer extends AbstractVerticle {
+  @Override
+  void stopServer(Vertx server) {
+    server.close()
+  }
+
+  @Override
+  boolean testExceptionBody() {
+    return false
+  }
+
+  @Override
+  boolean testPathParam() {
+    return true
+  }
+
+  @Override
+  boolean testNotFound() {
+    return false
+  }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.getPath()
+  }
+
+  protected Class<AbstractVerticle> verticle() {
+    return VertxReactiveWebServer
+  }
+
+  static class VertxReactiveWebServer extends AbstractVerticle {
 
     @Override
     void start(final Future<Void> startFuture) {
@@ -65,6 +118,12 @@ class VertxRxHttpServerTest extends VertxHttpServerTest {
           throw new Exception(EXCEPTION.body)
         }
       }
+      router.route("/path/:id/param").handler { ctx ->
+        controller(PATH_PARAM) {
+          ctx.response().setStatusCode(PATH_PARAM.status).end(ctx.request().getParam("id"))
+        }
+      }
+
 
       super.@vertx.createHttpServer()
         .requestHandler { router.accept(it) }

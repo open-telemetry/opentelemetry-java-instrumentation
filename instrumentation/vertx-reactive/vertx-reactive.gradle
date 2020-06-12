@@ -1,4 +1,3 @@
-// Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
@@ -12,21 +11,30 @@ testSets {
   }
 }
 
-ext.vertxVersion = '3.0.0'
+//The first Vert.x version that uses rx-java 2
+ext.vertxVersion = '3.5.0'
 
 dependencies {
   compileOnly group: 'io.vertx', name: 'vertx-web', version: vertxVersion
 
-  //We need both version as different versions of Vert.x use different versions of Netty
-  testCompile project(':instrumentation:netty:netty-4.0')
-  testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:jdbc')
+  //We need both version as different versions of Vert.x use different versions of Netty
+  testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:vertx')
 
   testCompile group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
   testCompile group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
+  testCompile 'org.hsqldb:hsqldb:2.3.4'
+
 
   // Vert.x 4.0 is incompatible with our tests.
   latestDepTestCompile group: 'io.vertx', name: 'vertx-web', version: '3.+'
   latestDepTestCompile group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-jdbc-client', version: '3.+'
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.+'
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-rx-java2', version: '3.+'
 }

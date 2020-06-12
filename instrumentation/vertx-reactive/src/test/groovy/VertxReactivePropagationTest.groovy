@@ -1,3 +1,18 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -13,11 +28,7 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.SERVER
 
-class VertxRxServerTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.jdbc.enabled", "true")
-  }
-
+class VertxReactivePropagationTest extends AgentTestRunner {
   @Shared
   OkHttpClient client = OkHttpUtils.client()
 
@@ -29,49 +40,11 @@ class VertxRxServerTest extends AgentTestRunner {
 
   def setupSpec() {
     port = PortUtils.randomOpenPort()
-    server = VertxRxWebTestServer.start(port)
+    server = VertxReactiveWebServer.start(port)
   }
 
   def cleanupSpec() {
     server.close()
-  }
-
-  def "test #responseCode response handling"() {
-    setup:
-    def url = "http://localhost:$port$path"
-    def request = new Request.Builder().url(url).get().build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == responseCode
-
-    and:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "HTTP GET" //TODO
-          spanKind SERVER
-          errored false
-          parent()
-          tags {
-//            "$MoreTags.NET_PEER_PORT" port //TODO
-            "$MoreTags.NET_PEER_PORT" Long
-            "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-            "$Tags.HTTP_URL" url
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
-          }
-        }
-//        basicSpan(it, 1, "io.vertx.core.http.impl.WebSocketRequestHandler.handle", span(0))
-//        basicSpan(it, 2, "io.vertx.reactivex.core.http.HttpServer.handle", span(1))
-//        basicSpan(it, 3, "io.vertx.ext.web.impl.RouterImpl.handle", span(2))
-//        basicSpan(it, 4, "io.vertx.reactivex.ext.web.Route.handle", span(3))
-      }
-    }
-
-    where:
-    responseCode   | path
-    SUCCESS.status | SUCCESS.path
   }
 
   //Verifies that context is correctly propagated and sql query span has correct parent.
@@ -89,7 +62,7 @@ class VertxRxServerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          operationName "HTTP GET" //TODO
+          operationName "/listProducts"
           spanKind SERVER
           errored false
           parent()
@@ -101,12 +74,8 @@ class VertxRxServerTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS" 200
           }
         }
-//        basicSpan(it, 1, "io.vertx.core.http.impl.WebSocketRequestHandler.handle", span(0))
-//        basicSpan(it, 2, "io.vertx.reactivex.core.http.HttpServer.handle", span(1))
-//        basicSpan(it, 3, "io.vertx.ext.web.impl.RouterImpl.handle", span(2))
-//        basicSpan(it, 4, "io.vertx.reactivex.ext.web.Route.handle", span(3))
-        basicSpan(it, 1, "VertxRxWebTestServer.handleListProducts", span(0))
-        basicSpan(it, 2, "VertxRxWebTestServer.listProducts", span(1))
+        basicSpan(it, 1, "VertxReactiveWebServer.handleListProducts", span(0))
+        basicSpan(it, 2, "VertxReactiveWebServer.listProducts", span(1))
         span(3) {
           operationName "SELECT id, name, price, weight FROM products"
           spanKind CLIENT
