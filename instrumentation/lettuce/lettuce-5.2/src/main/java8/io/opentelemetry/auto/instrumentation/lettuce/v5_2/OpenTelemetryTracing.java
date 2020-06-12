@@ -1,8 +1,6 @@
 package io.opentelemetry.auto.instrumentation.lettuce.v5_2;
 
-import java.net.SocketAddress;
-import java.util.ArrayList;
-import java.util.List;
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_2.LettuceClientDecorator.TRACER;
 
 import io.grpc.Context;
 import io.lettuce.core.tracing.TraceContext;
@@ -10,208 +8,271 @@ import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
+import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.TracingContextUtils;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import reactor.util.annotation.Nullable;
 
-public class OpenTelemetryTracing implements Tracing
-{
-  private static final TracerProviderRedisAdapter TRACER_PROVIDER_REDIS_ADAPTER_INSTANCE = new TracerProviderRedisAdapter();
+public enum OpenTelemetryTracing implements Tracing {
+  INSTANCE;
 
   @Override
-  public TracerProvider getTracerProvider()
-  {
-    return TRACER_PROVIDER_REDIS_ADAPTER_INSTANCE;
+  public TracerProvider getTracerProvider() {
+    return OpenTelemetryTracerProvider.INSTANCE;
   }
 
   @Override
-  public TraceContextProvider initialTraceContextProvider()
-  {
-    return new TraceContextProviderRedisAdapter();
+  public TraceContextProvider initialTraceContextProvider() {
+    return OpenTelemetryTraceContextProvider.INSTANCE;
   }
 
   @Override
-  public boolean isEnabled()
-  {
+  public boolean isEnabled() {
     return true;
   }
 
   @Override
-  public boolean includeCommandArgsInSpanTags()
-  {
+  public boolean includeCommandArgsInSpanTags() {
     return true;
   }
 
   @Override
-  public Endpoint createEndpoint(SocketAddress socketAddress)
-  {
+  public Endpoint createEndpoint(SocketAddress socketAddress) {
+    if (socketAddress instanceof InetSocketAddress) {
+      InetSocketAddress address = (InetSocketAddress) socketAddress;
+
+      return new OpenTelemetryEndpoint(
+          address.getAddress().getHostAddress(), address.getPort(), address.getHostString());
+    }
     return null;
   }
 
-  public static class TraceContextProviderRedisAdapter implements TraceContextProvider
-  {
+  private enum OpenTelemetryTracerProvider implements TracerProvider {
+    INSTANCE;
+
+    private final Tracer openTelemetryTracer = new OpenTelemetryTracer();
 
     @Override
-    public TraceContext getTraceContext()
-    {
-      return new TraceContextRedisAdapter();
+    public Tracer getTracer() {
+      return openTelemetryTracer;
     }
   }
 
-  public static class TraceContextRedisAdapter implements TraceContext
-  {
+  private enum OpenTelemetryTraceContextProvider implements TraceContextProvider {
+    INSTANCE;
+
+    @Override
+    public TraceContext getTraceContext() {
+      return new OpenTelemetryTraceContext();
+    }
+  }
+
+  public static class OpenTelemetryTraceContext implements TraceContext {
     private final Context context;
 
-    TraceContextRedisAdapter()
-    {
+    OpenTelemetryTraceContext() {
       this.context = Context.current();
     }
 
-    public Context getContext()
-    {
+    public Context getContext() {
       return context;
     }
   }
 
-  public static class TracerProviderRedisAdapter implements io.lettuce.core.tracing.TracerProvider
-  {
+  private static class OpenTelemetryEndpoint implements Endpoint {
+    private final String ip;
+    private final int port;
+    @Nullable private final String name;
 
-    @Override
-    public Tracer getTracer()
-    {
-      return new TracerRedisAdapter();
+    private OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
+      this.ip = ip;
+      this.port = port;
+      this.name = name;
     }
   }
 
-  public static class TracerRedisAdapter extends Tracer
-  {
+  private static class OpenTelemetryTracer extends Tracer {
 
     @Override
-    public SpanRedisAdapter nextSpan()
-    {
-      return new SpanRedisAdapter();
+    public OpenTelemetrySpan nextSpan() {
+      return new OpenTelemetrySpan(null);
     }
 
     @Override
-    public io.opentelemetry.trace.Span nextSpan(TraceContext traceContext)
-    {
-      return new SpanRedisAdapter(traceContext);
+    public OpenTelemetrySpan nextSpan(TraceContext traceContext) {
+      if (!(traceContext instanceof OpenTelemetryTraceContext)) {
+        return nextSpan();
+      }
+
+      Context context = ((OpenTelemetryTraceContext) traceContext).getContext();
+
+      final io.opentelemetry.trace.Span parent = TracingContextUtils.getSpanWithoutDefault(context);
+
+      return new OpenTelemetrySpan(parent);
     }
   }
 
-  public static class SpanRedisAdapter extends Tracer.Span
-  {
-    List<String> events = new ArrayList<>();
+  // The order that callbacks will be called in or which thread they are called from is not well
+  // defined. We go ahead and buffer all data until we know we have a span. This implementation is
+  // particularly safe, synchronizing all accesses.
+  private static class OpenTelemetrySpan extends Tracer.Span {
+    @Nullable private final Span parent;
 
-    private Span.Builder spanBuilder;
-    private final Context context;
-    private Span span;
-    private String name;
+    @Nullable private OpenTelemetryEndpoint endpoint;
+    @Nullable private String name;
 
-    private Scope scope = null;
+    @Nullable private List<Object> events;
+    @Nullable private List<String> tags;
 
-    public SpanRedisAdapter(TraceContext traceContext)
-    {
-      super();
-      if (!(traceContext instanceof TraceContextRedisAdapter))
-      {
-        throw new RuntimeException("Invalid type given: " + traceContext);
-      }
-      this.spanBuilder = OpenTelemetry.getTracerProvider().get("com.trace.adapter.redis")
-          .spanBuilder("RedisTracingAdapter");
+    @Nullable private Status status;
 
-      this.context = ((TraceContextRedisAdapter)traceContext).getContext();
-      this.span = null;
+    @Nullable private Span span;
+
+    private OpenTelemetrySpan(@Nullable Span parent) {
+      this.parent = parent;
     }
 
-    public SpanRedisAdapter()
-    {
-      super();
-      this.spanBuilder = OpenTelemetry.getTracerProvider().get("com.trace.adapter.redis")
-          .spanBuilder("RedisTracingAdapter");
-      this.context = null;
-    }
-
+    // Called before start. We need to buffer because this until then.
     @Override
-    public Tracer.Span start()
-    {
-      span = spanBuilder.startSpan();
-      if (context != null)
-      {
-        // Cannot support passing context between threads so ignoring the context here for now
-      }
-      events.forEach(event -> span.addEvent(event));
-      if (name != null)
-      {
+    public synchronized Tracer.Span name(String name) {
+      if (span != null) {
         span.updateName(name);
-      }
-      spanBuilder = null;
-      return this;
-    }
-
-    @Override
-    public Tracer.Span name(String name)
-    {
-      if (span == null)
-      {
+      } else {
         this.name = name;
       }
-      else
-      {
-        span.updateName(name);
+
+      return this;
+    }
+
+    @Override
+    public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
+      if (endpoint instanceof OpenTelemetryEndpoint) {
+        if (span != null) {
+          fillEndpoint(span, (OpenTelemetryEndpoint) endpoint);
+        } else {
+          this.endpoint = (OpenTelemetryEndpoint) endpoint;
+        }
       }
       return this;
     }
 
     @Override
-    public Tracer.Span annotate(String value)
-    {
-      if (span == null)
-      {
-        events.add(value);
+    public synchronized Tracer.Span start() {
+      // If name() wasn't called yet we will update it later.
+      String spanName = name != null ? name : "REDIS";
+      Span.Builder builder = TRACER.spanBuilder(spanName).setSpanKind(Kind.CLIENT);
+      if (parent != null) {
+        builder.setParent(parent);
+      } else {
+        builder.setNoParent();
       }
-      else
-      {
+
+      builder.setAttribute(SemanticAttributes.DB_TYPE.key(), "redis");
+
+      span = builder.startSpan();
+
+      if (endpoint != null) {
+        fillEndpoint(span, endpoint);
+        endpoint = null;
+      }
+
+      if (events != null) {
+        for (int i = 0; i < events.size(); i += 2) {
+          span.addEvent((String) events.get(i), (long) events.get(i + 1));
+        }
+        events = null;
+      }
+
+      if (tags != null) {
+        for (int i = 0; i < tags.size(); i += 2) {
+          span.setAttribute(tags.get(i), tags.get(i + 1));
+        }
+        tags = null;
+      }
+
+      if (status != null) {
+        span.setStatus(status);
+        status = null;
+      }
+
+      return this;
+    }
+
+    @Override
+    public synchronized Tracer.Span annotate(String value) {
+      if (span != null) {
         span.addEvent(value);
+      } else {
+        if (events == null) {
+          events = new ArrayList<>();
+        }
+        events.add(value);
+        final Instant now = Instant.now();
+        events.add(TimeUnit.SECONDS.toNanos(now.getEpochSecond()) + now.getNano());
       }
       return this;
     }
 
     @Override
-    public Tracer.Span tag(String key, String value)
-    {
-      if (span == null)
-      {
-        spanBuilder.setAttribute(key, value);
-      }
-      else
-      {
+    public synchronized Tracer.Span tag(String key, String value) {
+      key = translateTagKey(key);
+      if (span != null) {
         span.setAttribute(key, value);
+      } else {
+        if (tags == null) {
+          tags = new ArrayList<>();
+        }
+        tags.add(key);
+        tags.add(value);
       }
       return this;
     }
 
     @Override
-    public Tracer.Span error(Throwable throwable)
-    {
-      tag("exception.class", throwable.getClass()
-          .getName());
-      tag("exception.msg", throwable.getMessage());
-      return null;
-    }
-
-    @Override
-    public Tracer.Span remoteEndpoint(Endpoint endpoint)
-    {
+    public synchronized Tracer.Span error(Throwable throwable) {
+      // TODO(anuraaga): Check if any lettuce exceptions map well to a Status and try mapping.
+      final Status status =
+          Status.INTERNAL.withDescription(throwable.getClass() + ": " + throwable.getMessage());
+      if (span != null) {
+        span.setStatus(status);
+      } else {
+        this.status = status;
+      }
       return this;
     }
 
     @Override
-    public void finish()
-    {
-      if (span != null)
-      {
+    public synchronized void finish() {
+      if (span != null) {
         span.end();
+      }
+    }
+
+    private static String translateTagKey(String key) {
+      switch (key) {
+        case "redis.args":
+          return SemanticAttributes.DB_STATEMENT.key();
+        default:
+          return key;
+      }
+    }
+
+    private static void fillEndpoint(Span span, OpenTelemetryEndpoint endpoint) {
+      SemanticAttributes.NET_TRANSPORT.set(span, "IP.TCP");
+      SemanticAttributes.NET_PEER_IP.set(span, endpoint.ip);
+      if (endpoint.port != 0) {
+        SemanticAttributes.NET_PEER_PORT.set(span, endpoint.port);
+      }
+      if (endpoint.name != null) {
+        SemanticAttributes.NET_PEER_NAME.set(span, endpoint.name);
       }
     }
   }
