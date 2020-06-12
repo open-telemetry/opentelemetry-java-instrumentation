@@ -2,7 +2,7 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   testCompile project(':auto-tooling')
@@ -20,7 +20,7 @@ tasks.withType(Test).configureEach() {
   dependsOn ':auto-exporters:opentelemetry-auto-exporters-zipkin:shadowJar'
   doFirst {
     systemProperty 'projectVersion', allprojects.version[0]
-    systemProperty 'adapterRoot', "${rootDir}/auto-exporters"
+    systemProperty 'adapterRoot', "$rootDir/auto-exporters"
     systemProperty 'otlpExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-otlp').tasks.shadowJar.archivePath
     systemProperty 'jaegerExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-jaeger').tasks.shadowJar.archivePath
     systemProperty 'loggingExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-logging').tasks.shadowJar.archivePath

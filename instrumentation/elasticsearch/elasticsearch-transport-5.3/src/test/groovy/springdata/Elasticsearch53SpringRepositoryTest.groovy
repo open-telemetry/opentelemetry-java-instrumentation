@@ -61,6 +61,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
   }
 
   def setup() {
+    repo.refresh()
     TEST_WRITER.clear()
     runUnderTrace("delete") {
       repo.deleteAll()

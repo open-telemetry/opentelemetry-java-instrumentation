@@ -2,7 +2,7 @@ plugins {
     id 'com.intershop.gradle.javacc' version '4.0.0'
 }
 
-apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 

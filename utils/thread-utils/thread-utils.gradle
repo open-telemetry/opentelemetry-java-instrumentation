@@ -1,4 +1,4 @@
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 // TODO: add more tests
 excludedClassesCoverage += [

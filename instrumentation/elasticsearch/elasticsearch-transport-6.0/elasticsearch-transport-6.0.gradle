@@ -3,7 +3,7 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {

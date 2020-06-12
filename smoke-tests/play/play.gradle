@@ -40,7 +40,7 @@ repositories {
   }
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 description = 'Play Integration Tests.'
 

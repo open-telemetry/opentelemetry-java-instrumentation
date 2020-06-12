@@ -21,6 +21,7 @@ import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.RabbitDecorato
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
@@ -30,6 +31,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -90,13 +92,23 @@ public class TracedDelegatingConsumer implements Consumer {
         spanBuilder.setNoParent();
       }
 
+      final long startTimeMillis = System.currentTimeMillis();
       span =
           spanBuilder
               .setAttribute("message.size", body == null ? 0 : body.length)
               .setAttribute("span.origin.type", delegate.getClass().getName())
+              .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis))
               .startSpan();
       DECORATE.afterStart(span);
       DECORATE.onDeliver(span, envelope);
+
+      if (properties.getTimestamp() != null) {
+        // this will be set if the sender sets the timestamp,
+        // or if a plugin is installed on the rabbitmq broker
+        final long produceTime = properties.getTimestamp().getTime();
+        final long consumeTime = NANOSECONDS.toMillis(startTimeMillis);
+        span.setAttribute("record.queue_time_ms", Math.max(0L, consumeTime - produceTime));
+      }
 
       scope = currentContextWith(span);
 
