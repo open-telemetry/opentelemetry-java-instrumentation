@@ -148,6 +148,7 @@ include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-testing'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2-core'
+include ':instrumentation-core:spring'
 
 // exporter adapters
 include ":auto-exporters"
