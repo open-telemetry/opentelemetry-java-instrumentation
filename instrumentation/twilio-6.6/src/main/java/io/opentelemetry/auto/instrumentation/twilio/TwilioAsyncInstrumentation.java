@@ -19,6 +19,7 @@ import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -90,14 +91,9 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
     return singletonMap(
         isMethod()
+            .and(namedOneOf("createAsync", "deleteAsync", "readAsync", "fetchAsync", "updateAsync"))
             .and(isPublic())
             .and(not(isAbstract()))
-            .and(
-                named("createAsync")
-                    .or(named("deleteAsync"))
-                    .or(named("readAsync"))
-                    .or(named("fetchAsync"))
-                    .or(named("updateAsync")))
             .and(returns(named("com.google.common.util.concurrent.ListenableFuture"))),
         TwilioAsyncInstrumentation.class.getName() + "$TwilioClientAsyncAdvice");
   }

@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -78,8 +79,7 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        named("doFilter")
-            .or(named("service"))
+        namedOneOf("doFilter", "service")
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),

@@ -19,13 +19,13 @@ import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator
 import static io.opentelemetry.auto.instrumentation.twilio.TwilioClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -59,11 +59,12 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
           ? super net.bytebuddy.description.type.TypeDescription>
       typeMatcher() {
     return extendsClass(
-        named("com.twilio.base.Creator")
-            .or(named("com.twilio.base.Deleter"))
-            .or(named("com.twilio.base.Fetcher"))
-            .or(named("com.twilio.base.Reader"))
-            .or(named("com.twilio.base.Updater")));
+        namedOneOf(
+            "com.twilio.base.Creator",
+            "com.twilio.base.Deleter",
+            "com.twilio.base.Fetcher",
+            "com.twilio.base.Reader",
+            "com.twilio.base.Updater"));
   }
 
   /** Return the helper classes which will be available for use in instrumentation. */
@@ -89,12 +90,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(isPublic())
             .and(not(isAbstract()))
-            .and(
-                named("create")
-                    .or(named("delete"))
-                    .or(named("read"))
-                    .or(named("fetch"))
-                    .or(named("update"))),
+            .and(namedOneOf("create", "delete", "read", "fetch", "update")),
         TwilioSyncInstrumentation.class.getName() + "$TwilioClientAdvice");
   }
 
