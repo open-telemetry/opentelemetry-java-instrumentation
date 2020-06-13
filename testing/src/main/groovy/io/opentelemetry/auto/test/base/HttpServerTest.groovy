@@ -25,6 +25,7 @@ import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
+import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -96,7 +97,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   abstract void stopServer(SERVER server)
 
-  String expectedOperationName(String method) {
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
     return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
   }
 
@@ -207,10 +208,10 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       .method(method, body)
   }
 
-  static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
+  static <T> T controller(ServerEndpoint endpoint, Callable<T> closure) {
     assert TEST_TRACER.getCurrentSpan().getContext().isValid(): "Controller should have a parent span."
     if (endpoint == NOT_FOUND) {
-      return closure()
+      return closure.call()
     }
     return runUnderTrace("controller", closure)
   }
@@ -453,7 +454,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName(method)
+      operationName expectedOperationName(method, endpoint)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
