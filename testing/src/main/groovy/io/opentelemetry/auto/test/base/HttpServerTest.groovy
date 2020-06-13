@@ -64,7 +64,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   @Shared
   int port
   @Shared
-  static URI address
+  URI address
 
   def setupSpec() {
     withRetryOnBindException({

@@ -23,14 +23,12 @@ import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import lombok.SneakyThrows
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
 class VertxHttpServerTest extends HttpServerTest<Vertx> {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
 
-  @SneakyThrows
   @Override
   Vertx startServer(int port) {
     Vertx server = Vertx.vertx(new VertxOptions()

@@ -8,7 +8,7 @@ apply plugin: 'org.unbroken-dome.test-sets'
 muzzle {
   pass {
     group = 'io.vertx'
-    module = 'vertx-web'
+    module = 'vertx-rx-java2'
     versions = "[3.5.0,)"
   }
 }
@@ -27,7 +27,6 @@ dependencies {
   compileOnly group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
 
   testCompile project(':instrumentation:jdbc')
-  //We need both version as different versions of Vert.x use different versions of Netty
   testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:trace-annotation')
   testCompile project(':instrumentation:vertx')

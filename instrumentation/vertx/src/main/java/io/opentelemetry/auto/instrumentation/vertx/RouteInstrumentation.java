@@ -38,7 +38,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class RouteInstrumentation extends Instrumenter.Default {
 
   public RouteInstrumentation() {
-    super("vertx", "vert.x");
+    super("vertx");
   }
 
   @Override

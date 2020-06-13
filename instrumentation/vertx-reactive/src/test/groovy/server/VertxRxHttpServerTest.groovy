@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package server
+
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
@@ -23,7 +25,6 @@ import io.vertx.reactivex.core.AbstractVerticle
 import io.vertx.reactivex.ext.web.Router
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import lombok.SneakyThrows
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -35,7 +36,6 @@ import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCC
 class VertxRxHttpServerTest extends HttpServerTest<Vertx> {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
 
-  @SneakyThrows
   @Override
   Vertx startServer(int port) {
     Vertx server = Vertx.vertx(new VertxOptions()

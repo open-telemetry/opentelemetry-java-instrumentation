@@ -38,7 +38,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxRxInstrumentation extends Instrumenter.Default {
 
   public VertxRxInstrumentation() {
-    super("vertx", "vert.x");
+    super("vertx");
   }
 
   @Override
