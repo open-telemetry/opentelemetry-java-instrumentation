@@ -68,7 +68,7 @@ public class HttpBenchmark {
   @Fork(
       jvmArgsAppend = {
         "-javaagent:/path/to/opentelemetry-java-instrumentation/java-agent/build/libs/opentelemetry-auto.jar",
-        "-Dota.exporter.jar=/path/to/opentelemetry-java-instrumentation/auto-exporters/logging/build/libs/opentelemetry-auto-exporters-logging-or-other-exporter.jar"
+        "-Dota.exporter=logging"
       })
   public static class WithAgent extends ClassRetransformingBenchmark {}
 }

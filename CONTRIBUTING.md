@@ -92,9 +92,9 @@ named like:
 
 ```
 libs/opentelemetry-auto-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-jaeger-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-logging-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-otlp-<version>-SNAPSHOT.jar
+libs/opentelemetry-auto-exporter-jaeger-<version>-SNAPSHOT.jar
+libs/opentelemetry-auto-exporter-logging-<version>-SNAPSHOT.jar
+libs/opentelemetry-auto-exporter-otlp-<version>-SNAPSHOT.jar
 ```
 
 #### Building from source
