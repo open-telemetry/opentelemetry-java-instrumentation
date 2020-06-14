@@ -7,24 +7,24 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   testCompile project(':auto-tooling')
 
-  testCompile project(':auto-exporters:opentelemetry-auto-exporters-otlp')
-  testCompile project(':auto-exporters:opentelemetry-auto-exporters-jaeger')
-  testCompile project(':auto-exporters:opentelemetry-auto-exporters-logging')
-  testCompile project(':auto-exporters:opentelemetry-auto-exporters-zipkin')
+  testCompile project(':auto-exporters:opentelemetry-auto-exporter-otlp')
+  testCompile project(':auto-exporters:opentelemetry-auto-exporter-jaeger')
+  testCompile project(':auto-exporters:opentelemetry-auto-exporter-logging')
+  testCompile project(':auto-exporters:opentelemetry-auto-exporter-zipkin')
 }
 
 tasks.withType(Test).configureEach() {
-  dependsOn ':auto-exporters:opentelemetry-auto-exporters-otlp:shadowJar'
-  dependsOn ':auto-exporters:opentelemetry-auto-exporters-jaeger:shadowJar'
-  dependsOn ':auto-exporters:opentelemetry-auto-exporters-logging:shadowJar'
-  dependsOn ':auto-exporters:opentelemetry-auto-exporters-zipkin:shadowJar'
+  dependsOn ':auto-exporters:opentelemetry-auto-exporter-otlp:shadowJar'
+  dependsOn ':auto-exporters:opentelemetry-auto-exporter-jaeger:shadowJar'
+  dependsOn ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar'
+  dependsOn ':auto-exporters:opentelemetry-auto-exporter-zipkin:shadowJar'
   doFirst {
     systemProperty 'projectVersion', allprojects.version[0]
     systemProperty 'adapterRoot', "$rootDir/auto-exporters"
-    systemProperty 'otlpExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-otlp').tasks.shadowJar.archivePath
-    systemProperty 'jaegerExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-jaeger').tasks.shadowJar.archivePath
-    systemProperty 'loggingExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-logging').tasks.shadowJar.archivePath
-    systemProperty 'zipkinExporterJar', project(':auto-exporters:opentelemetry-auto-exporters-zipkin').tasks.shadowJar.archivePath
+    systemProperty 'otlpExporterJar', project(':auto-exporters:opentelemetry-auto-exporter-otlp').tasks.shadowJar.archivePath
+    systemProperty 'jaegerExporterJar', project(':auto-exporters:opentelemetry-auto-exporter-jaeger').tasks.shadowJar.archivePath
+    systemProperty 'loggingExporterJar', project(':auto-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath
+    systemProperty 'zipkinExporterJar', project(':auto-exporters:opentelemetry-auto-exporter-zipkin').tasks.shadowJar.archivePath
   }
 }
 
@@ -33,10 +33,10 @@ configurations {
 }
 
 dependencies {
-  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-logging', configuration: 'shadow')
-  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-otlp', configuration: 'shadow')
-  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-jaeger', configuration: 'shadow')
-  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporters-zipkin', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporter-logging', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporter-otlp', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporter-jaeger', configuration: 'shadow')
+  shadowInclude project(path: ':auto-exporters:opentelemetry-auto-exporter-zipkin', configuration: 'shadow')
 }
 
 
