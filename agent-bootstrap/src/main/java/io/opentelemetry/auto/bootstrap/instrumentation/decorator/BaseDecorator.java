@@ -128,10 +128,8 @@ public abstract class BaseDecorator {
    * reference. Anonymous classes are named based on their parent.
    */
   public String spanNameForClass(final Class<?> clazz) {
-    if (!clazz.isAnonymousClass()) {
-      return clazz.getSimpleName();
-    }
-    return SPAN_NAMES.get(clazz).getClassName();
+    String simpleName = clazz.getSimpleName();
+    return simpleName.isEmpty() ? SPAN_NAMES.get(clazz).getClassName() : simpleName;
   }
 
   private static class SpanNames {
@@ -157,13 +155,13 @@ public abstract class BaseDecorator {
   }
 
   private static String getClassName(Class<?> clazz) {
-    String name = clazz.getName();
-    int start = name.lastIndexOf('.');
-    if (!clazz.isAnonymousClass()) {
-      int qualifier = name.indexOf('$', start);
-      return name.substring(Math.max(start, qualifier) + 1);
+    String simpleName = clazz.getSimpleName();
+    if (simpleName.isEmpty()) {
+      String name = clazz.getName();
+      int start = name.lastIndexOf('.');
+      return name.substring(start + 1);
     }
-    return name.substring(start + 1);
+    return simpleName;
   }
 
   public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
