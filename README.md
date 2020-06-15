@@ -23,7 +23,7 @@ be defined before the application JAR. For example:
 
 ```
 java -javaagent:path/to/opentelemetry-auto-<version>.jar \
-     -Dota.exporter.jar=path/to/opentelemetry-auto-exporters-jaeger-<version>.jar \
+     -Dota.exporter.jar=path/to/opentelemetry-auto-exporter-jaeger-<version>.jar \
      -Dota.exporter.jaeger.endpoint=localhost:14250 \
      -Dota.exporter.jaeger.service.name=shopping \
      -jar myapp.jar
