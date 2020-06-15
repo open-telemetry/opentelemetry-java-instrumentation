@@ -338,7 +338,7 @@ After running Jaeger locally, navigate to the url below. Make sure to refresh th
  
 Run FirstService and SecondService from command line or using an IDE. The end point of interest for FirstService is `http://localhost:8080/message` and  `http://localhost:8081/time` for SecondService. Entering `localhost:8080/time` in a browser should call FirstService and then SecondService, creating a trace. To send a sample request enter the following in a browser of your choice:
 
-`http://localhost:8080/time`
+`http://localhost:8080/message`
 
 ***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.SECOND_SERVICE_URL. ***
 
