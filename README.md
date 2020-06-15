@@ -1,4 +1,10 @@
-# OpenTelemetry Auto-Instrumentation for Java
+# OpenTelemetry Instrumentation for Java
+
+## Join the discussions!
+
+* Watch this repo :eye:
+* Join the [Gitter channel](https://gitter.im/open-telemetry/opentelemetry-java-instrumentation)
+* Join the [weekly meeting](https://github.com/open-telemetry/community#java-instrumentation)
 
 ## Introduction
 
@@ -23,7 +29,7 @@ be defined before the application JAR. For example:
 
 ```
 java -javaagent:path/to/opentelemetry-auto-<version>.jar \
-     -Dota.exporter.jar=path/to/opentelemetry-auto-exporters-jaeger-<version>.jar \
+     -Dota.exporter.jar=path/to/opentelemetry-auto-exporter-jaeger-<version>.jar \
      -Dota.exporter.jaeger.endpoint=localhost:14250 \
      -Dota.exporter.jaeger.service.name=shopping \
      -jar myapp.jar

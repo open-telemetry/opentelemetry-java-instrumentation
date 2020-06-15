@@ -5,7 +5,7 @@ description = 'smoke-tests'
 dependencies {
   compile deps.spock
   compile project(':testing')
-  compile project(':auto-exporters:opentelemetry-auto-exporters-logging')
+  compile project(':auto-exporters:opentelemetry-auto-exporter-logging')
 }
 
 subprojects { subProject ->
