@@ -95,7 +95,7 @@ compile "io.grpc:grpc-netty:1.27.2"
 
 ### Tracer Configuration
 
-To enable tracing in your OpenTelemetry project configure a Tracer Bean. This bean will be auto wired to controllers to create and propagate spans. This can be seen in the `Tracer otelTracer()` method below. If you plan to use a trace exporter remember to also include it in this configuration file. In section 3 we will use an annotation to set up this configuration.
+To enable tracing in your OpenTelemetry project configure a Tracer Bean. This bean will be auto wired to controllers to create and propagate spans. This can be seen in the `Tracer otelTracer()` method below. If you plan to use a trace exporter remember to also include it in this configuration class. In section 3 we will use an annotation to set up this configuration.
 
 A sample OpenTelemetry configuration using LoggingExporter is shown below: 
 
