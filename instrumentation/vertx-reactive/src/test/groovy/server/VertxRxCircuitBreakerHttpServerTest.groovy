@@ -17,17 +17,19 @@ package server
 
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.vertx.circuitbreaker.CircuitBreakerOptions
+import io.vertx.core.Future
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.AbstractVerticle
 import io.vertx.reactivex.ext.web.Router
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
+class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
 
   @Override
   protected Class<AbstractVerticle> verticle() {
@@ -37,7 +39,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
   static class VertxRxCircuitBreakerWebTestServer extends AbstractVerticle {
 
     @Override
-    void start(final io.vertx.core.Future<Void> startFuture) {
+    void start(final Future<Void> startFuture) {
       final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT)
       final Router router = Router.router(super.@vertx)
       final CircuitBreaker breaker =
@@ -114,6 +116,20 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
           }
         })
       }
+      router.route("/path/:id/param").handler { ctx ->
+        breaker.executeCommand({ future ->
+          future.complete(PATH_PARAM)
+        }, {
+          if (it.failed()) {
+            throw it.cause()
+          }
+          HttpServerTest.ServerEndpoint endpoint = it.result()
+          controller(endpoint) {
+            ctx.response().setStatusCode(endpoint.status).end(ctx.request().getParam("id"))
+          }
+        })
+      }
+
 
       super.@vertx.createHttpServer()
         .requestHandler { router.accept(it) }

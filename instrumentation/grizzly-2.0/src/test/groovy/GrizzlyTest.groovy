@@ -106,7 +106,7 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
   }
 
   @Override
-  String expectedOperationName(String method) {
+  String expectedOperationName(String method, ServerEndpoint serverEndpoint) {
     return 'HttpHandler.doHandle'
   }
 }

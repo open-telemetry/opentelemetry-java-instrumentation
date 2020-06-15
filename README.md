@@ -1,4 +1,10 @@
-# OpenTelemetry Auto-Instrumentation for Java
+# OpenTelemetry Instrumentation for Java
+
+## Join the discussions!
+
+* Watch this repo :eye:
+* Join the [Gitter channel](https://gitter.im/open-telemetry/opentelemetry-java-instrumentation)
+* Join the [weekly meeting](https://github.com/open-telemetry/community#java-instrumentation)
 
 ## Introduction
 
@@ -23,7 +29,7 @@ be defined before the application JAR. For example:
 
 ```
 java -javaagent:path/to/opentelemetry-auto-<version>.jar \
-     -Dota.exporter.jar=path/to/opentelemetry-auto-exporters-jaeger-<version>.jar \
+     -Dota.exporter.jar=path/to/opentelemetry-auto-exporter-jaeger-<version>.jar \
      -Dota.exporter.jaeger.endpoint=localhost:14250 \
      -Dota.exporter.jaeger.service.name=shopping \
      -jar myapp.jar
@@ -135,6 +141,8 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Spring Webflux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+                           |
+| [Vert.x](https://vertx.io)                                                                                                            | 3.0+                           |
+| [Vert.x RxJava2](https://vertx.io/docs/vertx-rx/java2/)                                                                               | 3.5+                           |
 
 ### Disabled instrumentations
 
