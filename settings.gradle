@@ -16,7 +16,7 @@ gradleEnterprise {
   }
 }
 
-rootProject.name = 'trace-java'
+rootProject.name = 'opentelemetry-java-instrumentation'
 
 // agent projects
 include ':java-agent'
