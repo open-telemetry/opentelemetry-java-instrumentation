@@ -71,7 +71,7 @@ following "clusters" of classes:
 
 - `auto-tooling-and-instrumentation.isolated/` - contains `agent-tooling`
 module and `instrumentation` submodules, loaded and isolated inside
-`AgentClassLoader`. Including OpenTelemetry SDK and data exporters.
+`AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
 - `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and
 available in bootstrap classloader.
 - `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its

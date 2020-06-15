@@ -25,7 +25,7 @@ java -javaagent:path/to/opentelemetry-auto-<version>-all.jar \
      -jar myapp.jar
 ```
 By default OpenTelemetry Java agent uses 
-[OpenTelemetry exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
+[OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
 configured to send data to 
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/master/receiver/otlpreceiver/README.md)
 at `localhost:55680`. 
