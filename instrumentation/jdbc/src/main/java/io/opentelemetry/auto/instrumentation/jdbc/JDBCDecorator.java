@@ -15,29 +15,30 @@
  */
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import io.opentelemetry.OpenTelemetry;
+import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
+
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
+import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
-public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
+public class JDBCDecorator extends DatabaseClientDecorator<DBInfo, String> {
   public static final JDBCDecorator DECORATE = new JDBCDecorator();
 
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.jdbc");
-
-  private static final String DB_QUERY = "DB Query";
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jdbc";
+  }
 
   @Override
   protected String dbType() {
-    return "jdbc";
+    return "sql";
   }
 
   @Override
@@ -54,12 +55,45 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
   }
 
+  // TODO find a way to implement
+  @Override
+  protected InetSocketAddress peerAddress(DBInfo dbInfo) {
+    return null;
+  }
+
   @Override
   protected String dbUrl(final DBInfo info) {
     return info.getShortUrl();
   }
 
-  public Span onConnection(final Span span, final Connection connection) {
+  public Span startSpan(Statement statement, String query) {
+    final Connection connection = connectionFromStatement(statement);
+    if (connection == null) {
+      return null;
+    }
+
+    final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
+    if (callDepth > 0) {
+      return null;
+    }
+    String originType = statement.getClass().getName();
+    DBInfo dbInfo = extractDbInfo(connection);
+
+    return startSpan(dbInfo, query, originType);
+  }
+
+  @Override
+  public void end(Span span) {
+    CallDepthThreadLocalMap.reset(Statement.class);
+    super.end(span);
+  }
+
+  @Override
+  protected String normalizeQuery(String query) {
+    return JDBCUtils.normalizeSql(query);
+  }
+
+  private DBInfo extractDbInfo(Connection connection) {
     DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
     /*
      * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
@@ -89,22 +123,6 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
         JDBCMaps.connectionInfo.put(connection, dbInfo);
       }
     }
-
-    span.setAttribute(Tags.DB_TYPE, "sql");
-    return super.onConnection(span, dbInfo);
-  }
-
-  public String spanNameOnStatement(final String statement) {
-    return statement == null ? DB_QUERY : statement;
-  }
-
-  public String spanNameOnPreparedStatement(final PreparedStatement statement) {
-    final String sql = JDBCMaps.preparedStatements.get(statement);
-    return sql == null ? DB_QUERY : sql;
-  }
-
-  public Span onPreparedStatement(final Span span, final PreparedStatement statement) {
-    final String sql = JDBCMaps.preparedStatements.get(statement);
-    return super.onStatement(span, sql);
+    return dbInfo;
   }
 }

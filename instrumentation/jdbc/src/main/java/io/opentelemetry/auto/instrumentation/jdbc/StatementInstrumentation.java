@@ -16,11 +16,7 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jdbc.JDBCDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -28,11 +24,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -78,44 +72,33 @@ public final class StatementInstrumentation extends Instrumenter.Default {
   public static class StatementAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
-      final Connection connection = connectionFromStatement(statement);
-      if (connection == null) {
-        return null;
-      }
+    public static void onEnter(
+        @Advice.Argument(0) final String sql,
+        @Advice.This final Statement statement,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
 
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
-      if (callDepth > 0) {
-        return null;
+      span = DECORATE.startSpan(statement, sql);
+      if (span != null) {
+        scope = DECORATE.withSpan(span);
       }
-      final String normalizedSql = JDBCUtils.normalizeSql(sql);
-
-      final Span span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameOnStatement(normalizedSql))
-              .setSpanKind(CLIENT)
-              .setAttribute("span.origin.type", statement.getClass().getName())
-              .startSpan();
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, connection);
-      DECORATE.onStatement(span, normalizedSql);
-      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Statement.class);
+      scope.close();
 
-      final Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      if (throwable == null) {
+        DECORATE.end(span);
+      } else {
+        DECORATE.endExceptionally(span, throwable);
+      }
     }
   }
 }

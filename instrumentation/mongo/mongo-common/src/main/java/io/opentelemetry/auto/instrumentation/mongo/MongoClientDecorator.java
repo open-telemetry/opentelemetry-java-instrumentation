@@ -21,9 +21,8 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.trace.Tracer;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +31,15 @@ import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 
-public class MongoClientDecorator extends DatabaseClientDecorator<CommandStartedEvent> {
+public class MongoClientDecorator
+    extends DatabaseClientDecorator<CommandStartedEvent, BsonDocument> {
   public static final MongoClientDecorator DECORATE = new MongoClientDecorator();
 
   // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.mongo");
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.mongo";
+  }
 
   @Override
   protected String dbType() {
@@ -46,23 +48,6 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
 
   @Override
   protected String dbUser(final CommandStartedEvent event) {
-    return null;
-  }
-
-  @Override
-  protected String dbUrl(final CommandStartedEvent event) {
-    final ConnectionDescription connectionDescription = event.getConnectionDescription();
-    if (connectionDescription != null) {
-      final ServerAddress sa = connectionDescription.getServerAddress();
-      if (sa != null) {
-        // https://docs.mongodb.com/manual/reference/connection-string/
-        final String host = sa.getHost();
-        final int port = sa.getPort();
-        if (host != null && port != 0) {
-          return "mongodb://" + host + ":" + port;
-        }
-      }
-    }
     return null;
   }
 
@@ -89,7 +74,35 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
     return event.getDatabaseName();
   }
 
-  public String statement(final BsonDocument statement) {
+  @Override
+  protected InetSocketAddress peerAddress(CommandStartedEvent event) {
+    if (event.getConnectionDescription() != null
+        && event.getConnectionDescription().getServerAddress() != null) {
+      return event.getConnectionDescription().getServerAddress().getSocketAddress();
+    } else {
+      return null;
+    }
+  }
+
+  @Override
+  protected String dbUrl(final CommandStartedEvent event) {
+    final ConnectionDescription connectionDescription = event.getConnectionDescription();
+    if (connectionDescription != null) {
+      final ServerAddress sa = connectionDescription.getServerAddress();
+      if (sa != null) {
+        // https://docs.mongodb.com/manual/reference/connection-string/
+        final String host = sa.getHost();
+        final int port = sa.getPort();
+        if (host != null && port != 0) {
+          return "mongodb://" + host + ":" + port;
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public String normalizeQuery(final BsonDocument statement) {
     // scrub the Mongo command so that parameters are removed from the string
     final BsonDocument scrubbed = scrub(statement);
     return scrubbed.toString();
