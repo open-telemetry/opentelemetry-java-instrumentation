@@ -171,7 +171,9 @@ def setBuildFile(project) {
   }
 }
 
-setBuildFile(rootProject)
+rootProject.children.each {
+  setBuildFile(it)
+}
 
 project(':agent-bootstrap').name = 'auto-bootstrap'
 project(':agent-tooling').name = 'auto-tooling'
