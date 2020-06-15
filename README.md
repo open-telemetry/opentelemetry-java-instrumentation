@@ -1,4 +1,10 @@
-# OpenTelemetry Auto-Instrumentation for Java
+# OpenTelemetry Instrumentation for Java
+
+## Join the discussions!
+
+* Watch this repo :eye:
+* Join the [Gitter channel](https://gitter.im/open-telemetry/opentelemetry-java-instrumentation)
+* Join the [weekly meeting](https://github.com/open-telemetry/community#java-instrumentation)
 
 ## Introduction
 
