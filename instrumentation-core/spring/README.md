@@ -239,16 +239,17 @@ import io.opentelemetry.trace.Tracer;
 @Component
 public class HttpUtils {
 
-   @Autowired
-   private Tracer tracer;
-
-   private HttpTextFormat<SpanContext> textFormat;
-   private HttpTextFormat.Setter<HttpHeaders> setter = new HttpTextFormat.Setter<HttpHeaders>() {
+   private static final HttpTextFormat.Setter<HttpHeaders> setter = new HttpTextFormat.Setter<HttpHeaders>() {
          @Override
          public void set(HttpHeaders headers, String key, String value) {
             headers.set(key, value);
          }
       };
+      
+   @Autowired
+   private Tracer tracer;
+
+   private HttpTextFormat<SpanContext> textFormat;
 
    public HttpUtils(Tracer tracer) {
       textFormat = tracer.getHttpTextFormat();
@@ -337,9 +338,7 @@ After running Jaeger locally, navigate to the url below. Make sure to refresh th
 
 `http://localhost:16686`
 
-Run FirstService and SecondService from command line or using an IDE. The end point of interest for FirstService is `http://localhost:8080/message` and  `http://localhost:8081/time` for SecondService. Entering `localhost:8080/message` in a browser should call FirstService and then SecondService, creating a trace. To send a sample request enter the following in a browser of your choice:
-
-`http://localhost:8081/time`
+Run FirstService and SecondService from command line or using an IDE. The end point of interest for FirstService is `http://localhost:8080/message` and  `http://localhost:8081/time` for SecondService. Entering `localhost:8080/message` in a browser should call FirstService and then SecondService, creating a trace. 
 
 ***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.secondServiceUrl. ***
 
