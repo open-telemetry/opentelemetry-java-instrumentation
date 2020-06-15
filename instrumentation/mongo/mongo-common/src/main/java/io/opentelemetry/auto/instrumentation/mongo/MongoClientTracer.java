@@ -21,7 +21,7 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ConnectionId;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -31,9 +31,8 @@ import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 
-public class MongoClientDecorator
-    extends DatabaseClientDecorator<CommandStartedEvent, BsonDocument> {
-  public static final MongoClientDecorator DECORATE = new MongoClientDecorator();
+public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
+  public static final MongoClientTracer TRACER = new MongoClientTracer();
 
   // TODO use tracer names *.mongo-3.1, *.mongo-3.7, *.mongo-async-3.3 respectively in each module
   @Override

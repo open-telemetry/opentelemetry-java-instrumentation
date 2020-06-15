@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.jdbc;
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
 import io.opentelemetry.trace.Span;
@@ -28,8 +28,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class JDBCDecorator extends DatabaseClientDecorator<DBInfo, String> {
-  public static final JDBCDecorator DECORATE = new JDBCDecorator();
+public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
+  public static final JdbcTracer TRACER = new JdbcTracer();
 
   @Override
   protected String getInstrumentationName() {

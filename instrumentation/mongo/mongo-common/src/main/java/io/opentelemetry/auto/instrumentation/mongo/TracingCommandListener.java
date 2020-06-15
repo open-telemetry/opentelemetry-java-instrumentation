@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.mongo;
 
-import static io.opentelemetry.auto.instrumentation.mongo.MongoClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.mongo.MongoClientTracer.TRACER;
 
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
@@ -33,7 +33,7 @@ public class TracingCommandListener implements CommandListener {
 
   @Override
   public void commandStarted(final CommandStartedEvent event) {
-    Span span = DECORATE.startSpan(event, event.getCommand(), null);
+    Span span = TRACER.startSpan(event, event.getCommand(), null);
     spanMap.put(event.getRequestId(), span);
   }
 
@@ -41,7 +41,7 @@ public class TracingCommandListener implements CommandListener {
   public void commandSucceeded(final CommandSucceededEvent event) {
     final Span span = spanMap.remove(event.getRequestId());
     if (span != null) {
-      DECORATE.end(span);
+      TRACER.end(span);
     }
   }
 
@@ -49,7 +49,7 @@ public class TracingCommandListener implements CommandListener {
   public void commandFailed(final CommandFailedEvent event) {
     final Span span = spanMap.remove(event.getRequestId());
     if (span != null) {
-      DECORATE.endExceptionally(span, event.getThrowable());
+      TRACER.endExceptionally(span, event.getThrowable());
     }
   }
 }

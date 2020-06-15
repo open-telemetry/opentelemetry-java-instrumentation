@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.jdbc;
 
-import static io.opentelemetry.auto.instrumentation.jdbc.JDBCDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.jdbc.JdbcTracer.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -58,7 +58,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       packageName + ".normalizer.SqlNormalizer",
       packageName + ".JDBCMaps",
       packageName + ".JDBCUtils",
-      packageName + ".JDBCDecorator",
+      packageName + ".JdbcTracer",
     };
   }
 
@@ -78,9 +78,9 @@ public final class StatementInstrumentation extends Instrumenter.Default {
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
 
-      span = DECORATE.startSpan(statement, sql);
+      span = TRACER.startSpan(statement, sql);
       if (span != null) {
-        scope = DECORATE.withSpan(span);
+        scope = TRACER.withSpan(span);
       }
     }
 
@@ -95,9 +95,9 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       scope.close();
 
       if (throwable == null) {
-        DECORATE.end(span);
+        TRACER.end(span);
       } else {
-        DECORATE.endExceptionally(span, throwable);
+        TRACER.endExceptionally(span, throwable);
       }
     }
   }
