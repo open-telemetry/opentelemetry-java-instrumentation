@@ -8,7 +8,7 @@ The [first section](#manual-instrumentation-with-java-sdk) will walk you through
 
 The second section will build on the first. It will walk you through implementing spring-web handler and interceptor interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations. 
 
-The third section will walk you through the annotations and configurations defined in the opentelemetry-contrib-spring package. This section will equip you with new tools to streamline the set up and instrumentation of OpenTelemetry on Spring and Spring Boot applications. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
+The third section will walk you through the annotations and configurations defined in the opentelemetry-contrib-spring package. This section will equip you with new tools to streamline the step up and instrumentation of OpenTelemetry on Spring and Spring Boot applications. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.   
 
 In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace the requests between these services using two different approaches. Finally, in section three we will explore tools in the opentelemetry-instrumentation-spring package which can improve this process.
 
@@ -16,7 +16,7 @@ In this guide we will be using a running example. In section one and two, we wil
 
 ## Create two Spring Projects
 
-Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `FirstService` and the other `SecondService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies and configuration listed below. 
+Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.   Name one project `FirstService` and the other `SecondService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies and configuration listed below. 
 
 ## Setup for Manual Instrumentation
 
@@ -27,19 +27,19 @@ Add the dependencies below to enable OpenTelemetry in `FirstService` and `Second
 #### OpenTelemetry
 ```xml
 <dependency>
-	<groupId>io.opentelemetry</groupId>
-	<artifactId>opentelemetry-api</artifactId>
-	<version>0.5.0</version>
+   <groupId>io.opentelemetry</groupId>
+   <artifactId>opentelemetry-api</artifactId>
+   <version>0.5.0</version>
 </dependency>
 <dependency>
-	<groupId>io.opentelemetry</groupId>
-	<artifactId>opentelemetry-sdk</artifactId>
-	<version>0.5.0</version>
-</dependency>	
+   <groupId>io.opentelemetry</groupId>
+   <artifactId>opentelemetry-sdk</artifactId>
+   <version>0.5.0</version>
+</dependency>   
 <dependency>
-    <groupId>io.grpc</groupId>
-    <artifactId>grpc-context</artifactId>
-    <version>1.24.0</version>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-context</artifactId>
+      <version>1.24.0</version>
 </dependency>
 
 ```
@@ -47,28 +47,28 @@ Add the dependencies below to enable OpenTelemetry in `FirstService` and `Second
 #### LoggingExporter
 ```xml
 <dependency>
-	<groupId>io.opentelemetry</groupId>
-	<artifactId>opentelemetry-exporters-logging</artifactId>
-	<version>0.5.0</version>
+   <groupId>io.opentelemetry</groupId>
+   <artifactId>opentelemetry-exporters-logging</artifactId>
+   <version>0.5.0</version>
 </dependency>
 ```
 
 #### JaegerExporter
 ```xml
 <dependency>
-	<groupId>io.opentelemetry</groupId>
-	<artifactId>opentelemetry-exporters-jaeger</artifactId>
-	<version>0.5.0</version>
+   <groupId>io.opentelemetry</groupId>
+   <artifactId>opentelemetry-exporters-jaeger</artifactId>
+   <version>0.5.0</version>
 </dependency>
 <dependency>
-	<groupId>io.grpc</groupId>
-	<artifactId>grpc-protobuf</artifactId>
-	<version>1.27.2</version>
+   <groupId>io.grpc</groupId>
+   <artifactId>grpc-protobuf</artifactId>
+   <version>1.27.2</version>
 </dependency>
 <dependency>
-	<groupId>io.grpc</groupId>
-	<artifactId>grpc-netty</artifactId>
-	<version>1.27.2</version>
+   <groupId>io.grpc</groupId>
+   <artifactId>grpc-netty</artifactId>
+   <version>1.27.2</version>
 </dependency>
 ```
 
@@ -97,7 +97,7 @@ compile "io.grpc:grpc-netty:1.27.2"
 
 To enable tracing in your OpenTelemetry project configure a Tracer Bean. This bean will be auto wired to controllers to create and propagate spans. This can be seen in the `Tracer otelTracer()` method below. If you plan to use a trace exporter remember to also include it in this configuration class. In section 3 we will use an annotation to set up this configuration.
 
-A sample OpenTelemetry configuration using LoggingExporter is shown below: 
+A sample OpenTelemetry configuration using LogExporter is shown below: 
 
 ```java
 import org.springframework.context.annotation.Bean;
@@ -114,16 +114,16 @@ import io.opentelemetry.exporters.logging.*;
 
 @Configuration
 public class OtelConfig {
-  private static tracerName = "foo"; \\TODO:
-  @Bean
-  public Tracer otelTracer() throws Exception {
-    final Tracer tracer = OpenTelemetry.getTracer(tracerName);
+   private static tracerName = "fooTracer"; 
+   @Bean
+   public Tracer otelTracer() throws Exception {
+      final Tracer tracer = OpenTelemetry.getTracer(tracerName);
 
-    SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(logProcessor);
-    
-    return tracer;
-  }
+      SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
+      OpenTelemetrySdk.getTracerProvider().addSpanProcessor(logProcessor);
+      
+      return tracer;
+   }
 }
 ```
 
@@ -135,13 +135,13 @@ Sample configuration for a Jaeger Exporter:
 ```java
 
 SpanProcessor jaegerProcessor = SimpleSpanProcessor
-        .newBuilder(JaegerGrpcSpanExporter.newBuilder().setServiceName(tracerName)
-            .setChannel(ManagedChannelBuilder.forAddress("localhost", 14250).usePlaintext().build())
-            .build())
-        .build();
+            .newBuilder(JaegerGrpcSpanExporter.newBuilder().setServiceName(tracerName)
+                  .setChannel(ManagedChannelBuilder.forAddress("localhost", 14250).usePlaintext().build())
+                  .build())
+            .build();
 OpenTelemetrySdk.getTracerProvider().addSpanProcessor(jaegerProcessor);
 ```
-     
+       
 ### Project Background
 
 Here we will create rest controllers for `FirstService` and `SecondService`.
@@ -164,9 +164,9 @@ Required dependencies and configurations for FirstService and SecondService proj
 @SpringBootApplication
 public class FirstServiceApplication {
 
-  public static void main(String[] args) throws IOException {
-    SpringApplication.run(FirstServiceApplication.class, args);
-  }
+   public static void main(String[] args) throws IOException {
+      SpringApplication.run(FirstServiceApplication.class, args);
+   }
 }
 ```
 
@@ -188,36 +188,37 @@ import HttpUtils;
 @RestController
 @RequestMapping(value = "/message")
 public class FirstServiceController {
-  @Autowired
-  private Tracer tracer;
+   @Autowired
+   private Tracer tracer;
 
-  @Autowired
-  HttpUtils httpUtils;
+   @Autowired
+   HttpUtils httpUtils;
 
-  private static String SS_URL = "http://localhost:8081/time";
+   private static String SecondServiceUrl = "http://localhost:8081/time";
 
-  @GetMapping
-  public String firstTracedMethod() {
-    Span span = tracer.spanBuilder("message").startSpan();
-    span.addEvent("Controller Entered");
-    span.setAttribute("what.are.you", "Je suis attribute");
+   @GetMapping
+   public String firstTracedMethod() {
+      Span span = tracer.spanBuilder("message").startSpan();
+      span.addEvent("Controller Entered");
+      span.setAttribute("what.are.you", "Je suis attribute");
 
-    try (Scope scope = tracer.withSpan(span)) {
-      return "Second Service says: " + httpUtils.callEndpoint(SS_URL);
-    } catch (Exception e) {
-      span.setAttribute("error", e.toString());
-      span.setAttribute("error", true);
-      return "ERROR: I can't tell the time";
-    } finally {
-      span.end();
-    }
-  }
+      try (Scope scope = tracer.withSpan(span)) {
+         return "Second Service says: " + httpUtils.callEndpoint(SecondServiceUrl);
+      } catch (Exception e) {
+         span.addEvent(e.toString());
+         span.setAttribute("error", true);
+         return "ERROR: I can't tell the time";
+      } finally {
+         span.end();
+      }
+   }
 }
 ```
 
 6. Configure `HttpUtils.callEndpoint` to inject span context into request. This is key to propagate the trace to the SecondService
 
-HttpUtils is a helper class that injects the current span context into outgoing requests. This involves adding the tracer id and the trace-state to a request header. For this example, I used `RestTemplate` to send requests from `FirstService` to `SecondService`. A similar approach can be used with popular Java Web Clients such as [okhttp](https://square.github.io/okhttp/) and [apache http client](https://www.tutorialspoint.com/apache_httpclient/apache_httpclient_quick_guide.htm). The key to this implementation is to override the put method in `HttpTextFormat.Setter<?>` to handle your request format. `HttpTextFormat.inject` will use this setter to set `traceparent` and `tracestate` headers in your requests. These values will be used to propagate your span context to external services.
+HttpUtils is a helper class that injects the current span context into outgoing requests. This involves adding the tracer id and the trace-state to a request header. For this example, we used `RestTemplate` to send requests from `FirstService` to `SecondService`. A similar approach can be used with popular Java Web Clients such as [okhttp](https://square.github.io/okhttp/) and [apache http client](https://www.tutorialspoint.com/apache_httpclient/apache_httpclient_quick_guide.htm). The key to this implementation is to override the put method in `HttpTextFormat.Setter<?>` to handle your request format. `HttpTextFormat.inject` will use this setter to set `traceparent` and `tracestate` headers in your requests. These values will be used to propagate your span context to external services.
+
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -228,6 +229,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import io.grpc.Context;
+
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -236,36 +239,34 @@ import io.opentelemetry.trace.Tracer;
 @Component
 public class HttpUtils {
 
-  @Autowired
-  private Tracer tracer;
+   @Autowired
+   private Tracer tracer;
 
-  private HttpTextFormat<SpanContext> textFormat;
-  private HttpTextFormat.Setter<HttpHeaders> setter;
+   private HttpTextFormat<SpanContext> textFormat;
+   private HttpTextFormat.Setter<HttpHeaders> setter = new HttpTextFormat.Setter<HttpHeaders>() {
+         @Override
+         public void set(HttpHeaders headers, String key, String value) {
+            headers.set(key, value);
+         }
+      };
 
-  public HttpUtils(Tracer tracer) {
-    textFormat = tracer.getHttpTextFormat();
-    setter = new HttpTextFormat.Setter<HttpHeaders>() {
-      @Override
-      public void put(HttpHeaders headers, String key, String value) {
-        headers.set(key, value);
-      }
-    };
-  }
+   public HttpUtils(Tracer tracer) {
+      textFormat = tracer.getHttpTextFormat();
+   }
 
-  public String callEndpoint(String url) throws Exception {
-    HttpHeaders headers = new HttpHeaders();
+   public String callEndpoint(String url) throws Exception {
+      HttpHeaders headers = new HttpHeaders();
 
-    Span currentSpan = tracer.getCurrentSpan();
-    textFormat.inject(currentSpan.getContext(), headers, setter);
+      textFormat.inject(Context.current(), headers, setter);
 
-    HttpEntity<String> entity = new HttpEntity<String>(headers);
-    RestTemplate restTemplate = new RestTemplate();
+      HttpEntity<String> entity = new HttpEntity<String>(headers);
+      RestTemplate restTemplate = new RestTemplate();
 
-    ResponseEntity<String> response =
-        restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+      ResponseEntity<String> response =
+            restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-    return response.getBody();
-  }
+      return response.getBody();
+   }
 }
 ```
 ### SecondService
@@ -274,7 +275,7 @@ public class HttpUtils {
 2. Ensure an OpenTelemetry Tracer is configured
 3. Ensure a Spring Boot main class was created by the Spring initializer
 
-  
+   
 ```java
 import java.io.IOException;
 
@@ -284,9 +285,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SecondServiceApplication {
 
-  public static void main(String[] args) throws IOException {
-    SpringApplication.run(SecondServiceApplication.class, args);
-  }
+   public static void main(String[] args) throws IOException {
+      SpringApplication.run(SecondServiceApplication.class, args);
+   }
 }
 ```
 
@@ -306,21 +307,21 @@ import io.opentelemetry.trace.Tracer;
 @RestController
 @RequestMapping(value = "/time")
 public class SecondServiceController {
-  @Autowired
-  private Tracer tracer;
+   @Autowired
+   private Tracer tracer;
 
-  @GetMapping
-  public String callSecondTracedMethod() {
-    Span span = tracer.spanBuilder("time").startSpan();
-    span.addEvent("SecondServiceController Entered");
-    span.setAttribute("what.am.i", "Tu es une legume");
+   @GetMapping
+   public String callSecondTracedMethod() {
+      Span span = tracer.spanBuilder("time").startSpan();
+      span.addEvent("SecondServiceController Entered");
+      span.setAttribute("what.am.i", "Tu es une legume");
 
-    try (Scope scope = tracer.withSpan(span)) {
-      return "It's time to get a watch";
-    } finally {
-      span.end();
-    }
-  }
+      try{
+         return "It's time to get a watch";
+      } finally {
+         span.end();
+      }
+   }
 }
 ```
 
@@ -335,11 +336,11 @@ To view traces on the Jaeger UI, deploy a Jaeger Exporter on localhost by runnin
 After running Jaeger locally, navigate to the url below. Make sure to refresh the UI to view the exported traces from the two web services:
 
 `http://localhost:16686`
- 
-Run FirstService and SecondService from command line or using an IDE. The end point of interest for FirstService is `http://localhost:8080/message` and  `http://localhost:8081/time` for SecondService. Entering `localhost:8080/time` in a browser should call FirstService and then SecondService, creating a trace. To send a sample request enter the following in a browser of your choice:
 
-`http://localhost:8080/message`
+Run FirstService and SecondService from command line or using an IDE. The end point of interest for FirstService is `http://localhost:8080/message` and  `http://localhost:8081/time` for SecondService. Entering `localhost:8080/message` in a browser should call FirstService and then SecondService, creating a trace. To send a sample request enter the following in a browser of your choice:
 
-***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.SECOND_SERVICE_URL. ***
+`http://localhost:8081/time`
 
-Congrats, we just created a distributed service with OpenTelemetry!  
+***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.SecondServiceUrl. ***
+
+Congrats, we just created a distributed service with OpenTelemetry!
