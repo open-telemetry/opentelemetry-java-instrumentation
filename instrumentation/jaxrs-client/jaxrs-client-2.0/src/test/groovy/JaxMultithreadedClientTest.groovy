@@ -64,6 +64,6 @@ class JaxMultithreadedClientTest extends AgentTestRunner {
     }
 
     then:
-    conds.await(10)
+    conds.await(30)
   }
 }
