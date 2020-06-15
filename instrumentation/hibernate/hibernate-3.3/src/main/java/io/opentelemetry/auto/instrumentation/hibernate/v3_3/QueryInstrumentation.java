@@ -16,7 +16,7 @@
 package io.opentelemetry.auto.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;

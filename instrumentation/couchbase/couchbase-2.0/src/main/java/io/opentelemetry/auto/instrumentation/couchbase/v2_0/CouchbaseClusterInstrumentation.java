@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -43,8 +44,9 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.couchbase.client.java.cluster.DefaultAsyncClusterManager")
-        .or(named("com.couchbase.client.java.CouchbaseAsyncCluster"));
+    return namedOneOf(
+        "com.couchbase.client.java.cluster.DefaultAsyncClusterManager",
+        "com.couchbase.client.java.CouchbaseAsyncCluster");
   }
 
   @Override

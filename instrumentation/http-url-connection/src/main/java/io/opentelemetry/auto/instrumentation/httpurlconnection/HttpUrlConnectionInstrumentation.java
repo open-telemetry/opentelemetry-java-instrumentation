@@ -19,7 +19,7 @@ import static io.opentelemetry.auto.instrumentation.httpurlconnection.HeadersInj
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.httpurlconnection.HttpUrlConnectionDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;

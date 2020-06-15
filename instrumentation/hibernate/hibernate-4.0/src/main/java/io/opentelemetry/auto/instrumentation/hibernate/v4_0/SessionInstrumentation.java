@@ -19,7 +19,7 @@ import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator
 import static io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;

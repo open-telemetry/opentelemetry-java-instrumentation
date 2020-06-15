@@ -19,7 +19,7 @@ import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResp
 import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;

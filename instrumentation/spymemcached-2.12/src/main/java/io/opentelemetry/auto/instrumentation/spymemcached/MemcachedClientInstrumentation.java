@@ -15,7 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;

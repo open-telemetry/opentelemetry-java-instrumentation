@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -45,7 +45,7 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(
-        named("javax.servlet.FilterChain").or(named("javax.servlet.http.HttpServlet")));
+        namedOneOf("javax.servlet.FilterChain", "javax.servlet.http.HttpServlet"));
   }
 
   @Override

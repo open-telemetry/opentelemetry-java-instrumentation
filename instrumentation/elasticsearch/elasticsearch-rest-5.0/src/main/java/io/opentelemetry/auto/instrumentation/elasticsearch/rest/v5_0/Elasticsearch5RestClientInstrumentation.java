@@ -17,7 +17,7 @@ package io.opentelemetry.auto.instrumentation.elasticsearch.rest.v5_0;
 
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.TRACER;
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;

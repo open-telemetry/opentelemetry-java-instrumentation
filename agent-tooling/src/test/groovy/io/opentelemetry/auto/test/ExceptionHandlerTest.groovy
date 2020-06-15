@@ -28,7 +28,7 @@ import net.bytebuddy.dynamic.ClassFileLocator
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
 
-import static io.opentelemetry.auto.tooling.matcher.NamedOneOfMatcher.namedOneOf
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf
 import static net.bytebuddy.matcher.ElementMatchers.isMethod
 import static net.bytebuddy.matcher.ElementMatchers.named
 

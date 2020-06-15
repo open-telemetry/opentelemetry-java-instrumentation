@@ -23,6 +23,7 @@ import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapExtract
 import static io.opentelemetry.auto.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
@@ -106,11 +107,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
                         .or(isSetter())
                         .or(nameEndsWith("Listener"))
                         .or(nameEndsWith("Listeners"))
-                        .or(named("processAsync"))
-                        .or(named("open"))
-                        .or(named("close"))
-                        .or(named("abort"))
-                        .or(named("basicGet"))))
+                        .or(namedOneOf("processAsync", "open", "close", "abort", "basicGet"))))
             .and(isPublic())
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
         RabbitChannelInstrumentation.class.getName() + "$ChannelMethodAdvice");
