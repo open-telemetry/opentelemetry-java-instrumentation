@@ -340,6 +340,6 @@ Run FirstService and SecondService from command line or using an IDE. The end po
 
 `http://localhost:8080/time`
 
-***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.SS_URL. ***
+***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.SECOND_SERVICE_URL. ***
 
 Congrats, we just created a distributed service with OpenTelemetry!  
