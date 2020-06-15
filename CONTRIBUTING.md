@@ -192,4 +192,4 @@ Suggested plugins and settings:
     ![import layout](https://user-images.githubusercontent.com/734411/43430811-28442636-94ae-11e8-86f1-f270ddcba023.png)
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format)
 * [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
-  ![Recommended Settings](https://user-images.githubusercontent.com/734411/43430944-db84bf8a-94ae-11e8-8cec-0daa064937c4.png)
+  ![Recommended Settings](docs/contributing/save-actions.png)
