@@ -18,16 +18,15 @@ data from a Java application without code changes.
 
 ## Getting Started
 
-[ ![Download](https://api.bintray.com/packages/open-telemetry/maven/opentelemetry-java-instrumentation/images/download.svg) ](https://bintray.com/open-telemetry/maven/opentelemetry-java-instrumentation/_latestVersion)
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-auto-all.jar).
 
-The easiest way to start is to download "all-in" package, which includes instrumentation agent,
+This package includes the instrumentation agent,
 instrumentations for all supported libraries and all available data exporters.
 This provides completely automatic out of the box experience.
-TODO add here screenshot from Bintray download list.
 
 The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
 ```
-java -javaagent:path/to/opentelemetry-auto-<version>-all.jar \
+java -javaagent:path/to/opentelemetry-auto-all.jar \
      -jar myapp.jar
 ```
 By default OpenTelemetry Java agent uses 
@@ -39,7 +38,7 @@ at `localhost:55680`.
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables (see below for full list). For example:
 ```
-java -javaagent:path/to/opentelemetry-auto-<version>-all.jar \
+java -javaagent:path/to/opentelemetry-auto-all.jar \
      -Dota.exporter=zipkin
      -jar myapp.jar
 ```
