@@ -16,7 +16,7 @@ gradleEnterprise {
   }
 }
 
-rootProject.name = 'trace-java'
+rootProject.name = 'opentelemetry-java-instrumentation'
 
 // agent projects
 include ':java-agent'
@@ -171,7 +171,9 @@ def setBuildFile(project) {
   }
 }
 
-setBuildFile(rootProject)
+rootProject.children.each {
+  setBuildFile(it)
+}
 
 project(':agent-bootstrap').name = 'auto-bootstrap'
 project(':agent-tooling').name = 'auto-tooling'
