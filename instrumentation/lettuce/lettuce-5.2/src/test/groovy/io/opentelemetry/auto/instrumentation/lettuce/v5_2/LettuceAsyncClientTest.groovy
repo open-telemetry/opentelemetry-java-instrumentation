@@ -1,4 +1,3 @@
-
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -14,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.opentelemetry.auto.instrumentation.lettuce.v5_2
+
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
@@ -23,17 +24,12 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
-import io.lettuce.core.protocol.AsyncCommand
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
-import java.util.concurrent.CancellationException
-import java.util.concurrent.CompletionException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
@@ -106,8 +102,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     syncCommands.set("TESTKEY", "TESTVAL")
 
-    // 1 set + 1 connect trace
-    TEST_WRITER.waitForTraces(2)
+    // 1 set
+    TEST_WRITER.waitForTraces(1)
     TEST_WRITER.clear()
   }
 
@@ -128,21 +124,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     connection != null
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "CONNECT"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" HOST
-            "$MoreTags.NET_PEER_PORT" port
-            "$Tags.DB_TYPE" "redis"
-            "db.redis.dbIndex" 0
-          }
-        }
-      }
-    }
+    // Lettuce tracing does not trace connect
+    assertTraces(0) {}
 
     cleanup:
     connection.close()
@@ -161,22 +144,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     then:
     connection == null
     thrown ExecutionException
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "CONNECT"
-          spanKind CLIENT
-          errored true
-          tags {
-            "$MoreTags.NET_PEER_NAME" HOST
-            "$MoreTags.NET_PEER_PORT" incorrectPort
-            "$Tags.DB_TYPE" "redis"
-            "db.redis.dbIndex" 0
-            errorTags CompletionException, String
-          }
-        }
-      }
-    }
+    // Lettuce tracing does not trace connect
+    assertTraces(0) {}
   }
 
   def "set command using Future get with timeout"() {
@@ -193,7 +162,17 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -225,7 +204,17 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTKEY>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -271,7 +260,17 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<NON_EXISTENT_KEY>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -303,7 +302,16 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -353,7 +361,17 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTHM> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -363,122 +381,17 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTHM>"
           }
-        }
-      }
-    }
-  }
-
-  def "command completes exceptionally"() {
-    setup:
-    // turn off auto flush to complete the command exceptionally manually
-    asyncCommands.setAutoFlushCommands(false)
-    def conds = new AsyncConditions()
-    RedisFuture redisFuture = asyncCommands.del("key1", "key2")
-    boolean completedExceptionally = ((AsyncCommand) redisFuture).completeExceptionally(new IllegalStateException("TestException"))
-    redisFuture.exceptionally({
-      throwable ->
-        conds.evaluate {
-          assert throwable != null
-          assert throwable instanceof IllegalStateException
-          assert throwable.getMessage() == "TestException"
-        }
-        throw throwable
-    })
-
-    when:
-    // now flush and execute the command
-    asyncCommands.flushCommands()
-    redisFuture.get()
-
-    then:
-    conds.await()
-    completedExceptionally == true
-    thrown Exception
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "DEL"
-          spanKind CLIENT
-          errored true
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            errorTags(IllegalStateException, "TestException")
+          event(0) {
+            eventName "redis.encode.start"
           }
-        }
-      }
-    }
-  }
-
-  def "cancel command before it finishes"() {
-    setup:
-    asyncCommands.setAutoFlushCommands(false)
-    def conds = new AsyncConditions()
-    RedisFuture redisFuture = asyncCommands.sadd("SKEY", "1", "2")
-    redisFuture.whenCompleteAsync({
-      res, throwable ->
-        conds.evaluate {
-          assert throwable != null
-          assert throwable instanceof CancellationException
-        }
-    })
-
-    when:
-    boolean cancelSuccess = redisFuture.cancel(true)
-    asyncCommands.flushCommands()
-
-    then:
-    conds.await()
-    cancelSuccess == true
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "SADD"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            "db.command.cancelled" true
-          }
-        }
-      }
-    }
-  }
-
-  def "debug segfault command (returns void) with no argument should produce span"() {
-    setup:
-    asyncCommands.debugSegfault()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "DEBUG"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
-          }
-        }
-      }
-    }
-  }
-
-
-  def "shutdown command (returns void) should produce a span"() {
-    setup:
-    asyncCommands.shutdown(false)
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "SHUTDOWN"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }

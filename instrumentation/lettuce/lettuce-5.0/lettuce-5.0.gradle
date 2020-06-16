@@ -1,7 +1,6 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 apply from: "${rootDir}/gradle/instrumentation.gradle"

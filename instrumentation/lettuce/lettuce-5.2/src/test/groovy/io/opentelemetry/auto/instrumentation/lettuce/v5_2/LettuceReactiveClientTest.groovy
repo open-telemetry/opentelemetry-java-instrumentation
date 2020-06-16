@@ -1,4 +1,3 @@
-
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -14,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.opentelemetry.auto.instrumentation.lettuce.v5_2
+
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import reactor.core.scheduler.Schedulers
@@ -39,6 +39,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   @Shared
+  int port
+  @Shared
   String embeddedDbUri
 
   @Shared
@@ -50,7 +52,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    int port = PortUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
     String dbAddr = HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 
@@ -75,8 +77,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     syncCommands.set("TESTKEY", "TESTVAL")
 
-    // 1 set + 1 connect trace
-    TEST_WRITER.waitForTraces(2)
+    // 1 set
+    TEST_WRITER.waitForTraces(1)
     TEST_WRITER.clear()
   }
 
@@ -110,7 +112,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -133,7 +145,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTKEY>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -164,7 +186,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<NON_EXISTENT_KEY>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -193,7 +225,16 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -212,29 +253,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
-            "db.command.results.count" 157
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.statement" ""
+            "db.type" "redis"
           }
-        }
-      }
-    }
-  }
-
-  def "command cancel after 2 on flux publisher "() {
-    setup:
-    reactiveCommands.command().take(2).subscribe()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "COMMAND"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            "db.command.cancelled" true
-            "db.command.results.count" 2
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -251,44 +280,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     then:
     res != null
     TEST_WRITER.traces.size() == 0
-  }
-
-  def "debug segfault command (returns mono void) with no argument should produce span"() {
-    setup:
-    reactiveCommands.debugSegfault().subscribe()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "DEBUG"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
-          }
-        }
-      }
-    }
-  }
-
-  def "shutdown command (returns void) with argument should produce span"() {
-    setup:
-    reactiveCommands.shutdown(false).subscribe()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "SHUTDOWN"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
-          }
-        }
-      }
-    }
   }
 
   def "blocking subscriber"() {
@@ -314,7 +305,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<a> value<1>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
         span(2) {
@@ -323,7 +324,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<a>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -353,7 +364,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<a> value<1>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
         span(2) {
@@ -362,7 +383,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<a>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -393,7 +424,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<a> value<1>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
         span(2) {
@@ -402,7 +443,17 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           childOf span(0)
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<a>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }

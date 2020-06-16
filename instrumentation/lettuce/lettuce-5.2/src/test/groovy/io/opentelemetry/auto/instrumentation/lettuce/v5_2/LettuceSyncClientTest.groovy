@@ -1,4 +1,3 @@
-
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -14,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.opentelemetry.auto.instrumentation.lettuce.v5_2
+
 import io.lettuce.core.ClientOptions
+
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import redis.embedded.RedisServer
 import spock.lang.Shared
-
-import java.util.concurrent.CompletionException
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -48,6 +46,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
   String dbUriNonExistent
   @Shared
   String embeddedDbUri
+  @Shared
+  String embeddedDbLocalhostUri
 
   @Shared
   RedisServer redisServer
@@ -70,6 +70,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
     dbUriNonExistent = "redis://" + dbAddrNonExistent
     embeddedDbUri = "redis://" + dbAddr
+    embeddedDbLocalhostUri = "redis://localhost:" + port + "/" + DB_INDEX
 
     redisServer = RedisServer.builder()
     // bind to localhost to avoid firewall popup
@@ -89,8 +90,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
     syncCommands.set("TESTKEY", "TESTVAL")
     syncCommands.hmset("TESTHM", testHashMap)
 
-    // 2 sets + 1 connect trace
-    TEST_WRITER.waitForTraces(3)
+    // 2 sets
+    TEST_WRITER.waitForTraces(2)
     TEST_WRITER.clear()
   }
 
@@ -108,21 +109,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
     StatefulConnection connection = testConnectionClient.connect()
 
     then:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "CONNECT"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" HOST
-            "$MoreTags.NET_PEER_PORT" port
-            "$Tags.DB_TYPE" "redis"
-            "db.redis.dbIndex" 0
-          }
-        }
-      }
-    }
+    // Lettuce tracing does not trace connect
+    assertTraces(0) {}
 
     cleanup:
     connection.close()
@@ -138,22 +126,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     then:
     thrown RedisConnectionException
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "CONNECT"
-          spanKind CLIENT
-          errored true
-          tags {
-            "$MoreTags.NET_PEER_NAME" HOST
-            "$MoreTags.NET_PEER_PORT" incorrectPort
-            "$Tags.DB_TYPE" "redis"
-            "db.redis.dbIndex" 0
-            errorTags CompletionException, String
-          }
-        }
-      }
-    }
+    // Lettuce tracing does not trace connect
+    assertTraces(0) {}
   }
 
   def "set command"() {
@@ -169,7 +143,50 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
+          }
+        }
+      }
+    }
+  }
+  def "set command localhost"() {
+    setup:
+    RedisClient testConnectionClient = RedisClient.create(embeddedDbLocalhostUri)
+    testConnectionClient.setOptions(CLIENT_OPTIONS)
+    StatefulConnection connection = testConnectionClient.connect()
+    String res = connection.sync().set("TESTSETKEY", "TESTSETVAL")
+
+    expect:
+    res == "OK"
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "SET"
+          spanKind CLIENT
+          errored false
+          tags {
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.name" "localhost"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -189,7 +206,17 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTKEY>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -209,7 +236,17 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<NON_EXISTENT_KEY>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -229,7 +266,16 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -249,7 +295,17 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTLIST> value<TESTLIST ELEMENT>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -269,7 +325,17 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<user> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
@@ -289,48 +355,38 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           tags {
-            "$Tags.DB_TYPE" "redis"
+            "net.transport" "IP.TCP"
+            "net.peer.ip" "127.0.0.1"
+            "net.peer.port" port
+            "db.type" "redis"
+            "db.statement" "key<TESTHM>"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
           }
         }
       }
     }
   }
 
-  def "debug segfault command (returns void) with no argument should produce span"() {
+  def "debug segfault command (returns void) with no argument produces no span"() {
     setup:
     syncCommands.debugSegfault()
 
     expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "DEBUG"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
-          }
-        }
-      }
-    }
+    // lettuce tracing does not trace debug
+    assertTraces(0) {}
   }
 
-  def "shutdown command (returns void) should produce a span"() {
+  def "shutdown command (returns void) produces no span"() {
     setup:
     syncCommands.shutdown(false)
 
     expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "SHUTDOWN"
-          spanKind CLIENT
-          errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
-          }
-        }
-      }
-    }
+    // lettuce tracing does not trace shutdown
+    assertTraces(0) {}
   }
 }

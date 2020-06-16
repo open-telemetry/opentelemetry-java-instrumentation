@@ -1,3 +1,19 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.opentelemetry.auto.instrumentation.lettuce.v5_2;
 
 import static io.opentelemetry.auto.instrumentation.lettuce.v5_2.LettuceClientDecorator.TRACER;
@@ -55,7 +71,7 @@ public enum OpenTelemetryTracing implements Tracing {
     return null;
   }
 
-  private enum OpenTelemetryTracerProvider implements TracerProvider {
+  enum OpenTelemetryTracerProvider implements TracerProvider {
     INSTANCE;
 
     private final Tracer openTelemetryTracer = new OpenTelemetryTracer();
@@ -66,7 +82,7 @@ public enum OpenTelemetryTracing implements Tracing {
     }
   }
 
-  private enum OpenTelemetryTraceContextProvider implements TraceContextProvider {
+  enum OpenTelemetryTraceContextProvider implements TraceContextProvider {
     INSTANCE;
 
     @Override
@@ -75,10 +91,10 @@ public enum OpenTelemetryTracing implements Tracing {
     }
   }
 
-  public static class OpenTelemetryTraceContext implements TraceContext {
+  static class OpenTelemetryTraceContext implements TraceContext {
     private final Context context;
 
-    OpenTelemetryTraceContext() {
+    protected OpenTelemetryTraceContext() {
       this.context = Context.current();
     }
 
@@ -87,19 +103,25 @@ public enum OpenTelemetryTracing implements Tracing {
     }
   }
 
-  private static class OpenTelemetryEndpoint implements Endpoint {
-    private final String ip;
-    private final int port;
-    @Nullable private final String name;
+  static class OpenTelemetryEndpoint implements Endpoint {
+    final String ip;
+    final int port;
+    @Nullable final String name;
 
-    private OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
+    protected OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
       this.ip = ip;
       this.port = port;
-      this.name = name;
+      if (!ip.equals(name)) {
+        this.name = name;
+      } else {
+        this.name = null;
+      }
     }
   }
 
-  private static class OpenTelemetryTracer extends Tracer {
+  static class OpenTelemetryTracer extends Tracer {
+
+    protected OpenTelemetryTracer() {}
 
     @Override
     public OpenTelemetrySpan nextSpan() {
@@ -122,8 +144,9 @@ public enum OpenTelemetryTracing implements Tracing {
 
   // The order that callbacks will be called in or which thread they are called from is not well
   // defined. We go ahead and buffer all data until we know we have a span. This implementation is
-  // particularly safe, synchronizing all accesses.
-  private static class OpenTelemetrySpan extends Tracer.Span {
+  // particularly safe, synchronizing all accesses. Relying on implementation details would allow
+  // reducing synchronization but the impact should be minimal.
+  static class OpenTelemetrySpan extends Tracer.Span {
     @Nullable private final Span parent;
 
     @Nullable private OpenTelemetryEndpoint endpoint;
@@ -136,7 +159,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Nullable private Span span;
 
-    private OpenTelemetrySpan(@Nullable Span parent) {
+    protected OpenTelemetrySpan(@Nullable Span parent) {
       this.parent = parent;
     }
 
