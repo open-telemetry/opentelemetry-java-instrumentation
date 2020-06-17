@@ -10,7 +10,7 @@ muzzle {
   pass {
     group = "io.lettuce"
     module = "lettuce-core"
-    versions = "[5.2.0.RELEASE,)"
+    versions = "[5.1.0.RELEASE,)"
     assertInverse = true
   }
 }

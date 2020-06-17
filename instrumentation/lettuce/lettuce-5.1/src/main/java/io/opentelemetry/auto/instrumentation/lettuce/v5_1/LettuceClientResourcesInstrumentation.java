@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v5_2;
+package io.opentelemetry.auto.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -35,7 +36,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LettuceClientResourcesInstrumentation extends Instrumenter.Default {
 
   public LettuceClientResourcesInstrumentation() {
-    super("lettuce", "lettuce-5", "lettuce-5.2");
+    super("lettuce", "lettuce-5", "lettuce-5.1");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("io.lettuce.core.tracing.Tracing");
   }
 
   @Override
@@ -45,7 +51,15 @@ public class LettuceClientResourcesInstrumentation extends Instrumenter.Default 
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".OpenTelemetryTracing"};
+    return new String[] {
+        packageName + ".OpenTelemetryTracing",
+        packageName + ".OpenTelemetryTracing$OpenTelemetryTracerProvider",
+        packageName + ".OpenTelemetryTracing$OpenTelemetryTraceContextProvider",
+        packageName + ".OpenTelemetryTracing$OpenTelemetryTraceContext",
+        packageName + ".OpenTelemetryTracing$OpenTelemetryEndpoint",
+        packageName + ".OpenTelemetryTracing$OpenTelemetryTracer",
+        packageName + ".OpenTelemetryTracing$OpenTelemetrySpan",
+    };
   }
 
   @Override

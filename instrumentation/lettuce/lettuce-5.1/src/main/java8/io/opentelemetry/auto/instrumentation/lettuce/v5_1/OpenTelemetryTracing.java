@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v5_2;
+package io.opentelemetry.auto.instrumentation.lettuce.v5_1;
 
 import io.grpc.Context;
 import io.lettuce.core.tracing.TraceContext;
@@ -40,7 +40,7 @@ public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
 
   public static final io.opentelemetry.trace.Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.lettuce-5.2");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.lettuce-5.1");
 
   @Override
   public TracerProvider getTracerProvider() {
@@ -73,7 +73,7 @@ public enum OpenTelemetryTracing implements Tracing {
     return null;
   }
 
-  enum OpenTelemetryTracerProvider implements TracerProvider {
+  private enum OpenTelemetryTracerProvider implements TracerProvider {
     INSTANCE;
 
     private final Tracer openTelemetryTracer = new OpenTelemetryTracer();
@@ -84,7 +84,7 @@ public enum OpenTelemetryTracing implements Tracing {
     }
   }
 
-  enum OpenTelemetryTraceContextProvider implements TraceContextProvider {
+  private enum OpenTelemetryTraceContextProvider implements TraceContextProvider {
     INSTANCE;
 
     @Override
@@ -93,10 +93,10 @@ public enum OpenTelemetryTracing implements Tracing {
     }
   }
 
-  static class OpenTelemetryTraceContext implements TraceContext {
+  private static class OpenTelemetryTraceContext implements TraceContext {
     private final Context context;
 
-    protected OpenTelemetryTraceContext() {
+    private OpenTelemetryTraceContext() {
       this.context = Context.current();
     }
 
@@ -105,12 +105,12 @@ public enum OpenTelemetryTracing implements Tracing {
     }
   }
 
-  static class OpenTelemetryEndpoint implements Endpoint {
+  private static class OpenTelemetryEndpoint implements Endpoint {
     final String ip;
     final int port;
     @Nullable final String name;
 
-    protected OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
+    private OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
       this.ip = ip;
       this.port = port;
       if (!ip.equals(name)) {
@@ -121,9 +121,9 @@ public enum OpenTelemetryTracing implements Tracing {
     }
   }
 
-  static class OpenTelemetryTracer extends Tracer {
+  private static class OpenTelemetryTracer extends Tracer {
 
-    protected OpenTelemetryTracer() {}
+    private OpenTelemetryTracer() {}
 
     @Override
     public OpenTelemetrySpan nextSpan() {
@@ -148,7 +148,7 @@ public enum OpenTelemetryTracing implements Tracing {
   // defined. We go ahead and buffer all data until we know we have a span. This implementation is
   // particularly safe, synchronizing all accesses. Relying on implementation details would allow
   // reducing synchronization but the impact should be minimal.
-  static class OpenTelemetrySpan extends Tracer.Span {
+  private static class OpenTelemetrySpan extends Tracer.Span {
     private final Span.Builder spanBuilder;
 
     @Nullable private String name;
@@ -159,7 +159,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Nullable private Span span;
 
-    protected OpenTelemetrySpan(Span parent) {
+    private OpenTelemetrySpan(Span parent) {
       // Name will be updated later, we create with an arbitrary one here to store other data before
       // the span starts.
       spanBuilder =
