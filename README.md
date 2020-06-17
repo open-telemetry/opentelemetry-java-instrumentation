@@ -10,28 +10,36 @@
 
 This project provides a Java agent JAR that can be attached to any Java 7+
 application and dynamically injects bytecode to capture telemetry from a
-number of popular libraries and frameworks. The telemetry data can exported
-in a variety of formats each provided as their own independent JAR. In
-addition, the agent and exporter can be configured via command line arguments
+number of popular libraries and frameworks. 
+The telemetry data can be exported in a variety of formats. 
+In addition, the agent and exporter can be configured via command line arguments
 or environment variables. The net result is the ability to gather telemetry
 data from a Java application without code changes.
 
 ## Getting Started
 
-Download the [latest
-release](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases)
-of the Java agent and available exporters.
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-auto-all.jar).
+
+This package includes the instrumentation agent,
+instrumentations for all supported libraries and all available data exporters.
+This provides completely automatic out of the box experience.
 
 The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
-Configuration parameters are passed as Java system properties (`-D` flags) or
-as environment variables. Both the Java agent and exporter configuration must
-be defined before the application JAR. For example:
-
 ```
-java -javaagent:path/to/opentelemetry-auto-<version>.jar \
-     -Dota.exporter.jar=path/to/opentelemetry-auto-exporter-jaeger-<version>.jar \
-     -Dota.exporter.jaeger.endpoint=localhost:14250 \
-     -Dota.exporter.jaeger.service.name=shopping \
+java -javaagent:path/to/opentelemetry-auto-all.jar \
+     -jar myapp.jar
+```
+By default OpenTelemetry Java agent uses 
+[OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
+configured to send data to 
+[OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/master/receiver/otlpreceiver/README.md)
+at `localhost:55680`. 
+
+Configuration parameters are passed as Java system properties (`-D` flags) or
+as environment variables (see below for full list). For example:
+```
+java -javaagent:path/to/opentelemetry-auto-all.jar \
+     -Dota.exporter=zipkin
      -jar myapp.jar
 ```
 
@@ -48,6 +56,7 @@ only supports gRPC as its communications protocol.
 
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter=jaeger              | OTA_EXPORTER=jaeger              | To select Jaeger exporter                                            |
 | ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
 | ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
 
@@ -56,6 +65,7 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter=zipkin              | OTA_EXPORTER=zipkin              | To select Zipkin exporter                                            |
 | ota.exporter.zipkin.endpoint     | OTA_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
 | ota.exporter.zipkin.service.name | OTA_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance    
 
@@ -65,6 +75,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
+| ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                           |
 | ota.exporter.jar                 | OTA_EXPORTER_JAR                 | Path to the exporter fat-jar that you want to use                    |
 | ota.exporter.otlp.endpoint       | OTA_EXPORTER_OTLP_ENDPOINT       | The OTLP endpoint to connect to.                                     |
 
@@ -75,6 +86,7 @@ attributes to stdout. It is used mainly for testing and debugging.
 
 | System property             | Environment variable        | Purpose                                                                      |
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
+| ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
 
 ##### Customizing the OpenTelemetry SDK
@@ -233,9 +245,6 @@ High-level roadmap:
       [opentelemetry-specification#522](https://github.com/open-telemetry/opentelemetry-specification/issues/522))
   * See issues with label
     [specification](https://github.com/open-telemetry/opentelemetry-java-instrumentation/labels/specification)
-* Simpler exporter configuration
-  * See issue
-    [#370](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/370)
 * Great documentation
   * See issues with label
     [documentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/labels/documentation)

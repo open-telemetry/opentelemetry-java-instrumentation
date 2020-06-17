@@ -71,7 +71,7 @@ following "clusters" of classes:
 
 - `auto-tooling-and-instrumentation.isolated/` - contains `agent-tooling`
 module and `instrumentation` submodules, loaded and isolated inside
-`AgentClassLoader`. Including OpenTelemetry SDK.
+`AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
 - `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and
 available in bootstrap classloader.
 - `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its
@@ -83,19 +83,8 @@ Gradle plugin.
 #### Snapshot builds
 
 For developers testing code changes before a release is complete, there are
-snapshot builds of the `master` branch. When a PR is merged to `master`, a
-circleci build is kicked off as a github action which shows up as a github
-check on the git commit on `master` branch, i.e. a green checkmark. Clicking
-on the green checkmark you can view the `build_test_deploy` workflow and the
-`build` job shows the artifacts hosted on circleci. The artifacts will be
-named like:
-
-```
-libs/opentelemetry-auto-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporter-jaeger-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporter-logging-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporter-otlp-<version>-SNAPSHOT.jar
-```
+snapshot builds of the `master` branch. They are available from 
+[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/auto/) 
 
 #### Building from source
 
@@ -104,7 +93,7 @@ Build using Java 11:
 ```gradle assemble```
 
 and then you can find the java agent artifact at
-`java-agent/build/lib/opentelemetry-auto-<version>.jar`.
+`java-agent/build/lib/opentelemetry-auto-<version>-all.jar`.
 
 ### Testing
 
