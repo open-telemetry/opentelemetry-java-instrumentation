@@ -50,6 +50,10 @@ public abstract class HttpServerTracer<REQUEST> {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 
+  protected abstract String getInstrumentationName();
+
+  protected abstract String getVersion();
+
   public Span startSpan(REQUEST request, Method origin, String originType) {
     final Span.Builder builder =
         tracer
@@ -65,10 +69,6 @@ public abstract class HttpServerTracer<REQUEST> {
 
     return span;
   }
-
-  protected abstract String getVersion();
-
-  protected abstract String getInstrumentationName();
 
   protected void onConnection(Span span, REQUEST request) {
     SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(request));

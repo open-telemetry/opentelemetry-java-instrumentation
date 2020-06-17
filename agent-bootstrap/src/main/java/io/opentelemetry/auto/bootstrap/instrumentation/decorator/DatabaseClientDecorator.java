@@ -18,6 +18,8 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 
+/** @deprecated use {@link DatabaseClientTracer} instead. */
+@Deprecated
 public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorator {
 
   protected abstract String dbType();
@@ -38,13 +40,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
     return super.afterStart(span);
   }
 
-  /**
-   * This should be called when the connection is being used, not when it's created.
-   *
-   * @param span
-   * @param connection
-   * @return
-   */
+  /** This should be called when the connection is being used, not when it's created. */
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
