@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.jdbc;
 import static io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils.connectionFromStatement;
 
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.DBInfo;
 import io.opentelemetry.auto.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
@@ -66,26 +67,20 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
     return info.getShortUrl();
   }
 
+  public Depth getCallDepth() {
+    return CallDepthThreadLocalMap.getCallDepth(Statement.class);
+  }
+
   public Span startSpan(Statement statement, String query) {
     final Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
 
-    final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
-    if (callDepth > 0) {
-      return null;
-    }
     String originType = statement.getClass().getName();
     DBInfo dbInfo = extractDbInfo(connection);
 
     return startSpan(dbInfo, query, originType);
-  }
-
-  @Override
-  public void end(Span span) {
-    CallDepthThreadLocalMap.reset(Statement.class);
-    super.end(span);
   }
 
   @Override

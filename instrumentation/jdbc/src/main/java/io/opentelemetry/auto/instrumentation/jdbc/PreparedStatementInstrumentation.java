@@ -24,6 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -75,11 +76,15 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
     public static void onEnter(
         @Advice.This final PreparedStatement statement,
         @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
 
-      span = TRACER.startSpan(statement, JDBCMaps.preparedStatements.get(statement));
-      if (span != null) {
-        scope = TRACER.withSpan(span);
+      callDepth = TRACER.getCallDepth();
+      if (callDepth.getAndIncrement() == 0) {
+        span = TRACER.startSpan(statement, JDBCMaps.preparedStatements.get(statement));
+        if (span != null) {
+          scope = TRACER.withSpan(span);
+        }
       }
     }
 
@@ -87,16 +92,15 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
     public static void stopSpan(
         @Advice.Thrown final Throwable throwable,
         @Advice.Local("otelSpan") Span span,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      if (throwable == null) {
-        TRACER.end(span);
-      } else {
-        TRACER.endExceptionally(span, throwable);
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && scope != null) {
+        scope.close();
+        if (throwable == null) {
+          TRACER.end(span);
+        } else {
+          TRACER.endExceptionally(span, throwable);
+        }
       }
     }
   }

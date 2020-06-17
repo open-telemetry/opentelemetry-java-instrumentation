@@ -20,6 +20,15 @@ package io.opentelemetry.auto.bootstrap;
  *
  * <p>For example, this can be used to track nested calls to super() in constructors by calling
  * #incrementCallDepth at the beginning of each constructor.
+ *
+ * <p>This works the following way.
+ * When you enter some method that you want to track, you call {@link #incrementCallDepth} method.
+ * If returned number is larger than 0, then you have already been in this method and are in recursive call now.
+ * When you then leave the method, you call {@link #decrementCallDepth} method.
+ * If returned number is larger than 0, then you have already been in this method and are in recursive call now.
+ *
+ * <p>In short, the semantic of both methods is the same: they will return value 0 if and only if
+ * current method invocation is the first one for the current call stack.
  */
 public class CallDepthThreadLocalMap {
 
@@ -31,23 +40,35 @@ public class CallDepthThreadLocalMap {
         }
       };
 
+  public static Depth getCallDepth(final Class<?> k) {
+    return TLS.get(k).get();
+  }
+
   public static int incrementCallDepth(final Class<?> k) {
-    return TLS.get(k).get().increment();
+    return TLS.get(k).get().getAndIncrement();
+  }
+
+  public static int decrementCallDepth(final Class<?> k) {
+    return TLS.get(k).get().decrementAndGet();
   }
 
   public static void reset(final Class<?> k) {
     TLS.get(k).get().depth = 0;
   }
 
-  private static final class Depth {
+  public static final class Depth {
     private int depth;
 
     private Depth() {
       this.depth = 0;
     }
 
-    private int increment() {
+    public int getAndIncrement() {
       return this.depth++;
+    }
+
+    public int decrementAndGet() {
+      return --this.depth;
     }
   }
 
