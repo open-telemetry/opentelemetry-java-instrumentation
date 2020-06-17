@@ -96,7 +96,7 @@ public enum OpenTelemetryTracing implements Tracing {
   private static class OpenTelemetryTraceContext implements TraceContext {
     private final Context context;
 
-    private OpenTelemetryTraceContext() {
+    OpenTelemetryTraceContext() {
       this.context = Context.current();
     }
 
@@ -110,7 +110,7 @@ public enum OpenTelemetryTracing implements Tracing {
     final int port;
     @Nullable final String name;
 
-    private OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
+    OpenTelemetryEndpoint(String ip, int port, @Nullable String name) {
       this.ip = ip;
       this.port = port;
       if (!ip.equals(name)) {
@@ -123,7 +123,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
   private static class OpenTelemetryTracer extends Tracer {
 
-    private OpenTelemetryTracer() {}
+    OpenTelemetryTracer() {}
 
     @Override
     public OpenTelemetrySpan nextSpan() {
@@ -159,7 +159,9 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Nullable private Span span;
 
-    private OpenTelemetrySpan(Span parent) {
+    @Nullable private String args;
+
+    OpenTelemetrySpan(Span parent) {
       // Name will be updated later, we create with an arbitrary one here to store other data before
       // the span starts.
       spanBuilder =
@@ -174,9 +176,9 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized Tracer.Span name(String name) {
       if (span != null) {
         span.updateName(name);
-      } else {
-        this.name = name;
       }
+
+      this.name = name;
 
       return this;
     }
@@ -232,7 +234,10 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Override
     public synchronized Tracer.Span tag(String key, String value) {
-      key = translateTagKey(key);
+      if (key.equals("redis.args")) {
+        args = value;
+        return this;
+      }
       if (span != null) {
         span.setAttribute(key, value);
       } else {
@@ -257,16 +262,11 @@ public enum OpenTelemetryTracing implements Tracing {
     @Override
     public synchronized void finish() {
       if (span != null) {
+        if (name != null) {
+          final String statement = args != null && !args.isEmpty() ? name + " " + args : name;
+          SemanticAttributes.DB_STATEMENT.set(span, statement);
+        }
         span.end();
-      }
-    }
-
-    private static String translateTagKey(String key) {
-      switch (key) {
-        case "redis.args":
-          return SemanticAttributes.DB_STATEMENT.key();
-        default:
-          return key;
       }
     }
 

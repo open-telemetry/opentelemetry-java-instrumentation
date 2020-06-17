@@ -117,7 +117,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
+            "db.statement" "SET key<TESTSETKEY> value<TESTSETVAL>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -151,7 +151,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<TESTKEY>"
+            "db.statement" "GET key<TESTKEY>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -193,7 +193,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<NON_EXISTENT_KEY>"
+            "db.statement" "GET key<NON_EXISTENT_KEY>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -232,6 +232,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
+            "db.statement" "RANDOMKEY"
             "db.type" "redis"
           }
           event(0) {
@@ -261,7 +262,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
-            "db.statement" ""
+            "db.statement" "COMMAND"
             "db.type" "redis"
           }
           event(0) {
@@ -315,7 +316,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<a> value<1>"
+            "db.statement" "SET key<a> value<1>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -335,7 +336,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<a>"
+            "db.statement" "GET key<a>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -376,7 +377,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<a> value<1>"
+            "db.statement" "SET key<a> value<1>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -396,7 +397,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<a>"
+            "db.statement" "GET key<a>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -438,7 +439,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<a> value<1>"
+            "db.statement" "SET key<a> value<1>"
           }
           event(0) {
             eventName "redis.encode.start"
@@ -458,7 +459,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "net.peer.port" port
             "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
-            "db.statement" "key<a>"
+            "db.statement" "GET key<a>"
           }
           event(0) {
             eventName "redis.encode.start"
