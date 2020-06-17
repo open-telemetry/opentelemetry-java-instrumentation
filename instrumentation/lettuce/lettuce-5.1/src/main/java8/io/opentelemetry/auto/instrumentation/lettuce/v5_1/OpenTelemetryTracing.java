@@ -57,7 +57,8 @@ public enum OpenTelemetryTracing implements Tracing {
     return true;
   }
 
-  @Override
+  // Added in lettuce 5.2
+  // @Override
   public boolean includeCommandArgsInSpanTags() {
     return true;
   }
