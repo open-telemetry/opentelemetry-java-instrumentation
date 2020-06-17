@@ -165,6 +165,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
           }
@@ -207,6 +208,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTKEY>"
           }
@@ -263,6 +265,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<NON_EXISTENT_KEY>"
           }
@@ -305,6 +308,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
           }
           event(0) {
@@ -364,6 +368,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTHM> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
           }
@@ -384,6 +389,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTHM>"
           }

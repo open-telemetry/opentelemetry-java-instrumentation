@@ -45,9 +45,7 @@ public class LettuceClientResourcesInstrumentation extends Instrumenter.Default 
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".LettuceClientDecorator", packageName + ".OpenTelemetryTracing"
-    };
+    return new String[] {packageName + ".OpenTelemetryTracing"};
   }
 
   @Override

@@ -16,14 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_2;
 
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_2.LettuceClientDecorator.TRACER;
-
 import io.grpc.Context;
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
@@ -39,6 +38,9 @@ import reactor.util.annotation.Nullable;
 
 public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
+
+  public static final io.opentelemetry.trace.Tracer TRACER =
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.lettuce-5.2");
 
   @Override
   public TracerProvider getTracerProvider() {
@@ -125,7 +127,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Override
     public OpenTelemetrySpan nextSpan() {
-      return new OpenTelemetrySpan(null);
+      return new OpenTelemetrySpan(TRACER.getCurrentSpan());
     }
 
     @Override
@@ -136,7 +138,7 @@ public enum OpenTelemetryTracing implements Tracing {
 
       Context context = ((OpenTelemetryTraceContext) traceContext).getContext();
 
-      final io.opentelemetry.trace.Span parent = TracingContextUtils.getSpanWithoutDefault(context);
+      final io.opentelemetry.trace.Span parent = TracingContextUtils.getSpan(context);
 
       return new OpenTelemetrySpan(parent);
     }
@@ -147,23 +149,27 @@ public enum OpenTelemetryTracing implements Tracing {
   // particularly safe, synchronizing all accesses. Relying on implementation details would allow
   // reducing synchronization but the impact should be minimal.
   static class OpenTelemetrySpan extends Tracer.Span {
-    @Nullable private final Span parent;
+    private final Span.Builder spanBuilder;
 
-    @Nullable private OpenTelemetryEndpoint endpoint;
     @Nullable private String name;
 
     @Nullable private List<Object> events;
-    @Nullable private List<String> tags;
 
     @Nullable private Status status;
 
     @Nullable private Span span;
 
-    protected OpenTelemetrySpan(@Nullable Span parent) {
-      this.parent = parent;
+    protected OpenTelemetrySpan(Span parent) {
+      // Name will be updated later, we create with an arbitrary one here to store other data before
+      // the span starts.
+      spanBuilder =
+          TRACER
+              .spanBuilder("REDIS")
+              .setSpanKind(Kind.CLIENT)
+              .setParent(parent)
+              .setAttribute(SemanticAttributes.DB_TYPE.key(), "redis");
     }
 
-    // Called before start. We need to buffer because this until then.
     @Override
     public synchronized Tracer.Span name(String name) {
       if (span != null) {
@@ -181,7 +187,7 @@ public enum OpenTelemetryTracing implements Tracing {
         if (span != null) {
           fillEndpoint(span, (OpenTelemetryEndpoint) endpoint);
         } else {
-          this.endpoint = (OpenTelemetryEndpoint) endpoint;
+          fillEndpoint(spanBuilder, (OpenTelemetryEndpoint) endpoint);
         }
       }
       return this;
@@ -189,22 +195,9 @@ public enum OpenTelemetryTracing implements Tracing {
 
     @Override
     public synchronized Tracer.Span start() {
-      // If name() wasn't called yet we will update it later.
-      String spanName = name != null ? name : "REDIS";
-      Span.Builder builder = TRACER.spanBuilder(spanName).setSpanKind(Kind.CLIENT);
-      if (parent != null) {
-        builder.setParent(parent);
-      } else {
-        builder.setNoParent();
-      }
-
-      builder.setAttribute(SemanticAttributes.DB_TYPE.key(), "redis");
-
-      span = builder.startSpan();
-
-      if (endpoint != null) {
-        fillEndpoint(span, endpoint);
-        endpoint = null;
+      span = spanBuilder.startSpan();
+      if (name != null) {
+        span.updateName(name);
       }
 
       if (events != null) {
@@ -212,13 +205,6 @@ public enum OpenTelemetryTracing implements Tracing {
           span.addEvent((String) events.get(i), (long) events.get(i + 1));
         }
         events = null;
-      }
-
-      if (tags != null) {
-        for (int i = 0; i < tags.size(); i += 2) {
-          span.setAttribute(tags.get(i), tags.get(i + 1));
-        }
-        tags = null;
       }
 
       if (status != null) {
@@ -250,11 +236,7 @@ public enum OpenTelemetryTracing implements Tracing {
       if (span != null) {
         span.setAttribute(key, value);
       } else {
-        if (tags == null) {
-          tags = new ArrayList<>();
-        }
-        tags.add(key);
-        tags.add(value);
+        spanBuilder.setAttribute(key, value);
       }
       return this;
     }
@@ -263,7 +245,7 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized Tracer.Span error(Throwable throwable) {
       // TODO(anuraaga): Check if any lettuce exceptions map well to a Status and try mapping.
       final Status status =
-          Status.INTERNAL.withDescription(throwable.getClass() + ": " + throwable.getMessage());
+          Status.UNKNOWN.withDescription(throwable.getClass() + ": " + throwable.getMessage());
       if (span != null) {
         span.setStatus(status);
       } else {
@@ -288,15 +270,46 @@ public enum OpenTelemetryTracing implements Tracing {
       }
     }
 
-    private static void fillEndpoint(Span span, OpenTelemetryEndpoint endpoint) {
-      SemanticAttributes.NET_TRANSPORT.set(span, "IP.TCP");
-      SemanticAttributes.NET_PEER_IP.set(span, endpoint.ip);
-      if (endpoint.port != 0) {
-        SemanticAttributes.NET_PEER_PORT.set(span, endpoint.port);
-      }
+    private static void fillEndpoint(Span.Builder span, OpenTelemetryEndpoint endpoint) {
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP");
+      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), endpoint.ip);
+
+      final StringBuilder redisUrl = new StringBuilder("redis://");
+
       if (endpoint.name != null) {
-        SemanticAttributes.NET_PEER_NAME.set(span, endpoint.name);
+        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), endpoint.name);
+        redisUrl.append(endpoint.name);
+      } else {
+        redisUrl.append(endpoint.ip);
       }
+
+      if (endpoint.port != 0) {
+        span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), endpoint.port);
+        redisUrl.append(":").append(endpoint.port);
+      }
+
+      span.setAttribute(SemanticAttributes.DB_URL.key(), redisUrl.toString());
+    }
+
+    private static void fillEndpoint(Span span, OpenTelemetryEndpoint endpoint) {
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP");
+      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), endpoint.ip);
+
+      final StringBuilder redisUrl = new StringBuilder("redis://");
+
+      if (endpoint.name != null) {
+        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), endpoint.name);
+        redisUrl.append(endpoint.name);
+      } else {
+        redisUrl.append(endpoint.ip);
+      }
+
+      if (endpoint.port != 0) {
+        span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), endpoint.port);
+        redisUrl.append(":").append(endpoint.port);
+      }
+
+      span.setAttribute(SemanticAttributes.DB_URL.key(), redisUrl.toString());
     }
   }
 }

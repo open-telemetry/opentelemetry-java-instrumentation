@@ -146,6 +146,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
           }
@@ -179,6 +180,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.peer.ip" "127.0.0.1"
             "net.peer.name" "localhost"
             "net.peer.port" port
+            "db.url" "redis://localhost:$port"
             "db.type" "redis"
             "db.statement" "key<TESTSETKEY> value<TESTSETVAL>"
           }
@@ -209,6 +211,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTKEY>"
           }
@@ -239,6 +242,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<NON_EXISTENT_KEY>"
           }
@@ -269,6 +273,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
           }
           event(0) {
@@ -298,6 +303,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTLIST> value<TESTLIST ELEMENT>"
           }
@@ -328,6 +334,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<user> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
           }
@@ -358,6 +365,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
+            "db.url" "redis://127.0.0.1:$port"
             "db.type" "redis"
             "db.statement" "key<TESTHM>"
           }
