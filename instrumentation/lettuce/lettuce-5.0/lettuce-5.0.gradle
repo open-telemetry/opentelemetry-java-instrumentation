@@ -15,12 +15,6 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
 
