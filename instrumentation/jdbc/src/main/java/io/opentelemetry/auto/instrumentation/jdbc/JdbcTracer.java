@@ -26,6 +26,7 @@ import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -69,6 +70,10 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
 
   public Depth getCallDepth() {
     return CallDepthThreadLocalMap.getCallDepth(Statement.class);
+  }
+
+  public Span startSpan(PreparedStatement statement) {
+    return startSpan(statement, JDBCMaps.preparedStatements.get(statement));
   }
 
   public Span startSpan(Statement statement, String query) {

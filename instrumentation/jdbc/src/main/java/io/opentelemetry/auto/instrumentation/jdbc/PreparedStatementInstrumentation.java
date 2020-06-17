@@ -81,7 +81,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
       callDepth = TRACER.getCallDepth();
       if (callDepth.getAndIncrement() == 0) {
-        span = TRACER.startSpan(statement, JDBCMaps.preparedStatements.get(statement));
+        span = TRACER.startSpan(statement);
         if (span != null) {
           scope = TRACER.withSpan(span);
         }
