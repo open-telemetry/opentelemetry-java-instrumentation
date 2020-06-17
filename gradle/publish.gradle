@@ -97,5 +97,6 @@ artifactory {
 }
 
 artifactoryPublish {
-  publications ('maven')
+  enabled = version.toString().contains('SNAPSHOT')
+  publications('maven')
 }
