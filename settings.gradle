@@ -16,7 +16,7 @@ gradleEnterprise {
   }
 }
 
-rootProject.name = 'trace-java'
+rootProject.name = 'opentelemetry-java-instrumentation'
 
 // agent projects
 include ':java-agent'
@@ -146,12 +146,11 @@ include ':instrumentation:spring-webflux-5.0'
 include ':instrumentation:spymemcached-2.12'
 include ':instrumentation:trace-annotation'
 include ':instrumentation:twilio-6.6'
-include ':instrumentation:vertx-testing'
+include ':instrumentation:vertx'
+include ':instrumentation:vertx-reactive'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2-core'
-
-// exporter support
-include ':exporter-support'
+include ':instrumentation-core:spring'
 
 // exporter adapters
 include ":auto-exporters"
@@ -173,12 +172,14 @@ def setBuildFile(project) {
   }
 }
 
-setBuildFile(rootProject)
+rootProject.children.each {
+  setBuildFile(it)
+}
 
 project(':agent-bootstrap').name = 'auto-bootstrap'
 project(':agent-tooling').name = 'auto-tooling'
 project(':java-agent').name = 'opentelemetry-auto'
-project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporters-jaeger'
-project(':auto-exporters:logging').name = 'opentelemetry-auto-exporters-logging'
-project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporters-otlp'
-project(':auto-exporters:zipkin').name = 'opentelemetry-auto-exporters-zipkin'
+project(':auto-exporters:jaeger').name = 'opentelemetry-auto-exporter-jaeger'
+project(':auto-exporters:logging').name = 'opentelemetry-auto-exporter-logging'
+project(':auto-exporters:otlp').name = 'opentelemetry-auto-exporter-otlp'
+project(':auto-exporters:zipkin').name = 'opentelemetry-auto-exporter-zipkin'

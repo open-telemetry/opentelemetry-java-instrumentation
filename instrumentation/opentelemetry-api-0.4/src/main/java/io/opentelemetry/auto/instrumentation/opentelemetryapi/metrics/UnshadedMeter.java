@@ -49,15 +49,13 @@ class UnshadedMeter implements Meter {
   }
 
   @Override
-  public DoubleUpDownCounter.Builder doubleUpDownCounterBuilder(String s) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public DoubleUpDownCounter.Builder doubleUpDownCounterBuilder(final String name) {
+    return new UnshadedDoubleUpDownCounter.Builder(shadedMeter.doubleUpDownCounterBuilder(name));
   }
 
   @Override
-  public LongUpDownCounter.Builder longUpDownCounterBuilder(String s) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public LongUpDownCounter.Builder longUpDownCounterBuilder(final String name) {
+    return new UnshadedLongUpDownCounter.Builder(shadedMeter.longUpDownCounterBuilder(name));
   }
 
   @Override
@@ -71,27 +69,25 @@ class UnshadedMeter implements Meter {
   }
 
   @Override
-  public DoubleSumObserver.Builder doubleSumObserverBuilder(String s) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public DoubleSumObserver.Builder doubleSumObserverBuilder(final String name) {
+    return new UnshadedDoubleSumObserver.Builder(shadedMeter.doubleSumObserverBuilder(name));
   }
 
   @Override
-  public LongSumObserver.Builder longSumObserverBuilder(String s) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public LongSumObserver.Builder longSumObserverBuilder(final String name) {
+    return new UnshadedLongSumObserver.Builder(shadedMeter.longSumObserverBuilder(name));
   }
 
   @Override
-  public DoubleUpDownSumObserver.Builder doubleUpDownSumObserverBuilder(String s) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public DoubleUpDownSumObserver.Builder doubleUpDownSumObserverBuilder(final String name) {
+    return new UnshadedDoubleUpDownSumObserver.Builder(
+        shadedMeter.doubleUpDownSumObserverBuilder(name));
   }
 
   @Override
-  public LongUpDownSumObserver.Builder longUpDownSumObserverBuilder(String s) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public LongUpDownSumObserver.Builder longUpDownSumObserverBuilder(final String name) {
+    return new UnshadedLongUpDownSumObserver.Builder(
+        shadedMeter.longUpDownSumObserverBuilder(name));
   }
 
   @Override

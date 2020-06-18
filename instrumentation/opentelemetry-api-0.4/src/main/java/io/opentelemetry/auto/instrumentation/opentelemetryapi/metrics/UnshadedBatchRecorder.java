@@ -76,15 +76,25 @@ class UnshadedBatchRecorder implements BatchRecorder {
   }
 
   @Override
-  public BatchRecorder put(LongUpDownCounter longUpDownCounter, long l) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public BatchRecorder put(final LongUpDownCounter counter, final long value) {
+    if (counter instanceof UnshadedLongUpDownCounter) {
+      shadedBatchRecorder.put(
+          ((UnshadedLongUpDownCounter) counter).getShadedLongUpDownCounter(), value);
+    } else {
+      log.debug("unexpected counter: {}", counter);
+    }
+    return this;
   }
 
   @Override
-  public BatchRecorder put(DoubleUpDownCounter doubleUpDownCounter, double v) {
-    // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/463
-    return null;
+  public BatchRecorder put(final DoubleUpDownCounter counter, final double value) {
+    if (counter instanceof UnshadedDoubleUpDownCounter) {
+      shadedBatchRecorder.put(
+          ((UnshadedDoubleUpDownCounter) counter).getShadedDoubleUpDownCounter(), value);
+    } else {
+      log.debug("unexpected counter: {}", counter);
+    }
+    return this;
   }
 
   @Override

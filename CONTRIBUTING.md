@@ -71,7 +71,7 @@ following "clusters" of classes:
 
 - `auto-tooling-and-instrumentation.isolated/` - contains `agent-tooling`
 module and `instrumentation` submodules, loaded and isolated inside
-`AgentClassLoader`. Including OpenTelemetry SDK.
+`AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
 - `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and
 available in bootstrap classloader.
 - `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its
@@ -83,20 +83,8 @@ Gradle plugin.
 #### Snapshot builds
 
 For developers testing code changes before a release is complete, there are
-snapshot builds of the `master` branch. When a PR is merged to `master`, a
-circleci build is kicked off as a github action which shows up as a github
-check on the git commit on `master` branch, i.e. a green checkmark. Clicking
-on the green checkmark you can view the `build_test_deploy` workflow and the
-`build` job shows the artifacts hosted on circleci. The artifacts will be
-named like:
-
-```
-libs/exporter-support-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-jaeger-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-logging-<version>-SNAPSHOT.jar
-libs/opentelemetry-auto-exporters-otlp-<version>-SNAPSHOT.jar
-```
+snapshot builds of the `master` branch. They are available from 
+[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/auto/) 
 
 #### Building from source
 
@@ -105,7 +93,7 @@ Build using Java 11:
 ```gradle assemble```
 
 and then you can find the java agent artifact at
-`java-agent/build/lib/opentelemetry-auto-<version>.jar`.
+`java-agent/build/lib/opentelemetry-auto-<version>-all.jar`.
 
 ### Testing
 
@@ -204,4 +192,21 @@ Suggested plugins and settings:
     ![import layout](https://user-images.githubusercontent.com/734411/43430811-28442636-94ae-11e8-86f1-f270ddcba023.png)
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format)
 * [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
-  ![Recommended Settings](https://user-images.githubusercontent.com/734411/43430944-db84bf8a-94ae-11e8-8cec-0daa064937c4.png)
+  ![Recommended Settings](docs/contributing/save-actions.png)
+
+### Approvers and Maintainers
+
+Approvers:
+
+- [John Watson](https://github.com/jkwatson), New Relic
+
+Maintainers:
+
+- [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
+- [Trask Stalnaker](https://github.com/trask), Microsoft
+- [Tyler Benson](https://github.com/tylerbenson), DataDog
+
+#### Become an Approver or a Maintainer
+
+See the [community membership document](https://github.com/open-telemetry/community/blob/master/community-membership.md)
+in OpenTelemetry community repo.

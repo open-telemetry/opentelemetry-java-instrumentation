@@ -2,7 +2,7 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   compile deps.opentelemetrySdk

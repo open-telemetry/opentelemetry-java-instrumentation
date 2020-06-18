@@ -43,7 +43,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
 
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName(method)
+      operationName expectedOperationName(method, endpoint)
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {

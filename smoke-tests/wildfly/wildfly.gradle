@@ -19,7 +19,7 @@ repositories {
   }
 }
 
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 description = 'Wildfly Smoke Tests.'
 

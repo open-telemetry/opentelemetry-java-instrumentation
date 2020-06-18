@@ -39,30 +39,17 @@ public class Servlet3Advice {
       @Advice.Argument(1) final ServletResponse response,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    if (!(request instanceof HttpServletRequest)) {
+
+    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-    final Span existingSpan = TRACER.getAttachedSpan(httpServletRequest);
-    if (existingSpan != null) {
-      /*
-      Given request already has a span associated with it.
-      As there should not be nested spans of kind SERVER, we should NOT create a new span here.
 
-      But it may happen that there is no span in current Context or it is from a different trace.
-      E.g. in case of async servlet request processing we create span for incoming request in one thread,
-      but actual request continues processing happens in another thread.
-      Depending on servlet container implementation, this processing may again arrive into this method.
-      E.g. Jetty handles async requests in a way that calls HttpServlet.service method twice.
-
-      In this case we have to put the span from the request into current context before continuing.
-      */
-      final boolean spanContextWasLost = !TRACER.sameTrace(TRACER.getCurrentSpan(), existingSpan);
-      if (spanContextWasLost) {
-        // Put span from request attribute into current context.
-        // We did not create a new span here, so return null instead
-        scope = currentContextWith(existingSpan);
+    Span attachedSpan = TRACER.getAttachedSpan(httpServletRequest);
+    if (attachedSpan != null) {
+      if (TRACER.needsRescoping(attachedSpan)) {
+        scope = currentContextWith(attachedSpan);
       }
       // We are inside nested servlet/filter, don't create new span
       return;
@@ -88,34 +75,33 @@ public class Servlet3Advice {
     }
     scope.close();
 
-    if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-      TRACER.setPrincipal((HttpServletRequest) request);
+    if (span == null) {
+      // an existing span was found
+      return;
+    }
 
-      if (throwable != null) {
-        TRACER.endExceptionally(span, throwable, ((HttpServletResponse) response).getStatus());
-        return;
+    TRACER.setPrincipal(span, (HttpServletRequest) request);
+
+    if (throwable != null) {
+      TRACER.endExceptionally(span, throwable, ((HttpServletResponse) response).getStatus());
+      return;
+    }
+
+    final AtomicBoolean responseHandled = new AtomicBoolean(false);
+
+    // In case of async servlets wait for the actual response to be ready
+    if (request.isAsyncStarted()) {
+      try {
+        request.getAsyncContext().addListener(new TagSettingAsyncListener(responseHandled, span));
+      } catch (final IllegalStateException e) {
+        // org.eclipse.jetty.server.Request may throw an exception here if request became
+        // finished after check above. We just ignore that exception and move on.
       }
+    }
 
-      if (span == null) {
-        return;
-      }
-
-      final AtomicBoolean responseHandled = new AtomicBoolean(false);
-
-      // In case of async servlets wait for the actual response to be ready
-      if (request.isAsyncStarted()) {
-        try {
-          request.getAsyncContext().addListener(new TagSettingAsyncListener(responseHandled, span));
-        } catch (final IllegalStateException e) {
-          // org.eclipse.jetty.server.Request may throw an exception here if request became
-          // finished after check above. We just ignore that exception and move on.
-        }
-      }
-
-      // Check again in case the request finished before adding the listener.
-      if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-        TRACER.end(span, ((HttpServletResponse) response).getStatus());
-      }
+    // Check again in case the request finished before adding the listener.
+    if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
+      TRACER.end(span, ((HttpServletResponse) response).getStatus());
     }
   }
 }

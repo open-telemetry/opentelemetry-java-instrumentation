@@ -15,10 +15,9 @@
  */
 package io.opentelemetry.auto.tooling;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.exportersupport.MetricExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.contrib.auto.config.MetricExporterFactory;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
@@ -36,16 +35,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TracerInstaller {
   /** Register agent tracer if no agent tracer is already registered. */
+  @SuppressWarnings("unused")
   public static synchronized void installAgentTracer() {
     if (Config.get().isTraceEnabled()) {
 
       configure();
-      // Try to create an exporter
+      // Try to create an exporter from external jar file
       final String exporterJar = Config.get().getExporterJar();
       if (exporterJar != null) {
         installExportersFromJar(exporterJar);
       } else {
-        log.warn("No exporter is specified. Tracing will run but spans are dropped");
+        // Try to create embedded exporter
+        installExporters(Config.get().getExporter());
       }
     } else {
       log.info("Tracing is disabled.");
@@ -54,7 +55,33 @@ public class TracerInstaller {
     PropagatorsInitializer.initializePropagators(Config.get().getPropagators());
   }
 
-  @VisibleForTesting
+  private static synchronized void installExporters(final String exporterName) {
+    final SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
+    if (spanExporterFactory != null) {
+      final DefaultExporterConfig config = new DefaultExporterConfig("exporter");
+      installExporter(spanExporterFactory, config);
+    } else {
+      log.warn("No {} span exporter found", exporterName);
+      log.warn("No valid span exporter found. Tracing will run but spans are dropped");
+    }
+  }
+
+  private static SpanExporterFactory findSpanExporterFactory(String exporterName) {
+    final ServiceLoader<SpanExporterFactory> serviceLoader =
+        ServiceLoader.load(SpanExporterFactory.class, TracerInstaller.class.getClassLoader());
+
+    for (SpanExporterFactory spanExporterFactory : serviceLoader) {
+      if (spanExporterFactory
+          .getClass()
+          .getSimpleName()
+          .toLowerCase()
+          .startsWith(exporterName.toLowerCase())) {
+        return spanExporterFactory;
+      }
+    }
+    return null;
+  }
+
   private static synchronized void installExportersFromJar(final String exporterJar) {
     final URL url;
     try {
@@ -70,31 +97,42 @@ public class TracerInstaller {
 
     final SpanExporterFactory spanExporterFactory =
         getExporterFactory(SpanExporterFactory.class, exporterLoader);
+
     if (spanExporterFactory != null) {
-      final SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-      BatchSpanProcessor spanProcessor =
-          BatchSpanProcessor.newBuilder(spanExporter)
-              .readEnvironmentVariables()
-              .readSystemProperties()
-              .build();
-      OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
-      log.info("Installed span exporter: " + spanExporter.getClass().getName());
+      installExporter(spanExporterFactory, config);
     } else {
-      log.warn("No matching providers in jar " + exporterJar);
+      log.warn("No span exporter found in {}", exporterJar);
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
     }
 
     final MetricExporterFactory metricExporterFactory =
         getExporterFactory(MetricExporterFactory.class, exporterLoader);
     if (metricExporterFactory != null) {
-      final MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
-      IntervalMetricReader.builder()
-          .setMetricExporter(metricExporter)
-          .setMetricProducers(
-              Collections.singleton(OpenTelemetrySdk.getMeterProvider().getMetricProducer()))
-          .build();
-      log.info("Installed metric exporter: " + metricExporter.getClass().getName());
+      installExporter(metricExporterFactory, config);
     }
+  }
+
+  private static void installExporter(
+      MetricExporterFactory metricExporterFactory, DefaultExporterConfig config) {
+    final MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
+    IntervalMetricReader.builder()
+        .setMetricExporter(metricExporter)
+        .setMetricProducers(
+            Collections.singleton(OpenTelemetrySdk.getMeterProvider().getMetricProducer()))
+        .build();
+    log.info("Installed metric exporter: " + metricExporter.getClass().getName());
+  }
+
+  private static void installExporter(
+      SpanExporterFactory spanExporterFactory, DefaultExporterConfig config) {
+    final SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
+    final BatchSpanProcessor spanProcessor =
+        BatchSpanProcessor.newBuilder(spanExporter)
+            .readEnvironmentVariables()
+            .readSystemProperties()
+            .build();
+    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(spanProcessor);
+    log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
   private static <F> F getExporterFactory(
@@ -114,8 +152,9 @@ public class TracerInstaller {
   }
 
   private static void configure() {
-    /** Update trace config from env vars or sys props */
-    TraceConfig activeTraceConfig = OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
+    /* Update trace config from env vars or sys props */
+    final TraceConfig activeTraceConfig =
+        OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
     OpenTelemetrySdk.getTracerProvider()
         .updateActiveTraceConfig(
             activeTraceConfig
@@ -125,6 +164,7 @@ public class TracerInstaller {
                 .build());
   }
 
+  @SuppressWarnings("unused")
   public static void logVersionInfo() {
     VersionLogger.logAllVersions();
     log.debug(

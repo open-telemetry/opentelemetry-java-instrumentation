@@ -21,8 +21,9 @@ class CallDepthThreadLocalMapTest extends Specification {
 
   def "test CallDepthThreadLocalMap"() {
     setup:
-    def k1 = new Object()
-    def k2 = new Object()
+    Class<?> k1 = String
+    Class<?> k2 = Integer
+    Class<?> k3 = Double
 
     expect:
     CallDepthThreadLocalMap.incrementCallDepth(k1) == 0
@@ -46,5 +47,17 @@ class CallDepthThreadLocalMapTest extends Specification {
 
     CallDepthThreadLocalMap.incrementCallDepth(k1) == 1
     CallDepthThreadLocalMap.incrementCallDepth(k2) == 1
+
+    expect:
+    CallDepthThreadLocalMap.decrementCallDepth(k1) == 1
+    CallDepthThreadLocalMap.decrementCallDepth(k2) == 1
+
+    CallDepthThreadLocalMap.decrementCallDepth(k1) == 0
+    CallDepthThreadLocalMap.decrementCallDepth(k2) == 0
+
+    and:
+    CallDepthThreadLocalMap.incrementCallDepth(k3) == 0
+    CallDepthThreadLocalMap.decrementCallDepth(k3) == 0
+
   }
 }

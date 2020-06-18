@@ -68,7 +68,6 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.startsWith("org.aspectj.")
         || name.startsWith("com.intellij.rt.debugger.")
         || name.startsWith("com.p6spy.")
-        || name.startsWith("com.newrelic.")
         || name.startsWith("com.dynatrace.")
         || name.startsWith("com.jloadtrace.")
         || name.startsWith("com.appdynamics.")
@@ -153,6 +152,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
         || name.contains("javassist")
         || name.contains(".asm.")
         || name.contains("$__sisu")
+        || name.contains("$$EnhancerByProxool$$")
         || name.startsWith("org.springframework.core.$Proxy")) {
       return true;
     }

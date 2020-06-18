@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServletRequest> {
 
+  @Override
   protected String getVersion() {
     return null;
   }
@@ -73,6 +74,7 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return request.getMethod();
   }
 
+  @Override
   public void onRequest(Span span, HttpServletRequest request) {
     // we do this e.g. so that servlet containers can use these values in their access logs
     request.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
@@ -89,6 +91,7 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return HttpServletRequestGetter.GETTER;
   }
 
+  @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
     Throwable result = throwable;
     if (throwable instanceof ServletException && throwable.getCause() != null) {
@@ -97,13 +100,10 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
     return super.unwrapThrowable(result);
   }
 
-  public void setPrincipal(HttpServletRequest request) {
-    final Span existingSpan = getAttachedSpan(request);
-    if (existingSpan != null) {
-      final Principal principal = request.getUserPrincipal();
-      if (principal != null) {
-        existingSpan.setAttribute(MoreTags.USER_NAME, principal.getName());
-      }
+  public void setPrincipal(Span span, HttpServletRequest request) {
+    final Principal principal = request.getUserPrincipal();
+    if (principal != null) {
+      span.setAttribute(MoreTags.USER_NAME, principal.getName());
     }
   }
 }

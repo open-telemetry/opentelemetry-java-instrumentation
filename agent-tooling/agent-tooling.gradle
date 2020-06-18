@@ -1,4 +1,4 @@
-apply from: "${rootDir}/gradle/java.gradle"
+apply from: "$rootDir/gradle/java.gradle"
 
 // TODO this is not the desired state, only reflects current reality
 minimumBranchCoverage = 0
@@ -20,9 +20,6 @@ dependencies {
   compile deps.opentelemetrySdk
   compile deps.opentelemetrySdkAutoConfig
   compile deps.opentelemetryTraceProps
-
-  // TODO: move the interface in exporter-support into opentelemetry-sdk-contrib-auto-config
-  compile project(':exporter-support')
 
   compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   compile deps.bytebuddy

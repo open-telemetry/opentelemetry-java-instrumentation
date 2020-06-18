@@ -50,11 +50,11 @@ public abstract class HttpServerTracer<REQUEST> {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 
-  public Span startSpan(REQUEST request, Method origin, String originType) {
-    if (getAttachedSpan(request) != null) {
-      return null;
-    }
+  protected abstract String getInstrumentationName();
 
+  protected abstract String getVersion();
+
+  public Span startSpan(REQUEST request, Method origin, String originType) {
     final Span.Builder builder =
         tracer
             .spanBuilder(spanNameForMethod(origin))
@@ -69,10 +69,6 @@ public abstract class HttpServerTracer<REQUEST> {
 
     return span;
   }
-
-  protected abstract String getVersion();
-
-  protected abstract String getInstrumentationName();
 
   protected void onConnection(Span span, REQUEST request) {
     SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(request));
@@ -130,10 +126,6 @@ public abstract class HttpServerTracer<REQUEST> {
       log.debug("Error tagging url", e);
     }
     // TODO set resource name from URL.
-  }
-
-  public boolean sameTrace(Span oneSpan, Span otherSpan) {
-    return oneSpan.getContext().getTraceId().equals(otherSpan.getContext().getTraceId());
   }
 
   /**

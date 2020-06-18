@@ -38,11 +38,15 @@ public class Servlet2Advice {
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
-    if (!(request instanceof HttpServletRequest)) {
+    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    if (TRACER.getAttachedSpan(httpServletRequest) != null) {
+      return;
+    }
 
     // For use by HttpServletResponseInstrumentation:
     InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
@@ -64,21 +68,15 @@ public class Servlet2Advice {
     }
     scope.close();
 
-    if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-      TRACER.setPrincipal((HttpServletRequest) request);
+    TRACER.setPrincipal(span, (HttpServletRequest) request);
 
-      if (span == null) {
-        return;
-      }
+    Integer responseStatus =
+        InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
 
-      Integer responseStatus =
-          InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
-
-      if (throwable == null) {
-        TRACER.end(span, responseStatus);
-      } else {
-        TRACER.endExceptionally(span, throwable, responseStatus);
-      }
+    if (throwable == null) {
+      TRACER.end(span, responseStatus);
+    } else {
+      TRACER.endExceptionally(span, throwable, responseStatus);
     }
   }
 }
