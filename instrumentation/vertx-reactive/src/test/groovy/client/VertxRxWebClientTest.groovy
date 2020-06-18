@@ -47,6 +47,11 @@ class VertxRxWebClientTest extends HttpClientTest {
   }
 
   @Override
+  String userAgent() {
+    return "Vert.x-WebClient"
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }

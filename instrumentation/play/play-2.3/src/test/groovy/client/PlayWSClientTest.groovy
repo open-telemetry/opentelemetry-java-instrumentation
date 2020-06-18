@@ -66,6 +66,11 @@ class PlayWSClientTest extends HttpClientTest {
   }
 
   @Override
+  String userAgent() {
+    return "NING"
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }

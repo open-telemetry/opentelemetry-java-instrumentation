@@ -20,6 +20,7 @@ import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
@@ -28,6 +29,9 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
   @Shared
   def testUrl = new URI("http://myhost:123/somepath")
+
+  @Shared
+  def testUserAgent = "Apache HttpClient"
 
   def span = Mock(Span)
 
@@ -44,13 +48,14 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
       1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
       1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req.userAgent)
     }
     0 * _
 
     where:
     req << [
       null,
-      [method: "test-method", url: testUrl]
+      [method: "test-method", url: testUrl, userAgent: testUserAgent]
     ]
   }
 
@@ -164,6 +169,11 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected Integer status(Map m) {
         return m.status
+      }
+
+      @Override
+      protected String userAgent(Map m) {
+        return m.userAgent
       }
     }
   }

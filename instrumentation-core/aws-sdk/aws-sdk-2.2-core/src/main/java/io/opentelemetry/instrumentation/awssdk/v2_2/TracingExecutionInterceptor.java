@@ -65,6 +65,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (span != null) {
       try {
         executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
+        DECORATE.afterExecution(span, context.httpRequest());
         // Call onResponse on both types of responses:
         DECORATE.onSdkResponse(span, context.response());
         DECORATE.onResponse(span, context.httpResponse());

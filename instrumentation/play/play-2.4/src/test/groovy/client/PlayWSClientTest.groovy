@@ -48,6 +48,11 @@ class PlayWSClientTest extends HttpClientTest {
   }
 
   @Override
+  String userAgent() {
+    return "AHC"
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }

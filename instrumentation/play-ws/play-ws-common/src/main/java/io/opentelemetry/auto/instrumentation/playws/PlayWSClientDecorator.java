@@ -43,4 +43,9 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
   protected Integer status(final Response response) {
     return response.getStatusCode();
   }
+
+  @Override
+  protected String userAgent(Request request) {
+    return request.getHeaders().get(USER_AGENT);
+  }
 }

@@ -43,4 +43,9 @@ public class JaxRsClientDecorator
   protected Integer status(final ClientResponseContext httpResponse) {
     return httpResponse.getStatus();
   }
+
+  @Override
+  protected String userAgent(ClientRequestContext clientRequestContext) {
+    return clientRequestContext.getHeaderString(USER_AGENT);
+  }
 }

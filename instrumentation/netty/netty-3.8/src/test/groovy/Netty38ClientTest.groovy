@@ -55,6 +55,11 @@ class Netty38ClientTest extends HttpClientTest {
   }
 
   @Override
+  String userAgent() {
+    return "NING"
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }
