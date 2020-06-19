@@ -6,7 +6,7 @@ This package streamlines the manual instrumentation process of OpenTelemetry for
 
 The [first section](#manual-instrumentation-with-java-sdk) will walk you through span creation and propagation using the OpenTelemetry Java API and [Spring's RestTemplate Http Web Client](https://spring.io/guides/gs/consuming-rest/). This approach will use the "vanilla" OpenTelemetry API to make explicit tracing calls within an application's controller. 
 
-The second section will build on the first. It will walk you through implementing spring-web handler and interceptor interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations. 
+The [second section](#manual-instrumentation-using-handlers-and-interceptors)  will build on the first. It will walk you through implementing spring-web handler and interceptor interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations. 
 
 The third section will walk you through the annotations and configurations defined in the opentelemetry-instrumentation-spring package. This section will equip you with new tools to streamline the setup and instrumentation of OpenTelemetry on Spring and Spring Boot applications. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
@@ -16,7 +16,7 @@ In this guide we will be using a running example. In section one and two, we wil
 
 ## Create two Spring Projects
 
-Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `FirstService` and the other `SecondService`. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies and configuration listed below. 
+Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `FirstService` and the other `SecondService`. In this example `FirstService` will be a client of `SecondService` and they will be dealing with time. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies and configuration listed below. 
 
 ## Setup for Manual Instrumentation
 
@@ -114,7 +114,7 @@ import io.opentelemetry.exporters.logging.*;
 
 @Configuration
 public class OtelConfig {
-   private static tracerName = "fooTracer"; 
+   private final static tracerName = "fooTracer"; 
    @Bean
    public Tracer otelTracer() throws Exception {
       final Tracer tracer = OpenTelemetry.getTracer(tracerName);
@@ -144,7 +144,7 @@ OpenTelemetrySdk.getTracerProvider().addSpanProcessor(jaegerProcessor);
        
 ### Project Background
 
-Here we will create rest controllers for `FirstService` and `SecondService`.
+Here we will create RestControllers for `FirstService` and `SecondService`.
 `FirstService` will send a GET request to `SecondService` to retrieve the current time. After this request is resolved, `FirstService` then will append a message to time and return a string to the client. 
 
 ## Manual Instrumentation with Java SDK
@@ -153,7 +153,7 @@ Here we will create rest controllers for `FirstService` and `SecondService`.
 
 Required dependencies and configurations for FirstService and SecondService projects can be found [here](#setup-for-manual-instrumentation).
 
-### FirstService
+### Instrumentation of Receiving Service: FirstService
 
 1. Ensure OpenTelemetry dependencies are included
 2. Ensure an OpenTelemetry Tracer is configured
@@ -171,7 +171,7 @@ public class FirstServiceApplication {
 ```
 
 4. Create a RestController for FirstService
-5. Create a span to wrap the FirstServiceController
+5. Create a span to wrap FirstServiceController.firstTracedMethod()
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -188,27 +188,29 @@ import HttpUtils;
 @RestController
 @RequestMapping(value = "/message")
 public class FirstServiceController {
+   private static int requestCount = 1;
+   
    @Autowired
    private Tracer tracer;
 
    @Autowired
-   HttpUtils httpUtils;
+   private HttpUtils httpUtils;
 
-   private static String secondServiceUrl = "http://localhost:8081/time";
+   private static final String SECOND_SERVICE_URL = "http://localhost:8081/time";
 
    @GetMapping
    public String firstTracedMethod() {
       Span span = tracer.spanBuilder("message").startSpan();
       span.addEvent("Controller Entered");
-      span.setAttribute("what.are.you", "Je suis attribute");
+      span.setAttribute("firstservicecontroller.request.count", requestCount++);
 
       try (Scope scope = tracer.withSpan(span)) {
-         return "Second Service says: " + httpUtils.callEndpoint(secondServiceUrl);
+         return "Second Service says: " + httpUtils.callEndpoint(SECOND_SERVICE_URL);
       } catch (Exception e) {
-         span.addEvent(e.toString());
          span.setAttribute("error", true);
          return "ERROR: I can't tell the time";
       } finally {
+         span.addEvent("Exit Controller");
          span.end();
       }
    }
@@ -237,7 +239,7 @@ import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 @Component
-public class HttpUtils {
+public final class HttpUtils {
 
    private static final HttpTextFormat.Setter<HttpHeaders> setter = new HttpTextFormat.Setter<HttpHeaders>() {
          @Override
@@ -270,12 +272,11 @@ public class HttpUtils {
    }
 }
 ```
-### SecondService
+### Instrumentation of Client Service: SecondService
 
 1. Ensure OpenTelemetry dependencies are included
 2. Ensure an OpenTelemetry Tracer is configured
 3. Ensure a Spring Boot main class was created by the Spring initializer
-
 
 ```java
 import java.io.IOException;
@@ -293,7 +294,7 @@ public class SecondServiceApplication {
 ```
 
 4. Create a RestController for SecondService
-5. Start a span to wrap the SecondServiceController
+5. Start a span to wrap SecondServiceController.secondTracedMethod()
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -312,7 +313,7 @@ public class SecondServiceController {
    private Tracer tracer;
 
    @GetMapping
-   public String callSecondTracedMethod() {
+   public String secondTracedMethod() {
       Span span = tracer.spanBuilder("time").startSpan();
       span.addEvent("SecondServiceController Entered");
       span.setAttribute("what.am.i", "Tu es une legume");
@@ -340,6 +341,323 @@ After running Jaeger locally, navigate to the url below. Make sure to refresh th
 
 Run FirstService and SecondService from command line or using an IDE. The end point of interest for FirstService is `http://localhost:8080/message` and  `http://localhost:8081/time` for SecondService. Entering `localhost:8080/message` in a browser should call FirstService and then SecondService, creating a trace. 
 
-***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.secondServiceUrl. ***
+***Note: The default port for the Apache Tomcat is 8080. On localhost both FirstService and SecondService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by FirstServiceController.SECOND_SERVICE_URL. ***
 
 Congrats, we just created a distributed service with OpenTelemetry!
+
+## Manual Instrumentation using Handlers and Interceptors
+
+In this section, we will implement the Spring HandlerInerceptor interface to wrap all requests to FirstService and Second Service controllers in a span. 
+
+We will also use the RestTemplate HTTP client to send requests from FirstService to SecondService. To propagate the trace in this request we will also implement the ClientHttpRequestInterceptor interface. This implementation is only required for projects that send outbound requests. In this example it is only required for FirstService. 
+
+### Setup FirstService and SecondService
+
+Using the earlier instructions [create two example projects](#create-two-spring-projects) and add the required [dependencies and configurations](#setup-for-manual-instrumentation). 
+
+### Instrumentation of Client Service: SecondService
+
+Ensure the main method in SecondServiceApplication is defined. This will be the entry point to the SecondService project. This file should be created by the Spring Boot project initializer.
+
+```java
+import java.io.IOException;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SecondServiceApplication {
+
+   public static void main(String[] args) throws IOException {
+      SpringApplication.run(SecondServiceApplication.class, args);
+   }
+}
+```
+
+Add the RestController below to your SecondService project. This controller will return a string when SecondServiceController.secondTracedMethod is called:
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
+
+@RestController
+@RequestMapping(value = "/time")
+public class SecondServiceController {
+   @Autowired
+   private Tracer tracer;
+
+   @GetMapping
+   public String secondTracedMethod() {
+      return "It's time to get a watch";
+   }
+}
+```
+
+#### Create Controller Interceptor
+
+Add the class below to wrap all requests to the SecondServiceController in a span. This class will call the preHandle method before the RestController is entered and the postHandle method after a response is created. 
+
+The preHandle method starts a span for each request. The postHandle method closes the span and adds the span context to the response header. This implementation is shown below:    
+
+```java
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+import io.grpc.Context;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
+
+@Component
+public class ControllerTraceInterceptor implements HandlerInterceptor {
+
+   private static final HttpTextFormat.Getter<HttpServletRequest> getter =
+         new HttpTextFormat.Getter<HttpServletRequest>() {
+            public String get(HttpServletRequest req, String key) {
+               return req.getHeader(key);
+            }
+         };
+
+   private static final HttpTextFormat.Setter<HttpServletResponse> setter =
+         new HttpTextFormat.Setter<HttpServletResponse>() {
+            @Override
+            public void set(HttpServletResponse response, String key, String value) {
+               response.addHeader(key, value);
+            }
+         };
+
+   @Autowired
+   private Tracer tracer;
+
+   @Override
+   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+         throws Exception {
+     
+      Span span = createSpanWithParent(request, context);
+      span.setAttribute("handler", "pre");
+      tracer.withSpan(span);
+
+      return true;
+   }
+
+   @Override
+   public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+         ModelAndView modelAndView) throws Exception {
+
+      Span currentSpan = tracer.getCurrentSpan();
+      currentSpan.setAttribute("handler", "post");
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), response, setter);
+      currentSpan.end();
+   }
+
+   @Override
+   public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+         Object handler, Exception exception) throws Exception {}
+   
+   private Span createSpanWithParent(HttpServletRequest request, Context context) {
+      Span parentSpan = TracingContextUtils.getSpan(context);
+
+      if (parentSpan.getContext().isValid()) {
+         return  tracer.spanBuilder(request.getRequestURI()).setParent(parentSpan).startSpan();
+      }
+
+      Span span = tracer.spanBuilder(request.getRequestURI()).startSpan();
+      span.addEvent("Parent Span Not Found");
+
+      return span;
+   }
+}
+
+```
+
+The final step is to register an instance of the ControllerTraceInterceptor:
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+
+@Component
+public class InterceptorConfig extends WebMvcConfigurationSupport {
+
+   @Autowired
+   ControllerTraceInterceptor controllerTraceInterceptor;
+
+   @Override
+   public void addInterceptors(InterceptorRegistry registry) {
+      registry.addInterceptor(controllerTraceInterceptor);
+   }
+}
+```
+
+Now your SecondService application is complete. Create the FirstService application using the instructions below and then run your distributed service!
+
+### Instrumentation of Receiving Service: FirstService
+
+Ensure the main method in FirstServiceApplication is defined. This will be the entry point to the FirstService project. This file should be created by the Spring Boot project initializer.
+
+```java
+@SpringBootApplication
+public class FirstServiceApplication {
+
+   public static void main(String[] args) throws IOException {
+      SpringApplication.run(FirstServiceApplication.class, args);
+   }
+}
+```
+
+Create a RestController for FirstService. This controller will send a request to SecondService and then return the response to the client:
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+
+@RestController
+@RequestMapping(value = "/message")
+public class FirstServiceController {
+   @Autowired
+   private Tracer tracer;
+	
+   @Autowired
+   private RestTemplate restTemplate;
+
+   @Autowired
+   HttpUtils httpUtils;
+
+   private static String SECOND_SERVICE_URL = "http://localhost:8081/time";
+
+   @GetMapping
+   public String firstTracedMethod() {
+
+      ResponseEntity<String> response =
+            restTemplate.exchange(SECOND_SERVICE_URL, HttpMethod.GET, null, String.class);
+      String secondServiceTime = response.getBody();
+
+      return "Second Service says: " + secondServiceTime;
+
+   }
+}
+```
+
+As seen in the setup of SecondService, create implement the TraceInterceptor interface to wrap requests to the SecondServiceController in a span. Then register this new handler by extending the HandlerInterceptor. In effect, we will be taking a copy of the InterceptorConfig.java and ControllerTraceInterceptor.java defined in SecondService and adding it to FirstService. These files are referenced [here](#create-controller-interceptor).
+
+#### Create Client Http Request Interceptor
+
+Next, we will configure the ClientHttpRequestInterceptor to intercept all client HTTP requests made using RestTemplate.
+
+To propagate the span context from FirstService to SecondService we must inject the trace id and trace state into the outgoing request header. In section 1 this was done using the helper class HttpUtils. In this section, we will implement the ClientHttpRequestInterceptor interface and register this interceptor in our application. 
+
+Include the two classes below to your FirstService project to add this functionality:
+
+
+```java
+
+import java.io.IOException;
+
+import io.grpc.Context;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
+
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.stereotype.Component;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.context.propagation.HttpTextFormat;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
+
+@Component
+public class RestTemplateHeaderModifierInterceptor implements ClientHttpRequestInterceptor {
+
+   @Autowired
+   private Tracer tracer;
+
+   private static final HttpTextFormat.Setter<HttpRequest> setter =
+         new HttpTextFormat.Setter<HttpRequest>() {
+            @Override
+            public void set(HttpRequest carrier, String key, String value) {
+               carrier.getHeaders().set(key, value);
+            }
+         };
+
+
+   @Override
+   public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+         ClientHttpRequestExecution execution) throws IOException {
+
+      Span currentSpan = tracer.getCurrentSpan();
+      currentSpan.setAttribute("client_http", "inject");
+      currentSpan.addEvent("Request sent to SecondService");
+
+      OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), request, setter);
+
+      ClientHttpResponse response = execution.execute(request, body);
+
+      return response;
+   }
+}
+
+```
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class RestClientConfig {
+
+   @Autowired
+   RestTemplateHeaderModifierInterceptor restTemplateHeaderModifierInterceptor;
+
+   @Bean
+   public RestTemplate restTemplate() {
+      RestTemplate restTemplate = new RestTemplate();
+
+      List<ClientHttpRequestInterceptor> interceptors = restTemplate.getInterceptors();
+      if (interceptors.isEmpty()) {
+         interceptors = new ArrayList<>();
+      }
+      interceptors.add(restTemplateHeaderModifierInterceptor);
+      restTemplate.setInterceptors(interceptors);
+
+      return restTemplate;
+   }
+}
+```
+
+### Create a distributed trace 
+
+By default Spring Boot runs a Tomcat server on port 8080. This tutorial assumes FirstService runs on the default port (8080) and SecondService runs on port 8081. This is because we hard coded the SecondService end point in FirstServiceController.SECOND_SERVICE_URL. To run SecondServiceApplication on port 8081 include `server.port=8081` in the resources/application.properties file. 
+
+Run both the FirstService and SecondService projects in terminal or using an IDE (ex. Eclipse). The end point for FirstService should be `http://localhost:8080/message` and `http://localhost:8081/time` for SecondService. Type both urls in a browser and ensure you receive a 200 response. 
+
+To visualize this trace add a trace exporter to one or both of your applications. Instructions on how to setup LogExporter and Jaeger can be seen [above](#tracer-configuration). 
+
+To create a sample trace enter `localhost:8080/message` in a browser. This trace should include a span for FirstService and a span for SecondService.
