@@ -10,8 +10,8 @@
 
 This project provides a Java agent JAR that can be attached to any Java 7+
 application and dynamically injects bytecode to capture telemetry from a
-number of popular libraries and frameworks. 
-The telemetry data can be exported in a variety of formats. 
+number of popular libraries and frameworks.
+The telemetry data can be exported in a variety of formats.
 In addition, the agent and exporter can be configured via command line arguments
 or environment variables. The net result is the ability to gather telemetry
 data from a Java application without code changes.
@@ -29,11 +29,11 @@ The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
 java -javaagent:path/to/opentelemetry-auto-all.jar \
      -jar myapp.jar
 ```
-By default OpenTelemetry Java agent uses 
+By default OpenTelemetry Java agent uses
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
-configured to send data to 
+configured to send data to
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/master/receiver/otlpreceiver/README.md)
-at `localhost:55680`. 
+at `localhost:55680`.
 
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables (see below for full list). For example:
@@ -67,7 +67,7 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | ota.exporter=zipkin              | OTA_EXPORTER=zipkin              | To select Zipkin exporter                                            |
 | ota.exporter.zipkin.endpoint     | OTA_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
-| ota.exporter.zipkin.service.name | OTA_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance    
+| ota.exporter.zipkin.service.name | OTA_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance
 
 #### OTLP exporter
 
@@ -94,7 +94,7 @@ attributes to stdout. It is used mainly for testing and debugging.
 *This is highly advanced behavior and still in the prototyping phase. It may change drastically or be removed completely. Use
 with caution*
 
-The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/blob/master/api/src/main/java/io/opentelemetry/trace/spi/TracerProviderFactory.java) 
+The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/blob/master/api/src/main/java/io/opentelemetry/trace/spi/TracerProviderFactory.java)
 for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
 
 Because the auto instrumentation runs in a separate classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can
@@ -163,7 +163,7 @@ For this reason the following instrumentations are disabled by default:
 - `jdbc-datasource` which creates spans whenever `java.sql.DataSource#getConnection` method is called.
 - `servlet-filter` which creates spans around Servlet Filter methods.
 - `servlet-service` which creates spans around Servlet methods.
- 
+
 To enable them, add `ota.integration.<name>.enabled` system property:
 `-Dota.integration.jdbc-datasource.enabled=true`
 

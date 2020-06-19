@@ -24,7 +24,8 @@ import scala.concurrent.duration._
 
 // ! == send-message
 object AkkaActors {
-  val TRACER: Tracer = OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
+  val TRACER: Tracer =
+    OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
   val system: ActorSystem = ActorSystem("helloAkka")
 
@@ -33,8 +34,10 @@ object AkkaActors {
   val howdyGreeter: ActorRef =
     system.actorOf(Greeter.props("Howdy", printer), "howdyGreeter")
 
-  val forwarder: ActorRef = system.actorOf(Forwarder.props(printer), "forwarderActor")
-  val helloGreeter: ActorRef = system.actorOf(Greeter.props("Hello", forwarder), "helloGreeter")
+  val forwarder: ActorRef =
+    system.actorOf(Forwarder.props(printer), "forwarderActor")
+  val helloGreeter: ActorRef =
+    system.actorOf(Greeter.props("Hello", forwarder), "helloGreeter")
 
   def tracedChild(opName: String): Unit = {
     TRACER.spanBuilder(opName).startSpan().end()
@@ -86,7 +89,8 @@ class AkkaActors {
 }
 
 object Greeter {
-  def props(message: String, receiverActor: ActorRef): Props = Props(new Greeter(message, receiverActor))
+  def props(message: String, receiverActor: ActorRef): Props =
+    Props(new Greeter(message, receiverActor))
 
   final case class WhoToGreet(who: String)
 
@@ -129,7 +133,8 @@ class Receiver extends Actor with ActorLogging {
 }
 
 object Forwarder {
-  def props(receiverActor: ActorRef): Props = Props(new Forwarder(receiverActor))
+  def props(receiverActor: ActorRef): Props =
+    Props(new Forwarder(receiverActor))
 }
 
 class Forwarder(receiverActor: ActorRef) extends Actor with ActorLogging {
