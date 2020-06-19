@@ -60,7 +60,6 @@ public abstract class BaseDecorator {
     if (remoteConnection != null) {
       onPeerConnection(span, remoteConnection.getAddress());
 
-      span.setAttribute(MoreTags.NET_PEER_NAME, remoteConnection.getHostName());
       span.setAttribute(MoreTags.NET_PEER_PORT, remoteConnection.getPort());
     }
     return span;

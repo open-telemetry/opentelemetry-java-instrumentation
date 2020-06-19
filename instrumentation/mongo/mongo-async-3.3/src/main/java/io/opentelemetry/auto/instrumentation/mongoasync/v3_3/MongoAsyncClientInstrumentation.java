@@ -64,7 +64,7 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.mongo.MongoClientDecorator",
+      "io.opentelemetry.auto.instrumentation.mongo.MongoClientTracer",
       "io.opentelemetry.auto.instrumentation.mongo.TracingCommandListener"
     };
   }

@@ -15,12 +15,14 @@
  */
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -36,6 +38,11 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
 
   public LettuceClientInstrumentation() {
     super("lettuce", "lettuce-5");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return not(hasClassesNamed("io.lettuce.core.tracing.Tracing"));
   }
 
   @Override

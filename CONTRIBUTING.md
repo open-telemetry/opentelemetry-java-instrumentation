@@ -193,3 +193,20 @@ Suggested plugins and settings:
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format)
 * [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
   ![Recommended Settings](docs/contributing/save-actions.png)
+
+### Approvers and Maintainers
+
+Approvers:
+
+- [John Watson](https://github.com/jkwatson), New Relic
+
+Maintainers:
+
+- [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
+- [Trask Stalnaker](https://github.com/trask), Microsoft
+- [Tyler Benson](https://github.com/tylerbenson), DataDog
+
+#### Become an Approver or a Maintainer
+
+See the [community membership document](https://github.com/open-telemetry/community/blob/master/community-membership.md)
+in OpenTelemetry community repo.
