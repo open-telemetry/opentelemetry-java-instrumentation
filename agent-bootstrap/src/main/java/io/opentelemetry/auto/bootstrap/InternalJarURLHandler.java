@@ -27,9 +27,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.security.Permission;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +38,6 @@ public class InternalJarURLHandler extends URLStreamHandler {
 
   private final String name;
   private final FileNotInInternalJar notFound;
-  private final Map<String, JarEntry> filenameToEntry = new HashMap<>();
   private final JarFile bootstrapJarFile;
 
   private WeakReference<Pair<String, JarEntry>> cache = NULL;
@@ -49,30 +45,15 @@ public class InternalJarURLHandler extends URLStreamHandler {
   InternalJarURLHandler(final String internalJarFileName, final URL bootstrapJarLocation) {
     name = internalJarFileName;
     notFound = new FileNotInInternalJar(internalJarFileName);
-    final String filePrefix = internalJarFileName + "/";
     JarFile jarFile = null;
     try {
       if (bootstrapJarLocation != null) {
         jarFile = new JarFile(new File(bootstrapJarLocation.toURI()), false);
-        final Enumeration<JarEntry> entries = jarFile.entries();
-        while (entries.hasMoreElements()) {
-          final JarEntry entry = entries.nextElement();
-          if (!entry.isDirectory() && entry.getName().startsWith(filePrefix)) {
-            String name = entry.getName();
-            // remove data suffix
-            int end = name.endsWith(".classdata") ? name.length() - 4 : name.length();
-            String fileName = name.substring(internalJarFileName.length(), end);
-            filenameToEntry.put(fileName, entry);
-          }
-        }
       }
     } catch (final URISyntaxException | IOException e) {
       log.error("Unable to read internal jar", e);
     }
 
-    if (filenameToEntry.isEmpty()) {
-      log.warn("No internal jar entries found");
-    }
     bootstrapJarFile = jarFile;
   }
 
@@ -90,7 +71,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
     // and the key will be a new object each time.
     Pair<String, JarEntry> pair = cache.get();
     if (null == pair || !filename.equals(pair.getLeft())) {
-      final JarEntry entry = filenameToEntry.get(filename);
+      JarEntry entry = bootstrapJarFile.getJarEntry(getResourcePath(filename));
       if (null != entry) {
         pair = Pair.of(filename, entry);
         // the cache field is not volatile as a performance optimization
@@ -107,6 +88,20 @@ public class InternalJarURLHandler extends URLStreamHandler {
       cache = NULL;
     }
     return new InternalJarURLConnection(url, bootstrapJarFile.getInputStream(pair.getRight()));
+  }
+
+  private String getResourcePath(String filename) {
+    boolean isClass = filename.endsWith(".class");
+    int length = name.length() + filename.length();
+    if (isClass) {
+      length += 4; // length of text "data" appended below
+    }
+    StringBuilder sb = new StringBuilder(length);
+    sb.append(name).append(filename);
+    if (isClass) {
+      sb.append("data");
+    }
+    return sb.toString();
   }
 
   private static class InternalJarURLConnection extends URLConnection {

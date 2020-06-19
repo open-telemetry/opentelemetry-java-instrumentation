@@ -43,8 +43,23 @@ class InternalJarURLHandlerTest extends AgentSpecification {
     "isolated" | '/a/b/c/C.class'
   }
 
-
-  // guards against InternalJarURLHandler caching and re-using the same stream twice
+  // this test serves two purposes:
+  //
+  // (1) Constrain what is cached: I wanted to test that a load does not cache the stream after
+  // releasing it and losing control over its lifecyle.
+  // What's special about the second load which makes it distinct from the first load is that there
+  // was a predecessor.
+  // There is a caching mechanism in place, (the JarEntry is cached with the class name), but what
+  // if someone comes along later and tried to cache something closeable like the stream instead?
+  // That would be unfortunate, but this test would break if that ever happened.
+  //
+  // (2) Hitting the branch where caching has occurred: there happen to be about 800 classloads
+  // early on which go all the way down the chain and end up in the leaf-level classloader twice.
+  // Preventing this from happening would have been a much more invasive change than mitigating it
+  // with a cache.
+  // Unless you test the load twice, you won't test the branch where the cache is hit.
+  // The logic actually dismisses the cache after a hit, based on knowledge of this pattern, making
+  // the third load indistinguishable from the first load, hence the lack of a test for it.
   def "test read class twice"() {
     setup:
     InternalJarURLHandler handler = new InternalJarURLHandler(dir, testJarLocation)
