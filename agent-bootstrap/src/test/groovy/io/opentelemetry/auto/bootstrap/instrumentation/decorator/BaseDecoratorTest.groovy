@@ -43,10 +43,10 @@ class BaseDecoratorTest extends AgentSpecification {
 
     then:
     if (connection.getAddress()) {
-      2 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
       1 * span.setAttribute(MoreTags.NET_PEER_IP, connection.address.hostAddress)
     } else {
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
+      0 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
     }
     1 * span.setAttribute(MoreTags.NET_PEER_PORT, connection.port)
     0 * _
