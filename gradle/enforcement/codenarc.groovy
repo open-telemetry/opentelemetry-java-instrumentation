@@ -315,7 +315,6 @@ ruleset {
     regex = '^[a-z][\\$_a-zA-Z0-9]*$|^.*\\s.*$'
   }
   ObjectOverrideMisspelledMethodName
-  PackageName
   ParameterName
   PropertyName
   VariableName {

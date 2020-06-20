@@ -1,7 +1,6 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -11,24 +10,15 @@ muzzle {
   pass {
     group = "io.lettuce"
     module = "lettuce-core"
-    versions = "[5.0.0.RELEASE,)"
+    versions = "[5.0.0.RELEASE,5.1.0.RELEASE)"
     assertInverse = true
-  }
-}
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
   }
 }
 
 dependencies {
   compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
-  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
 
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
   testCompile project(':instrumentation:reactor-3.1')
-
-  latestDepTestCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.+'
 }
