@@ -399,9 +399,6 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           /*
            * For each context store defined in a current instrumentation we create an agent builder
            * that injects necessary fields.
-           *
-           * Does not use classLoaderMatcher() because those can be conflicting among
-           * instrumentation which use the same ContextStore.
            */
           builder =
               builder
