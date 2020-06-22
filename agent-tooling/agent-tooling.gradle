@@ -10,10 +10,7 @@ configurations {
 }
 
 dependencies {
-  compile(project(':auto-bootstrap')) {
-    // This only needs to exist in the bootstrap, not the instrumentation jar.
-    exclude group: 'org.slf4j', module: 'slf4j-simple'
-  }
+  compile(project(':auto-bootstrap'))
   compile(project(':utils:thread-utils'))
 
   compile deps.opentelemetryApi
