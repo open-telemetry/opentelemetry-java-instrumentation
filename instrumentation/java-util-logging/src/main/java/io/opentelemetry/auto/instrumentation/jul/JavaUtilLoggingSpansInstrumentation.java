@@ -24,6 +24,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.instrumentation.logging.LoggerDepth;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +81,7 @@ public class JavaUtilLoggingSpansInstrumentation extends Instrumenter.Default {
         @Advice.This final Logger logger, @Advice.Argument(0) final LogRecord logRecord) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      final boolean topLevel = CallDepthThreadLocalMap.incrementCallDepth(Logger.class) == 0;
+      final boolean topLevel = CallDepthThreadLocalMap.incrementCallDepth(LoggerDepth.class) == 0;
       if (topLevel) {
         JavaUtilLoggingSpans.capture(logger, logRecord);
       }
@@ -90,7 +91,7 @@ public class JavaUtilLoggingSpansInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Enter final boolean topLevel) {
       if (topLevel) {
-        CallDepthThreadLocalMap.reset(Logger.class);
+        CallDepthThreadLocalMap.reset(LoggerDepth.class);
       }
     }
   }
