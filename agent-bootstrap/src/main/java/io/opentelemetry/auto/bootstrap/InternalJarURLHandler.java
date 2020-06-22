@@ -79,7 +79,6 @@ public class InternalJarURLHandler extends URLStreamHandler {
         // it just means the same work is recomputed but does not affect consistency
         cache = new WeakReference<>(pair);
       } else {
-        log.debug("{} not found in {}", filename, name);
         throw notFound;
       }
     } else {
