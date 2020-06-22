@@ -19,7 +19,7 @@ dependencies {
   //
   // and in the code "io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is in the
   // bootstrap class loader (as those references will later be shaded)
-  compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
+  compileOnly project(path: ':opentelemetry-api-beta-shaded-for-instrumenting', configuration: 'shadow')
 
-  testCompile project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
+  testCompile project(path: ':opentelemetry-api-beta-shaded-for-instrumenting', configuration: 'shadow')
 }

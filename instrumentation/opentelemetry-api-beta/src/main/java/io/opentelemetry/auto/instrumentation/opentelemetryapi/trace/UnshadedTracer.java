@@ -15,8 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
-import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toUnshaded;
-
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.context.Scope;
 import unshaded.io.opentelemetry.trace.Span;
@@ -33,7 +31,7 @@ class UnshadedTracer implements Tracer {
 
   @Override
   public Span getCurrentSpan() {
-    return toUnshaded(shadedTracer.getCurrentSpan());
+    return Bridging.toUnshaded(shadedTracer.getCurrentSpan());
   }
 
   @Override
