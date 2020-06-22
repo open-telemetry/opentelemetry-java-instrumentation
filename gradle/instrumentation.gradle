@@ -27,8 +27,9 @@ afterEvaluate {
   }
 
   dependencies {
+    implementation(project(':auto-bootstrap'))
     // Apply common dependencies for instrumentation.
-    compile(project(':auto-tooling')) {
+    implementation(project(':auto-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
       // is brought in for tests by project(:testing) below
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
@@ -36,6 +37,7 @@ afterEvaluate {
     compile deps.bytebuddy
     annotationProcessor deps.autoservice
     implementation deps.autoservice
+    implementation deps.slf4j
 
     // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
     testCompile project(':instrumentation:java-concurrent')

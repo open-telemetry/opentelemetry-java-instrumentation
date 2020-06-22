@@ -6,7 +6,7 @@ excludedClassesCoverage += [
 ]
 
 dependencies {
-  compile deps.slf4j
+  implementation deps.slf4j
 
-  testCompile project(':utils:test-utils')
+  testImplementation project(':utils:test-utils')
 }

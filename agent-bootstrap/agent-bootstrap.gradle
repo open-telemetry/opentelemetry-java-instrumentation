@@ -11,7 +11,6 @@ minimumInstructionCoverage = 0.0
 
 dependencies {
   api deps.opentelemetryApi
-  implementation project(':utils:thread-utils')
   implementation deps.slf4j
   implementation group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
   // ^ Generally a bad idea for libraries, but we're shadowing.
