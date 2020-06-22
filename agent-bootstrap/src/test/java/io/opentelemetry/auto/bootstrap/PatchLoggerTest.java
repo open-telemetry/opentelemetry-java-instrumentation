@@ -20,10 +20,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -36,7 +35,7 @@ import org.mockito.Mockito;
 public class PatchLoggerTest {
   @Test
   public void testImplementsAllMethods() {
-    final Set<MethodSignature> patchLoggerMethods = Sets.newHashSet();
+    final Set<MethodSignature> patchLoggerMethods = new HashSet<>();
     for (final Method method : PatchLogger.class.getMethods()) {
       final MethodSignature methodSignature = new MethodSignature();
       methodSignature.name = method.getName();
@@ -53,7 +52,7 @@ public class PatchLoggerTest {
               .replace("io.opentelemetry.auto.bootstrap.PatchLogger", "java.util.logging.Logger");
       patchLoggerMethods.add(methodSignature);
     }
-    final Set<MethodSignature> julLoggerMethods = Sets.newHashSet();
+    final Set<MethodSignature> julLoggerMethods = new HashSet<>();
     for (final Method method : java.util.logging.Logger.class.getMethods()) {
       final String methodName = method.getName();
       if (methodName.contains("Handler") || methodName.contains("Filter")) {
@@ -61,7 +60,7 @@ public class PatchLoggerTest {
       }
       final MethodSignature builder = new MethodSignature();
       builder.name = methodName;
-      final List<String> parameterTypes = Lists.newArrayList();
+      final List<String> parameterTypes = new ArrayList<>();
       for (final Class<?> clazz : method.getParameterTypes()) {
         parameterTypes.add(clazz.getName());
       }

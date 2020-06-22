@@ -37,16 +37,16 @@ dependencies {
     // including :opentelemetry-sdk-shaded-for-testing above instead
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
-  implementation project(':utils:test-utils')
+  api project(':utils:test-utils')
 
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
   implementation deps.groovy
 
-  testImplementation project(':utils:test-utils')
   testImplementation project(':instrumentation:trace-annotation')
 
+  //TODO replace with Otel WithSpan
   testImplementation('io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2') {
     // bringing this in has side effects and causes some tests to fail
     exclude group: 'io.dropwizard', module: 'dropwizard-core'
@@ -54,6 +54,7 @@ dependencies {
 
   testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
   // test instrumenting java 1.1 bytecode
+  //TODO do we want this?
   testImplementation group: 'net.sf.jt400', name: 'jt400', version: '6.1'
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
