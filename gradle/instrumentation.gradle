@@ -48,5 +48,6 @@ afterEvaluate {
     testCompile project(':testing')
     testAnnotationProcessor deps.autoservice
     testImplementation deps.autoservice
+    testImplementation project(':utils:test-utils')
   }
 }
