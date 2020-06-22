@@ -22,7 +22,7 @@ afterEvaluate {
     transformation {
       tasks = ['compileJava', 'compileScala', 'compileKotlin']
       plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin'
-      classPath = project(':auto-tooling').configurations.instrumentationMuzzle + configurations.compile + sourceSets.main.output
+      classPath = project(':auto-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath + sourceSets.main.output
     }
   }
 

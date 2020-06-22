@@ -9,6 +9,8 @@ muzzle {
 }
 
 dependencies {
+  implementation deps.opentelemetryApiAutoAnnotations
+
   testCompile group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '+'
   testCompile(group: 'io.opentracing.contrib.dropwizard', name: 'dropwizard-opentracing', version: '0.2.2') {
     transitive = false

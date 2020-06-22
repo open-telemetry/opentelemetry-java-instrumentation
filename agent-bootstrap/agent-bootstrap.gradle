@@ -10,14 +10,13 @@ minimumBranchCoverage = 0.0
 minimumInstructionCoverage = 0.0
 
 dependencies {
-  compile deps.opentelemetryApi
-  compile deps.opentelemetryApiAutoAnnotations
-  compile project(':utils:thread-utils')
-  compile deps.slf4j
-  compile group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
+  api deps.opentelemetryApi
+  implementation project(':utils:thread-utils')
+  implementation deps.slf4j
+  implementation group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
-  testCompile project(':testing')
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '1.7.1'
+  testImplementation project(':testing')
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '1.7.1'
 }
