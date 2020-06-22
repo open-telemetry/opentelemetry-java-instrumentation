@@ -96,7 +96,7 @@ public class SpringWebMvcDecorator extends BaseDecorator {
     span.setAttribute("view.name", mv.getViewName());
     final View view = mv.getView();
     if (view != null) {
-      span.setAttribute("view.type", view.getClass().getName());
+      span.setAttribute("view.type", spanNameForClass(view.getClass()));
     }
     return span;
   }

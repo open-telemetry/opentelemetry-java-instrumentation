@@ -136,7 +136,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       spanKind INTERNAL
       errored false
       tags {
-        "view.type" RedirectView.name
+        "view.type" RedirectView.simpleName
       }
     }
   }
