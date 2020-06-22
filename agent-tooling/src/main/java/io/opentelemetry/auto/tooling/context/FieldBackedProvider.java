@@ -388,10 +388,6 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          * class transformation.
          */
         synchronized (INSTALLED_CONTEXT_MATCHERS) {
-          // FIXME: This makes an assumption that class loader matchers for instrumenters that use
-          // same context classes should be the same - which seems reasonable, but is not checked.
-          // Addressing this properly requires some notion of 'compound intrumenters' which we
-          // currently do not have.
           if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
             log.debug("Skipping builder for {} {}", instrumenter.getClass().getName(), entry);
             continue;
@@ -406,7 +402,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            */
           builder =
               builder
-                  .type(safeHasSuperType(named(entry.getKey())), instrumenter.classLoaderMatcher())
+                  .type(safeHasSuperType(named(entry.getKey())))
                   .and(safeToInjectFieldsMatcher())
                   .and(Default.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
