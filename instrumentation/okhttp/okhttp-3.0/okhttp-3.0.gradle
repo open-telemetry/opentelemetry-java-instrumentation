@@ -30,7 +30,7 @@ dependencies {
 
   compile project(':auto-tooling')
 
-  testCompile(project(':testing')) {
+  testImplementation(project(':testing')) {
     exclude module: 'okhttp'
   }
   testCompile project(':instrumentation:java-concurrent')
