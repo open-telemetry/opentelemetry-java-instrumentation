@@ -637,12 +637,7 @@ public class RestClientConfig {
    public RestTemplate restTemplate() {
       RestTemplate restTemplate = new RestTemplate();
 
-      List<ClientHttpRequestInterceptor> interceptors = restTemplate.getInterceptors();
-      if (interceptors.isEmpty()) {
-         interceptors = new ArrayList<>();
-      }
-      interceptors.add(restTemplateHeaderModifierInterceptor);
-      restTemplate.setInterceptors(interceptors);
+      restTemplate.getInterceptors().add(restTemplateHeaderModifierInterceptor);
 
       return restTemplate;
    }
