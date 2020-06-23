@@ -55,6 +55,11 @@ class Netty40ClientTest extends HttpClientTest {
   }
 
   @Override
+  String userAgent() {
+    return "AHC"
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }

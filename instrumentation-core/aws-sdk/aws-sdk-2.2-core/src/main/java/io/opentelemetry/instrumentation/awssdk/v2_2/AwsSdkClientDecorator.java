@@ -17,6 +17,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkRequest;
@@ -73,6 +74,12 @@ final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, Sd
     return span;
   }
 
+  // Certain headers in the request like User-Agent are only available after execution.
+  Span afterExecution(final Span span, final SdkHttpRequest request) {
+    SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent(request));
+    return span;
+  }
+
   // Not overriding the super.  Should call both with each type of response.
   Span onSdkResponse(final Span span, final SdkResponse response) {
     if (response instanceof AwsResponse) {
@@ -94,5 +101,10 @@ final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, Sd
   @Override
   protected Integer status(final SdkHttpResponse response) {
     return response.statusCode();
+  }
+
+  @Override
+  protected String userAgent(SdkHttpRequest sdkHttpRequest) {
+    return sdkHttpRequest.firstMatchingHeader(USER_AGENT).orElse(null);
   }
 }

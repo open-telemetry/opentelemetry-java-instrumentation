@@ -42,4 +42,9 @@ public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConne
   protected Integer status(final Integer status) {
     return status;
   }
+
+  @Override
+  protected String userAgent(HttpURLConnection httpURLConnection) {
+    return httpURLConnection.getRequestProperty(USER_AGENT);
+  }
 }
