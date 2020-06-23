@@ -445,7 +445,8 @@ public class ControllerTraceInterceptor implements HandlerInterceptor {
    @Override
    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
          throws Exception {
-     
+      Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
+          .extract(Context.current(), request, getter);
       Span span = createSpanWithParent(request, context);
       span.setAttribute("handler", "pre");
       tracer.withSpan(span);
