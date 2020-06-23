@@ -556,7 +556,7 @@ public class FirstServiceController {
 }
 ```
 
-As seen in the setup of SecondService, create implement the TraceInterceptor interface to wrap requests to the SecondServiceController in a span. Then register this new handler by extending the HandlerInterceptor. In effect, we will be taking a copy of the InterceptorConfig.java and ControllerTraceInterceptor.java defined in SecondService and adding it to FirstService. These files are referenced [here](#create-controller-interceptor).
+As seen in the setup of SecondService, implement the TraceInterceptor interface to wrap requests to the SecondServiceController in a span. Then register this new handler by extending the HandlerInterceptor. In effect, we will be taking a copy of the InterceptorConfig.java and ControllerTraceInterceptor.java defined in SecondService and adding it to FirstService. These files are referenced [here](#create-controller-interceptor).
 
 #### Create Client Http Request Interceptor
 
