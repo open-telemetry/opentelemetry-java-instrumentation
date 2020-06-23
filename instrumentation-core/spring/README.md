@@ -170,7 +170,7 @@ public class FirstServiceApplication {
 }
 ```
 
-4. Create a RestController for FirstService
+4. Create a REST controller for FirstService
 5. Create a span to wrap FirstServiceController.firstTracedMethod()
 
 ```java
@@ -293,7 +293,7 @@ public class SecondServiceApplication {
 }
 ```
 
-4. Create a RestController for SecondService
+4. Create a REST controller for SecondService
 5. Start a span to wrap SecondServiceController.secondTracedMethod()
 
 ```java
@@ -374,7 +374,7 @@ public class SecondServiceApplication {
 }
 ```
 
-Add the RestController below to your SecondService project. This controller will return a string when SecondServiceController.secondTracedMethod is called:
+Add the REST controller below to your SecondService project. This controller will return a string when SecondServiceController.secondTracedMethod is called:
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -401,7 +401,7 @@ public class SecondServiceController {
 
 #### Create Controller Interceptor
 
-Add the class below to wrap all requests to the SecondServiceController in a span. This class will call the preHandle method before the RestController is entered and the postHandle method after a response is created. 
+Add the class below to wrap all requests to the SecondServiceController in a span. This class will call the preHandle method before the REST controller is entered and the postHandle method after a response is created. 
 
 The preHandle method starts a span for each request. The postHandle method closes the span and adds the span context to the response header. This implementation is shown below:    
 
@@ -521,7 +521,7 @@ public class FirstServiceApplication {
 }
 ```
 
-Create a RestController for FirstService. This controller will send a request to SecondService and then return the response to the client:
+Create a REST controller for FirstService. This controller will send a request to SecondService and then return the response to the client:
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
