@@ -351,7 +351,7 @@ In this section, we will implement the Spring HandlerInerceptor interface to wra
 
 We will also use the RestTemplate HTTP client to send requests from FirstService to SecondService. To propagate the trace in this request we will also implement the ClientHttpRequestInterceptor interface. This implementation is only required for projects that send outbound requests. In this example it is only required for FirstService. 
 
-### Setup FirstService and SecondService
+### Set up FirstService and SecondService
 
 Using the earlier instructions [create two example projects](#create-two-spring-projects) and add the required [dependencies and configurations](#setup-for-manual-instrumentation). 
 
