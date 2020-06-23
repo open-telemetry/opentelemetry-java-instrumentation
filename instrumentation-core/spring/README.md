@@ -239,7 +239,7 @@ import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 @Component
-public final class HttpUtils {
+public class HttpUtils {
 
    private static final HttpTextFormat.Setter<HttpHeaders> setter = new HttpTextFormat.Setter<HttpHeaders>() {
          @Override
@@ -347,13 +347,13 @@ Congrats, we just created a distributed service with OpenTelemetry!
 
 ## Manual Instrumentation using Handlers and Interceptors
 
-In this section, we will implement the Spring HandlerInerceptor interface to wrap all requests to FirstService and Second Service controllers in a span. 
+In this section, we will implement the Spring HandlerInerceptor interface to wrap all requests to FirstService and SecondService controllers in a span. 
 
 We will also use the RestTemplate HTTP client to send requests from FirstService to SecondService. To propagate the trace in this request we will also implement the ClientHttpRequestInterceptor interface. This implementation is only required for projects that send outbound requests. In this example it is only required for FirstService. 
 
-### Setup FirstService and SecondService
+### Set up FirstService and SecondService
 
-Using the earlier instructions [create two example projects](#create-two-spring-projects) and add the required [dependencies and configurations](#setup-for-manual-instrumentation). 
+Using the earlier instructions [create two spring projects](#create-two-spring-projects) and add the required [dependencies and configurations](#setup-for-manual-instrumentation). 
 
 ### Instrumentation of Client Service: SecondService
 
@@ -381,10 +381,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 
 @RestController
 @RequestMapping(value = "/time")
@@ -545,7 +541,7 @@ public class FirstServiceController {
    @Autowired
    HttpUtils httpUtils;
 
-   private static String SECOND_SERVICE_URL = "http://localhost:8081/time";
+   private static final String SECOND_SERVICE_URL = "http://localhost:8081/time";
 
    @GetMapping
    public String firstTracedMethod() {
@@ -560,13 +556,13 @@ public class FirstServiceController {
 }
 ```
 
-As seen in the setup of SecondService, create implement the TraceInterceptor interface to wrap requests to the SecondServiceController in a span. Then register this new handler by extending the HandlerInterceptor. In effect, we will be taking a copy of the InterceptorConfig.java and ControllerTraceInterceptor.java defined in SecondService and adding it to FirstService. These files are referenced [here](#create-controller-interceptor).
+As seen in the setup of SecondService, implement the TraceInterceptor interface to wrap requests to the SecondServiceController in a span. Then register this new handler by extending the HandlerInterceptor. In effect, we will be taking a copy of the InterceptorConfig.java and ControllerTraceInterceptor.java defined in SecondService and adding it to FirstService. These files are referenced [here](#create-controller-interceptor).
 
 #### Create Client Http Request Interceptor
 
 Next, we will configure the ClientHttpRequestInterceptor to intercept all client HTTP requests made using RestTemplate.
 
-To propagate the span context from FirstService to SecondService we must inject the trace id and trace state into the outgoing request header. In section 1 this was done using the helper class HttpUtils. In this section, we will implement the ClientHttpRequestInterceptor interface and register this interceptor in our application. 
+To propagate the span context from FirstService to SecondService we must inject the trace parent and trace state into the outgoing request header. In section 1 this was done using the helper class HttpUtils. In this section, we will implement the ClientHttpRequestInterceptor interface and register this interceptor in our application. 
 
 Include the two classes below to your FirstService project to add this functionality:
 
@@ -641,12 +637,7 @@ public class RestClientConfig {
    public RestTemplate restTemplate() {
       RestTemplate restTemplate = new RestTemplate();
 
-      List<ClientHttpRequestInterceptor> interceptors = restTemplate.getInterceptors();
-      if (interceptors.isEmpty()) {
-         interceptors = new ArrayList<>();
-      }
-      interceptors.add(restTemplateHeaderModifierInterceptor);
-      restTemplate.setInterceptors(interceptors);
+      restTemplate.getInterceptors().add(restTemplateHeaderModifierInterceptor);
 
       return restTemplate;
    }
