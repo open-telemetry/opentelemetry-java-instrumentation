@@ -541,7 +541,7 @@ public class FirstServiceController {
    @Autowired
    HttpUtils httpUtils;
 
-   private static String SECOND_SERVICE_URL = "http://localhost:8081/time";
+   private static final String SECOND_SERVICE_URL = "http://localhost:8081/time";
 
    @GetMapping
    public String firstTracedMethod() {
