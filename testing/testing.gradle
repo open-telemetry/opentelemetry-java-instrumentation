@@ -3,7 +3,7 @@ apply from: "$rootDir/gradle/java.gradle"
 minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.5
 excludedClassesCoverage += [
-  'io.opentelemetry.auto.test.asserts.*Assert',
+  'io.opentelemetry.auto.test.asserts.*Assert*',
   'io.opentelemetry.auto.test.base.*',
   'io.opentelemetry.auto.test.log.*',
   'io.opentelemetry.auto.test.AgentTestRunner',

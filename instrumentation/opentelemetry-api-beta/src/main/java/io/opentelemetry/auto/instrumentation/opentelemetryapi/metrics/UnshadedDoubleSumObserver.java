@@ -15,8 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
 import io.opentelemetry.metrics.AsynchronousInstrument;
-import java.util.Map;
+import unshaded.io.opentelemetry.common.Labels;
 import unshaded.io.opentelemetry.metrics.DoubleSumObserver;
 
 class UnshadedDoubleSumObserver implements DoubleSumObserver {
@@ -29,41 +30,40 @@ class UnshadedDoubleSumObserver implements DoubleSumObserver {
   }
 
   @Override
-  public void setCallback(final Callback<ResultDoubleSumObserver> metricUpdater) {
+  public void setCallback(final Callback<DoubleResult> metricUpdater) {
     shadedDoubleSumObserver.setCallback(new ShadedResultDoubleSumObserver(metricUpdater));
   }
 
   static class ShadedResultDoubleSumObserver
       implements AsynchronousInstrument.Callback<
-          io.opentelemetry.metrics.DoubleSumObserver.ResultDoubleSumObserver> {
+          io.opentelemetry.metrics.DoubleSumObserver.DoubleResult> {
 
-    private final Callback<ResultDoubleSumObserver> metricUpdater;
+    private final Callback<DoubleResult> metricUpdater;
 
-    protected ShadedResultDoubleSumObserver(final Callback<ResultDoubleSumObserver> metricUpdater) {
+    protected ShadedResultDoubleSumObserver(final Callback<DoubleResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(
-        final io.opentelemetry.metrics.DoubleSumObserver.ResultDoubleSumObserver result) {
+    public void update(final io.opentelemetry.metrics.DoubleSumObserver.DoubleResult result) {
       metricUpdater.update(new UnshadedResultDoubleSumObserver(result));
     }
   }
 
-  static class UnshadedResultDoubleSumObserver implements ResultDoubleSumObserver {
+  static class UnshadedResultDoubleSumObserver implements DoubleResult {
 
-    private final io.opentelemetry.metrics.DoubleSumObserver.ResultDoubleSumObserver
+    private final io.opentelemetry.metrics.DoubleSumObserver.DoubleResult
         shadedResultDoubleSumObserver;
 
     public UnshadedResultDoubleSumObserver(
-        final io.opentelemetry.metrics.DoubleSumObserver.ResultDoubleSumObserver
+        final io.opentelemetry.metrics.DoubleSumObserver.DoubleResult
             shadedResultDoubleSumObserver) {
       this.shadedResultDoubleSumObserver = shadedResultDoubleSumObserver;
     }
 
     @Override
-    public void observe(final double value, final String... keyValueLabelPairs) {
-      shadedResultDoubleSumObserver.observe(value, keyValueLabelPairs);
+    public void observe(final double value, final Labels labels) {
+      shadedResultDoubleSumObserver.observe(value, LabelsShader.shade(labels));
     }
   }
 
@@ -88,8 +88,8 @@ class UnshadedDoubleSumObserver implements DoubleSumObserver {
     }
 
     @Override
-    public DoubleSumObserver.Builder setConstantLabels(final Map<String, String> constantLabels) {
-      shadedBuilder.setConstantLabels(constantLabels);
+    public DoubleSumObserver.Builder setConstantLabels(final Labels constantLabels) {
+      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
       return this;
     }
 

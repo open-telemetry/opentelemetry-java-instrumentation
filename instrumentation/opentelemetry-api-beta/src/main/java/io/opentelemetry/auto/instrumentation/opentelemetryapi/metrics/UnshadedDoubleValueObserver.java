@@ -15,8 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
 import io.opentelemetry.metrics.AsynchronousInstrument;
-import java.util.Map;
+import unshaded.io.opentelemetry.common.Labels;
 import unshaded.io.opentelemetry.metrics.DoubleValueObserver;
 
 class UnshadedDoubleValueObserver implements DoubleValueObserver {
@@ -29,42 +30,40 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
   }
 
   @Override
-  public void setCallback(final Callback<ResultDoubleValueObserver> metricUpdater) {
+  public void setCallback(final Callback<DoubleResult> metricUpdater) {
     shadedDoubleValueObserver.setCallback(new ShadedResultDoubleValueObserver(metricUpdater));
   }
 
   static class ShadedResultDoubleValueObserver
       implements AsynchronousInstrument.Callback<
-          io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver> {
+          io.opentelemetry.metrics.DoubleValueObserver.DoubleResult> {
 
-    private final Callback<ResultDoubleValueObserver> metricUpdater;
+    private final Callback<DoubleResult> metricUpdater;
 
-    protected ShadedResultDoubleValueObserver(
-        final Callback<ResultDoubleValueObserver> metricUpdater) {
+    protected ShadedResultDoubleValueObserver(final Callback<DoubleResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(
-        final io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver result) {
+    public void update(final io.opentelemetry.metrics.DoubleValueObserver.DoubleResult result) {
       metricUpdater.update(new UnshadedResultDoubleValueObserver(result));
     }
   }
 
-  static class UnshadedResultDoubleValueObserver implements ResultDoubleValueObserver {
+  static class UnshadedResultDoubleValueObserver implements DoubleResult {
 
-    private final io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver
+    private final io.opentelemetry.metrics.DoubleValueObserver.DoubleResult
         shadedResultDoubleValueObserver;
 
     public UnshadedResultDoubleValueObserver(
-        final io.opentelemetry.metrics.DoubleValueObserver.ResultDoubleValueObserver
+        final io.opentelemetry.metrics.DoubleValueObserver.DoubleResult
             shadedResultDoubleValueObserver) {
       this.shadedResultDoubleValueObserver = shadedResultDoubleValueObserver;
     }
 
     @Override
-    public void observe(final double value, final String... keyValueLabelPairs) {
-      shadedResultDoubleValueObserver.observe(value, keyValueLabelPairs);
+    public void observe(final double value, final Labels labels) {
+      shadedResultDoubleValueObserver.observe(value, LabelsShader.shade(labels));
     }
   }
 
@@ -89,8 +88,8 @@ class UnshadedDoubleValueObserver implements DoubleValueObserver {
     }
 
     @Override
-    public DoubleValueObserver.Builder setConstantLabels(final Map<String, String> constantLabels) {
-      shadedBuilder.setConstantLabels(constantLabels);
+    public DoubleValueObserver.Builder setConstantLabels(final Labels constantLabels) {
+      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
       return this;
     }
 

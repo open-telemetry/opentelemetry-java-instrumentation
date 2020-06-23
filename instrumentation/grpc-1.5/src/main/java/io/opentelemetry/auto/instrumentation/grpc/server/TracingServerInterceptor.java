@@ -32,12 +32,11 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.common.Attributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TracingServerInterceptor implements ServerInterceptor {
@@ -120,9 +119,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onMessage(final ReqT message) {
-      final Map<String, AttributeValue> attributes = new HashMap<>();
-      attributes.put("message.type", AttributeValue.stringAttributeValue("RECEIVED"));
-      attributes.put("message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
+      Attributes attributes =
+          Attributes.of(
+              "message.type", AttributeValue.stringAttributeValue("RECEIVED"),
+              "message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
       span.addEvent("message", attributes);
       try (final Scope scope = currentContextWith(span)) {
         delegate().onMessage(message);

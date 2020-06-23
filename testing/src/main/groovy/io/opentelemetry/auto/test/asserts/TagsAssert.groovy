@@ -18,18 +18,19 @@ package io.opentelemetry.auto.test.asserts
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.common.AttributeValue
-
+import io.opentelemetry.common.ReadableAttributes
+import io.opentelemetry.common.ReadableKeyValuePairs
 import java.util.regex.Pattern
 
 class TagsAssert {
-  private final Map<String, AttributeValue> tags
+  private final ReadableAttributes tags
   private final Set<String> assertedTags = new TreeSet<>()
 
-  private TagsAssert(attributes) {
+  private TagsAssert(ReadableAttributes attributes) {
     this.tags = attributes
   }
 
-  static void assertTags(Map<String, AttributeValue> attributes,
+  static void assertTags(ReadableAttributes attributes,
                          @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TagsAssert'])
                          @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new TagsAssert(attributes)
@@ -58,7 +59,7 @@ class TagsAssert {
       return
     }
     assertedTags.add(name)
-    def val = getVal(tags[name])
+    def val = getVal(tags.get(name))
     if (value instanceof Pattern) {
       assert val =~ value
     } else if (value instanceof Class) {
@@ -82,12 +83,18 @@ class TagsAssert {
   }
 
   void assertTagsAllVerified() {
-    def set = new TreeMap<>(tags).keySet()
-    set.removeAll(assertedTags)
-    // The primary goal is to ensure the set is empty.
-    // tags and assertedTags are included via an "always true" comparison
-    // so they provide better context in the error message.
-    assert (tags.entrySet() != assertedTags || assertedTags.isEmpty()) && set.isEmpty()
+    Set<String> allTags = new TreeSet<>()
+    tags.forEach(new ReadableKeyValuePairs.KeyValueConsumer<AttributeValue>() {
+      @Override
+      void consume(String key, AttributeValue value) {
+        allTags.add(key)
+      }
+    })
+    Set<String> unverifiedTags = new TreeSet(allTags)
+    unverifiedTags.removeAll(assertedTags)
+    // tags and assertedTags are included to provide better context in the error message.
+    //containsAll because we may assert more than span actually has
+    assert unverifiedTags.isEmpty() && assertedTags.containsAll(allTags)
   }
 
   private static Object getVal(AttributeValue attributeValue) {

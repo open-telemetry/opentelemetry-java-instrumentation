@@ -16,10 +16,10 @@
 package io.opentelemetry.auto.exporters.logging;
 
 import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Collection;
-import java.util.Map;
 
 public class LoggingExporter implements SpanExporter {
   private final String prefix;
@@ -33,25 +33,29 @@ public class LoggingExporter implements SpanExporter {
     for (final SpanData span : list) {
       System.out.print(
           prefix + " " + span.getName() + " " + span.getSpanId().toLowerBase16() + " ");
-      for (final Map.Entry<String, AttributeValue> attr : span.getAttributes().entrySet()) {
-        System.out.print(attr.getKey() + "=");
-        final AttributeValue value = attr.getValue();
-        switch (value.getType()) {
-          case STRING:
-            System.out.print('"' + value.getStringValue() + '"');
-            break;
-          case BOOLEAN:
-            System.out.print(value.getBooleanValue());
-            break;
-          case LONG:
-            System.out.print(value.getLongValue());
-            break;
-          case DOUBLE:
-            System.out.print(value.getDoubleValue());
-            break;
-        }
-        System.out.print(" ");
-      }
+      span.getAttributes()
+          .forEach(
+              new KeyValueConsumer<AttributeValue>() {
+                @Override
+                public void consume(String key, AttributeValue value) {
+                  System.out.print(key + "=");
+                  switch (value.getType()) {
+                    case STRING:
+                      System.out.print('"' + value.getStringValue() + '"');
+                      break;
+                    case BOOLEAN:
+                      System.out.print(value.getBooleanValue());
+                      break;
+                    case LONG:
+                      System.out.print(value.getLongValue());
+                      break;
+                    case DOUBLE:
+                      System.out.print(value.getDoubleValue());
+                      break;
+                  }
+                  System.out.print(" ");
+                }
+              });
     }
     System.out.println();
     return ResultCode.SUCCESS;

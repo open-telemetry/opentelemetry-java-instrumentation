@@ -18,9 +18,9 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShaded;
 import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridging.toShadedOrNull;
 
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.common.AttributeValue;
+import unshaded.io.opentelemetry.common.Attributes;
 import unshaded.io.opentelemetry.trace.EndSpanOptions;
 import unshaded.io.opentelemetry.trace.Event;
 import unshaded.io.opentelemetry.trace.Link;
@@ -79,13 +79,12 @@ class UnshadedSpan implements Span {
   }
 
   @Override
-  public void addEvent(final String name, final Map<String, AttributeValue> attributes) {
+  public void addEvent(final String name, final Attributes attributes) {
     shadedSpan.addEvent(name, toShaded(attributes));
   }
 
   @Override
-  public void addEvent(
-      final String name, final Map<String, AttributeValue> attributes, final long timestamp) {
+  public void addEvent(final String name, final Attributes attributes, final long timestamp) {
     shadedSpan.addEvent(name, toShaded(attributes), timestamp);
   }
 
@@ -178,8 +177,7 @@ class UnshadedSpan implements Span {
     }
 
     @Override
-    public Span.Builder addLink(
-        final SpanContext spanContext, final Map<String, AttributeValue> attributes) {
+    public Span.Builder addLink(final SpanContext spanContext, final Attributes attributes) {
       shadedBuilder.addLink(toShaded(spanContext));
       return this;
     }

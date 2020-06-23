@@ -15,7 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.Map;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
+import unshaded.io.opentelemetry.common.Labels;
 import unshaded.io.opentelemetry.metrics.DoubleUpDownCounter;
 
 class UnshadedDoubleUpDownCounter implements DoubleUpDownCounter {
@@ -32,13 +33,13 @@ class UnshadedDoubleUpDownCounter implements DoubleUpDownCounter {
   }
 
   @Override
-  public void add(final double delta, final String... labelKeyValuePairs) {
-    shadedDoubleUpDownCounter.add(delta, labelKeyValuePairs);
+  public void add(final double delta, final Labels labels) {
+    shadedDoubleUpDownCounter.add(delta, LabelsShader.shade(labels));
   }
 
   @Override
-  public BoundDoubleUpDownCounter bind(final String... labelKeyValuePairs) {
-    return new BoundInstrument(shadedDoubleUpDownCounter.bind(labelKeyValuePairs));
+  public BoundDoubleUpDownCounter bind(final Labels labels) {
+    return new BoundInstrument(shadedDoubleUpDownCounter.bind(LabelsShader.shade(labels)));
   }
 
   static class BoundInstrument implements BoundDoubleUpDownCounter {
@@ -84,8 +85,8 @@ class UnshadedDoubleUpDownCounter implements DoubleUpDownCounter {
     }
 
     @Override
-    public DoubleUpDownCounter.Builder setConstantLabels(final Map<String, String> constantLabels) {
-      shadedBuilder.setConstantLabels(constantLabels);
+    public DoubleUpDownCounter.Builder setConstantLabels(final Labels constantLabels) {
+      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
       return this;
     }
 

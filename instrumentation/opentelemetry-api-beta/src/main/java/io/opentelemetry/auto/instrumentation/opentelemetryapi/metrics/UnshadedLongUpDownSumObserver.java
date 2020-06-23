@@ -15,8 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
 import io.opentelemetry.metrics.AsynchronousInstrument;
-import java.util.Map;
+import unshaded.io.opentelemetry.common.Labels;
 import unshaded.io.opentelemetry.metrics.LongUpDownSumObserver;
 
 class UnshadedLongUpDownSumObserver implements LongUpDownSumObserver {
@@ -29,42 +30,40 @@ class UnshadedLongUpDownSumObserver implements LongUpDownSumObserver {
   }
 
   @Override
-  public void setCallback(final Callback<ResultLongUpDownSumObserver> metricUpdater) {
+  public void setCallback(final Callback<LongResult> metricUpdater) {
     shadedLongUpDownSumObserver.setCallback(new ShadedResultLongUpDownSumObserver(metricUpdater));
   }
 
   static class ShadedResultLongUpDownSumObserver
       implements AsynchronousInstrument.Callback<
-          io.opentelemetry.metrics.LongUpDownSumObserver.ResultLongUpDownSumObserver> {
+          io.opentelemetry.metrics.LongUpDownSumObserver.LongResult> {
 
-    private final Callback<ResultLongUpDownSumObserver> metricUpdater;
+    private final Callback<LongResult> metricUpdater;
 
-    protected ShadedResultLongUpDownSumObserver(
-        final Callback<ResultLongUpDownSumObserver> metricUpdater) {
+    protected ShadedResultLongUpDownSumObserver(final Callback<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(
-        final io.opentelemetry.metrics.LongUpDownSumObserver.ResultLongUpDownSumObserver result) {
+    public void update(final io.opentelemetry.metrics.LongUpDownSumObserver.LongResult result) {
       metricUpdater.update(new UnshadedResultLongUpDownSumObserver(result));
     }
   }
 
-  static class UnshadedResultLongUpDownSumObserver implements ResultLongUpDownSumObserver {
+  static class UnshadedResultLongUpDownSumObserver implements LongResult {
 
-    private final io.opentelemetry.metrics.LongUpDownSumObserver.ResultLongUpDownSumObserver
+    private final io.opentelemetry.metrics.LongUpDownSumObserver.LongResult
         shadedResultLongUpDownSumObserver;
 
     public UnshadedResultLongUpDownSumObserver(
-        final io.opentelemetry.metrics.LongUpDownSumObserver.ResultLongUpDownSumObserver
+        final io.opentelemetry.metrics.LongUpDownSumObserver.LongResult
             shadedResultLongUpDownSumObserver) {
       this.shadedResultLongUpDownSumObserver = shadedResultLongUpDownSumObserver;
     }
 
     @Override
-    public void observe(final long value, final String... keyValueLabelPairs) {
-      shadedResultLongUpDownSumObserver.observe(value, keyValueLabelPairs);
+    public void observe(final long value, final Labels labels) {
+      shadedResultLongUpDownSumObserver.observe(value, LabelsShader.shade(labels));
     }
   }
 
@@ -89,9 +88,8 @@ class UnshadedLongUpDownSumObserver implements LongUpDownSumObserver {
     }
 
     @Override
-    public LongUpDownSumObserver.Builder setConstantLabels(
-        final Map<String, String> constantLabels) {
-      shadedBuilder.setConstantLabels(constantLabels);
+    public LongUpDownSumObserver.Builder setConstantLabels(final Labels constantLabels) {
+      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
       return this;
     }
 
