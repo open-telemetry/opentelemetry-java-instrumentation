@@ -15,12 +15,14 @@
  */
 package io.opentelemetry.auto.tooling;
 
+import io.opentelemetry.auto.bootstrap.spi.TracerCustomizer;
 import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.contrib.auto.config.MetricExporterFactory;
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -152,10 +154,17 @@ public class TracerInstaller {
   }
 
   private static void configure() {
+    // Execute any user-provided (usually vendor-provided) configuration logic.
+    final ServiceLoader<TracerCustomizer> serviceLoader =
+        ServiceLoader.load(TracerCustomizer.class, TracerInstaller.class.getClassLoader());
+    final TracerSdkProvider tracerSdkProvider = OpenTelemetrySdk.getTracerProvider();
+    for (TracerCustomizer customizer : serviceLoader) {
+      customizer.configure(tracerSdkProvider);
+    }
+
     /* Update trace config from env vars or sys props */
-    final TraceConfig activeTraceConfig =
-        OpenTelemetrySdk.getTracerProvider().getActiveTraceConfig();
-    OpenTelemetrySdk.getTracerProvider()
+    final TraceConfig activeTraceConfig = tracerSdkProvider.getActiveTraceConfig();
+    tracerSdkProvider
         .updateActiveTraceConfig(
             activeTraceConfig
                 .toBuilder()
