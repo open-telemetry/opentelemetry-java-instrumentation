@@ -399,7 +399,7 @@ public class SecondServiceController {
 
 Add the class below to wrap all requests to the SecondServiceController in a span. This class will call the preHandle method before the REST controller is entered and the postHandle method after a response is created. 
 
-The preHandle method starts a span for each request. The postHandle method closes the span and adds the span context to the response header. This implementation is shown below:    
+The preHandle method starts a span for each request. This implementation is shown below:    
 
 ```java
 
