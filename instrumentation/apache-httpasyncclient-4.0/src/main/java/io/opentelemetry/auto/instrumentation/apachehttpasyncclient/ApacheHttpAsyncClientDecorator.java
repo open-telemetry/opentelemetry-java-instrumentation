@@ -20,6 +20,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.apache.http.Header;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.RequestLine;
@@ -71,5 +72,11 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
       }
     }
     return null;
+  }
+
+  @Override
+  protected String userAgent(HttpRequest httpRequest) {
+    final Header header = httpRequest.getFirstHeader(USER_AGENT);
+    return header != null ? header.getValue() : null;
   }
 }

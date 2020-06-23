@@ -42,4 +42,10 @@ public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response
   protected Integer status(Response response) {
     return response.getStatusCode();
   }
+
+  @Override
+  protected String userAgent(RequestWrapper requestWrapper) {
+    // TODO: Find out how to get user agent.
+    return null;
+  }
 }

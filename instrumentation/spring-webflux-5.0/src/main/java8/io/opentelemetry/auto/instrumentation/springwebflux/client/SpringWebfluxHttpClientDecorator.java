@@ -52,4 +52,9 @@ public class SpringWebfluxHttpClientDecorator
   protected Integer status(final ClientResponse httpResponse) {
     return httpResponse.statusCode().value();
   }
+
+  @Override
+  protected String userAgent(ClientRequest clientRequest) {
+    return clientRequest.headers().getFirst(USER_AGENT);
+  }
 }

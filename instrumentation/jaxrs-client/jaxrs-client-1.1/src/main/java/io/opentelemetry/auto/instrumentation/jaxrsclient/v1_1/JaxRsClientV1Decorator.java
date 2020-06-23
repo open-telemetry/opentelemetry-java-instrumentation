@@ -42,4 +42,9 @@ public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, C
   protected Integer status(final ClientResponse clientResponse) {
     return clientResponse.getStatus();
   }
+
+  @Override
+  protected String userAgent(ClientRequest clientRequest) {
+    return (String) clientRequest.getHeaders().getFirst(USER_AGENT);
+  }
 }

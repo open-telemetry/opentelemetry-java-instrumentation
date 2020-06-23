@@ -42,4 +42,9 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   protected Integer status(final Response httpResponse) {
     return httpResponse.code();
   }
+
+  @Override
+  protected String userAgent(Request request) {
+    return request.header(USER_AGENT);
+  }
 }

@@ -41,7 +41,9 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"));
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("javax.servlet.http.HttpServlet")
+        .and(not(hasClassesNamed("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener")));
   }
 
   @Override
