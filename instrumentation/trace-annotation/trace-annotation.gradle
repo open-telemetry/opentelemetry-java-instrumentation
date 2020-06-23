@@ -5,6 +5,7 @@ muzzle {
     group = "io.opentracing.contrib.dropwizard"
     module = "dropwizard-opentracing"
     versions = "(,)"
+    extraDependency 'io.opentelemetry:opentelemetry-contrib-auto-annotations:0.5.0'
   }
 }
 
