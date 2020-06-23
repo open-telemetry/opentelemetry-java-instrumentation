@@ -239,7 +239,7 @@ import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Tracer;
 
 @Component
-public final class HttpUtils {
+public class HttpUtils {
 
    private static final HttpTextFormat.Setter<HttpHeaders> setter = new HttpTextFormat.Setter<HttpHeaders>() {
          @Override
