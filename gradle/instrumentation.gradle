@@ -12,6 +12,9 @@ byteBuddy {
 }
 
 apply from: "$rootDir/gradle/java.gradle"
+if (project.ext.find("skipPublish") != true) {
+  apply from: "$rootDir/gradle/publish.gradle"
+}
 
 tasks.withType(Test) {
   forkEvery = 1

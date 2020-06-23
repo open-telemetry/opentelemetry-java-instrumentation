@@ -10,9 +10,15 @@ publishing {
   }
   publications {
     maven(MavenPublication) {
-      artifact javadocJar
-      artifact sourcesJar
-      artifact shadowJar
+      if (project.tasks.findByName("shadowJar") != null) {
+        project.shadow.component(it)
+        //These two are here just to satisfy Maven Central
+        artifact sourcesJar
+        artifact javadocJar
+      } else {
+        from components.java
+      }
+
 
       pom {
         name = 'OpenTelemetry Instrumentation for Java'

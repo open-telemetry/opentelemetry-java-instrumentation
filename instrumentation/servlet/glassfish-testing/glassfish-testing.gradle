@@ -1,9 +1,11 @@
 ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
+  skipPublish = true
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
+
 
 testSets {
   latestDepTest {
