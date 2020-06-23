@@ -17,6 +17,7 @@
 package io.opentelemetry.auto.instrumentation.jdbc;
 
 import static io.opentelemetry.auto.instrumentation.jdbc.JdbcTracer.TRACER;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -41,6 +42,11 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
   public PreparedStatementInstrumentation() {
     super("jdbc");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("java.sql.PreparedStatement");
   }
 
   @Override
