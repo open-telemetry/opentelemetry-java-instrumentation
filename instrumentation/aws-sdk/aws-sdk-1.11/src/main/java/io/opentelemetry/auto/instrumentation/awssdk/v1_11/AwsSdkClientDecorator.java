@@ -114,4 +114,9 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   protected Integer status(final Response response) {
     return response.getHttpResponse().getStatusCode();
   }
+
+  @Override
+  protected String userAgent(Request request) {
+    return (String) request.getHeaders().get(USER_AGENT);
+  }
 }

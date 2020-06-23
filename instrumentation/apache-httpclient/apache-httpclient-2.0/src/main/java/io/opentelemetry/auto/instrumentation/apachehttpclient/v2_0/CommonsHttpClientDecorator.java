@@ -20,6 +20,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URIException;
@@ -49,5 +50,11 @@ public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, 
   protected Integer status(final HttpMethod httpMethod) {
     final StatusLine statusLine = httpMethod.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
+  }
+
+  @Override
+  protected String userAgent(HttpMethod httpMethod) {
+    final Header header = httpMethod.getRequestHeader(USER_AGENT);
+    return header != null ? header.getValue() : null;
   }
 }

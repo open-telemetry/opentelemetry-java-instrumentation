@@ -22,6 +22,7 @@ import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
@@ -81,6 +82,10 @@ abstract class HttpClientTest extends AgentTestRunner {
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
 
   Integer statusOnRedirectError() {
+    return null
+  }
+
+  String userAgent() {
     return null
   }
 
@@ -375,6 +380,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
+    def userAgent = userAgent()
     trace.span(index) {
       if (parentSpan == null) {
         parent()
@@ -390,6 +396,9 @@ abstract class HttpClientTest extends AgentTestRunner {
         "$MoreTags.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 } // Optional
         "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "$Tags.HTTP_METHOD" method
+        if (userAgent) {
+          "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith(userAgent) }
+        }
         if (status) {
           "$Tags.HTTP_STATUS" status
         }

@@ -44,4 +44,9 @@ public class ClientDecorator extends HttpClientDecorator<Request, Response> {
   protected Integer status(final Response response) {
     return response.getStatusCode();
   }
+
+  @Override
+  protected String userAgent(Request request) {
+    return request.getHeaders().getFirstValue(USER_AGENT);
+  }
 }
