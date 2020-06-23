@@ -427,14 +427,6 @@ public class ControllerTraceInterceptor implements HandlerInterceptor {
             }
          };
 
-   private static final HttpTextFormat.Setter<HttpServletResponse> setter =
-         new HttpTextFormat.Setter<HttpServletResponse>() {
-            @Override
-            public void set(HttpServletResponse response, String key, String value) {
-               response.addHeader(key, value);
-            }
-         };
-
    @Autowired
    private Tracer tracer;
 
