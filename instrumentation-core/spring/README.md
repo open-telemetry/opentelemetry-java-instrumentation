@@ -539,7 +539,7 @@ public class FirstServiceController {
    private RestTemplate restTemplate;
 
    @Autowired
-   HttpUtils httpUtils;
+   private HttpUtils httpUtils;
 
    private static final String SECOND_SERVICE_URL = "http://localhost:8081/time";
 
