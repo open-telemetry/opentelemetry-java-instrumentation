@@ -164,13 +164,8 @@ public class TracerInstaller {
 
     /* Update trace config from env vars or sys props */
     final TraceConfig activeTraceConfig = tracerSdkProvider.getActiveTraceConfig();
-    tracerSdkProvider
-        .updateActiveTraceConfig(
-            activeTraceConfig
-                .toBuilder()
-                .readEnvironmentVariables()
-                .readSystemProperties()
-                .build());
+    tracerSdkProvider.updateActiveTraceConfig(
+        activeTraceConfig.toBuilder().readEnvironmentVariables().readSystemProperties().build());
   }
 
   @SuppressWarnings("unused")
