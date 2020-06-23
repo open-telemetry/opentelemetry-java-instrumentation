@@ -24,8 +24,10 @@ import java.lang.invoke.MethodType;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
@@ -78,6 +80,8 @@ public class Config {
   public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
   public static final String EXPERIMENTAL_LOG_CAPTURE_THRESHOLD =
       "experimental.log.capture.threshold";
+
+  public static final String ENDPOINT_PEER_SERVICE_MAPPING = "endpoint.peer.service.mapping";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
@@ -149,6 +153,8 @@ public class Config {
 
   @Getter private final boolean kafkaClientPropagationEnabled;
 
+  @Getter private final Map<String, String> endpointPeerServiceMapping;
+
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
 
@@ -215,6 +221,8 @@ public class Config {
         getBooleanSettingFromEnvironment(
             KAFKA_CLIENT_PROPAGATION_ENABLED, DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED);
 
+    endpointPeerServiceMapping = getMapSettingFromEnvironment(ENDPOINT_PEER_SERVICE_MAPPING);
+
     log.debug("New instance: {}", this);
   }
 
@@ -278,6 +286,10 @@ public class Config {
     kafkaClientPropagationEnabled =
         getPropertyBooleanValue(
             properties, KAFKA_CLIENT_PROPAGATION_ENABLED, parent.kafkaClientPropagationEnabled);
+
+    endpointPeerServiceMapping =
+        getPropertyMapValue(
+            properties, ENDPOINT_PEER_SERVICE_MAPPING, parent.endpointPeerServiceMapping);
 
     log.debug("New instance: {}", this);
   }
@@ -343,6 +355,11 @@ public class Config {
   private static List<String> getListSettingFromEnvironment(
       final String name, final String defaultValue) {
     return parseList(getSettingFromEnvironment(name, defaultValue));
+  }
+
+  @NonNull
+  private static Map<String, String> getMapSettingFromEnvironment(final String name) {
+    return parseMap(getSettingFromEnvironment(name, null));
   }
 
   /**
@@ -443,6 +460,12 @@ public class Config {
     return value == null || value.trim().isEmpty() ? defaultValue : parseList(value);
   }
 
+  private static Map<String, String> getPropertyMapValue(
+      final Properties properties, final String name, final Map<String, String> defaultValue) {
+    final String value = properties.getProperty(name);
+    return value == null || value.trim().isEmpty() ? defaultValue : parseMap(value);
+  }
+
   private static Boolean getPropertyBooleanValue(
       final Properties properties, final String name, final Boolean defaultValue) {
     return valueOf(properties.getProperty(name), Boolean.class, defaultValue);
@@ -507,6 +530,24 @@ public class Config {
       tokens[i] = tokens[i].trim();
     }
     return Collections.unmodifiableList(Arrays.asList(tokens));
+  }
+
+  private static Map<String, String> parseMap(final String str) {
+    if (str == null || str.trim().isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    final Map<String, String> result = new LinkedHashMap<>();
+    for (String token : str.split(",", -1)) {
+      token = token.trim();
+      String[] parts = token.split("=", -1);
+      if (parts.length != 2) {
+        log.warn("Invalid map config part, should be formatted key1=value1,key2=value2: {}", str);
+        return Collections.emptyMap();
+      }
+      result.put(parts[0], parts[1]);
+    }
+    return Collections.unmodifiableMap(result);
   }
 
   /**
