@@ -448,7 +448,6 @@ public class ControllerTraceInterceptor implements HandlerInterceptor {
 
       Span currentSpan = tracer.getCurrentSpan();
       currentSpan.setAttribute("handler", "post");
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), response, setter);
       currentSpan.end();
    }
 
