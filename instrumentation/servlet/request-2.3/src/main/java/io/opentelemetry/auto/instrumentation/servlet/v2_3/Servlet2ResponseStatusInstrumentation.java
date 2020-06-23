@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -72,8 +73,11 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        named("sendError").or(named("setStatus")), Servlet2ResponseStatusAdvice.class.getName());
-    transformers.put(named("sendRedirect"), Servlet2ResponseRedirectAdvice.class.getName());
+        namedOneOf("sendError", "setStatus"),
+        Servlet2ResponseStatusInstrumentation.class.getName() + "$Servlet2ResponseStatusAdvice");
+    transformers.put(
+        named("sendRedirect"),
+        Servlet2ResponseStatusInstrumentation.class.getName() + "$Servlet2ResponseRedirectAdvice");
     return transformers;
   }
 
