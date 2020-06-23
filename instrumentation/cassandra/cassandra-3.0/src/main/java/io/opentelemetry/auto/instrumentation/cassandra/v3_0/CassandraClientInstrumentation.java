@@ -51,6 +51,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
       packageName + ".TracingSession",
       packageName + ".TracingSession$1",
       packageName + ".TracingSession$2",
+      "io.opentelemetry.auto.common.exec.DaemonThreadFactory",
     };
   }
 
