@@ -144,7 +144,7 @@ OpenTelemetrySdk.getTracerProvider().addSpanProcessor(jaegerProcessor);
        
 ### Project Background
 
-Here we will create RestControllers for `FirstService` and `SecondService`.
+Here we will create REST controllers for `FirstService` and `SecondService`.
 `FirstService` will send a GET request to `SecondService` to retrieve the current time. After this request is resolved, `FirstService` then will append a message to time and return a string to the client. 
 
 ## Manual Instrumentation with Java SDK
