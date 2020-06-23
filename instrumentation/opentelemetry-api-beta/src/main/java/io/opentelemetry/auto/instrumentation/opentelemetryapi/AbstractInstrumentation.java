@@ -83,12 +83,14 @@ public abstract class AbstractInstrumentation extends Instrumenter.Default {
       packageName + ".metrics.UnshadedMeterProvider",
       packageName + ".trace.Bridging",
       packageName + ".trace.Bridging$1",
+      packageName + ".trace.Bridging$2",
       packageName + ".trace.TracingContextUtils",
       packageName + ".trace.UnshadedSpan",
       packageName + ".trace.UnshadedSpan$Builder",
       packageName + ".trace.UnshadedTracer",
       packageName + ".trace.UnshadedTracerProvider",
-      packageName + ".LabelsShader"
+      packageName + ".LabelsShader",
+      packageName + ".LabelsShader$Consumer"
     };
   }
 
