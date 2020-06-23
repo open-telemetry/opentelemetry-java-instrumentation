@@ -114,7 +114,7 @@ import io.opentelemetry.exporters.logging.*;
 
 @Configuration
 public class OtelConfig {
-   private final static tracerName = "fooTracer"; 
+   private static final tracerName = "fooTracer"; 
    @Bean
    public Tracer otelTracer() throws Exception {
       final Tracer tracer = OpenTelemetry.getTracer(tracerName);
