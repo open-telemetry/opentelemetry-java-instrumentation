@@ -562,7 +562,7 @@ As seen in the setup of SecondService, implement the TraceInterceptor interface 
 
 Next, we will configure the ClientHttpRequestInterceptor to intercept all client HTTP requests made using RestTemplate.
 
-To propagate the span context from FirstService to SecondService we must inject the trace id and trace state into the outgoing request header. In section 1 this was done using the helper class HttpUtils. In this section, we will implement the ClientHttpRequestInterceptor interface and register this interceptor in our application. 
+To propagate the span context from FirstService to SecondService we must inject the trace parent and trace state into the outgoing request header. In section 1 this was done using the helper class HttpUtils. In this section, we will implement the ClientHttpRequestInterceptor interface and register this interceptor in our application. 
 
 Include the two classes below to your FirstService project to add this functionality:
 
