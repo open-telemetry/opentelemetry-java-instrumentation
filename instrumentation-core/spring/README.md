@@ -353,7 +353,7 @@ We will also use the RestTemplate HTTP client to send requests from FirstService
 
 ### Set up FirstService and SecondService
 
-Using the earlier instructions [create two example projects](#create-two-spring-projects) and add the required [dependencies and configurations](#setup-for-manual-instrumentation). 
+Using the earlier instructions [create two spring projects](#create-two-spring-projects) and add the required [dependencies and configurations](#setup-for-manual-instrumentation). 
 
 ### Instrumentation of Client Service: SecondService
 
