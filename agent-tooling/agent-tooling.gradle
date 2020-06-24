@@ -25,6 +25,7 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':testing')
+  testCompile deps.opentelemetryInMemory
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile
