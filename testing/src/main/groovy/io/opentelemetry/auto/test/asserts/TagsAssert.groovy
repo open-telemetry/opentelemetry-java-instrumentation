@@ -92,8 +92,9 @@ class TagsAssert {
     })
     Set<String> unverifiedTags = new TreeSet(allTags)
     unverifiedTags.removeAll(assertedTags)
-    // tags and assertedTags are included to provide better context in the error message.
-    //containsAll because we may assert more than span actually has
+    // The first and second condition in the assert are exactly the same
+    // but both are included in order to provide better context in the error message.
+    // containsAll because tests may assert more tags than span actually has
     assert unverifiedTags.isEmpty() && assertedTags.containsAll(allTags)
   }
 
