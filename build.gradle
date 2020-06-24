@@ -26,7 +26,7 @@ release {
 def isCI = System.getenv("CI") != null
 
 allprojects {
-  group = 'io.opentelemetry.instrumentation'
+  group = 'io.opentelemetry.instrumentation.auto'
 
   if (isCI) {
     buildDir = "$rootDir/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
