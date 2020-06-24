@@ -25,7 +25,6 @@ import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
-import org.eclipse.jetty.http.HttpStatus
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -161,7 +160,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -221,7 +220,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -339,7 +338,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -436,7 +435,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -504,7 +503,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.INTERNAL_SERVER_ERROR_500
+    res.code() == 500
 
     cleanup:
     res.close()
@@ -559,7 +558,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.NOT_FOUND_404
+    res.code() == 404
 
     cleanup:
     res.close()

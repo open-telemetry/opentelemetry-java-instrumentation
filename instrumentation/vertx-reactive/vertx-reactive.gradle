@@ -37,7 +37,7 @@ dependencies {
   testCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
   testCompile group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
   testCompile 'org.hsqldb:hsqldb:2.3.4'
-
+  testCompile deps.opentelemetryApiAutoAnnotations
 
   // Vert.x 4.0 is incompatible with our tests.
   latestDepTestCompile group: 'io.vertx', name: 'vertx-web', version: '3.+'

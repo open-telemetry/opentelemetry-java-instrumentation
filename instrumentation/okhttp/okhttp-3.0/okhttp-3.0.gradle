@@ -30,7 +30,7 @@ dependencies {
 
   compile project(':auto-tooling')
 
-  testCompile(project(':testing')) {
+  testImplementation(project(':testing')) {
     exclude module: 'okhttp'
   }
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
