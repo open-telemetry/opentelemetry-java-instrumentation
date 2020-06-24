@@ -436,7 +436,7 @@ public class ControllerTraceInterceptor implements HandlerInterceptor {
       Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
           .extract(Context.current(), request, getter);
       Span span = createSpanWithParent(request, context);
-      span.setAttribute("handler", "pre");
+      span.addEvent("controller handler pre");
       tracer.withSpan(span);
 
       return true;
@@ -444,29 +444,30 @@ public class ControllerTraceInterceptor implements HandlerInterceptor {
 
    @Override
    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-         ModelAndView modelAndView) throws Exception {
-
-      Span currentSpan = tracer.getCurrentSpan();
-      currentSpan.setAttribute("handler", "post");
-      currentSpan.end();
-   }
+         ModelAndView modelAndView) throws Exception {}
 
    @Override
    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
-         Object handler, Exception exception) throws Exception {}
+         Object handler, Exception exception) throws Exception {
+     
+      Span currentSpan = tracer.getCurrentSpan();
+      currentSpan.addEvent("controller post");
+      currentSpan.end();
+   }
    
    private Span createSpanWithParent(HttpServletRequest request, Context context) {
       Span parentSpan = TracingContextUtils.getSpan(context);
-
+      Span.Builder spanBuilder = tracer.spanBuilder(request.getRequestURI()).setSpanKind(Span.Kind.SERVER);
+      
       if (parentSpan.getContext().isValid()) {
-         return  tracer.spanBuilder(request.getRequestURI()).setParent(parentSpan).startSpan();
+        return spanBuilder.setParent(parentSpan).startSpan();
       }
-
-      Span span = tracer.spanBuilder(request.getRequestURI()).startSpan();
+  
+      Span span = spanBuilder.startSpan();
       span.addEvent("Parent Span Not Found");
 
       return span;
-   }
+    }
 }
 
 ```
@@ -593,16 +594,19 @@ public class RestTemplateHeaderModifierInterceptor implements ClientHttpRequestI
    @Override
    public ClientHttpResponse intercept(HttpRequest request, byte[] body,
          ClientHttpRequestExecution execution) throws IOException {
+      
+      String spanName = request.getMethodValue() +  " " + request.getURI().toString();
+      Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(Span.Kind.CLIENT).startSpan();
+      
+      try {
+        OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), request, setter);
+        ClientHttpResponse response = execution.execute(request, body);
+        LOG.info(String.format("Request sent from RestTemplateInterceptor"));
 
-      Span currentSpan = tracer.getCurrentSpan();
-      currentSpan.setAttribute("client_http", "inject");
-      currentSpan.addEvent("Request sent to SecondService");
-
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), request, setter);
-
-      ClientHttpResponse response = execution.execute(request, body);
-
-      return response;
+        return response;
+      }finally {
+        currentSpan.end();
+      }
    }
 }
 
