@@ -260,6 +260,20 @@ workflows:
             branches:
               ignore: master
 
+      - publish_master:
+          requires:
+            - check
+            - test_7
+            - test_8
+            - test_11
+            - test_14
+            - test_latest
+          filters:
+            branches:
+              only: master
+            tags:
+              ignore: /.*/
+
   nightly_snapshot:
     triggers:
       - schedule:
