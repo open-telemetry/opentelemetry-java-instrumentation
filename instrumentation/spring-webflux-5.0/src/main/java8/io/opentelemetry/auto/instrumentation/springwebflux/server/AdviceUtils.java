@@ -16,12 +16,13 @@
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.util.Map;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +38,10 @@ import reactor.util.context.Context;
 @Slf4j
 public class AdviceUtils {
 
-  public static final String SPAN_ATTRIBUTE =
-      "io.opentelemetry.auto.instrumentation.springwebflux.Span";
-  public static final String PARENT_SPAN_ATTRIBUTE =
-      "io.opentelemetry.auto.instrumentation.springwebflux.ParentSpan";
+  public static final String CONTEXT_ATTRIBUTE =
+      "io.opentelemetry.auto.instrumentation.springwebflux.Context";
+  public static final String PARENT_CONTEXT_ATTRIBUTE =
+      "io.opentelemetry.auto.instrumentation.springwebflux.ParentContext";
 
   public static String parseOperationName(final Object handler) {
     final String className = DECORATE.spanNameForClass(handler.getClass());
@@ -55,8 +56,8 @@ public class AdviceUtils {
     return operationName;
   }
 
-  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final Span span) {
-    return mono.<T>transform(finishSpanNextOrError(span));
+  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final io.grpc.Context context) {
+    return mono.<T>transform(finishSpanNextOrError(context));
   }
 
   /**
@@ -65,9 +66,9 @@ public class AdviceUtils {
    * versions.
    */
   public static <T> Function<? super Publisher<T>, ? extends Publisher<T>> finishSpanNextOrError(
-      final Span span) {
+      final io.grpc.Context context) {
     return Operators.lift(
-        (scannable, subscriber) -> new SpanFinishingSubscriber<>(subscriber, span));
+        (scannable, subscriber) -> new SpanFinishingSubscriber<>(subscriber, context));
   }
 
   public static void finishSpanIfPresent(
@@ -87,12 +88,13 @@ public class AdviceUtils {
   private static void finishSpanIfPresentInAttributes(
       final Map<String, Object> attributes, final Throwable throwable) {
 
-    final Span span = (Span) attributes.remove(SPAN_ATTRIBUTE);
-    finishSpanIfPresent(span, throwable);
+    final io.grpc.Context context = (io.grpc.Context) attributes.remove(CONTEXT_ATTRIBUTE);
+    finishSpanIfPresent(context, throwable);
   }
 
-  static void finishSpanIfPresent(final Span span, final Throwable throwable) {
-    if (span != null) {
+  static void finishSpanIfPresent(final io.grpc.Context context, final Throwable throwable) {
+    if (context != null) {
+      Span span = TracingContextUtils.getSpan(context);
       if (throwable != null) {
         span.setStatus(Status.UNKNOWN);
         BaseDecorator.addThrowable(span, throwable);
@@ -104,38 +106,38 @@ public class AdviceUtils {
   public static class SpanFinishingSubscriber<T> implements CoreSubscriber<T> {
 
     private final CoreSubscriber<? super T> subscriber;
-    private final Span span;
+    private final io.grpc.Context otelContext;
     private final Context context;
 
-    public SpanFinishingSubscriber(final CoreSubscriber<? super T> subscriber, final Span span) {
+    public SpanFinishingSubscriber(final CoreSubscriber<? super T> subscriber, final io.grpc.Context otelContext) {
       this.subscriber = subscriber;
-      this.span = span;
-      context = subscriber.currentContext().put(Span.class, span);
+      this.otelContext = otelContext;
+      context = subscriber.currentContext().put(Span.class, otelContext);
     }
 
     @Override
     public void onSubscribe(final Subscription s) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = withScopedContext(otelContext)) {
         subscriber.onSubscribe(s);
       }
     }
 
     @Override
     public void onNext(final T t) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (final Scope scope = withScopedContext(otelContext)) {
         subscriber.onNext(t);
       }
     }
 
     @Override
     public void onError(final Throwable t) {
-      finishSpanIfPresent(span, t);
+      finishSpanIfPresent(otelContext, t);
       subscriber.onError(t);
     }
 
     @Override
     public void onComplete() {
-      finishSpanIfPresent(span, null);
+      finishSpanIfPresent(otelContext, null);
       subscriber.onComplete();
     }
 

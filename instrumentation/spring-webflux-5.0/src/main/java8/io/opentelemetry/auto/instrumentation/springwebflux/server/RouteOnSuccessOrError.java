@@ -15,7 +15,9 @@
  */
 package io.opentelemetry.auto.instrumentation.springwebflux.server;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import org.springframework.web.reactive.function.server.HandlerFunction;
@@ -43,14 +45,16 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     if (handler != null) {
       final String predicateString = parsePredicateString();
       if (predicateString != null) {
-        final Span span = (Span) serverRequest.attributes().get(AdviceUtils.SPAN_ATTRIBUTE);
-        if (span != null) {
+        final Context context = (Context) serverRequest.attributes()
+            .get(AdviceUtils.CONTEXT_ATTRIBUTE);
+        if (context != null) {
+          Span span = TracingContextUtils.getSpan(context);
           span.setAttribute("request.predicate", predicateString);
         }
-        final Span parentSpan =
-            (Span) serverRequest.attributes().get(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
-        if (parentSpan != null) {
-          parentSpan.updateName(parseRoute(predicateString));
+        final Context parentContext =
+            (Context) serverRequest.attributes().get(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE);
+        if (parentContext != null) {
+          TracingContextUtils.getSpan(parentContext).updateName(parseRoute(predicateString));
         }
       }
     }

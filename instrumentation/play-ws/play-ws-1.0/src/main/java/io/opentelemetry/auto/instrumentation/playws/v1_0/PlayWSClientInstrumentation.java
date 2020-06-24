@@ -46,14 +46,20 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
-      final Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+
+      Context currentContext = Context.current();
+
+      OpenTelemetry.getPropagators()
+          .getHttpTextFormat()
+          .inject(withSpan(span, currentContext), request, SETTER);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
-        asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);
+        asyncHandler =
+            new StreamedAsyncHandlerWrapper(
+                (StreamedAsyncHandler) asyncHandler, span, currentContext);
       } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
         // websocket upgrade handlers aren't supported
-        asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
+        asyncHandler = new AsyncHandlerWrapper(asyncHandler, span, currentContext);
       }
 
       return span;

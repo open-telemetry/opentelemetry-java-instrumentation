@@ -27,6 +27,7 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.api.Pair;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
@@ -37,17 +38,18 @@ public class ClientRequestAdvice {
   public static Scope onEnter(
       @Advice.Argument(0) final Request request,
       @Advice.Argument(1) final AsyncHandler<?> handler) {
-    final Span parentSpan = TRACER.getCurrentSpan();
     final Span span =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, request);
 
-    final Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+    Context currentContext = Context.current();
     InstrumentationContext.get(AsyncHandler.class, Pair.class)
-        .put(handler, Pair.of(parentSpan, span));
-    return TRACER.withSpan(span);
+        .put(handler, Pair.of(currentContext, span));
+
+    final Context newContext = withSpan(span, currentContext);
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(newContext, request, SETTER);
+    return ContextUtils.withScopedContext(newContext);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
