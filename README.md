@@ -78,9 +78,9 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                           |
 | ota.exporter.jar                 | OTA_EXPORTER_JAR                 | Path to the exporter fat-jar that you want to use                    |
 | ota.exporter.otlp.endpoint       | OTA_EXPORTER_OTLP_ENDPOINT       | The OTLP endpoint to connect to.                                     |
-| ota.exporter.otlp.deadline.ms    | OTLP_DEADLINE_MS                 | Max waiting time for the collector to process each span batch        |
-| ota.exporter.otlp.use.tls        | OTLP_USE_TLS                     | Use or not TLS, default is false                                     |
-| ota.exporter.otlp.metadata       | OTLP_METADATA                    | Key-value pairs separated by semicolon to pass as metadata           |
+| ota.exporter.otlp.span.timeout   | OTA_EXPORTER_OTLP_SPAN_TIMEOUT   | Max waiting time in ms for the collector to process each span batch  |
+| ota.exporter.otlp.use.tls        | OTA_EXPORTER_OTLP_USE_TLS        | Use or not TLS, default is false                                     |
+| ota.exporter.otlp.metadata       | OTA_EXPORTER_OTLP_METADATA       | Key-value pairs separated by semicolon to pass as metadata           |
 
 #### Logging Exporter
 

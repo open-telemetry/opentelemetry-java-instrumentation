@@ -37,7 +37,7 @@ import java.util.Map.Entry;
 
 public class OtlpSpanExporterFactory implements SpanExporterFactory {
   private static final String OTLP_ENDPOINT = "otlp.endpoint";
-  private static final String OTLP_DEADLINE_MS = "otlp.deadline.ms";
+  private static final String OTLP_SPAN_TIMEOUT = "otlp.span.timeout";
   private static final String OTLP_USE_TLS = "otlp.use.tls";
   private static final String OTLP_METADATA = "otlp.metadata";
 
@@ -50,7 +50,7 @@ public class OtlpSpanExporterFactory implements SpanExporterFactory {
 
     final Builder builder = OtlpGrpcSpanExporter.newBuilder();
 
-    final long deadlineMs = config.getLong(OTLP_DEADLINE_MS, -1);
+    final long deadlineMs = config.getLong(OTLP_SPAN_TIMEOUT, -1);
     if (deadlineMs > 0) {
       builder.setDeadlineMs(deadlineMs);
     }
