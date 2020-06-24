@@ -33,7 +33,6 @@ dependencies {
   testImplementation(project(':testing')) {
     exclude module: 'okhttp'
   }
-  testCompile project(':instrumentation:java-concurrent')
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
 
   // 4.x.x-alpha has been released and it looks like there are lots of incompatible changes

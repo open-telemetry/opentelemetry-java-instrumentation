@@ -44,6 +44,8 @@ abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 1000
   protected static final READ_TIMEOUT_MS = 2000
+  protected static final BASIC_AUTH_KEY = "custom authorization header"
+  protected static final BASIC_AUTH_VAL = "plain text auth token"
 
   @AutoCleanup
   @Shared
@@ -70,6 +72,18 @@ abstract class HttpClientTest extends AgentTestRunner {
       prefix("circular-redirect") {
         handleDistributedRequest()
         redirect(server.address.resolve("/circular-redirect").toURL().toString())
+      }
+      prefix("secured") {
+        handleDistributedRequest()
+        if (request.headers.get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
+          response.status(200).send("secured string under basic auth")
+        } else {
+          response.status(401).send("Unauthorized")
+        }
+      }
+      prefix("to-secured") {
+        handleDistributedRequest()
+        redirect(server.address.resolve("/secured").toURL().toString())
       }
     }
   }
@@ -272,6 +286,28 @@ abstract class HttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, false, uri, statusOnRedirectError(), thrownException)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
+      }
+    }
+
+    where:
+    method = "GET"
+  }
+
+  def "redirect #method to secured endpoint copies auth header"() {
+    given:
+    assumeTrue(testRedirects())
+    def uri = server.address.resolve("/to-secured")
+
+    when:
+    def status = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
+
+    then:
+    status == 200
+    assertTraces(1) {
+      trace(0, 3 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, false, uri)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
         serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
       }

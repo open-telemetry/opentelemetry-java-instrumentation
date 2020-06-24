@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.rediscala;
 import static io.opentelemetry.auto.instrumentation.rediscala.RediscalaClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rediscala.RediscalaClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -51,19 +52,18 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("redis.ActorRequest"))
-        .or(safeHasSuperType(named("redis.Request")))
-        .or(safeHasSuperType(named("redis.BufferedRequest")))
-        .or(safeHasSuperType(named("redis.RoundRobinPoolRequest")));
+    return safeHasSuperType(
+        namedOneOf(
+            "redis.ActorRequest",
+            "redis.Request",
+            "redis.BufferedRequest",
+            "redis.RoundRobinPoolRequest"));
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
       RediscalaInstrumentation.class.getName() + "$OnCompleteHandler",
-      "io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator",
-      "io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator",
-      "io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator",
       packageName + ".RediscalaClientDecorator",
     };
   }
@@ -83,10 +83,10 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand cmd) {
-      final Span span =
-          TRACER.spanBuilder(cmd.getClass().getName()).setSpanKind(CLIENT).startSpan();
+      String statement = DECORATE.spanNameForClass(cmd.getClass());
+      final Span span = TRACER.spanBuilder(statement).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
-      DECORATE.onStatement(span, cmd.getClass().getName());
+      DECORATE.onStatement(span, statement);
       return new SpanWithScope(span, currentContextWith(span));
     }
 
