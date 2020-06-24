@@ -34,8 +34,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(final AsyncHandler delegate, final Span span,
-      Context parentContext) {
+  public AsyncHandlerWrapper(final AsyncHandler delegate, final Span span, Context parentContext) {
     this.delegate = delegate;
     this.span = span;
     this.parentContext = parentContext;

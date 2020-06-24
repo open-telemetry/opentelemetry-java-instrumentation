@@ -15,12 +15,8 @@
  */
 package io.opentelemetry.auto.instrumentation.reactor;
 
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
-import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -38,13 +34,16 @@ public class TracingSubscriber<T>
   private final io.grpc.Context downstreamContext;
   private Subscription subscription;
 
-  public TracingSubscriber(final io.grpc.Context upstreamContext,
-      final CoreSubscriber<T> delegate) {
+  public TracingSubscriber(
+      final io.grpc.Context upstreamContext, final CoreSubscriber<T> delegate) {
     this.delegate = delegate;
     this.upstreamContext = upstreamContext;
     this.downstreamContext =
-        (io.grpc.Context) delegate.currentContext().getOrEmpty(io.grpc.Context.class)
-            .orElse(io.grpc.Context.ROOT);
+        (io.grpc.Context)
+            delegate
+                .currentContext()
+                .getOrEmpty(io.grpc.Context.class)
+                .orElse(io.grpc.Context.ROOT);
 
     // The context is exposed upstream so we put our upstream context here for use by the next
     // TracingSubscriber

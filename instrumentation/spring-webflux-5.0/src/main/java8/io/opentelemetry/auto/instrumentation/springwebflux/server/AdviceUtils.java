@@ -109,7 +109,8 @@ public class AdviceUtils {
     private final io.grpc.Context otelContext;
     private final Context context;
 
-    public SpanFinishingSubscriber(final CoreSubscriber<? super T> subscriber, final io.grpc.Context otelContext) {
+    public SpanFinishingSubscriber(
+        final CoreSubscriber<? super T> subscriber, final io.grpc.Context otelContext) {
       this.subscriber = subscriber;
       this.otelContext = otelContext;
       context = subscriber.currentContext().put(Span.class, otelContext);

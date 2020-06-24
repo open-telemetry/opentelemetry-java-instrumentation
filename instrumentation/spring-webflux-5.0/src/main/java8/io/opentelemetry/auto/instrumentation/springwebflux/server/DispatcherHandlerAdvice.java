@@ -21,7 +21,6 @@ import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
@@ -35,10 +34,10 @@ import reactor.core.publisher.Mono;
 public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void methodEnter(@Advice.Argument(0) final ServerWebExchange exchange,
+  public static void methodEnter(
+      @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Local("otelScope") Scope otelScope,
-      @Advice.Local("otelContext") Context otelContext
-  ) {
+      @Advice.Local("otelContext") Context otelContext) {
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
     // right things so we have to store the context in request itself.
     // We also store parent (netty's) context so we could update resource name.
@@ -60,8 +59,7 @@ public class DispatcherHandlerAdvice {
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Void> mono,
       @Advice.Local("otelScope") Scope otelScope,
-      @Advice.Local("otelContext") Context otelContext
-  ) {
+      @Advice.Local("otelContext") Context otelContext) {
     if (throwable == null && mono != null) {
       mono = AdviceUtils.setPublisherSpan(mono, otelContext);
     } else if (throwable != null) {

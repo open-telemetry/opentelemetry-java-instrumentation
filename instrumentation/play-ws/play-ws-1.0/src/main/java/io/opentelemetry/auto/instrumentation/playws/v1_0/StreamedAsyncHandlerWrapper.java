@@ -24,7 +24,8 @@ public class StreamedAsyncHandlerWrapper extends AsyncHandlerWrapper
     implements StreamedAsyncHandler {
   private final StreamedAsyncHandler streamedDelegate;
 
-  public StreamedAsyncHandlerWrapper(final StreamedAsyncHandler delegate, final Span span, Context parentContext) {
+  public StreamedAsyncHandlerWrapper(
+      final StreamedAsyncHandler delegate, final Span span, Context parentContext) {
     super(delegate, span, parentContext);
     streamedDelegate = delegate;
   }

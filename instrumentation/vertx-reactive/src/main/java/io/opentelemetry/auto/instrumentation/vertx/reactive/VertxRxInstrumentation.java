@@ -15,7 +15,6 @@
  */
 package io.opentelemetry.auto.instrumentation.vertx.reactive;
 
-import static io.opentelemetry.auto.instrumentation.vertx.reactive.VertxDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;

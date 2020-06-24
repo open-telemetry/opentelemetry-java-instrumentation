@@ -45,8 +45,8 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     if (handler != null) {
       final String predicateString = parsePredicateString();
       if (predicateString != null) {
-        final Context context = (Context) serverRequest.attributes()
-            .get(AdviceUtils.CONTEXT_ATTRIBUTE);
+        final Context context =
+            (Context) serverRequest.attributes().get(AdviceUtils.CONTEXT_ATTRIBUTE);
         if (context != null) {
           Span span = TracingContextUtils.getSpan(context);
           span.setAttribute("request.predicate", predicateString);

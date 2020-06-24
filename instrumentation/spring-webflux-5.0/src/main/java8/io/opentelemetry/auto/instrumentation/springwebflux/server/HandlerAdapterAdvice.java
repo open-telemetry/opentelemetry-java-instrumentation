@@ -62,7 +62,7 @@ public class HandlerAdapterAdvice {
     final PathPattern bestPattern =
         exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     if (parentContext != null && bestPattern != null) {
-      //TODO this is wrong span to update. We should update the outermost server span
+      // TODO this is wrong span to update. We should update the outermost server span
       final String spanName = bestPattern.getPatternString();
       TracingContextUtils.getSpan(parentContext).updateName(spanName);
     }

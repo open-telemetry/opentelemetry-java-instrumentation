@@ -16,7 +16,6 @@
 package io.opentelemetry.auto.instrumentation.grizzly.client;
 
 import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.TRACER;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
@@ -37,8 +36,8 @@ public class ClientResponseAdvice {
       @Advice.This final AsyncCompletionHandler<?> handler,
       @Advice.Argument(0) final Response response) {
 
-    //TODO I think all this should happen on exit, not on enter.
-    //After response was handled by user provided handler.
+    // TODO I think all this should happen on exit, not on enter.
+    // After response was handled by user provided handler.
     final ContextStore<AsyncHandler, Pair> contextStore =
         InstrumentationContext.get(AsyncHandler.class, Pair.class);
     final Pair<Context, Span> spanWithParent = contextStore.get(handler);
@@ -50,7 +49,9 @@ public class ClientResponseAdvice {
       DECORATE.beforeFinish(spanWithParent.getRight());
       spanWithParent.getRight().end();
     }
-    return spanWithParent.hasLeft() ? ContextUtils.withScopedContext(spanWithParent.getLeft()) : null;
+    return spanWithParent.hasLeft()
+        ? ContextUtils.withScopedContext(spanWithParent.getLeft())
+        : null;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

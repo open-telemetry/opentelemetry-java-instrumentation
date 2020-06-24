@@ -63,7 +63,8 @@ public class TracingPublishers {
         return new FuseableParallelFluxTracingPublisher<>(context, (ParallelFlux<T>) delegate);
       }
       if (delegate instanceof ConnectableFlux) {
-        return new FuseableConnectableFluxTracingPublisher<>(context, (ConnectableFlux<T>) delegate);
+        return new FuseableConnectableFluxTracingPublisher<>(
+            context, (ConnectableFlux<T>) delegate);
       }
       if (delegate instanceof GroupedFlux) {
         return new FuseableGroupedFluxTracingPublisher<>(context, (GroupedFlux<?, T>) delegate);
@@ -140,7 +141,8 @@ public class TracingPublishers {
     private final Context context;
     private final ConnectableFlux<T> delegate;
 
-    public ConnectableFluxTracingPublisher(final Context context, final ConnectableFlux<T> delegate) {
+    public ConnectableFluxTracingPublisher(
+        final Context context, final ConnectableFlux<T> delegate) {
       this.context = context;
       this.delegate = delegate;
     }
@@ -208,7 +210,8 @@ public class TracingPublishers {
 
   public static class FuseableParallelFluxTracingPublisher<T>
       extends ParallelFluxTracingPublisher<T> implements Fuseable {
-    public FuseableParallelFluxTracingPublisher(final Context context, final ParallelFlux<T> delegate) {
+    public FuseableParallelFluxTracingPublisher(
+        final Context context, final ParallelFlux<T> delegate) {
       super(context, delegate);
     }
   }
@@ -223,7 +226,8 @@ public class TracingPublishers {
 
   public static class FuseableGroupedFluxTracingPublisher<O, T>
       extends GroupedFluxTracingPublisher<O, T> implements Fuseable {
-    public FuseableGroupedFluxTracingPublisher(final Context context, final GroupedFlux<O, T> delegate) {
+    public FuseableGroupedFluxTracingPublisher(
+        final Context context, final GroupedFlux<O, T> delegate) {
       super(context, delegate);
     }
   }
