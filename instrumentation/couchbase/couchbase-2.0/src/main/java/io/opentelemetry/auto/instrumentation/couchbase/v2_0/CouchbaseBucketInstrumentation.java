@@ -15,6 +15,7 @@
  */
 package io.opentelemetry.auto.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -43,8 +44,9 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.couchbase.client.java.bucket.DefaultAsyncBucketManager")
-        .or(named("com.couchbase.client.java.CouchbaseAsyncBucket"));
+    return namedOneOf(
+        "com.couchbase.client.java.bucket.DefaultAsyncBucketManager",
+        "com.couchbase.client.java.CouchbaseAsyncBucket");
   }
 
   @Override

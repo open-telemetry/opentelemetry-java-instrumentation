@@ -73,12 +73,24 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
       if (redirect == null) {
         return;
       }
-
-      for (final Header header : original.getAllHeaders()) {
-        final String name = header.getName().toLowerCase();
-        if (name.equals("traceparent")) {
-          if (!redirect.containsHeader(header.getName())) {
-            redirect.setHeader(header.getName(), header.getValue());
+      // TODO this only handles W3C headers
+      // Apache HttpClient 4.0.1+ copies headers from original to redirect only
+      // if redirect headers are empty. Because we add headers
+      // "traceparent" and "tracestate" to redirect: it means redirect headers never
+      // will be empty. So in case if not-instrumented redirect had no headers,
+      // we just copy all not set headers from original to redirect (doing same
+      // thing as apache httpclient does).
+      if (!redirect.headerIterator().hasNext()) {
+        // redirect didn't have other headers besides tracing, so we need to do copy
+        // (same work as Apache HttpClient 4.0.1+ does w/o instrumentation)
+        redirect.setHeaders(original.getAllHeaders());
+      } else {
+        for (final Header header : original.getAllHeaders()) {
+          final String name = header.getName().toLowerCase();
+          if (name.equals("traceparent") || name.equals("tracestate")) {
+            if (!redirect.containsHeader(header.getName())) {
+              redirect.setHeader(header.getName(), header.getValue());
+            }
           }
         }
       }

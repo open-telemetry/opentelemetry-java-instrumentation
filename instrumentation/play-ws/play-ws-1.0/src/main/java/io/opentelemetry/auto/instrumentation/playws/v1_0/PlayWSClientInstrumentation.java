@@ -31,6 +31,7 @@ import net.bytebuddy.asm.Advice;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
+import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 
 @AutoService(Instrumenter.class)
 public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation {
@@ -50,7 +51,8 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);
-      } else {
+      } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
+        // websocket upgrade handlers aren't supported
         asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
       }
 

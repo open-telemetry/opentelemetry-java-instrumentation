@@ -16,6 +16,7 @@
 package io.opentelemetry.auto.instrumentation.javaclassloader;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedNoneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -56,9 +57,10 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     // just an optimization to exclude common class loaders that are known to delegate to the
     // bootstrap loader (or happen to _be_ the bootstrap loader)
-    return not(named("java.lang.ClassLoader"))
-        .and(not(named("com.ibm.oti.vm.BootstrapClassLoader")))
-        .and(not(named("io.opentelemetry.auto.bootstrap.AgentClassLoader")))
+    return namedNoneOf(
+            "java.lang.ClassLoader",
+            "com.ibm.oti.vm.BootstrapClassLoader",
+            "io.opentelemetry.auto.bootstrap.AgentClassLoader")
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
