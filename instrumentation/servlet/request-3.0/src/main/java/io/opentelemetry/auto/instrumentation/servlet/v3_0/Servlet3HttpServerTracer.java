@@ -15,6 +15,10 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
+
+import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -46,7 +50,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
   }
 
   /*
-  Given request already has a span associated with it.
+  Given request already has a context associated with it.
   As there should not be nested spans of kind SERVER, we should NOT create a new span here.
 
   But it may happen that there is no span in current Context or it is from a different trace.
@@ -57,8 +61,8 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
 
   In this case we have to put the span from the request into current context before continuing.
   */
-  public boolean needsRescoping(Span attachedSpan) {
-    return !sameTrace(tracer.getCurrentSpan(), attachedSpan);
+  public boolean needsRescoping(Context attachedContext) {
+    return !sameTrace(getSpan(Context.current()), getSpan(attachedContext));
   }
 
   @Override
@@ -73,22 +77,23 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
    * This was easier and less "hacky" than other ways to add the filter to the front of the filter
    * chain.
    */
+  // TODO review this hacky-hacky
   private void onContext(
-      final Span span, final HttpServletRequest request, final ServletContext context) {
-    if (context == null) {
+      final Span span, final HttpServletRequest request, final ServletContext servletContext) {
+    if (servletContext == null) {
       // some frameworks (jetty) may return a null context.
       return;
     }
-    final Object attribute = context.getAttribute("io.opentelemetry.auto.dispatcher-filter");
+    final Object attribute = servletContext.getAttribute("io.opentelemetry.auto.dispatcher-filter");
     if (attribute instanceof Filter) {
-      final Object priorAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      request.setAttribute(SPAN_ATTRIBUTE, span);
+      final Object priorAttr = request.getAttribute(CONTEXT_ATTRIBUTE);
+      request.setAttribute(CONTEXT_ATTRIBUTE, withSpan(span, Context.current()));
       try {
         ((Filter) attribute).doFilter(request, null, null);
       } catch (final IOException | ServletException e) {
         log.debug("Exception unexpectedly thrown by filter", e);
       } finally {
-        request.setAttribute(SPAN_ATTRIBUTE, priorAttr);
+        request.setAttribute(CONTEXT_ATTRIBUTE, priorAttr);
       }
     }
   }

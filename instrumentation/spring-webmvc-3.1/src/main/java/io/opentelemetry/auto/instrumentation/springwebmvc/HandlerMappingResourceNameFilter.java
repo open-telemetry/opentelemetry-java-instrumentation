@@ -15,10 +15,11 @@
  */
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
 
-import io.opentelemetry.trace.Span;
+import io.grpc.Context;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -45,10 +46,10 @@ public class HandlerMappingResourceNameFilter implements Filter {
       try {
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
-          final Object parentSpan = request.getAttribute(SPAN_ATTRIBUTE);
-          if (parentSpan instanceof Span) {
+          final Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+          if (parentContext instanceof Context) {
             // Let the parent span resource name be set with the attribute set in findMapping.
-            DECORATE.onRequest((Span) parentSpan, request);
+            DECORATE.onRequest(TracingContextUtils.getSpan((Context) parentContext), request);
           }
         }
       } catch (final Exception e) {

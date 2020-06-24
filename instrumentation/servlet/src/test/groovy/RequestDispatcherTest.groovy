@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+import io.grpc.Context
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.Span
-
+import io.opentelemetry.trace.TracingContextUtils
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.trace.TracingContextUtils.getSpan
+import static io.opentelemetry.trace.TracingContextUtils.withSpan
 
 class RequestDispatcherTest extends AgentTestRunner {
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)
-  def mockSpan = Mock(Span)
+  def mockContext = withSpan(Mock(Span), Context.ROOT)
   def dispatcher = new RequestDispatcherUtils(request, response)
 
   def "test dispatch no-parent"() {
@@ -37,7 +42,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     dispatcher.include("")
 
     then:
-    2 * request.getAttribute(SPAN_ATTRIBUTE)
+    2 * request.getAttribute(CONTEXT_ATTRIBUTE)
     assertTraces(2) {
       trace(0, 1) {
         basicSpan(it, 0, "forward-child")
@@ -58,7 +63,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(SPAN_ATTRIBUTE)
+    1 * request.getAttribute(CONTEXT_ATTRIBUTE)
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
@@ -74,11 +79,11 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(SPAN_ATTRIBUTE) >> mockSpan
+    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
     then:
-    1 * request.setAttribute(SPAN_ATTRIBUTE, { it.name == "servlet.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "servlet.$operation" })
     then:
-    1 * request.setAttribute(SPAN_ATTRIBUTE, mockSpan)
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
     0 * _
 
     where:
@@ -105,7 +110,7 @@ class RequestDispatcherTest extends AgentTestRunner {
     def th = thrown(ServletException)
     th == ex
 
-    1 * request.getAttribute(SPAN_ATTRIBUTE)
+    1 * request.getAttribute(CONTEXT_ATTRIBUTE)
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, ex)
@@ -123,11 +128,11 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(SPAN_ATTRIBUTE) >> mockSpan
+    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
     then:
-    1 * request.setAttribute(SPAN_ATTRIBUTE, { it.name == "servlet.$operation" })
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { getSpan(it).name == "servlet.$operation" })
     then:
-    1 * request.setAttribute(SPAN_ATTRIBUTE, mockSpan)
+    1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
     0 * _
 
     where:

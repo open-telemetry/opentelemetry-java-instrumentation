@@ -15,14 +15,16 @@
  */
 package io.opentelemetry.auto.instrumentation.grizzly;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -79,14 +81,14 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final Request request,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      if (TRACER.getAttachedSpan(request) != null) {
+      if (TRACER.getAttachedContext(request) != null) {
         return;
       }
 
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       span = TRACER.startSpan(request, method, null);
-      scope = TRACER.withSpan(span);
+      scope = TRACER.newScope(span, request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -111,10 +113,10 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onAfterService(final Request request) {
-      final Object spanAttr = request.getAttribute(SPAN_ATTRIBUTE);
-      if (spanAttr instanceof Span) {
-        request.removeAttribute(SPAN_ATTRIBUTE);
-        TRACER.end((Span) spanAttr, request.getResponse().getStatus());
+      final Object contextAttribute = request.getAttribute(CONTEXT_ATTRIBUTE);
+      if (contextAttribute instanceof Context) {
+        request.removeAttribute(CONTEXT_ATTRIBUTE);
+        TRACER.end(getSpan((Context) contextAttribute), request.getResponse().getStatus());
       }
     }
   }

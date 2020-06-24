@@ -16,8 +16,9 @@
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -46,10 +47,10 @@ public class Servlet3Advice {
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    Span attachedSpan = TRACER.getAttachedSpan(httpServletRequest);
-    if (attachedSpan != null) {
-      if (TRACER.needsRescoping(attachedSpan)) {
-        scope = currentContextWith(attachedSpan);
+    Context attachedContext = TRACER.getAttachedContext(httpServletRequest);
+    if (attachedContext != null) {
+      if (TRACER.needsRescoping(attachedContext)) {
+        scope = withScopedContext(attachedContext);
       }
       // We are inside nested servlet/filter, don't create new span
       return;
@@ -60,7 +61,7 @@ public class Servlet3Advice {
         .put((HttpServletResponse) response, httpServletRequest);
 
     span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
-    scope = TRACER.withSpan(span);
+    scope = TRACER.newScope(span, httpServletRequest);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

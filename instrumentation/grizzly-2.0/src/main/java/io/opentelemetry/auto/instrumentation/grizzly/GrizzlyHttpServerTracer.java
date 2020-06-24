@@ -17,6 +17,7 @@ package io.opentelemetry.auto.instrumentation.grizzly;
 
 import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
@@ -48,8 +49,14 @@ public class GrizzlyHttpServerTracer extends HttpServerTracer<Request> {
   }
 
   @Override
-  protected void attachSpanToRequest(Span span, Request request) {
-    request.setAttribute(SPAN_ATTRIBUTE, span);
+  protected void attachContextToRequest(Context context, Request request) {
+    request.setAttribute(CONTEXT_ATTRIBUTE, context);
+  }
+
+  @Override
+  public Context getAttachedContext(Request request) {
+    Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
+    return context instanceof Context ? (Context) context : null;
   }
 
   @Override
@@ -72,12 +79,6 @@ public class GrizzlyHttpServerTracer extends HttpServerTracer<Request> {
   @Override
   protected Getter<Request> getGetter() {
     return GETTER;
-  }
-
-  @Override
-  public Span getAttachedSpan(Request request) {
-    Object span = request.getAttribute(SPAN_ATTRIBUTE);
-    return span instanceof Span ? (Span) span : null;
   }
 
   @Override

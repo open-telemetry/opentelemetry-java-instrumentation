@@ -15,13 +15,15 @@
  */
 package io.opentelemetry.auto.instrumentation.servlet.dispatcher;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.servlet.dispatcher.RequestDispatcherDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,6 +31,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
@@ -87,12 +90,13 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
     public static SpanWithScope start(
         @Advice.Origin("#m") final String method,
         @Advice.This final RequestDispatcher dispatcher,
-        @Advice.Local("_originalServletSpan") Object originalServletSpan,
+        @Advice.Local("_originalServletContext") Object originalServletContext,
         @Advice.Argument(0) final ServletRequest request) {
       final Span parentSpan = TRACER.getCurrentSpan();
 
-      final Object servletSpanObject = request.getAttribute(SPAN_ATTRIBUTE);
-      final Span servletSpan = servletSpanObject instanceof Span ? (Span) servletSpanObject : null;
+      final Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
+      final Span servletSpan =
+          servletContextObject instanceof Context ? getSpan((Context) servletContextObject) : null;
 
       if (!parentSpan.getContext().isValid() && servletSpan == null) {
         // Don't want to generate a new top-level span
@@ -125,18 +129,19 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
 
       // save the original servlet span before overwriting the request attribute, so that it can be
       // restored on method exit
-      originalServletSpan = request.getAttribute(SPAN_ATTRIBUTE);
+      originalServletContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
       // this tells the dispatched servlet to use the current span as the parent for its work
-      request.setAttribute(SPAN_ATTRIBUTE, span);
+      Context newContext = withSpan(span, Context.current());
+      request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
 
-      return new SpanWithScope(span, currentContextWith(span));
+      return new SpanWithScope(span, withScopedContext(newContext));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
         @Advice.Enter final SpanWithScope spanWithScope,
-        @Advice.Local("_originalServletSpan") final Object originalServletSpan,
+        @Advice.Local("_originalServletContext") final Object originalServletContext,
         @Advice.Argument(0) final ServletRequest request,
         @Advice.Thrown final Throwable throwable) {
       if (spanWithScope == null) {
@@ -144,9 +149,11 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       }
 
       // restore the original servlet span
-      // since spanWithScope is non-null here, originalServletSpan must have been set with the prior
+      // since spanWithScope is non-null here, originalServletContext must have been set with the
+      // prior
       // servlet span (as opposed to remaining unset)
-      request.setAttribute(SPAN_ATTRIBUTE, originalServletSpan);
+      // TODO review this logic. Seems like manual context management
+      request.setAttribute(CONTEXT_ATTRIBUTE, originalServletContext);
 
       final Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);

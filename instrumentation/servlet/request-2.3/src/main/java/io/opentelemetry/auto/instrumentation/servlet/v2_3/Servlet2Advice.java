@@ -44,7 +44,7 @@ public class Servlet2Advice {
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    if (TRACER.getAttachedSpan(httpServletRequest) != null) {
+    if (TRACER.getAttachedContext(httpServletRequest) != null) {
       return;
     }
 
@@ -53,7 +53,7 @@ public class Servlet2Advice {
         .put((HttpServletResponse) response, httpServletRequest);
 
     span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
-    scope = TRACER.withSpan(span);
+    scope = TRACER.newScope(span, httpServletRequest);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

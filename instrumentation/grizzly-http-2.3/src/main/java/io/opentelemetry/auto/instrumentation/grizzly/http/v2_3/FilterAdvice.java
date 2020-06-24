@@ -15,11 +15,12 @@
  */
 package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.grizzly.http.v2_3.GrizzlyDecorator.TRACER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
+import io.grpc.Context;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -32,11 +33,12 @@ public class FilterAdvice {
     if (TRACER.getCurrentSpan().getContext().isValid()) {
       return null;
     }
-    final Span span = (Span) ctx.getAttributes().getAttribute(SPAN_ATTRIBUTE);
-    if (span == null) {
+    final Context context =
+        (Context) ctx.getAttributes().getAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE);
+    if (context == null) {
       return null;
     }
-    return TRACER.withSpan(span);
+    return withScopedContext(context);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

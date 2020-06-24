@@ -15,12 +15,13 @@
  */
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -30,6 +31,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -80,9 +82,9 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
-      final Object parentSpan = request.getAttribute(SPAN_ATTRIBUTE);
-      if (parentSpan instanceof Span) {
-        DECORATE.onRequest((Span) parentSpan, request);
+      final Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+      if (parentContext instanceof Context) {
+        DECORATE.onRequest(getSpan((Context) parentContext), request);
       }
 
       if (!TRACER.getCurrentSpan().getContext().isValid()) {

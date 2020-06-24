@@ -15,13 +15,17 @@
  */
 package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
 
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.TracingContextUtils;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -70,10 +74,11 @@ public class GrizzlyDecorator
 
   public static void onHttpServerFilterPrepareResponseExit(
       final FilterChainContext ctx, final HttpResponsePacket responsePacket) {
-    final Span span = (Span) ctx.getAttributes().getAttribute(SPAN_ATTRIBUTE);
+    final Context context = (Context) ctx.getAttributes().getAttribute(CONTEXT_ATTRIBUTE);
+    Span span = TracingContextUtils.getSpan(context);
     DECORATE.onResponse(span, responsePacket);
     span.end();
-    ctx.getAttributes().removeAttribute(SPAN_ATTRIBUTE);
+    ctx.getAttributes().removeAttribute(CONTEXT_ATTRIBUTE);
     ctx.getAttributes().removeAttribute(RESPONSE_ATTRIBUTE);
   }
 
@@ -81,7 +86,7 @@ public class GrizzlyDecorator
       final FilterChainContext ctx, final HttpHeader httpHeader) {
     // only create a span if there isn't another one attached to the current ctx
     // and if the httpHeader has been parsed into a HttpRequestPacket
-    if (ctx.getAttributes().getAttribute(SPAN_ATTRIBUTE) != null
+    if (ctx.getAttributes().getAttribute(CONTEXT_ATTRIBUTE) != null
         || !(httpHeader instanceof HttpRequestPacket)) {
       return;
     }
@@ -93,9 +98,10 @@ public class GrizzlyDecorator
             .setSpanKind(SERVER)
             .setParent(extract(httpHeader, ExtractAdapter.GETTER))
             .startSpan();
-    try (final Scope ignored = TRACER.withSpan(span)) {
+    Context newContext = TracingContextUtils.withSpan(span, Context.current());
+    try (final Scope ignored = ContextUtils.withScopedContext(newContext)) {
       DECORATE.afterStart(span);
-      ctx.getAttributes().setAttribute(SPAN_ATTRIBUTE, span);
+      ctx.getAttributes().setAttribute(CONTEXT_ATTRIBUTE, newContext);
       ctx.getAttributes().setAttribute(RESPONSE_ATTRIBUTE, httpResponse);
       DECORATE.onConnection(span, httpRequest);
       DECORATE.onRequest(span, httpRequest);
@@ -103,13 +109,14 @@ public class GrizzlyDecorator
   }
 
   public static void onFilterChainFail(final FilterChainContext ctx, final Throwable throwable) {
-    final Span span = (Span) ctx.getAttributes().getAttribute(SPAN_ATTRIBUTE);
-    if (null != span) {
+    final Context context = (Context) ctx.getAttributes().getAttribute(CONTEXT_ATTRIBUTE);
+    if (null != context) {
+      Span span = TracingContextUtils.getSpan(context);
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
     }
-    ctx.getAttributes().removeAttribute(SPAN_ATTRIBUTE);
+    ctx.getAttributes().removeAttribute(CONTEXT_ATTRIBUTE);
     ctx.getAttributes().removeAttribute(RESPONSE_ATTRIBUTE);
   }
 }
