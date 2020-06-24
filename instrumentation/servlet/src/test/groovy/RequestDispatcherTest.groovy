@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 import io.grpc.Context
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.TracingContextUtils
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse

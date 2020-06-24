@@ -4,12 +4,8 @@ ext {
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply from: "$rootDir/gradle/test-with-scala.gradle"
 
 dependencies {
-  compileOnly deps.scala
-
-  testCompile deps.scala
   testCompile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 
   testCompile project(':instrumentation:java-concurrent')
