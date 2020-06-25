@@ -216,9 +216,15 @@ workflows:
             tags:
               only: /.*/
 
+      - check:
+          filters:
+            tags:
+              only: /.*/
+
       - default_test_job:
           requires:
             - build
+            - check
           prefixTestTask: true
           name: test_<< matrix.testTask >>
           matrix:
@@ -231,6 +237,7 @@ workflows:
       - default_test_job:
           requires:
             - build
+            - check
           name: test_11
           testTask: test jacocoTestReport jacocoTestCoverageVerification
           filters:
@@ -240,13 +247,9 @@ workflows:
       - default_test_job:
           requires:
             - build
+            - check
           name: test_latest
           testTask: latestDepTest
-          filters:
-            tags:
-              only: /.*/
-
-      - check:
           filters:
             tags:
               only: /.*/
@@ -254,18 +257,19 @@ workflows:
       - muzzle:
           requires:
             - build
+            - check
           filters:
             branches:
               ignore: master
 
       - publish_master:
           requires:
-            - check
             - test_7
             - test_8
             - test_11
             - test_14
             - test_latest
+            - muzzle
           filters:
             branches:
               only: master
@@ -302,9 +306,15 @@ workflows:
             branches:
               only: /\d+\.\d+\.x$/
 
+      - check:
+          filters:
+            branches:
+              only: /\d+\.\d+\.x$/
+
       - default_test_job:
           requires:
             - build
+            - check
           prefixTestTask: true
           name: test_<< matrix.testTask >>
           matrix:
@@ -317,6 +327,7 @@ workflows:
       - default_test_job:
           requires:
             - build
+            - check
           name: test_11
           testTask: test jacocoTestReport jacocoTestCoverageVerification
           filters:
@@ -326,13 +337,9 @@ workflows:
       - default_test_job:
           requires:
             - build
+            - check
           name: test_latest
           testTask: latestDepTest
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
-      - check:
           filters:
             branches:
               only: /\d+\.\d+\.x$/
@@ -340,6 +347,7 @@ workflows:
       - muzzle:
           requires:
             - build
+            - check
           filters:
             branches:
               only: /\d+\.\d+\.x$/
@@ -351,7 +359,6 @@ workflows:
             - test_11
             - test_14
             - test_latest
-            - check
             - muzzle
           filters:
             branches:
