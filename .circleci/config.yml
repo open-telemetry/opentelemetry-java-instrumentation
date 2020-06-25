@@ -33,7 +33,7 @@ jobs:
           name: Build Project
           command: >-
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M"
-            ./gradlew clean classes testClasses :opentelemetry-auto:shadowJar :auto-exporters:shadowJar
+            ./gradlew clean build shadowJar -x test
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
 
@@ -216,15 +216,9 @@ workflows:
             tags:
               only: /.*/
 
-      - check:
-          filters:
-            tags:
-              only: /.*/
-
       - default_test_job:
           requires:
             - build
-            - check
           prefixTestTask: true
           name: test_<< matrix.testTask >>
           matrix:
@@ -237,7 +231,6 @@ workflows:
       - default_test_job:
           requires:
             - build
-            - check
           name: test_11
           testTask: test jacocoTestReport jacocoTestCoverageVerification
           filters:
@@ -247,7 +240,6 @@ workflows:
       - default_test_job:
           requires:
             - build
-            - check
           name: test_latest
           testTask: latestDepTest
           filters:
@@ -257,7 +249,6 @@ workflows:
       - muzzle:
           requires:
             - build
-            - check
           filters:
             branches:
               ignore: master
@@ -306,15 +297,9 @@ workflows:
             branches:
               only: /\d+\.\d+\.x$/
 
-      - check:
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
       - default_test_job:
           requires:
             - build
-            - check
           prefixTestTask: true
           name: test_<< matrix.testTask >>
           matrix:
@@ -327,7 +312,6 @@ workflows:
       - default_test_job:
           requires:
             - build
-            - check
           name: test_11
           testTask: test jacocoTestReport jacocoTestCoverageVerification
           filters:
@@ -337,7 +321,6 @@ workflows:
       - default_test_job:
           requires:
             - build
-            - check
           name: test_latest
           testTask: latestDepTest
           filters:
@@ -347,7 +330,6 @@ workflows:
       - muzzle:
           requires:
             - build
-            - check
           filters:
             branches:
               only: /\d+\.\d+\.x$/
