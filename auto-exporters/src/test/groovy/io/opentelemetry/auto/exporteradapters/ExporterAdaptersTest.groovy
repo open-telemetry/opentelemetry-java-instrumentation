@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.tooling.ExporterClassLoader
 import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory
 import spock.lang.Shared

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap;
 
 /** Marker interface to show that fields for FieldBackedContextStore have been applied to a class */
