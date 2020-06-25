@@ -21,4 +21,4 @@ spotless {
 }
 
 task formatCode(dependsOn: ['spotlessApply'])
-check.dependsOn 'spotlessApply'
+check.dependsOn 'spotlessCheck'
