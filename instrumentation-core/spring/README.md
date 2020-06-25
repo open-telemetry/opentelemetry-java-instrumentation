@@ -599,13 +599,14 @@ public class RestTemplateHeaderModifierInterceptor implements ClientHttpRequestI
       Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(Span.Kind.CLIENT).startSpan();
       
       try {
-        OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), request, setter);
-        ClientHttpResponse response = execution.execute(request, body);
-        LOG.info(String.format("Request sent from RestTemplateInterceptor"));
+         tracer.withSpan(span);
+         OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), request, setter);
+         ClientHttpResponse response = execution.execute(request, body);
+         LOG.info(String.format("Request sent from RestTemplateInterceptor"));
 
-        return response;
+         return response;
       }finally {
-        currentSpan.end();
+         currentSpan.end();
       }
    }
 }
