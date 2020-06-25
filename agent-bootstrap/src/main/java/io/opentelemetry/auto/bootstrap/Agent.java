@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 // We cannot use lombok here because we need to configure logger first
 public class Agent {
 
-   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
+  private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
       "io.opentelemetry.auto.slf4j.simpleLogger.showDateTime";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY =
       "io.opentelemetry.auto.slf4j.simpleLogger.dateTimeFormat";
