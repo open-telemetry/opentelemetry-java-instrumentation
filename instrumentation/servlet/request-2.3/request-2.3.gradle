@@ -26,7 +26,7 @@ dependencies {
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
   compile(project(':instrumentation:servlet:servlet-common'))
 
-  testCompile(project(':testing')) {
+  testImplementation(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'

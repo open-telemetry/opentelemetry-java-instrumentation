@@ -80,8 +80,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
       try {
         final PeriodicTask<T> periodicTask = new PeriodicTask<>(task, target);
         final ScheduledFuture<?> future =
-            executorService.scheduleAtFixedRate(
-                new PeriodicTask<>(task, target), initialDelay, period, unit);
+            executorService.scheduleAtFixedRate(periodicTask, initialDelay, period, unit);
         periodicTask.setFuture(future);
         return future;
       } catch (final RejectedExecutionException e) {

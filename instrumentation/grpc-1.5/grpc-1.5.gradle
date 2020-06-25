@@ -48,6 +48,7 @@ dependencies {
   testCompile group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
   testCompile group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
   testCompile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+  testCompile project(':utils:thread-utils')
 
   latestDepTestCompile sourceSets.test.output // include the protobuf generated classes
   latestDepTestCompile group: 'io.grpc', name: 'grpc-netty', version: '+'
