@@ -88,7 +88,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       span = TRACER.startSpan(request, method, null);
-      scope = TRACER.newScope(span, request);
+      scope = TRACER.startScope(span, request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

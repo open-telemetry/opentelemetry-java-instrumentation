@@ -178,7 +178,7 @@ public abstract class HttpServerTracer<REQUEST> {
    *
    * <p>Attaches new context to the request to avoid creating duplicate server spans.
    */
-  public Scope newScope(Span span, REQUEST request) {
+  public Scope startScope(Span span, REQUEST request) {
     Context newContext = withSpan(span, Context.current());
     attachContextToRequest(newContext, request);
     return withScopedContext(newContext);
@@ -231,14 +231,12 @@ public abstract class HttpServerTracer<REQUEST> {
   protected abstract String method(REQUEST request);
 
   /** Stores given context in the given request in implementation specific way. */
-  protected void attachContextToRequest(Context context, REQUEST request) {}
+  protected abstract void attachContextToRequest(Context context, REQUEST request);
 
   /**
    * Returns context stored to given request by {@link #attachContextToRequest(Context, REQUEST)}.
    *
    * <p>May be null.
    */
-  protected Context getAttachedContext(REQUEST request) {
-    return null;
-  }
+  public abstract Context getAttachedContext(REQUEST request);
 }
