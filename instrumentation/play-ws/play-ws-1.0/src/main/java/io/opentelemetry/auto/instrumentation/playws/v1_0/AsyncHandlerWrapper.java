@@ -30,14 +30,14 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
   private final Span span;
-  private final Context parentContext;
+  private final Context invocationContext;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(final AsyncHandler delegate, final Span span, Context parentContext) {
+  public AsyncHandlerWrapper(final AsyncHandler delegate, final Span span, Context invocationContext) {
     this.delegate = delegate;
     this.span = span;
-    this.parentContext = parentContext;
+    this.invocationContext = invocationContext;
   }
 
   @Override
@@ -68,7 +68,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.end();
 
-    try (final Scope scope = ContextUtils.withScopedContext(parentContext)) {
+    try (final Scope scope = ContextUtils.withScopedContext(invocationContext)) {
       return delegate.onCompleted();
     }
   }
@@ -79,7 +79,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.end();
 
-    try (final Scope scope = ContextUtils.withScopedContext(parentContext)) {
+    try (final Scope scope = ContextUtils.withScopedContext(invocationContext)) {
       delegate.onThrowable(throwable);
     }
   }
