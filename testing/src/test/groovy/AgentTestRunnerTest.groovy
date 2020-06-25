@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.google.common.reflect.ClassPath
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.SpockRunner

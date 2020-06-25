@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.lambdaworks.redis.ClientOptions
 import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException

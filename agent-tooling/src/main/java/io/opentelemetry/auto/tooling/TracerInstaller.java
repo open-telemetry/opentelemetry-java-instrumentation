@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.auto.bootstrap.spi.TracerCustomizer;
@@ -118,6 +119,8 @@ public class TracerInstaller {
       MetricExporterFactory metricExporterFactory, DefaultExporterConfig config) {
     final MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
     IntervalMetricReader.builder()
+        .readEnvironmentVariables()
+        .readSystemProperties()
         .setMetricExporter(metricExporter)
         .setMetricProducers(
             Collections.singleton(OpenTelemetrySdk.getMeterProvider().getMetricProducer()))
