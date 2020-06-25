@@ -6,7 +6,7 @@ This package streamlines the manual instrumentation process of OpenTelemetry for
 
 The [first section](#manual-instrumentation-with-java-sdk) will walk you through span creation and propagation using the OpenTelemetry Java API and [Spring's RestTemplate Http Web Client](https://spring.io/guides/gs/consuming-rest/). This approach will use the "vanilla" OpenTelemetry API to make explicit tracing calls within an application's controller. 
 
-The [second section](#manual-instrumentation-using-handlers-and-interceptors)  will build on the first. It will walk you through implementing spring-web handler and interceptor interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations. 
+The [second section](#manual-instrumentation-using-handlers-and-filters)  will build on the first. It will walk you through implementing spring-web handler and filter interfaces to create traces with minimal changes to existing application code. Using the OpenTelemetry API, this approach involves copy and pasting files and a significant amount of manual configurations. 
 
 The third section will walk you through the annotations and configurations defined in the opentelemetry-instrumentation-spring package. This section will equip you with new tools to streamline the setup and instrumentation of OpenTelemetry on Spring and Spring Boot applications. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
@@ -345,9 +345,9 @@ Run FirstService and SecondService from command line or using an IDE. The end po
 
 Congrats, we just created a distributed service with OpenTelemetry!
 
-## Manual Instrumentation using Handlers and Interceptors
+## Manual Instrumentation using Handlers and Filters
 
-In this section, we will implement the Spring HandlerInerceptor interface to wrap all requests to FirstService and SecondService controllers in a span. 
+In this section, we will implement the javax Serverlet Filter interface to wrap all requests to FirstService and SecondService controllers in a span. 
 
 We will also use the RestTemplate HTTP client to send requests from FirstService to SecondService. To propagate the trace in this request we will also implement the ClientHttpRequestInterceptor interface. This implementation is only required for projects that send outbound requests. In this example it is only required for FirstService. 
 
@@ -395,7 +395,7 @@ public class SecondServiceController {
 }
 ```
 
-#### Create Controller Interceptor
+#### Create Controller Filter
 
 Add the class below to wrap all requests to the SecondServiceController in a span. This class will call the preHandle method before the REST controller is entered and the postHandle method after a response is created. 
 
@@ -403,94 +403,57 @@ The preHandle method starts a span for each request. This implementation is show
 
 ```java
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.context.propagation.HttpTextFormat;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
-
 @Component
-public class ControllerTraceInterceptor implements HandlerInterceptor {
-
-   private static final HttpTextFormat.Getter<HttpServletRequest> getter =
-         new HttpTextFormat.Getter<HttpServletRequest>() {
-            public String get(HttpServletRequest req, String key) {
-               return req.getHeader(key);
-            }
-         };
-
-   @Autowired
-   private Tracer tracer;
-
-   @Override
-   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-         throws Exception {
-      Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
-          .extract(Context.current(), request, getter);
-      Span span = createSpanWithParent(request, context);
-      span.addEvent("controller handler pre");
-      tracer.withSpan(span);
-
-      return true;
-   }
-
-   @Override
-   public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-         ModelAndView modelAndView) throws Exception {}
-
-   @Override
-   public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
-         Object handler, Exception exception) throws Exception {
-     
-      Span currentSpan = tracer.getCurrentSpan();
-      currentSpan.addEvent("controller post");
-      currentSpan.end();
-   }
-   
-   private Span createSpanWithParent(HttpServletRequest request, Context context) {
-      Span parentSpan = TracingContextUtils.getSpan(context);
-      Span.Builder spanBuilder = tracer.spanBuilder(request.getRequestURI()).setSpanKind(Span.Kind.SERVER);
-      
-      if (parentSpan.getContext().isValid()) {
-        return spanBuilder.setParent(parentSpan).startSpan();
-      }
+public class ControllerFilter implements Filter {
   
-      Span span = spanBuilder.startSpan();
-      span.addEvent("Parent Span Not Found");
+  @Autowired
+  Tracer tracer;
+  
+  private final Logger LOG = Logger.getLogger(ControllerFilter.class.getName());
 
-      return span;
+  private final HttpTextFormat.Getter<HttpServletRequest> GETTER =
+      new HttpTextFormat.Getter<HttpServletRequest>() {
+        public String get(HttpServletRequest req, String key) {
+          return req.getHeader(key);
+        }
+      };
+
+  @Override
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+      throws IOException, ServletException {
+    LOG.info("start doFilter");
+    
+    HttpServletRequest req = (HttpServletRequest) request;
+    Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
+        .extract(Context.current(), req, GETTER);
+    Span currentSpan = createSpanWithParent(req, context);
+    try {
+      tracer.withSpan(currentSpan);
+      currentSpan.addEvent("dofilter");
+      chain.doFilter(req, response);
+    }finally {
+      LOG.info("end doFilter");
+      currentSpan.end();
     }
+    
+  }
+  
+  private Span createSpanWithParent(HttpServletRequest request, Context context) {
+    Span parentSpan = TracingContextUtils.getSpan(context);
+    Span.Builder spanBuilder = tracer.spanBuilder(request.getRequestURI()).setSpanKind(Span.Kind.SERVER);
+    
+    if (parentSpan.getContext().isValid()) {
+      return spanBuilder.setParent(parentSpan).startSpan();
+    }
+
+    Span span = spanBuilder.startSpan();
+    span.addEvent("Parent Span Not Found");
+
+    return span;
+  }
+}
 }
 
-```
-
-The final step is to register an instance of the ControllerTraceInterceptor:
-
-```java
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
-
-@Component
-public class InterceptorConfig extends WebMvcConfigurationSupport {
-
-   @Autowired
-   ControllerTraceInterceptor controllerTraceInterceptor;
-
-   @Override
-   public void addInterceptors(InterceptorRegistry registry) {
-      registry.addInterceptor(controllerTraceInterceptor);
-   }
-}
 ```
 
 Now your SecondService application is complete. Create the FirstService application using the instructions below and then run your distributed service!
@@ -548,7 +511,7 @@ public class FirstServiceController {
 }
 ```
 
-As seen in the setup of SecondService, implement the TraceInterceptor interface to wrap requests to the SecondServiceController in a span. Then register this new handler by extending the HandlerInterceptor. In effect, we will be taking a copy of the InterceptorConfig.java and ControllerTraceInterceptor.java defined in SecondService and adding it to FirstService. These files are referenced [here](#create-controller-interceptor).
+As seen in the setup of SecondService, implement the javax serverlet filter interface to wrap requests to the SecondServiceController in a span. In effect, we will be taking a copy of the [ControllerFilter.java](#create-controller-filter) file defined in SecondService and adding it to FirstService.
 
 #### Create Client Http Request Interceptor
 
@@ -577,7 +540,7 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 
 @Component
-public class RestTemplateHeaderModifierInterceptor implements ClientHttpRequestInterceptor {
+public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 
    @Autowired
    private Tracer tracer;
