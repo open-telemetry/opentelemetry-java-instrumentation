@@ -247,8 +247,6 @@ workflows:
               only: /.*/
 
       - check:
-          requires:
-            - build
           filters:
             tags:
               only: /.*/
@@ -335,8 +333,6 @@ workflows:
               only: /\d+\.\d+\.x$/
 
       - check:
-          requires:
-            - build
           filters:
             branches:
               only: /\d+\.\d+\.x$/
