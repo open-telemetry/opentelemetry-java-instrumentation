@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.base.HttpClientTest
 import okhttp3.Headers
 import okhttp3.MediaType

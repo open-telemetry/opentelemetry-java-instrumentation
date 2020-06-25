@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.auto.instrumentation.jdbc.normalizer.SqlNormalizer

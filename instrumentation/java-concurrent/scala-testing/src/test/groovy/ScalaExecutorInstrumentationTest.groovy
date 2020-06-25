@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.trace.data.SpanData
 import scala.concurrent.forkjoin.ForkJoinPool
