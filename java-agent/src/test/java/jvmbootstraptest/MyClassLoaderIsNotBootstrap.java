@@ -13,31 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.smoketest
+package jvmbootstraptest;
 
-
-import io.opentelemetry.auto.test.utils.OkHttpUtils
-import io.opentelemetry.auto.test.utils.PortUtils
-import okhttp3.OkHttpClient
-import spock.lang.Shared
-
-import java.util.concurrent.TimeUnit
-
-abstract class AbstractServerSmokeTest extends AbstractSmokeTest {
-
-  @Shared
-  int httpPort = PortUtils.randomOpenPort()
-
-
-  protected OkHttpClient client = OkHttpUtils.client()
-
-  def setupSpec() {
-    try {
-      PortUtils.waitForPortToOpen(httpPort, 240, TimeUnit.SECONDS, testedProcess)
-    } catch (e) {
-      System.err.println(logfile.text)
-      throw e
+public class MyClassLoaderIsNotBootstrap {
+  public static void main(final String[] args) {
+    if (MyClassLoaderIsNotBootstrap.class.getClassLoader() == null) {
+      throw new RuntimeException("Application level class was loaded by bootstrap classloader");
     }
   }
-
 }

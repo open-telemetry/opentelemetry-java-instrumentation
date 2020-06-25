@@ -32,6 +32,7 @@ dependencies {
   testCompile group: 'software.amazon.awssdk', name: 'sqs', version: '2.2.0'
   testCompile group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.2.0'
   testCompile group: 'software.amazon.awssdk', name: 'kinesis', version: '2.2.0'
+  testImplementation deps.guava
 
   latestDepTestCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   latestDepTestCompile project(':instrumentation:netty:netty-4.1')

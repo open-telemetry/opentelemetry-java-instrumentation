@@ -29,9 +29,18 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 public abstract class BaseDecorator {
+
+  private static final ClassValue<SpanNames> SPAN_NAMES =
+      new ClassValue<SpanNames>() {
+        @Override
+        protected SpanNames computeValue(Class<?> type) {
+          return new SpanNames(getClassName(type));
+        }
+      };
 
   protected BaseDecorator() {}
 
@@ -88,25 +97,71 @@ public abstract class BaseDecorator {
    * reference. Anonymous classes are named based on their parent.
    */
   public String spanNameForMethod(final Method method) {
-    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
+    return spanNameForMethod(method.getDeclaringClass(), method);
+  }
+
+  /**
+   * This method is used to generate an acceptable span (operation) name based on a given method
+   * reference. Anonymous classes are named based on their parent.
+   *
+   * @param method the method to get the name from, nullable
+   * @return the span name from the class and method
+   */
+  public String spanNameForMethod(final Class<?> clazz, final Method method) {
+    return spanNameForMethod(clazz, null == method ? null : method.getName());
+  }
+
+  /**
+   * This method is used to generate an acceptable span (operation) name based on a given method
+   * reference. Anonymous classes are named based on their parent.
+   *
+   * @param methodName the name of the method to get the name from, nullable
+   * @return the span name from the class and method
+   */
+  public String spanNameForMethod(final Class<?> clazz, final String methodName) {
+    SpanNames cn = SPAN_NAMES.get(clazz);
+    return null == methodName ? cn.getClassName() : cn.getSpanName(methodName);
   }
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
    */
-  public String spanNameForClass(final Class clazz) {
-    if (!clazz.isAnonymousClass()) {
-      return clazz.getSimpleName();
+  public String spanNameForClass(final Class<?> clazz) {
+    String simpleName = clazz.getSimpleName();
+    return simpleName.isEmpty() ? SPAN_NAMES.get(clazz).getClassName() : simpleName;
+  }
+
+  private static class SpanNames {
+    private final String className;
+    private final ConcurrentHashMap<String, String> spanNames = new ConcurrentHashMap<>(1);
+
+    private SpanNames(String className) {
+      this.className = className;
     }
-    String className = clazz.getName();
-    if (clazz.getPackage() != null) {
-      final String pkgName = clazz.getPackage().getName();
-      if (!pkgName.isEmpty()) {
-        className = clazz.getName().replace(pkgName, "").substring(1);
+
+    public String getClassName() {
+      return className;
+    }
+
+    public String getSpanName(String methodName) {
+      String spanName = spanNames.get(methodName);
+      if (null == spanName) {
+        spanName = className + "." + methodName;
+        spanNames.putIfAbsent(methodName, spanName);
       }
+      return spanName;
     }
-    return className;
+  }
+
+  private static String getClassName(Class<?> clazz) {
+    String simpleName = clazz.getSimpleName();
+    if (simpleName.isEmpty()) {
+      String name = clazz.getName();
+      int start = name.lastIndexOf('.');
+      return name.substring(start + 1);
+    }
+    return simpleName;
   }
 
   public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {

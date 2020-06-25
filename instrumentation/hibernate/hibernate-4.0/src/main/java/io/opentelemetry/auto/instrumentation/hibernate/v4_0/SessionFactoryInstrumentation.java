@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.hibernate.v4_0;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -53,11 +54,9 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod()
-            .and(named("openSession").or(named("openStatelessSession")))
+            .and(namedOneOf("openSession", "openStatelessSession"))
             .and(takesArguments(0))
-            .and(
-                returns(
-                    named("org.hibernate.Session").or(named("org.hibernate.StatelessSession")))),
+            .and(returns(namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession"))),
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 

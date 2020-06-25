@@ -174,6 +174,18 @@ public class IntegrationTestUtils {
     throw new RuntimeException("Agent jar not found");
   }
 
+  public static int runOnSeparateJvm(
+      final String mainClassName,
+      final String[] jvmArgs,
+      final String[] mainMethodArgs,
+      final Map<String, String> envVars,
+      final boolean printOutputStreams)
+      throws Exception {
+    final String classPath = System.getProperty("java.class.path");
+    return runOnSeparateJvm(
+        mainClassName, jvmArgs, mainMethodArgs, envVars, classPath, printOutputStreams);
+  }
+
   /**
    * On a separate JVM, run the main method for a given class.
    *
@@ -187,11 +199,11 @@ public class IntegrationTestUtils {
       final String[] jvmArgs,
       final String[] mainMethodArgs,
       final Map<String, String> envVars,
+      final String classpath,
       final boolean printOutputStreams)
       throws Exception {
 
     final String separator = System.getProperty("file.separator");
-    final String classpath = System.getProperty("java.class.path");
     final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
     final List<String> vmArgsList = new ArrayList<>(Arrays.asList(jvmArgs));

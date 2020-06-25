@@ -42,6 +42,6 @@ class Java9ModulesSmokeTest extends AbstractSmokeTest {
   @Timeout(value = TIMEOUT_SECS, unit = TimeUnit.SECONDS)
   def "Module application runs correctly"() {
     expect:
-    assert serverProcess.waitFor() == 0
+    assert testedProcess.waitFor() == 0
   }
 }

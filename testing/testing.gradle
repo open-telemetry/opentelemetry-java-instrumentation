@@ -15,43 +15,47 @@ excludedClassesCoverage += [
 ]
 
 dependencies {
-  compile deps.opentelemetryApi
-  compile(project(path: ':opentelemetry-sdk-shaded-for-testing', configuration: 'shadow'))
-  compile deps.bytebuddy
-  compile deps.bytebuddyagent
-  compile deps.slf4j
-  compile deps.spock
-  compile deps.testLogging
-  compile deps.guava
+  api(project(path: ':opentelemetry-sdk-shaded-for-testing', configuration: 'shadow'))
+
+  implementation deps.opentelemetryApi
+  implementation deps.bytebuddy
+  implementation deps.bytebuddyagent
+  implementation deps.slf4j
+  implementation deps.spock
+  implementation deps.testLogging
+  implementation deps.guava
 
   // okhttp 3.12.x is the last version to support Java7
-  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.12.12'
-  compile group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '3.12.12'
+  api group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.12.12'
+  api group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '3.12.12'
 
-  compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+  //TODO replace with Servlet API?
+  implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
 
-  compile(project(':auto-tooling')) {
+  implementation(project(':auto-bootstrap'))
+  implementation(project(':auto-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
-  compile project(':utils:test-utils')
+  api project(':utils:test-utils')
 
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
-  compile deps.groovy
+  implementation deps.groovy
 
-  testCompile project(':utils:test-utils')
-  testCompile project(':instrumentation:trace-annotation')
+  testImplementation project(':instrumentation:trace-annotation')
 
-  testCompile('io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2') {
+  //TODO replace with Otel WithSpan
+  testImplementation('io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2') {
     // bringing this in has side effects and causes some tests to fail
     exclude group: 'io.dropwizard', module: 'dropwizard-core'
   }
 
-  testCompile group: 'cglib', name: 'cglib', version: '3.2.5'
+  testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
   // test instrumenting java 1.1 bytecode
-  testCompile group: 'net.sf.jt400', name: 'jt400', version: '6.1'
+  //TODO do we want this?
+  testImplementation group: 'net.sf.jt400', name: 'jt400', version: '6.1'
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
   testAnnotationProcessor deps.autoservice

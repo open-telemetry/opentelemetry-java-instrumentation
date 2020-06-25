@@ -75,7 +75,7 @@ public class SpringWebMvcDecorator extends BaseDecorator {
       methodName = "<annotation>";
     }
 
-    return DECORATE.spanNameForClass(clazz) + "." + methodName;
+    return DECORATE.spanNameForMethod(clazz, methodName);
   }
 
   public String spanNameOnRender(final ModelAndView mv) {

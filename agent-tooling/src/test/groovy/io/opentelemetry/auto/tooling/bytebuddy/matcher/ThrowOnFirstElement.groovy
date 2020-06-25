@@ -13,31 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.smoketest
+package io.opentelemetry.auto.tooling.bytebuddy.matcher
 
+class ThrowOnFirstElement implements Iterator<Object> {
 
-import io.opentelemetry.auto.test.utils.OkHttpUtils
-import io.opentelemetry.auto.test.utils.PortUtils
-import okhttp3.OkHttpClient
-import spock.lang.Shared
+  int i = 0
 
-import java.util.concurrent.TimeUnit
-
-abstract class AbstractServerSmokeTest extends AbstractSmokeTest {
-
-  @Shared
-  int httpPort = PortUtils.randomOpenPort()
-
-
-  protected OkHttpClient client = OkHttpUtils.client()
-
-  def setupSpec() {
-    try {
-      PortUtils.waitForPortToOpen(httpPort, 240, TimeUnit.SECONDS, testedProcess)
-    } catch (e) {
-      System.err.println(logfile.text)
-      throw e
-    }
+  @Override
+  boolean hasNext() {
+    return i++ < 1
   }
 
+  @Override
+  Object next() {
+    throw new Exception("iteration exception")
+  }
 }
