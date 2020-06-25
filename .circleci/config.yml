@@ -45,6 +45,14 @@ jobs:
       - store_artifacts:
           path: ./libs
 
+      - run:
+          name: Collect Reports
+          when: on_fail
+          command: .circleci/collect_reports.sh
+
+      - store_artifacts:
+          path: ./reports
+
       - persist_to_workspace:
           root: .
           paths:
@@ -107,34 +115,6 @@ jobs:
 
       - store_test_results:
           path: ./results
-
-  check:
-    <<: *defaults
-
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - restore_cache:
-          <<: *cache_keys
-
-      - run:
-          name: Build Project
-          command: >-
-            GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
-            ./gradlew build -PskipTests
-            << pipeline.parameters.gradle_flags >>
-            --max-workers=8
-
-      - run:
-          name: Collect Reports
-          when: always
-          command: .circleci/collect_reports.sh
-
-      - store_artifacts:
-          path: ./reports
 
   muzzle:
     <<: *defaults
