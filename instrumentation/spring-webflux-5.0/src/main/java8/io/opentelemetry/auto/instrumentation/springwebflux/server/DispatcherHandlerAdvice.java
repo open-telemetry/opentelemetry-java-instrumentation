@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
@@ -41,13 +42,17 @@ public class DispatcherHandlerAdvice {
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
     // right things so we have to store the context in request itself.
     // We also store parent (netty's) context so we could update resource name.
-    Context currentContext = Context.current();
-    exchange.getAttributes().put(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE, currentContext);
+    Context parentContext = Context.current();
+    exchange.getAttributes().put(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE, parentContext);
 
-    final Span span = TRACER.spanBuilder("DispatcherHandler.handle").startSpan();
+    final Span span =
+        TRACER
+            .spanBuilder("DispatcherHandler.handle")
+            .setParent(getSpan(parentContext))
+            .startSpan();
     DECORATE.afterStart(span);
 
-    otelContext = withSpan(span, currentContext);
+    otelContext = withSpan(span, parentContext);
     exchange.getAttributes().put(AdviceUtils.CONTEXT_ATTRIBUTE, otelContext);
 
     otelScope = withScopedContext(otelContext);
