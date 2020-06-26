@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.vertx.reactive;
 
-import static io.opentelemetry.auto.instrumentation.vertx.reactive.VertxDecorator.TRACER;
-
+import io.grpc.Context;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import java.util.function.Consumer;
@@ -27,18 +27,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<?>>> {
   private final Consumer<Handler<AsyncResult<?>>> delegate;
-  private final Span parentSpan;
+  private final Context executionContext;
 
   public AsyncResultConsumerWrapper(
-      final Consumer<Handler<AsyncResult<?>>> delegate, Span parentSpan) {
+      final Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     this.delegate = delegate;
-    this.parentSpan = parentSpan;
+    this.executionContext = executionContext;
   }
 
   @Override
   public void accept(final Handler<AsyncResult<?>> asyncResultHandler) {
-    if (parentSpan != null) {
-      try (final Scope scope = TRACER.withSpan(parentSpan)) {
+    if (executionContext != null) {
+      try (final Scope scope = ContextUtils.withScopedContext(executionContext)) {
         delegate.accept(asyncResultHandler);
       }
     } else {
@@ -47,10 +47,10 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   }
 
   public static Consumer<Handler<AsyncResult<?>>> wrapIfNeeded(
-      final Consumer<Handler<AsyncResult<?>>> delegate, final Span parentSpan) {
+      final Consumer<Handler<AsyncResult<?>>> delegate, final Context executionContext) {
     if (!(delegate instanceof AsyncResultConsumerWrapper)) {
       log.debug("Wrapping consumer {}", delegate);
-      return new AsyncResultConsumerWrapper(delegate, parentSpan);
+      return new AsyncResultConsumerWrapper(delegate, executionContext);
     }
     return delegate;
   }

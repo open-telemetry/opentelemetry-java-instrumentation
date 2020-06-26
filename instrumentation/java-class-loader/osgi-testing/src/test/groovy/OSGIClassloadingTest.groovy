@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.felix.framework.BundleWiringImpl
 import org.eclipse.osgi.internal.debug.Debug

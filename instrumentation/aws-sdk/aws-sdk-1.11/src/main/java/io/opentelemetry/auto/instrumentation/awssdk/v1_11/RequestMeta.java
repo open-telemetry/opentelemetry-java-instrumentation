@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.handlers.HandlerContextKey;

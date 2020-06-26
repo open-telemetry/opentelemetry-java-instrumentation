@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;

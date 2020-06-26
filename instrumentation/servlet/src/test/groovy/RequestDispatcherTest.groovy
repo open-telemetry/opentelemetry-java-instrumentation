@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import io.grpc.Context
+
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.trace.Span
 import javax.servlet.ServletException

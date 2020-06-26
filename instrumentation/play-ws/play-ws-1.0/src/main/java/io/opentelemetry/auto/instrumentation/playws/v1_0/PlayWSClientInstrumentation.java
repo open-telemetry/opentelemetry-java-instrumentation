@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.playws.v1_0;
 
 import static io.opentelemetry.auto.instrumentation.playws.HeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.google.auto.service.AutoService;
@@ -40,20 +42,29 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
     public static Span methodEnter(
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
+      Context parentContext = Context.current();
 
       final Span span =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
+          TRACER
+              .spanBuilder(DECORATE.spanNameForRequest(request))
+              .setSpanKind(CLIENT)
+              .setParent(getSpan(parentContext))
+              .startSpan();
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
-      final Context context = withSpan(span, Context.current());
-      OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
+
+      OpenTelemetry.getPropagators()
+          .getHttpTextFormat()
+          .inject(withSpan(span, parentContext), request, SETTER);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
-        asyncHandler = new StreamedAsyncHandlerWrapper((StreamedAsyncHandler) asyncHandler, span);
+        asyncHandler =
+            new StreamedAsyncHandlerWrapper(
+                (StreamedAsyncHandler) asyncHandler, span, parentContext);
       } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
         // websocket upgrade handlers aren't supported
-        asyncHandler = new AsyncHandlerWrapper(asyncHandler, span);
+        asyncHandler = new AsyncHandlerWrapper(asyncHandler, span, parentContext);
       }
 
       return span;
