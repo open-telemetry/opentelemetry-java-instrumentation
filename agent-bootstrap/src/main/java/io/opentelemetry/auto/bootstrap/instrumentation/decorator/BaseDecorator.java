@@ -79,7 +79,7 @@ public abstract class BaseDecorator {
     return onPeerConnection(span, remoteAddress, null);
   }
 
-  public Span onPeerConnection(
+  private Span onPeerConnection(
       final Span span, final InetAddress remoteAddress, String hostString) {
     assert span != null;
     if (remoteAddress != null) {
