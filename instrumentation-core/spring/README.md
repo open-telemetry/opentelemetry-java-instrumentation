@@ -510,7 +510,7 @@ public class FirstServiceController {
 }
 ```
 
-As seen in the setup of SecondService, implement the javax serverlet filter interface to wrap requests to the SecondServiceController in a span. In effect, we will be taking a copy of the [ControllerFilter.java](#create-controller-filter) file defined in SecondService and adding it to FirstService.
+As seen in the setup of SecondService, implement the javax servlet filter interface to wrap requests to the SecondServiceController in a span. In effect, we will be taking a copy of the [ControllerFilter.java](#create-controller-filter) file defined in SecondService and adding it to FirstService.
 
 #### Create Client Http Request Interceptor
 
