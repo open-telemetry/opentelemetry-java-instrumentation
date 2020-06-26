@@ -26,7 +26,6 @@ dependencies {
   implementation deps.slf4j
 
   testImplementation project(':testing')
-  testImplementation deps.opentelemetryInMemory
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile

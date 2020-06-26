@@ -30,7 +30,6 @@ ext {
     opentelemetryTraceProps        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-contrib-trace-propagators', version: versions.opentelemetry),
     opentelemetrySdk               : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
     opentelemetrySdkAutoConfig     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-contrib-auto-config', version: versions.opentelemetry),
-    opentelemetryInMemory          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-inmemory', version: versions.opentelemetry),
     opentelemetryJaeger            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-jaeger', version: versions.opentelemetry),
     opentelemetryOtlp              : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-otlp', version: versions.opentelemetry),
     opentelemetryZipkin            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporters-zipkin', version: versions.opentelemetry),
