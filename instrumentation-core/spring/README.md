@@ -438,17 +438,7 @@ public class ControllerFilter implements Filter {
   }
   
   private Span createSpanWithParent(HttpServletRequest request, Context context) {
-    Span parentSpan = TracingContextUtils.getSpan(context);
-    Span.Builder spanBuilder = tracer.spanBuilder(request.getRequestURI()).setSpanKind(Span.Kind.SERVER);
-    
-    if (parentSpan.getContext().isValid()) {
-      return spanBuilder.setParent(parentSpan).startSpan();
-    }
-
-    Span span = spanBuilder.startSpan();
-    span.addEvent("Parent Span Not Found");
-
-    return span;
+    return tracer.spanBuilder(request.getRequestURI()).setSpanKind(Span.Kind.SERVER).startSpan();
   }
 }
 }
