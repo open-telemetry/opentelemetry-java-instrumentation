@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.log.injection.LogContextInjectionTestBase
 import org.apache.log4j.MDC
 import org.junit.Ignore

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.playws.v1_0;
 
 import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.playws.PlayWSClientDecorator.TRACER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
@@ -30,14 +31,15 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 public class AsyncHandlerWrapper implements AsyncHandler {
   private final AsyncHandler delegate;
   private final Span span;
-  private final Span parentSpan;
+  private final Context invocationContext;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(final AsyncHandler delegate, final Span span) {
+  public AsyncHandlerWrapper(
+      final AsyncHandler delegate, final Span span, Context invocationContext) {
     this.delegate = delegate;
     this.span = span;
-    parentSpan = TRACER.getCurrentSpan();
+    this.invocationContext = invocationContext;
   }
 
   @Override
@@ -68,11 +70,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.end();
 
-    if (parentSpan.getContext().isValid()) {
-      try (final Scope scope = currentContextWith(parentSpan)) {
-        return delegate.onCompleted();
-      }
-    } else {
+    try (final Scope scope = ContextUtils.withScopedContext(invocationContext)) {
       return delegate.onCompleted();
     }
   }
@@ -83,11 +81,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     DECORATE.beforeFinish(span);
     span.end();
 
-    if (parentSpan.getContext().isValid()) {
-      try (final Scope scope = currentContextWith(parentSpan)) {
-        delegate.onThrowable(throwable);
-      }
-    } else {
+    try (final Scope scope = ContextUtils.withScopedContext(invocationContext)) {
       delegate.onThrowable(throwable);
     }
   }

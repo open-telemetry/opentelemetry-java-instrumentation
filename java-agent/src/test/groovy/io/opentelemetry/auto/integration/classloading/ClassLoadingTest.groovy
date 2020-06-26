@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.integration.classloading
 
 import io.opentelemetry.auto.util.gc.GCUtils

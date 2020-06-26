@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.bootstrap.WeakMap
 import io.opentelemetry.auto.instrumentation.jaxrs.v1_0.JaxRsAnnotationsDecorator
 import io.opentelemetry.auto.test.AgentTestRunner
