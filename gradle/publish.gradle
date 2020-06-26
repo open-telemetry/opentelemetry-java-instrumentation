@@ -19,6 +19,7 @@ publishing {
         from components.java
       }
 
+      artifactId = artifactPrefix(project) + artifactId
 
       pom {
         name = 'OpenTelemetry Instrumentation for Java'
@@ -54,6 +55,16 @@ publishing {
 
     }
   }
+}
+
+private String artifactPrefix(Project p){
+  if(p.name.startsWith("opentelemetry")){
+    return ''
+  }
+  if(p.group == 'io.opentelemetry.instrumentation.auto'){
+    return 'opentelemetry-auto-'
+  }
+  return 'opentelemetry-'
 }
 
 bintray {
