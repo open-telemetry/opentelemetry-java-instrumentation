@@ -33,7 +33,7 @@ jobs:
           name: Build Project
           command: >-
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx1G -Xms64M' -Dota.forkedMaxHeapSize=1G -Dota.forkedMinHeapSize=64M"
-            ./gradlew clean classes testClasses :opentelemetry-auto:shadowJar :auto-exporters:shadowJar
+            ./gradlew clean build shadowJar -x test
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
 
@@ -44,6 +44,14 @@ jobs:
 
       - store_artifacts:
           path: ./libs
+
+      - run:
+          name: Collect Reports
+          when: on_fail
+          command: .circleci/collect_reports.sh
+
+      - store_artifacts:
+          path: ./reports
 
       - persist_to_workspace:
           root: .
@@ -107,34 +115,6 @@ jobs:
 
       - store_test_results:
           path: ./results
-
-  check:
-    <<: *defaults
-
-    steps:
-      - checkout
-
-      - attach_workspace:
-          at: .
-
-      - restore_cache:
-          <<: *cache_keys
-
-      - run:
-          name: Build Project
-          command: >-
-            GRADLE_OPTS="-Dota.forkedMaxHeapSize=4G -Dota.forkedMinHeapSize=64M"
-            ./gradlew build -PskipTests
-            << pipeline.parameters.gradle_flags >>
-            --max-workers=8
-
-      - run:
-          name: Collect Reports
-          when: always
-          command: .circleci/collect_reports.sh
-
-      - store_artifacts:
-          path: ./reports
 
   muzzle:
     <<: *defaults
@@ -246,13 +226,6 @@ workflows:
             tags:
               only: /.*/
 
-      - check:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
-
       - muzzle:
           requires:
             - build
@@ -262,12 +235,12 @@ workflows:
 
       - publish_master:
           requires:
-            - check
             - test_7
             - test_8
             - test_11
             - test_14
             - test_latest
+            - muzzle
           filters:
             branches:
               only: master
@@ -334,13 +307,6 @@ workflows:
             branches:
               only: /\d+\.\d+\.x$/
 
-      - check:
-          requires:
-            - build
-          filters:
-            branches:
-              only: /\d+\.\d+\.x$/
-
       - muzzle:
           requires:
             - build
@@ -355,7 +321,6 @@ workflows:
             - test_11
             - test_14
             - test_latest
-            - check
             - muzzle
           filters:
             branches:
