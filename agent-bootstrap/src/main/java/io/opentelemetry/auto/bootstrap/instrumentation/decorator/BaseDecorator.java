@@ -68,7 +68,7 @@ public abstract class BaseDecorator {
   public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
-      onPeerConnection(span, remoteConnection.getAddress());
+      onPeerConnection(span, remoteConnection.getAddress(), remoteConnection.getHostString());
 
       span.setAttribute(MoreTags.NET_PEER_PORT, remoteConnection.getPort());
     }
@@ -76,10 +76,21 @@ public abstract class BaseDecorator {
   }
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
+    return onPeerConnection(span, remoteAddress, null);
+  }
+
+  public Span onPeerConnection(
+      final Span span, final InetAddress remoteAddress, String hostString) {
     assert span != null;
     if (remoteAddress != null) {
-      span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
+      final String hostName = remoteAddress.getHostName();
+      if (!hostName.equals(remoteAddress.getHostAddress())) {
+        span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
+      }
       span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
+    } else if (hostString != null) {
+      // Failed DNS lookup, the host string is the name.
+      span.setAttribute(MoreTags.NET_PEER_NAME, hostString);
     }
     return span;
   }
