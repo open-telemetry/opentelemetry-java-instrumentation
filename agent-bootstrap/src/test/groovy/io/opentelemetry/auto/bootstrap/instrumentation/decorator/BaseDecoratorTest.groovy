@@ -27,6 +27,9 @@ class BaseDecoratorTest extends AgentSpecification {
   @Shared
   def decorator = newDecorator()
 
+  @Shared
+  def resolvedAddress = new InetSocketAddress("github.com", 999)
+
   def span = Mock(Span)
 
   def "test afterStart"() {
@@ -57,7 +60,7 @@ class BaseDecoratorTest extends AgentSpecification {
     new InetSocketAddress("localhost", 888)         | "localhost"         | "127.0.0.1"
     new InetSocketAddress("127.0.0.1", 888)         | "localhost"         | "127.0.0.1"
     new InetSocketAddress("1.2.3.4", 888)           | null                | "1.2.3.4"
-    new InetSocketAddress("ipv6.google.com", 999)   | "ipv6.google.com"   | new InetSocketAddress("ipv6.google.com", 999).address.hostAddress
+    resolvedAddress                                 | "github.com"        | resolvedAddress.address.hostAddress
     new InetSocketAddress("bad.address.local", 999) | "bad.address.local" | null
   }
 
