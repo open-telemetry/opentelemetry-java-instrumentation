@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap;
 
 import java.io.ByteArrayInputStream;
@@ -48,7 +49,10 @@ public class InternalJarURLHandler extends URLStreamHandler {
           final JarEntry entry = entries.nextElement();
 
           if (!entry.isDirectory() && entry.getName().startsWith(filePrefix)) {
-            filenameToEntry.put(entry.getName().substring(internalJarFileName.length()), entry);
+            String name = entry.getName();
+            // remove data suffix
+            int end = name.endsWith(".classdata") ? name.length() - 4 : name.length();
+            filenameToEntry.put(name.substring(internalJarFileName.length(), end), entry);
           }
         }
       }
@@ -63,15 +67,16 @@ public class InternalJarURLHandler extends URLStreamHandler {
 
   @Override
   protected URLConnection openConnection(final URL url) throws IOException {
-    final String filename = url.getFile().replaceAll("\\.class$", ".classdata");
+    final String filename = url.getFile();
     if ("/".equals(filename)) {
       // "/" is used as the default url of the jar
       // This is called by the SecureClassLoader trying to obtain permissions
 
       // nullInputStream() is not available until Java 11
       return new InternalJarURLConnection(url, new ByteArrayInputStream(new byte[0]));
-    } else if (filenameToEntry.containsKey(filename)) {
-      final JarEntry entry = filenameToEntry.get(filename);
+    }
+    final JarEntry entry = filenameToEntry.get(filename);
+    if (null != entry) {
       return new InternalJarURLConnection(url, bootstrapJarFile.getInputStream(entry));
     } else {
       throw new NoSuchFileException(url.getFile(), null, url.getFile() + " not in internal jar");

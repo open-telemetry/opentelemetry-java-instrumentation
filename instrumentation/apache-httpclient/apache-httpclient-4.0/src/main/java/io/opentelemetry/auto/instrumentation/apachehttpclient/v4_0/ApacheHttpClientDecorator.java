@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
@@ -41,5 +43,11 @@ public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriReques
   @Override
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.getStatusLine().getStatusCode();
+  }
+
+  @Override
+  protected String userAgent(HttpUriRequest httpUriRequest) {
+    final Header header = httpUriRequest.getFirstHeader(USER_AGENT);
+    return header != null ? header.getValue() : null;
   }
 }

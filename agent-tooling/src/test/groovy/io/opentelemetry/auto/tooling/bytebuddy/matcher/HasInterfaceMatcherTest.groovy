@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.tooling.bytebuddy.matcher
 
 import io.opentelemetry.auto.tooling.AgentTooling
@@ -23,6 +24,7 @@ import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.F
 import io.opentelemetry.auto.tooling.bytebuddy.matcher.testclasses.G
 import io.opentelemetry.auto.util.test.AgentSpecification
 import net.bytebuddy.description.type.TypeDescription
+import net.bytebuddy.description.type.TypeList
 import net.bytebuddy.jar.asm.Opcodes
 import spock.lang.Shared
 
@@ -61,6 +63,8 @@ class HasInterfaceMatcherTest extends AgentSpecification {
     def type = Mock(TypeDescription)
     def typeGeneric = Mock(TypeDescription.Generic)
     def matcher = implementsInterface(named(Object.name))
+    def interfaces = Mock(TypeList.Generic)
+    def it = new ThrowOnFirstElement()
 
     when:
     def result = matcher.matches(type)
@@ -73,7 +77,8 @@ class HasInterfaceMatcherTest extends AgentSpecification {
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
     1 * typeGeneric.getTypeName() >> "typeGeneric-name"
-    1 * type.getInterfaces() >> { throw new Exception("getInterfaces exception") }
+    1 * type.getInterfaces() >> interfaces
+    1 * interfaces.iterator() >> it
     1 * type.getSuperClass() >> { throw new Exception("getSuperClass exception") }
     2 * type.getTypeName() >> "type-name"
     0 * _

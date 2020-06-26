@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.common.exec;
 
 import java.lang.ref.WeakReference;
@@ -80,8 +81,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
       try {
         final PeriodicTask<T> periodicTask = new PeriodicTask<>(task, target);
         final ScheduledFuture<?> future =
-            executorService.scheduleAtFixedRate(
-                new PeriodicTask<>(task, target), initialDelay, period, unit);
+            executorService.scheduleAtFixedRate(periodicTask, initialDelay, period, unit);
         periodicTask.setFuture(future);
         return future;
       } catch (final RejectedExecutionException e) {

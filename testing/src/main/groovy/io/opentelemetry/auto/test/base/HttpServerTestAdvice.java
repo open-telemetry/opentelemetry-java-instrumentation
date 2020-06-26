@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.test.base;
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;

@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
+import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.OpenTelemetry;
@@ -42,5 +44,10 @@ public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, Ht
   @Override
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.status().intValue();
+  }
+
+  @Override
+  protected String userAgent(HttpRequest httpRequest) {
+    return httpRequest.getHeader(USER_AGENT).map(HttpHeader::value).orElse(null);
   }
 }

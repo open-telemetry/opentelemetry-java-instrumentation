@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.tooling.bytebuddy.matcher;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
@@ -42,7 +43,7 @@ class HasSuperMethodMatcher<T extends MethodDescription>
     }
     final Junction<MethodDescription> signatureMatcher = hasSignature(target.asSignatureToken());
     TypeDefinition declaringType = target.getDeclaringType();
-    final Set<TypeDefinition> checkedInterfaces = new HashSet<>();
+    final Set<TypeDefinition> checkedInterfaces = new HashSet<>(8);
 
     while (declaringType != null) {
       for (final MethodDescription methodDescription : declaringType.getDeclaredMethods()) {
@@ -63,8 +64,7 @@ class HasSuperMethodMatcher<T extends MethodDescription>
       final Junction<MethodDescription> signatureMatcher,
       final Set<TypeDefinition> checkedInterfaces) {
     for (final TypeDefinition type : interfaces) {
-      if (!checkedInterfaces.contains(type)) {
-        checkedInterfaces.add(type);
+      if (checkedInterfaces.add(type)) {
         for (final MethodDescription methodDescription : type.getDeclaredMethods()) {
           if (signatureMatcher.matches(methodDescription) && matcher.matches(methodDescription)) {
             return true;

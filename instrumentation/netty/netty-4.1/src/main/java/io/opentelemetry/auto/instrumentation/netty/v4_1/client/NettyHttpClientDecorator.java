@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.netty.v4_1.client;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -51,5 +52,10 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
   @Override
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.status().code();
+  }
+
+  @Override
+  protected String userAgent(HttpRequest httpRequest) {
+    return httpRequest.headers().get(USER_AGENT);
   }
 }

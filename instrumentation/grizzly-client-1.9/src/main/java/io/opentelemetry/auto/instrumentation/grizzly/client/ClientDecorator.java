@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.grizzly.client;
 
 import com.ning.http.client.Request;
@@ -43,5 +44,10 @@ public class ClientDecorator extends HttpClientDecorator<Request, Response> {
   @Override
   protected Integer status(final Response response) {
     return response.getStatusCode();
+  }
+
+  @Override
+  protected String userAgent(Request request) {
+    return request.getHeaders().getFirstValue(USER_AGENT);
   }
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.auto.config.Config;
@@ -21,6 +22,7 @@ import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
@@ -30,11 +32,15 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
 
+  protected static final String USER_AGENT = "User-Agent";
+
   protected abstract String method(REQUEST request);
 
   protected abstract URI url(REQUEST request) throws URISyntaxException;
 
   protected abstract Integer status(RESPONSE response);
+
+  protected abstract String userAgent(REQUEST request);
 
   public Span getOrCreateSpan(REQUEST request, Tracer tracer) {
     return getOrCreateSpan(spanNameForRequest(request), tracer);
@@ -52,6 +58,11 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     assert span != null;
     if (request != null) {
       span.setAttribute(Tags.HTTP_METHOD, method(request));
+
+      final String userAgent = userAgent(request);
+      if (userAgent != null) {
+        SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
+      }
 
       // Copy of HttpServerDecorator url handling
       try {

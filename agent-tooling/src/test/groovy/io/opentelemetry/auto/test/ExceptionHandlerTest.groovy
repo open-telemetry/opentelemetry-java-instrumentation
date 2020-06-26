@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.test
 
 import ch.qos.logback.classic.Level
@@ -28,6 +29,7 @@ import net.bytebuddy.dynamic.ClassFileLocator
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
 
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf
 import static net.bytebuddy.matcher.ElementMatchers.isMethod
 import static net.bytebuddy.matcher.ElementMatchers.named
 
@@ -54,7 +56,7 @@ class ExceptionHandlerTest extends AgentSpecification {
           .with(new AgentBuilder.LocationStrategy.Simple(ClassFileLocator.ForClassLoader.of(BadAdvice.getClassLoader())))
           .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
           .advice(
-            isMethod().and(named("smallStack").or(named("largeStack"))),
+            isMethod().and(namedOneOf("smallStack", "largeStack")),
             BadAdvice.NoOpAdvice.getName()))
 
     ByteBuddyAgent.install()

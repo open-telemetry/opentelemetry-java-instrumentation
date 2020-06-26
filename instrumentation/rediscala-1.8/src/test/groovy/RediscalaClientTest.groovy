@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import akka.actor.ActorSystem
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
@@ -84,11 +85,11 @@ class RediscalaClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "redis.api.strings.Set"
+          operationName "Set"
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_STATEMENT" "redis.api.strings.Set"
+            "$Tags.DB_STATEMENT" "Set"
           }
         }
       }
@@ -112,21 +113,21 @@ class RediscalaClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          operationName "redis.api.strings.Set"
+          operationName "Set"
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_STATEMENT" "redis.api.strings.Set"
+            "$Tags.DB_STATEMENT" "Set"
           }
         }
       }
       trace(1, 1) {
         span(0) {
-          operationName "redis.api.strings.Get"
+          operationName "Get"
           spanKind CLIENT
           tags {
             "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_STATEMENT" "redis.api.strings.Get"
+            "$Tags.DB_STATEMENT" "Get"
           }
         }
       }

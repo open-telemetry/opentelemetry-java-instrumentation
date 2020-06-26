@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe;
@@ -82,8 +83,9 @@ public interface Instrumenter {
       instrumentationPrimaryName = instrumentationName;
 
       enabled = Config.get().isIntegrationEnabled(instrumentationNames, defaultEnabled());
-      if (!contextStore().isEmpty()) {
-        contextProvider = new FieldBackedProvider(this);
+      Map<String, String> contextStore = contextStore();
+      if (!contextStore.isEmpty()) {
+        contextProvider = new FieldBackedProvider(this, contextStore);
       } else {
         contextProvider = NoopContextProvider.INSTANCE;
       }

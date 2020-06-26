@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.khttp;
 
 import io.opentelemetry.OpenTelemetry;
@@ -41,5 +42,11 @@ public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response
   @Override
   protected Integer status(Response response) {
     return response.getStatusCode();
+  }
+
+  @Override
+  protected String userAgent(RequestWrapper requestWrapper) {
+    // TODO: Find out how to get user agent.
+    return null;
   }
 }

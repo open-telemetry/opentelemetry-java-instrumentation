@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package client
 
 import io.opentelemetry.auto.test.base.HttpClientTest
@@ -63,6 +64,11 @@ class PlayWSClientTest extends HttpClientTest {
       it.status
     })
     return status.get(1, TimeUnit.SECONDS)
+  }
+
+  @Override
+  String userAgent() {
+    return "NING"
   }
 
   @Override

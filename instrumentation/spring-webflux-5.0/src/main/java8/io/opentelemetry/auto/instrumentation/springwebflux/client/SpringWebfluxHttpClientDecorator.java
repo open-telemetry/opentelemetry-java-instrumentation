@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
 import io.opentelemetry.OpenTelemetry;
@@ -51,5 +52,10 @@ public class SpringWebfluxHttpClientDecorator
   @Override
   protected Integer status(final ClientResponse httpResponse) {
     return httpResponse.statusCode().value();
+  }
+
+  @Override
+  protected String userAgent(ClientRequest clientRequest) {
+    return clientRequest.headers().getFirst(USER_AGENT);
   }
 }

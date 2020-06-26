@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -50,13 +52,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod()
-            .and(
-                named("list")
-                    .or(named("executeUpdate"))
-                    .or(named("uniqueResult"))
-                    .or(named("iterate"))
-                    .or(named("scroll"))),
+        isMethod().and(namedOneOf("list", "executeUpdate", "uniqueResult", "iterate", "scroll")),
         QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
   }
 

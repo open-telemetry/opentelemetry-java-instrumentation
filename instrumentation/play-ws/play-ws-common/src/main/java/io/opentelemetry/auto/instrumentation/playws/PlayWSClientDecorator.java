@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.playws;
 
 import io.opentelemetry.OpenTelemetry;
@@ -42,5 +43,10 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
   @Override
   protected Integer status(final Response response) {
     return response.getStatusCode();
+  }
+
+  @Override
+  protected String userAgent(Request request) {
+    return request.getHeaders().get(USER_AGENT);
   }
 }

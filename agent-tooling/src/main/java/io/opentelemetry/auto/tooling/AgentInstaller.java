@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.tooling;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.skipClassLoader;
 import static io.opentelemetry.auto.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.OpenTelemetry;
@@ -163,15 +164,25 @@ public class AgentInstaller {
   private static ElementMatcher.Junction<Object> matchesConfiguredExcludes() {
     final List<String> excludedClasses = Config.get().getExcludedClasses();
     ElementMatcher.Junction matcher = none();
+    List<String> literals = new ArrayList<>();
+    List<String> prefixes = new ArrayList<>();
+    // first accumulate by operation because a lot of work can be aggregated
     for (String excludedClass : excludedClasses) {
       excludedClass = excludedClass.trim();
       if (excludedClass.endsWith("*")) {
         // remove the trailing *
-        final String prefix = excludedClass.substring(0, excludedClass.length() - 1);
-        matcher = matcher.or(nameStartsWith(prefix));
+        prefixes.add(excludedClass.substring(0, excludedClass.length() - 1));
       } else {
-        matcher = matcher.or(named(excludedClass));
+        literals.add(excludedClass);
       }
+    }
+    if (!literals.isEmpty()) {
+      matcher = matcher.or(namedOneOf(literals));
+    }
+    for (String prefix : prefixes) {
+      // TODO - with a prefix tree this matching logic can be handled by a
+      // single longest common prefix query
+      matcher = matcher.or(nameStartsWith(prefix));
     }
     return matcher;
   }

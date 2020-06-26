@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.OpenTelemetry;
@@ -41,5 +42,10 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   @Override
   protected Integer status(final Response httpResponse) {
     return httpResponse.code();
+  }
+
+  @Override
+  protected String userAgent(Request request) {
+    return request.header(USER_AGENT);
   }
 }

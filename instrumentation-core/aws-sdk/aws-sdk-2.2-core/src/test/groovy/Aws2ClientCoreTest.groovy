@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
@@ -106,6 +108,7 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -196,6 +199,7 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
             "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
             "$Tags.HTTP_METHOD" "$method"
             "$Tags.HTTP_STATUS" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"

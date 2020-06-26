@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package client
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
@@ -59,6 +61,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
           "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
           "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
           "$Tags.HTTP_METHOD" method
+          "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("ReactorNetty") }
           if (status) {
             "$Tags.HTTP_STATUS" status
           }

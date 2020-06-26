@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.auto.instrumentation.hibernate.HibernateDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.hibernate.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -63,7 +65,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(
-        named("org.hibernate.Session").or(named("org.hibernate.StatelessSession")));
+        namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession"));
   }
 
   @Override
@@ -77,19 +79,20 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     transformers.put(
         isMethod()
             .and(
-                named("save")
-                    .or(named("replicate"))
-                    .or(named("saveOrUpdate"))
-                    .or(named("update"))
-                    .or(named("merge"))
-                    .or(named("persist"))
-                    .or(named("lock"))
-                    .or(named("refresh"))
-                    .or(named("insert"))
-                    .or(named("delete"))
+                namedOneOf(
+                    "save",
+                    "replicate",
+                    "saveOrUpdate",
+                    "update",
+                    "merge",
+                    "persist",
+                    "lock",
+                    "refresh",
+                    "insert",
+                    "delete",
                     // Lazy-load methods.
-                    .or(named("immediateLoad"))
-                    .or(named("internalLoad"))),
+                    "immediateLoad",
+                    "internalLoad")),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // Handle the non-generic 'get' separately.
@@ -104,7 +107,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     // current Span to the returned object using a ContextStore.
     transformers.put(
         isMethod()
-            .and(named("beginTransaction").or(named("getTransaction")))
+            .and(namedOneOf("beginTransaction", "getTransaction"))
             .and(returns(named("org.hibernate.Transaction"))),
         SessionInstrumentation.class.getName() + "$GetTransactionAdvice");
 

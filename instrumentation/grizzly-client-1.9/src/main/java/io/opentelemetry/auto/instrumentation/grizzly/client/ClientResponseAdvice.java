@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.grizzly.client;
 
 import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.TRACER;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.bootstrap.instrumentation.api.Pair;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
@@ -34,9 +36,12 @@ public class ClientResponseAdvice {
   public static Scope onEnter(
       @Advice.This final AsyncCompletionHandler<?> handler,
       @Advice.Argument(0) final Response response) {
+
+    // TODO I think all this should happen on exit, not on enter.
+    // After response was handled by user provided handler.
     final ContextStore<AsyncHandler, Pair> contextStore =
         InstrumentationContext.get(AsyncHandler.class, Pair.class);
-    final Pair<Span, Span> spanWithParent = contextStore.get(handler);
+    final Pair<Context, Span> spanWithParent = contextStore.get(handler);
     if (null != spanWithParent) {
       contextStore.put(handler, null);
     }
@@ -45,7 +50,9 @@ public class ClientResponseAdvice {
       DECORATE.beforeFinish(spanWithParent.getRight());
       spanWithParent.getRight().end();
     }
-    return spanWithParent.hasLeft() ? TRACER.withSpan(spanWithParent.getLeft()) : null;
+    return spanWithParent.hasLeft()
+        ? ContextUtils.withScopedContext(spanWithParent.getLeft())
+        : null;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

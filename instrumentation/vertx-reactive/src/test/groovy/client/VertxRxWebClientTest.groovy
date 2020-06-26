@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package client
 
 import io.opentelemetry.auto.test.base.HttpClientTest
@@ -44,6 +45,11 @@ class VertxRxWebClientTest extends HttpClientTest {
       .map { it.statusCode() }
       .toObservable()
       .blockingFirst()
+  }
+
+  @Override
+  String userAgent() {
+    return "Vert.x-WebClient"
   }
 
   @Override

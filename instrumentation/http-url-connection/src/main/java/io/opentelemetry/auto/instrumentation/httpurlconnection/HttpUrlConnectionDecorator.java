@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.httpurlconnection;
 
 import io.opentelemetry.OpenTelemetry;
@@ -41,5 +42,10 @@ public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConne
   @Override
   protected Integer status(final Integer status) {
     return status;
+  }
+
+  @Override
+  protected String userAgent(HttpURLConnection httpURLConnection) {
+    return httpURLConnection.getRequestProperty(USER_AGENT);
   }
 }

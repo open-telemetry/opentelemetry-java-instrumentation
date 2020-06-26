@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.google.common.io.Files
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
@@ -27,7 +28,6 @@ import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
-import org.eclipse.jetty.http.HttpStatus
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -142,7 +142,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -204,7 +204,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -263,7 +263,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -333,7 +333,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.INTERNAL_SERVER_ERROR_500
+    res.code() == 500
 
     cleanup:
     res.close()
@@ -394,7 +394,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -489,7 +489,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
 
     cleanup:
     res.close()
@@ -536,7 +536,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpStatus.INTERNAL_SERVER_ERROR_500
+    res.code() == 500
 
     cleanup:
     res.close()
@@ -556,7 +556,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    res.code() == HttpStatus.OK_200
+    res.code() == 200
     assertTraces(1) {
       trace(0, 1) {
         span(0) {

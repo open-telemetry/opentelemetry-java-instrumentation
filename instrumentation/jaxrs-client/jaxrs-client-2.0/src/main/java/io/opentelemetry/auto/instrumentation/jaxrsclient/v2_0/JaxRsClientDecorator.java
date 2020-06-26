@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v2_0;
 
 import io.opentelemetry.OpenTelemetry;
@@ -42,5 +43,10 @@ public class JaxRsClientDecorator
   @Override
   protected Integer status(final ClientResponseContext httpResponse) {
     return httpResponse.getStatus();
+  }
+
+  @Override
+  protected String userAgent(ClientRequestContext clientRequestContext) {
+    return clientRequestContext.getHeaderString(USER_AGENT);
   }
 }

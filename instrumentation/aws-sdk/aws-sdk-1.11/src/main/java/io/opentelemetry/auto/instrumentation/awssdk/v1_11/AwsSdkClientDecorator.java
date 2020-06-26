@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -113,5 +114,10 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   @Override
   protected Integer status(final Response response) {
     return response.getHttpResponse().getStatusCode();
+  }
+
+  @Override
+  protected String userAgent(Request request) {
+    return (String) request.getHeaders().get(USER_AGENT);
   }
 }

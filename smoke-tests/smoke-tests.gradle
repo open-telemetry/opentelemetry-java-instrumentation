@@ -3,9 +3,11 @@ apply from: "$rootDir/gradle/java.gradle"
 description = 'smoke-tests'
 
 dependencies {
-  compile deps.spock
-  compile project(':testing')
-  compile project(':auto-exporters:opentelemetry-auto-exporter-logging')
+  api deps.spock
+  api project(':testing')
+
+  implementation project(':auto-exporters:opentelemetry-auto-exporter-logging')
+  implementation deps.slf4j
 }
 
 subprojects { subProject ->

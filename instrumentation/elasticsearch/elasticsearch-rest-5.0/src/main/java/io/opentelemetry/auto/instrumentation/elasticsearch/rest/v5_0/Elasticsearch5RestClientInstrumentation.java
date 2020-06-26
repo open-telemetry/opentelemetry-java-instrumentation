@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.elasticsearch.rest.v5_0;
 
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.TRACER;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -59,7 +61,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod()
-            .and(named("performRequestAsync").or(named("performRequestAsyncNoCatch")))
+            .and(namedOneOf("performRequestAsync", "performRequestAsyncNoCatch"))
             .and(takesArguments(7))
             .and(takesArgument(0, named("java.lang.String"))) // method
             .and(takesArgument(1, named("java.lang.String"))) // endpoint

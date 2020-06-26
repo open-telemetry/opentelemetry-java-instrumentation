@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
@@ -52,6 +53,11 @@ class Netty40ClientTest extends HttpClientTest {
       }
     }).get()
     return response.statusCode
+  }
+
+  @Override
+  String userAgent() {
+    return "AHC"
   }
 
   @Override
