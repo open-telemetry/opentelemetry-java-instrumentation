@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.playws.v1_0;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
 import org.reactivestreams.Publisher;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
@@ -24,8 +25,9 @@ public class StreamedAsyncHandlerWrapper extends AsyncHandlerWrapper
     implements StreamedAsyncHandler {
   private final StreamedAsyncHandler streamedDelegate;
 
-  public StreamedAsyncHandlerWrapper(final StreamedAsyncHandler delegate, final Span span) {
-    super(delegate, span);
+  public StreamedAsyncHandlerWrapper(
+      final StreamedAsyncHandler delegate, final Span span, Context invocationContext) {
+    super(delegate, span, invocationContext);
     streamedDelegate = delegate;
   }
 

@@ -19,8 +19,10 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 import static io.opentelemetry.auto.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TracingContextUtils;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
@@ -35,8 +37,9 @@ public class HandlerAdapterAdvice {
       @Advice.Argument(1) final Object handler) {
 
     SpanWithScope spanWithScope = null;
-    final Span span = exchange.getAttribute(AdviceUtils.SPAN_ATTRIBUTE);
-    if (handler != null && span != null) {
+    final Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
+    if (handler != null && context != null) {
+      Span span = TracingContextUtils.getSpan(context);
       final String handlerType;
       final String operationName;
 
@@ -56,12 +59,13 @@ public class HandlerAdapterAdvice {
       spanWithScope = new SpanWithScope(span, currentContextWith(span));
     }
 
-    final Span parentSpan = exchange.getAttribute(AdviceUtils.PARENT_SPAN_ATTRIBUTE);
+    final Context parentContext = exchange.getAttribute(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE);
     final PathPattern bestPattern =
         exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-    if (parentSpan != null && bestPattern != null) {
+    if (parentContext != null && bestPattern != null) {
+      // TODO this is wrong span to update. We should update the outermost server span
       final String spanName = bestPattern.getPatternString();
-      parentSpan.updateName(spanName);
+      TracingContextUtils.getSpan(parentContext).updateName(spanName);
     }
 
     return spanWithScope;

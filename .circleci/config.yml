@@ -257,7 +257,7 @@ workflows:
                 - depends-on-otel-java-snapshot
     jobs:
       - default_test_job:
-          name: test_8
+          name: test_11
           testTask: test jacocoTestReport jacocoTestCoverageVerification
 
   release:

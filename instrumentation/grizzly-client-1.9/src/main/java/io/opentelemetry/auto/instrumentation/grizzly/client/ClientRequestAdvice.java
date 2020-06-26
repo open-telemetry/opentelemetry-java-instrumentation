@@ -19,7 +19,9 @@ package io.opentelemetry.auto.instrumentation.grizzly.client;
 import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.grizzly.client.ClientDecorator.TRACER;
 import static io.opentelemetry.auto.instrumentation.grizzly.client.InjectAdapter.SETTER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import com.ning.http.client.AsyncHandler;
@@ -38,17 +40,24 @@ public class ClientRequestAdvice {
   public static Scope onEnter(
       @Advice.Argument(0) final Request request,
       @Advice.Argument(1) final AsyncHandler<?> handler) {
-    final Span parentSpan = TRACER.getCurrentSpan();
+    Context parentContext = Context.current();
+
     final Span span =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
+        TRACER
+            .spanBuilder(DECORATE.spanNameForRequest(request))
+            .setSpanKind(CLIENT)
+            .setParent(getSpan(parentContext))
+            .startSpan();
+
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, request);
 
-    final Context context = withSpan(span, Context.current());
-    OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
     InstrumentationContext.get(AsyncHandler.class, Pair.class)
-        .put(handler, Pair.of(parentSpan, span));
-    return TRACER.withSpan(span);
+        .put(handler, Pair.of(parentContext, span));
+
+    final Context newContext = withSpan(span, parentContext);
+    OpenTelemetry.getPropagators().getHttpTextFormat().inject(newContext, request, SETTER);
+    return withScopedContext(newContext);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
