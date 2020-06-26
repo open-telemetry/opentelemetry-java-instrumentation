@@ -561,8 +561,7 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
       String spanName = request.getMethodValue() +  " " + request.getURI().toString();
       Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(Span.Kind.CLIENT).startSpan();
       
-      try {
-         tracer.withSpan(currentSpan);
+      try (Scope scope = tracer.withSpan(currentSpan)) {
          OpenTelemetry.getPropagators().getHttpTextFormat().inject(Context.current(), request, setter);
          ClientHttpResponse response = execution.execute(request, body);
          LOG.info(String.format("Request sent from RestTemplateInterceptor"));
