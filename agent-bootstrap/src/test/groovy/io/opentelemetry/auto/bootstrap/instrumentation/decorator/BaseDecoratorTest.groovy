@@ -70,20 +70,18 @@ class BaseDecoratorTest extends AgentSpecification {
     }
 
     then:
+    1 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
     if (connection.getAddress()) {
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
       1 * span.setAttribute(MoreTags.NET_PEER_IP, connection.address.hostAddress)
-    } else {
-      0 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
     }
     1 * span.setAttribute(MoreTags.NET_PEER_PORT, connection.port)
-    if (expectedPeer) {
-      1 * span.setAttribute("peer.service", expectedPeer)
+    if (expectedPeerService) {
+      1 * span.setAttribute("peer.service", expectedPeerService)
     }
     0 * _
 
     where:
-    connection                                      | expectedPeer
+    connection                                      | expectedPeerService
     new InetSocketAddress("1.2.3.4", 888)           | "catservice"
     new InetSocketAddress("2.3.4.5", 888)           | null
     new InetSocketAddress("dogs.com", 999)          | "dogsservice"
