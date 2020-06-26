@@ -130,13 +130,7 @@ public class TracerInstaller {
 
   private static void installExporter(
       SpanExporterFactory spanExporterFactory, DefaultExporterConfig config) {
-    SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-
-    if (!Config.get().getEndpointPeerServiceMapping().isEmpty()) {
-      spanExporter =
-          new PeerMappingExporter(spanExporter, Config.get().getEndpointPeerServiceMapping());
-    }
-
+    final SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
     final BatchSpanProcessor spanProcessor =
         BatchSpanProcessor.newBuilder(spanExporter)
             .readEnvironmentVariables()
