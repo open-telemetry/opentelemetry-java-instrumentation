@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.netty.v4_0.client;
 
 import io.netty.channel.CombinedChannelDuplexHandler;

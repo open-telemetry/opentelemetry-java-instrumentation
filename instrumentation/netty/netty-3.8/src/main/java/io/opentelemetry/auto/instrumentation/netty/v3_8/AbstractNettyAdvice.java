@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.netty.v3_8;
 
 import org.jboss.netty.handler.codec.http.HttpHeaders;

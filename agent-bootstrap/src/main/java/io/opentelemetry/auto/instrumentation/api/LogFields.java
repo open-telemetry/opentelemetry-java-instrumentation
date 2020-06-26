@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.api;
 
 // standard log field names from OpenTracing (see io.opentracing.log.Fields)
