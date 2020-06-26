@@ -427,8 +427,7 @@ public class ControllerFilter implements Filter {
     Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
         .extract(Context.current(), req, GETTER);
     Span currentSpan = createSpanWithParent(req, context);
-    try {
-      tracer.withSpan(currentSpan);
+      try (Scope scope = tracer.withSpan(currentSpan)) {
       currentSpan.addEvent("dofilter");
       chain.doFilter(req, response);
     }finally {
