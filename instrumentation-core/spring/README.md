@@ -347,7 +347,7 @@ Congrats, we just created a distributed service with OpenTelemetry!
 
 ## Manual Instrumentation using Handlers and Filters
 
-In this section, we will implement the javax Serverlet Filter interface to wrap all requests to FirstService and SecondService controllers in a span. 
+In this section, we will implement the javax Servlet Filter interface to wrap all requests to FirstService and SecondService controllers in a span. 
 
 We will also use the RestTemplate HTTP client to send requests from FirstService to SecondService. To propagate the trace in this request we will also implement the ClientHttpRequestInterceptor interface. This implementation is only required for projects that send outbound requests. In this example it is only required for FirstService. 
 
