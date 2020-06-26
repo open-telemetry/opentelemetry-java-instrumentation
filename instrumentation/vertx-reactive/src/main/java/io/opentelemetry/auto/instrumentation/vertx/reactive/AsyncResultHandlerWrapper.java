@@ -16,8 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.vertx.reactive;
 
+import io.grpc.Context;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -25,18 +26,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>>> {
   private final Handler<Handler<AsyncResult<?>>> delegate;
-  private final Span parentSpan;
+  private final Context executionContext;
 
   public AsyncResultHandlerWrapper(
-      final Handler<Handler<AsyncResult<?>>> delegate, Span parentSpan) {
+      final Handler<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     this.delegate = delegate;
-    this.parentSpan = parentSpan;
+    this.executionContext = executionContext;
   }
 
   @Override
   public void handle(final Handler<AsyncResult<?>> asyncResultHandler) {
-    if (parentSpan != null) {
-      try (final Scope scope = VertxDecorator.TRACER.withSpan(parentSpan)) {
+    if (executionContext != null) {
+      try (final Scope scope = ContextUtils.withScopedContext(executionContext)) {
         delegate.handle(asyncResultHandler);
       }
     } else {
@@ -45,10 +46,10 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
   }
 
   public static Handler<Handler<AsyncResult<?>>> wrapIfNeeded(
-      final Handler<Handler<AsyncResult<?>>> delegate, final Span parentSpan) {
+      final Handler<Handler<AsyncResult<?>>> delegate, final Context executionContext) {
     if (!(delegate instanceof AsyncResultHandlerWrapper)) {
       log.debug("Wrapping handler {}", delegate);
-      return new AsyncResultHandlerWrapper(delegate, parentSpan);
+      return new AsyncResultHandlerWrapper(delegate, executionContext);
     }
     return delegate;
   }

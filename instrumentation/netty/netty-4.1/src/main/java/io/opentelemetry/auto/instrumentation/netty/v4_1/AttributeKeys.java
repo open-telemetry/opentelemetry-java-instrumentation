@@ -44,6 +44,7 @@ public class AttributeKeys {
    * io.opentelemetry.auto.instrumentation.ratpack.server.TracingHandler, so if this changes, that
    * must also change.
    */
+  // TODO understand and change to context
   public static final AttributeKey<Span> SERVER_ATTRIBUTE_KEY =
       attributeKey(HttpServerTracingHandler.class.getName() + ".span");
 
