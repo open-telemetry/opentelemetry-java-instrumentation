@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.grpc.Context
 
 import io.opentelemetry.auto.test.AgentTestRunner
