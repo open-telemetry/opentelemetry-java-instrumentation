@@ -198,7 +198,7 @@ public class AgentBootstrap {
     try (final BufferedReader reader =
         new BufferedReader(
             new InputStreamReader(
-                AgentBootstrap.class.getResourceAsStream("/opentelemetry-auto.version"),
+                AgentBootstrap.class.getResourceAsStream("/opentelemetry-javaagent.version"),
                 StandardCharsets.UTF_8))) {
 
       for (int c = reader.read(); c != -1; c = reader.read()) {

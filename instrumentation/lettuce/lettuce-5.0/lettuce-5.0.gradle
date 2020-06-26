@@ -20,5 +20,5 @@ dependencies {
 
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
-  testCompile project(':instrumentation:reactor-3.1')
+  testCompile project(':instrumentation:project-reactor-3.1')
 }

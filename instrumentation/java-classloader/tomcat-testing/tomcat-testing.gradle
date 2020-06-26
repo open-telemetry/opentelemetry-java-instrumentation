@@ -19,7 +19,7 @@ testSets {
 }
 
 dependencies {
-  testCompile project(':instrumentation:java-class-loader')
+  testCompile project(':instrumentation:java-classloader')
 
   //This seems to be the earliest version that has org.apache.catalina.loader.WebappClassLoaderBase
   //Older versions would require slightly different instrumentation.

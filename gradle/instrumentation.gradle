@@ -44,7 +44,7 @@ afterEvaluate {
     testCompile project(':instrumentation:java-concurrent')
     // FIXME: we should enable this, but currently this fails tests for google http client
     //testCompile project(':instrumentation:http-url-connection')
-    testCompile project(':instrumentation:java-class-loader')
+    testCompile project(':instrumentation:java-classloader')
 
     testCompile project(':testing')
     testAnnotationProcessor deps.autoservice

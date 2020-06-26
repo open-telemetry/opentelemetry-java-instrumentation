@@ -8,11 +8,11 @@ dependencies {
 }
 
 task launch(type: JavaExec) {
-  dependsOn ':opentelemetry-auto:shadowJar'
+  dependsOn ':opentelemetry-javaagent:shadowJar'
   doFirst {
     classpath = sourceSets.main.runtimeClasspath
     main = 'io.opentelemetry.loadgenerator.LoadGenerator'
-    jvmArgs = ["-javaagent:${project(':opentelemetry-auto').shadowJar.archivePath}"]
+    jvmArgs = ["-javaagent:${project(':opentelemetry-javaagent').shadowJar.archivePath}"]
     systemProperties System.properties
   }
 }

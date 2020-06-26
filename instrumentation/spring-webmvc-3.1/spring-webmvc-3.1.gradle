@@ -33,7 +33,7 @@ dependencies {
 
   // Include servlet instrumentation for verifying the tomcat requests
   testCompile project(':instrumentation:servlet')
-  testCompile project(':instrumentation:servlet:request-3.0')
+  testCompile project(':instrumentation:servlet:servlet-3.0')
 
   testCompile group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
   testCompile group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.2.Final'

@@ -36,7 +36,7 @@ dependencies {
 
   testCompile project(':instrumentation:trace-annotation')
   testCompile project(':instrumentation:netty:netty-4.1')
-  testCompile project(':instrumentation:reactor-3.1')
+  testCompile project(':instrumentation:project-reactor-3.1')
 
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'

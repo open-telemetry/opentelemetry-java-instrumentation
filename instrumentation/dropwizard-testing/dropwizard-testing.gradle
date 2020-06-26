@@ -11,7 +11,7 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
   testCompile project(':instrumentation:jaxrs:jaxrs-2.0')
-  testCompile project(':instrumentation:servlet:request-3.0')
+  testCompile project(':instrumentation:servlet:servlet-3.0')
 
   // First version with DropwizardTestSupport:
   testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'

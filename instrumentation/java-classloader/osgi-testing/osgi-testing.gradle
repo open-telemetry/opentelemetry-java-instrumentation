@@ -2,7 +2,7 @@ ext.skipPublish = true
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-  testCompile project(':instrumentation:java-class-loader')
+  testCompile project(':instrumentation:java-classloader')
 
   // TODO: we should separate core and Eclipse tests at some point,
   // but right now core-specific tests are quite dump and are run with

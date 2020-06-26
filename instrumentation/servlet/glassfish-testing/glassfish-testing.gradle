@@ -14,7 +14,7 @@ testSets {
 }
 
 dependencies {
-  testCompile project(':instrumentation:servlet:request-3.0')
+  testCompile project(':instrumentation:servlet:servlet-3.0')
   testCompile project(':instrumentation:grizzly-2.0')
 
   testCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.0'
