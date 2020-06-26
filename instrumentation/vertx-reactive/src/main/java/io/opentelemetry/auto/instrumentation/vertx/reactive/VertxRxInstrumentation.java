@@ -16,13 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.vertx.reactive;
 
-import static io.opentelemetry.auto.instrumentation.vertx.reactive.VertxDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -81,7 +81,7 @@ public class VertxRxInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false) Handler<Handler<AsyncResult<?>>> handler) {
-      handler = AsyncResultHandlerWrapper.wrapIfNeeded(handler, TRACER.getCurrentSpan());
+      handler = AsyncResultHandlerWrapper.wrapIfNeeded(handler, Context.current());
     }
   }
 
@@ -90,7 +90,7 @@ public class VertxRxInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false) Consumer<Handler<AsyncResult<?>>> handler) {
-      handler = AsyncResultConsumerWrapper.wrapIfNeeded(handler, TRACER.getCurrentSpan());
+      handler = AsyncResultConsumerWrapper.wrapIfNeeded(handler, Context.current());
     }
   }
 }
