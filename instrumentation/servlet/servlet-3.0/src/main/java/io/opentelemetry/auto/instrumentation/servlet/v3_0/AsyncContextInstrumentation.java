@@ -16,16 +16,17 @@
 
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer.TRACER;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -87,7 +88,8 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
       final ServletRequest request = context.getRequest();
 
-      final Span currentSpan = TRACER.getCurrentSpan();
+      Context currentContext = Context.current();
+      final Span currentSpan = getSpan(currentContext);
       if (currentSpan.getContext().isValid()) {
         // this tells the dispatched servlet to use the current span as the parent for its work
         // (if the currentSpan is not valid for some reason, the original servlet span should still
@@ -96,7 +98,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
         // the original servlet span stored in the same request attribute does not need to be saved
         // and restored on method exit, because dispatch() hands off control of the request
         // processing, and nothing can be done with the request anymore after this
-        request.setAttribute(SPAN_ATTRIBUTE, currentSpan);
+        request.setAttribute(CONTEXT_ATTRIBUTE, currentContext);
       }
 
       return true;

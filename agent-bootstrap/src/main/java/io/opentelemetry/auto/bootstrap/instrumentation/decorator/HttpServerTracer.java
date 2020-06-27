@@ -17,8 +17,10 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
@@ -43,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 // TODO In search for a better home package
 @Slf4j
 public abstract class HttpServerTracer<REQUEST> {
-  public static final String SPAN_ATTRIBUTE = "io.opentelemetry.auto.span";
+  public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
 
   protected final Tracer tracer;
 
@@ -82,7 +84,6 @@ public abstract class HttpServerTracer<REQUEST> {
 
   // TODO use semantic attributes
   protected void onRequest(final Span span, final REQUEST request) {
-    attachSpanToRequest(span, request);
     SemanticAttributes.HTTP_METHOD.set(span, method(request));
 
     // Copy of HttpClientDecorator url handling
@@ -173,8 +174,15 @@ public abstract class HttpServerTracer<REQUEST> {
     return tracer.getCurrentSpan();
   }
 
-  public Scope withSpan(Span span) {
-    return tracer.withSpan(span);
+  /**
+   * Creates new scoped context with the given span.
+   *
+   * <p>Attaches new context to the request to avoid creating duplicate server spans.
+   */
+  public Scope startScope(Span span, REQUEST request) {
+    Context newContext = withSpan(span, Context.current());
+    attachContextToRequest(newContext, request);
+    return withScopedContext(newContext);
   }
 
   // TODO should end methods remove SPAN attribute from request as well?
@@ -190,9 +198,8 @@ public abstract class HttpServerTracer<REQUEST> {
       // We may change span status, but not http_status attribute
       responseStatus = 500;
     }
-    setStatus(span, responseStatus);
     onError(span, unwrapThrowable(throwable));
-    span.end();
+    end(span, responseStatus);
   }
 
   protected Throwable unwrapThrowable(Throwable throwable) {
@@ -224,9 +231,13 @@ public abstract class HttpServerTracer<REQUEST> {
 
   protected abstract String method(REQUEST request);
 
-  protected void attachSpanToRequest(Span span, REQUEST request) {}
+  /** Stores given context in the given request in implementation specific way. */
+  protected abstract void attachContextToRequest(Context context, REQUEST request);
 
-  protected Span getAttachedSpan(REQUEST request) {
-    return null;
-  }
+  /**
+   * Returns context stored to given request by {@link #attachContextToRequest(Context, REQUEST)}.
+   *
+   * <p>May be null.
+   */
+  public abstract Context getAttachedContext(REQUEST request);
 }
