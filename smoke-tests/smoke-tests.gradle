@@ -12,12 +12,12 @@ dependencies {
 
 subprojects { subProject ->
   subProject.tasks.withType(Test).configureEach {
-    dependsOn = [':opentelemetry-auto:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
+    dependsOn = [':opentelemetry-javaagent:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
 
     doFirst {
       // Tests depend on this to know where to run things and what agent jar to use
       jvmArgs "-Dio.opentelemetry.smoketest.builddir=${buildDir}"
-      jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':opentelemetry-auto').tasks.shadowJar.archivePath}"
+      jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':opentelemetry-javaagent').tasks.shadowJar.archivePath}"
       jvmArgs "-Dota.exporter.jar=${project(':auto-exporters:opentelemetry-auto-exporter-logging').tasks.shadowJar.archivePath}"
     }
   }

@@ -1,7 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
-
-dependencies {
-  testCompile project(':instrumentation:java-class-loader')
-
-  testCompile group: 'org.jboss.modules', name: 'jboss-modules', version: '1.3.10.Final'
-}

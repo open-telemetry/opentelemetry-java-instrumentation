@@ -17,13 +17,15 @@
 package io.opentelemetry.auto.instrumentation.jetty;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.jetty.HttpServletRequestExtractAdapter.GETTER;
 import static io.opentelemetry.auto.instrumentation.jetty.JettyDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jetty.JettyDecorator.TRACER;
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.instrumentation.api.Tags;
@@ -40,7 +42,7 @@ public class JettyHandlerAdvice {
   public static SpanWithScope onEnter(
       @Advice.This final Object source, @Advice.Argument(2) final HttpServletRequest req) {
 
-    if (req.getAttribute(SPAN_ATTRIBUTE) != null) {
+    if (req.getAttribute(CONTEXT_ATTRIBUTE) != null) {
       // Request already being traced elsewhere.
       return null;
     }
@@ -55,10 +57,11 @@ public class JettyHandlerAdvice {
     DECORATE.onConnection(span, req);
     DECORATE.onRequest(span, req);
 
-    req.setAttribute(SPAN_ATTRIBUTE, span);
+    Context newContext = withSpan(span, Context.current());
+    req.setAttribute(CONTEXT_ATTRIBUTE, newContext);
     req.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
     req.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
-    return new SpanWithScope(span, currentContextWith(span));
+    return new SpanWithScope(span, withScopedContext(newContext));
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
