@@ -27,7 +27,7 @@ dependencies {
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   // Only 5.2+ will have command arguments in the db.statement tag.
   testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
-  testCompile project(':instrumentation:project-reactor-3.1')
+  testCompile project(':instrumentation:reactor-3.1')
 
   latestDepTestCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.+'
 }
