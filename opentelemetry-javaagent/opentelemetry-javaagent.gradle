@@ -4,7 +4,7 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-description = 'opentelemetry-auto'
+description = 'Auto instrumentation agent'
 
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/version.gradle"
@@ -46,7 +46,6 @@ shadowJar {
 
 //Includes instrumentations, but not exporters
 task lightShadow(type: ShadowJar) {
-  archiveClassifier = ''
   from sourceSets.main.output
 
   def sourceTasks = [project(':instrumentation').tasks.shadowJar]
@@ -61,6 +60,7 @@ publishing {
     }
   }
 }
+
 tasks.withType(ShadowJar).configureEach {
   configurations = [project.configurations.shadowInclude]
   mergeServiceFiles()

@@ -1,3 +1,5 @@
+ext.skipPublish = true
+
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
@@ -17,7 +19,7 @@ testSets {
 }
 
 dependencies {
-  testCompile project(':instrumentation:java-class-loader')
+  testCompile project(':instrumentation:java-classloader')
 
   //This seems to be the earliest version that has org.apache.catalina.loader.WebappClassLoaderBase
   //Older versions would require slightly different instrumentation.

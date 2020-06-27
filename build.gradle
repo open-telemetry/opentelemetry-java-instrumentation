@@ -26,7 +26,7 @@ release {
 def isCI = System.getenv("CI") != null
 
 allprojects {
-  group = 'io.opentelemetry.auto'
+  group = 'io.opentelemetry.instrumentation.auto'
 
   if (isCI) {
     buildDir = "$rootDir/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
@@ -42,7 +42,7 @@ repositories {
   mavenCentral()
 }
 
-description = 'trace-java'
+description = 'OpenTelemetry instrumentations for Java'
 
 wrapper {
   distributionType = Wrapper.DistributionType.ALL
