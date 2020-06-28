@@ -5,7 +5,7 @@ muzzle {
   pass {
     group = "javax.servlet"
     module = "servlet-api"
-    versions = "[2.2,)"
+    versions = "[2.3,)"
     assertInverse = true
   }
 }
@@ -15,7 +15,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 
   testCompile(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'

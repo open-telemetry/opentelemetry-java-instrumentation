@@ -69,6 +69,11 @@ public class RequestDispatcherUtils {
 
   class TestContext implements ServletContext {
     @Override
+    public String getContextPath() {
+      return null;
+    }
+
+    @Override
     public ServletContext getContext(final String s) {
       return null;
     }

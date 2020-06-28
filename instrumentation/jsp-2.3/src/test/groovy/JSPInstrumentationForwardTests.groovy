@@ -101,7 +101,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 6) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -140,6 +140,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
+          operationName "servlet.forward"
+          errored false
+        }
+        span(4) {
+          childOf span(3)
           operationName "Compile /$forwardDestFileName"
           errored false
           tags {
@@ -148,8 +153,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(3)
           operationName "Render /$forwardDestFileName"
           errored false
           tags {
@@ -182,7 +187,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -219,6 +224,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" reqUrl
           }
         }
+        span(3) {
+          childOf span(2)
+          operationName "servlet.forward"
+          errored false
+        }
       }
     }
     res.code() == 200
@@ -237,7 +247,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 9) {
+      trace(0, 12) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -276,6 +286,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
+          operationName "servlet.forward"
+          errored false
+        }
+        span(4) {
+          childOf span(3)
           operationName "Compile /includes/includeMulti.jsp"
           errored false
           tags {
@@ -284,8 +299,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(3)
           operationName "Render /includes/includeMulti.jsp"
           errored false
           tags {
@@ -295,29 +310,13 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
         }
-        span(5) {
-          childOf span(4)
-          operationName "Compile /common/javaLoopH2.jsp"
-          errored false
-          tags {
-            "servlet.context" "/$jspWebappContext"
-            "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-          }
-        }
         span(6) {
-          childOf span(4)
-          operationName "Render /common/javaLoopH2.jsp"
+          childOf span(5)
+          operationName "servlet.include"
           errored false
-          tags {
-            "span.origin.type" "javaLoopH2_jsp"
-            "servlet.context" "/$jspWebappContext"
-            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
-          }
         }
         span(7) {
-          childOf span(4)
+          childOf span(6)
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
           tags {
@@ -327,7 +326,33 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           }
         }
         span(8) {
-          childOf span(4)
+          childOf span(6)
+          operationName "Render /common/javaLoopH2.jsp"
+          errored false
+          tags {
+            "span.origin.type" "javaLoopH2_jsp"
+            "servlet.context" "/$jspWebappContext"
+            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
+            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
+          }
+        }
+        span(9) {
+          childOf span(5)
+          operationName "servlet.include"
+          errored false
+        }
+        span(10) {
+          childOf span(9)
+          operationName "Compile /common/javaLoopH2.jsp"
+          errored false
+          tags {
+            "servlet.context" "/$jspWebappContext"
+            "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(11) {
+          childOf span(9)
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           tags {
@@ -355,7 +380,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 7) {
+      trace(0, 9) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -394,6 +419,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
+          operationName "servlet.forward"
+          errored false
+        }
+        span(4) {
+          childOf span(3)
           operationName "Compile /forwards/forwardToSimpleJava.jsp"
           errored false
           tags {
@@ -402,8 +432,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(3)
           operationName "Render /forwards/forwardToSimpleJava.jsp"
           errored false
           tags {
@@ -413,8 +443,13 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
           }
         }
-        span(5) {
-          childOf span(4)
+        span(6) {
+          childOf span(5)
+          operationName "servlet.forward"
+          errored false
+        }
+        span(7) {
+          childOf span(6)
           operationName "Compile /common/loop.jsp"
           errored false
           tags {
@@ -423,8 +458,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(6) {
-          childOf span(4)
+        span(8) {
+          childOf span(6)
           operationName "Render /common/loop.jsp"
           errored false
           tags {
@@ -452,7 +487,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 5) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -493,6 +528,15 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
+          operationName "servlet.forward"
+          errored true
+          tags {
+            "dispatcher.target" "/forwards/../compileError.jsp"
+            errorTags(JasperException, String)
+          }
+        }
+        span(4) {
+          childOf span(3)
           operationName "Compile /compileError.jsp"
           errored true
           tags {
@@ -520,7 +564,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -556,6 +600,11 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
+        }
+        span(3) {
+          childOf span(2)
+          operationName "servlet.forward"
+          errored false
         }
       }
     }

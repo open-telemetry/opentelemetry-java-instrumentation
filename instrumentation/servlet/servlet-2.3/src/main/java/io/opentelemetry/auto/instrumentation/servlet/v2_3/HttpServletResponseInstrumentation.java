@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet.http;
+package io.opentelemetry.auto.instrumentation.servlet.v2_3;
 
-import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletResponseDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletResponseDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
@@ -83,6 +83,8 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         return null;
       }
 
+      // TODO is this condition necessary?
+      // Because of it this instrumentation depends on Servlet2Advice
       final HttpServletRequest req =
           InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class).get(resp);
       if (req == null) {

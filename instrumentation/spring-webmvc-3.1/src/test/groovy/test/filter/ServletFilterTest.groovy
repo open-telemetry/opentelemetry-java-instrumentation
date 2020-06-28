@@ -28,7 +28,6 @@ import org.springframework.context.ConfigurableApplicationContext
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
@@ -55,11 +54,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   }
 
   @Override
-  boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT || endpoint == ERROR
-  }
-
-  @Override
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     endpoint == ERROR || endpoint == EXCEPTION
   }
@@ -79,18 +73,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
     // FIXME: the instrumentation adds an extra controller span which is not consistent.
     // Fix tests or remove extra span.
     false
-  }
-
-  @Override
-  void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      operationName endpoint == REDIRECT ? "HttpServletResponse.sendRedirect" : "HttpServletResponse.sendError"
-      spanKind INTERNAL
-      errored false
-      childOf((SpanData) parent)
-      tags {
-      }
-    }
   }
 
   @Override

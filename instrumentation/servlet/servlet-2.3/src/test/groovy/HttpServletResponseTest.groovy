@@ -224,6 +224,11 @@ class HttpServletResponseTest extends AgentTestRunner {
     }
 
     @Override
+    String getContentType() {
+      return null
+    }
+
+    @Override
     ServletOutputStream getOutputStream() throws IOException {
       return null
     }
@@ -231,6 +236,11 @@ class HttpServletResponseTest extends AgentTestRunner {
     @Override
     PrintWriter getWriter() throws IOException {
       return null
+    }
+
+    @Override
+    void setCharacterEncoding(String charset) {
+
     }
 
     @Override

@@ -55,11 +55,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT
-  }
-
-  @Override
   boolean hasRenderSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT
   }
