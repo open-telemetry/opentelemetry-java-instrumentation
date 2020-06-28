@@ -1,0 +1,29 @@
+ext.skipPublish = true
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = "org.apache.tomcat"
+    module = 'tomcat-catalina'
+    versions = "[3.0.14,)"
+    assertInverse = true
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  testCompile project(':instrumentation:java-classloader')
+
+  //This seems to be the earliest version that has org.apache.catalina.loader.WebappClassLoaderBase
+  //Older versions would require slightly different instrumentation.
+  testCompile group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
+
+  latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '+'
+}

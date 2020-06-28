@@ -1,9 +1,11 @@
 ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
+  skipPublish = true
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
+
 
 testSets {
   latestDepTest {
@@ -12,7 +14,7 @@ testSets {
 }
 
 dependencies {
-  testCompile project(':instrumentation:servlet:request-3.0')
+  testCompile project(':instrumentation:servlet:servlet-3.0')
   testCompile project(':instrumentation:grizzly-2.0')
 
   testCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.0'

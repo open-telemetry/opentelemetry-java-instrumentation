@@ -2,7 +2,10 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
+group = 'io.opentelemetry.instrumentation'
+
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
