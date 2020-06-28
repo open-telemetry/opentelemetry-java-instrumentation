@@ -16,9 +16,6 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
-
-import io.opentelemetry.trace.Span
-
 class ServerDecoratorTest extends BaseDecoratorTest {
 
   def "test afterStart"() {
