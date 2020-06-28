@@ -27,6 +27,9 @@ class BaseDecoratorTest extends AgentSpecification {
   @Shared
   def decorator = newDecorator()
 
+  @Shared
+  def resolvedAddress = new InetSocketAddress("github.com", 999)
+
   def span = Mock(Span)
 
   def "test afterStart"() {
@@ -43,20 +46,21 @@ class BaseDecoratorTest extends AgentSpecification {
     decorator.onPeerConnection(span, connection)
 
     then:
-    if (connection.getAddress()) {
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
-      1 * span.setAttribute(MoreTags.NET_PEER_IP, connection.address.hostAddress)
-    } else {
-      0 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
+    if (expectedPeerName) {
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, expectedPeerName)
+    }
+    if (expectedPeerIp) {
+      1 * span.setAttribute(MoreTags.NET_PEER_IP, expectedPeerIp)
     }
     1 * span.setAttribute(MoreTags.NET_PEER_PORT, connection.port)
     0 * _
 
     where:
-    connection                                      | _
-    new InetSocketAddress("localhost", 888)         | _
-    new InetSocketAddress("ipv6.google.com", 999)   | _
-    new InetSocketAddress("bad.address.local", 999) | _
+    connection                                      | expectedPeerName    | expectedPeerIp
+    new InetSocketAddress("localhost", 888)         | "localhost"         | "127.0.0.1"
+    new InetSocketAddress("1.2.3.4", 888)           | null                | "1.2.3.4"
+    resolvedAddress                                 | "github.com"        | resolvedAddress.address.hostAddress
+    new InetSocketAddress("bad.address.local", 999) | "bad.address.local" | null
   }
 
   def "test onError"() {
