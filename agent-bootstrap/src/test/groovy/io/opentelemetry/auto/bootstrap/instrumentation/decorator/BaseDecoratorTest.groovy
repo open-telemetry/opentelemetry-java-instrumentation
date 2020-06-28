@@ -58,7 +58,6 @@ class BaseDecoratorTest extends AgentSpecification {
     where:
     connection                                      | expectedPeerName    | expectedPeerIp
     new InetSocketAddress("localhost", 888)         | "localhost"         | "127.0.0.1"
-    new InetSocketAddress("127.0.0.1", 888)         | "localhost"         | "127.0.0.1"
     new InetSocketAddress("1.2.3.4", 888)           | null                | "1.2.3.4"
     resolvedAddress                                 | "github.com"        | resolvedAddress.address.hostAddress
     new InetSocketAddress("bad.address.local", 999) | "bad.address.local" | null

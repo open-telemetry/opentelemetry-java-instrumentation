@@ -68,30 +68,26 @@ public abstract class BaseDecorator {
   public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
-      onPeerConnection(span, remoteConnection.getAddress(), remoteConnection.getHostString());
-
+      InetAddress remoteAddress = remoteConnection.getAddress();
+      if (remoteAddress != null) {
+        onPeerConnection(span, remoteAddress);
+      } else {
+        // Failed DNS lookup, the host string is the name.
+        String hostString = remoteConnection.getHostString();
+        span.setAttribute(MoreTags.NET_PEER_NAME, hostString);
+      }
       span.setAttribute(MoreTags.NET_PEER_PORT, remoteConnection.getPort());
     }
     return span;
   }
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
-    return onPeerConnection(span, remoteAddress, null);
-  }
-
-  private Span onPeerConnection(
-      final Span span, final InetAddress remoteAddress, String hostString) {
     assert span != null;
-    if (remoteAddress != null) {
-      final String hostName = remoteAddress.getHostName();
-      if (!hostName.equals(remoteAddress.getHostAddress())) {
-        span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
-      }
-      span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
-    } else if (hostString != null) {
-      // Failed DNS lookup, the host string is the name.
-      span.setAttribute(MoreTags.NET_PEER_NAME, hostString);
+    final String hostName = remoteAddress.getHostName();
+    if (!hostName.equals(remoteAddress.getHostAddress())) {
+      span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
     }
+    span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
     return span;
   }
 
