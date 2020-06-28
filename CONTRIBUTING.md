@@ -198,6 +198,7 @@ Suggested plugins and settings:
 
 Approvers:
 
+- [Anuraag Agrawal](https://github.com/anuraaga), AWS
 - [John Watson](https://github.com/jkwatson), New Relic
 
 Maintainers:
