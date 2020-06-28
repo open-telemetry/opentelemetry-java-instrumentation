@@ -22,8 +22,8 @@ class KHttpClientTest extends HttpClientTest {
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     // khttp applies the same timeout for both connect and read
-    def timeout = Math.max(CONNECT_TIMEOUT_MS, READ_TIMEOUT_MS)
-    def response = KHttp.request(method, uri.toString(), headers, Collections.emptyMap(), null, null, null, null, timeout)
+    def timeoutSeconds = Math.max(CONNECT_TIMEOUT_MS, READ_TIMEOUT_MS) / 1000
+    def response = KHttp.request(method, uri.toString(), headers, Collections.emptyMap(), null, null, null, null, timeoutSeconds)
     if (callback != null) {
       callback.call()
     }
