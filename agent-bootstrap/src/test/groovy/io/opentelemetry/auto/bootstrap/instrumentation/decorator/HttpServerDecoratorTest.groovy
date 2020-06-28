@@ -26,8 +26,6 @@ import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class HttpServerDecoratorTest extends ServerDecoratorTest {
 
-  def span = Mock(Span)
-
   def "test onRequest"() {
     setup:
     def decorator = newDecorator()

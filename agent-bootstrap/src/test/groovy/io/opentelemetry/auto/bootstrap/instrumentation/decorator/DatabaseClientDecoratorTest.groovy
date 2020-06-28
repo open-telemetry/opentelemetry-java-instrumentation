@@ -21,8 +21,6 @@ import io.opentelemetry.trace.Span
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
-  def span = Mock(Span)
-
   def "test afterStart"() {
     setup:
     def decorator = newDecorator()
