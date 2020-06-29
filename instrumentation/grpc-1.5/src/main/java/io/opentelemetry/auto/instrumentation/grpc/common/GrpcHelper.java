@@ -55,7 +55,11 @@ public final class GrpcHelper {
   }
 
   public static Status statusFromGrpcStatus(io.grpc.Status grpcStatus) {
-
+    Status status = codeFromGrpcCode(grpcStatus.getCode()).toStatus();
+    if (grpcStatus.getDescription() != null) {
+      status = status.withDescription(grpcStatus.getDescription());
+    }
+    return status;
   }
 
   private static CanonicalCode codeFromGrpcCode(io.grpc.Status.Code grpcCode) {
@@ -64,8 +68,6 @@ public final class GrpcHelper {
         return CanonicalCode.OK;
       case CANCELLED:
         return CanonicalCode.CANCELLED;
-      case UNKNOWN:
-        return CanonicalCode.UNKNOWN;
       case INVALID_ARGUMENT:
         return CanonicalCode.INVALID_ARGUMENT;
       case DEADLINE_EXCEEDED:
@@ -94,10 +96,10 @@ public final class GrpcHelper {
         return CanonicalCode.DATA_LOSS;
       case UNAUTHENTICATED:
         return CanonicalCode.UNAUTHENTICATED;
+      case UNKNOWN:
+      default:
+        return CanonicalCode.UNKNOWN;
     }
-
-    // gRPC status == OTel status, try a string match
-    CanonicalCode.CanonicalCode.valueOf()
   }
 
   private GrpcHelper() {}

@@ -18,8 +18,8 @@ package io.opentelemetry.auto.instrumentation.grpc.client;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
+import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 
 public class GrpcClientDecorator extends ClientDecorator {
@@ -33,9 +33,7 @@ public class GrpcClientDecorator extends ClientDecorator {
     span.setAttribute("status.description", status.getDescription());
 
     onError(span, status.getCause());
-    if (!status.isOk()) {
-      span.setStatus(Status.UNKNOWN);
-    }
+    span.setStatus(GrpcHelper.statusFromGrpcStatus(status));
     return span;
   }
 }
