@@ -171,7 +171,7 @@ public class MainServiceApplication {
 ```
 
 4. Create a REST controller for MainService
-5. Create a span to wrap MainServiceController.firstTracedMethod()
+5. Create a span to wrap MainServiceController.message()
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,7 +189,7 @@ import HttpUtils;
 @RequestMapping(value = "/message")
 public class MainServiceController {
    private static int requestCount = 1;
-   private static final String SECOND_SERVICE_URL = "http://localhost:8081/time";
+   private static final String TIME_SERVICE_URL = "http://localhost:8081/time";
    
    @Autowired
    private Tracer tracer;
@@ -198,13 +198,13 @@ public class MainServiceController {
    private HttpUtils httpUtils;
 
    @GetMapping
-   public String firstTracedMethod() {
+   public String message() {
       Span span = tracer.spanBuilder("message").startSpan();
 
       try (Scope scope = tracer.withSpan(span)) {
          span.addEvent("Controller Entered");
-         span.setAttribute("firstservicecontroller.request.count", requestCount++);
-         return "Second Service says: " + httpUtils.callEndpoint(SECOND_SERVICE_URL);
+         span.setAttribute("timeservicecontroller.request.count", requestCount++);
+         return "Time Service says: " + httpUtils.callEndpoint(TIME_SERVICE_URL);
       } catch (Exception e) {
          span.setAttribute("error", true);
          return "ERROR: I can't tell the time";
@@ -293,7 +293,7 @@ public class TimeServiceApplication {
 ```
 
 4. Create a REST controller for TimeService
-5. Start a span to wrap TimeServiceController.secondTracedMethod()
+5. Start a span to wrap TimeServiceController.time()
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -312,7 +312,7 @@ public class TimeServiceController {
    private Tracer tracer;
 
    @GetMapping
-   public String secondTracedMethod() {
+   public String time() {
       Span span = tracer.spanBuilder("time").startSpan();
       
       try (Scope scope = tracer.withSpan(span)) {
@@ -340,7 +340,7 @@ After running Jaeger locally, navigate to the url below. Make sure to refresh th
 
 Run MainService and TimeService from command line or using an IDE. The end point of interest for MainService is `http://localhost:8080/message` and  `http://localhost:8081/time` for TimeService. Entering `localhost:8080/message` in a browser should call MainService and then TimeService, creating a trace. 
 
-***Note: The default port for the Apache Tomcat is 8080. On localhost both MainService and TimeService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by MainServiceController.SECOND_SERVICE_URL. ***
+***Note: The default port for the Apache Tomcat is 8080. On localhost both MainService and TimeService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by MainServiceController.TIME_SERVICE_URL. ***
 
 Congrats, we just created a distributed service with OpenTelemetry!
 
@@ -373,7 +373,7 @@ public class TimeServiceApplication {
 }
 ```
 
-Add the REST controller below to your TimeService project. This controller will return a string when TimeServiceController.secondTracedMethod is called:
+Add the REST controller below to your TimeService project. This controller will return a string when TimeServiceController.time is called:
 
 ```java
 import org.springframework.beans.factory.annotation.Autowired;
@@ -388,7 +388,7 @@ public class TimeServiceController {
    private Tracer tracer;
 
    @GetMapping
-   public String secondTracedMethod() {
+   public String time() {
       return "It's time to get a watch";
    }
 }
@@ -474,7 +474,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/message")
 public class MainServiceController {
-   private static final String SECOND_SERVICE_URL = "http://localhost:8081/time";
+   private static final String TIME_SERVICE_URL = "http://localhost:8081/time";
 
    @Autowired
    private Tracer tracer;
@@ -486,10 +486,10 @@ public class MainServiceController {
    private HttpUtils httpUtils;
 
    @GetMapping
-   public String firstTracedMethod() {
+   public String message() {
 
       ResponseEntity<String> response =
-            restTemplate.exchange(SECOND_SERVICE_URL, HttpMethod.GET, null, String.class);
+            restTemplate.exchange(TIME_SERVICE_URL, HttpMethod.GET, null, String.class);
       String currentTime = response.getBody();
 
       return "Time Service: " + currentTime;
@@ -591,7 +591,7 @@ public class RestClientConfig {
 
 ### Create a distributed trace 
 
-By default Spring Boot runs a Tomcat server on port 8080. This tutorial assumes MainService runs on the default port (8080) and TimeService runs on port 8081. This is because we hard coded the TimeService end point in MainServiceController.SECOND_SERVICE_URL. To run TimeServiceApplication on port 8081 include `server.port=8081` in the resources/application.properties file. 
+By default Spring Boot runs a Tomcat server on port 8080. This tutorial assumes MainService runs on the default port (8080) and TimeService runs on port 8081. This is because we hard coded the TimeService end point in MainServiceController.TIME_SERVICE_URL. To run TimeServiceApplication on port 8081 include `server.port=8081` in the resources/application.properties file. 
 
 Run both the MainService and TimeService projects in terminal or using an IDE (ex. Eclipse). The end point for MainService should be `http://localhost:8080/message` and `http://localhost:8081/time` for TimeService. Type both urls in a browser and ensure you receive a 200 response. 
 
