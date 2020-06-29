@@ -200,10 +200,10 @@ public class MainServiceController {
    @GetMapping
    public String firstTracedMethod() {
       Span span = tracer.spanBuilder("message").startSpan();
-      span.addEvent("Controller Entered");
-      span.setAttribute("firstservicecontroller.request.count", requestCount++);
 
       try (Scope scope = tracer.withSpan(span)) {
+         span.addEvent("Controller Entered");
+         span.setAttribute("firstservicecontroller.request.count", requestCount++);
          return "Second Service says: " + httpUtils.callEndpoint(SECOND_SERVICE_URL);
       } catch (Exception e) {
          span.setAttribute("error", true);
@@ -314,10 +314,10 @@ public class TimeServiceController {
    @GetMapping
    public String secondTracedMethod() {
       Span span = tracer.spanBuilder("time").startSpan();
-      span.addEvent("TimeServiceController Entered");
-      span.setAttribute("what.am.i", "Tu es une legume");
-
-      try{
+      
+      try (Scope scope = tracer.withSpan(span)) {
+         span.addEvent("TimeServiceController Entered");
+         span.setAttribute("what.am.i", "Tu es une legume");
          return "It's time to get a watch";
       } finally {
          span.end();
@@ -422,12 +422,15 @@ public class ControllerFilter implements Filter {
     LOG.info("start doFilter");
     
     HttpServletRequest req = (HttpServletRequest) request;
-    Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
-        .extract(Context.current(), req, GETTER);
-    Span currentSpan = createSpanWithParent(req, context);
+    Span currentSpan;
     try (Scope scope = tracer.withSpan(currentSpan)) {
+      Context context = OpenTelemetry.getPropagators().getHttpTextFormat()
+        .extract(Context.current(), req, GETTER);
+      currentSpan = createSpanWithParent(req, context);
       currentSpan.addEvent("dofilter");
       chain.doFilter(req, response);
+    } finally {
+         currentSpan.end();
     }
     
     LOG.info("end doFilter");   
@@ -551,6 +554,8 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
          LOG.info(String.format("Request sent from RestTemplateInterceptor"));
 
          return response;
+      }finally {
+         currentSpan.end();
       }
    }
 }
