@@ -5,7 +5,8 @@ muzzle {
   pass {
     group = "org.glassfish.grizzly"
     module = 'grizzly-http'
-    versions = "[2.3,)"
+    versions = "[2.0,)"
+    assertInverse = true
   }
 }
 
@@ -17,7 +18,7 @@ testSets {
 
 dependencies {
 
-  compileOnly group: 'org.glassfish.grizzly', name: 'grizzly-http', version: '2.3'
+  compileOnly group: 'org.glassfish.grizzly', name: 'grizzly-http', version: '2.0'
 
   testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testCompile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'

@@ -51,7 +51,7 @@ import static org.glassfish.grizzly.memory.Buffers.wrap
 class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> {
 
   static {
-    System.setProperty("ota.integration.grizzly-filterchain.enabled", "true")
+    System.setProperty("ota.integration.grizzly.enabled", "true")
   }
 
   private TCPNIOTransport transport

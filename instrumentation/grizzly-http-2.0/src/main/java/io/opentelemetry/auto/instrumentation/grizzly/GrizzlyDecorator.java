@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
+package io.opentelemetry.auto.instrumentation.grizzly;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.trace.Span.Kind.SERVER;

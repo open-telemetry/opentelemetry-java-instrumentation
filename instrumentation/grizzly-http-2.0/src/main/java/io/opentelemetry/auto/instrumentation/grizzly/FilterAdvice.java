@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
+package io.opentelemetry.auto.instrumentation.grizzly;
 
-import static io.opentelemetry.auto.instrumentation.grizzly.http.v2_3.GrizzlyDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import io.grpc.Context;

@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
+package io.opentelemetry.auto.instrumentation.grizzly;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -30,20 +29,15 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class DefaultFilterChainInstrumentation extends Instrumenter.Default {
+public class HttpServerFilterInstrumentation extends Instrumenter.Default {
 
-  public DefaultFilterChainInstrumentation() {
-    super("grizzly-filterchain");
+  public HttpServerFilterInstrumentation() {
+    super("grizzly");
   }
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("org.glassfish.grizzly.filterchain.DefaultFilterChain");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".GrizzlyDecorator", packageName + ".ExtractAdapter"};
+    return named("org.glassfish.grizzly.http.HttpServerFilter");
   }
 
   @Override
@@ -52,13 +46,19 @@ public class DefaultFilterChainInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {packageName + ".GrizzlyDecorator", packageName + ".ExtractAdapter"};
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-        isMethod()
-            .and(isPrivate())
-            .and(named("notifyFailure"))
+        named("prepareResponse")
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
-            .and(takesArgument(1, named("java.lang.Throwable"))),
-        packageName + ".DefaultFilterChainAdvice");
+            .and(takesArgument(1, named("org.glassfish.grizzly.http.HttpRequestPacket")))
+            .and(takesArgument(2, named("org.glassfish.grizzly.http.HttpResponsePacket")))
+            .and(takesArgument(3, named("org.glassfish.grizzly.http.HttpContent")))
+            .and(isPrivate()),
+        packageName + ".HttpServerFilterAdvice");
   }
 }
