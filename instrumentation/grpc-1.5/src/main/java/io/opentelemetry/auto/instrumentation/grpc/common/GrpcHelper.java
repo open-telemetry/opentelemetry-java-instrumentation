@@ -18,9 +18,11 @@ package io.opentelemetry.auto.instrumentation.grpc.common;
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.Status.CanonicalCode;
 import java.net.InetSocketAddress;
 
-public class GrpcHelper {
+public final class GrpcHelper {
   public static void prepareSpan(
       final Span span,
       final String methodName,
@@ -51,4 +53,52 @@ public class GrpcHelper {
       span.setAttribute(MoreTags.NET_PEER_NAME, "(unknown)");
     }
   }
+
+  public static Status statusFromGrpcStatus(io.grpc.Status grpcStatus) {
+
+  }
+
+  private static CanonicalCode codeFromGrpcCode(io.grpc.Status.Code grpcCode) {
+    switch (grpcCode) {
+      case OK:
+        return CanonicalCode.OK;
+      case CANCELLED:
+        return CanonicalCode.CANCELLED;
+      case UNKNOWN:
+        return CanonicalCode.UNKNOWN;
+      case INVALID_ARGUMENT:
+        return CanonicalCode.INVALID_ARGUMENT;
+      case DEADLINE_EXCEEDED:
+        return CanonicalCode.DEADLINE_EXCEEDED;
+      case NOT_FOUND:
+        return CanonicalCode.NOT_FOUND;
+      case ALREADY_EXISTS:
+        return CanonicalCode.ALREADY_EXISTS;
+      case PERMISSION_DENIED:
+        return CanonicalCode.PERMISSION_DENIED;
+      case RESOURCE_EXHAUSTED:
+        return CanonicalCode.RESOURCE_EXHAUSTED;
+      case FAILED_PRECONDITION:
+        return CanonicalCode.FAILED_PRECONDITION;
+      case ABORTED:
+        return CanonicalCode.ABORTED;
+      case OUT_OF_RANGE:
+        return CanonicalCode.OUT_OF_RANGE;
+      case UNIMPLEMENTED:
+        return CanonicalCode.UNIMPLEMENTED;
+      case INTERNAL:
+        return CanonicalCode.INTERNAL;
+      case UNAVAILABLE:
+        return CanonicalCode.UNAVAILABLE;
+      case DATA_LOSS:
+        return CanonicalCode.DATA_LOSS;
+      case UNAUTHENTICATED:
+        return CanonicalCode.UNAUTHENTICATED;
+    }
+
+    // gRPC status == OTel status, try a string match
+    CanonicalCode.CanonicalCode.valueOf()
+  }
+
+  private GrpcHelper() {}
 }
