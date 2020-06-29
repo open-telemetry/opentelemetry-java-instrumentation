@@ -7,5 +7,5 @@ dependencies {
   testCompile deps.coroutines
 
   testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:annotations')
 }
