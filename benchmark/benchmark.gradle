@@ -15,10 +15,10 @@ dependencies {
 }
 
 jmh {
-  timeUnit = 'ms' // Output time unit. Available time units are: [m, s, ms, us, ns].
+  timeUnit = 'us' // Output time unit. Available time units are: [m, s, ms, us, ns].
   benchmarkMode = ['avgt']
-  timeOnIteration = '20s'
-  iterations = 1 // Number of measurement iterations to do.
+  timeOnIteration = '10s'
+  iterations = 10 // Number of measurement iterations to do.
   fork = 1 // How many times to forks a single benchmark. Use 0 to disable forking altogether
 //  jvmArgs += ["-XX:+UnlockDiagnosticVMOptions", "-XX:+DebugNonSafepoints", "-XX:StartFlightRecording=delay=5s,dumponexit=true,name=jmh-benchmark,filename=$rootDir/benchmark/build/reports/jmh/jmh-benchmark.jfr"]
 //  jvmArgs += ["-agentpath:$rootDir/benchmark/src/jmh/resources/libasyncProfiler.so=start,collapsed,file=$rootDir/benchmark/build/reports/jmh/profiler.txt"]
@@ -30,17 +30,18 @@ jmh {
 
 //  profilers = ['stack:lines=5;detailLine=true;period=5;excludePackages=true']
   // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr]
-  profilers = ['io.opentelemetry.benchmark.UsedMemoryProfiler', 'gc']
+//  profilers = ['io.opentelemetry.benchmark.UsedMemoryProfiler', 'gc']
 
 //  humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
 //  operationsPerInvocation = 10 // Operations per invocation.
 //  synchronizeIterations = false // Synchronize iterations?
-  timeout = '5s' // Timeout for benchmark iteration.
+//  timeout = '5s' // Timeout for benchmark iteration.
 //  includeTests = false
   // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
 
   duplicateClassesStrategy = DuplicatesStrategy.EXCLUDE
-  jmhVersion = '1.23' // Specifies JMH version
+//  jmhVersion = '1.23' // Specifies JMH version
+  include = ['io.opentelemetry.benchmark.storage.StorageBenchmark']
 }
 
 tasks.jmh.dependsOn(':opentelemetry-javaagent:shadowJar')
