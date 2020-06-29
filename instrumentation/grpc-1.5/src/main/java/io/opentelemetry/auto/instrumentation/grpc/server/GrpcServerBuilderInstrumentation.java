@@ -51,6 +51,8 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
       packageName + ".TracingServerInterceptor$TracingServerCall",
       packageName + ".TracingServerInterceptor$TracingServerCallListener",
       "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
+      // Generated for enum switch.
+      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper$1",
     };
   }
 

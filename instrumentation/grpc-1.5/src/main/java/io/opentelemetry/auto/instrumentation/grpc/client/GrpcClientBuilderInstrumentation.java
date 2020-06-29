@@ -58,6 +58,8 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
       packageName + ".TracingClientInterceptor$TracingClientCall",
       packageName + ".TracingClientInterceptor$TracingClientCallListener",
       "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper",
+      // Generated for enum switch.
+      "io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper$1",
     };
   }
 
