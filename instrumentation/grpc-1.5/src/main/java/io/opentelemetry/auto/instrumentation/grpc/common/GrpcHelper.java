@@ -16,13 +16,41 @@
 
 package io.opentelemetry.auto.instrumentation.grpc.common;
 
+import io.grpc.Status.Code;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Status.CanonicalCode;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
 
 public final class GrpcHelper {
+  private static final Map<Code, CanonicalCode> CODE_MAP;
+
+  static {
+    EnumMap<Code, CanonicalCode> codeMap = new EnumMap<>(Code.class);
+    codeMap.put(Code.OK, CanonicalCode.OK);
+    codeMap.put(Code.CANCELLED, CanonicalCode.CANCELLED);
+    codeMap.put(Code.INVALID_ARGUMENT, CanonicalCode.INVALID_ARGUMENT);
+    codeMap.put(Code.DEADLINE_EXCEEDED, CanonicalCode.DEADLINE_EXCEEDED);
+    codeMap.put(Code.NOT_FOUND, CanonicalCode.NOT_FOUND);
+    codeMap.put(Code.ALREADY_EXISTS, CanonicalCode.ALREADY_EXISTS);
+    codeMap.put(Code.PERMISSION_DENIED, CanonicalCode.PERMISSION_DENIED);
+    codeMap.put(Code.RESOURCE_EXHAUSTED, CanonicalCode.RESOURCE_EXHAUSTED);
+    codeMap.put(Code.FAILED_PRECONDITION, CanonicalCode.FAILED_PRECONDITION);
+    codeMap.put(Code.ABORTED, CanonicalCode.ABORTED);
+    codeMap.put(Code.OUT_OF_RANGE, CanonicalCode.OUT_OF_RANGE);
+    codeMap.put(Code.UNIMPLEMENTED, CanonicalCode.UNIMPLEMENTED);
+    codeMap.put(Code.INTERNAL, CanonicalCode.INTERNAL);
+    codeMap.put(Code.UNAVAILABLE, CanonicalCode.UNAVAILABLE);
+    codeMap.put(Code.DATA_LOSS, CanonicalCode.DATA_LOSS);
+    codeMap.put(Code.UNAUTHENTICATED, CanonicalCode.UNAUTHENTICATED);
+    codeMap.put(Code.UNKNOWN, CanonicalCode.UNKNOWN);
+    CODE_MAP = Collections.unmodifiableMap(codeMap);
+  }
+
   public static void prepareSpan(
       final Span span,
       final String methodName,
@@ -62,44 +90,9 @@ public final class GrpcHelper {
     return status;
   }
 
-  private static CanonicalCode codeFromGrpcCode(io.grpc.Status.Code grpcCode) {
-    switch (grpcCode) {
-      case OK:
-        return CanonicalCode.OK;
-      case CANCELLED:
-        return CanonicalCode.CANCELLED;
-      case INVALID_ARGUMENT:
-        return CanonicalCode.INVALID_ARGUMENT;
-      case DEADLINE_EXCEEDED:
-        return CanonicalCode.DEADLINE_EXCEEDED;
-      case NOT_FOUND:
-        return CanonicalCode.NOT_FOUND;
-      case ALREADY_EXISTS:
-        return CanonicalCode.ALREADY_EXISTS;
-      case PERMISSION_DENIED:
-        return CanonicalCode.PERMISSION_DENIED;
-      case RESOURCE_EXHAUSTED:
-        return CanonicalCode.RESOURCE_EXHAUSTED;
-      case FAILED_PRECONDITION:
-        return CanonicalCode.FAILED_PRECONDITION;
-      case ABORTED:
-        return CanonicalCode.ABORTED;
-      case OUT_OF_RANGE:
-        return CanonicalCode.OUT_OF_RANGE;
-      case UNIMPLEMENTED:
-        return CanonicalCode.UNIMPLEMENTED;
-      case INTERNAL:
-        return CanonicalCode.INTERNAL;
-      case UNAVAILABLE:
-        return CanonicalCode.UNAVAILABLE;
-      case DATA_LOSS:
-        return CanonicalCode.DATA_LOSS;
-      case UNAUTHENTICATED:
-        return CanonicalCode.UNAUTHENTICATED;
-      case UNKNOWN:
-      default:
-        return CanonicalCode.UNKNOWN;
-    }
+  private static CanonicalCode codeFromGrpcCode(Code grpcCode) {
+    CanonicalCode code = CODE_MAP.get(grpcCode);
+    return code != null ? code : CanonicalCode.UNKNOWN;
   }
 
   private GrpcHelper() {}
