@@ -168,7 +168,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       this.fragment = uriObj.fragment
       this.status = status
       this.body = body
-      this.errored = status >= 500
+      this.errored = status >= 400
     }
 
     String getPath() {
