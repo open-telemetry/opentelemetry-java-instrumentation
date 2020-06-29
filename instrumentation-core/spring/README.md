@@ -404,11 +404,10 @@ The preHandle method starts a span for each request. This implementation is show
 
 @Component
 public class ControllerFilter implements Filter {
-  
+  private static final Logger LOG = Logger.getLogger(ControllerFilter.class.getName());
+    
   @Autowired
   Tracer tracer;
-  
-  private static final Logger LOG = Logger.getLogger(ControllerFilter.class.getName());
 
   private final HttpTextFormat.Getter<HttpServletRequest> GETTER =
       new HttpTextFormat.Getter<HttpServletRequest>() {
