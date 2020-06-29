@@ -29,7 +29,7 @@ dependencies {
   testCompile project(':instrumentation:netty:netty-4.0')
   testCompile project(':instrumentation:netty:netty-4.1')
   testCompile project(':instrumentation:jdbc')
-  testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:annotations')
 
   testCompile group: 'io.vertx', name: 'vertx-web', version: vertxVersion
   testCompile group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
