@@ -86,9 +86,6 @@ class HttpUtilTest extends Specification {
     431        | Status.INVALID_ARGUMENT
     451        | Status.INVALID_ARGUMENT
 
-    // nginx specific
-    499        | Status.CANCELLED
-
     500        | Status.INTERNAL
     501        | Status.UNIMPLEMENTED
     502        | Status.INTERNAL

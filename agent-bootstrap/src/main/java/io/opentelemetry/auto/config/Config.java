@@ -117,8 +117,6 @@ public class Config {
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final List<String> excludedClasses;
-  @Getter private final BitSet httpServerErrorStatuses;
-  @Getter private final BitSet httpClientErrorStatuses;
   @Getter private final boolean httpServerTagQueryString;
   @Getter private final boolean httpClientTagQueryString;
   @Getter private final Integer scopeDepthLimit;
@@ -172,14 +170,6 @@ public class Config {
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
-
-    httpServerErrorStatuses =
-        getIntegerRangeSettingFromEnvironment(
-            HTTP_SERVER_ERROR_STATUSES, DEFAULT_HTTP_SERVER_ERROR_STATUSES);
-
-    httpClientErrorStatuses =
-        getIntegerRangeSettingFromEnvironment(
-            HTTP_CLIENT_ERROR_STATUSES, DEFAULT_HTTP_CLIENT_ERROR_STATUSES);
 
     httpServerTagQueryString =
         getBooleanSettingFromEnvironment(
@@ -240,14 +230,6 @@ public class Config {
 
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);
-
-    httpServerErrorStatuses =
-        getPropertyIntegerRangeValue(
-            properties, HTTP_SERVER_ERROR_STATUSES, parent.httpServerErrorStatuses);
-
-    httpClientErrorStatuses =
-        getPropertyIntegerRangeValue(
-            properties, HTTP_CLIENT_ERROR_STATUSES, parent.httpClientErrorStatuses);
 
     httpServerTagQueryString =
         getPropertyBooleanValue(

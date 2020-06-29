@@ -46,8 +46,6 @@ class ConfigTest extends AgentSpecification {
 
     then:
     config.traceEnabled == true
-    config.httpServerErrorStatuses == toBitSet((500..599))
-    config.httpClientErrorStatuses == toBitSet((400..599))
     config.runtimeContextFieldInjection == true
     config.endpointPeerServiceMapping.isEmpty()
     config.toString().contains("traceEnabled=true")
@@ -76,8 +74,6 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == false
     config.traceMethods == "mypackage.MyClass[myMethod]"
-    config.httpServerErrorStatuses == toBitSet((122..457))
-    config.httpClientErrorStatuses == toBitSet((111..111))
     config.runtimeContextFieldInjection == false
     config.endpointPeerServiceMapping.equals(["1.2.3.4": "cats", "dogs.com": "dogs"])
   }
@@ -97,8 +93,6 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == false
     config.traceMethods == "mypackage.MyClass[myMethod]"
-    config.httpServerErrorStatuses == toBitSet((122..457))
-    config.httpClientErrorStatuses == toBitSet((111..111))
     config.runtimeContextFieldInjection == false
     config.endpointPeerServiceMapping.equals(["1.2.3.4": "cats", "dogs.com": "dogs"])
   }
@@ -145,8 +139,6 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == true
     config.traceMethods == " "
-    config.httpServerErrorStatuses == toBitSet((500..599))
-    config.httpClientErrorStatuses == toBitSet((400..599))
     config.endpointPeerServiceMapping.isEmpty()
   }
 
@@ -164,8 +156,6 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == false
     config.traceMethods == "mypackage.MyClass[myMethod]"
-    config.httpServerErrorStatuses == toBitSet((122..457))
-    config.httpClientErrorStatuses == toBitSet((111..111))
   }
 
   def "override null properties"() {
@@ -231,45 +221,6 @@ class ConfigTest extends AgentSpecification {
     ["disabled-env", "test-env"]   | true           | false
 
     integrationNames = new TreeSet<>(names)
-  }
-
-  def "verify integer range configs on tracer"() {
-    setup:
-    System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, value)
-    System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, value)
-    def props = new Properties()
-    props.setProperty(HTTP_CLIENT_ERROR_STATUSES, value)
-    props.setProperty(HTTP_SERVER_ERROR_STATUSES, value)
-
-    when:
-    def config = new Config()
-    def propConfig = Config.get(props)
-
-    then:
-    if (expected) {
-      assert config.httpServerErrorStatuses == toBitSet(expected)
-      assert config.httpClientErrorStatuses == toBitSet(expected)
-      assert propConfig.httpServerErrorStatuses == toBitSet(expected)
-      assert propConfig.httpClientErrorStatuses == toBitSet(expected)
-    } else {
-      assert config.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
-      assert config.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
-      assert propConfig.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
-      assert propConfig.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
-    }
-
-    where:
-    value               | expected // null means default value
-    "1"                 | null
-    "a"                 | null
-    ""                  | null
-    "1000"              | null
-    "100-200-300"       | null
-    "500"               | [500]
-    "100,999"           | [100, 999]
-    "999-888"           | 888..999
-    "400-403,405-407"   | [400, 401, 402, 403, 405, 406, 407]
-    " 400 - 403 , 405 " | [400, 401, 402, 403, 405]
   }
 
   def "verify fallback to properties file"() {

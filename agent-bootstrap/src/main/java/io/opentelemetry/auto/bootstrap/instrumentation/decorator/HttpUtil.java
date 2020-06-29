@@ -18,10 +18,10 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.trace.Status;
 
-final class HttpUtil {
+public final class HttpUtil {
 
-  // https://github.com/open-telemetry/opentelemetry-collector/blob/8aa273184455591cad278c92c7cfcf75ad353d57/translator/trace/grpc_http_mapper.go#L55
-  static Status statusFromHttpStatus(int httpStatus) {
+  // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
+  public static Status statusFromHttpStatus(int httpStatus) {
     if (httpStatus >= 100 && httpStatus < 400) {
       return Status.OK;
     }
@@ -35,8 +35,6 @@ final class HttpUtil {
         return Status.NOT_FOUND;
       case 429:
         return Status.RESOURCE_EXHAUSTED;
-      case 499:
-        return Status.CANCELLED;
       case 501:
         return Status.UNIMPLEMENTED;
       case 503:
