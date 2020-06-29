@@ -408,7 +408,7 @@ public class ControllerFilter implements Filter {
   @Autowired
   Tracer tracer;
   
-  private final Logger LOG = Logger.getLogger(ControllerFilter.class.getName());
+  private static final Logger LOG = Logger.getLogger(ControllerFilter.class.getName());
 
   private final HttpTextFormat.Getter<HttpServletRequest> GETTER =
       new HttpTextFormat.Getter<HttpServletRequest>() {
