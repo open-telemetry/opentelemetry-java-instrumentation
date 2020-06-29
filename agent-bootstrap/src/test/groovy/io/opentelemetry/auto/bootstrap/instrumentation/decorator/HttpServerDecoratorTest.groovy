@@ -20,7 +20,6 @@ import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Status
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
