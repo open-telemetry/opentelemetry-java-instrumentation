@@ -34,8 +34,6 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
   @Shared
   def testUserAgent = "Apache HttpClient"
 
-  def span = Mock(Span)
-
   def "test onRequest"() {
     setup:
     def decorator = newDecorator()

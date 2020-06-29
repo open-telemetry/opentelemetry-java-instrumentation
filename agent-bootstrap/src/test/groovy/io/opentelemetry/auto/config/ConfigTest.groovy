@@ -22,6 +22,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
 import static io.opentelemetry.auto.config.Config.CONFIGURATION_FILE
+import static io.opentelemetry.auto.config.Config.ENDPOINT_PEER_SERVICE_MAPPING
 import static io.opentelemetry.auto.config.Config.HTTP_CLIENT_ERROR_STATUSES
 import static io.opentelemetry.auto.config.Config.HTTP_SERVER_ERROR_STATUSES
 import static io.opentelemetry.auto.config.Config.PREFIX
@@ -37,6 +38,7 @@ class ConfigTest extends AgentSpecification {
 
   private static final TRACE_ENABLED_ENV = "OTA_TRACE_ENABLED"
   private static final TRACE_METHODS_ENV = "OTA_TRACE_METHODS"
+  private static final ENDPOINT_PEER_NAME_MAPPING_ENV = "OTA_ENDPOINT_PEER_SERVICE_MAPPING"
 
   def "verify defaults"() {
     when:
@@ -47,6 +49,7 @@ class ConfigTest extends AgentSpecification {
     config.httpServerErrorStatuses == toBitSet((500..599))
     config.httpClientErrorStatuses == toBitSet((400..599))
     config.runtimeContextFieldInjection == true
+    config.endpointPeerServiceMapping.isEmpty()
     config.toString().contains("traceEnabled=true")
 
     where:
@@ -65,6 +68,7 @@ class ConfigTest extends AgentSpecification {
     prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
+    prop.setProperty(ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
 
     when:
     Config config = Config.get(prop)
@@ -75,6 +79,7 @@ class ConfigTest extends AgentSpecification {
     config.httpServerErrorStatuses == toBitSet((122..457))
     config.httpClientErrorStatuses == toBitSet((111..111))
     config.runtimeContextFieldInjection == false
+    config.endpointPeerServiceMapping.equals(["1.2.3.4": "cats", "dogs.com": "dogs"])
   }
 
   def "specify overrides via system properties"() {
@@ -84,6 +89,7 @@ class ConfigTest extends AgentSpecification {
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
+    System.setProperty(PREFIX + ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4=cats,dogs.com=dogs")
 
     when:
     Config config = new Config()
@@ -94,12 +100,14 @@ class ConfigTest extends AgentSpecification {
     config.httpServerErrorStatuses == toBitSet((122..457))
     config.httpClientErrorStatuses == toBitSet((111..111))
     config.runtimeContextFieldInjection == false
+    config.endpointPeerServiceMapping.equals(["1.2.3.4": "cats", "dogs.com": "dogs"])
   }
 
   def "specify overrides via env vars"() {
     setup:
     environmentVariables.set(TRACE_ENABLED_ENV, "false")
     environmentVariables.set(TRACE_METHODS_ENV, "mypackage.MyClass[myMethod]")
+    environmentVariables.set(ENDPOINT_PEER_NAME_MAPPING_ENV, "1.2.3.4=cats,dogs.com=dogs")
 
     when:
     def config = new Config()
@@ -107,6 +115,7 @@ class ConfigTest extends AgentSpecification {
     then:
     config.traceEnabled == false
     config.traceMethods == "mypackage.MyClass[myMethod]"
+    config.endpointPeerServiceMapping.equals(["1.2.3.4": "cats", "dogs.com": "dogs"])
   }
 
   def "sys props override env vars"() {
@@ -128,6 +137,7 @@ class ConfigTest extends AgentSpecification {
     System.setProperty(PREFIX + TRACE_METHODS, " ")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
+    System.setProperty(PREFIX + ENDPOINT_PEER_SERVICE_MAPPING, "1.2.3.4,dogs=cats")
 
     when:
     def config = new Config()
@@ -137,6 +147,7 @@ class ConfigTest extends AgentSpecification {
     config.traceMethods == " "
     config.httpServerErrorStatuses == toBitSet((500..599))
     config.httpClientErrorStatuses == toBitSet((400..599))
+    config.endpointPeerServiceMapping.isEmpty()
   }
 
   def "sys props override properties"() {
