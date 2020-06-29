@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import io.opentelemetry.auto.test.base.HttpServerTest
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
