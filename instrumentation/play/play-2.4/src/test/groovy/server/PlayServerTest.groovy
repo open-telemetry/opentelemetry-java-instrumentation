@@ -29,6 +29,7 @@ import java.util.function.Supplier
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -88,7 +89,7 @@ class PlayServerTest extends HttpServerTest<Server> {
     trace.span(index) {
       operationName "play.request"
       spanKind INTERNAL
-      errored endpoint == ERROR || endpoint == EXCEPTION
+      errored endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
       childOf((SpanData) parent)
       tags {
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

@@ -20,7 +20,6 @@ import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Status
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
@@ -107,31 +106,26 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    withConfigOverride(Config.HTTP_CLIENT_ERROR_STATUSES, "$errorRange") {
-      decorator.onResponse(span, resp)
-    }
+    decorator.onResponse(span, resp)
 
     then:
     if (status) {
       1 * span.setAttribute(Tags.HTTP_STATUS, status)
-    }
-    if (error) {
-      1 * span.setStatus(Status.UNKNOWN)
+      1 * span.setStatus(HttpStatusConverter.statusFromHttpStatus(status))
     }
     0 * _
 
     where:
-    status | error | errorRange | resp
-    200    | false | null       | [status: 200]
-    399    | false | null       | [status: 399]
-    400    | true  | null       | [status: 400]
-    499    | true  | null       | [status: 499]
-    500    | true  | null       | [status: 500]
-    500    | false | "400-499"  | [status: 500]
-    500    | true  | "400-500"  | [status: 500]
-    600    | false | null       | [status: 600]
-    null   | false | null       | [status: null]
-    null   | false | null       | null
+    status | resp
+    200    | [status: 200]
+    399    | [status: 399]
+    400    | [status: 400]
+    499    | [status: 499]
+    500    | [status: 500]
+    500    | [status: 500]
+    600    | [status: 600]
+    null   | [status: null]
+    null   | null
   }
 
   def "test assert null span"() {

@@ -31,7 +31,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -216,9 +215,7 @@ public abstract class HttpServerTracer<REQUEST> {
   private void setStatus(Span span, int status) {
     SemanticAttributes.HTTP_STATUS_CODE.set(span, status);
     // TODO status_message
-    if (Config.get().getHttpServerErrorStatuses().get(status)) {
-      span.setStatus(Status.UNKNOWN);
-    }
+    span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
   }
 
   protected abstract Integer peerPort(REQUEST request);
