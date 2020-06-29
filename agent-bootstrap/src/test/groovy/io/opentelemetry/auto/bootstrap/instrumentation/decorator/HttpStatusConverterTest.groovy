@@ -19,11 +19,11 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 import io.opentelemetry.trace.Status
 import spock.lang.Specification
 
-class HttpUtilTest extends Specification {
+class HttpStatusConverterTest extends Specification {
 
   def "test HTTP #httpStatus to OTel #expectedStatus"() {
     when:
-    def status = HttpUtil.statusFromHttpStatus(httpStatus)
+    def status = HttpStatusConverter.statusFromHttpStatus(httpStatus)
 
     then:
     status == expectedStatus

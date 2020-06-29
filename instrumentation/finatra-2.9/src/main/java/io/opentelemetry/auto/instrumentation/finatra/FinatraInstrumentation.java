@@ -33,7 +33,7 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpUtil;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpStatusConverter;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
@@ -131,7 +131,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       final Span span = spanWithScope.getSpan();
 
       // Don't use DECORATE.onResponse because this is the controller span
-      Status status = HttpUtil.statusFromHttpStatus(DECORATE.status(response));
+      Status status = HttpStatusConverter.statusFromHttpStatus(DECORATE.status(response));
       if (!status.isOk()) {
         span.setStatus(status);
       }

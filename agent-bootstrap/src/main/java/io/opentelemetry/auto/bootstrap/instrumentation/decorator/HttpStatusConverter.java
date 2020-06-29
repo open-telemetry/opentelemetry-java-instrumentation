@@ -18,7 +18,7 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.trace.Status;
 
-public final class HttpUtil {
+public final class HttpStatusConverter {
 
   // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
   public static Status statusFromHttpStatus(int httpStatus) {
@@ -56,5 +56,5 @@ public final class HttpUtil {
     return Status.UNKNOWN;
   }
 
-  private HttpUtil() {}
+  private HttpStatusConverter() {}
 }

@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,10 +88,6 @@ public class Config {
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
-  private static final BitSet DEFAULT_HTTP_SERVER_ERROR_STATUSES =
-      parseIntegerRangeSet("500-599", "default");
-  private static final BitSet DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
-      parseIntegerRangeSet("400-599", "default");
   private static final boolean DEFAULT_HTTP_SERVER_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
@@ -371,17 +366,6 @@ public class Config {
     }
   }
 
-  private static BitSet getIntegerRangeSettingFromEnvironment(
-      final String name, final BitSet defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    try {
-      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
-  }
-
   /**
    * Converts the property name, e.g. 'trace.enabled' into a public environment variable name, e.g.
    * `OTA_TRACE_ENABLED`.
@@ -457,48 +441,6 @@ public class Config {
   private static Integer getPropertyIntegerValue(
       final Properties properties, final String name, final Integer defaultValue) {
     return valueOf(properties.getProperty(name), Integer.class, defaultValue);
-  }
-
-  private static BitSet getPropertyIntegerRangeValue(
-      final Properties properties, final String name, final BitSet defaultValue) {
-    final String value = properties.getProperty(name);
-    try {
-      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
-  }
-
-  @NonNull
-  private static BitSet parseIntegerRangeSet(@NonNull String str, final String settingName)
-      throws NumberFormatException {
-    str = str.replaceAll("\\s", "");
-    if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
-      log.warn(
-          "Invalid config for {}: '{}'. Must be formatted like '400-403,405,410-499'.",
-          settingName,
-          str);
-      throw new NumberFormatException();
-    }
-
-    final int lastSeparator = Math.max(str.lastIndexOf(','), str.lastIndexOf('-'));
-    final int maxValue = Integer.parseInt(str.substring(lastSeparator + 1));
-    final BitSet set = new BitSet(maxValue);
-    final String[] tokens = str.split(",", -1);
-    for (final String token : tokens) {
-      final int separator = token.indexOf('-');
-      if (separator == -1) {
-        set.set(Integer.parseInt(token));
-      } else if (separator > 0) {
-        final int left = Integer.parseInt(token.substring(0, separator));
-        final int right = Integer.parseInt(token.substring(separator + 1));
-        final int min = Math.min(left, right);
-        final int max = Math.max(left, right);
-        set.set(min, max + 1);
-      }
-    }
-    return set;
   }
 
   @NonNull
