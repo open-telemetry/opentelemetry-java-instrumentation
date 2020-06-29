@@ -153,7 +153,7 @@ Here we will create REST controllers for `MainService` and `TimeService`.
 
 Required dependencies and configurations for MainService and TimeService projects can be found [here](#setup-for-manual-instrumentation).
 
-### Instrumentation of Receiving Service: MainService
+### Instrumentation of MainService
 
 1. Ensure OpenTelemetry dependencies are included
 2. Ensure an OpenTelemetry Tracer is configured
@@ -271,7 +271,7 @@ public class HttpUtils {
    }
 }
 ```
-### Instrumentation of Client Service: TimeService
+### Instrumentation of TimeService
 
 1. Ensure OpenTelemetry dependencies are included
 2. Ensure an OpenTelemetry Tracer is configured
@@ -354,7 +354,7 @@ We will also use the RestTemplate HTTP client to send requests from MainService 
 
 Using the earlier instructions [create two spring projects](#create-two-spring-projects) and add the required [dependencies and configurations](#setup-for-manual-instrumentation). 
 
-### Instrumentation of Client Service: TimeService
+### Instrumentation of TimeService
 
 Ensure the main method in TimeServiceApplication is defined. This will be the entry point to the TimeService project. This file should be created by the Spring Boot project initializer.
 
@@ -442,7 +442,7 @@ public class ControllerFilter implements Filter {
 
 Now your TimeService application is complete. Create the MainService application using the instructions below and then run your distributed service!
 
-### Instrumentation of Receiving Service: MainService
+### Instrumentation of MainService
 
 Ensure the main method in MainServiceApplication is defined. This will be the entry point to the MainService project. This file should be created by the Spring Boot project initializer.
 
