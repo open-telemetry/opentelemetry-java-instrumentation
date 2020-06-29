@@ -20,7 +20,6 @@ import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -121,7 +120,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
         span.setAttribute(Tags.HTTP_STATUS, status);
 
         if (Config.get().getHttpClientErrorStatuses().get(status)) {
-          span.setStatus(Status.UNKNOWN);
+          span.setStatus(HttpUtil.statusFromHttpStatus(status));
         }
       }
     }

@@ -20,7 +20,6 @@ import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Status
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
@@ -116,7 +115,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_STATUS, status)
     }
     if (error) {
-      1 * span.setStatus(Status.UNKNOWN)
+      1 * span.setStatus(HttpUtil.statusFromHttpStatus(status))
     }
     0 * _
 

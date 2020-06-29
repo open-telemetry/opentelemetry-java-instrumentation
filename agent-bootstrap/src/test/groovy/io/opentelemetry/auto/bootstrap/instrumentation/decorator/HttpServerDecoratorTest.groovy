@@ -131,7 +131,7 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_STATUS, status)
     }
     if (error) {
-      1 * span.setStatus(Status.UNKNOWN)
+      1 * span.setStatus(HttpUtil.statusFromHttpStatus(status))
     }
     0 * _
 
