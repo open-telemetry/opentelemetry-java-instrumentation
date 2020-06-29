@@ -37,7 +37,6 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpStatusConve
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -131,10 +130,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       final Span span = spanWithScope.getSpan();
 
       // Don't use DECORATE.onResponse because this is the controller span
-      Status status = HttpStatusConverter.statusFromHttpStatus(DECORATE.status(response));
-      if (!status.isOk()) {
-        span.setStatus(status);
-      }
+      span.setStatus(HttpStatusConverter.statusFromHttpStatus(DECORATE.status(response)));
 
       DECORATE.beforeFinish(span);
       span.end();
