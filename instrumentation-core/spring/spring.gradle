@@ -4,6 +4,10 @@ plugins {
 	id 'java'
 }
 
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 group = 'io.opentelemetry.instrumentation'
 version = '0.0.1-SNAPSHOT'
 
