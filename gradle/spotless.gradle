@@ -2,6 +2,7 @@ apply plugin: 'com.diffplug.gradle.spotless'
 
 spotless {
   java {
+    googleJavaFormat()
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
     target 'src/**/*.java'
   }
@@ -9,9 +10,15 @@ spotless {
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|class)'
   }
   scala {
+    scalafmt()
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
   }
   kotlin {
+    // ktfmt() // only supports 4 space indentation
+    ktlint().userData(['indent_size': '2', 'continuation_indent_size': '2'])
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
   }
 }
+
+task formatCode(dependsOn: ['spotlessApply'])
+check.dependsOn 'spotlessCheck'

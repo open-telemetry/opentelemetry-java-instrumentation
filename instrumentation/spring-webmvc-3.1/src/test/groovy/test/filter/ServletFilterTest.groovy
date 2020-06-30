@@ -24,6 +24,7 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
+import test.boot.SecurityConfig
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -38,7 +39,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
 
   @Override
   ConfigurableApplicationContext startServer(int port) {
-    def app = new SpringApplication(FilteredAppConfig)
+    def app = new SpringApplication(FilteredAppConfig, SecurityConfig)
     app.setDefaultProperties(singletonMap("server.port", port))
     def context = app.run()
     return context
@@ -89,21 +90,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
       errored false
       childOf((SpanData) parent)
       tags {
-      }
-    }
-  }
-
-  @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      operationName "TestController.${endpoint.name().toLowerCase()}"
-      spanKind INTERNAL
-      errored endpoint == EXCEPTION
-      childOf((SpanData) parent)
-      tags {
-        if (endpoint == EXCEPTION) {
-          errorTags(Exception, EXCEPTION.body)
-        }
       }
     }
   }

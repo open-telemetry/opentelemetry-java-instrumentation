@@ -1,6 +1,7 @@
 plugins {
   groovy
   `java-gradle-plugin`
+  id("com.diffplug.gradle.spotless") version "4.3.0"
 }
 
 gradlePlugin {

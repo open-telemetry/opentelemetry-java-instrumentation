@@ -1,5 +1,5 @@
 plugins {
-    id 'com.intershop.gradle.javacc' version '4.0.0'
+  id 'com.intershop.gradle.javacc' version '4.0.0'
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -21,9 +21,6 @@ javacc {
   }
 }
 
-tasks.withType(com.github.sherter.googlejavaformatgradleplugin.VerifyGoogleJavaFormat).configureEach {
-  exclude '**/jdbc/normalizer/*.java'
-}
 tasks.withType(Checkstyle).configureEach {
   exclude '**/jdbc/normalizer/*.java'
 }
@@ -36,7 +33,8 @@ testSets {
 
 dependencies {
   // jdbc unit testing
-  testCompile group: 'com.h2database', name: 'h2', version: '1.3.169' // first version jdk 1.6 compatible
+  testCompile group: 'com.h2database', name: 'h2', version: '1.3.169'
+  // first version jdk 1.6 compatible
   testCompile group: 'org.apache.derby', name: 'derby', version: '10.6.1.0'
   testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
 

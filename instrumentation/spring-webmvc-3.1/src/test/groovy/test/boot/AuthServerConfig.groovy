@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package server
+package test.boot
 
-import play.api.GlobalSettings
-import play.api.mvc.{RequestHeader, Result, Results}
+import org.springframework.context.annotation.Configuration
+import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer
 
-import scala.concurrent.Future
-
-class Settings extends GlobalSettings {
-  override def onError(
-      request: RequestHeader,
-      ex: Throwable
-  ): Future[Result] = {
-    Future.successful(Results.InternalServerError(ex.getCause.getMessage))
-  }
+@Configuration
+@EnableAuthorizationServer
+class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 }

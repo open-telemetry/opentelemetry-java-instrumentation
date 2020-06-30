@@ -8,14 +8,11 @@ plugins {
   id 'org.unbroken-dome.test-sets' version '2.2.1'
   id 'com.github.ben-manes.versions' version '0.27.0'
 
-  // Not applying google java format by default because it gets confused by stray java build
-  // files in 'workspace' build directory in CI
-  id 'com.github.sherter.google-java-format' version '0.8' apply false
   id 'com.dorongold.task-tree' version '1.5'
 
   id "com.github.johnrengelman.shadow" version "5.2.0"
 
-  id "com.diffplug.gradle.spotless" version "3.28.1"
+  id "com.diffplug.gradle.spotless" version "4.3.0"
   id "com.github.spotbugs" version "4.0.1"
 }
 
@@ -67,3 +64,19 @@ task writeMuzzleTasksToFile {
       .join('\n')
   }
 }
+
+apply plugin: 'com.diffplug.gradle.spotless'
+
+spotless {
+  // this formatting is applied at the root level, as some of these files are not in a submodules
+  // and would be missed otherwise
+  format 'misc', {
+    target '**/.gitignore', '**/*.md', '**/*.sh'
+    indentWithSpaces()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+}
+
+task formatCode(dependsOn: ['spotlessApply'])
+check.dependsOn 'spotlessCheck'

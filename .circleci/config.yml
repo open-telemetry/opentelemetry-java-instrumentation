@@ -17,7 +17,7 @@ cache_keys: &cache_keys
 parameters:
   gradle_flags:
     type: string
-    default: "--build-cache --parallel --stacktrace --no-daemon"
+    default: "--stacktrace --no-daemon"
 
 jobs:
   build:

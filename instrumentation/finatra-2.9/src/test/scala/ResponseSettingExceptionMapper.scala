@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 
 @Singleton
 class ResponseSettingExceptionMapper @Inject()(response: ResponseBuilder)
-  extends ExceptionMapper[Exception] {
+    extends ExceptionMapper[Exception] {
 
   override def toResponse(request: Request, exception: Exception): Response = {
     response.internalServerError(exception.getMessage)

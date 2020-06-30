@@ -20,6 +20,7 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.Span
 import okhttp3.Request
+import okhttp3.RequestBody
 
 import javax.servlet.Servlet
 
@@ -64,7 +65,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   protected ServerEndpoint lastRequest
 
   @Override
-  Request.Builder request(ServerEndpoint uri, String method, String body) {
+  Request.Builder request(ServerEndpoint uri, String method, RequestBody body) {
     lastRequest = uri
     super.request(uri, method, body)
   }

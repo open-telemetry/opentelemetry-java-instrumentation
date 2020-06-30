@@ -34,19 +34,25 @@ object AkkaHttpTestSyncWebServer {
   val syncHandler: HttpRequest => HttpResponse = {
     case HttpRequest(GET, uri: Uri, _, _, _) => {
       val endpoint = HttpServerTest.ServerEndpoint.forPath(uri.path.toString())
-      HttpServerTest.controller(endpoint, new Closure[HttpResponse](()) {
-        def doCall(): HttpResponse = {
-          val resp = HttpResponse(status = endpoint.getStatus)
-          endpoint match {
-            case SUCCESS => resp.withEntity(endpoint.getBody)
-            case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
-            case REDIRECT => resp.withHeaders(headers.Location(endpoint.getBody))
-            case ERROR => resp.withEntity(endpoint.getBody)
-            case EXCEPTION => throw new Exception(endpoint.getBody)
-            case _ => HttpResponse(status = NOT_FOUND.getStatus).withEntity(NOT_FOUND.getBody)
+      HttpServerTest.controller(
+        endpoint,
+        new Closure[HttpResponse](()) {
+          def doCall(): HttpResponse = {
+            val resp = HttpResponse(status = endpoint.getStatus)
+            endpoint match {
+              case SUCCESS     => resp.withEntity(endpoint.getBody)
+              case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
+              case REDIRECT =>
+                resp.withHeaders(headers.Location(endpoint.getBody))
+              case ERROR     => resp.withEntity(endpoint.getBody)
+              case EXCEPTION => throw new Exception(endpoint.getBody)
+              case _ =>
+                HttpResponse(status = NOT_FOUND.getStatus)
+                  .withEntity(NOT_FOUND.getBody)
+            }
           }
         }
-      })
+      )
     }
   }
 
@@ -55,7 +61,10 @@ object AkkaHttpTestSyncWebServer {
   def start(port: Int): Unit = synchronized {
     if (null == binding) {
       import scala.concurrent.duration._
-      binding = Await.result(Http().bindAndHandleSync(syncHandler, "localhost", port), 10 seconds)
+      binding = Await.result(
+        Http().bindAndHandleSync(syncHandler, "localhost", port),
+        10 seconds
+      )
     }
   }
 
