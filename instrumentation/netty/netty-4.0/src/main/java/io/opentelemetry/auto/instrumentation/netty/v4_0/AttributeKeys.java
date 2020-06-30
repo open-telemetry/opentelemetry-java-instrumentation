@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_0;
 
+import io.grpc.Context;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.client.HttpClientTracingHandler;
@@ -39,7 +40,7 @@ public class AttributeKeys {
   public static final AttributeKey<Span> PARENT_CONNECT_SPAN_ATTRIBUTE_KEY =
       attributeKey("io.opentelemetry.auto.instrumentation.netty.v4_0.parent.connect.span");
 
-  public static final AttributeKey<Span> SERVER_ATTRIBUTE_KEY =
+  public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
       attributeKey(HttpServerTracingHandler.class.getName() + ".span");
 
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =

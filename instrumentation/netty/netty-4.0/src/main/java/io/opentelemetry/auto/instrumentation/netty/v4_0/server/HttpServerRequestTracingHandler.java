@@ -16,17 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_0.server;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyRequestExtractAdapter.GETTER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerTracer.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
-import io.opentelemetry.auto.instrumentation.netty.v4_0.AttributeKeys;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 
@@ -34,38 +30,26 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
   @Override
   public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+    Channel channel = ctx.channel();
 
     if (!(msg instanceof HttpRequest)) {
-      final Span span = ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).get();
-      if (span == null) {
-        ctx.fireChannelRead(msg); // superclass does not throw
+      Span serverSpan = TRACER.getServerSpan(channel);
+      if (serverSpan == null) {
+        ctx.fireChannelRead(msg);
       } else {
-        try (final Scope scope = currentContextWith(span)) {
-          ctx.fireChannelRead(msg); // superclass does not throw
+        try (final Scope ignored = currentContextWith(serverSpan)) {
+          ctx.fireChannelRead(msg);
         }
       }
       return;
     }
 
-    final HttpRequest request = (HttpRequest) msg;
-
-    final Span.Builder spanBuilder =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-    spanBuilder.setParent(extract(request.headers(), GETTER));
-    final Span span = spanBuilder.startSpan();
-    try (final Scope scope = currentContextWith(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, ctx.channel());
-      DECORATE.onRequest(span, request);
-
-      ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(span);
-
+    Span span = TRACER.startSpan((HttpRequest) msg, channel, "netty.request", null);
+    try (final Scope ignored = TRACER.startScope(span, channel)) {
       try {
         ctx.fireChannelRead(msg);
       } catch (final Throwable throwable) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end(); // Finish the span manually since finishSpanOnClose was false
+        TRACER.endExceptionally(span, throwable, 500);
         throw throwable;
       }
     }

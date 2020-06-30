@@ -18,12 +18,12 @@ package io.opentelemetry.auto.instrumentation.netty.v4_0.server;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
+import io.grpc.Context;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
+import io.opentelemetry.auto.instrumentation.netty.v4_0.AttributeKeys;
+import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
@@ -31,16 +31,37 @@ import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class NettyHttpServerDecorator
-    extends HttpServerDecorator<HttpRequest, Channel, HttpResponse> {
-  public static final NettyHttpServerDecorator DECORATE = new NettyHttpServerDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-4.0");
+public class NettyHttpServerTracer extends HttpServerTracer<HttpRequest, Channel, Channel> {
+  public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
 
   @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
+  }
+
+  @Override
+  protected void attachServerSpanContext(Context context, Channel channel) {
+    channel.attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(context);
+  }
+
+  @Override
+  public Context getServerSpanContext(Channel channel) {
+    return channel.attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).get();
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.netty-4.0";
+  }
+
+  @Override
+  protected String getVersion() {
+    return null;
+  }
+
+  @Override
+  protected Getter<HttpRequest> getGetter() {
+    return NettyRequestExtractAdapter.GETTER;
   }
 
   @Override
@@ -71,8 +92,4 @@ public class NettyHttpServerDecorator
     return null;
   }
 
-  @Override
-  protected Integer status(final HttpResponse httpResponse) {
-    return httpResponse.getStatus().code();
-  }
 }
