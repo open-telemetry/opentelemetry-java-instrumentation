@@ -30,6 +30,7 @@ jmh {
 
 //  profilers = ['stack:lines=5;detailLine=true;period=5;excludePackages=true']
   // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr]
+  profilers = ['gc']
 //  profilers = ['io.opentelemetry.benchmark.UsedMemoryProfiler', 'gc']
 
 //  humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
