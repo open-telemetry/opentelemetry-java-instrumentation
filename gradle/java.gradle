@@ -39,8 +39,6 @@ sourceSets {
   main {
     java {
       srcDir 'src/main/java'
-      srcDir 'src/main/java8'
-      srcDir 'src/main/java9'
     }
   }
 }
