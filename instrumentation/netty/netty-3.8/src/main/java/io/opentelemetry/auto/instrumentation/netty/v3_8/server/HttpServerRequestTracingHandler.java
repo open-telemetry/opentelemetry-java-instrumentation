@@ -16,17 +16,14 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyRequestExtractAdapter.GETTER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -48,12 +45,12 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
     if (!(msg.getMessage() instanceof HttpRequest)) {
-      final Span span = channelTraceContext.getServerSpan();
-      if (span == null) {
-        ctx.sendUpstream(msg); // superclass does not throw
+      Context serverSpanContext = TRACER.getServerSpanContext(channelTraceContext);
+      if (serverSpanContext == null) {
+        ctx.sendUpstream(msg);
       } else {
-        try (final Scope scope = TRACER.withSpan(span)) {
-          ctx.sendUpstream(msg); // superclass does not throw
+        try (final Scope ignored = ContextUtils.withScopedContext(serverSpanContext)) {
+          ctx.sendUpstream(msg);
         }
       }
       return;
@@ -61,30 +58,12 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
     final HttpRequest request = (HttpRequest) msg.getMessage();
 
-    final Span.Builder spanBuilder =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-    final SpanContext extractedContext = extract(request.headers(), GETTER);
-    if (extractedContext.isValid()) {
-      spanBuilder.setParent(extractedContext);
-    } else {
-      // explicitly setting "no parent" in case a span was propagated to this thread
-      // by the java-concurrent instrumentation when the thread was started
-      spanBuilder.setNoParent();
-    }
-    final Span span = spanBuilder.startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, ctx.getChannel());
-      DECORATE.onRequest(span, request);
-
-      channelTraceContext.setServerSpan(span);
-
+    Span span = TRACER.startSpan(request, ctx.getChannel(), "netty.request", null);
+    try (final Scope ignored = TRACER.startScope(span, channelTraceContext)) {
       try {
         ctx.sendUpstream(msg);
       } catch (final Throwable throwable) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.end(); // Finish the span manually since finishSpanOnClose was false
+        TRACER.endExceptionally(span, throwable, 500);
         throw throwable;
       }
     }

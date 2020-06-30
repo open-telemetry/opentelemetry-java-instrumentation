@@ -25,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerDecorator;
+import io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Collections;
@@ -59,10 +59,9 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".AbstractNettyAdvice",
-      packageName + ".ChannelTraceContext",
-      packageName + ".ChannelTraceContext$Factory",
-      packageName + ".server.NettyHttpServerDecorator",
+        packageName + ".AbstractNettyAdvice",
+        packageName + ".ChannelTraceContext",
+        packageName + ".ChannelTraceContext$Factory",
     };
   }
 
@@ -86,14 +85,14 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelConnectAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This final Channel channel) {
-      final Span span = NettyHttpServerDecorator.TRACER.getCurrentSpan();
+      final Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
         final ContextStore<Channel, ChannelTraceContext> contextStore =
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
         if (contextStore
-                .putIfAbsent(channel, ChannelTraceContext.Factory.INSTANCE)
-                .getConnectionContinuation()
+            .putIfAbsent(channel, ChannelTraceContext.Factory.INSTANCE)
+            .getConnectionContinuation()
             == null) {
           contextStore.get(channel).setConnectionContinuation(span);
         }
