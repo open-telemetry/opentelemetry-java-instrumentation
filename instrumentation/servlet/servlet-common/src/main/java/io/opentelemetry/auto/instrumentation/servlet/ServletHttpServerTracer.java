@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ServletHttpServerTracer
-    extends HttpServerTracer<HttpServletRequest, HttpServletRequest> {
+    extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 
   @Override
   protected String getVersion() {
@@ -62,14 +62,14 @@ public abstract class ServletHttpServerTracer
   }
 
   @Override
-  protected Integer peerPort(HttpServletRequest request) {
+  protected Integer peerPort(HttpServletRequest connection) {
     // HttpServletResponse doesn't have accessor for remote port prior to Servlet spec 3.0
     return null;
   }
 
   @Override
-  protected String peerHostIP(HttpServletRequest request) {
-    return request.getRemoteAddr();
+  protected String peerHostIP(HttpServletRequest connection) {
+    return connection.getRemoteAddr();
   }
 
   @Override

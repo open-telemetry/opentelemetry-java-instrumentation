@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 // TODO In search for a better home package
 @Slf4j
-public abstract class HttpServerTracer<REQUEST, STORAGE> {
+public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
   public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
   // Keeps track of the server span for the current trace.
   private static final Context.Key<Span> CONTEXT_SERVER_SPAN_KEY =
@@ -59,25 +59,30 @@ public abstract class HttpServerTracer<REQUEST, STORAGE> {
 
   protected abstract String getVersion();
 
-  public Span startSpan(REQUEST request, Method origin, String originType) {
+  public Span startSpan(REQUEST request, CONNECTION connection, Method origin, String originType) {
+    String spanName = spanNameForMethod(origin);
+    return startSpan(request, connection, spanName, originType);
+  }
+
+  public Span startSpan(REQUEST request, CONNECTION connection, String spanName, String originType) {
     final Span.Builder builder =
         tracer
-            .spanBuilder(spanNameForMethod(origin))
+            .spanBuilder(spanName)
             .setSpanKind(SERVER)
             .setParent(extract(request, getGetter()))
             // TODO Where span.origin.type is defined?
             .setAttribute("span.origin.type", originType);
 
     Span span = builder.startSpan();
-    onConnection(span, request);
+    onConnection(span, connection);
     onRequest(span, request);
 
     return span;
   }
 
-  protected void onConnection(Span span, REQUEST request) {
-    SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(request));
-    final Integer port = peerPort(request);
+  protected void onConnection(Span span, CONNECTION connection) {
+    SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(connection));
+    final Integer port = peerPort(connection);
     // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
     if (port != null && port > 0) {
       SemanticAttributes.NET_PEER_PORT.set(span, port);
@@ -228,9 +233,9 @@ public abstract class HttpServerTracer<REQUEST, STORAGE> {
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
   }
 
-  protected abstract Integer peerPort(REQUEST request);
+  protected abstract Integer peerPort(CONNECTION connection);
 
-  protected abstract String peerHostIP(REQUEST request);
+  protected abstract String peerHostIP(CONNECTION connection);
 
   protected abstract HttpTextFormat.Getter<REQUEST> getGetter();
 

@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -41,7 +42,6 @@ import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracing
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -75,20 +75,20 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".AttributeKeys",
-      packageName + ".AttributeKeys$1",
-      // client helpers
-      packageName + ".client.NettyHttpClientDecorator",
-      packageName + ".client.NettyResponseInjectAdapter",
-      packageName + ".client.HttpClientRequestTracingHandler",
-      packageName + ".client.HttpClientResponseTracingHandler",
-      packageName + ".client.HttpClientTracingHandler",
-      // server helpers
-      packageName + ".server.NettyHttpServerDecorator",
-      packageName + ".server.NettyRequestExtractAdapter",
-      packageName + ".server.HttpServerRequestTracingHandler",
-      packageName + ".server.HttpServerResponseTracingHandler",
-      packageName + ".server.HttpServerTracingHandler"
+        packageName + ".AttributeKeys",
+        packageName + ".AttributeKeys$1",
+        // client helpers
+        packageName + ".client.NettyHttpClientDecorator",
+        packageName + ".client.NettyResponseInjectAdapter",
+        packageName + ".client.HttpClientRequestTracingHandler",
+        packageName + ".client.HttpClientResponseTracingHandler",
+        packageName + ".client.HttpClientTracingHandler",
+        // server helpers
+        packageName + ".server.NettyHttpServerDecorator",
+        packageName + ".server.NettyRequestExtractAdapter",
+        packageName + ".server.HttpServerRequestTracingHandler",
+        packageName + ".server.HttpServerResponseTracingHandler",
+        packageName + ".server.HttpServerTracingHandler"
     };
   }
 
@@ -150,19 +150,19 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
               HttpServerResponseTracingHandler.class.getName(),
               new HttpServerResponseTracingHandler());
         } else
-        // Client pipeline handlers
-        if (handler instanceof HttpClientCodec) {
-          pipeline.addLast(
-              HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
-        } else if (handler instanceof HttpRequestEncoder) {
-          pipeline.addLast(
-              HttpClientRequestTracingHandler.class.getName(),
-              new HttpClientRequestTracingHandler());
-        } else if (handler instanceof HttpResponseDecoder) {
-          pipeline.addLast(
-              HttpClientResponseTracingHandler.class.getName(),
-              new HttpClientResponseTracingHandler());
-        }
+          // Client pipeline handlers
+          if (handler instanceof HttpClientCodec) {
+            pipeline.addLast(
+                HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
+          } else if (handler instanceof HttpRequestEncoder) {
+            pipeline.addLast(
+                HttpClientRequestTracingHandler.class.getName(),
+                new HttpClientRequestTracingHandler());
+          } else if (handler instanceof HttpResponseDecoder) {
+            pipeline.addLast(
+                HttpClientResponseTracingHandler.class.getName(),
+                new HttpClientResponseTracingHandler());
+          }
       } catch (final IllegalArgumentException e) {
         // Prevented adding duplicate handlers.
       }
@@ -172,7 +172,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
-      final Span span = NettyHttpServerDecorator.TRACER.getCurrentSpan();
+      final Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
         final Attribute<Span> attribute =
             pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);

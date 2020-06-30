@@ -27,7 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.netty.channel.ChannelFuture;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator;
+import io.opentelemetry.auto.instrumentation.netty.v4_1.client.NettyHttpClientDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -60,20 +60,20 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".AttributeKeys",
-      packageName + ".AttributeKeys$1",
-      // client helpers
-      packageName + ".client.NettyHttpClientDecorator",
-      packageName + ".client.NettyResponseInjectAdapter",
-      packageName + ".client.HttpClientRequestTracingHandler",
-      packageName + ".client.HttpClientResponseTracingHandler",
-      packageName + ".client.HttpClientTracingHandler",
-      // server helpers
-      packageName + ".server.NettyHttpServerDecorator",
-      packageName + ".server.NettyRequestExtractAdapter",
-      packageName + ".server.HttpServerRequestTracingHandler",
-      packageName + ".server.HttpServerResponseTracingHandler",
-      packageName + ".server.HttpServerTracingHandler"
+        packageName + ".AttributeKeys",
+        packageName + ".AttributeKeys$1",
+        // client helpers
+        packageName + ".client.NettyHttpClientDecorator",
+        packageName + ".client.NettyResponseInjectAdapter",
+        packageName + ".client.HttpClientRequestTracingHandler",
+        packageName + ".client.HttpClientResponseTracingHandler",
+        packageName + ".client.HttpClientTracingHandler",
+        // server helpers
+        packageName + ".server.NettyHttpServerDecorator",
+        packageName + ".server.NettyRequestExtractAdapter",
+        packageName + ".server.HttpServerRequestTracingHandler",
+        packageName + ".server.HttpServerResponseTracingHandler",
+        packageName + ".server.HttpServerTracingHandler"
     };
   }
 
@@ -106,10 +106,10 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       final Scope parentScope = currentContextWith(parentSpan);
 
       final Span errorSpan =
-          NettyHttpServerDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-      try (final Scope scope = currentContextWith(errorSpan)) {
-        NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
-        NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);
+          NettyHttpClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
+      try (final Scope ignored = currentContextWith(errorSpan)) {
+        NettyHttpClientDecorator.DECORATE.onError(errorSpan, cause);
+        NettyHttpClientDecorator.DECORATE.beforeFinish(errorSpan);
         errorSpan.end();
       }
 
