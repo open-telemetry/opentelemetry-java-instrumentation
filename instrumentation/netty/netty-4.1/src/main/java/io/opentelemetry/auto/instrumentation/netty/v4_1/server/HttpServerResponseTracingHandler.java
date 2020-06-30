@@ -16,7 +16,6 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_1.server;
 
-
 import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;

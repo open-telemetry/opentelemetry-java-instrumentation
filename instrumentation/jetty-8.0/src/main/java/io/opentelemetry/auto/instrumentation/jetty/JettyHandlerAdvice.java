@@ -45,7 +45,9 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest, method, handler.getClass().getName());
+    span =
+        TRACER.startSpan(
+            httpServletRequest, httpServletRequest, method, handler.getClass().getName());
     scope = TRACER.startScope(span, httpServletRequest);
   }
 

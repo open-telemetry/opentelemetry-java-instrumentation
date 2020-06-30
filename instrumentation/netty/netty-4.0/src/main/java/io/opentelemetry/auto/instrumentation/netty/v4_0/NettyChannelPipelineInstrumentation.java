@@ -75,19 +75,19 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        packageName + ".AttributeKeys",
-        packageName + ".AttributeKeys$1",
-        // client helpers
-        packageName + ".client.NettyHttpClientDecorator",
-        packageName + ".client.NettyResponseInjectAdapter",
-        packageName + ".client.HttpClientRequestTracingHandler",
-        packageName + ".client.HttpClientResponseTracingHandler",
-        packageName + ".client.HttpClientTracingHandler",
-        // server helpers
-        packageName + ".server.NettyRequestExtractAdapter",
-        packageName + ".server.HttpServerRequestTracingHandler",
-        packageName + ".server.HttpServerResponseTracingHandler",
-        packageName + ".server.HttpServerTracingHandler"
+      packageName + ".AttributeKeys",
+      packageName + ".AttributeKeys$1",
+      // client helpers
+      packageName + ".client.NettyHttpClientDecorator",
+      packageName + ".client.NettyResponseInjectAdapter",
+      packageName + ".client.HttpClientRequestTracingHandler",
+      packageName + ".client.HttpClientResponseTracingHandler",
+      packageName + ".client.HttpClientTracingHandler",
+      // server helpers
+      packageName + ".server.NettyRequestExtractAdapter",
+      packageName + ".server.HttpServerRequestTracingHandler",
+      packageName + ".server.HttpServerResponseTracingHandler",
+      packageName + ".server.HttpServerTracingHandler"
     };
   }
 
@@ -140,19 +140,19 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
               HttpServerResponseTracingHandler.class.getName(),
               new HttpServerResponseTracingHandler());
         } else
-          // Client pipeline handlers
-          if (handler instanceof HttpClientCodec) {
-            pipeline.addLast(
-                HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
-          } else if (handler instanceof HttpRequestEncoder) {
-            pipeline.addLast(
-                HttpClientRequestTracingHandler.class.getName(),
-                new HttpClientRequestTracingHandler());
-          } else if (handler instanceof HttpResponseDecoder) {
-            pipeline.addLast(
-                HttpClientResponseTracingHandler.class.getName(),
-                new HttpClientResponseTracingHandler());
-          }
+        // Client pipeline handlers
+        if (handler instanceof HttpClientCodec) {
+          pipeline.addLast(
+              HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
+        } else if (handler instanceof HttpRequestEncoder) {
+          pipeline.addLast(
+              HttpClientRequestTracingHandler.class.getName(),
+              new HttpClientRequestTracingHandler());
+        } else if (handler instanceof HttpResponseDecoder) {
+          pipeline.addLast(
+              HttpClientResponseTracingHandler.class.getName(),
+              new HttpClientResponseTracingHandler());
+        }
       } catch (final IllegalArgumentException e) {
         // Prevented adding duplicate handlers.
       }

@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class NettyRequestExtractAdapter implements HttpTextFormat.Getter<HttpRequest> {

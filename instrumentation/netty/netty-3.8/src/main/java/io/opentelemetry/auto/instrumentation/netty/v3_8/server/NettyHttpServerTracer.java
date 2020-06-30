@@ -16,14 +16,12 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
 
+import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
+
 import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
-import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
-import io.opentelemetry.trace.Tracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
@@ -31,9 +29,6 @@ import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
-
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 @Slf4j
 public class NettyHttpServerTracer

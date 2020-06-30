@@ -16,7 +16,6 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_0.server;
 
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 

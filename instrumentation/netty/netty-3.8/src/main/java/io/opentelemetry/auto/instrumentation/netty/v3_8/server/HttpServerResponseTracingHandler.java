@@ -16,6 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
 
+import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
+
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
@@ -28,8 +30,6 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
 import org.jboss.netty.handler.codec.http.HttpResponse;
-
-import static io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerTracer.TRACER;
 
 public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHandler {
 

@@ -59,9 +59,9 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        packageName + ".AbstractNettyAdvice",
-        packageName + ".ChannelTraceContext",
-        packageName + ".ChannelTraceContext$Factory",
+      packageName + ".AbstractNettyAdvice",
+      packageName + ".ChannelTraceContext",
+      packageName + ".ChannelTraceContext$Factory",
     };
   }
 
@@ -91,8 +91,8 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
         if (contextStore
-            .putIfAbsent(channel, ChannelTraceContext.Factory.INSTANCE)
-            .getConnectionContinuation()
+                .putIfAbsent(channel, ChannelTraceContext.Factory.INSTANCE)
+                .getConnectionContinuation()
             == null) {
           contextStore.get(channel).setConnectionContinuation(span);
         }

@@ -49,7 +49,9 @@ public class Servlet2Advice {
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
+    span =
+        TRACER.startSpan(
+            httpServletRequest, httpServletRequest, method, servlet.getClass().getName());
     scope = TRACER.startScope(span, httpServletRequest);
   }
 

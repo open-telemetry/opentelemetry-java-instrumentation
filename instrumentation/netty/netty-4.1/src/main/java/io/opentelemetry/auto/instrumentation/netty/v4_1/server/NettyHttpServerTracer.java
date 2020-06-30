@@ -91,5 +91,4 @@ public class NettyHttpServerTracer extends HttpServerTracer<HttpRequest, Channel
     }
     return null;
   }
-
 }
