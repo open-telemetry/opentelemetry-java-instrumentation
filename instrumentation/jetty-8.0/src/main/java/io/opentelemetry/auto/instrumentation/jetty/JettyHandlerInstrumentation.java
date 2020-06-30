@@ -51,15 +51,6 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JettyDecorator",
-      packageName + ".HttpServletRequestExtractAdapter",
-      packageName + ".TagSettingAsyncListener"
-    };
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("handle")

@@ -25,8 +25,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletRequest;
@@ -45,7 +46,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * <p>This instrumentation intercepts status setting methods from Servlet 2.0 specification and
  * stores that status into context store. Then {@link Servlet2Advice#stopSpan(ServletRequest,
- * ServletResponse, SpanWithScope, Throwable)} can get it from context and set required span
+ * ServletResponse, Throwable, Span, Scope)} can get it from context and set required span
  * attribute.
  */
 @AutoService(Instrumenter.class)

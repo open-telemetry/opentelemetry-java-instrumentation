@@ -45,7 +45,7 @@ public class Servlet2Advice {
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    if (TRACER.getAttachedContext(httpServletRequest) != null) {
+    if (TRACER.getServerSpanContext(httpServletRequest) != null) {
       return;
     }
 

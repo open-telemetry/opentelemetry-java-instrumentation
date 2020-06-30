@@ -31,6 +31,7 @@ import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.Option;
 
+// TODO Play does not creste server spans, it should not use HttpServerDecorator
 @Slf4j
 public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Request, Result> {
   public static final PlayHttpServerDecorator DECORATE = new PlayHttpServerDecorator();

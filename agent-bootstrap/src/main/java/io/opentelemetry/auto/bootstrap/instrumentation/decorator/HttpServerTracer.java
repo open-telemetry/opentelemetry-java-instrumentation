@@ -43,8 +43,11 @@ import lombok.extern.slf4j.Slf4j;
 
 // TODO In search for a better home package
 @Slf4j
-public abstract class HttpServerTracer<REQUEST> {
+public abstract class HttpServerTracer<REQUEST, STORAGE> {
   public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
+  // Keeps track of the server span for the current trace.
+  private static final Context.Key<Span> CONTEXT_SERVER_SPAN_KEY =
+      Context.key("opentelemetry-trace-server-span-key");
 
   protected final Tracer tracer;
 
@@ -133,7 +136,7 @@ public abstract class HttpServerTracer<REQUEST> {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
    */
-  protected String spanNameForMethod(final Method method) {
+  private String spanNameForMethod(final Method method) {
     return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
   }
 
@@ -141,7 +144,7 @@ public abstract class HttpServerTracer<REQUEST> {
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
    */
-  public String spanNameForClass(final Class clazz) {
+  private String spanNameForClass(final Class clazz) {
     if (!clazz.isAnonymousClass()) {
       return clazz.getSimpleName();
     }
@@ -173,14 +176,21 @@ public abstract class HttpServerTracer<REQUEST> {
     return tracer.getCurrentSpan();
   }
 
+  public Span getServerSpan(STORAGE storage) {
+    Context attachedContext = getServerSpanContext(storage);
+    return attachedContext == null ? null : CONTEXT_SERVER_SPAN_KEY.get(attachedContext);
+  }
+
   /**
    * Creates new scoped context with the given span.
    *
    * <p>Attaches new context to the request to avoid creating duplicate server spans.
    */
-  public Scope startScope(Span span, REQUEST request) {
-    Context newContext = withSpan(span, Context.current());
-    attachContextToRequest(newContext, request);
+  public Scope startScope(Span span, STORAGE storage) {
+    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
+    Context serverSpanContext = Context.current().withValue(CONTEXT_SERVER_SPAN_KEY, span);
+    Context newContext = withSpan(span, serverSpanContext);
+    attachServerSpanContext(newContext, storage);
     return withScopedContext(newContext);
   }
 
@@ -228,13 +238,14 @@ public abstract class HttpServerTracer<REQUEST> {
 
   protected abstract String method(REQUEST request);
 
-  /** Stores given context in the given request in implementation specific way. */
-  protected abstract void attachContextToRequest(Context context, REQUEST request);
+  /** Stores given context in the given storage in implementation specific way. */
+  protected abstract void attachServerSpanContext(Context context, STORAGE storage);
 
   /**
-   * Returns context stored to given request by {@link #attachContextToRequest(Context, REQUEST)}.
+   * Returns context stored to the given storage by {@link #attachServerSpanContext(Context,
+   * STORAGE)}.
    *
    * <p>May be null.
    */
-  public abstract Context getAttachedContext(REQUEST request);
+  public abstract Context getServerSpanContext(STORAGE storage);
 }

@@ -16,21 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.jetty;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.jetty.HttpServletRequestExtractAdapter.GETTER;
-import static io.opentelemetry.auto.instrumentation.jetty.JettyDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.jetty.JettyDecorator.TRACER;
-import static io.opentelemetry.context.ContextUtils.withScopedContext;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
+import static io.opentelemetry.auto.instrumentation.jetty.JettyHttpServerTracer.TRACER;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import java.security.Principal;
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,72 +31,63 @@ import net.bytebuddy.asm.Advice;
 public class JettyHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(
-      @Advice.This final Object source, @Advice.Argument(2) final HttpServletRequest req) {
+  public static void onEnter(
+      @Advice.This final Object handler,
+      @Advice.Origin final Method method,
+      @Advice.This final Object source,
+      @Advice.Argument(2) final HttpServletRequest httpServletRequest,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
 
-    if (req.getAttribute(CONTEXT_ATTRIBUTE) != null) {
-      // Request already being traced elsewhere.
-      return null;
+    Context attachedContext = TRACER.getServerSpanContext(httpServletRequest);
+    if (attachedContext != null) {
+      // We are inside nested handler, don't create new span
+      return;
     }
 
-    final Span.Builder spanBuilder =
-        TRACER.spanBuilder(req.getMethod() + " " + source.getClass().getName()).setSpanKind(SERVER);
-    spanBuilder.setParent(extract(req, GETTER));
-    final Span span = spanBuilder.startSpan();
-
-    span.setAttribute("span.origin.type", source.getClass().getName());
-    DECORATE.afterStart(span);
-    DECORATE.onConnection(span, req);
-    DECORATE.onRequest(span, req);
-
-    Context newContext = withSpan(span, Context.current());
-    req.setAttribute(CONTEXT_ATTRIBUTE, newContext);
-    req.setAttribute("traceId", span.getContext().getTraceId().toLowerBase16());
-    req.setAttribute("spanId", span.getContext().getSpanId().toLowerBase16());
-    return new SpanWithScope(span, withScopedContext(newContext));
+    span = TRACER.startSpan(httpServletRequest, method, handler.getClass().getName());
+    scope = TRACER.startScope(span, httpServletRequest);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Argument(2) final HttpServletRequest req,
-      @Advice.Argument(3) final HttpServletResponse resp,
-      @Advice.Enter final SpanWithScope spanWithScope,
-      @Advice.Thrown final Throwable throwable) {
-    if (spanWithScope == null) {
+      @Advice.Argument(2) final HttpServletRequest request,
+      @Advice.Argument(3) final HttpServletResponse response,
+      @Advice.Thrown final Throwable throwable,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    if (scope == null) {
       return;
     }
-    final Span span = spanWithScope.getSpan();
-    final Principal userPrincipal = req.getUserPrincipal();
-    if (userPrincipal != null) {
-      span.setAttribute(MoreTags.USER_NAME, userPrincipal.getName());
+    scope.close();
+
+    if (span == null) {
+      // an existing span was found
+      return;
     }
+
+    TRACER.setPrincipal(span, request);
+
     if (throwable != null) {
-      DECORATE.onResponse(span, resp);
-      if (resp.getStatus() == HttpServletResponse.SC_OK) {
-        // exception is thrown in filter chain, but status code is incorrect
-        span.setAttribute(Tags.HTTP_STATUS, 500);
-      }
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end(); // Finish the span manually since finishSpanOnClose was false
-    } else {
-      final AtomicBoolean activated = new AtomicBoolean(false);
-      if (req.isAsyncStarted()) {
-        try {
-          req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
-        } catch (final IllegalStateException e) {
-          // org.eclipse.jetty.server.Request may throw an exception here if request became
-          // finished after check above. We just ignore that exception and move on.
-        }
-      }
-      // Check again in case the request finished before adding the listener.
-      if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
-        DECORATE.onResponse(span, resp);
-        DECORATE.beforeFinish(span);
-        span.end();
-      }
-      // else span finished by TagSettingAsyncListener
+      TRACER.endExceptionally(span, throwable, response.getStatus());
+      return;
     }
-    spanWithScope.closeScope();
+
+    final AtomicBoolean responseHandled = new AtomicBoolean(false);
+
+    // In case of async servlets wait for the actual response to be ready
+    if (request.isAsyncStarted()) {
+      try {
+        request.getAsyncContext().addListener(new TagSettingAsyncListener(responseHandled, span));
+      } catch (final IllegalStateException e) {
+        // org.eclipse.jetty.server.Request may throw an exception here if request became
+        // finished after check above. We just ignore that exception and move on.
+      }
+    }
+
+    // Check again in case the request finished before adding the listener.
+    if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
+      TRACER.end(span, response.getStatus());
+    }
   }
 }

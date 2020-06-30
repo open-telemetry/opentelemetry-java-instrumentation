@@ -29,7 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServletRequest> {
+public abstract class ServletHttpServerTracer
+    extends HttpServerTracer<HttpServletRequest, HttpServletRequest> {
 
   @Override
   protected String getVersion() {
@@ -50,13 +51,13 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   }
 
   @Override
-  public Context getAttachedContext(HttpServletRequest request) {
+  public Context getServerSpanContext(HttpServletRequest request) {
     Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
   }
 
   @Override
-  protected void attachContextToRequest(Context context, HttpServletRequest request) {
+  protected void attachServerSpanContext(Context context, HttpServletRequest request) {
     request.setAttribute(CONTEXT_ATTRIBUTE, context);
   }
 
