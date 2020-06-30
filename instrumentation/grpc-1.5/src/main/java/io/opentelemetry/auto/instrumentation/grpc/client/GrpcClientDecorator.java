@@ -29,7 +29,10 @@ public class GrpcClientDecorator extends ClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grpc-1.5");
 
   public Span onClose(final Span span, final io.grpc.Status status) {
-    super.onError(span, status.getCause());
+    if (status.getCause() != null) {
+      // We have a Status so only call super.onError to fill in common error tags.
+      super.onError(span, status.getCause());
+    }
     span.setStatus(GrpcHelper.statusFromGrpcStatus(status));
     return span;
   }
