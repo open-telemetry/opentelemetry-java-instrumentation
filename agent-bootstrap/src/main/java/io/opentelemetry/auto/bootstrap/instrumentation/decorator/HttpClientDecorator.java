@@ -75,6 +75,10 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           if (url.getHost() != null) {
             urlBuilder.append(url.getHost());
             span.setAttribute(MoreTags.NET_PEER_NAME, url.getHost());
+            String peerService = mapToPeer(url.getHost());
+            if (peerService != null) {
+              span.setAttribute("peer.service", peerService);
+            }
             if (url.getPort() > 0) {
               span.setAttribute(MoreTags.NET_PEER_PORT, url.getPort());
               if (url.getPort() != 80 && url.getPort() != 443) {

@@ -19,11 +19,10 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
-
-import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class HttpClientDecoratorTest extends ClientDecoratorTest {
 
@@ -55,6 +54,30 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       null,
       [method: "test-method", url: testUrl, userAgent: testUserAgent]
     ]
+  }
+
+  def "test onRequest with mapped peer"() {
+    setup:
+    def decorator = newDecorator()
+    def req = [method: "test-method", url: testUrl, userAgent: testUserAgent]
+
+    when:
+    ConfigUtils.withConfigOverride(
+      "endpoint.peer.service.mapping",
+      "myhost=reservation-service") {
+      decorator.onRequest(span, req)
+    }
+
+    then:
+    if (req) {
+      1 * span.setAttribute(Tags.HTTP_METHOD, req.method)
+      1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
+      1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute("peer.service", "reservation-service")
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req.userAgent)
+    }
+    0 * _
   }
 
   def "test url handling for #url"() {
