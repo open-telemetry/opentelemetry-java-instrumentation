@@ -150,7 +150,7 @@ include ':instrumentation:twilio-6.6'
 include ':instrumentation:vertx-3.0'
 include ':instrumentation:vertx-reactive-3.5'
 
-include ':instrumentation-core:aws-sdk:aws-sdk-2.2-core'
+include ':instrumentation-core:aws-sdk:aws-sdk-2.2'
 include ':instrumentation-core:spring:trace-core'
 
 // exporter adapters
