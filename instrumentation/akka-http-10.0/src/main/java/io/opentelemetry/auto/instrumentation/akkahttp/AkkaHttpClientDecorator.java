@@ -47,7 +47,12 @@ public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, Ht
   }
 
   @Override
-  protected String userAgent(HttpRequest httpRequest) {
-    return httpRequest.getHeader(USER_AGENT).map(HttpHeader::value).orElse(null);
+  protected String requestHeader(HttpRequest httpRequest, String name) {
+    return httpRequest.getHeader(name).map(HttpHeader::value).orElse(null);
+  }
+
+  @Override
+  protected String responseHeader(HttpResponse httpResponse, String name) {
+    return httpResponse.getHeader(name).map(HttpHeader::value).orElse(null);
   }
 }

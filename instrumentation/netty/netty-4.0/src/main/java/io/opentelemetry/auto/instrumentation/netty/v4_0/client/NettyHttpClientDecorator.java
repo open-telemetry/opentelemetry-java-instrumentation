@@ -55,7 +55,12 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
   }
 
   @Override
-  protected String userAgent(HttpRequest httpRequest) {
-    return httpRequest.headers().get(USER_AGENT);
+  protected String requestHeader(HttpRequest httpRequest, String name) {
+    return httpRequest.headers().get(name);
+  }
+
+  @Override
+  protected String responseHeader(HttpResponse httpResponse, String name) {
+    return httpResponse.headers().get(name);
   }
 }

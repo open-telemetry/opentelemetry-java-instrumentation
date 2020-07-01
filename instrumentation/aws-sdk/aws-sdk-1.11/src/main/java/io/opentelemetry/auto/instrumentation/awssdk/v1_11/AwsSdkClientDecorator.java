@@ -117,7 +117,12 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String userAgent(Request request) {
-    return (String) request.getHeaders().get(USER_AGENT);
+  protected String requestHeader(Request request, String name) {
+    return (String) request.getHeaders().get(name);
+  }
+
+  @Override
+  protected String responseHeader(Response response, String name) {
+    return response.getHttpResponse().getHeaders().get(name);
   }
 }

@@ -21,6 +21,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import org.apache.http.Header;
+import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
@@ -46,8 +47,17 @@ public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriReques
   }
 
   @Override
-  protected String userAgent(HttpUriRequest httpUriRequest) {
-    final Header header = httpUriRequest.getFirstHeader(USER_AGENT);
+  protected String requestHeader(HttpUriRequest request, String name) {
+    return header(request, name);
+  }
+
+  @Override
+  protected String responseHeader(HttpResponse response, String name) {
+    return header(response, name);
+  }
+
+  private static String header(HttpMessage message, String name) {
+    Header header = message.getFirstHeader(name);
     return header != null ? header.getValue() : null;
   }
 }

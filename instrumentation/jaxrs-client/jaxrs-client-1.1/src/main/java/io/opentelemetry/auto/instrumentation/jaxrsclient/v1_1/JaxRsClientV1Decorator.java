@@ -45,7 +45,12 @@ public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, C
   }
 
   @Override
-  protected String userAgent(ClientRequest clientRequest) {
-    return (String) clientRequest.getHeaders().getFirst(USER_AGENT);
+  protected String requestHeader(ClientRequest clientRequest, String name) {
+    return (String) clientRequest.getHeaders().getFirst(name);
+  }
+
+  @Override
+  protected String responseHeader(ClientResponse clientResponse, String name) {
+    return clientResponse.getHeaders().getFirst(name);
   }
 }

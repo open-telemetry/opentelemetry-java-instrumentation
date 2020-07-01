@@ -46,14 +46,14 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
       1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
       1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
-      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req.userAgent)
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
     }
     0 * _
 
     where:
     req << [
       null,
-      [method: "test-method", url: testUrl, userAgent: testUserAgent]
+      [method: "test-method", url: testUrl, "User-Agent": testUserAgent]
     ]
   }
 
@@ -165,8 +165,13 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       }
 
       @Override
-      protected String userAgent(Map m) {
-        return m.userAgent
+      protected String requestHeader(Map m, String name) {
+        return m[name]
+      }
+
+      @Override
+      protected String responseHeader(Map m, String name) {
+        return m[name]
       }
     }
   }

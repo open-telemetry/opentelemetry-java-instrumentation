@@ -46,7 +46,12 @@ public class JaxRsClientDecorator
   }
 
   @Override
-  protected String userAgent(ClientRequestContext clientRequestContext) {
-    return clientRequestContext.getHeaderString(USER_AGENT);
+  protected String requestHeader(ClientRequestContext clientRequestContext, String name) {
+    return clientRequestContext.getHeaderString(name);
+  }
+
+  @Override
+  protected String responseHeader(ClientResponseContext clientResponseContext, String name) {
+    return clientResponseContext.getHeaderString(name);
   }
 }
