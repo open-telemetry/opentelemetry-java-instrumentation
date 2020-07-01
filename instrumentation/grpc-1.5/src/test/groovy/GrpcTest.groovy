@@ -273,7 +273,9 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
-            errorTags error.class, error.message
+            if (grpcStatus.cause != null) {
+              errorTags grpcStatus.cause.class, grpcStatus.cause.message
+            }
           }
         }
       }
