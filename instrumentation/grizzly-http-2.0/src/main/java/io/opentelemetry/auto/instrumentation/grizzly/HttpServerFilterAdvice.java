@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
+package io.opentelemetry.auto.instrumentation.grizzly;
 
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
-import org.glassfish.grizzly.http.HttpHeader;
+import org.glassfish.grizzly.http.HttpResponsePacket;
 
-public class HttpCodecFilterAdvice {
-
+public class HttpServerFilterAdvice {
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(
       @Advice.Argument(0) final FilterChainContext ctx,
-      @Advice.Argument(1) final HttpHeader httpHeader) {
-    GrizzlyDecorator.onHttpCodecFilterExit(ctx, httpHeader);
+      @Advice.Argument(2) final HttpResponsePacket response) {
+    GrizzlyDecorator.onHttpServerFilterPrepareResponseExit(ctx, response);
   }
 }

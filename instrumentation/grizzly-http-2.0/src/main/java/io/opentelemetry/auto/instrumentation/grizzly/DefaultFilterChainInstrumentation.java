@@ -14,35 +14,31 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.grizzly.http.v2_3;
+package io.opentelemetry.auto.instrumentation.grizzly;
 
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class HttpCodecFilterInstrumentation extends Instrumenter.Default {
+public class DefaultFilterChainInstrumentation extends Instrumenter.Default {
 
-  public HttpCodecFilterInstrumentation() {
-    super("grizzly-filterchain");
+  public DefaultFilterChainInstrumentation() {
+    super("grizzly");
   }
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("org.glassfish.grizzly.http.HttpCodecFilter");
-  }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
+    return named("org.glassfish.grizzly.filterchain.DefaultFilterChain");
   }
 
   @Override
@@ -51,22 +47,18 @@ public final class HttpCodecFilterInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    // this is for 2.3 through 2.3.19
-    transformers.put(
-        named("handleRead")
+    return Collections.singletonMap(
+        isMethod()
+            .and(isPrivate())
+            .and(named("notifyFailure"))
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
-            .and(takesArgument(1, named("org.glassfish.grizzly.http.HttpPacketParsing")))
-            .and(isPublic()),
-        packageName + ".HttpCodecFilterOldAdvice");
-    // this is for 2.3.20+
-    transformers.put(
-        named("handleRead")
-            .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
-            .and(takesArgument(1, named("org.glassfish.grizzly.http.HttpHeader")))
-            .and(isPublic()),
-        packageName + ".HttpCodecFilterAdvice");
-    return transformers;
+            .and(takesArgument(1, named("java.lang.Throwable"))),
+        packageName + ".DefaultFilterChainAdvice");
   }
 }
