@@ -12,4 +12,14 @@ class Slf4jMDCTest extends LogContextInjectionTestBase {
   def get(String key) {
     return MDC.get(key)
   }
+
+  @Override
+  def remove(String key) {
+    return MDC.remove(key)
+  }
+
+  @Override
+  def clear() {
+    return MDC.clear()
+  }
 }
