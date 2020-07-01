@@ -59,7 +59,15 @@ public abstract class BaseDecorator {
   public Span onError(final Span span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      span.setStatus(Status.UNKNOWN);
+      onComplete(span, Status.UNKNOWN, throwable);
+    }
+    return span;
+  }
+
+  public Span onComplete(Span span, Status status, Throwable throwable) {
+    assert span != null;
+    span.setStatus(status);
+    if (throwable != null) {
       addThrowable(
           span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }

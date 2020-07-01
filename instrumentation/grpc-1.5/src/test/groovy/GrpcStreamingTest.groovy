@@ -25,6 +25,7 @@ import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.Status
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -119,11 +120,11 @@ class GrpcStreamingTest extends AgentTestRunner {
           spanKind CLIENT
           parent()
           errored false
+          status(Status.OK)
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" port
-            "status.code" "OK"
           }
           (1..(clientMessageCount * serverMessageCount)).each {
             def messageId = it
@@ -141,11 +142,11 @@ class GrpcStreamingTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(0)
           errored false
+          status(Status.OK)
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
-            "status.code" "OK"
           }
           clientRange.each {
             def messageId = it
