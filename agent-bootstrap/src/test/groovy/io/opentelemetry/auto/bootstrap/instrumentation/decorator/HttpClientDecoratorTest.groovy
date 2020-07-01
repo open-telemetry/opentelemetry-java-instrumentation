@@ -19,10 +19,11 @@ package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
+
+import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
 class HttpClientDecoratorTest extends ClientDecoratorTest {
 
@@ -62,7 +63,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     def req = [method: "test-method", url: testUrl, userAgent: testUserAgent]
 
     when:
-    ConfigUtils.withConfigOverride(
+    withConfigOverride(
       "endpoint.peer.service.mapping",
       "myhost=reservation-service") {
       decorator.onRequest(span, req)
