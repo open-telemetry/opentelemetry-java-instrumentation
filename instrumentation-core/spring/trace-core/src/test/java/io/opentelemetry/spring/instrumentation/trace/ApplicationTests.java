@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.opentelemetry.spring.instrumentation.trace;
 
-package io.opentelemetry.instrumentation.spring;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootTest
+@EnableAutoConfiguration(
+    exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+class ApplicationTests {
 
-@SpringBootApplication
-public class Application {
-
-  public static void main(String[] args) {
-    SpringApplication.run(Application.class, args);
-  }
+  @Test
+  void contextLoads() {}
 }
