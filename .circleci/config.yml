@@ -203,16 +203,7 @@ workflows:
           name: test_<< matrix.testTask >>
           matrix:
             parameters:
-              testTask: ["7", "8"]
-          filters:
-            tags:
-              only: /.*/
-
-      - default_test_job:
-          requires:
-            - build
-          name: test_11
-          testTask: test jacocoTestReport jacocoTestCoverageVerification
+              testTask: ["8"]
           filters:
             tags:
               only: /.*/
@@ -235,9 +226,7 @@ workflows:
 
       - publish_master:
           requires:
-            - test_7
             - test_8
-            - test_11
             - test_latest
             - muzzle
           filters:
@@ -283,7 +272,7 @@ workflows:
           name: test_<< matrix.testTask >>
           matrix:
             parameters:
-              testTask: ["7", "8"]
+              testTask: ["7", "8", "14"]
           filters:
             branches:
               only: /\d+\.\d+\.x$/
@@ -318,6 +307,7 @@ workflows:
             - test_7
             - test_8
             - test_11
+            - test_14
             - test_latest
             - muzzle
           filters:
