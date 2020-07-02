@@ -31,7 +31,6 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -69,8 +68,7 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap(
-        "javax.servlet.http.HttpServletResponse", "javax.servlet.http.HttpServletRequest");
+    return singletonMap("javax.servlet.http.HttpServletResponse", "java.lang.Boolean");
   }
 
   public static class SendAdvice {
@@ -83,8 +81,8 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
         return null;
       }
 
-      final HttpServletRequest req =
-          InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class).get(resp);
+      final Boolean req =
+          InstrumentationContext.get(HttpServletResponse.class, Boolean.class).get(resp);
       if (req == null) {
         // Missing the response->request linking... probably in a wrapped instance.
         return null;

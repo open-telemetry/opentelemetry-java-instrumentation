@@ -61,8 +61,7 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap(
-        "javax.servlet.http.HttpServletResponse", "javax.servlet.http.HttpServletRequest");
+    return singletonMap("javax.servlet.http.HttpServletResponse", "java.lang.Boolean");
   }
 
   /**

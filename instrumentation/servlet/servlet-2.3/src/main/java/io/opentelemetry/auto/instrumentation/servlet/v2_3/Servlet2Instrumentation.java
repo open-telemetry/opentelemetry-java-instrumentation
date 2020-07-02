@@ -57,8 +57,7 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> contextStores = new HashMap<>();
-    contextStores.put(
-        "javax.servlet.http.HttpServletResponse", "javax.servlet.http.HttpServletRequest");
+    contextStores.put("javax.servlet.http.HttpServletResponse", "java.lang.Boolean");
     contextStores.put("javax.servlet.ServletResponse", Integer.class.getName());
     return contextStores;
   }
