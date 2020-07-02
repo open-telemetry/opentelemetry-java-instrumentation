@@ -60,7 +60,6 @@ public final class WebMVCFilter implements Filter {
     Span currentSpan = createSpanWithParent(req, context);
 
     try (Scope scope = tracer.withSpan(currentSpan)) {
-      currentSpan.addEvent("doFilter");
       chain.doFilter(req, response);
     } finally {
       currentSpan.end();
