@@ -143,7 +143,7 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.receiveNoWait"
+          operationName expectedSpanName
           spanKind CLIENT
           errored false
           tags {
@@ -175,7 +175,7 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.receive"
+          operationName expectedSpanName
           spanKind CLIENT
           errored false
           tags {
