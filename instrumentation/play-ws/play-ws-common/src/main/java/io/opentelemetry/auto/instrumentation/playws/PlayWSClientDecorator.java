@@ -52,6 +52,6 @@ public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response
 
   @Override
   protected String responseHeader(Response response, String name) {
-    return response.getHeader(name);
+    return response.getHeaders().get(name);
   }
 }
