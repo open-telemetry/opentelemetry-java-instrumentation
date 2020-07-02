@@ -53,6 +53,11 @@ public final class JMSSessionInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {packageName + ".JMSDecorator"};
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("createConsumer")
