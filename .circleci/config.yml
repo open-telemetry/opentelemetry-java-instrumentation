@@ -203,7 +203,7 @@ workflows:
           name: test_<< matrix.testTask >>
           matrix:
             parameters:
-              testTask: ["7", "8", "14"]
+              testTask: ["7", "8"]
           filters:
             tags:
               only: /.*/
@@ -238,7 +238,6 @@ workflows:
             - test_7
             - test_8
             - test_11
-            - test_14
             - test_latest
             - muzzle
           filters:
@@ -284,7 +283,7 @@ workflows:
           name: test_<< matrix.testTask >>
           matrix:
             parameters:
-              testTask: ["7", "8", "14"]
+              testTask: ["7", "8"]
           filters:
             branches:
               only: /\d+\.\d+\.x$/
@@ -319,7 +318,6 @@ workflows:
             - test_7
             - test_8
             - test_11
-            - test_14
             - test_latest
             - muzzle
           filters:
