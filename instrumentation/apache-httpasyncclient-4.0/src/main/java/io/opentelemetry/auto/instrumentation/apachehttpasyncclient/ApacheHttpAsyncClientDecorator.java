@@ -28,10 +28,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.RequestLine;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
 
-public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequest, HttpContext> {
+public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
 
   public static final ApacheHttpAsyncClientDecorator DECORATE =
       new ApacheHttpAsyncClientDecorator();
@@ -65,15 +63,9 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
   }
 
   @Override
-  protected Integer status(final HttpContext context) {
-    HttpResponse response = extractResponse(context);
-    if (response != null) {
-      final StatusLine statusLine = response.getStatusLine();
-      if (statusLine != null) {
-        return statusLine.getStatusCode();
-      }
-    }
-    return null;
+  protected Integer status(final HttpResponse response) {
+    final StatusLine statusLine = response.getStatusLine();
+    return statusLine != null ? statusLine.getStatusCode() : null;
   }
 
   @Override
@@ -82,21 +74,12 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
   }
 
   @Override
-  protected String responseHeader(HttpContext context, String name) {
-    HttpResponse response = extractResponse(context);
-    if (response != null) {
-      return header(response, name);
-    }
-    return null;
+  protected String responseHeader(HttpResponse response, String name) {
+    return header(response, name);
   }
 
   private static String header(HttpMessage message, String name) {
     Header header = message.getFirstHeader(name);
     return header != null ? header.getValue() : null;
-  }
-
-  private static HttpResponse extractResponse(HttpContext context) {
-    Object responseObject = context.getAttribute(HttpCoreContext.HTTP_RESPONSE);
-    return responseObject instanceof HttpResponse ? (HttpResponse) responseObject : null;
   }
 }

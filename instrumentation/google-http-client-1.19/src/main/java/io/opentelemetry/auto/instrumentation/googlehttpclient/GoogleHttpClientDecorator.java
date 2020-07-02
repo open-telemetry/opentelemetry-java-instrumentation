@@ -61,6 +61,6 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   }
 
   private static String header(HttpHeaders headers, String name) {
-    return (String) headers.get(name);
+    return headers.getFirstHeaderStringValue(name);
   }
 }
