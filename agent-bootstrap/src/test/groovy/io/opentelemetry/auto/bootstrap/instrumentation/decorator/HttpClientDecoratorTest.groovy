@@ -60,7 +60,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
   def "test onRequest with mapped peer"() {
     setup:
     def decorator = newDecorator()
-    def req = [method: "test-method", url: testUrl, userAgent: testUserAgent]
+    def req = [method: "test-method", url: testUrl, "User-Agent": testUserAgent]
 
     when:
     withConfigOverride(
@@ -76,7 +76,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
       1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
       1 * span.setAttribute("peer.service", "reservation-service")
-      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req.userAgent)
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
     }
     0 * _
   }
