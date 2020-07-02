@@ -47,7 +47,12 @@ public class ClientDecorator extends HttpClientDecorator<Request, Response> {
   }
 
   @Override
-  protected String userAgent(Request request) {
-    return request.getHeaders().getFirstValue(USER_AGENT);
+  protected String requestHeader(Request request, String name) {
+    return request.getHeaders().getFirstValue(name);
+  }
+
+  @Override
+  protected String responseHeader(Response response, String name) {
+    return response.getHeaders().getFirstValue(name);
   }
 }

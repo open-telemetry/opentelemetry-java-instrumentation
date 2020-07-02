@@ -39,7 +39,9 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
   protected abstract Integer status(RESPONSE response);
 
-  protected abstract String userAgent(REQUEST request);
+  protected abstract String requestHeader(REQUEST request, String name);
+
+  protected abstract String responseHeader(RESPONSE response, String name);
 
   public Span getOrCreateSpan(REQUEST request, Tracer tracer) {
     return getOrCreateSpan(spanNameForRequest(request), tracer);
@@ -58,7 +60,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     if (request != null) {
       span.setAttribute(Tags.HTTP_METHOD, method(request));
 
-      final String userAgent = userAgent(request);
+      final String userAgent = requestHeader(request, USER_AGENT);
       if (userAgent != null) {
         SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
       }

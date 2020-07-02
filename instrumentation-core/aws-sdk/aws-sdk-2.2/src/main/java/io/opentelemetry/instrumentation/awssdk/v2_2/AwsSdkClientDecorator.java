@@ -25,6 +25,7 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
+import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
@@ -77,7 +78,7 @@ final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, Sd
 
   // Certain headers in the request like User-Agent are only available after execution.
   Span afterExecution(final Span span, final SdkHttpRequest request) {
-    SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent(request));
+    SemanticAttributes.HTTP_USER_AGENT.set(span, requestHeader(request, USER_AGENT));
     return span;
   }
 
@@ -105,7 +106,16 @@ final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, Sd
   }
 
   @Override
-  protected String userAgent(SdkHttpRequest sdkHttpRequest) {
-    return sdkHttpRequest.firstMatchingHeader(USER_AGENT).orElse(null);
+  protected String requestHeader(SdkHttpRequest sdkHttpRequest, String name) {
+    return header(sdkHttpRequest, name);
+  }
+
+  @Override
+  protected String responseHeader(SdkHttpResponse sdkHttpResponse, String name) {
+    return header(sdkHttpResponse, name);
+  }
+
+  private static String header(SdkHttpHeaders headers, String name) {
+    return headers.firstMatchingHeader(name).orElse(null);
   }
 }

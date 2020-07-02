@@ -46,11 +46,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.nio.ContentEncoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
 
 @AutoService(Instrumenter.class)
 public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
@@ -203,7 +205,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void completed(final T result) {
-      DECORATE.onResponse(clientSpan, context);
+      DECORATE.onResponse(clientSpan, getResponse(context));
       DECORATE.beforeFinish(clientSpan);
       clientSpan.end(); // end span before calling delegate
 
@@ -218,7 +220,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void failed(final Exception ex) {
-      DECORATE.onResponse(clientSpan, context);
+      DECORATE.onResponse(clientSpan, getResponse(context));
       DECORATE.onError(clientSpan, ex);
       DECORATE.beforeFinish(clientSpan);
       clientSpan.end(); // end span before calling delegate
@@ -234,7 +236,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void cancelled() {
-      DECORATE.onResponse(clientSpan, context);
+      DECORATE.onResponse(clientSpan, getResponse(context));
       DECORATE.beforeFinish(clientSpan);
       clientSpan.end(); // end span before calling delegate
 
@@ -263,6 +265,10 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (delegate != null) {
         delegate.cancelled();
       }
+    }
+
+    private static HttpResponse getResponse(HttpContext context) {
+      return (HttpResponse) context.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }
 }

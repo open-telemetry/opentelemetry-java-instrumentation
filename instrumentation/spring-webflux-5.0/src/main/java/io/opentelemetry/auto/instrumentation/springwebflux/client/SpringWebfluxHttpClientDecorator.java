@@ -21,6 +21,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -55,7 +56,13 @@ public class SpringWebfluxHttpClientDecorator
   }
 
   @Override
-  protected String userAgent(ClientRequest clientRequest) {
-    return clientRequest.headers().getFirst(USER_AGENT);
+  protected String requestHeader(ClientRequest clientRequest, String name) {
+    return clientRequest.headers().getFirst(name);
+  }
+
+  @Override
+  protected String responseHeader(ClientResponse clientResponse, String name) {
+    List<String> headers = clientResponse.headers().header(name);
+    return !headers.isEmpty() ? headers.get(0) : null;
   }
 }
