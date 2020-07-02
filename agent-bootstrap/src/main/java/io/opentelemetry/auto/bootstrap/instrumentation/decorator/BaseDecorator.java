@@ -200,7 +200,7 @@ public abstract class BaseDecorator {
     return span.getContext();
   }
 
-  private static String mapToPeer(String endpoint) {
+  protected static String mapToPeer(String endpoint) {
     if (endpoint == null) {
       return null;
     }
