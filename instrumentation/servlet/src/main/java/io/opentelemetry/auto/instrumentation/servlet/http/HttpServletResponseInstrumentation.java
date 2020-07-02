@@ -26,9 +26,10 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
+import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap.Depth;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
@@ -66,45 +67,37 @@ public final class HttpServletResponseInstrumentation extends Instrumenter.Defau
     return singletonMap(namedOneOf("sendError", "sendRedirect"), SendAdvice.class.getName());
   }
 
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("javax.servlet.http.HttpServletResponse", "java.lang.Boolean");
-  }
-
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope start(
-        @Advice.Origin("#m") final String method, @Advice.This final HttpServletResponse resp) {
-      if (!TRACER.getCurrentSpan().getContext().isValid()) {
-        // Don't want to generate a new top-level span
-        return null;
+    public static void start(
+        @Advice.Origin("#m") final String method,
+        @Advice.This final HttpServletResponse resp,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
+      callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
+      // Don't want to generate a new top-level span
+      if (callDepth.getAndIncrement() == 0 && TRACER.getCurrentSpan().getContext().isValid()) {
+        span = TRACER.spanBuilder("HttpServletResponse." + method).startSpan();
+        DECORATE.afterStart(span);
+        scope = currentContextWith(span);
       }
-
-      final Boolean req =
-          InstrumentationContext.get(HttpServletResponse.class, Boolean.class).get(resp);
-      if (req == null) {
-        // Missing the response->request linking... probably in a wrapped instance.
-        return null;
-      }
-
-      final Span span = TRACER.spanBuilder("HttpServletResponse." + method).startSpan();
-      DECORATE.afterStart(span);
-
-      return new SpanWithScope(span, currentContextWith(span));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
-      if (spanWithScope == null) {
-        return;
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") Depth callDepth) {
+      if (callDepth.decrementAndGet() == 0 && span != null) {
+        CallDepthThreadLocalMap.reset(HttpServletResponse.class);
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+        span.end();
+        scope.close();
       }
-      final Span span = spanWithScope.getSpan();
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
     }
   }
 }

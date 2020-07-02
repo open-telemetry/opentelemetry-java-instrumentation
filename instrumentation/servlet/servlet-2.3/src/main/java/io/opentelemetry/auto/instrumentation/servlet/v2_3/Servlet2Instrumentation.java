@@ -27,7 +27,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -56,10 +55,7 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> contextStores = new HashMap<>();
-    contextStores.put("javax.servlet.http.HttpServletResponse", "java.lang.Boolean");
-    contextStores.put("javax.servlet.ServletResponse", Integer.class.getName());
-    return contextStores;
+    return singletonMap("javax.servlet.ServletResponse", Integer.class.getName());
   }
 
   @Override

@@ -59,11 +59,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
     };
   }
 
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("javax.servlet.http.HttpServletResponse", "java.lang.Boolean");
-  }
-
   /**
    * Here we are instrumenting the public method for HttpServlet. This should ensure that this
    * advice is always called before HttpServletInstrumentation which is instrumenting the protected
