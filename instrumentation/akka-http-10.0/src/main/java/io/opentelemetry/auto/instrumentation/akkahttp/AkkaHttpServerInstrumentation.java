@@ -54,12 +54,12 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-        AkkaHttpServerInstrumentation.class.getName() + "$SyncWrapper",
-        AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper",
-        AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$1",
-        AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$2",
-        packageName + ".AkkaHttpServerHeaders",
-        packageName + ".AkkaHttpServerTracer",
+      AkkaHttpServerInstrumentation.class.getName() + "$SyncWrapper",
+      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper",
+      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$1",
+      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$2",
+      packageName + ".AkkaHttpServerHeaders",
+      packageName + ".AkkaHttpServerTracer",
     };
   }
 
