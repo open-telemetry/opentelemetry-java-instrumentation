@@ -25,10 +25,15 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.AgentClassRule
+import io.opentelemetry.auto.test.SpockRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import org.junit.ClassRule
+import org.junit.Rule
+import org.junit.runner.RunWith
 import redis.embedded.RedisServer
 import spock.lang.Shared
+import spock.lang.Specification
 import spock.util.concurrent.AsyncConditions
 
 import java.util.concurrent.ExecutionException
@@ -40,11 +45,19 @@ import java.util.function.Function
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-class LettuceAsyncClientTest extends AgentTestRunner {
+@RunWith(SpockRunner.class)
+class LettuceAsyncClientTest extends Specification {
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
+
+  @ClassRule
+  @Shared
+  AgentClassRule agent = new AgentClassRule()
+
+  @Rule
+  AgentClassRule.AgentRule agentRule = new AgentClassRule.AgentRule()
 
   @Shared
   int port
@@ -104,8 +117,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    agent.getTestWriter().waitForTraces(1)
+    agent.getTestWriter().clear()
   }
 
   def cleanup() {
@@ -126,7 +139,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     then:
     connection != null
     // Lettuce tracing does not trace connect
-    assertTraces(0) {}
+    agent.assertTraces(0) {}
 
     cleanup:
     connection.close()
@@ -146,7 +159,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     connection == null
     thrown ExecutionException
     // Lettuce tracing does not trace connect
-    assertTraces(0) {}
+    agent.assertTraces(0) {}
   }
 
   def "set command using Future get with timeout"() {
@@ -156,7 +169,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     expect:
     res == "OK"
-    assertTraces(1) {
+    agent.assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "SET"
@@ -199,7 +212,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(1) {
+    agent.assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "GET"
@@ -256,7 +269,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(1) {
+    agent.assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "GET"
@@ -299,7 +312,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(1) {
+    agent.assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "RANDOMKEY"
@@ -360,7 +373,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(2) {
+    agent.assertTraces(2) {
       trace(0, 1) {
         span(0) {
           operationName "HMSET"

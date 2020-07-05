@@ -17,19 +17,22 @@
 package io.opentelemetry.auto.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.ClientOptions
-
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
-import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.AgentTestTrait
+import io.opentelemetry.auto.test.SpockRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import org.junit.runner.RunWith
 import redis.embedded.RedisServer
 import spock.lang.Shared
+import spock.lang.Specification
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-class LettuceSyncClientTest extends AgentTestRunner {
+@RunWith(SpockRunner.class)
+class LettuceSyncClientTest extends Specification implements AgentTestTrait {
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
@@ -64,7 +67,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
   StatefulConnection connection
   RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
+  def childSetupSpec() {
     port = PortUtils.randomOpenPort()
     incorrectPort = PortUtils.randomOpenPort()
     dbAddr = HOST + ":" + port + "/" + DB_INDEX
@@ -81,7 +84,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
       .port(port).build()
   }
 
-  def setup() {
+  def childSetup() {
     redisClient = RedisClient.create(embeddedDbUri)
 
     redisServer.start()

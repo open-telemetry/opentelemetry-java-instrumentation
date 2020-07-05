@@ -54,7 +54,6 @@ import net.bytebuddy.utility.JavaModule;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 import org.spockframework.runtime.model.SpecMetadata;
 
@@ -73,7 +72,6 @@ import org.spockframework.runtime.model.SpecMetadata;
  *       in an initialized state.
  * </ul>
  */
-@RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 @Slf4j
 public abstract class AgentTestRunner extends AgentSpecification {
@@ -170,7 +168,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
   public void beforeTest() {
     assert !getTestTracer().getCurrentSpan().getContext().isValid()
         : "Span is active before test has started: " + getTestTracer().getCurrentSpan();
-    log.debug("Starting test: '{}'", getSpecificationContext().getCurrentIteration().getName());
+    // log.debug("Starting test: '{}'", getSpecificationContext().getCurrentIteration().getName());
     TEST_WRITER.clear();
   }
 
