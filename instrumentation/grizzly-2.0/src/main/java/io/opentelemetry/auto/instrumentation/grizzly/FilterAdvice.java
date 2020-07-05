@@ -16,11 +16,10 @@
 
 package io.opentelemetry.auto.instrumentation.grizzly;
 
-import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.Scope;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.BaseFilter;
@@ -29,21 +28,23 @@ import org.glassfish.grizzly.filterchain.FilterChainContext;
 public class FilterAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Scope onEnter(
-      @Advice.This final BaseFilter it, @Advice.Argument(0) final FilterChainContext ctx) {
+  public static void onEnter(
+      @Advice.This final BaseFilter it,
+      @Advice.Argument(0) final FilterChainContext ctx,
+      @Advice.Local("otelScope") Scope scope) {
     if (TRACER.getCurrentSpan().getContext().isValid()) {
-      return null;
+      return;
     }
-    final Context context =
-        (Context) ctx.getAttributes().getAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE);
-    if (context == null) {
-      return null;
+
+    final Context context = TRACER.getServerSpanContext(ctx);
+    if (context != null) {
+      scope = withScopedContext(context);
     }
-    return withScopedContext(context);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-  public static void onExit(@Advice.This final BaseFilter it, @Advice.Enter final Scope scope) {
+  public static void onExit(
+      @Advice.This final BaseFilter it, @Advice.Local("otelScope") Scope scope) {
     if (scope != null) {
       scope.close();
     }

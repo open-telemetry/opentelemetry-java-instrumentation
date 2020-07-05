@@ -16,16 +16,33 @@
 
 package io.opentelemetry.auto.instrumentation.grizzly;
 
+import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
+
+import io.grpc.Context;
+import io.opentelemetry.trace.Span;
+import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpHeader;
+import org.glassfish.grizzly.http.HttpRequestPacket;
 
 public class HttpCodecFilterAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(
+      @Advice.Origin final Method method,
       @Advice.Argument(0) final FilterChainContext ctx,
       @Advice.Argument(1) final HttpHeader httpHeader) {
-    GrizzlyDecorator.onHttpCodecFilterExit(ctx, httpHeader);
+    Context context = TRACER.getServerSpanContext(ctx);
+
+    // only create a span if there isn't another one attached to the current ctx
+    // and if the httpHeader has been parsed into a HttpRequestPacket
+    if (context != null || !(httpHeader instanceof HttpRequestPacket)) {
+      return;
+    }
+    final HttpRequestPacket httpRequest = (HttpRequestPacket) httpHeader;
+    Span span = TRACER.startSpan(httpRequest, httpRequest, method, null);
+
+    TRACER.startScope(span, ctx);
   }
 }

@@ -16,12 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerHeaders.GETTER;
-import static io.opentelemetry.trace.Span.Kind.SERVER;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.auto.instrumentation.akkahttp.AkkaHttpServerTracer.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -29,11 +24,9 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -61,13 +54,12 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      AkkaHttpServerInstrumentation.class.getName() + "$WrapperHelper",
-      AkkaHttpServerInstrumentation.class.getName() + "$SyncWrapper",
-      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper",
-      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$1",
-      AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$2",
-      packageName + ".AkkaHttpServerHeaders",
-      packageName + ".AkkaHttpServerDecorator",
+        AkkaHttpServerInstrumentation.class.getName() + "$SyncWrapper",
+        AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper",
+        AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$1",
+        AkkaHttpServerInstrumentation.class.getName() + "$AsyncWrapper$2",
+        packageName + ".AkkaHttpServerHeaders",
+        packageName + ".AkkaHttpServerTracer",
     };
   }
 
@@ -108,37 +100,6 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class WrapperHelper {
-    public static SpanWithScope createSpan(final HttpRequest request) {
-      final Span.Builder spanBuilder =
-          TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(SERVER);
-      spanBuilder.setParent(extract(request, GETTER));
-      final Span span = spanBuilder.startSpan();
-
-      DECORATE.afterStart(span);
-      DECORATE.onConnection(span, request);
-      DECORATE.onRequest(span, request);
-
-      return new SpanWithScope(span, currentContextWith(span));
-    }
-
-    public static void finishSpan(final Span span, final HttpResponse response) {
-      DECORATE.onResponse(span, response);
-      DECORATE.beforeFinish(span);
-
-      span.end();
-    }
-
-    public static void finishSpan(final Span span, final Throwable t) {
-      DECORATE.onError(span, t);
-      span.setAttribute(Tags.HTTP_STATUS, 500);
-      span.setStatus(Status.UNKNOWN);
-      DECORATE.beforeFinish(span);
-
-      span.end();
-    }
-  }
-
   @Slf4j
   public static class SyncWrapper extends AbstractFunction1<HttpRequest, HttpResponse> {
     private final Function1<HttpRequest, HttpResponse> userHandler;
@@ -149,16 +110,13 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpResponse apply(final HttpRequest request) {
-      final SpanWithScope spanWithScope = WrapperHelper.createSpan(request);
-      final Span span = spanWithScope.getSpan();
-      try {
+      Span span = TRACER.startSpan(request, request, "akka.request", null);
+      try (Scope ignored = TRACER.startScope(span, request)) {
         final HttpResponse response = userHandler.apply(request);
-        spanWithScope.closeScope();
-        WrapperHelper.finishSpan(span, response);
+        TRACER.end(span, response.status().intValue());
         return response;
       } catch (final Throwable t) {
-        spanWithScope.closeScope();
-        WrapperHelper.finishSpan(span, t);
+        TRACER.endExceptionally(span, t, 500);
         throw t;
       }
     }
@@ -178,35 +136,30 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public Future<HttpResponse> apply(final HttpRequest request) {
-      final SpanWithScope spanWithScope = WrapperHelper.createSpan(request);
-      final Span span = spanWithScope.getSpan();
-      Future<HttpResponse> futureResponse = null;
-      try {
-        futureResponse = userHandler.apply(request);
+      Span span = TRACER.startSpan(request, request, "akka.request", null);
+      try (Scope ignored = TRACER.startScope(span, request)) {
+        return userHandler
+            .apply(request)
+            .transform(
+                new AbstractFunction1<HttpResponse, HttpResponse>() {
+                  @Override
+                  public HttpResponse apply(final HttpResponse response) {
+                    TRACER.end(span, response.status().intValue());
+                    return response;
+                  }
+                },
+                new AbstractFunction1<Throwable, Throwable>() {
+                  @Override
+                  public Throwable apply(final Throwable t) {
+                    TRACER.endExceptionally(span, t, 500);
+                    return t;
+                  }
+                },
+                executionContext);
       } catch (final Throwable t) {
-        spanWithScope.closeScope();
-        WrapperHelper.finishSpan(span, t);
+        TRACER.endExceptionally(span, t, 500);
         throw t;
       }
-      final Future<HttpResponse> wrapped =
-          futureResponse.transform(
-              new AbstractFunction1<HttpResponse, HttpResponse>() {
-                @Override
-                public HttpResponse apply(final HttpResponse response) {
-                  WrapperHelper.finishSpan(span, response);
-                  return response;
-                }
-              },
-              new AbstractFunction1<Throwable, Throwable>() {
-                @Override
-                public Throwable apply(final Throwable t) {
-                  WrapperHelper.finishSpan(span, t);
-                  return t;
-                }
-              },
-              executionContext);
-      spanWithScope.closeScope();
-      return wrapped;
     }
   }
 }

@@ -17,23 +17,26 @@
 package io.opentelemetry.auto.instrumentation.akkahttp;
 
 import akka.http.scaladsl.model.HttpRequest;
-import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.grpc.Context;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
+import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class AkkaHttpServerDecorator
-    extends HttpServerDecorator<HttpRequest, HttpRequest, HttpResponse> {
-  public static final AkkaHttpServerDecorator DECORATE = new AkkaHttpServerDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.akka-http-10.0");
+public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequest, HttpRequest> {
+  public static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
 
   @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.method().value();
+  }
+
+  @Override
+  protected void attachServerSpanContext(Context context, HttpRequest httpRequest) {}
+
+  @Override
+  public Context getServerSpanContext(HttpRequest httpRequest) {
+    return null;
   }
 
   @Override
@@ -47,12 +50,22 @@ public class AkkaHttpServerDecorator
   }
 
   @Override
-  protected Integer peerPort(final HttpRequest httpRequest) {
+  protected Getter<HttpRequest> getGetter() {
+    return AkkaHttpServerHeaders.GETTER;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.akka-http-10.0";
+  }
+
+  @Override
+  protected String getVersion() {
     return null;
   }
 
   @Override
-  protected Integer status(final HttpResponse httpResponse) {
-    return httpResponse.status().intValue();
+  protected Integer peerPort(final HttpRequest httpRequest) {
+    return null;
   }
 }
