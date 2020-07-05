@@ -59,6 +59,8 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".server.NettyHttpServerTracer",
+      packageName + ".server.NettyRequestExtractAdapter",
       packageName + ".AbstractNettyAdvice",
       packageName + ".ChannelTraceContext",
       packageName + ".ChannelTraceContext$Factory",

@@ -51,6 +51,17 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      packageName + ".JettyHttpServerTracer",
+      "io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer",
+      "io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener",
+      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer",
+      "io.opentelemetry.auto.instrumentation.servlet.HttpServletRequestGetter",
+    };
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("handle")
