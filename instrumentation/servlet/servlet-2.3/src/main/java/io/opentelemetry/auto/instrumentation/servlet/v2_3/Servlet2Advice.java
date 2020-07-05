@@ -49,10 +49,6 @@ public class Servlet2Advice {
       return;
     }
 
-    // For use by HttpServletResponseInstrumentation:
-    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
-        .put((HttpServletResponse) response, httpServletRequest);
-
     span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
     scope = TRACER.startScope(span, httpServletRequest);
   }

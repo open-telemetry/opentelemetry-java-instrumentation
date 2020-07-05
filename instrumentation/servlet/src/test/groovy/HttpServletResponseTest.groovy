@@ -44,7 +44,6 @@ class HttpServletResponseTest extends AgentTestRunner {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    assert response.__opentelemetryContext$javax$servlet$http$HttpServletResponse != null
     TEST_WRITER.clear()
   }
 
@@ -104,7 +103,6 @@ class HttpServletResponseTest extends AgentTestRunner {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    assert response.__opentelemetryContext$javax$servlet$http$HttpServletResponse != null
     TEST_WRITER.clear()
 
     when:

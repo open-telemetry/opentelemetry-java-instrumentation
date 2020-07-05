@@ -20,7 +20,6 @@ import static io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpSer
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.lang.reflect.Method;
@@ -56,10 +55,6 @@ public class Servlet3Advice {
       // We are inside nested servlet/filter, don't create new span
       return;
     }
-
-    // For use by HttpServletResponseInstrumentation:
-    InstrumentationContext.get(HttpServletResponse.class, HttpServletRequest.class)
-        .put((HttpServletResponse) response, httpServletRequest);
 
     span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
     scope = TRACER.startScope(span, httpServletRequest);
