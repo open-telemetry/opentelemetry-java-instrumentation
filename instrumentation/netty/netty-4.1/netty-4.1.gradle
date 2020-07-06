@@ -41,7 +41,7 @@ testSets {
 dependencies {
   compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
 
-  testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:annotations')
   testCompile group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
   testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
 

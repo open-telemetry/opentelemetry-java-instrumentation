@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.Host;

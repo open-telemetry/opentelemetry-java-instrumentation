@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
@@ -25,6 +26,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.common.exec.CommonTaskExecutor
 import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 
@@ -83,6 +85,7 @@ class GrpcTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
+          status(io.opentelemetry.trace.Status.OK)
           event(0) {
             eventName "message"
             attributes {
@@ -94,7 +97,6 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" port
-            "status.code" "OK"
           }
         }
         span(2) {
@@ -102,6 +104,7 @@ class GrpcTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(1)
           errored false
+          status(io.opentelemetry.trace.Status.OK)
           event(0) {
             eventName "message"
             attributes {
@@ -113,7 +116,6 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
-            "status.code" "OK"
           }
         }
       }
@@ -129,7 +131,7 @@ class GrpcTest extends AgentTestRunner {
 
   def "test error - #name"() {
     setup:
-    def error = status.asException()
+    def error = grpcStatus.asException()
     BindableService greeter = new GreeterGrpc.GreeterImplBase() {
       @Override
       void sayHello(
@@ -163,10 +165,9 @@ class GrpcTest extends AgentTestRunner {
           spanKind CLIENT
           parent()
           errored true
+          status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
-            "status.code" "${status.code.name()}"
-            "status.description" description
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" port
           }
@@ -176,6 +177,7 @@ class GrpcTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(0)
           errored true
+          status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
           event(0) {
             eventName "message"
             attributes {
@@ -185,12 +187,10 @@ class GrpcTest extends AgentTestRunner {
           }
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
-            "status.code" "${status.code.name()}"
-            "status.description" description
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
-            if (status.cause != null) {
-              errorTags status.cause.class, status.cause.message
+            if (grpcStatus.cause != null) {
+              errorTags grpcStatus.cause.class, grpcStatus.cause.message
             }
           }
         }
@@ -202,18 +202,18 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name                          | status                                                                 | description
-    "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))           | null
-    "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error")) | null
-    "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))     | null
-    "Runtime - description"       | Status.UNKNOWN.withDescription("some description")                     | "some description"
-    "Status - description"        | Status.PERMISSION_DENIED.withDescription("some description")           | "some description"
-    "StatusRuntime - description" | Status.UNIMPLEMENTED.withDescription("some description")               | "some description"
+    name                          | grpcStatus
+    "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))
+    "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))
+    "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))
+    "Runtime - description"       | Status.UNKNOWN.withDescription("some description")
+    "Status - description"        | Status.PERMISSION_DENIED.withDescription("some description")
+    "StatusRuntime - description" | Status.UNIMPLEMENTED.withDescription("some description")
   }
 
   def "test error thrown - #name"() {
     setup:
-    def error = status.asRuntimeException()
+    def error = grpcStatus.asRuntimeException()
     BindableService greeter = new GreeterGrpc.GreeterImplBase() {
       @Override
       void sayHello(
@@ -247,9 +247,11 @@ class GrpcTest extends AgentTestRunner {
           spanKind CLIENT
           parent()
           errored true
+          // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
+          // least for the version we test against.
+          status(io.opentelemetry.trace.Status.UNKNOWN)
           tags {
             "$MoreTags.RPC_SERVICE" "Greeter"
-            "status.code" "UNKNOWN"
             "$MoreTags.NET_PEER_NAME" "localhost"
             "$MoreTags.NET_PEER_PORT" Long
           }
@@ -259,6 +261,7 @@ class GrpcTest extends AgentTestRunner {
           spanKind SERVER
           childOf span(0)
           errored true
+          status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
           event(0) {
             eventName "message"
             attributes {
@@ -270,7 +273,9 @@ class GrpcTest extends AgentTestRunner {
             "$MoreTags.RPC_SERVICE" "Greeter"
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long
-            errorTags error.class, error.message
+            if (grpcStatus.cause != null) {
+              errorTags grpcStatus.cause.class, grpcStatus.cause.message
+            }
           }
         }
       }
@@ -281,7 +286,7 @@ class GrpcTest extends AgentTestRunner {
     server?.shutdownNow()?.awaitTermination()
 
     where:
-    name                          | status
+    name                          | grpcStatus
     "Runtime - cause"             | Status.UNKNOWN.withCause(new RuntimeException("some error"))
     "Status - cause"              | Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))
     "StatusRuntime - cause"       | Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))

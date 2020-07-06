@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
 
 import com.squareup.okhttp.Request;
@@ -42,5 +43,15 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   @Override
   protected Integer status(final Response response) {
     return response.code();
+  }
+
+  @Override
+  protected String requestHeader(Request request, String name) {
+    return request.header(name);
+  }
+
+  @Override
+  protected String responseHeader(Response response, String name) {
+    return response.header(name);
   }
 }

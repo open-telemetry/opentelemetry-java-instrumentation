@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -58,13 +59,7 @@ class KafkaClientTest extends AgentTestRunner {
     def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
 
     // set the topic that needs to be consumed
-    def containerProperties
-    try {
-      // Different class names for test and latestDepTest.
-      containerProperties = Class.forName("org.springframework.kafka.listener.config.ContainerProperties").newInstance(SHARED_TOPIC)
-    } catch (ClassNotFoundException | NoClassDefFoundError e) {
-      containerProperties = Class.forName("org.springframework.kafka.listener.ContainerProperties").newInstance(SHARED_TOPIC)
-    }
+    def containerProperties = containerProperties()
 
     // create a Kafka MessageListenerContainer
     def container = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties)
@@ -120,6 +115,92 @@ class KafkaClientTest extends AgentTestRunner {
         }
       }
     }
+
+    cleanup:
+    producerFactory.stop()
+    container?.stop()
+  }
+
+
+  def "test pass through tombstone"() {
+    setup:
+    def senderProps = KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
+    def producerFactory = new DefaultKafkaProducerFactory<String, String>(senderProps)
+    def kafkaTemplate = new KafkaTemplate<String, String>(producerFactory)
+
+    // set up the Kafka consumer properties
+    def consumerProperties = KafkaTestUtils.consumerProps("sender", "false", embeddedKafka)
+
+    // create a Kafka consumer factory
+    def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
+
+    // set the topic that needs to be consumed
+    def containerProperties = containerProperties()
+
+    // create a Kafka MessageListenerContainer
+    def container = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties)
+
+    // create a thread safe queue to store the received message
+    def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
+
+    // setup a Kafka message listener
+    container.setupMessageListener(new MessageListener<String, String>() {
+      @Override
+      void onMessage(ConsumerRecord<String, String> record) {
+        records.add(record)
+      }
+    })
+
+    // start the container and underlying message listener
+    container.start()
+
+    // wait until the container has the required number of assigned partitions
+    ContainerTestUtils.waitForAssignment(container, embeddedKafka.getPartitionsPerTopic())
+
+    when:
+    kafkaTemplate.send(SHARED_TOPIC, null)
+
+
+    then:
+    // check that the message was received
+    def received = records.poll(5, TimeUnit.SECONDS)
+    received.value() == null
+    received.key() == null
+
+    assertTraces(2) {
+      trace(0, 1) {
+        // PRODUCER span 0
+        span(0) {
+          operationName SHARED_TOPIC
+          spanKind PRODUCER
+          errored false
+          parent()
+          tags {
+            "tombstone" true
+          }
+        }
+      }
+      // when a user consumes a tombstone a new trace is started
+      // because context can't be propagated safely
+      trace(1, 1) {
+        // CONSUMER span 0
+        span(0) {
+          operationName SHARED_TOPIC
+          spanKind CONSUMER
+          errored false
+          parent()
+          tags {
+            "partition" { it >= 0 }
+            "offset" 0
+            "record.queue_time_ms" { it >= 0 }
+            "tombstone" true
+          }
+        }
+      }
+    }
+
+    def headers = received.headers()
+    !headers.iterator().hasNext()
 
     cleanup:
     producerFactory.stop()
@@ -206,13 +287,7 @@ class KafkaClientTest extends AgentTestRunner {
     def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
 
     // set the topic that needs to be consumed
-    def containerProperties
-    try {
-      // Different class names for test and latestDepTest.
-      containerProperties = Class.forName("org.springframework.kafka.listener.config.ContainerProperties").newInstance(SHARED_TOPIC)
-    } catch (ClassNotFoundException | NoClassDefFoundError e) {
-      containerProperties = Class.forName("org.springframework.kafka.listener.ContainerProperties").newInstance(SHARED_TOPIC)
-    }
+    def containerProperties = containerProperties()
 
     // create a Kafka MessageListenerContainer
     def container = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties)
@@ -224,7 +299,6 @@ class KafkaClientTest extends AgentTestRunner {
     container.setupMessageListener(new MessageListener<String, String>() {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
-        TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
         records.add(record)
       }
     })
@@ -259,5 +333,14 @@ class KafkaClientTest extends AgentTestRunner {
 
   }
 
-}
 
+  def containerProperties() {
+    try {
+      // Different class names for test and latestDepTest.
+      return Class.forName("org.springframework.kafka.listener.config.ContainerProperties").newInstance(SHARED_TOPIC)
+    } catch (ClassNotFoundException | NoClassDefFoundError e) {
+      return Class.forName("org.springframework.kafka.listener.ContainerProperties").newInstance(SHARED_TOPIC)
+    }
+  }
+
+}

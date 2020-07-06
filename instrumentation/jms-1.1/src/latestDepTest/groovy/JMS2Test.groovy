@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.google.common.io.Files
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -179,7 +180,7 @@ class JMS2Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.receiveNoWait"
+          operationName expectedSpanName
           spanKind CLIENT
           errored false
           tags {
@@ -211,7 +212,7 @@ class JMS2Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          operationName "jms.receive"
+          operationName expectedSpanName
           spanKind CLIENT
           errored false
           tags {

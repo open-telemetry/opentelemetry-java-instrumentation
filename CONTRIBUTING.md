@@ -83,8 +83,8 @@ Gradle plugin.
 #### Snapshot builds
 
 For developers testing code changes before a release is complete, there are
-snapshot builds of the `master` branch. They are available from 
-[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/auto/) 
+snapshot builds of the `master` branch. They are available from
+[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/auto/)
 
 #### Building from source
 
@@ -145,31 +145,34 @@ We follow the [Google Java Style
 Guide](https://google.github.io/styleguide/javaguide.html). Our build will
 fail if source code is not formatted according to that style.
 
-To verify code style manually run the following command, which uses
-[google-java-format](https://github.com/google/google-java-format) library:
+The main goal is to avoid extensive reformatting caused by different IDEs having different opinion
+about how things should be formatted by establishing.
 
-`./gradlew verifyGoogleJavaFormat`
+Running
 
-or on Windows
+```bash
+./gradlew spotlessApply
+```
 
-`gradlew.bat verifyGoogleJavaFormat`
+reformats all the files that need reformatting.
 
-Instead of fixing style inconsistencies by hand, you can run gradle task
-`googleJavaFormat` to automatically fix all found issues:
+Running
 
-`./gradlew googleJavaFormat`
+```bash
+./gradlew spotlessCheck
+```
 
-or on Windows
-
-`gradlew.bat googleJavaFormat`
+runs formatting verify task only.
 
 #### Pre-commit hook
 
-To completely delegate code style formatting to the machine, you can add [git
-pre-commit hook](https://git-scm.com/docs/githooks). We provide an example
-script in `buildscripts/pre-commit` file. Just copy or symlink it into
-`.git/hooks` folder.
+To completely delegate code style formatting to the machine,
+there is a pre-commit hook setup to verify formatting before committing.
+It can be activated with this command:
 
+```bash
+git config core.hooksPath .githooks
+```
 
 #### Editorconfig
 
@@ -198,6 +201,7 @@ Suggested plugins and settings:
 
 Approvers:
 
+- [Anuraag Agrawal](https://github.com/anuraaga), AWS
 - [John Watson](https://github.com/jkwatson), New Relic
 
 Maintainers:

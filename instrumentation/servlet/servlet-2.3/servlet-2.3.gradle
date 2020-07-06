@@ -1,0 +1,37 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = "javax.servlet"
+    module = "servlet-api"
+    versions = "[2.2, 3.0)"
+    assertInverse = true
+  }
+
+  fail {
+    group = "javax.servlet"
+    module = 'javax.servlet-api'
+    versions = "[3.0,)"
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+  compile(project(':instrumentation:servlet:servlet-common'))
+
+  testImplementation(project(':testing')) {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
+  testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
+  testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
+
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.+'
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.+'
+}

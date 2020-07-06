@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT;

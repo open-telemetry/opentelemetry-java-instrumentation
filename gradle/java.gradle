@@ -1,10 +1,6 @@
 import java.time.Duration
 
-if (project.path.startsWith(":instrumentation-core")) {
-  apply plugin: 'java-library'
-} else {
-  apply plugin: 'java'
-}
+apply plugin: 'java-library'
 apply plugin: 'groovy'
 
 apply from: "$rootDir/gradle/spotless.gradle"
@@ -15,7 +11,7 @@ apply from: "$rootDir/gradle/spotbugs.gradle"
 def applyCodeCoverage = !(
     project.path.startsWith(":smoke-tests") ||
         //TODO why some tests fail on java 11 if jacoco is present?
-        project.path == ":opentelemetry-auto" ||
+        project.path == ":opentelemetry-javaagent" ||
         project.path == ":load-generator" ||
         project.path.startsWith(":benchmark") ||
         project.path.startsWith(":instrumentation"))
@@ -43,8 +39,6 @@ sourceSets {
   main {
     java {
       srcDir 'src/main/java'
-      srcDir 'src/main/java8'
-      srcDir 'src/main/java9'
     }
   }
 }

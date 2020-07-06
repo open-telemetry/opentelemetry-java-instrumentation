@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.tooling.muzzle;
 
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
@@ -101,13 +102,13 @@ public final class ReferenceMatcher {
       loader = Utils.getBootstrapProxy();
     }
 
-    final List<Mismatch> mismatches = new ArrayList<>();
+    List<Mismatch> mismatches = Collections.emptyList();
 
     for (final Reference reference : references) {
       // Don't reference-check helper classes.
       // They will be injected by the instrumentation's HelperInjector.
       if (!helperClassNames.contains(reference.getClassName())) {
-        mismatches.addAll(checkMatch(reference, loader));
+        mismatches = lazyAddAll(mismatches, checkMatch(reference, loader));
       }
     }
 
@@ -125,10 +126,8 @@ public final class ReferenceMatcher {
     final TypePool typePool =
         AgentTooling.poolStrategy()
             .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
-    final List<Mismatch> mismatches = new ArrayList<>();
     try {
-      final TypePool.Resolution resolution =
-          typePool.describe(Utils.getClassName(reference.getClassName()));
+      final TypePool.Resolution resolution = typePool.describe(reference.getClassName());
       if (!resolution.isResolved()) {
         return Collections.<Mismatch>singletonList(
             new Mismatch.MissingClass(
@@ -140,41 +139,45 @@ public final class ReferenceMatcher {
         // bytebuddy throws an illegal state exception with this message if it cannot resolve types
         // TODO: handle missing type resolutions without catching bytebuddy's exceptions
         final String className = e.getMessage().replace("Cannot resolve type description for ", "");
-        mismatches.add(
+        return Collections.<Mismatch>singletonList(
             new Mismatch.MissingClass(reference.getSources().toArray(new Source[0]), className));
       } else {
         // Shouldn't happen. Fail the reference check and add a mismatch for debug logging.
-        mismatches.add(new Mismatch.ReferenceCheckError(e, reference, loader));
+        return Collections.<Mismatch>singletonList(
+            new Mismatch.ReferenceCheckError(e, reference, loader));
       }
     }
-    return mismatches;
   }
 
   public static List<Reference.Mismatch> checkMatch(
       final Reference reference, final TypeDescription typeOnClasspath) {
-    final List<Mismatch> mismatches = new ArrayList<>();
+    List<Mismatch> mismatches = Collections.emptyList();
 
     for (final Reference.Flag flag : reference.getFlags()) {
       if (!flag.matches(typeOnClasspath.getModifiers())) {
         final String desc = reference.getClassName();
-        mismatches.add(
-            new Mismatch.MissingFlag(
-                reference.getSources().toArray(new Source[0]),
-                desc,
-                flag,
-                typeOnClasspath.getModifiers()));
+        mismatches =
+            lazyAdd(
+                mismatches,
+                new Mismatch.MissingFlag(
+                    reference.getSources().toArray(new Source[0]),
+                    desc,
+                    flag,
+                    typeOnClasspath.getModifiers()));
       }
     }
 
     for (final Reference.Field fieldRef : reference.getFields()) {
       final FieldDescription.InDefinedShape fieldDescription = findField(fieldRef, typeOnClasspath);
       if (fieldDescription == null) {
-        mismatches.add(
-            new Reference.Mismatch.MissingField(
-                fieldRef.getSources().toArray(new Reference.Source[0]),
-                reference.getClassName(),
-                fieldRef.getName(),
-                fieldRef.getType().getInternalName()));
+        mismatches =
+            lazyAdd(
+                mismatches,
+                new Reference.Mismatch.MissingField(
+                    fieldRef.getSources().toArray(new Reference.Source[0]),
+                    reference.getClassName(),
+                    fieldRef.getName(),
+                    fieldRef.getType().getInternalName()));
       } else {
         for (final Reference.Flag flag : fieldRef.getFlags()) {
           if (!flag.matches(fieldDescription.getModifiers())) {
@@ -183,12 +186,14 @@ public final class ReferenceMatcher {
                     + "#"
                     + fieldRef.getName()
                     + fieldRef.getType().getInternalName();
-            mismatches.add(
-                new Mismatch.MissingFlag(
-                    fieldRef.getSources().toArray(new Source[0]),
-                    desc,
-                    flag,
-                    fieldDescription.getModifiers()));
+            mismatches =
+                lazyAdd(
+                    mismatches,
+                    new Mismatch.MissingFlag(
+                        fieldRef.getSources().toArray(new Source[0]),
+                        desc,
+                        flag,
+                        fieldDescription.getModifiers()));
           }
         }
       }
@@ -198,27 +203,30 @@ public final class ReferenceMatcher {
       final MethodDescription.InDefinedShape methodDescription =
           findMethod(methodRef, typeOnClasspath);
       if (methodDescription == null) {
-        mismatches.add(
-            new Reference.Mismatch.MissingMethod(
-                methodRef.getSources().toArray(new Reference.Source[0]),
-                methodRef.getName(),
-                methodRef.getDescriptor()));
+        mismatches =
+            lazyAdd(
+                mismatches,
+                new Reference.Mismatch.MissingMethod(
+                    methodRef.getSources().toArray(new Reference.Source[0]),
+                    methodRef.getName(),
+                    methodRef.getDescriptor()));
       } else {
         for (final Reference.Flag flag : methodRef.getFlags()) {
           if (!flag.matches(methodDescription.getModifiers())) {
             final String desc =
                 reference.getClassName() + "#" + methodRef.getName() + methodRef.getDescriptor();
-            mismatches.add(
-                new Mismatch.MissingFlag(
-                    methodRef.getSources().toArray(new Source[0]),
-                    desc,
-                    flag,
-                    methodDescription.getModifiers()));
+            mismatches =
+                lazyAdd(
+                    mismatches,
+                    new Mismatch.MissingFlag(
+                        methodRef.getSources().toArray(new Source[0]),
+                        desc,
+                        flag,
+                        methodDescription.getModifiers()));
           }
         }
       }
     }
-
     return mismatches;
   }
 
@@ -291,5 +299,22 @@ public final class ReferenceMatcher {
       }
     }
     return null;
+  }
+
+  // optimization to avoid ArrayList allocation in the common case when there are no mismatches
+  private static List<Mismatch> lazyAdd(List<Mismatch> mismatches, Mismatch mismatch) {
+    List<Mismatch> result = mismatches.isEmpty() ? new ArrayList<Mismatch>() : mismatches;
+    result.add(mismatch);
+    return result;
+  }
+
+  // optimization to avoid ArrayList allocation in the common case when there are no mismatches
+  private static List<Mismatch> lazyAddAll(List<Mismatch> mismatches, List<Mismatch> toAdd) {
+    if (!toAdd.isEmpty()) {
+      List<Mismatch> result = mismatches.isEmpty() ? new ArrayList<Mismatch>() : mismatches;
+      result.addAll(toAdd);
+      return result;
+    }
+    return mismatches;
   }
 }

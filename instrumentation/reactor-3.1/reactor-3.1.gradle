@@ -25,7 +25,7 @@ testSets {
 dependencies {
   compileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 
-  testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:annotations')
 
   testCompile group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 

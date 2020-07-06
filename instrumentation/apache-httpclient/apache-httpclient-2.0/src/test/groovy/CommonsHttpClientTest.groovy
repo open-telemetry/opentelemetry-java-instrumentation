@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpMethod

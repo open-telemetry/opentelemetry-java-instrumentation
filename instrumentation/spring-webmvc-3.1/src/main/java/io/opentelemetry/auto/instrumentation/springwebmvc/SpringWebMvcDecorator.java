@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
 import io.opentelemetry.OpenTelemetry;
@@ -75,7 +76,7 @@ public class SpringWebMvcDecorator extends BaseDecorator {
       methodName = "<annotation>";
     }
 
-    return DECORATE.spanNameForClass(clazz) + "." + methodName;
+    return DECORATE.spanNameForMethod(clazz, methodName);
   }
 
   public String spanNameOnRender(final ModelAndView mv) {
@@ -95,7 +96,7 @@ public class SpringWebMvcDecorator extends BaseDecorator {
     span.setAttribute("view.name", mv.getViewName());
     final View view = mv.getView();
     if (view != null) {
-      span.setAttribute("view.type", view.getClass().getName());
+      span.setAttribute("view.type", spanNameForClass(view.getClass()));
     }
     return span;
   }

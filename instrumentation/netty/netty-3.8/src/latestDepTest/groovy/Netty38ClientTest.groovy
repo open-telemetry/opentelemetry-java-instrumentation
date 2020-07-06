@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
@@ -52,6 +53,11 @@ class Netty38ClientTest extends HttpClientTest {
       }
     }).get()
     return response.statusCode
+  }
+
+  @Override
+  String userAgent() {
+    return "AHC"
   }
 
   @Override

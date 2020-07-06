@@ -23,7 +23,7 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
 
-  compile project(':instrumentation:elasticsearch:elasticsearch-common')
+  compile project(':instrumentation:elasticsearch:elasticsearch-transport-common')
 
   // Ensure no cross interference
   testCompile project(':instrumentation:elasticsearch:elasticsearch-rest-5.0')

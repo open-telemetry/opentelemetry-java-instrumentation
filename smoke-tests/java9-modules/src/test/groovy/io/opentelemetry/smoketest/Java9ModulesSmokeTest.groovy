@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.smoketest
 
 import spock.lang.Timeout
@@ -42,6 +43,6 @@ class Java9ModulesSmokeTest extends AbstractSmokeTest {
   @Timeout(value = TIMEOUT_SECS, unit = TimeUnit.SECONDS)
   def "Module application runs correctly"() {
     expect:
-    assert serverProcess.waitFor() == 0
+    assert testedProcess.waitFor() == 0
   }
 }

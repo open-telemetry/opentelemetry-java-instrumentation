@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.servlet;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
@@ -48,14 +50,14 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   }
 
   @Override
-  public Span getAttachedSpan(HttpServletRequest request) {
-    Object span = request.getAttribute(SPAN_ATTRIBUTE);
-    return span instanceof Span ? (Span) span : null;
+  public Context getAttachedContext(HttpServletRequest request) {
+    Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
+    return context instanceof Context ? (Context) context : null;
   }
 
   @Override
-  protected void attachSpanToRequest(Span span, HttpServletRequest request) {
-    request.setAttribute(SPAN_ATTRIBUTE, span);
+  protected void attachContextToRequest(Context context, HttpServletRequest request) {
+    request.setAttribute(CONTEXT_ATTRIBUTE, context);
   }
 
   @Override

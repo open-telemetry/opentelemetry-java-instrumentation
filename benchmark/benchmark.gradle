@@ -43,7 +43,7 @@ jmh {
   jmhVersion = '1.23' // Specifies JMH version
 }
 
-tasks.jmh.dependsOn(':opentelemetry-auto:shadowJar')
+tasks.jmh.dependsOn(':opentelemetry-javaagent:shadowJar')
 
 /*
 If using libasyncProfiler, use the following to generate nice svg flamegraphs.

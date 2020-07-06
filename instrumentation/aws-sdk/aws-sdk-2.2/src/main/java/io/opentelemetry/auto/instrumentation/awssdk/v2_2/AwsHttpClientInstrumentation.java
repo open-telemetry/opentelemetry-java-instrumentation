@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.auto.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.ScopeHolder.CURRENT;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -53,11 +55,9 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     return nameStartsWith("software.amazon.awssdk.")
         .and(
             extendsClass(
-                named(
-                        "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage")
-                    .or(
-                        named(
-                            "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage"))));
+                namedOneOf(
+                    "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeHttpRequestStage",
+                    "software.amazon.awssdk.core.internal.http.pipeline.stages.MakeAsyncHttpRequestStage")));
   }
 
   @Override

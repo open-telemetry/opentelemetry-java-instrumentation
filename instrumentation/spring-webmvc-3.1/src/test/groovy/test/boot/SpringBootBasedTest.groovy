@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package test.boot
 
 import io.opentelemetry.auto.instrumentation.api.MoreTags
@@ -20,15 +21,19 @@ import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import okhttp3.FormBody
+import okhttp3.RequestBody
 import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.web.servlet.view.RedirectView
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.LOGIN
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.trace.Span.Kind.SERVER
 import static java.util.Collections.singletonMap
@@ -37,7 +42,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
   @Override
   ConfigurableApplicationContext startServer(int port) {
-    def app = new SpringApplication(AppConfig)
+    def app = new SpringApplication(AppConfig, SecurityConfig, AuthServerConfig)
     app.setDefaultProperties(singletonMap("server.port", port))
     def context = app.run()
     return context
@@ -75,6 +80,44 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     true
   }
 
+  def "test character encoding of #testPassword"() {
+    setup:
+    def authProvider = server.getBean(SavingAuthenticationProvider)
+
+    RequestBody formBody = new FormBody.Builder()
+      .add("username", "test")
+      .add("password", testPassword).build()
+
+    def request = request(LOGIN, "POST", formBody).build()
+
+    when:
+    authProvider.latestAuthentications.clear()
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 302 // redirect after success
+    authProvider.latestAuthentications.get(0).password == testPassword
+
+    and:
+    assertTraces(2) {
+      trace(0, 1) {
+        basicSpan(it, 0, "TEST_SPAN")
+      }
+      trace(1, 2) {
+        serverSpan(it, 0, null, null, "POST", LOGIN)
+        span(1) {
+          operationName "HttpServletResponse.sendRedirect"
+          childOf span(0)
+          tags {
+          }
+        }
+      }
+    }
+
+    where:
+    testPassword << ["password", "dfsdföääöüüä", "🤓"]
+  }
+
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
@@ -93,7 +136,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       spanKind INTERNAL
       errored false
       tags {
-        "view.type" RedirectView.name
+        "view.type" RedirectView.simpleName
       }
     }
   }
@@ -116,7 +159,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
+      operationName endpoint == LOGIN ? "ApplicationFilterChain.doFilter" : endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {

@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
+
 import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
@@ -25,6 +28,9 @@ class BaseDecoratorTest extends AgentSpecification {
 
   @Shared
   def decorator = newDecorator()
+
+  @Shared
+  def resolvedAddress = new InetSocketAddress("github.com", 999)
 
   def span = Mock(Span)
 
@@ -42,20 +48,44 @@ class BaseDecoratorTest extends AgentSpecification {
     decorator.onPeerConnection(span, connection)
 
     then:
-    if (connection.getAddress()) {
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
-      1 * span.setAttribute(MoreTags.NET_PEER_IP, connection.address.hostAddress)
-    } else {
-      0 * span.setAttribute(MoreTags.NET_PEER_NAME, connection.hostName)
+    if (expectedPeerName) {
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, expectedPeerName)
+    }
+    if (expectedPeerIp) {
+      1 * span.setAttribute(MoreTags.NET_PEER_IP, expectedPeerIp)
     }
     1 * span.setAttribute(MoreTags.NET_PEER_PORT, connection.port)
     0 * _
 
     where:
-    connection                                      | _
-    new InetSocketAddress("localhost", 888)         | _
-    new InetSocketAddress("ipv6.google.com", 999)   | _
-    new InetSocketAddress("bad.address.local", 999) | _
+    connection                                      | expectedPeerName    | expectedPeerIp
+    new InetSocketAddress("localhost", 888)         | "localhost"         | "127.0.0.1"
+    new InetSocketAddress("1.2.3.4", 888)           | null                | "1.2.3.4"
+    resolvedAddress                                 | "github.com"        | resolvedAddress.address.hostAddress
+    new InetSocketAddress("bad.address.local", 999) | "bad.address.local" | null
+  }
+
+  def "test onPeerConnection with mapped peer"() {
+    when:
+    ConfigUtils.withConfigOverride(
+      "endpoint.peer.service.mapping",
+      "1.2.3.4=catservice,dogs.com=dogsservice,opentelemetry.io=specservice") {
+      decorator.onPeerConnection(span, connection)
+    }
+
+    then:
+    if (expectedPeerService) {
+      1 * span.setAttribute("peer.service", expectedPeerService)
+    } else {
+      0 * span.setAttribute("peer.service", _)
+    }
+
+    where:
+    connection                                      | expectedPeerService
+    new InetSocketAddress("1.2.3.4", 888)           | "catservice"
+    new InetSocketAddress("2.3.4.5", 888)           | null
+    new InetSocketAddress("dogs.com", 999)          | "dogsservice"
+    new InetSocketAddress("github.com", 999)        | null
   }
 
   def "test onError"() {
@@ -73,6 +103,25 @@ class BaseDecoratorTest extends AgentSpecification {
 
     where:
     error << [new Exception(), null]
+  }
+
+  def "test onComplete"() {
+    when:
+    decorator.onComplete(span, status, error)
+
+    then:
+    1 * span.setStatus(status)
+    if (error) {
+      1 * span.setAttribute(MoreTags.ERROR_TYPE, error.getClass().getName())
+      1 * span.setAttribute(MoreTags.ERROR_STACK, _)
+      1 * span.setAttribute(MoreTags.ERROR_MSG, null)
+    }
+    0 * _
+
+    where:
+    error           | status
+    new Exception() | Status.INTERNAL
+    null            | Status.OK
   }
 
   def "test beforeFinish"() {

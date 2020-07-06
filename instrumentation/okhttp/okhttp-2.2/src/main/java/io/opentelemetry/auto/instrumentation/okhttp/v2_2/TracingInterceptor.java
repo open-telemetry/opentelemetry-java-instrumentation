@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.okhttp.v2_2;
 
 import static io.opentelemetry.auto.instrumentation.okhttp.v2_2.OkHttpClientDecorator.DECORATE;

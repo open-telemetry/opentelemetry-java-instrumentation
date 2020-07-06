@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package server
 
 import groovy.lang.Closure
@@ -28,10 +29,12 @@ class BlockClosureAdapter(block: () => Result) extends Closure[Result] {
   override def call(): Result = block()
 }
 
-class AsyncControllerClosureAdapter(response: Future[Result]) extends Closure[Future[Result]] {
+class AsyncControllerClosureAdapter(response: Future[Result])
+    extends Closure[Future[Result]] {
   override def call(): Future[Result] = response
 }
 
-class AsyncBlockClosureAdapter(block: () => Future[Result]) extends Closure[Future[Result]] {
+class AsyncBlockClosureAdapter(block: () => Future[Result])
+    extends Closure[Future[Result]] {
   override def call(): Future[Result] = block()
 }

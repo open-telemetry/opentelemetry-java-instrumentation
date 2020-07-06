@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
 import com.sun.jersey.api.client.ClientRequest;
@@ -41,5 +42,16 @@ public class JaxRsClientV1Decorator extends HttpClientDecorator<ClientRequest, C
   @Override
   protected Integer status(final ClientResponse clientResponse) {
     return clientResponse.getStatus();
+  }
+
+  @Override
+  protected String requestHeader(ClientRequest clientRequest, String name) {
+    Object header = clientRequest.getHeaders().getFirst(name);
+    return header != null ? header.toString() : null;
+  }
+
+  @Override
+  protected String responseHeader(ClientResponse clientResponse, String name) {
+    return clientResponse.getHeaders().getFirst(name);
   }
 }

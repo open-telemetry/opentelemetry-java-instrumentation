@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.tooling.muzzle;
 
 import io.opentelemetry.auto.tooling.Utils;
@@ -187,10 +188,13 @@ public class ReferenceCreator extends ClassVisitor {
   }
 
   private void addReference(final Reference ref) {
-    if (references.containsKey(ref.getClassName())) {
-      references.put(ref.getClassName(), references.get(ref.getClassName()).merge(ref));
-    } else {
-      references.put(ref.getClassName(), ref);
+    if (!ref.getClassName().startsWith("java.")) {
+      Reference reference = references.get(ref.getClassName());
+      if (null == reference) {
+        references.put(ref.getClassName(), ref);
+      } else {
+        references.put(ref.getClassName(), reference.merge(ref));
+      }
     }
   }
 

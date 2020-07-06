@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.jaxrs.v1_0;
 
 import static io.opentelemetry.auto.instrumentation.jaxrs.v1_0.JaxRsAnnotationsDecorator.DECORATE;
@@ -20,6 +21,7 @@ import static io.opentelemetry.auto.instrumentation.jaxrs.v1_0.JaxRsAnnotationsD
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -81,13 +83,14 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
             .and(
                 hasSuperMethod(
                     isAnnotatedWith(
-                        named("javax.ws.rs.Path")
-                            .or(named("javax.ws.rs.DELETE"))
-                            .or(named("javax.ws.rs.GET"))
-                            .or(named("javax.ws.rs.HEAD"))
-                            .or(named("javax.ws.rs.OPTIONS"))
-                            .or(named("javax.ws.rs.POST"))
-                            .or(named("javax.ws.rs.PUT"))))),
+                        namedOneOf(
+                            "javax.ws.rs.Path",
+                            "javax.ws.rs.DELETE",
+                            "javax.ws.rs.GET",
+                            "javax.ws.rs.HEAD",
+                            "javax.ws.rs.OPTIONS",
+                            "javax.ws.rs.POST",
+                            "javax.ws.rs.PUT")))),
         JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 

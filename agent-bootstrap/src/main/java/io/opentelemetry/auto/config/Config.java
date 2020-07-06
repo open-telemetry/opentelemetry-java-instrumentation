@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.config;
 
 import java.io.File;
@@ -22,10 +23,11 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
@@ -79,15 +81,13 @@ public class Config {
   public static final String EXPERIMENTAL_LOG_CAPTURE_THRESHOLD =
       "experimental.log.capture.threshold";
 
+  public static final String ENDPOINT_PEER_SERVICE_MAPPING = "endpoint.peer.service.mapping";
+
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
-  private static final BitSet DEFAULT_HTTP_SERVER_ERROR_STATUSES =
-      parseIntegerRangeSet("500-599", "default");
-  private static final BitSet DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
-      parseIntegerRangeSet("400-599", "default");
   private static final boolean DEFAULT_HTTP_SERVER_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
   private static final int DEFAULT_SCOPE_DEPTH_LIMIT = 100;
@@ -112,8 +112,6 @@ public class Config {
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final List<String> excludedClasses;
-  @Getter private final BitSet httpServerErrorStatuses;
-  @Getter private final BitSet httpClientErrorStatuses;
   @Getter private final boolean httpServerTagQueryString;
   @Getter private final boolean httpClientTagQueryString;
   @Getter private final Integer scopeDepthLimit;
@@ -149,6 +147,8 @@ public class Config {
 
   @Getter private final boolean kafkaClientPropagationEnabled;
 
+  @Getter private final Map<String, String> endpointPeerServiceMapping;
+
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
 
@@ -165,14 +165,6 @@ public class Config {
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
-
-    httpServerErrorStatuses =
-        getIntegerRangeSettingFromEnvironment(
-            HTTP_SERVER_ERROR_STATUSES, DEFAULT_HTTP_SERVER_ERROR_STATUSES);
-
-    httpClientErrorStatuses =
-        getIntegerRangeSettingFromEnvironment(
-            HTTP_CLIENT_ERROR_STATUSES, DEFAULT_HTTP_CLIENT_ERROR_STATUSES);
 
     httpServerTagQueryString =
         getBooleanSettingFromEnvironment(
@@ -215,6 +207,8 @@ public class Config {
         getBooleanSettingFromEnvironment(
             KAFKA_CLIENT_PROPAGATION_ENABLED, DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED);
 
+    endpointPeerServiceMapping = getMapSettingFromEnvironment(ENDPOINT_PEER_SERVICE_MAPPING);
+
     log.debug("New instance: {}", this);
   }
 
@@ -231,14 +225,6 @@ public class Config {
 
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);
-
-    httpServerErrorStatuses =
-        getPropertyIntegerRangeValue(
-            properties, HTTP_SERVER_ERROR_STATUSES, parent.httpServerErrorStatuses);
-
-    httpClientErrorStatuses =
-        getPropertyIntegerRangeValue(
-            properties, HTTP_CLIENT_ERROR_STATUSES, parent.httpClientErrorStatuses);
 
     httpServerTagQueryString =
         getPropertyBooleanValue(
@@ -278,6 +264,10 @@ public class Config {
     kafkaClientPropagationEnabled =
         getPropertyBooleanValue(
             properties, KAFKA_CLIENT_PROPAGATION_ENABLED, parent.kafkaClientPropagationEnabled);
+
+    endpointPeerServiceMapping =
+        getPropertyMapValue(
+            properties, ENDPOINT_PEER_SERVICE_MAPPING, parent.endpointPeerServiceMapping);
 
     log.debug("New instance: {}", this);
   }
@@ -345,6 +335,11 @@ public class Config {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
 
+  @NonNull
+  private static Map<String, String> getMapSettingFromEnvironment(final String name) {
+    return parseMap(getSettingFromEnvironment(name, null));
+  }
+
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Boolean.
    */
@@ -365,17 +360,6 @@ public class Config {
       final String name, final Class<T> tClass, final T defaultValue) {
     try {
       return valueOf(getSettingFromEnvironment(name, null), tClass, defaultValue);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
-  }
-
-  private static BitSet getIntegerRangeSettingFromEnvironment(
-      final String name, final BitSet defaultValue) {
-    final String value = getSettingFromEnvironment(name, null);
-    try {
-      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
     } catch (final NumberFormatException e) {
       log.warn("Invalid configuration for " + name, e);
       return defaultValue;
@@ -443,6 +427,12 @@ public class Config {
     return value == null || value.trim().isEmpty() ? defaultValue : parseList(value);
   }
 
+  private static Map<String, String> getPropertyMapValue(
+      final Properties properties, final String name, final Map<String, String> defaultValue) {
+    final String value = properties.getProperty(name);
+    return value == null || value.trim().isEmpty() ? defaultValue : parseMap(value);
+  }
+
   private static Boolean getPropertyBooleanValue(
       final Properties properties, final String name, final Boolean defaultValue) {
     return valueOf(properties.getProperty(name), Boolean.class, defaultValue);
@@ -451,48 +441,6 @@ public class Config {
   private static Integer getPropertyIntegerValue(
       final Properties properties, final String name, final Integer defaultValue) {
     return valueOf(properties.getProperty(name), Integer.class, defaultValue);
-  }
-
-  private static BitSet getPropertyIntegerRangeValue(
-      final Properties properties, final String name, final BitSet defaultValue) {
-    final String value = properties.getProperty(name);
-    try {
-      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
-    } catch (final NumberFormatException e) {
-      log.warn("Invalid configuration for " + name, e);
-      return defaultValue;
-    }
-  }
-
-  @NonNull
-  private static BitSet parseIntegerRangeSet(@NonNull String str, final String settingName)
-      throws NumberFormatException {
-    str = str.replaceAll("\\s", "");
-    if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
-      log.warn(
-          "Invalid config for {}: '{}'. Must be formatted like '400-403,405,410-499'.",
-          settingName,
-          str);
-      throw new NumberFormatException();
-    }
-
-    final int lastSeparator = Math.max(str.lastIndexOf(','), str.lastIndexOf('-'));
-    final int maxValue = Integer.parseInt(str.substring(lastSeparator + 1));
-    final BitSet set = new BitSet(maxValue);
-    final String[] tokens = str.split(",", -1);
-    for (final String token : tokens) {
-      final int separator = token.indexOf('-');
-      if (separator == -1) {
-        set.set(Integer.parseInt(token));
-      } else if (separator > 0) {
-        final int left = Integer.parseInt(token.substring(0, separator));
-        final int right = Integer.parseInt(token.substring(separator + 1));
-        final int min = Math.min(left, right);
-        final int max = Math.max(left, right);
-        set.set(min, max + 1);
-      }
-    }
-    return set;
   }
 
   @NonNull
@@ -507,6 +455,24 @@ public class Config {
       tokens[i] = tokens[i].trim();
     }
     return Collections.unmodifiableList(Arrays.asList(tokens));
+  }
+
+  private static Map<String, String> parseMap(final String str) {
+    if (str == null || str.trim().isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    final Map<String, String> result = new LinkedHashMap<>();
+    for (String token : str.split(",", -1)) {
+      token = token.trim();
+      String[] parts = token.split("=", -1);
+      if (parts.length != 2) {
+        log.warn("Invalid map config part, should be formatted key1=value1,key2=value2: {}", str);
+        return Collections.emptyMap();
+      }
+      result.put(parts[0], parts[1]);
+    }
+    return Collections.unmodifiableMap(result);
   }
 
   /**

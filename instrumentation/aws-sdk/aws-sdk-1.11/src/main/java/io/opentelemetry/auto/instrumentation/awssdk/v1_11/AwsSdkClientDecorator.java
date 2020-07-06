@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -26,7 +27,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response> {
+public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Response<?>> {
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -40,7 +41,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  public String spanNameForRequest(final Request request) {
+  public String spanNameForRequest(final Request<?> request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
@@ -50,7 +51,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  public Span onRequest(final Span span, final Request request) {
+  public Span onRequest(final Span span, final Request<?> request) {
     // Call super first because we override the span name below.
     super.onRequest(span, request);
 
@@ -78,7 +79,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  public Span onResponse(final Span span, final Response response) {
+  public Span onResponse(final Span span, final Response<?> response) {
     if (response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       final AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
@@ -101,17 +102,27 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String method(final Request request) {
+  protected String method(final Request<?> request) {
     return request.getHttpMethod().name();
   }
 
   @Override
-  protected URI url(final Request request) {
+  protected URI url(final Request<?> request) {
     return request.getEndpoint();
   }
 
   @Override
-  protected Integer status(final Response response) {
+  protected Integer status(final Response<?> response) {
     return response.getHttpResponse().getStatusCode();
+  }
+
+  @Override
+  protected String requestHeader(Request<?> request, String name) {
+    return request.getHeaders().get(name);
+  }
+
+  @Override
+  protected String responseHeader(Response<?> response, String name) {
+    return response.getHttpResponse().getHeaders().get(name);
   }
 }

@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.InjectAdapter.SETTER;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.jaxrsclient.v1_1.JaxRsClientV1Decorator.TRACER;
@@ -86,7 +87,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final ClientRequest request, @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
-      final boolean isRootClientHandler = null == request.getProperties().get(SPAN_ATTRIBUTE);
+      final boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       if (isRootClientHandler) {
         final Span span =
             TRACER
@@ -95,9 +96,10 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
                 .startSpan();
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
-        request.getProperties().put(SPAN_ATTRIBUTE, span);
 
         final Context context = withSpan(span, Context.current());
+        request.getProperties().put(CONTEXT_ATTRIBUTE, context);
+
         OpenTelemetry.getPropagators()
             .getHttpTextFormat()
             .inject(context, request.getHeaders(), SETTER);

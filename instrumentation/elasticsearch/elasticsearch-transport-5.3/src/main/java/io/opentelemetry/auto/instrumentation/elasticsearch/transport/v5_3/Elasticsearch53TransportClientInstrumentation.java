@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.elasticsearch.transport.v5_3;
 
-import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.elasticsearch.transport.ElasticsearchTransportClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static java.util.Collections.singletonMap;
@@ -61,7 +62,7 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
       "com.google.common.base.Joiner$1",
       "com.google.common.base.Joiner$2",
       "com.google.common.base.Joiner$MapJoiner",
-      "io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator",
+      "io.opentelemetry.auto.instrumentation.elasticsearch.transport.ElasticsearchTransportClientDecorator",
       packageName + ".TransportActionListener",
     };
   }

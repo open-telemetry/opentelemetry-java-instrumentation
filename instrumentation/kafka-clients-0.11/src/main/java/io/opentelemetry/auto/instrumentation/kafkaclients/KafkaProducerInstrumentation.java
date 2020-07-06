@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.kafkaclients;
 
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
@@ -92,6 +93,11 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
       callback = new ProducerCallback(callback, span);
 
+      boolean isTombstone = record.value() == null && !record.headers().iterator().hasNext();
+      if (isTombstone) {
+        span.setAttribute("tombstone", true);
+      }
+
       // Do not inject headers for batch versions below 2
       // This is how similar check is being done in Kafka client itself:
       // https://github.com/apache/kafka/blob/05fcfde8f69b0349216553f711fdfc3f0259c601/clients/src/main/java/org/apache/kafka/common/record/MemoryRecordsBuilder.java#L411-L412
@@ -100,7 +106,9 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       // headers attempt to read messages that were produced by clients > 0.11 and the magic
       // value of the broker(s) is >= 2
       if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2
-          && Config.get().isKafkaClientPropagationEnabled()) {
+          && Config.get().isKafkaClientPropagationEnabled()
+          // Must not interfere with tombstones
+          && !isTombstone) {
         final Context context = withSpan(span, Context.current());
         try {
           OpenTelemetry.getPropagators()

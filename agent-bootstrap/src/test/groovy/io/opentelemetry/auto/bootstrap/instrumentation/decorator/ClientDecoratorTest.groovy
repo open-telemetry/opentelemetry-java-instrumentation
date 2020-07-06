@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
 import io.grpc.Context
@@ -25,8 +26,6 @@ import io.opentelemetry.trace.TracingContextUtils
 class ClientDecoratorTest extends BaseDecoratorTest {
 
   private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
-
-  def span = Mock(Span)
 
   def "test afterStart"() {
     setup:

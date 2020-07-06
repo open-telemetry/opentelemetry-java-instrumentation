@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.jaxrs.v1_0;
 
 import static io.opentelemetry.auto.bootstrap.WeakMap.Provider.newWeakMap;
@@ -48,7 +49,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (isRootScope && !spanName.isEmpty()) {
       span.updateName(spanName);
     } else {
-      span.updateName(DECORATE.spanNameForClass(target) + "." + method.getName());
+      span.updateName(DECORATE.spanNameForMethod(target, method));
     }
   }
 

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.jms;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
@@ -23,11 +24,13 @@ import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -82,6 +85,11 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
     return transformers;
   }
 
+  @Override
+  public Map<String, String> contextStore() {
+    return singletonMap("javax.jms.MessageConsumer", "java.lang.String");
+  }
+
   public static class ConsumerAdvice {
 
     @Advice.OnMethodEnter
@@ -96,9 +104,12 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         @Advice.Origin final Method method,
         @Advice.Return final Message message,
         @Advice.Thrown final Throwable throwable) {
-      final String spanName;
+      String spanName;
       if (message == null) {
-        spanName = DECORATE.spanNameForReceive(method);
+        spanName = InstrumentationContext.get(MessageConsumer.class, String.class).get(consumer);
+        if (spanName == null) {
+          spanName = "destination";
+        }
       } else {
         spanName = DECORATE.spanNameForReceive(message);
       }

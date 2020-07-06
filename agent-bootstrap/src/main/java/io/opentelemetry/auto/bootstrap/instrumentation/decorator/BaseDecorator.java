@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
@@ -29,9 +31,18 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 public abstract class BaseDecorator {
+
+  private static final ClassValue<SpanNames> SPAN_NAMES =
+      new ClassValue<SpanNames>() {
+        @Override
+        protected SpanNames computeValue(Class<?> type) {
+          return new SpanNames(getClassName(type));
+        }
+      };
 
   protected BaseDecorator() {}
 
@@ -48,7 +59,15 @@ public abstract class BaseDecorator {
   public Span onError(final Span span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      span.setStatus(Status.UNKNOWN);
+      onComplete(span, Status.UNKNOWN, throwable);
+    }
+    return span;
+  }
+
+  public Span onComplete(Span span, Status status, Throwable throwable) {
+    assert span != null;
+    span.setStatus(status);
+    if (throwable != null) {
       addThrowable(
           span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }
@@ -58,8 +77,18 @@ public abstract class BaseDecorator {
   public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
-      onPeerConnection(span, remoteConnection.getAddress());
-
+      final InetAddress remoteAddress = remoteConnection.getAddress();
+      if (remoteAddress != null) {
+        onPeerConnection(span, remoteAddress);
+      } else {
+        // Failed DNS lookup, the host string is the name.
+        final String hostString = remoteConnection.getHostString();
+        span.setAttribute(MoreTags.NET_PEER_NAME, hostString);
+        String peerService = mapToPeer(hostString);
+        if (peerService != null) {
+          span.setAttribute("peer.service", peerService);
+        }
+      }
       span.setAttribute(MoreTags.NET_PEER_PORT, remoteConnection.getPort());
     }
     return span;
@@ -67,9 +96,18 @@ public abstract class BaseDecorator {
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
-    if (remoteAddress != null) {
+    final String hostName = remoteAddress.getHostName();
+    if (!hostName.equals(remoteAddress.getHostAddress())) {
       span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
-      span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
+    }
+    span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
+
+    String peerService = mapToPeer(hostName);
+    if (peerService == null) {
+      peerService = mapToPeer(remoteAddress.getHostAddress());
+    }
+    if (peerService != null) {
+      span.setAttribute("peer.service", peerService);
     }
     return span;
   }
@@ -88,25 +126,71 @@ public abstract class BaseDecorator {
    * reference. Anonymous classes are named based on their parent.
    */
   public String spanNameForMethod(final Method method) {
-    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
+    return spanNameForMethod(method.getDeclaringClass(), method);
+  }
+
+  /**
+   * This method is used to generate an acceptable span (operation) name based on a given method
+   * reference. Anonymous classes are named based on their parent.
+   *
+   * @param method the method to get the name from, nullable
+   * @return the span name from the class and method
+   */
+  public String spanNameForMethod(final Class<?> clazz, final Method method) {
+    return spanNameForMethod(clazz, null == method ? null : method.getName());
+  }
+
+  /**
+   * This method is used to generate an acceptable span (operation) name based on a given method
+   * reference. Anonymous classes are named based on their parent.
+   *
+   * @param methodName the name of the method to get the name from, nullable
+   * @return the span name from the class and method
+   */
+  public String spanNameForMethod(final Class<?> clazz, final String methodName) {
+    SpanNames cn = SPAN_NAMES.get(clazz);
+    return null == methodName ? cn.getClassName() : cn.getSpanName(methodName);
   }
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
    */
-  public String spanNameForClass(final Class clazz) {
-    if (!clazz.isAnonymousClass()) {
-      return clazz.getSimpleName();
+  public String spanNameForClass(final Class<?> clazz) {
+    String simpleName = clazz.getSimpleName();
+    return simpleName.isEmpty() ? SPAN_NAMES.get(clazz).getClassName() : simpleName;
+  }
+
+  private static class SpanNames {
+    private final String className;
+    private final ConcurrentHashMap<String, String> spanNames = new ConcurrentHashMap<>(1);
+
+    private SpanNames(String className) {
+      this.className = className;
     }
-    String className = clazz.getName();
-    if (clazz.getPackage() != null) {
-      final String pkgName = clazz.getPackage().getName();
-      if (!pkgName.isEmpty()) {
-        className = clazz.getName().replace(pkgName, "").substring(1);
+
+    public String getClassName() {
+      return className;
+    }
+
+    public String getSpanName(String methodName) {
+      String spanName = spanNames.get(methodName);
+      if (null == spanName) {
+        spanName = className + "." + methodName;
+        spanNames.putIfAbsent(methodName, spanName);
       }
+      return spanName;
     }
-    return className;
+  }
+
+  private static String getClassName(Class<?> clazz) {
+    String simpleName = clazz.getSimpleName();
+    if (simpleName.isEmpty()) {
+      String name = clazz.getName();
+      int start = name.lastIndexOf('.');
+      return name.substring(start + 1);
+    }
+    return simpleName;
   }
 
   public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
@@ -114,5 +198,13 @@ public abstract class BaseDecorator {
         getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
     final Span span = getSpan(context);
     return span.getContext();
+  }
+
+  protected static String mapToPeer(String endpoint) {
+    if (endpoint == null) {
+      return null;
+    }
+
+    return Config.get().getEndpointPeerServiceMapping().get(endpoint);
   }
 }

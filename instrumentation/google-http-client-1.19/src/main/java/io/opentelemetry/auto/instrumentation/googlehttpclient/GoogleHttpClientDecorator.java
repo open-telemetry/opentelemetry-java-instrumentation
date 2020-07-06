@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.googlehttpclient;
 
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.OpenTelemetry;
@@ -46,5 +48,19 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   @Override
   protected Integer status(final HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
+  }
+
+  @Override
+  protected String requestHeader(HttpRequest httpRequest, String name) {
+    return header(httpRequest.getHeaders(), name);
+  }
+
+  @Override
+  protected String responseHeader(HttpResponse httpResponse, String name) {
+    return header(httpResponse.getHeaders(), name);
+  }
+
+  private static String header(HttpHeaders headers, String name) {
+    return headers.getFirstHeaderStringValue(name);
   }
 }

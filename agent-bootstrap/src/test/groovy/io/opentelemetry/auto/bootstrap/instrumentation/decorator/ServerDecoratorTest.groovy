@@ -13,14 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
-
-import io.opentelemetry.trace.Span
-
 class ServerDecoratorTest extends BaseDecoratorTest {
-
-  def span = Mock(Span)
 
   def "test afterStart"() {
     def decorator = newDecorator()

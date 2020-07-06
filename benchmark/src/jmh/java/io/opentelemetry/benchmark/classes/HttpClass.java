@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.benchmark.classes;
 
 import com.google.api.client.http.GenericUrl;

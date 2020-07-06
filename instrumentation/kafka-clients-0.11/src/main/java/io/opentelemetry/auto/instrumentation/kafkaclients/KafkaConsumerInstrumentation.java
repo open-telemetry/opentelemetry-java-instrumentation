@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.kafkaclients;
 
 import static io.opentelemetry.auto.instrumentation.kafkaclients.KafkaDecorator.DECORATE;
@@ -54,7 +55,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracingIterable",
       packageName + ".TracingIterator",
-      packageName + ".TracingList",
+      packageName + ".TracingList"
     };
   }
 

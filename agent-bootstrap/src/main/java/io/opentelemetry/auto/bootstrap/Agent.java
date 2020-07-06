@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap;
 
 import java.lang.instrument.Instrumentation;
@@ -147,8 +148,7 @@ public class Agent {
   private static synchronized void startAgent(final Instrumentation inst, final URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
       try {
-        final ClassLoader agentClassLoader =
-            createAgentClassLoader("auto-tooling-and-instrumentation.isolated", bootstrapURL);
+        final ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapURL);
         final Class<?> agentInstallerClass =
             agentClassLoader.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");
         final Method agentInstallerMethod =

@@ -1,6 +1,7 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
+  skipPublish = true
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -13,5 +14,5 @@ dependencies {
   testCompile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 
   testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:annotations')
 }

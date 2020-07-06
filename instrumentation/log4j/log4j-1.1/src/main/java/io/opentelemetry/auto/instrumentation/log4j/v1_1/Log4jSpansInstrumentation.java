@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.log4j.v1_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;

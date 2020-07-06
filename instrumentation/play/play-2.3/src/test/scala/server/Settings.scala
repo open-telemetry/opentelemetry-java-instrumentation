@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package server
 
 import play.api.GlobalSettings
@@ -21,7 +22,10 @@ import play.api.mvc.{RequestHeader, Result, Results}
 import scala.concurrent.Future
 
 class Settings extends GlobalSettings {
-  override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
+  override def onError(
+      request: RequestHeader,
+      ex: Throwable
+  ): Future[Result] = {
     Future.successful(Results.InternalServerError(ex.getCause.getMessage))
   }
 }

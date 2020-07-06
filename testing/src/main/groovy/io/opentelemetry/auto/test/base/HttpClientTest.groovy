@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.test.base
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
@@ -22,6 +23,7 @@ import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
@@ -43,6 +45,8 @@ abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 1000
   protected static final READ_TIMEOUT_MS = 2000
+  protected static final BASIC_AUTH_KEY = "custom authorization header"
+  protected static final BASIC_AUTH_VAL = "plain text auth token"
 
   @AutoCleanup
   @Shared
@@ -70,6 +74,18 @@ abstract class HttpClientTest extends AgentTestRunner {
         handleDistributedRequest()
         redirect(server.address.resolve("/circular-redirect").toURL().toString())
       }
+      prefix("secured") {
+        handleDistributedRequest()
+        if (request.headers.get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
+          response.status(200).send("secured string under basic auth")
+        } else {
+          response.status(401).send("Unauthorized")
+        }
+      }
+      prefix("to-secured") {
+        handleDistributedRequest()
+        redirect(server.address.resolve("/secured").toURL().toString())
+      }
     }
   }
 
@@ -81,6 +97,10 @@ abstract class HttpClientTest extends AgentTestRunner {
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
 
   Integer statusOnRedirectError() {
+    return null
+  }
+
+  String userAgent() {
     return null
   }
 
@@ -276,6 +296,28 @@ abstract class HttpClientTest extends AgentTestRunner {
     method = "GET"
   }
 
+  def "redirect #method to secured endpoint copies auth header"() {
+    given:
+    assumeTrue(testRedirects())
+    def uri = server.address.resolve("/to-secured")
+
+    when:
+    def status = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
+
+    then:
+    status == 200
+    assertTraces(1) {
+      trace(0, 3 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, false, uri)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
+      }
+    }
+
+    where:
+    method = "GET"
+  }
+
   def "connection error (unopened port)"() {
     given:
     assumeTrue(testConnectionFailure())
@@ -375,6 +417,7 @@ abstract class HttpClientTest extends AgentTestRunner {
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
+    def userAgent = userAgent()
     trace.span(index) {
       if (parentSpan == null) {
         parent()
@@ -390,6 +433,9 @@ abstract class HttpClientTest extends AgentTestRunner {
         "$MoreTags.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 } // Optional
         "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "$Tags.HTTP_METHOD" method
+        if (userAgent) {
+          "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith(userAgent) }
+        }
         if (status) {
           "$Tags.HTTP_STATUS" status
         }

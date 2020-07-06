@@ -663,10 +663,8 @@ ij_groovy_while_brace_force = never
 ij_groovy_while_on_new_line = false
 ij_groovy_wrap_long_lines = false
 
-[{*.gradle.kts,*.kt,*.kts,*.main.kts}]
-indent_size = 4
-tab_width = 4
-ij_continuation_indent_size = 8
+[{*.kt,*.kts}]
+ij_continuation_indent_size = 2
 ij_kotlin_align_in_columns_case_branch = false
 ij_kotlin_align_multiline_binary_operation = false
 ij_kotlin_align_multiline_extends_list = false

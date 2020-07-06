@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.jms;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
 import io.opentelemetry.trace.Tracer;
-import java.lang.reflect.Method;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.Queue;
@@ -34,10 +34,6 @@ public class JMSDecorator extends ClientDecorator {
 
   public String spanNameForReceive(final Message message) {
     return toSpanName(message, null);
-  }
-
-  public String spanNameForReceive(final Method method) {
-    return "jms." + method.getName();
   }
 
   public String spanNameForConsumer(final Message message) {
@@ -59,18 +55,22 @@ public class JMSDecorator extends ClientDecorator {
     if (jmsDestination == null) {
       jmsDestination = destination;
     }
+    return toSpanName(jmsDestination);
+  }
+
+  public static String toSpanName(Destination destination) {
     try {
-      if (jmsDestination instanceof Queue) {
-        final String queueName = ((Queue) jmsDestination).getQueueName();
-        if (jmsDestination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX)) {
+      if (destination instanceof Queue) {
+        final String queueName = ((Queue) destination).getQueueName();
+        if (destination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX)) {
           return "queue/<temporary>";
         } else {
           return "queue/" + queueName;
         }
       }
-      if (jmsDestination instanceof Topic) {
-        final String topicName = ((Topic) jmsDestination).getTopicName();
-        if (jmsDestination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX)) {
+      if (destination instanceof Topic) {
+        final String topicName = ((Topic) destination).getTopicName();
+        if (destination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX)) {
           return "topic/<temporary>";
         } else {
           return "topic/" + topicName;

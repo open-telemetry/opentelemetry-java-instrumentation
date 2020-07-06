@@ -1,0 +1,281 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.opentelemetry.auto.test;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+
+public class IntegrationTestUtils {
+
+  /** Returns the classloader the core agent is running on. */
+  public static ClassLoader getAgentClassLoader() {
+    return getAgentFieldClassloader("AGENT_CLASSLOADER");
+  }
+
+  /** Returns the classloader the jmxfetch is running on. */
+  public static ClassLoader getJmxFetchClassLoader() {
+    return getAgentFieldClassloader("JMXFETCH_CLASSLOADER");
+  }
+
+  private static ClassLoader getAgentFieldClassloader(final String fieldName) {
+    Field classloaderField = null;
+    try {
+      final Class<?> agentClass =
+          ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.Agent");
+      classloaderField = agentClass.getDeclaredField(fieldName);
+      classloaderField.setAccessible(true);
+      return (ClassLoader) classloaderField.get(null);
+    } catch (final Exception e) {
+      throw new IllegalStateException(e);
+    } finally {
+      if (null != classloaderField) {
+        classloaderField.setAccessible(false);
+      }
+    }
+  }
+
+  /** Returns the URL to the jar the agent appended to the bootstrap classpath * */
+  public static ClassLoader getBootstrapProxy() throws Exception {
+    final ClassLoader agentClassLoader = getAgentClassLoader();
+    final Method getBootstrapProxy = agentClassLoader.getClass().getMethod("getBootstrapProxy");
+    return (ClassLoader) getBootstrapProxy.invoke(agentClassLoader);
+  }
+
+  /** See {@link IntegrationTestUtils#createJarWithClasses(String, Class[])} */
+  public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
+    return createJarWithClasses(null, classes);
+  }
+  /**
+   * Create a temporary jar on the filesystem with the bytes of the given classes.
+   *
+   * <p>The jar file will be removed when the jvm exits.
+   *
+   * @param mainClassname The name of the class to use for Main-Class and Premain-Class. May be null
+   * @param classes classes to package into the jar.
+   * @return the location of the newly created jar.
+   * @throws IOException
+   */
+  public static URL createJarWithClasses(final String mainClassname, final Class<?>... classes)
+      throws IOException {
+    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
+    tmpJar.deleteOnExit();
+
+    final Manifest manifest = new Manifest();
+    if (mainClassname != null) {
+      final Attributes mainAttributes = manifest.getMainAttributes();
+      mainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+      mainAttributes.put(Attributes.Name.MAIN_CLASS, mainClassname);
+      mainAttributes.put(new Attributes.Name("Premain-Class"), mainClassname);
+    }
+    final JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
+    for (final Class<?> clazz : classes) {
+      addToJar(clazz, target);
+    }
+    target.close();
+
+    return tmpJar.toURI().toURL();
+  }
+
+  private static void addToJar(final Class<?> clazz, final JarOutputStream jarOutputStream)
+      throws IOException {
+    InputStream inputStream = null;
+    ClassLoader loader = clazz.getClassLoader();
+    if (null == loader) {
+      // bootstrap resources can be fetched through the system loader
+      loader = ClassLoader.getSystemClassLoader();
+    }
+    try {
+      final JarEntry entry = new JarEntry(getResourceName(clazz.getName()));
+      jarOutputStream.putNextEntry(entry);
+      inputStream = loader.getResourceAsStream(getResourceName(clazz.getName()));
+
+      final byte[] buffer = new byte[1024];
+      while (true) {
+        final int count = inputStream.read(buffer);
+        if (count == -1) {
+          break;
+        }
+        jarOutputStream.write(buffer, 0, count);
+      }
+      jarOutputStream.closeEntry();
+    } finally {
+      if (inputStream != null) {
+        inputStream.close();
+      }
+    }
+  }
+
+  /** com.foo.Bar -> com/foo/Bar.class */
+  public static String getResourceName(final String className) {
+    return className.replace('.', '/') + ".class";
+  }
+
+  public static String[] getBootstrapPackagePrefixes() throws Exception {
+    final Field f =
+        getAgentClassLoader()
+            .loadClass("io.opentelemetry.auto.tooling.Constants")
+            .getField("BOOTSTRAP_PACKAGE_PREFIXES");
+    return (String[]) f.get(null);
+  }
+
+  public static String[] getAgentPackagePrefixes() throws Exception {
+    final Field f =
+        getAgentClassLoader()
+            .loadClass("io.opentelemetry.auto.tooling.Constants")
+            .getField("AGENT_PACKAGE_PREFIXES");
+    return (String[]) f.get(null);
+  }
+
+  private static String getAgentArgument() {
+    final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+    for (final String arg : runtimeMxBean.getInputArguments()) {
+      if (arg.startsWith("-javaagent")) {
+        return arg;
+      }
+    }
+
+    throw new RuntimeException("Agent jar not found");
+  }
+
+  public static int runOnSeparateJvm(
+      final String mainClassName,
+      final String[] jvmArgs,
+      final String[] mainMethodArgs,
+      final Map<String, String> envVars,
+      final boolean printOutputStreams)
+      throws Exception {
+    final String classPath = System.getProperty("java.class.path");
+    return runOnSeparateJvm(
+        mainClassName, jvmArgs, mainMethodArgs, envVars, classPath, printOutputStreams);
+  }
+
+  /**
+   * On a separate JVM, run the main method for a given class.
+   *
+   * @param mainClassName The name of the entry point class. Must declare a main method.
+   * @param printOutputStreams if true, print stdout and stderr of the child jvm
+   * @return the return code of the child jvm
+   * @throws Exception
+   */
+  public static int runOnSeparateJvm(
+      final String mainClassName,
+      final String[] jvmArgs,
+      final String[] mainMethodArgs,
+      final Map<String, String> envVars,
+      final String classpath,
+      final boolean printOutputStreams)
+      throws Exception {
+
+    final String separator = System.getProperty("file.separator");
+    final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+
+    final List<String> vmArgsList = new ArrayList<>(Arrays.asList(jvmArgs));
+    vmArgsList.add(getAgentArgument());
+
+    final List<String> commands = new ArrayList<>();
+    commands.add(path);
+    commands.addAll(vmArgsList);
+    commands.add("-cp");
+    commands.add(classpath);
+    commands.add(mainClassName);
+    commands.addAll(Arrays.asList(mainMethodArgs));
+    final ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
+    processBuilder.environment().putAll(envVars);
+
+    final Process process = processBuilder.start();
+
+    final StreamGobbler errorGobbler =
+        new StreamGobbler(process.getErrorStream(), "ERROR", printOutputStreams);
+    final StreamGobbler outputGobbler =
+        new StreamGobbler(process.getInputStream(), "OUTPUT", printOutputStreams);
+    outputGobbler.start();
+    errorGobbler.start();
+
+    waitFor(process, 30, TimeUnit.SECONDS);
+
+    outputGobbler.join();
+    errorGobbler.join();
+
+    return process.exitValue();
+  }
+
+  private static void waitFor(final Process process, final long timeout, final TimeUnit unit)
+      throws InterruptedException, TimeoutException {
+    final long startTime = System.nanoTime();
+    long rem = unit.toNanos(timeout);
+
+    do {
+      try {
+        process.exitValue();
+        return;
+      } catch (final IllegalThreadStateException ex) {
+        if (rem > 0) {
+          Thread.sleep(Math.min(TimeUnit.NANOSECONDS.toMillis(rem) + 1, 100));
+        }
+      }
+      rem = unit.toNanos(timeout) - (System.nanoTime() - startTime);
+    } while (rem > 0);
+    throw new TimeoutException();
+  }
+
+  private static class StreamGobbler extends Thread {
+    InputStream stream;
+    String type;
+    boolean print;
+
+    private StreamGobbler(final InputStream stream, final String type, final boolean print) {
+      this.stream = stream;
+      this.type = type;
+      this.print = print;
+    }
+
+    @Override
+    public void run() {
+      try {
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+          if (print) {
+            System.out.println(type + "> " + line);
+          }
+        }
+      } catch (final IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+}

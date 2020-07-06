@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.finatra;
 
 import static io.opentelemetry.auto.instrumentation.finatra.FinatraDecorator.DECORATE;
@@ -32,11 +33,10 @@ import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
-import io.opentelemetry.auto.config.Config;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpStatusConverter;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -130,9 +130,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
       final Span span = spanWithScope.getSpan();
 
       // Don't use DECORATE.onResponse because this is the controller span
-      if (Config.get().getHttpServerErrorStatuses().get(DECORATE.status(response))) {
-        span.setStatus(Status.UNKNOWN);
-      }
+      span.setStatus(HttpStatusConverter.statusFromHttpStatus(DECORATE.status(response)));
 
       DECORATE.beforeFinish(span);
       span.end();

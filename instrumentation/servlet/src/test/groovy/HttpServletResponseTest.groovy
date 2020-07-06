@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.auto.test.AgentTestRunner
 import spock.lang.Subject
@@ -43,7 +44,6 @@ class HttpServletResponseTest extends AgentTestRunner {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    assert response.__opentelemetryContext$javax$servlet$http$HttpServletResponse != null
     TEST_WRITER.clear()
   }
 
@@ -103,7 +103,6 @@ class HttpServletResponseTest extends AgentTestRunner {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    assert response.__opentelemetryContext$javax$servlet$http$HttpServletResponse != null
     TEST_WRITER.clear()
 
     when:

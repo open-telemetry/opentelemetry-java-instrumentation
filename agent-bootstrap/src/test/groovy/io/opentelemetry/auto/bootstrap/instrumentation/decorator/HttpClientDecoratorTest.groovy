@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
-import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
@@ -29,7 +30,8 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
   @Shared
   def testUrl = new URI("http://myhost:123/somepath")
 
-  def span = Mock(Span)
+  @Shared
+  def testUserAgent = "Apache HttpClient"
 
   def "test onRequest"() {
     setup:
@@ -44,14 +46,39 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
       1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
       1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
     }
     0 * _
 
     where:
     req << [
       null,
-      [method: "test-method", url: testUrl]
+      [method: "test-method", url: testUrl, "User-Agent": testUserAgent]
     ]
+  }
+
+  def "test onRequest with mapped peer"() {
+    setup:
+    def decorator = newDecorator()
+    def req = [method: "test-method", url: testUrl, "User-Agent": testUserAgent]
+
+    when:
+    withConfigOverride(
+      "endpoint.peer.service.mapping",
+      "myhost=reservation-service") {
+      decorator.onRequest(span, req)
+    }
+
+    then:
+    if (req) {
+      1 * span.setAttribute(Tags.HTTP_METHOD, req.method)
+      1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
+      1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
+      1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute("peer.service", "reservation-service")
+      1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
+    }
+    0 * _
   }
 
   def "test url handling for #url"() {
@@ -103,31 +130,26 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    withConfigOverride(Config.HTTP_CLIENT_ERROR_STATUSES, "$errorRange") {
-      decorator.onResponse(span, resp)
-    }
+    decorator.onResponse(span, resp)
 
     then:
     if (status) {
       1 * span.setAttribute(Tags.HTTP_STATUS, status)
-    }
-    if (error) {
-      1 * span.setStatus(Status.UNKNOWN)
+      1 * span.setStatus(HttpStatusConverter.statusFromHttpStatus(status))
     }
     0 * _
 
     where:
-    status | error | errorRange | resp
-    200    | false | null       | [status: 200]
-    399    | false | null       | [status: 399]
-    400    | true  | null       | [status: 400]
-    499    | true  | null       | [status: 499]
-    500    | true  | null       | [status: 500]
-    500    | false | "400-499"  | [status: 500]
-    500    | true  | "400-500"  | [status: 500]
-    600    | false | null       | [status: 600]
-    null   | false | null       | [status: null]
-    null   | false | null       | null
+    status | resp
+    200    | [status: 200]
+    399    | [status: 399]
+    400    | [status: 400]
+    499    | [status: 499]
+    500    | [status: 500]
+    500    | [status: 500]
+    600    | [status: 600]
+    null   | [status: null]
+    null   | null
   }
 
   def "test assert null span"() {
@@ -164,6 +186,16 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected Integer status(Map m) {
         return m.status
+      }
+
+      @Override
+      protected String requestHeader(Map m, String name) {
+        return m[name]
+      }
+
+      @Override
+      protected String responseHeader(Map m, String name) {
+        return m[name]
       }
     }
   }

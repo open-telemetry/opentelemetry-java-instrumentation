@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import io.opentelemetry.auto.test.base.HttpClientTest
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.ClientConfig
@@ -56,6 +57,7 @@ abstract class JaxRsClientAsyncTest extends HttpClientTest {
         latch.countDown()
       }
     }).get()
+    response.close()
 
     // need to wait for callback to complete in case test is expecting span from it
     latch.await()

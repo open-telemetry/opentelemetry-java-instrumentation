@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.kafkaclients;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
@@ -85,6 +86,11 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         final long startTimeMillis = System.currentTimeMillis();
         spanBuilder.setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis));
         final Span span = spanBuilder.startSpan();
+        // tombstone checking logic here because it can only be inferred
+        // from the record itself
+        if (next.value() == null && !next.headers().iterator().hasNext()) {
+          span.setAttribute("tombstone", true);
+        }
         decorator.afterStart(span);
         decorator.onConsume(span, startTimeMillis, next);
         currentSpanWithScope = new SpanWithScope(span, currentContextWith(span));

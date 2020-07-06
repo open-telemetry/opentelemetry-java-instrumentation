@@ -1,7 +1,0 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
-
-dependencies {
-  compileOnly group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
-  compileOnly group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
-  compile project(':auto-tooling')
-}

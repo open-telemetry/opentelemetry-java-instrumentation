@@ -13,56 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator.SPAN_ATTRIBUTE;
+import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
 
+import io.grpc.Context;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.TracingContextUtils;
+import java.io.IOException;
 import java.util.List;
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.core.Ordered;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 
-public class HandlerMappingResourceNameFilter implements Filter {
+public class HandlerMappingResourceNameFilter extends OncePerRequestFilter implements Ordered {
   private volatile List<HandlerMapping> handlerMappings;
 
   @Override
-  public void init(final FilterConfig filterConfig) {}
+  protected void doFilterInternal(
+      final HttpServletRequest request,
+      final HttpServletResponse response,
+      final FilterChain filterChain)
+      throws ServletException, IOException {
 
-  @Override
-  public void doFilter(
-      final ServletRequest servletRequest,
-      final ServletResponse servletResponse,
-      final FilterChain filterChain) {
-    if (servletRequest instanceof HttpServletRequest && handlerMappings != null) {
-      final HttpServletRequest request = (HttpServletRequest) servletRequest;
+    final Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+    Span parentSpan = null;
+    if (parentContext instanceof Context) {
+      parentSpan = TracingContextUtils.getSpan((Context) parentContext);
+    }
+
+    if (handlerMappings != null && parentSpan != null) {
       try {
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
-          final Object parentSpan = request.getAttribute(SPAN_ATTRIBUTE);
-          if (parentSpan instanceof Span) {
-            // Let the parent span resource name be set with the attribute set in findMapping.
-            DECORATE.onRequest((Span) parentSpan, request);
-          }
+          // Let the parent span resource name be set with the attribute set in findMapping.
+          DECORATE.onRequest(parentSpan, request);
         }
-      } catch (final Exception e) {
+      } catch (final Exception ignored) {
+        // mapping.getHandler() threw exception.  Ignore
       }
+
+      filterChain.doFilter(request, response);
     }
   }
 
-  @Override
-  public void destroy() {}
-
   /**
    * When a HandlerMapping matches a request, it sets HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE
-   * as an attribute on the request. This attribute is read by
-   * SpringWebHttpServerDecorator.onRequest and set as the resource name.
+   * as an attribute on the request. This attribute is read by SpringWebMvcDecorator.onRequest and
+   * set as the resource name.
    */
   private boolean findMapping(final HttpServletRequest request) throws Exception {
     for (final HandlerMapping mapping : handlerMappings) {
@@ -76,5 +82,19 @@ public class HandlerMappingResourceNameFilter implements Filter {
 
   public void setHandlerMappings(final List<HandlerMapping> handlerMappings) {
     this.handlerMappings = handlerMappings;
+  }
+
+  @Override
+  public int getOrder() {
+    // Run after all HIGHEST_PRECEDENCE items
+    return Ordered.HIGHEST_PRECEDENCE + 1;
+  }
+
+  public static class BeanDefinition extends GenericBeanDefinition {
+    public BeanDefinition() {
+      setScope(SCOPE_SINGLETON);
+      setBeanClass(HandlerMappingResourceNameFilter.class);
+      setBeanClassName(HandlerMappingResourceNameFilter.class.getName());
+    }
   }
 }
