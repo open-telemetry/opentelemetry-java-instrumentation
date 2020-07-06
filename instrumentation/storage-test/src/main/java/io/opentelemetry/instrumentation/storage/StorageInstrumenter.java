@@ -43,12 +43,13 @@ public class StorageInstrumenter extends Default {
   public String[] helperClassNames() {
     return new String[] {
         packageName + ".StorageDecorator",
+        packageName + ".StorageKey",
     };
   }
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("java.lang.String", Integer.class.getName());
+    return singletonMap("io.opentelemetry.instrumentation.storage.StorageKey", Integer.class.getName());
   }
 
   public static class GrpcContextAdvice {
@@ -74,7 +75,7 @@ public class StorageInstrumenter extends Default {
         @Origin("#m") final String method,
         @Argument(0) final int value) {
 
-      InstrumentationContext.get(String.class, Integer.class).put(method, value + 1);
+      InstrumentationContext.get(StorageKey.class, Integer.class).put(StorageKey.INSTANCE, value + 1);
 
       return withScopedContext(DECORATE.attach(value + 1));
     }

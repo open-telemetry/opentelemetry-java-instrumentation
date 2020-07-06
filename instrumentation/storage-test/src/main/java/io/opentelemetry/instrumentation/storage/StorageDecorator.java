@@ -24,7 +24,7 @@ import io.opentelemetry.trace.Tracer;
 public class StorageDecorator extends BaseDecorator {
   public static final StorageDecorator DECORATE = new StorageDecorator();
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.storage");
 
   static final Context.Key<Integer> CONTEXT_CLIENT_SPAN_KEY =
       Context.key("some-key");

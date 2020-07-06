@@ -7,6 +7,9 @@ import org.openjdk.jmh.annotations.Fork;
     jvmArgsAppend = {
         "-javaagent:/Users/nsalnikovtarnovski/Documents/workspace/opentelemetry-auto-instr-java/opentelemetry-javaagent/build/libs/opentelemetry-javaagent-0.5.0-SNAPSHOT-all.jar",
         "-Dota.exporter=logging",
+        "-XX:+UseParallelOldGC",
+        "-Xmx2g",
+        "-XX:+AlwaysPreTouch"
 //        "-Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=debug"
     })
 public class StorageBenchmark {
