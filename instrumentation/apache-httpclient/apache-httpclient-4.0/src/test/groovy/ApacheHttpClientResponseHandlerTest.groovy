@@ -41,7 +41,6 @@ class ApacheHttpClientResponseHandlerTest extends HttpClientTest {
   def setupSpec() {
     HttpParams httpParams = client.getParams()
     HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
-    HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
   }
 
   @Override
