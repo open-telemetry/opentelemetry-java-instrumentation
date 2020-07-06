@@ -25,9 +25,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.instrumentation.springwebflux.client.HttpHeadersInjectAdapter;
-import io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator;
-import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -35,6 +32,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public class WebClientFilterInstrumentation extends Instrumenter.Default {
+
+  static final String CORE_INSTRUMENATION_PACKAGE_NAME =
+      "io.opentelemetry.instrumentation.springwebflux.client";
 
   public WebClientFilterInstrumentation() {
     super("spring-webflux", "spring-webflux-client");
@@ -49,9 +49,9 @@ public class WebClientFilterInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      SpringWebfluxHttpClientDecorator.class.getName(),
-      HttpHeadersInjectAdapter.class.getName(),
-      WebClientTracingFilter.class.getName()
+      CORE_INSTRUMENATION_PACKAGE_NAME + ".SpringWebfluxHttpClientDecorator",
+      CORE_INSTRUMENATION_PACKAGE_NAME + ".HttpHeadersInjectAdapter",
+      CORE_INSTRUMENATION_PACKAGE_NAME + ".WebClientTracingFilter"
     };
   }
 
