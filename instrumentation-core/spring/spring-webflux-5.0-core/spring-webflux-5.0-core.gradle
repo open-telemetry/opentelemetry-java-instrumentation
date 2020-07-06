@@ -2,7 +2,7 @@ ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-group = 'io.opentelemetry.instrumentation'
+group = 'io.opentelemetry.instrumentation.spring.webflux'
 version = '0.0.1-SNAPSHOT'
 
 apply from: "$rootDir/gradle/java.gradle"
@@ -16,9 +16,9 @@ testSets {
 }
 
 dependencies {
-  api project(':auto-bootstrap')
+  compileOnly project(':auto-bootstrap')
   
-  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
-  compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
+  api group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
+  api group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
   api deps.opentelemetryApi
 }

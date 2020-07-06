@@ -42,6 +42,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
     final Span span =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
+    DECORATE.afterStart(span);
 
     try (final Scope scope = TRACER.withSpan(span)) {
       final ClientRequest mutatedRequest =
