@@ -30,7 +30,7 @@ In the example above this is `ApplicationFilterChain.doFilter(ServletRequest, Se
 Let us call this first servlet specific method an "entry point".
 This is the main target for `Servlet3Instrumentation` and `Servlet2Instrumentation` instrumenters:
 
-`public void javax.servlet.FilterChain#doFilter(ServletRequest, ServletResponse)` 
+`public void javax.servlet.FilterChain#doFilter(ServletRequest, ServletResponse)`
 
 `public void javax.servlet.http.HttpServlet#service(ServletRequest, ServletResponse)`.
 
@@ -39,7 +39,7 @@ the second method as instrumentation entry point.
 These instrumentations are located in two separate submodules `request-3.0` and `request-2.3`, respectively,
 because they and corresponding tests depend on different versions of servlet specification.
 
-Next, request passes several other methods from Servlet specification, such as 
+Next, request passes several other methods from Servlet specification, such as
 
 `protected void javax.servlet.http.HttpServlet#service(HttpServletRequest, HttpServletResponse)` or
 
@@ -70,7 +70,7 @@ Because their root spans will all have the same named based on common entry poin
 In order to alleviate this problem, instrumentations for specific frameworks, such as Spring MVC here,
 _update_ name of the span corresponding to the entry point.
 Each framework instrumentation can decide what is the best span name based on framework implementation details.
-Of course, still adhering to OpenTelemetry 
+Of course, still adhering to OpenTelemetry
 [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md).
 
 ## Additional instrumentations

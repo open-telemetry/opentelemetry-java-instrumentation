@@ -29,7 +29,8 @@ jar {
 CopySpec isolateSpec(Collection<Task> sourceTasks) {
   return copySpec {
     from(sourceTasks.collect { zipTree(it.archiveFile) }) {
-      into 'auto-tooling-and-instrumentation.isolated'
+      // important to keep prefix 'inst' short, as it is prefixed to lots of strings in runtime mem
+      into 'inst'
       rename '(^.*)\\.class$', '$1.classdata'
       // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
       rename '^LICENSE$', 'LICENSE.renamed'

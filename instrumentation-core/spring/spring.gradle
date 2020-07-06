@@ -1,0 +1,32 @@
+plugins {
+	id 'org.springframework.boot' version '2.3.0.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+}
+
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+group = 'io.opentelemetry.instrumentation'
+version = '0.0.1-SNAPSHOT'
+
+apply from: "$rootDir/gradle/java.gradle"
+
+sourceCompatibility = '8'
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	
+	compileOnly deps.opentelemetryApi
+	compileOnly	deps.opentelemetrySdk 
+	compileOnly "io.opentelemetry:opentelemetry-exporters-logging:0.5.0"
+}
+
+test {
+	useJUnitPlatform()
+}

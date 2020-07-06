@@ -34,15 +34,3 @@ check.dependsOn checkstyleTasks
 tasks.withType(Test).configureEach {
   mustRunAfter checkstyleTasks
 }
-
-// Verification seems broken on Java 9.
-apply plugin: 'com.github.sherter.google-java-format'
-
-googleJavaFormat {
-  source = sourceSets*.allJava
-  exclude '**/build/**/*.java'
-}
-
-tasks.withType(Checkstyle).configureEach {
-  mustRunAfter verifyGoogleJavaFormat
-}

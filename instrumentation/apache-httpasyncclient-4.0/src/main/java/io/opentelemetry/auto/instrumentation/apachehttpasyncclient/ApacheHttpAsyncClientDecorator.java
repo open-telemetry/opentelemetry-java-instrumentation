@@ -22,15 +22,14 @@ import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
+import org.apache.http.HttpMessage;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.RequestLine;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
 
-public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequest, HttpContext> {
+public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
 
   public static final ApacheHttpAsyncClientDecorator DECORATE =
       new ApacheHttpAsyncClientDecorator();
@@ -64,20 +63,23 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
   }
 
   @Override
-  protected Integer status(final HttpContext context) {
-    final Object responseObject = context.getAttribute(HttpCoreContext.HTTP_RESPONSE);
-    if (responseObject instanceof HttpResponse) {
-      final StatusLine statusLine = ((HttpResponse) responseObject).getStatusLine();
-      if (statusLine != null) {
-        return statusLine.getStatusCode();
-      }
-    }
-    return null;
+  protected Integer status(final HttpResponse response) {
+    final StatusLine statusLine = response.getStatusLine();
+    return statusLine != null ? statusLine.getStatusCode() : null;
   }
 
   @Override
-  protected String userAgent(HttpRequest httpRequest) {
-    final Header header = httpRequest.getFirstHeader(USER_AGENT);
+  protected String requestHeader(HttpRequest request, String name) {
+    return header(request, name);
+  }
+
+  @Override
+  protected String responseHeader(HttpResponse response, String name) {
+    return header(response, name);
+  }
+
+  private static String header(HttpMessage message, String name) {
+    Header header = message.getFirstHeader(name);
     return header != null ? header.getValue() : null;
   }
 }

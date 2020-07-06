@@ -33,14 +33,21 @@ object AkkaHttpTestWebServer {
   implicit val executionContext = system.dispatcher
 
   val exceptionHandler = ExceptionHandler {
-    case ex: Exception => complete(HttpResponse(status = EXCEPTION.getStatus).withEntity(ex.getMessage))
+    case ex: Exception =>
+      complete(
+        HttpResponse(status = EXCEPTION.getStatus).withEntity(ex.getMessage)
+      )
   }
 
   val route = { //handleExceptions(exceptionHandler) {
     path(SUCCESS.rawPath) {
-      complete(HttpResponse(status = SUCCESS.getStatus).withEntity(SUCCESS.getBody))
+      complete(
+        HttpResponse(status = SUCCESS.getStatus).withEntity(SUCCESS.getBody)
+      )
     } ~ path(QUERY_PARAM.rawPath) {
-      complete(HttpResponse(status = QUERY_PARAM.getStatus).withEntity(SUCCESS.getBody))
+      complete(
+        HttpResponse(status = QUERY_PARAM.getStatus).withEntity(SUCCESS.getBody)
+      )
     } ~ path(REDIRECT.rawPath) {
       redirect(Uri(REDIRECT.getBody), StatusCodes.Found)
     } ~ path(ERROR.rawPath) {
@@ -55,7 +62,8 @@ object AkkaHttpTestWebServer {
   def start(port: Int): Unit = synchronized {
     if (null == binding) {
       import scala.concurrent.duration._
-      binding = Await.result(Http().bindAndHandle(route, "localhost", port), 10 seconds)
+      binding =
+        Await.result(Http().bindAndHandle(route, "localhost", port), 10 seconds)
     }
   }
 

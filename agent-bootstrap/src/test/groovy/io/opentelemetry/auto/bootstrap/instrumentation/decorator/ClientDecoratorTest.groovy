@@ -27,8 +27,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
 
   private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
-  def span = Mock(Span)
-
   def "test afterStart"() {
     setup:
     def decorator = newDecorator((String) serviceName)

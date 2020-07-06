@@ -24,6 +24,7 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
+import test.boot.SecurityConfig
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -37,7 +38,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
 
   @Override
   ConfigurableApplicationContext startServer(int port) {
-    def app = new SpringApplication(FilteredAppConfig)
+    def app = new SpringApplication(FilteredAppConfig, SecurityConfig)
     app.setDefaultProperties(singletonMap("server.port", port))
     def context = app.run()
     return context

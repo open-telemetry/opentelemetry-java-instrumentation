@@ -569,7 +569,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           parent()
           operationName expectedOperationName()
           spanKind SERVER
-          errored false
+          errored true
           tags {
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long

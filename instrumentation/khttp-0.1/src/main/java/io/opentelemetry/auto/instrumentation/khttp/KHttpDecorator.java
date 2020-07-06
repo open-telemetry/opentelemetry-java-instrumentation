@@ -45,8 +45,13 @@ public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response
   }
 
   @Override
-  protected String userAgent(RequestWrapper requestWrapper) {
-    // TODO: Find out how to get user agent.
+  protected String requestHeader(RequestWrapper requestWrapper, String name) {
+    // TODO: Find out how to get request header.
     return null;
+  }
+
+  @Override
+  protected String responseHeader(Response response, String name) {
+    return response.getHeaders().get(name);
   }
 }

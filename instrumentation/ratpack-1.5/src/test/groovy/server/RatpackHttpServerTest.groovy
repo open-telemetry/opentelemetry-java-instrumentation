@@ -28,6 +28,7 @@ import ratpack.test.embed.EmbeddedApp
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -125,7 +126,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
     trace.span(index) {
       operationName endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
       spanKind INTERNAL
-      errored endpoint == ERROR || endpoint == EXCEPTION
+      errored endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
       childOf((SpanData) parent)
       tags {
         "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional

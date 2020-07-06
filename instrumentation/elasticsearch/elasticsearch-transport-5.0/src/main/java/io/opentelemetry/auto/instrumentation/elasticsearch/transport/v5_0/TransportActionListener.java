@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.elasticsearch.transport.v5_0;
 
-import static io.opentelemetry.auto.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;

@@ -20,6 +20,7 @@ import static io.opentelemetry.OpenTelemetry.getPropagators;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
@@ -58,7 +59,15 @@ public abstract class BaseDecorator {
   public Span onError(final Span span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      span.setStatus(Status.UNKNOWN);
+      onComplete(span, Status.UNKNOWN, throwable);
+    }
+    return span;
+  }
+
+  public Span onComplete(Span span, Status status, Throwable throwable) {
+    assert span != null;
+    span.setStatus(status);
+    if (throwable != null) {
       addThrowable(
           span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }
@@ -68,8 +77,18 @@ public abstract class BaseDecorator {
   public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
-      onPeerConnection(span, remoteConnection.getAddress());
-
+      final InetAddress remoteAddress = remoteConnection.getAddress();
+      if (remoteAddress != null) {
+        onPeerConnection(span, remoteAddress);
+      } else {
+        // Failed DNS lookup, the host string is the name.
+        final String hostString = remoteConnection.getHostString();
+        span.setAttribute(MoreTags.NET_PEER_NAME, hostString);
+        String peerService = mapToPeer(hostString);
+        if (peerService != null) {
+          span.setAttribute("peer.service", peerService);
+        }
+      }
       span.setAttribute(MoreTags.NET_PEER_PORT, remoteConnection.getPort());
     }
     return span;
@@ -77,9 +96,18 @@ public abstract class BaseDecorator {
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
-    if (remoteAddress != null) {
+    final String hostName = remoteAddress.getHostName();
+    if (!hostName.equals(remoteAddress.getHostAddress())) {
       span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
-      span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
+    }
+    span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
+
+    String peerService = mapToPeer(hostName);
+    if (peerService == null) {
+      peerService = mapToPeer(remoteAddress.getHostAddress());
+    }
+    if (peerService != null) {
+      span.setAttribute("peer.service", peerService);
     }
     return span;
   }
@@ -170,5 +198,13 @@ public abstract class BaseDecorator {
         getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
     final Span span = getSpan(context);
     return span.getContext();
+  }
+
+  protected static String mapToPeer(String endpoint) {
+    if (endpoint == null) {
+      return null;
+    }
+
+    return Config.get().getEndpointPeerServiceMapping().get(endpoint);
   }
 }

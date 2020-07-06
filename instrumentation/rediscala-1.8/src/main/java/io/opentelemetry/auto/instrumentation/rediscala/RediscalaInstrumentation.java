@@ -18,6 +18,7 @@ package io.opentelemetry.auto.instrumentation.rediscala;
 
 import static io.opentelemetry.auto.instrumentation.rediscala.RediscalaClientDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.rediscala.RediscalaClientDecorator.TRACER;
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
@@ -49,6 +50,11 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
 
   public RediscalaInstrumentation() {
     super("rediscala", "redis");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("redis.Request");
   }
 
   @Override

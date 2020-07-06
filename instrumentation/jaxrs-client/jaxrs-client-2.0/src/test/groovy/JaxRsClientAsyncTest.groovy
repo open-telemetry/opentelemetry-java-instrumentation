@@ -57,6 +57,7 @@ abstract class JaxRsClientAsyncTest extends HttpClientTest {
         latch.countDown()
       }
     }).get()
+    response.close()
 
     // need to wait for callback to complete in case test is expecting span from it
     latch.await()

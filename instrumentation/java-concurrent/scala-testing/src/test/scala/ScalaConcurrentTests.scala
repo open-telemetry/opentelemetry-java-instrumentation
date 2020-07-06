@@ -24,11 +24,12 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
-  val TRACER: Tracer = OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
+  val TRACER: Tracer =
+    OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
 
   /**
-   * @return Number of expected spans in the trace
-   */
+    * @return Number of expected spans in the trace
+    */
   def traceWithFutureAndCallbacks() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)
@@ -71,14 +72,15 @@ class ScalaConcurrentTests {
         1
       }
       goodFuture onSuccess {
-        case _ => Future {
-          2
-        } onSuccess {
-          case _ => {
-            tracedChild("callback")
-            latch.countDown()
+        case _ =>
+          Future {
+            2
+          } onSuccess {
+            case _ => {
+              tracedChild("callback")
+              latch.countDown()
+            }
           }
-        }
       }
 
       latch.await()
@@ -89,8 +91,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-   * @return Number of expected spans in the trace
-   */
+    * @return Number of expected spans in the trace
+    */
   def traceWithPromises() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)
@@ -137,26 +139,22 @@ class ScalaConcurrentTests {
   }
 
   /**
-   * @return Number of expected spans in the trace
-   */
+    * @return Number of expected spans in the trace
+    */
   def tracedWithFutureFirstCompletions() {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)
     try {
-      val completedVal = Future.firstCompletedOf(
-        List(
-          Future {
-            tracedChild("timeout1")
-            false
-          },
-          Future {
-            tracedChild("timeout2")
-            false
-          },
-          Future {
-            tracedChild("timeout3")
-            true
-          }))
+      val completedVal = Future.firstCompletedOf(List(Future {
+        tracedChild("timeout1")
+        false
+      }, Future {
+        tracedChild("timeout2")
+        false
+      }, Future {
+        tracedChild("timeout3")
+        true
+      }))
       Await.result(completedVal, 30 seconds)
     } finally {
       parentSpan.end()
@@ -165,8 +163,8 @@ class ScalaConcurrentTests {
   }
 
   /**
-   * @return Number of expected spans in the trace
-   */
+    * @return Number of expected spans in the trace
+    */
   def tracedTimeout(): Integer = {
     val parentSpan = TRACER.spanBuilder("parent").startSpan()
     val parentScope = TRACER.withSpan(parentSpan)

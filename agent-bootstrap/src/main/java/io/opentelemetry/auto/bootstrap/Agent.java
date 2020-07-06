@@ -148,8 +148,7 @@ public class Agent {
   private static synchronized void startAgent(final Instrumentation inst, final URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
       try {
-        final ClassLoader agentClassLoader =
-            createAgentClassLoader("auto-tooling-and-instrumentation.isolated", bootstrapURL);
+        final ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapURL);
         final Class<?> agentInstallerClass =
             agentClassLoader.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");
         final Method agentInstallerMethod =

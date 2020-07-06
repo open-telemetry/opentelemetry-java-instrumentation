@@ -1,0 +1,40 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = 'io.vertx'
+    module = 'vertx-web'
+    versions = "[3.0.0,)"
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+ext.vertxVersion = '3.0.0'
+
+dependencies {
+  compileOnly group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+
+  //We need both version as different versions of Vert.x use different versions of Netty
+  testCompile project(':instrumentation:netty:netty-4.0')
+  testCompile project(':instrumentation:netty:netty-4.1')
+  testCompile project(':instrumentation:jdbc')
+  testCompile project(':instrumentation:annotations')
+
+  testCompile group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+  testCompile group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
+
+  // Vert.x 4.0 is incompatible with our tests.
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-web', version: '3.+'
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
+}

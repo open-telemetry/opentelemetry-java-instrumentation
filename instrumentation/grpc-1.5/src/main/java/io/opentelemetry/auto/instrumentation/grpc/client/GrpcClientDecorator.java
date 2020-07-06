@@ -16,10 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.grpc.client;
 
+import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
+import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 
 public class GrpcClientDecorator extends ClientDecorator {
@@ -28,14 +29,14 @@ public class GrpcClientDecorator extends ClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.grpc-1.5");
 
   public Span onClose(final Span span, final io.grpc.Status status) {
+    onComplete(span, GrpcHelper.statusFromGrpcStatus(status), status.getCause());
+    return span;
+  }
 
-    span.setAttribute("status.code", status.getCode().name());
-    span.setAttribute("status.description", status.getDescription());
-
-    onError(span, status.getCause());
-    if (!status.isOk()) {
-      span.setStatus(Status.UNKNOWN);
-    }
+  @Override
+  public Span onError(Span span, Throwable throwable) {
+    assert span != null;
+    onClose(span, Status.fromThrowable(throwable));
     return span;
   }
 }

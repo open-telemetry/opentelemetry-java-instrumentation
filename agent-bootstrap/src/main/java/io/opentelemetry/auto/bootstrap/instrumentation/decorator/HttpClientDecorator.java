@@ -20,7 +20,6 @@ import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -40,7 +39,9 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
   protected abstract Integer status(RESPONSE response);
 
-  protected abstract String userAgent(REQUEST request);
+  protected abstract String requestHeader(REQUEST request, String name);
+
+  protected abstract String responseHeader(RESPONSE response, String name);
 
   public Span getOrCreateSpan(REQUEST request, Tracer tracer) {
     return getOrCreateSpan(spanNameForRequest(request), tracer);
@@ -59,7 +60,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     if (request != null) {
       span.setAttribute(Tags.HTTP_METHOD, method(request));
 
-      final String userAgent = userAgent(request);
+      final String userAgent = requestHeader(request, USER_AGENT);
       if (userAgent != null) {
         SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
       }
@@ -76,6 +77,10 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           if (url.getHost() != null) {
             urlBuilder.append(url.getHost());
             span.setAttribute(MoreTags.NET_PEER_NAME, url.getHost());
+            String peerService = mapToPeer(url.getHost());
+            if (peerService != null) {
+              span.setAttribute("peer.service", peerService);
+            }
             if (url.getPort() > 0) {
               span.setAttribute(MoreTags.NET_PEER_PORT, url.getPort());
               if (url.getPort() != 80 && url.getPort() != 443) {
@@ -119,10 +124,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       final Integer status = status(response);
       if (status != null) {
         span.setAttribute(Tags.HTTP_STATUS, status);
-
-        if (Config.get().getHttpClientErrorStatuses().get(status)) {
-          span.setStatus(Status.UNKNOWN);
-        }
+        span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
       }
     }
     return span;

@@ -20,7 +20,6 @@ import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
@@ -120,10 +119,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
       final Integer status = status(response);
       if (status != null) {
         span.setAttribute(Tags.HTTP_STATUS, status);
-
-        if (Config.get().getHttpServerErrorStatuses().get(status)) {
-          span.setStatus(Status.UNKNOWN);
-        }
+        span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
       }
     }
     return span;

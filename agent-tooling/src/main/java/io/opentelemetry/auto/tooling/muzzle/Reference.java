@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -612,7 +613,7 @@ public class Reference {
 
   public static class Builder {
     private final Set<Source> sources = new HashSet<>();
-    private final Set<Flag> flags = new HashSet<>();
+    private final Set<Flag> flags = EnumSet.noneOf(Flag.class);
     private final String className;
     private String superName = null;
     private final Set<String> interfaces = new HashSet<>();
