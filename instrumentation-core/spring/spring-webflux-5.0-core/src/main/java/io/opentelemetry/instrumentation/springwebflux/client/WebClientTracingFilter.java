@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+package io.opentelemetry.instrumentation.springwebflux.client;
 
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
+import static io.opentelemetry.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.grpc.Context;
@@ -42,7 +42,6 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
     final Span span =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-    DECORATE.afterStart(span);
 
     try (final Scope scope = TRACER.withSpan(span)) {
       final ClientRequest mutatedRequest =

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+package io.opentelemetry.instrumentation.springwebflux.client;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.springframework.http.HttpHeaders;
