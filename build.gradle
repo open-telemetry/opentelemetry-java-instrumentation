@@ -13,7 +13,7 @@ plugins {
   id "com.github.johnrengelman.shadow" version "5.2.0"
 
   id "com.diffplug.gradle.spotless" version "4.3.0"
-  id "com.github.spotbugs" version "4.0.1"
+  id "com.github.spotbugs" version "4.2.1"
 }
 
 release {

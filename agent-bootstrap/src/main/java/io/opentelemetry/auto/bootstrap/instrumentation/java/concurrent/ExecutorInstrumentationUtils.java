@@ -18,6 +18,7 @@ package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent.AdviceUtils.TRACER;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.trace.Span;
@@ -61,16 +62,16 @@ public class ExecutorInstrumentationUtils {
   /**
    * Create task state given current scope.
    *
+   * @param <T> task class type
    * @param contextStore context storage
    * @param task task instance
-   * @param span current span
-   * @param <T> task class type
+   * @param context current span
    * @return new state
    */
   public static <T> State setupState(
-      final ContextStore<T, State> contextStore, final T task, final Span span) {
+      final ContextStore<T, State> contextStore, final T task, final Context context) {
     final State state = contextStore.putIfAbsent(task, State.FACTORY);
-    state.setParentSpan(span);
+    state.setParentSpan(context);
     return state;
   }
 
@@ -90,7 +91,7 @@ public class ExecutorInstrumentationUtils {
       but this may potentially lead to memory leaks if callers do not properly handle
       exceptions.
        */
-      state.clearParentSpan();
+      state.clearParentContext();
     }
   }
 
