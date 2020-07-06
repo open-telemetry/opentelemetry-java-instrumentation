@@ -17,16 +17,11 @@
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
-import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
-import java.io.IOException;
-import javax.servlet.Filter;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,39 +59,6 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
   */
   public boolean needsRescoping(Context attachedContext) {
     return !sameTrace(getSpan(Context.current()), getSpan(attachedContext));
-  }
-
-  @Override
-  public void onRequest(Span span, HttpServletRequest request) {
-    super.onRequest(span, request);
-    onContext(span, request, request.getServletContext());
-  }
-
-  /**
-   * This method executes the filter created by
-   * io.opentelemetry.auto.instrumentation.springwebmvc.DispatcherServletInstrumentation$HandlerMappingAdvice.
-   * This was easier and less "hacky" than other ways to add the filter to the front of the filter
-   * chain.
-   */
-  // TODO review this hacky-hacky
-  private void onContext(
-      final Span span, final HttpServletRequest request, final ServletContext servletContext) {
-    if (servletContext == null) {
-      // some frameworks (jetty) may return a null context.
-      return;
-    }
-    final Object attribute = servletContext.getAttribute("io.opentelemetry.auto.dispatcher-filter");
-    if (attribute instanceof Filter) {
-      final Object priorAttr = request.getAttribute(CONTEXT_ATTRIBUTE);
-      request.setAttribute(CONTEXT_ATTRIBUTE, withSpan(span, Context.current()));
-      try {
-        ((Filter) attribute).doFilter(request, null, null);
-      } catch (final IOException | ServletException e) {
-        log.debug("Exception unexpectedly thrown by filter", e);
-      } finally {
-        request.setAttribute(CONTEXT_ATTRIBUTE, priorAttr);
-      }
-    }
   }
 
   private static boolean sameTrace(final Span oneSpan, final Span otherSpan) {

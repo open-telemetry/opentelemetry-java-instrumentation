@@ -26,16 +26,17 @@ import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
-import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicBoolean
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -152,6 +153,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 //    QUERY_FRAGMENT_PARAM("query/fragment?some=query#some-fragment", 200, "some=query#some-fragment"),
     PATH_PARAM("path/123/param", 200, "123"),
     AUTH_REQUIRED("authRequired", 200, null),
+    LOGIN("login", 302, null),
 
     private final URI uriObj
     private final String path
@@ -168,7 +170,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       this.fragment = uriObj.fragment
       this.status = status
       this.body = body
-      this.errored = status >= 500
+      this.errored = status >= 400
     }
 
     String getPath() {
@@ -199,7 +201,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
   }
 
-  Request.Builder request(ServerEndpoint uri, String method, String body) {
+  Request.Builder request(ServerEndpoint uri, String method, RequestBody body) {
     def url = HttpUrl.get(uri.resolvePath(address)).newBuilder()
       .query(uri.query)
       .fragment(uri.fragment)

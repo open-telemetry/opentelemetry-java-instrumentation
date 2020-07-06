@@ -105,6 +105,25 @@ class BaseDecoratorTest extends AgentSpecification {
     error << [new Exception(), null]
   }
 
+  def "test onComplete"() {
+    when:
+    decorator.onComplete(span, status, error)
+
+    then:
+    1 * span.setStatus(status)
+    if (error) {
+      1 * span.setAttribute(MoreTags.ERROR_TYPE, error.getClass().getName())
+      1 * span.setAttribute(MoreTags.ERROR_STACK, _)
+      1 * span.setAttribute(MoreTags.ERROR_MSG, null)
+    }
+    0 * _
+
+    where:
+    error           | status
+    new Exception() | Status.INTERNAL
+    null            | Status.OK
+  }
+
   def "test beforeFinish"() {
     when:
     decorator.beforeFinish(span)

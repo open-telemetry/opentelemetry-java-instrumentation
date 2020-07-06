@@ -30,7 +30,7 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
 
-  compile project(':instrumentation:elasticsearch:elasticsearch-common')
+  compile project(':instrumentation:elasticsearch:elasticsearch-transport-common')
 
   testCompile project(':instrumentation:apache-httpasyncclient-4.0')
   testCompile project(':instrumentation:netty:netty-4.1')

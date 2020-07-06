@@ -203,6 +203,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           operationName "/**"
           spanKind SERVER
           parent()
+          errored true
           tags {
             "$MoreTags.NET_PEER_IP" "127.0.0.1"
             "$MoreTags.NET_PEER_PORT" Long

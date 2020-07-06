@@ -44,7 +44,7 @@ dependencies {
 
   implementation deps.groovy
 
-  testImplementation project(':instrumentation:trace-annotation')
+  testImplementation project(':instrumentation:annotations')
 
   //TODO replace with Otel WithSpan
   testImplementation('io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2') {

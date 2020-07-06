@@ -41,6 +41,7 @@ public class AgentClassLoader extends URLClassLoader {
   // As a workaround, we keep a reference to the bootstrap jar
   // to use only for resource lookups.
   private final BootstrapClassLoaderProxy bootstrapProxy;
+
   /**
    * Construct a new AgentClassLoader
    *
@@ -59,20 +60,13 @@ public class AgentClassLoader extends URLClassLoader {
             ? new BootstrapClassLoaderProxy(new URL[0])
             : new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation});
 
+    InternalJarURLHandler internalJarURLHandler =
+        new InternalJarURLHandler(internalJarFileName, bootstrapJarLocation);
     try {
       // The fields of the URL are mostly dummy.  InternalJarURLHandler is the only important
       // field.  If extending this class from Classloader instead of URLClassloader required less
       // boilerplate it could be used and the need for dummy fields would be reduced
-
-      final URL internalJarURL =
-          new URL(
-              "x-internal-jar",
-              null,
-              0,
-              "/",
-              new InternalJarURLHandler(internalJarFileName, bootstrapJarLocation));
-
-      addURL(internalJarURL);
+      addURL(new URL("x-internal-jar", null, 0, "/", internalJarURLHandler));
     } catch (final MalformedURLException e) {
       // This can't happen with current URL constructor
       log.error("URL malformed.  Unsupported JDK?", e);

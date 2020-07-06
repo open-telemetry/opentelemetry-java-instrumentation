@@ -45,7 +45,12 @@ public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConne
   }
 
   @Override
-  protected String userAgent(HttpURLConnection httpURLConnection) {
-    return httpURLConnection.getRequestProperty(USER_AGENT);
+  protected String requestHeader(HttpURLConnection httpURLConnection, String name) {
+    return httpURLConnection.getRequestProperty(name);
+  }
+
+  @Override
+  protected String responseHeader(Integer integer, String name) {
+    return null;
   }
 }

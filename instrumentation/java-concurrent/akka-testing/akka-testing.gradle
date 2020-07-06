@@ -10,5 +10,5 @@ dependencies {
   testCompile group: 'com.typesafe.akka', name: 'akka-testkit_2.11', version: '2.3.16'
 
   testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:annotations')
 }

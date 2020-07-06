@@ -19,7 +19,6 @@ package io.opentelemetry.auto.instrumentation.springwebmvc;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -28,21 +27,17 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.servlet.ServletContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.context.ApplicationContext;
-import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -56,13 +51,6 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.web.servlet.DispatcherServlet");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(
-        "org.springframework.web.servlet.DispatcherServlet",
-        packageName + ".HandlerMappingResourceNameFilter");
   }
 
   @Override
@@ -106,23 +94,14 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void afterRefresh(
-        @Advice.This final DispatcherServlet dispatcher,
         @Advice.Argument(0) final ApplicationContext springCtx,
-        @Advice.FieldValue("handlerMappings") final List<HandlerMapping> handlerMappings,
-        @Advice.Thrown final Throwable throwable) {
-      final ServletContext servletContext = springCtx.getBean(ServletContext.class);
-      if (handlerMappings != null && servletContext != null) {
-        final ContextStore<DispatcherServlet, HandlerMappingResourceNameFilter> contextStore =
-            InstrumentationContext.get(
-                DispatcherServlet.class, HandlerMappingResourceNameFilter.class);
-        HandlerMappingResourceNameFilter filter = contextStore.get(dispatcher);
-        if (filter == null) {
-          filter = new HandlerMappingResourceNameFilter();
-          contextStore.put(dispatcher, filter);
+        @Advice.FieldValue("handlerMappings") final List<HandlerMapping> handlerMappings) {
+      if (springCtx.containsBean("otelAutoDispatcherFilter")) {
+        final HandlerMappingResourceNameFilter filter =
+            (HandlerMappingResourceNameFilter) springCtx.getBean("otelAutoDispatcherFilter");
+        if (handlerMappings != null && filter != null) {
+          filter.setHandlerMappings(handlerMappings);
         }
-        filter.setHandlerMappings(handlerMappings);
-        // attribute used by Servlet3Decorator.onContext
-        servletContext.setAttribute("io.opentelemetry.auto.dispatcher-filter", filter);
       }
     }
   }

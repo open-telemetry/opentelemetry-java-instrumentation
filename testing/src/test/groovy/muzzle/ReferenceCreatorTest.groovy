@@ -29,20 +29,18 @@ class ReferenceCreatorTest extends AgentTestRunner {
     Map<String, Reference> references = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.getName(), this.getClass().getClassLoader())
 
     expect:
-    references.get('java.lang.Object') != null
-    references.get('java.lang.String') != null
     references.get('muzzle.TestClasses$MethodBodyAdvice$A') != null
     references.get('muzzle.TestClasses$MethodBodyAdvice$B') != null
     references.get('muzzle.TestClasses$MethodBodyAdvice$SomeInterface') != null
     references.get('muzzle.TestClasses$MethodBodyAdvice$SomeImplementation') != null
-    references.keySet().size() == 6
+    references.keySet().size() == 4
 
     // interface flags
     references.get('muzzle.TestClasses$MethodBodyAdvice$B').getFlags().contains(Reference.Flag.NON_INTERFACE)
     references.get('muzzle.TestClasses$MethodBodyAdvice$SomeInterface').getFlags().contains(Reference.Flag.INTERFACE)
 
     // class access flags
-    references.get('java.lang.Object').getFlags().contains(Reference.Flag.PUBLIC)
+    references.get('muzzle.TestClasses$MethodBodyAdvice$A').getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
     references.get('muzzle.TestClasses$MethodBodyAdvice$B').getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
 
     // method refs

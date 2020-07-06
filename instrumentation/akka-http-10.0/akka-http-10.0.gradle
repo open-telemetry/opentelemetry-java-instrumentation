@@ -78,7 +78,7 @@ dependencies {
 
   testCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
-  testCompile project(':instrumentation:trace-annotation')
+  testCompile project(':instrumentation:annotations')
 
   lagomTestCompile project(':instrumentation:akka-http-10.0')
 

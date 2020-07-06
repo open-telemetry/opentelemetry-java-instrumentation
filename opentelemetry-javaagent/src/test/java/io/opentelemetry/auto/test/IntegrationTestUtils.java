@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,13 +71,8 @@ public class IntegrationTestUtils {
   /** Returns the URL to the jar the agent appended to the bootstrap classpath * */
   public static ClassLoader getBootstrapProxy() throws Exception {
     final ClassLoader agentClassLoader = getAgentClassLoader();
-    final Field field = agentClassLoader.getClass().getDeclaredField("bootstrapProxy");
-    try {
-      field.setAccessible(true);
-      return (ClassLoader) field.get(agentClassLoader);
-    } finally {
-      field.setAccessible(false);
-    }
+    final Method getBootstrapProxy = agentClassLoader.getClass().getMethod("getBootstrapProxy");
+    return (ClassLoader) getBootstrapProxy.invoke(agentClassLoader);
   }
 
   /** See {@link IntegrationTestUtils#createJarWithClasses(String, Class[])} */
