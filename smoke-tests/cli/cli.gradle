@@ -15,7 +15,7 @@ jar {
 dependencies {
   compile deps.opentelemetryApi
 
-  testCompile project(':smoke-tests')
+  testImplementation project(':smoke-tests')
 }
 
 tasks.withType(Test).configureEach {

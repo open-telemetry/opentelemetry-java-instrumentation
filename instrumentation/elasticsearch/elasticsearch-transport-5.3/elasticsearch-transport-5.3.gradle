@@ -30,22 +30,22 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
 
-  compile project(':instrumentation:elasticsearch:elasticsearch-transport-common')
+  implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common')
 
-  testCompile project(':instrumentation:apache-httpasyncclient-4.0')
-  testCompile project(':instrumentation:netty:netty-4.1')
-  testCompile project(':instrumentation:spring-data-1.8')
+  testImplementation project(':instrumentation:apache-httpasyncclient-4.0')
+  testImplementation project(':instrumentation:netty:netty-4.1')
+  testImplementation project(':instrumentation:spring-data-1.8')
 
-  testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
-  testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 
-  testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.3.0'
-  testCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
+  testImplementation group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.3.0'
+  testImplementation group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
 
   // Unfortunately this will bump the transport version up to 5.5.0.
-  testCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.0.RELEASE'
+  testImplementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.0.RELEASE'
 
-  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.+'
-  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.+'
-  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.+'
+  latestDepTestImplementation group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.+'
+  latestDepTestImplementation group: 'org.elasticsearch.client', name: 'transport', version: '5.+'
+  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.+'
 }

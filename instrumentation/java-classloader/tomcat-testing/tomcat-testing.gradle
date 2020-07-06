@@ -19,11 +19,11 @@ testSets {
 }
 
 dependencies {
-  testCompile project(':instrumentation:java-classloader')
+  testImplementation project(':instrumentation:java-classloader')
 
   //This seems to be the earliest version that has org.apache.catalina.loader.WebappClassLoaderBase
   //Older versions would require slightly different instrumentation.
-  testCompile group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
+  testImplementation group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
 
-  latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '+'
+  latestDepTestImplementation group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '+'
 }

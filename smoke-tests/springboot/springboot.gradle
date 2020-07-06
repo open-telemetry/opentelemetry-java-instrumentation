@@ -17,7 +17,7 @@ jar {
 dependencies {
   compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.18.RELEASE'
 
-  testCompile project(':smoke-tests')
+  testImplementation project(':smoke-tests')
 }
 
 tasks.withType(Test).configureEach {

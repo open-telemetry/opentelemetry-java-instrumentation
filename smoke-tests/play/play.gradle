@@ -49,7 +49,7 @@ dependencies {
   play "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
   play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
-  testCompile project(':smoke-tests')
+  testImplementation project(':smoke-tests')
 }
 
 tasks.withType(Test).configureEach {
