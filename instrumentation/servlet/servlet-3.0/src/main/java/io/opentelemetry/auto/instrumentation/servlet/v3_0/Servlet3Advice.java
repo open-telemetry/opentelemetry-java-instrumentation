@@ -47,7 +47,7 @@ public class Servlet3Advice {
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    Context attachedContext = TRACER.getServerSpanContext(httpServletRequest);
+    Context attachedContext = TRACER.getServerContext(httpServletRequest);
     if (attachedContext != null) {
       if (TRACER.needsRescoping(attachedContext)) {
         scope = withScopedContext(attachedContext);

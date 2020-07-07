@@ -46,12 +46,10 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     Span span = TRACER.startSpan((HttpRequest) msg, channel, "netty.request", null);
     try (final Scope ignored = TRACER.startScope(span, channel)) {
-      try {
-        ctx.fireChannelRead(msg);
-      } catch (final Throwable throwable) {
-        TRACER.endExceptionally(span, throwable, 500);
-        throw throwable;
-      }
+      ctx.fireChannelRead(msg);
+    } catch (final Throwable throwable) {
+      TRACER.endExceptionally(span, throwable);
+      throw throwable;
     }
   }
 }

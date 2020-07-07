@@ -30,7 +30,7 @@ public class DefaultFilterChainAdvice {
       @Advice.Argument(1) final Throwable throwable) {
     Span span = TRACER.getServerSpan(ctx);
     if (span != null) {
-      TRACER.endExceptionally(span, throwable, 500);
+      TRACER.endExceptionally(span, throwable);
     }
   }
 }

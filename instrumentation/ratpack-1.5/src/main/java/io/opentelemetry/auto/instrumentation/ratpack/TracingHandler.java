@@ -39,7 +39,7 @@ public final class TracingHandler implements Handler {
    */
   public static final AttributeKey<io.grpc.Context> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
-          "io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler.span");
+          "io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler.context");
 
   @Override
   public void handle(final Context ctx) {

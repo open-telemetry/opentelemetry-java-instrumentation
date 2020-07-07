@@ -33,7 +33,7 @@ public class HttpCodecFilterAdvice {
       @Advice.Origin final Method method,
       @Advice.Argument(0) final FilterChainContext ctx,
       @Advice.Argument(1) final HttpHeader httpHeader) {
-    Context context = TRACER.getServerSpanContext(ctx);
+    Context context = TRACER.getServerContext(ctx);
 
     // only create a span if there isn't another one attached to the current ctx
     // and if the httpHeader has been parsed into a HttpRequestPacket

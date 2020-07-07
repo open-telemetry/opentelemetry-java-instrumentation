@@ -32,21 +32,19 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
   @Override
   public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise prm) {
-    Context context = TRACER.getServerSpanContext(ctx.channel());
+    Context context = TRACER.getServerContext(ctx.channel());
     if (context == null || !(msg instanceof HttpResponse)) {
       ctx.write(msg, prm);
       return;
     }
 
+    Span span = TracingContextUtils.getSpan(context);
     try (final Scope ignored = ContextUtils.withScopedContext(context)) {
-      Span span = TracingContextUtils.getSpan(context);
-      try {
-        ctx.write(msg, prm);
-      } catch (final Throwable throwable) {
-        TRACER.endExceptionally(span, throwable, 500);
-        throw throwable;
-      }
-      TRACER.end(span, ((HttpResponse) msg).status().code());
+      ctx.write(msg, prm);
+    } catch (final Throwable throwable) {
+      TRACER.endExceptionally(span, throwable);
+      throw throwable;
     }
+    TRACER.end(span, ((HttpResponse) msg).status().code());
   }
 }

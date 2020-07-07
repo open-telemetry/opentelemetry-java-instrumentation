@@ -183,7 +183,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
   }
 
   public Span getServerSpan(STORAGE storage) {
-    Context attachedContext = getServerSpanContext(storage);
+    Context attachedContext = getServerContext(storage);
     return attachedContext == null ? null : CONTEXT_SERVER_SPAN_KEY.get(attachedContext);
   }
 
@@ -196,7 +196,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     Context serverSpanContext = Context.current().withValue(CONTEXT_SERVER_SPAN_KEY, span);
     Context newContext = withSpan(span, serverSpanContext);
-    attachServerSpanContext(newContext, storage);
+    attachServerContext(newContext, storage);
     return withScopedContext(newContext);
   }
 
@@ -204,6 +204,11 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
   public void end(Span span, int responseStatus) {
     setStatus(span, responseStatus);
     span.end();
+  }
+
+  /** Ends given span exceptionally with default response status code 500. */
+  public void endExceptionally(Span span, Throwable throwable) {
+    endExceptionally(span, throwable, 500);
   }
 
   public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
@@ -244,14 +249,16 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
 
   protected abstract String method(REQUEST request);
 
-  /** Stores given context in the given storage in implementation specific way. */
-  protected abstract void attachServerSpanContext(Context context, STORAGE storage);
+  /**
+   * Stores given context in the given request-response-loop storage in implementation specific way.
+   */
+  protected abstract void attachServerContext(Context context, STORAGE storage);
 
   /**
-   * Returns context stored to the given storage by {@link #attachServerSpanContext(Context,
-   * STORAGE)}.
+   * Returns context stored to the given request-response-loop storage by {@link
+   * #attachServerContext(Context, STORAGE)}.
    *
    * <p>May be null.
    */
-  public abstract Context getServerSpanContext(STORAGE storage);
+  public abstract Context getServerContext(STORAGE storage);
 }

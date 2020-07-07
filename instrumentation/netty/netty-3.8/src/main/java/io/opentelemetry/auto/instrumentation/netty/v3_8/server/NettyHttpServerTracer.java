@@ -41,12 +41,12 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected void attachServerSpanContext(Context context, ChannelTraceContext channelTraceContext) {
+  protected void attachServerContext(Context context, ChannelTraceContext channelTraceContext) {
     channelTraceContext.setContext(context);
   }
 
   @Override
-  public Context getServerSpanContext(ChannelTraceContext channelTraceContext) {
+  public Context getServerContext(ChannelTraceContext channelTraceContext) {
     return channelTraceContext.getContext();
   }
 

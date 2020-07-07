@@ -35,12 +35,12 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected void attachServerSpanContext(Context context, FilterChainContext filterChainContext) {
+  protected void attachServerContext(Context context, FilterChainContext filterChainContext) {
     filterChainContext.getAttributes().setAttribute(CONTEXT_ATTRIBUTE, context);
   }
 
   @Override
-  public Context getServerSpanContext(FilterChainContext filterChainContext) {
+  public Context getServerContext(FilterChainContext filterChainContext) {
     Object attribute = filterChainContext.getAttributes().getAttribute(CONTEXT_ATTRIBUTE);
     return attribute instanceof Context ? (Context) attribute : null;
   }

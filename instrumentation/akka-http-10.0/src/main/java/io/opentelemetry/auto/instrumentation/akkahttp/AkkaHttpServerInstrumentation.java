@@ -111,12 +111,12 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     @Override
     public HttpResponse apply(final HttpRequest request) {
       Span span = TRACER.startSpan(request, request, "akka.request", null);
-      try (Scope ignored = TRACER.startScope(span, request)) {
+      try (Scope ignored = TRACER.startScope(span, null)) {
         final HttpResponse response = userHandler.apply(request);
         TRACER.end(span, response.status().intValue());
         return response;
       } catch (final Throwable t) {
-        TRACER.endExceptionally(span, t, 500);
+        TRACER.endExceptionally(span, t);
         throw t;
       }
     }
@@ -137,7 +137,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     @Override
     public Future<HttpResponse> apply(final HttpRequest request) {
       Span span = TRACER.startSpan(request, request, "akka.request", null);
-      try (Scope ignored = TRACER.startScope(span, request)) {
+      try (Scope ignored = TRACER.startScope(span, null)) {
         return userHandler
             .apply(request)
             .transform(
@@ -151,13 +151,13 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
                 new AbstractFunction1<Throwable, Throwable>() {
                   @Override
                   public Throwable apply(final Throwable t) {
-                    TRACER.endExceptionally(span, t, 500);
+                    TRACER.endExceptionally(span, t);
                     return t;
                   }
                 },
                 executionContext);
       } catch (final Throwable t) {
-        TRACER.endExceptionally(span, t, 500);
+        TRACER.endExceptionally(span, t);
         throw t;
       }
     }

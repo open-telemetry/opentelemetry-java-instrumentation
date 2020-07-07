@@ -41,7 +41,7 @@ public class AttributeKeys {
       attributeKey("io.opentelemetry.auto.instrumentation.netty.v4_0.parent.connect.span");
 
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
-      attributeKey(HttpServerTracingHandler.class.getName() + ".span");
+      attributeKey(HttpServerTracingHandler.class.getName() + ".context");
 
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".span");

@@ -23,7 +23,7 @@ import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequest, HttpRequest> {
+public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequest, Void> {
   public static final AkkaHttpServerTracer TRACER = new AkkaHttpServerTracer();
 
   @Override
@@ -32,10 +32,10 @@ public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequ
   }
 
   @Override
-  protected void attachServerSpanContext(Context context, HttpRequest httpRequest) {}
+  protected void attachServerContext(Context context, Void none) {}
 
   @Override
-  public Context getServerSpanContext(HttpRequest httpRequest) {
+  public Context getServerContext(Void none) {
     return null;
   }
 

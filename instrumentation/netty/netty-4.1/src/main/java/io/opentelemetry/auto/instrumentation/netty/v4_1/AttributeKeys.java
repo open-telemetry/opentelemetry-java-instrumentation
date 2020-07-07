@@ -46,7 +46,7 @@ public class AttributeKeys {
    * must also change.
    */
   public static final AttributeKey<Context> SERVER_ATTRIBUTE_KEY =
-      attributeKey(HttpServerTracingHandler.class.getName() + ".span");
+      attributeKey(HttpServerTracingHandler.class.getName() + ".context");
 
   // TODO understand and change to context
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =

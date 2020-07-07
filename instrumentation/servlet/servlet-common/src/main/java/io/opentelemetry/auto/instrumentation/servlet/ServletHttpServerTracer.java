@@ -51,13 +51,13 @@ public abstract class ServletHttpServerTracer
   }
 
   @Override
-  public Context getServerSpanContext(HttpServletRequest request) {
+  public Context getServerContext(HttpServletRequest request) {
     Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
   }
 
   @Override
-  protected void attachServerSpanContext(Context context, HttpServletRequest request) {
+  protected void attachServerContext(Context context, HttpServletRequest request) {
     request.setAttribute(CONTEXT_ATTRIBUTE, context);
   }
 

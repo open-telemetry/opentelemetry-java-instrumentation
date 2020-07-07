@@ -40,12 +40,12 @@ public class NettyHttpServerTracer extends HttpServerTracer<HttpRequest, Channel
   }
 
   @Override
-  protected void attachServerSpanContext(Context context, Channel channel) {
+  protected void attachServerContext(Context context, Channel channel) {
     channel.attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(context);
   }
 
   @Override
-  public Context getServerSpanContext(Channel channel) {
+  public Context getServerContext(Channel channel) {
     return channel.attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).get();
   }
 
