@@ -33,8 +33,6 @@ class OkHttp2Test extends HttpClientTest {
 
     def setupSpec() {
         client.setConnectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        client.setReadTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        client.setWriteTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
     }
 
     @Override

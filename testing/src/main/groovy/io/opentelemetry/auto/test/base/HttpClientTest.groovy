@@ -44,7 +44,6 @@ import static org.junit.Assume.assumeTrue
 abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 1000
-  protected static final READ_TIMEOUT_MS = 2000
   protected static final BASIC_AUTH_KEY = "custom authorization header"
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 

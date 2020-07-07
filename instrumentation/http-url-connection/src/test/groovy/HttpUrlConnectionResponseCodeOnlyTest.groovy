@@ -26,7 +26,6 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
     try {
       connection.setRequestMethod(method)
       connection.connectTimeout = CONNECT_TIMEOUT_MS
-      connection.readTimeout = READ_TIMEOUT_MS
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       return connection.getResponseCode()

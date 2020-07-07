@@ -40,7 +40,6 @@ class HttpUrlConnectionTest extends HttpClientTest {
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
       connection.connectTimeout = CONNECT_TIMEOUT_MS
-      connection.readTimeout = READ_TIMEOUT_MS
       def parentSpan = TEST_TRACER.getCurrentSpan()
       def stream = connection.inputStream
       assert TEST_TRACER.getCurrentSpan() == parentSpan

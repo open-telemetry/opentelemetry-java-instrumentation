@@ -30,7 +30,6 @@ class JaxRsClientV1Test extends HttpClientTest {
 
   def setupSpec() {
     client.setConnectTimeout(CONNECT_TIMEOUT_MS)
-    client.setReadTimeout(READ_TIMEOUT_MS)
     // Add filters to ensure spans aren't duplicated.
     client.addFilter(new LoggingFilter())
     client.addFilter(new GZIPContentEncodingFilter())
