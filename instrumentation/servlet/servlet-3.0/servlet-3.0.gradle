@@ -22,23 +22,23 @@ testSets {
 }
 
 dependencies {
+  api(project(':instrumentation:servlet:servlet-common'))
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
-  compile(project(':instrumentation:servlet:servlet-common'))
 
-  testCompile(project(':testing')) {
+  testImplementation(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
-  testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
-  testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
-  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
-  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
+  testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+  testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
+  testImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
+  testImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
 
   // Jetty 10 seems to refuse to run on java8.
   // TODO: we need to setup separate test for Jetty 10 when that is released.
-  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
-  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
+  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
+  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
 
   // FIXME: 9.0.24 seems to have changed something...
-  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.22'
-  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.22'
+  latestDepTestImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.22'
+  latestDepTestImplementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.22'
 }

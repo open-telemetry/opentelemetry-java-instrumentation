@@ -22,7 +22,7 @@ testSets {
 dependencies {
   compileOnly group: 'khttp', name: 'khttp', version: '0.1.0'
 
-  testCompile group: 'khttp', name: 'khttp', version: '0.1.0'
+  testImplementation group: 'khttp', name: 'khttp', version: '0.1.0'
 
-  latestDepTestCompile group: 'khttp', name: 'khttp', version: '+'
+  latestDepTestImplementation group: 'khttp', name: 'khttp', version: '+'
 }

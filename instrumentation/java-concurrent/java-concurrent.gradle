@@ -23,7 +23,7 @@ dependencies {
   // This is needed for Akka ForJoinTask/Pool instrumentation
   compileOnly group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 
-  testCompile project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:annotations')
 
   slickTestCompile project(':instrumentation:java-concurrent')
   slickTestCompile project(':instrumentation:annotations')

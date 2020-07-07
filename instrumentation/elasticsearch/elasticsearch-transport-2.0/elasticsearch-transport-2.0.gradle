@@ -23,24 +23,24 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
 
-  compile project(':instrumentation:elasticsearch:elasticsearch-transport-common')
+  implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common')
 
   // Ensure no cross interference
-  testCompile project(':instrumentation:elasticsearch:elasticsearch-rest-5.0')
-  testCompile project(':instrumentation:elasticsearch:elasticsearch-transport-5.0')
-  testCompile project(':instrumentation:apache-httpasyncclient-4.0')
+  testImplementation project(':instrumentation:elasticsearch:elasticsearch-rest-5.0')
+  testImplementation project(':instrumentation:elasticsearch:elasticsearch-transport-5.0')
+  testImplementation project(':instrumentation:apache-httpasyncclient-4.0')
 
-  testCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
+  testImplementation group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
 
-  testCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.0.0.RELEASE'
+  testImplementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.0.0.RELEASE'
 
-  testCompile group: 'net.java.dev.jna', name: 'jna', version: '4.5.1'
-  testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
-  testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+  testImplementation group: 'net.java.dev.jna', name: 'jna', version: '4.5.1'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 
-  testCompile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-smile', version: '2.9.9'
+  testImplementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-smile', version: '2.9.9'
   // ^ is needed because we are using a newer version of jackson that isn't compatible without this.
 
-  latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.4.6'
-  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.1.15.RELEASE'
+  latestDepTestImplementation group: 'org.elasticsearch', name: 'elasticsearch', version: '2.4.6'
+  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.1.15.RELEASE'
 }

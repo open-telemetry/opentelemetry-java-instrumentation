@@ -25,10 +25,10 @@ testSets {
 dependencies {
   compileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.5.0'
 
-  testCompile project(':instrumentation:netty:netty-4.1')
-  testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.5.0'
-  latestDepTestCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
+  testImplementation project(':instrumentation:netty:netty-4.1')
+  testImplementation group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.5.0'
+  latestDepTestImplementation group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
-    testCompile group: 'com.sun.activation', name: 'jakarta.activation', version: '1.2.2'
+    testImplementation group: 'com.sun.activation', name: 'jakarta.activation', version: '1.2.2'
   }
 }

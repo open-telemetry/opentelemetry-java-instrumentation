@@ -33,24 +33,24 @@ testSets {
 
 dependencies {
   // jdbc unit testing
-  testCompile group: 'com.h2database', name: 'h2', version: '1.3.169'
+  testImplementation group: 'com.h2database', name: 'h2', version: '1.3.169'
   // first version jdk 1.6 compatible
-  testCompile group: 'org.apache.derby', name: 'derby', version: '10.6.1.0'
-  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+  testImplementation group: 'org.apache.derby', name: 'derby', version: '10.6.1.0'
+  testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
 
-  testCompile group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '7.0.19'
+  testImplementation group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '7.0.19'
   // tomcat needs this to run
-  testCompile group: 'org.apache.tomcat', name: 'tomcat-juli', version: '7.0.19'
-  testCompile group: 'com.zaxxer', name: 'HikariCP', version: '2.4.0'
-  testCompile group: 'com.mchange', name: 'c3p0', version: '0.9.5'
+  testImplementation group: 'org.apache.tomcat', name: 'tomcat-juli', version: '7.0.19'
+  testImplementation group: 'com.zaxxer', name: 'HikariCP', version: '2.4.0'
+  testImplementation group: 'com.mchange', name: 'c3p0', version: '0.9.5'
 
-  latestDepTestCompile group: 'com.h2database', name: 'h2', version: '+'
-  latestDepTestCompile group: 'org.apache.derby', name: 'derby', version: '10.14.+'
-  latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '+'
+  latestDepTestImplementation group: 'com.h2database', name: 'h2', version: '+'
+  latestDepTestImplementation group: 'org.apache.derby', name: 'derby', version: '10.14.+'
+  latestDepTestImplementation group: 'org.hsqldb', name: 'hsqldb', version: '+'
 
-  latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '+'
-  latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-juli', version: '+'
-  latestDepTestCompile group: 'com.zaxxer', name: 'HikariCP', version: '+'
-  latestDepTestCompile group: 'com.mchange', name: 'c3p0', version: '+'
+  latestDepTestImplementation group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '+'
+  latestDepTestImplementation group: 'org.apache.tomcat', name: 'tomcat-juli', version: '+'
+  latestDepTestImplementation group: 'com.zaxxer', name: 'HikariCP', version: '+'
+  latestDepTestImplementation group: 'com.mchange', name: 'c3p0', version: '+'
 }
 

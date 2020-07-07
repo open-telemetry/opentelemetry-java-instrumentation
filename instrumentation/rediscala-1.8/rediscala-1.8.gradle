@@ -58,8 +58,8 @@ testSets {
 dependencies {
   compileOnly group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
 
-  testCompile group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
-  testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  testImplementation group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
+  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
 
-  latestDepTestCompile group: 'com.github.etaty', name: 'rediscala_2.11', version: '+'
+  latestDepTestImplementation group: 'com.github.etaty', name: 'rediscala_2.11', version: '+'
 }

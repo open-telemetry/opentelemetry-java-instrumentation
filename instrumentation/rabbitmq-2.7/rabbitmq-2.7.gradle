@@ -19,13 +19,13 @@ testSets {
 dependencies {
   compileOnly group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
 
-  testCompile group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
-  testCompile group: 'org.springframework.amqp', name: 'spring-rabbit', version: '1.1.0.RELEASE'
+  testImplementation group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+  testImplementation group: 'org.springframework.amqp', name: 'spring-rabbit', version: '1.1.0.RELEASE'
 
-  testCompile deps.testcontainers
+  testImplementation deps.testcontainers
 
-  latestDepTestCompile group: 'com.rabbitmq', name: 'amqp-client', version: '+'
-  latestDepTestCompile group: 'org.springframework.amqp', name: 'spring-rabbit', version: '+'
+  latestDepTestImplementation group: 'com.rabbitmq', name: 'amqp-client', version: '+'
+  latestDepTestImplementation group: 'org.springframework.amqp', name: 'spring-rabbit', version: '+'
 }
 
 configurations.testRuntime {

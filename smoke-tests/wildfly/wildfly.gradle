@@ -26,14 +26,14 @@ description = 'Wildfly Smoke Tests.'
 dependencies {
   // uses the ivy repository url to download the wildfly servlet zip
   // organisation = serverName, revision = serverVersion, module = serverModule, ext = serverExtension
-  compile "${serverName}:${serverModule}:${serverVersion}@${serverExtension}"
+  implementation "${serverName}:${serverModule}:${serverVersion}@${serverExtension}"
 
-  testCompile project(':smoke-tests')
+  testImplementation project(':smoke-tests')
 }
 
 tasks.register("unzip", Copy) {
   def zipFileNamePrefix = "servlet"
-  def zipPath = project.configurations.compile.find {
+  def zipPath = project.configurations.runtimeClasspath.find {
     it.name.startsWith(zipFileNamePrefix)
   }
   if (zipPath != null) {
