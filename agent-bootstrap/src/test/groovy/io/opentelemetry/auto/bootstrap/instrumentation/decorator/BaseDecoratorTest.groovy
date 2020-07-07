@@ -17,11 +17,12 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.auto.util.test.AgentSpecification
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 class BaseDecoratorTest extends AgentSpecification {
@@ -49,12 +50,12 @@ class BaseDecoratorTest extends AgentSpecification {
 
     then:
     if (expectedPeerName) {
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, expectedPeerName)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), expectedPeerName)
     }
     if (expectedPeerIp) {
-      1 * span.setAttribute(MoreTags.NET_PEER_IP, expectedPeerIp)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), expectedPeerIp)
     }
-    1 * span.setAttribute(MoreTags.NET_PEER_PORT, connection.port)
+    1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.port)
     0 * _
 
     where:
@@ -95,9 +96,9 @@ class BaseDecoratorTest extends AgentSpecification {
     then:
     if (error) {
       1 * span.setStatus(Status.UNKNOWN)
-      1 * span.setAttribute(MoreTags.ERROR_TYPE, error.getClass().getName())
-      1 * span.setAttribute(MoreTags.ERROR_STACK, _)
-      1 * span.setAttribute(MoreTags.ERROR_MSG, null)
+      1 * span.setAttribute(MoreAttributes.ERROR_TYPE, error.getClass().getName())
+      1 * span.setAttribute(MoreAttributes.ERROR_STACK, _)
+      1 * span.setAttribute(MoreAttributes.ERROR_MSG, null)
     }
     0 * _
 
@@ -112,9 +113,9 @@ class BaseDecoratorTest extends AgentSpecification {
     then:
     1 * span.setStatus(status)
     if (error) {
-      1 * span.setAttribute(MoreTags.ERROR_TYPE, error.getClass().getName())
-      1 * span.setAttribute(MoreTags.ERROR_STACK, _)
-      1 * span.setAttribute(MoreTags.ERROR_MSG, null)
+      1 * span.setAttribute(MoreAttributes.ERROR_TYPE, error.getClass().getName())
+      1 * span.setAttribute(MoreAttributes.ERROR_STACK, _)
+      1 * span.setAttribute(MoreAttributes.ERROR_MSG, null)
     }
     0 * _
 

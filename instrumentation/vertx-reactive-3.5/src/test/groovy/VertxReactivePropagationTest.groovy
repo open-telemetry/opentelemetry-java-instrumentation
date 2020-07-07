@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import io.vertx.reactivex.core.Vertx
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -67,12 +66,12 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           spanKind SERVER
           errored false
           parent()
-          tags {
-            "$MoreTags.NET_PEER_PORT" Long
-            "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-            "$Tags.HTTP_URL" url
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+            "${SemanticAttributes.HTTP_URL.key()}" url
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
           }
         }
         basicSpan(it, 1, "VertxReactiveWebServer.handleListProducts", span(0))
@@ -82,12 +81,12 @@ class VertxReactivePropagationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(2)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test?shutdown=true"
-            "$Tags.DB_USER" "SA"
-            "$Tags.DB_STATEMENT" "SELECT id, name, price, weight FROM products"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test?shutdown=true"
+            "${SemanticAttributes.DB_USER.key()}" "SA"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SELECT id, name, price, weight FROM products"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" String
           }
         }

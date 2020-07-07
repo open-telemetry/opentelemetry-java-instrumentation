@@ -29,9 +29,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +97,7 @@ public class GeodeInstrumentation extends Instrumenter.Default {
           TRACER
               .spanBuilder(method.getName())
               .setSpanKind(CLIENT)
-              .setAttribute(Tags.DB_INSTANCE, thiz.getName())
+              .setAttribute(SemanticAttributes.DB_INSTANCE.key(), thiz.getName())
               .startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));
@@ -134,8 +134,8 @@ public class GeodeInstrumentation extends Instrumenter.Default {
           TRACER
               .spanBuilder(method.getName())
               .setSpanKind(CLIENT)
-              .setAttribute(Tags.DB_INSTANCE, thiz.getName())
-              .setAttribute(Tags.DB_STATEMENT, query)
+              .setAttribute(SemanticAttributes.DB_INSTANCE.key(), thiz.getName())
+              .setAttribute(SemanticAttributes.DB_STATEMENT.key(), query)
               .startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));

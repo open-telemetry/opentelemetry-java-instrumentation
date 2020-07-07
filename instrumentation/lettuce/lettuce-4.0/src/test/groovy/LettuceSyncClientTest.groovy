@@ -19,10 +19,9 @@ import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException
 import com.lambdaworks.redis.api.StatefulConnection
 import com.lambdaworks.redis.api.sync.RedisCommands
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
@@ -112,10 +111,10 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "CONNECT"
           spanKind CLIENT
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" HOST
-            "$MoreTags.NET_PEER_PORT" port
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
             "db.redis.dbIndex" 0
           }
         }
@@ -142,12 +141,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "CONNECT"
           spanKind CLIENT
           errored true
-          tags {
-            "$MoreTags.NET_PEER_NAME" HOST
-            "$MoreTags.NET_PEER_PORT" incorrectPort
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
             "db.redis.dbIndex" 0
-            errorTags RedisConnectionException, String
+            errorAttributes RedisConnectionException, String
           }
         }
       }
@@ -166,8 +165,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -186,8 +185,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -206,8 +205,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -226,8 +225,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "RANDOMKEY"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -246,8 +245,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "LPUSH"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -266,8 +265,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "HMSET"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -286,8 +285,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "HGETALL"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -305,8 +304,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "DEBUG"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }
@@ -324,8 +323,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
           operationName "SHUTDOWN"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "redis"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
           }
         }
       }

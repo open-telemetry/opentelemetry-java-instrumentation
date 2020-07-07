@@ -22,44 +22,44 @@ import io.opentelemetry.common.AttributeValue
 
 import java.util.regex.Pattern
 
-class TagsAssert {
-  private final Map<String, AttributeValue> tags
-  private final Set<String> assertedTags = new TreeSet<>()
+class AttributesAssert {
+  private final Map<String, AttributeValue> attributes
+  private final Set<String> assertedAttributes = new TreeSet<>()
 
-  private TagsAssert(attributes) {
-    this.tags = attributes
+  private AttributesAssert(attributes) {
+    this.attributes = attributes
   }
 
-  static void assertTags(Map<String, AttributeValue> attributes,
-                         @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TagsAssert'])
-                         @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    def asserter = new TagsAssert(attributes)
+  static void assertAttributes(Map<String, AttributeValue> attributes,
+                               @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
+                         @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+    def asserter = new AttributesAssert(attributes)
     def clone = (Closure) spec.clone()
     clone.delegate = asserter
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
-    asserter.assertTagsAllVerified()
+    asserter.assertAttributesAllVerified()
   }
 
-  def errorTags(Class<Throwable> errorType) {
-    errorTags(errorType, null)
+  def errorAttributes(Class<Throwable> errorType) {
+    errorAttributes(errorType, null)
   }
 
-  def errorTags(Class<Throwable> errorType, message) {
-    tag("error.type", errorType.name)
-    tag("error.stack", String)
+  def errorAttributes(Class<Throwable> errorType, message) {
+    attribute("error.type", errorType.name)
+    attribute("error.stack", String)
 
     if (message != null) {
-      tag("error.msg", message)
+      attribute("error.msg", message)
     }
   }
 
-  def tag(String name, value) {
+  def attribute(String name, value) {
     if (value == null) {
       return
     }
-    assertedTags.add(name)
-    def val = getVal(tags[name])
+    assertedAttributes.add(name)
+    def val = getVal(attributes[name])
     if (value instanceof Pattern) {
       assert val =~ value
     } else if (value instanceof Class) {
@@ -71,24 +71,24 @@ class TagsAssert {
     }
   }
 
-  def tag(String name) {
-    return tags[name]
+  def attribute(String name) {
+    return attributes[name]
   }
 
   def methodMissing(String name, args) {
     if (args.length == 0) {
       throw new IllegalArgumentException(args.toString())
     }
-    tag(name, args[0])
+    attribute(name, args[0])
   }
 
-  void assertTagsAllVerified() {
-    def set = new TreeMap<>(tags).keySet()
-    set.removeAll(assertedTags)
+  void assertAttributesAllVerified() {
+    def set = new TreeMap<>(attributes).keySet()
+    set.removeAll(assertedAttributes)
     // The primary goal is to ensure the set is empty.
-    // tags and assertedTags are included via an "always true" comparison
+    // attributes and assertedAttributes are included via an "always true" comparison
     // so they provide better context in the error message.
-    assert (tags.entrySet() != assertedTags || assertedTags.isEmpty()) && set.isEmpty()
+    assert (attributes.entrySet() != assertedAttributes || assertedAttributes.isEmpty()) && set.isEmpty()
   }
 
   private static Object getVal(AttributeValue attributeValue) {

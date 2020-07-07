@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.catalina.servlets.DefaultServlet
 import org.glassfish.embeddable.BootstrapProperties
 import org.glassfish.embeddable.Deployer
@@ -94,12 +94,12 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
       } else {
         parent()
       }
-      tags {
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$MoreTags.NET_PEER_PORT" Long
-        "$Tags.HTTP_STATUS" endpoint.status
-        "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+      attributes {
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
         "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }
@@ -109,7 +109,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }

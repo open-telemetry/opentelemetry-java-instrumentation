@@ -18,10 +18,9 @@ package io.opentelemetry.auto.instrumentation.elasticsearch.rest;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
@@ -47,15 +46,15 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
   }
 
   public Span onRequest(final Span span, final String method, final String endpoint) {
-    span.setAttribute(Tags.HTTP_METHOD, method);
-    span.setAttribute(Tags.HTTP_URL, endpoint);
+    span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method);
+    span.setAttribute(SemanticAttributes.HTTP_URL.key(), endpoint);
     return span;
   }
 
   public Span onResponse(final Span span, final Response response) {
     if (response != null && response.getHost() != null) {
-      span.setAttribute(MoreTags.NET_PEER_NAME, response.getHost().getHostName());
-      span.setAttribute(MoreTags.NET_PEER_PORT, response.getHost().getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), response.getHost().getHostName());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), response.getHost().getPort());
     }
     return span;
   }

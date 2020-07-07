@@ -99,7 +99,7 @@ class KafkaClientTest extends AgentTestRunner {
           spanKind PRODUCER
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -107,7 +107,7 @@ class KafkaClientTest extends AgentTestRunner {
           spanKind CONSUMER
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -175,7 +175,7 @@ class KafkaClientTest extends AgentTestRunner {
           spanKind PRODUCER
           errored false
           parent()
-          tags {
+          attributes {
             "tombstone" true
           }
         }
@@ -189,7 +189,7 @@ class KafkaClientTest extends AgentTestRunner {
           spanKind CONSUMER
           errored false
           parent()
-          tags {
+          attributes {
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -249,7 +249,7 @@ class KafkaClientTest extends AgentTestRunner {
           spanKind PRODUCER
           errored false
           parent()
-          tags {
+          attributes {
             "partition" { it >= 0 }
           }
         }
@@ -258,7 +258,7 @@ class KafkaClientTest extends AgentTestRunner {
           spanKind CONSUMER
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }

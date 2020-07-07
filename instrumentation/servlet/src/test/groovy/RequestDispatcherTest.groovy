@@ -69,7 +69,7 @@ class RequestDispatcherTest extends AgentTestRunner {
         span(1) {
           operationName "servlet.$operation"
           childOf span(0)
-          tags {
+          attributes {
             "dispatcher.target" target
           }
         }
@@ -117,9 +117,9 @@ class RequestDispatcherTest extends AgentTestRunner {
           operationName "servlet.$operation"
           childOf span(0)
           errored true
-          tags {
+          attributes {
             "dispatcher.target" target
-            errorTags(ex.class, ex.message)
+            errorAttributes(ex.class, ex.message)
           }
         }
         basicSpan(it, 2, "$operation-child", span(1))

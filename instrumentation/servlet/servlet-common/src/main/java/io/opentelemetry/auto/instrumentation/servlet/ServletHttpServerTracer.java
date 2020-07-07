@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.servlet;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
@@ -106,7 +106,7 @@ public abstract class ServletHttpServerTracer
   public void setPrincipal(Span span, HttpServletRequest request) {
     final Principal principal = request.getUserPrincipal();
     if (principal != null) {
-      span.setAttribute(MoreTags.USER_NAME, principal.getName());
+      span.setAttribute(MoreAttributes.USER_NAME, principal.getName());
     }
   }
 }
