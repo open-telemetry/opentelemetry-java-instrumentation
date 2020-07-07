@@ -16,12 +16,13 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.trace.Span;
+import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,9 +45,10 @@ public class AdviceUtils {
       final ContextStore<T, State> contextStore, final T task) {
     final State state = contextStore.get(task);
     if (state != null) {
-      final Span parentSpan = state.getAndResetParentSpan();
-      if (parentSpan != null) {
-        return new SpanWithScope(parentSpan, currentContextWith(parentSpan));
+      final Context parentContext = state.getAndResetParentContext();
+      if (parentContext != null) {
+        return new SpanWithScope(
+            getSpan(parentContext), ContextUtils.withScopedContext(parentContext));
       }
     }
     return null;

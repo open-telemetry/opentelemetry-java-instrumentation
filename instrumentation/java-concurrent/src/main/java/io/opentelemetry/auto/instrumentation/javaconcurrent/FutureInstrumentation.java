@@ -127,7 +127,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
           InstrumentationContext.get(Future.class, State.class);
       final State state = contextStore.get(future);
       if (state != null) {
-        state.clearParentSpan();
+        state.clearParentContext();
       }
     }
   }
