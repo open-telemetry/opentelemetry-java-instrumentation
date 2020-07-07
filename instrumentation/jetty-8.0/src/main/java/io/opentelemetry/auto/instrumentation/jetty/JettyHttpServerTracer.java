@@ -16,16 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.jetty;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
-import javax.servlet.http.HttpServletRequest;
+import io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
 
-public class HttpServletRequestExtractAdapter implements HttpTextFormat.Getter<HttpServletRequest> {
-
-  public static final HttpServletRequestExtractAdapter GETTER =
-      new HttpServletRequestExtractAdapter();
+public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
+  public static final JettyHttpServerTracer TRACER = new JettyHttpServerTracer();
 
   @Override
-  public String get(final HttpServletRequest carrier, final String key) {
-    return carrier.getHeader(key);
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.jetty-8.0";
   }
 }

@@ -68,6 +68,11 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
       }
     }
   }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "akka.request"
+  }
 }
 
 @Retry

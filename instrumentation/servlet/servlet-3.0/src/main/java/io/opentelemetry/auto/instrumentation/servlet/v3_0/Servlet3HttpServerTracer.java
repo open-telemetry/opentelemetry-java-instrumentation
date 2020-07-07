@@ -35,8 +35,8 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
   }
 
   @Override
-  protected Integer peerPort(HttpServletRequest request) {
-    return request.getRemotePort();
+  protected Integer peerPort(HttpServletRequest connection) {
+    return connection.getRemotePort();
   }
 
   public void onTimeout(Span span, long timeout) {
