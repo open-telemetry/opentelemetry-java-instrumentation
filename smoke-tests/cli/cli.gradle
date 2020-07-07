@@ -13,7 +13,7 @@ jar {
 }
 
 dependencies {
-  compile deps.opentelemetryApi
+  implementation deps.opentelemetryApi
 
   testImplementation project(':smoke-tests')
 }
