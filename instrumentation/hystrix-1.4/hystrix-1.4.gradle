@@ -16,16 +16,16 @@ testSets {
 }
 
 dependencies {
-  compile project(':instrumentation:rxjava-1.0')
+  implementation project(':instrumentation:rxjava-1.0')
 
   compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
   compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
 
-  testCompile project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:annotations')
 
-  testCompile group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
-  testCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
+  testImplementation group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
+  testImplementation group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
 
-  latestDepTestCompile group: 'io.reactivex', name: 'rxjava', version: '+'
-  latestDepTestCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
+  latestDepTestImplementation group: 'io.reactivex', name: 'rxjava', version: '+'
+  latestDepTestImplementation group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
 }

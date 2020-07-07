@@ -5,8 +5,8 @@ apply from: "$rootDir/gradle/test-with-scala.gradle"
 dependencies {
   compileOnly deps.scala
 
-  testCompile deps.scala
+  testImplementation deps.scala
 
-  testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:java-concurrent')
+  testImplementation project(':instrumentation:annotations')
 }

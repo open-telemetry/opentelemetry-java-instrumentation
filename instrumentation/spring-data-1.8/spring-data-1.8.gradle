@@ -34,20 +34,20 @@ dependencies {
   compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.8.0.RELEASE')
   compileOnly(group: 'org.springframework', name: 'spring-aop', version: '1.2')
 
-  testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
-  testCompile group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
+  testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
+  testImplementation group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
 
   // JPA dependencies
-  testCompile project(':instrumentation:jdbc')
-  testCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
-  testCompile group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
-  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
-  testCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
+  testImplementation project(':instrumentation:jdbc')
+  testImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
+  testImplementation group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
+  testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+  testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
 
-  latestDepTestCompile group: 'org.springframework', name: 'spring-test', version: '+'
-  latestDepTestCompile group: 'org.springframework', name: 'spring-context', version: '+'
+  latestDepTestImplementation group: 'org.springframework', name: 'spring-test', version: '+'
+  latestDepTestImplementation group: 'org.springframework', name: 'spring-context', version: '+'
 
-  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-commons', version: '+'
-  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
+  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-commons', version: '+'
+  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
 }
 

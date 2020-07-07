@@ -26,23 +26,23 @@ dependencies {
   compileOnly group: 'io.vertx', name: 'vertx-web', version: vertxVersion
   compileOnly group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
 
-  testCompile project(':instrumentation:jdbc')
-  testCompile project(':instrumentation:netty:netty-4.1')
-  testCompile project(':instrumentation:annotations')
-  testCompile project(':instrumentation:vertx-3.0')
+  testImplementation project(':instrumentation:jdbc')
+  testImplementation project(':instrumentation:netty:netty-4.1')
+  testImplementation project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:vertx-3.0')
 
-  testCompile group: 'io.vertx', name: 'vertx-web', version: vertxVersion
-  testCompile group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
-  testCompile group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
-  testCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
-  testCompile group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
-  testCompile 'org.hsqldb:hsqldb:2.3.4'
-  testCompile deps.opentelemetryApiAutoAnnotations
+  testImplementation group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+  testImplementation group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
+  testImplementation group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
+  testImplementation group: 'io.vertx', name: 'vertx-circuit-breaker', version: vertxVersion
+  testImplementation group: 'io.vertx', name: 'vertx-rx-java2', version: vertxVersion
+  testImplementation 'org.hsqldb:hsqldb:2.3.4'
+  testImplementation deps.opentelemetryApiAutoAnnotations
 
   // Vert.x 4.0 is incompatible with our tests.
-  latestDepTestCompile group: 'io.vertx', name: 'vertx-web', version: '3.+'
-  latestDepTestCompile group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
-  latestDepTestCompile group: 'io.vertx', name: 'vertx-jdbc-client', version: '3.+'
-  latestDepTestCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.+'
-  latestDepTestCompile group: 'io.vertx', name: 'vertx-rx-java2', version: '3.+'
+  latestDepTestImplementation group: 'io.vertx', name: 'vertx-web', version: '3.+'
+  latestDepTestImplementation group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
+  latestDepTestImplementation group: 'io.vertx', name: 'vertx-jdbc-client', version: '3.+'
+  latestDepTestImplementation group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.+'
+  latestDepTestImplementation group: 'io.vertx', name: 'vertx-rx-java2', version: '3.+'
 }

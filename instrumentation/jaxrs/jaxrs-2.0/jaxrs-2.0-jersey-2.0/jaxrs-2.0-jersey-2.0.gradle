@@ -14,5 +14,5 @@ dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
   compileOnly group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.0'
 
-  compile project(':instrumentation:jaxrs:jaxrs-2.0')
+  implementation project(':instrumentation:jaxrs:jaxrs-2.0')
 }

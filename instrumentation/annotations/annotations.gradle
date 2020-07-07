@@ -12,19 +12,19 @@ muzzle {
 dependencies {
   implementation deps.opentelemetryApiAutoAnnotations
 
-  testCompile group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '+'
-  testCompile(group: 'io.opentracing.contrib.dropwizard', name: 'dropwizard-opentracing', version: '0.2.2') {
+  testImplementation group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '+'
+  testImplementation(group: 'io.opentracing.contrib.dropwizard', name: 'dropwizard-opentracing', version: '0.2.2') {
     transitive = false
   }
-  testCompile group: 'com.signalfx.public', name: 'signalfx-trace-api', version: '+'
+  testImplementation group: 'com.signalfx.public', name: 'signalfx-trace-api', version: '+'
   //Old and new versions of kamon use different packages for Trace annotation
-  testCompile(group: 'io.kamon', name: 'kamon-annotation_2.11', version: '0.6.7') {
+  testImplementation(group: 'io.kamon', name: 'kamon-annotation_2.11', version: '0.6.7') {
     transitive = false
   }
-  testCompile group: 'io.kamon', name: 'kamon-annotation-api', version: '+'
-  testCompile group: 'com.appoptics.agent.java', name: 'appoptics-sdk', version: '+'
-  testCompile group: 'com.tracelytics.agent.java', name: 'tracelytics-api', version: '+'
-  testCompile(group: 'org.springframework.cloud', name: 'spring-cloud-sleuth-core', version: '+') {
+  testImplementation group: 'io.kamon', name: 'kamon-annotation-api', version: '+'
+  testImplementation group: 'com.appoptics.agent.java', name: 'appoptics-sdk', version: '+'
+  testImplementation group: 'com.tracelytics.agent.java', name: 'tracelytics-api', version: '+'
+  testImplementation(group: 'org.springframework.cloud', name: 'spring-cloud-sleuth-core', version: '+') {
     transitive = false
   }
 }

@@ -19,10 +19,10 @@ muzzle {
 dependencies {
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 
-  testCompile group: 'javax.servlet', name: 'servlet-api', version: '2.3'
+  testImplementation group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 
   // servlet request instrumentation required for linking request to response.
-  testCompile project(':instrumentation:servlet:servlet-2.3')
+  testImplementation project(':instrumentation:servlet:servlet-2.3')
 
   // Don't want to conflict with jetty from the test server.
   testImplementation(project(':testing')) {

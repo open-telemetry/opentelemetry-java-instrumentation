@@ -5,7 +5,7 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compile deps.opentelemetrySdk
+  implementation deps.opentelemetrySdk
 }
 
 // OpenTelemetry SDK with shaded dependencies so that they do not conflict with other libraries (in particular guava)

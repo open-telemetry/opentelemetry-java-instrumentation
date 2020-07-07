@@ -32,20 +32,20 @@ dependencies {
   }
 
   // Include servlet instrumentation for verifying the tomcat requests
-  testCompile project(':instrumentation:servlet')
-  testCompile project(':instrumentation:servlet:servlet-3.0')
+  testImplementation project(':instrumentation:servlet')
+  testImplementation project(':instrumentation:servlet:servlet-3.0')
 
-  testCompile group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
-  testCompile group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.2.Final'
+  testImplementation group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
+  testImplementation group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.2.Final'
 
-  testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
+  testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
 
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.17.RELEASE'
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '1.5.17.RELEASE'
-  testCompile group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.0.16.RELEASE'
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.17.RELEASE'
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '1.5.17.RELEASE'
+  testImplementation group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.0.16.RELEASE'
 
   // For spring security
-  testCompile "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
-  testCompile "org.glassfish.jaxb:jaxb-runtime:2.3.2"
+  testImplementation "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
+  testImplementation "org.glassfish.jaxb:jaxb-runtime:2.3.2"
 }

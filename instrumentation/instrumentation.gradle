@@ -25,14 +25,14 @@ subprojects {
       instr_project.tasks.test.dependsOn(subProj.tasks.test)
 
       instr_project.dependencies {
-        compile(project(subProj.getPath()))
+        implementation(project(subProj.getPath()))
       }
     }
   }
 }
 
 dependencies {
-  compile(project(':auto-tooling')) {
+  implementation(project(':auto-tooling')) {
     exclude module: ':auto-bootstrap'
   }
 }
