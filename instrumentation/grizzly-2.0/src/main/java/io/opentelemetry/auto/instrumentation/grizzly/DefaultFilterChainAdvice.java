@@ -16,6 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.grizzly;
 
+import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
+
+import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 
@@ -25,6 +28,9 @@ public class DefaultFilterChainAdvice {
   public static void onFail(
       @Advice.Argument(0) final FilterChainContext ctx,
       @Advice.Argument(1) final Throwable throwable) {
-    GrizzlyDecorator.onFilterChainFail(ctx, throwable);
+    Span span = TRACER.getServerSpan(ctx);
+    if (span != null) {
+      TRACER.endExceptionally(span, throwable);
+    }
   }
 }

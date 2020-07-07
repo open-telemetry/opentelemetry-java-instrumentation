@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerTracer.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -41,7 +42,6 @@ import io.opentelemetry.auto.instrumentation.netty.v4_1.client.HttpClientTracing
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_1.server.NettyHttpServerDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -84,7 +84,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
       packageName + ".client.HttpClientResponseTracingHandler",
       packageName + ".client.HttpClientTracingHandler",
       // server helpers
-      packageName + ".server.NettyHttpServerDecorator",
+      packageName + ".server.NettyHttpServerTracer",
       packageName + ".server.NettyRequestExtractAdapter",
       packageName + ".server.HttpServerRequestTracingHandler",
       packageName + ".server.HttpServerResponseTracingHandler",
@@ -172,7 +172,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
-      final Span span = NettyHttpServerDecorator.TRACER.getCurrentSpan();
+      final Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
         final Attribute<Span> attribute =
             pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);

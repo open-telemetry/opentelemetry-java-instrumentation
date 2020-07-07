@@ -18,9 +18,10 @@ package io.opentelemetry.auto.instrumentation.netty.v3_8.server;
 
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
-import io.opentelemetry.trace.Tracer;
+import io.grpc.Context;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
+import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
+import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
@@ -28,19 +29,25 @@ import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
 
 @Slf4j
-public class NettyHttpServerDecorator
-    extends HttpServerDecorator<HttpRequest, Channel, HttpResponse> {
-  public static final NettyHttpServerDecorator DECORATE = new NettyHttpServerDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.netty-3.8");
+public class NettyHttpServerTracer
+    extends HttpServerTracer<HttpRequest, Channel, ChannelTraceContext> {
+  public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();
 
   @Override
   protected String method(final HttpRequest httpRequest) {
     return httpRequest.getMethod().getName();
+  }
+
+  @Override
+  protected void attachServerContext(Context context, ChannelTraceContext channelTraceContext) {
+    channelTraceContext.setContext(context);
+  }
+
+  @Override
+  public Context getServerContext(ChannelTraceContext channelTraceContext) {
+    return channelTraceContext.getContext();
   }
 
   @Override
@@ -63,16 +70,26 @@ public class NettyHttpServerDecorator
   }
 
   @Override
+  protected Getter<HttpRequest> getGetter() {
+    return NettyRequestExtractAdapter.GETTER;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.netty-3.8";
+  }
+
+  @Override
+  protected String getVersion() {
+    return null;
+  }
+
+  @Override
   protected Integer peerPort(final Channel channel) {
     final SocketAddress socketAddress = channel.getRemoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getPort();
     }
     return null;
-  }
-
-  @Override
-  protected Integer status(final HttpResponse httpResponse) {
-    return httpResponse.getStatus().getCode();
   }
 }

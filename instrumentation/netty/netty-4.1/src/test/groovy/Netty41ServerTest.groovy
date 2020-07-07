@@ -121,4 +121,9 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> {
   void stopServer(EventLoopGroup server) {
     server?.shutdownGracefully()
   }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "netty.request"
+  }
 }

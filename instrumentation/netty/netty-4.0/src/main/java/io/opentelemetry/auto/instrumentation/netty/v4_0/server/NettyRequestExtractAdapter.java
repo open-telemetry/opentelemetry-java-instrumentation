@@ -16,15 +16,15 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v4_0.server;
 
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 
-public class NettyRequestExtractAdapter implements HttpTextFormat.Getter<HttpHeaders> {
+public class NettyRequestExtractAdapter implements HttpTextFormat.Getter<HttpRequest> {
 
   public static final NettyRequestExtractAdapter GETTER = new NettyRequestExtractAdapter();
 
   @Override
-  public String get(final HttpHeaders headers, final String key) {
-    return headers.get(key);
+  public String get(final HttpRequest request, final String key) {
+    return request.headers().get(key);
   }
 }
