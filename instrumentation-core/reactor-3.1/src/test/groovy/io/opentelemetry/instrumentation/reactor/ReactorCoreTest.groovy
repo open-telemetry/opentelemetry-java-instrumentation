@@ -1,3 +1,4 @@
+
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -14,11 +15,14 @@
  * limitations under the License.
  */
 
+package io.opentelemetry.instrumentation.reactor
+
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.instrumentation.reactor.shaded.TracingPublishers
-import io.opentelemetry.auto.test.AgentTestRunner
+
+import io.opentelemetry.auto.test.InstrumentationTestRunner
 import io.opentelemetry.auto.test.utils.TraceUtils
 import io.opentelemetry.trace.DefaultSpan
+import io.opentelemetry.trace.Tracer
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -30,9 +34,20 @@ import java.time.Duration
 
 import static io.opentelemetry.auto.test.utils.TraceUtils.basicSpan
 
-class ReactorCoreTest extends AgentTestRunner {
+class ReactorCoreTest extends InstrumentationTestRunner {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
+
+  private static final Tracer TEST_TRACER =
+    OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.reactor");
+
+  def setupSpec() {
+    TracingPublishers.registerOnEachOperator()
+  }
+
+  def cleanupSpec() {
+    TracingPublishers.resetOnEachOperator()
+  }
 
   @Shared
   def addOne = { i ->

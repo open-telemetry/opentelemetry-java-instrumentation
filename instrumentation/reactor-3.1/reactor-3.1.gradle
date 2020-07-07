@@ -1,7 +1,6 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -23,13 +22,11 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+  implementation project(path: ':instrumentation-core:reactor-3.1', configuration: 'shadow')
 
-  testCompile project(':instrumentation:annotations')
+  testImplementation group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 
-  testCompile group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
-
-  latestDepTestCompile group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
+  latestDepTestImplementation group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
   // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
-  latestDepTestCompile group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
+  latestDepTestImplementation group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
 }
