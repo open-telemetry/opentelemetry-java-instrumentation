@@ -15,3 +15,20 @@ instrumentation/
     aws-sdk-2.2/
     aws-sdk-2.2-auto/
 ```
+
+## Shading core instrumentation
+
+The instrumentation in this folder is intended for use both directly from user apps and from the
+agent when it automatically adds instrumentation to a user app. This means that the same library may
+be used both by the agent and the app at the same time, so to prevent any conflicts, we make sure to
+use a shaded version from the agent, which is not published for use from users, e.g.,
+
+```
+shadowJar {
+  archiveClassifier = 'agent'
+
+  configurations = []
+
+  relocate 'io.opentelemetry.instrumentation.awssdk.v2_2', 'io.opentelemetry.auto.instrumentation.awssdk.v2_2.shaded'
+}
+```

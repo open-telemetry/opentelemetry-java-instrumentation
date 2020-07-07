@@ -55,7 +55,7 @@ dependencies {
 }
 
 shadowJar {
-  archiveClassifier.set('agent')
+  archiveClassifier = 'agent'
 
   configurations = []
 
