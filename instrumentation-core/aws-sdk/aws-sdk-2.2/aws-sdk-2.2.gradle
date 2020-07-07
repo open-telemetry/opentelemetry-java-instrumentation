@@ -1,5 +1,10 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
+  noShadowPublish = true
 }
 
 group = 'io.opentelemetry.instrumentation'
@@ -47,4 +52,12 @@ dependencies {
   latestDepTestCompile group: 'software.amazon.awssdk', name: 'sqs', version: '+'
   latestDepTestCompile group: 'software.amazon.awssdk', name: 'dynamodb', version: '+'
   latestDepTestCompile group: 'software.amazon.awssdk', name: 'kinesis', version: '+'
+}
+
+shadowJar {
+  archiveClassifier.set('agent')
+
+  configurations = []
+
+  relocate 'io.opentelemetry.instrumentation.awssdk.v2_2', 'io.opentelemetry.auto.instrumentation.awssdk.v2_2.shaded'
 }

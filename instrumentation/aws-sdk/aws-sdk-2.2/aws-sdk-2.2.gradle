@@ -18,7 +18,7 @@ testSets {
 }
 
 dependencies {
-  compile project(':instrumentation-core:aws-sdk:aws-sdk-2.2')
+  compile project(path: ':instrumentation-core:aws-sdk:aws-sdk-2.2', configuration: 'shadow')
 
   compileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
