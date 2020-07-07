@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebmvc;
+package io.opentelemetry.instrumentation.springwebmvc;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
 
 import io.grpc.Context;
 import io.opentelemetry.trace.Span;
@@ -55,7 +55,7 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          DECORATE.onRequest(parentSpan, request);
+          DECORATE.updateSpanNameUsingPattern(parentSpan, request);
         }
       } catch (final Exception ignored) {
         // mapping.getHandler() threw exception.  Ignore

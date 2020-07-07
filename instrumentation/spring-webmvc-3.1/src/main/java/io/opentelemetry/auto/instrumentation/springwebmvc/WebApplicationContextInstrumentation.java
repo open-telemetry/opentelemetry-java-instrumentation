@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
+import static io.opentelemetry.auto.instrumentation.springwebmvc.InstrumentationHelper.CORE_INSTRUMENTATION_PACKAGE_NAME;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
@@ -26,6 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.springwebmvc.HandlerMappingResourceNameFilter;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -36,6 +38,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 
 @AutoService(Instrumenter.class)
 public class WebApplicationContextInstrumentation extends Instrumenter.Default {
+
   public WebApplicationContextInstrumentation() {
     super("spring-web");
   }
@@ -57,9 +60,9 @@ public class WebApplicationContextInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".SpringWebMvcDecorator",
-      packageName + ".HandlerMappingResourceNameFilter",
-      packageName + ".HandlerMappingResourceNameFilter$BeanDefinition",
+      CORE_INSTRUMENTATION_PACKAGE_NAME + ".SpringWebMvcDecorator",
+      CORE_INSTRUMENTATION_PACKAGE_NAME + ".HandlerMappingResourceNameFilter",
+      CORE_INSTRUMENTATION_PACKAGE_NAME + ".HandlerMappingResourceNameFilter$BeanDefinition",
     };
   }
 

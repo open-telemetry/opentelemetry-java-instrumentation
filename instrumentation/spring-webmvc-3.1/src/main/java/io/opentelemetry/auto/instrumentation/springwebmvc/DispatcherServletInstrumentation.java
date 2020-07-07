@@ -16,8 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.springwebmvc.InstrumentationHelper.CORE_INSTRUMENTATION_PACKAGE_NAME;
+import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -29,6 +30,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.instrumentation.springwebmvc.HandlerMappingResourceNameFilter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +58,8 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".SpringWebMvcDecorator", packageName + ".HandlerMappingResourceNameFilter"
+      CORE_INSTRUMENTATION_PACKAGE_NAME + ".SpringWebMvcDecorator",
+      CORE_INSTRUMENTATION_PACKAGE_NAME + ".HandlerMappingResourceNameFilter"
     };
   }
 
@@ -131,10 +134,10 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) final Exception exception) {
       final Span span = TRACER.getCurrentSpan();
-      if (span.getContext().isValid() && exception != null) {
+      if (span.getContext().isValid()) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        DECORATE.addThrowable(span, exception);
+        DECORATE.onError(span, exception);
       }
     }
   }

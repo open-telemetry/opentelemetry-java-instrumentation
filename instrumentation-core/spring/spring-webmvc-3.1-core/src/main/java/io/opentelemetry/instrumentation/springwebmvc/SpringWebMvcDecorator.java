@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebmvc;
+package io.opentelemetry.instrumentation.springwebmvc;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracerBase;
+import io.opentelemetry.auto.instrumentation.servlet.HttpServletRequestGetter;
+import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
@@ -31,14 +36,15 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.Controller;
 
-@Slf4j
-public class SpringWebMvcDecorator extends BaseDecorator {
+public class SpringWebMvcDecorator
+    extends HttpServerTracerBase<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webmvc-3.1");
+
   public static final SpringWebMvcDecorator DECORATE = new SpringWebMvcDecorator();
 
-  public Span onRequest(final Span span, final HttpServletRequest request) {
+  public void updateSpanNameUsingPattern(final Span span, final HttpServletRequest request) {
     if (request != null) {
       final Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
@@ -46,7 +52,6 @@ public class SpringWebMvcDecorator extends BaseDecorator {
         span.updateName(bestMatchingPattern.toString());
       }
     }
-    return span;
   }
 
   public String spanNameOnHandle(final Object handler) {
@@ -79,6 +84,20 @@ public class SpringWebMvcDecorator extends BaseDecorator {
     return DECORATE.spanNameForMethod(clazz, methodName);
   }
 
+  /**
+   * This method is used to generate an acceptable span (operation) name based on a given method
+   * reference. Anonymous classes are named based on their parent.
+   *
+   * @param methodName the name of the method to get the name from, nullable
+   * @return the span name from the class and method
+   */
+  public String spanNameForMethod(final Class<?> clazz, final String methodName) {
+    if (methodName == null) {
+      return spanNameForClass(clazz);
+    }
+    return spanNameForClass(clazz) + "." + methodName;
+  }
+
   public String spanNameOnRender(final ModelAndView mv) {
     final String viewName = mv.getViewName();
     if (viewName != null) {
@@ -99,5 +118,60 @@ public class SpringWebMvcDecorator extends BaseDecorator {
       span.setAttribute("view.type", spanNameForClass(view.getClass()));
     }
     return span;
+  }
+
+  public Span afterStart(final Span span) {
+    assert span != null;
+    return span;
+  }
+
+  public Span beforeFinish(final Span span) {
+    assert span != null;
+    return span;
+  }
+
+  @Override
+  public void onError(final Span span, final Throwable throwable) {
+    assert span != null;
+    if (throwable != null) {
+      span.setStatus(Status.UNKNOWN);
+      addThrowable(span, throwable);
+    }
+  }
+
+  @Override
+  protected Integer peerPort(HttpServletRequest request) {
+    return request.getRemotePort();
+  }
+
+  @Override
+  protected String peerHostIP(HttpServletRequest request) {
+    return request.getRemoteAddr();
+  }
+
+  @Override
+  protected Getter<HttpServletRequest> getGetter() {
+    return HttpServletRequestGetter.GETTER;
+  }
+
+  @Override
+  protected URI url(HttpServletRequest request) throws URISyntaxException {
+    return new URI(request.getRequestURI());
+  }
+
+  @Override
+  protected String method(HttpServletRequest request) {
+    return request.getMethod();
+  }
+
+  @Override
+  protected void attachServerContext(Context context, HttpServletRequest request) {
+    request.setAttribute(CONTEXT_ATTRIBUTE, context);
+  }
+
+  @Override
+  public Context getServerContext(HttpServletRequest request) {
+    Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
+    return context instanceof Context ? (Context) context : null;
   }
 }

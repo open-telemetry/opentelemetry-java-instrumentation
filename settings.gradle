@@ -151,7 +151,8 @@ include ':instrumentation:vertx-3.0'
 include ':instrumentation:vertx-reactive-3.5'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2'
-include ':instrumentation-core:spring'
+
+include ':instrumentation-core:spring:spring-webmvc-3.1-core'
 
 // exporter adapters
 include ":auto-exporters"

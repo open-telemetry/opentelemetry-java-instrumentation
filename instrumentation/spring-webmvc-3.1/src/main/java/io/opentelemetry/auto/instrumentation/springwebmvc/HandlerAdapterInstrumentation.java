@@ -17,10 +17,11 @@
 package io.opentelemetry.auto.instrumentation.springwebmvc;
 
 import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.springwebmvc.InstrumentationHelper.CORE_INSTRUMENTATION_PACKAGE_NAME;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 import static java.util.Collections.singletonMap;
@@ -63,7 +64,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".SpringWebMvcDecorator"};
+    return new String[] {CORE_INSTRUMENTATION_PACKAGE_NAME + ".SpringWebMvcDecorator"};
   }
 
   @Override
@@ -85,7 +86,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
       // Name the parent span based on the matching pattern
       final Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
       if (parentContext instanceof Context) {
-        DECORATE.onRequest(getSpan((Context) parentContext), request);
+        DECORATE.updateSpanNameUsingPattern(getSpan((Context) parentContext), request);
       }
 
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
