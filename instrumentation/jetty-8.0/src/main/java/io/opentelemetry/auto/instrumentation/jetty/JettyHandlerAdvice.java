@@ -39,7 +39,7 @@ public class JettyHandlerAdvice {
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
-    Context attachedContext = TRACER.getServerSpanContext(httpServletRequest);
+    Context attachedContext = TRACER.getServerContext(httpServletRequest);
     if (attachedContext != null) {
       // We are inside nested handler, don't create new span
       return;
