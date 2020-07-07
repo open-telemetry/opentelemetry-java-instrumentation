@@ -34,7 +34,6 @@ class CommonsHttpClientTest extends HttpClientTest {
 
   def setupSpec() {
     client.setConnectionTimeout(CONNECT_TIMEOUT_MS)
-    client.setTimeout(READ_TIMEOUT_MS)
   }
 
   @Override

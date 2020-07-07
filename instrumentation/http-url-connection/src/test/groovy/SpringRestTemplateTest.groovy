@@ -35,7 +35,6 @@ class SpringRestTemplateTest extends HttpClientTest {
 
   def setupSpec() {
     factory.connectTimeout = CONNECT_TIMEOUT_MS
-    factory.readTimeout = READ_TIMEOUT_MS
   }
 
   @Override

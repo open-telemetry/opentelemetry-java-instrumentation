@@ -40,7 +40,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
 
     HttpRequest request = requestFactory.buildRequest(method, genericUrl, null)
     request.connectTimeout = CONNECT_TIMEOUT_MS
-    request.readTimeout = READ_TIMEOUT_MS
 
     // GenericData::putAll method converts all known http headers to List<String>
     // and lowercase all other headers
