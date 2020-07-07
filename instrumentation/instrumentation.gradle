@@ -39,9 +39,9 @@ dependencies {
 
 configurations {
   // exclude bootstrap dependencies from shadowJar
-  runtime.exclude module: deps.slf4j
-  runtime.exclude group: 'org.slf4j'
-  runtime.exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
+  implementation.exclude module: deps.slf4j
+  implementation.exclude group: 'org.slf4j'
+  implementation.exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
 }
 
 // need to perform shading in two steps in order to avoid shading java.util.logging.Logger
@@ -54,7 +54,7 @@ task shadowJarStep1(type: com.github.jengelman.gradle.plugins.shadow.tasks.Shado
   archiveClassifier = 'step1'
   destinationDirectory = file("${project.buildDir}/step1")
 
-  configurations = [project.configurations.runtime]
+  configurations = [project.configurations.runtimeClasspath]
 
   dependencies {
     exclude(project(':instrumentation:java-util-logging'))
