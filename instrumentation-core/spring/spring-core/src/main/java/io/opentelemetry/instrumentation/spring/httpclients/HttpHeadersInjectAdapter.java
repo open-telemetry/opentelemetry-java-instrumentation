@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.spring;
+package io.opentelemetry.instrumentation.spring.httpclients;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import io.opentelemetry.context.propagation.HttpTextFormat;
+import org.springframework.http.HttpRequest;
 
-@SpringBootApplication
-public class Application {
+public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpRequest> {
 
-  public static void main(String[] args) {
-    SpringApplication.run(Application.class, args);
+  public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
+
+  @Override
+  public void set(HttpRequest carrier, String key, String value) {
+    carrier.getHeaders().set(key, value);
   }
 }

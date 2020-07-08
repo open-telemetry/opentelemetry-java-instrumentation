@@ -1,0 +1,29 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_7
+}
+
+group = 'io.opentelemetry.instrumentation.spring'
+version = '0.0.1-SNAPSHOT'
+
+apply plugin: 'java'
+apply from: "$rootDir/gradle/java.gradle"
+
+sourceCompatibility = '7'
+
+dependencies {
+  
+  // copy-paste from instrumentation-core-aws-sdk:aws-sdk-2.2-core:
+  // TODO(anuraaga): We currently include common instrumentation logic like decorators in the
+  // bootstrap, but we need to move it out so manual instrumentation does not depend on code from
+  // the agent, like Agent.
+  api project(':auto-bootstrap')
+  
+  api "org.springframework:spring-webmvc:3.1.0.RELEASE"
+  api deps.opentelemetryApi
+
+  testImplementation "org.springframework:spring-test:3.1.0.RELEASE"
+}
+
+test {
+  useJUnitPlatform()
+}
