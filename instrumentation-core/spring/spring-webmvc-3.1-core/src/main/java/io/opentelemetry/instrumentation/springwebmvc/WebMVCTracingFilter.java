@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.springwebmvc;
 
-import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcDecorator.DECORATE;
+import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcServerTracer.DECORATE;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -49,10 +49,9 @@ public class WebMVCTracingFilter extends OncePerRequestFilter implements Ordered
 
     try (Scope scope = tracer.withSpan(serverSpan)) {
       filterChain.doFilter(req, response);
-    } catch (Throwable t) {
-      DECORATE.onError(serverSpan, t);
-    } finally {
       DECORATE.end(serverSpan, response.getStatus());
+    } catch (Throwable t) {
+      DECORATE.endExceptionally(serverSpan, t, response.getStatus());
     }
   }
 

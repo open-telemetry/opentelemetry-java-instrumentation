@@ -1,5 +1,26 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
+muzzle {
+  pass {
+    group = 'org.springframework'
+    module = 'spring-webmvc'
+    versions = "[3.1.0.RELEASE,]"
+    skipVersions += ['1.2.1', '1.2.2', '1.2.3', '1.2.4'] // broken releases... missing dependencies
+    skipVersions += '3.2.1.RELEASE' // missing a required class.  (bad release?)
+    extraDependency "javax.servlet:javax.servlet-api:3.0.1"
+    assertInverse = true
+  }
+
+  // FIXME: webmvc depends on web, so we need a separate integration for spring-web specifically.
+  fail {
+    group = 'org.springframework'
+    module = 'spring-web'
+    versions = "[,]"
+    skipVersions += ['1.2.1', '1.2.2', '1.2.3', '1.2.4'] // broken releases... missing dependencies
+    extraDependency "javax.servlet:javax.servlet-api:3.0.1"
+  }
+}
+
 dependencies {
   compileOnly project(':instrumentation-core:spring:spring-webmvc-3.1-core')
 

@@ -20,35 +20,14 @@ import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracerBase;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter;
-import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Status;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 
-public class SpringWebMvcDecorator
+public class SpringWebMvcServerTracer
     extends HttpServerTracerBase<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 
-  public static final SpringWebMvcDecorator DECORATE = new SpringWebMvcDecorator();
-
-  public Span afterStart(final Span span) {
-    assert span != null;
-    return span;
-  }
-
-  public Span beforeFinish(final Span span) {
-    assert span != null;
-    return span;
-  }
-
-  @Override
-  public void onError(final Span span, final Throwable throwable) {
-    assert span != null;
-    if (throwable != null) {
-      span.setStatus(Status.UNKNOWN);
-      addThrowable(span, throwable);
-    }
-  }
+  public static final SpringWebMvcServerTracer DECORATE = new SpringWebMvcServerTracer();
 
   @Override
   protected Integer peerPort(HttpServletRequest request) {
