@@ -14,21 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.servlet; /*
-                                                   * Copyright The OpenTelemetry Authors
-                                                   *
-                                                   * Licensed under the Apache License, Version 2.0 (the "License");
-                                                   * you may not use this file except in compliance with the License.
-                                                   * You may obtain a copy of the License at
-                                                   *
-                                                   *     http://www.apache.org/licenses/LICENSE-2.0
-                                                   *
-                                                   * Unless required by applicable law or agreed to in writing, software
-                                                   * distributed under the License is distributed on an "AS IS" BASIS,
-                                                   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-                                                   * See the License for the specific language governing permissions and
-                                                   * limitations under the License.
-                                                   */
+package io.opentelemetry.instrumentation.servlet;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
@@ -66,13 +52,13 @@ public abstract class ServletHttpServerTracer
 
   @Override
   public Context getServerContext(HttpServletRequest request) {
-    Object context = request.getAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE);
+    Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
   }
 
   @Override
   protected void attachServerContext(Context context, HttpServletRequest request) {
-    request.setAttribute(HttpServerTracer.CONTEXT_ATTRIBUTE, context);
+    request.setAttribute(CONTEXT_ATTRIBUTE, context);
   }
 
   @Override

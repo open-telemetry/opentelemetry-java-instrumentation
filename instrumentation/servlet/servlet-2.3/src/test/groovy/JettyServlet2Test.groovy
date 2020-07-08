@@ -84,20 +84,6 @@ class JettyServlet2Test extends HttpServerTest<Server> {
     false
   }
 
-  //This fails on Jetty because HttpServletResponseInstrumentation creates
-  // HttpServletResponse.sendError span within ServerEntryAdvice trace.
-  // Thus `HttpServerTest.assertTheTraces` finds 2 spans in that artificial trace, instead of expected 1
-  @Override
-  boolean testException() {
-    return false
-  }
-
-//Contributed by HttpServletResponseInstrumentation
-//  @Override
-//  boolean hasResponseSpan(ServerEndpoint endpoint) {
-//    endpoint == REDIRECT || endpoint == ERROR
-//  }
-
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
