@@ -1,9 +1,9 @@
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compile deps.groovy
-  compile deps.spock
+  api deps.groovy
+  api deps.spock
 
-  compile deps.bytebuddy
-  compile deps.bytebuddyagent
+  api deps.bytebuddy
+  api deps.bytebuddyagent
 }

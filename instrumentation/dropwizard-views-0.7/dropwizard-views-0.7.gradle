@@ -11,6 +11,6 @@ muzzle {
 dependencies {
   compileOnly group: 'io.dropwizard', name: 'dropwizard-views', version: '0.7.0'
 
-  testCompile group: 'io.dropwizard', name: 'dropwizard-views-freemarker', version: '0.7.0'
-  testCompile group: 'io.dropwizard', name: 'dropwizard-views-mustache', version: '0.7.0'
+  testImplementation group: 'io.dropwizard', name: 'dropwizard-views-freemarker', version: '0.7.0'
+  testImplementation group: 'io.dropwizard', name: 'dropwizard-views-mustache', version: '0.7.0'
 }

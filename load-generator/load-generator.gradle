@@ -1,10 +1,10 @@
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compile project(':auto-bootstrap')
+  implementation project(':auto-bootstrap')
 
-  compile 'info.picocli:picocli:4.0.4'
-  compile deps.guava
+  implementation 'info.picocli:picocli:4.0.4'
+  implementation deps.guava
 }
 
 task launch(type: JavaExec) {

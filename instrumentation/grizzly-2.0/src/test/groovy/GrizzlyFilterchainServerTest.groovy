@@ -215,6 +215,12 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> {
       }
     }
   }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "HttpCodecFilter.handleRead"
+  }
+
 }
 
 

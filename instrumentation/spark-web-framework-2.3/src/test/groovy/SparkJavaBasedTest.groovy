@@ -68,6 +68,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
             "span.origin.type" spark.embeddedserver.jetty.JettyHandler.name
+            "servlet.path" ''
           }
         }
       }

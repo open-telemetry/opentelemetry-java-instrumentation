@@ -41,7 +41,7 @@ import io.opentelemetry.auto.instrumentation.netty.v4_0.client.HttpClientTracing
 import io.opentelemetry.auto.instrumentation.netty.v4_0.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.auto.instrumentation.netty.v4_0.server.HttpServerTracingHandler;
-import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerDecorator;
+import io.opentelemetry.auto.instrumentation.netty.v4_0.server.NettyHttpServerTracer;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
@@ -84,7 +84,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
       packageName + ".client.HttpClientResponseTracingHandler",
       packageName + ".client.HttpClientTracingHandler",
       // server helpers
-      packageName + ".server.NettyHttpServerDecorator",
+      packageName + ".server.NettyHttpServerTracer",
       packageName + ".server.NettyRequestExtractAdapter",
       packageName + ".server.HttpServerRequestTracingHandler",
       packageName + ".server.HttpServerResponseTracingHandler",
@@ -163,7 +163,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
-      final Span span = NettyHttpServerDecorator.TRACER.getCurrentSpan();
+      final Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
         final Attribute<Span> attribute =
             pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);

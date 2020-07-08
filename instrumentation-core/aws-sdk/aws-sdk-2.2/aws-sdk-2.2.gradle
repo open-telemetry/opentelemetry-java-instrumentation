@@ -27,31 +27,31 @@ dependencies {
 
   api group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
-  testCompile project(':testing')
+  testImplementation project(':testing')
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
-  testCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
+  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
   // Also include netty instrumentation because it is used by aws async client
-  testCompile project(':instrumentation:netty:netty-4.1')
-  testCompile group: 'software.amazon.awssdk', name: 'apache-client', version: '2.2.0'
-  testCompile group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
-  testCompile group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
-  testCompile group: 'software.amazon.awssdk', name: 'ec2', version: '2.2.0'
-  testCompile group: 'software.amazon.awssdk', name: 'sqs', version: '2.2.0'
-  testCompile group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.2.0'
-  testCompile group: 'software.amazon.awssdk', name: 'kinesis', version: '2.2.0'
+  testImplementation project(':instrumentation:netty:netty-4.1')
+  testImplementation group: 'software.amazon.awssdk', name: 'apache-client', version: '2.2.0'
+  testImplementation group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
+  testImplementation group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
+  testImplementation group: 'software.amazon.awssdk', name: 'ec2', version: '2.2.0'
+  testImplementation group: 'software.amazon.awssdk', name: 'sqs', version: '2.2.0'
+  testImplementation group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.2.0'
+  testImplementation group: 'software.amazon.awssdk', name: 'kinesis', version: '2.2.0'
   testImplementation deps.guava
 
-  latestDepTestCompile project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
-  latestDepTestCompile project(':instrumentation:netty:netty-4.1')
+  latestDepTestImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
+  latestDepTestImplementation project(':instrumentation:netty:netty-4.1')
 
-  latestDepTestCompile group: 'software.amazon.awssdk', name: 'apache-client', version: '+'
-  latestDepTestCompile group: 'software.amazon.awssdk', name: 's3', version: '+'
-  latestDepTestCompile group: 'software.amazon.awssdk', name: 'rds', version: '+'
-  latestDepTestCompile group: 'software.amazon.awssdk', name: 'ec2', version: '+'
-  latestDepTestCompile group: 'software.amazon.awssdk', name: 'sqs', version: '+'
-  latestDepTestCompile group: 'software.amazon.awssdk', name: 'dynamodb', version: '+'
-  latestDepTestCompile group: 'software.amazon.awssdk', name: 'kinesis', version: '+'
+  latestDepTestImplementation group: 'software.amazon.awssdk', name: 'apache-client', version: '+'
+  latestDepTestImplementation group: 'software.amazon.awssdk', name: 's3', version: '+'
+  latestDepTestImplementation group: 'software.amazon.awssdk', name: 'rds', version: '+'
+  latestDepTestImplementation group: 'software.amazon.awssdk', name: 'ec2', version: '+'
+  latestDepTestImplementation group: 'software.amazon.awssdk', name: 'sqs', version: '+'
+  latestDepTestImplementation group: 'software.amazon.awssdk', name: 'dynamodb', version: '+'
+  latestDepTestImplementation group: 'software.amazon.awssdk', name: 'kinesis', version: '+'
 }
 
 shadowJar {

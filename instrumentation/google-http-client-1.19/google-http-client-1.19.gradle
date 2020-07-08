@@ -20,7 +20,7 @@ testSets {
 dependencies {
   compileOnly group: 'com.google.http-client', name: 'google-http-client', version: '1.19.0'
 
-  testCompile group: 'com.google.http-client', name: 'google-http-client', version: '1.19.0'
+  testImplementation group: 'com.google.http-client', name: 'google-http-client', version: '1.19.0'
 
-  latestDepTestCompile group: 'com.google.http-client', name: 'google-http-client', version: '+'
+  latestDepTestImplementation group: 'com.google.http-client', name: 'google-http-client', version: '+'
 }

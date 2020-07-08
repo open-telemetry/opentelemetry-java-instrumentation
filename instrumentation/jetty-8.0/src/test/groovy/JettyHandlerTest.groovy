@@ -119,7 +119,7 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def handlerName = handler().class.name
     trace.span(index) {
-      operationName "$method $handlerName"
+      operationName "TestHandler.handle"
       spanKind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -135,6 +135,7 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         "$Tags.HTTP_METHOD" method
         "$Tags.HTTP_STATUS" endpoint.status
         "span.origin.type" handlerName
+        "servlet.path" ''
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }

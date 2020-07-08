@@ -3,9 +3,9 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-kotlin.gradle"
 
 dependencies {
-  testCompile deps.kotlin
-  testCompile deps.coroutines
+  testImplementation deps.kotlin
+  testImplementation deps.coroutines
 
-  testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:java-concurrent')
+  testImplementation project(':instrumentation:annotations')
 }

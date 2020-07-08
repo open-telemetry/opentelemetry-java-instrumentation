@@ -7,7 +7,7 @@ dependencies {
 def checkstyleConfigDir = file("${buildscript.sourceFile.parentFile}/enforcement/checkstyle")
 
 checkstyle {
-  configDir = checkstyleConfigDir
+  configDirectory = checkstyleConfigDir
   configProperties.checkstyleConfigDir = checkstyleConfigDir
   maxWarnings = 500
 }

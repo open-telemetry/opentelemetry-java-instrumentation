@@ -6,12 +6,12 @@ apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
-  compile(deps.opentelemetryJaeger) {
+  implementation(deps.opentelemetryJaeger) {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }
   compileOnly deps.opentelemetrySdkAutoConfig
-  compile group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
-  compile group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.24.0'
+  implementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
+  implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.24.0'
 }
 
 shadowJar {

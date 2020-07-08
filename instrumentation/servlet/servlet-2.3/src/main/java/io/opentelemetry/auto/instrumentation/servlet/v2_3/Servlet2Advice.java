@@ -45,11 +45,13 @@ public class Servlet2Advice {
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    if (TRACER.getAttachedContext(httpServletRequest) != null) {
+    if (TRACER.getServerContext(httpServletRequest) != null) {
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
+    span =
+        TRACER.startSpan(
+            httpServletRequest, httpServletRequest, method, servlet.getClass().getName());
     scope = TRACER.startScope(span, httpServletRequest);
   }
 

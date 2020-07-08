@@ -29,7 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServletRequest> {
+public abstract class ServletHttpServerTracer
+    extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 
   @Override
   protected String getVersion() {
@@ -50,25 +51,25 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   }
 
   @Override
-  public Context getAttachedContext(HttpServletRequest request) {
+  public Context getServerContext(HttpServletRequest request) {
     Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
   }
 
   @Override
-  protected void attachContextToRequest(Context context, HttpServletRequest request) {
+  protected void attachServerContext(Context context, HttpServletRequest request) {
     request.setAttribute(CONTEXT_ATTRIBUTE, context);
   }
 
   @Override
-  protected Integer peerPort(HttpServletRequest request) {
+  protected Integer peerPort(HttpServletRequest connection) {
     // HttpServletResponse doesn't have accessor for remote port prior to Servlet spec 3.0
     return null;
   }
 
   @Override
-  protected String peerHostIP(HttpServletRequest request) {
-    return request.getRemoteAddr();
+  protected String peerHostIP(HttpServletRequest connection) {
+    return connection.getRemoteAddr();
   }
 
   @Override

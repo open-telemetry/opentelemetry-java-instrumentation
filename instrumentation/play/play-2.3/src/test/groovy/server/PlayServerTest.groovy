@@ -69,4 +69,9 @@ class PlayServerTest extends HttpServerTest<TestServer> {
       }
     }
   }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "netty.request"
+  }
 }

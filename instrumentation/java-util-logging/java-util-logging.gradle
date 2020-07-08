@@ -16,7 +16,7 @@ testSets {
 }
 
 dependencies {
-  testCompile 'org.jboss.logmanager:jboss-logmanager:1.0.0.GA'
+  testImplementation 'org.jboss.logmanager:jboss-logmanager:1.0.0.GA'
 
-  latestDepTestCompile 'org.jboss.logmanager:jboss-logmanager:+'
+  latestDepTestImplementation 'org.jboss.logmanager:jboss-logmanager:+'
 }

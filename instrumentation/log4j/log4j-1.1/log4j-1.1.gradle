@@ -19,16 +19,16 @@ configurations {
   // In order to test the real log4j library we need to remove the log4j transitive
   // dependency 'log4j-over-slf4j' brought in by :testing which would shadow
   // the log4j module under test using a proxy to slf4j instead.
-  testCompile.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
+  testImplementation.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 
   // See: https://stackoverflow.com/a/9047963/2749853
-  testCompile.exclude group: 'javax.jms', module: 'jms'
+  testImplementation.exclude group: 'javax.jms', module: 'jms'
 }
 
 dependencies {
   compileOnly group: 'log4j', name: 'log4j', version: '1.2.16'
 
-  testCompile group: 'log4j', name: 'log4j', version: '1.2.16'
+  testImplementation group: 'log4j', name: 'log4j', version: '1.2.16'
 
-  latestDepTestCompile group: 'log4j', name: 'log4j', version: '+'
+  latestDepTestImplementation group: 'log4j', name: 'log4j', version: '+'
 }

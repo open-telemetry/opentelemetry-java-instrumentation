@@ -5,13 +5,13 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  testCompile project(':auto-tooling')
+  testImplementation project(':auto-tooling')
 
-  testCompile deps.opentelemetrySdkAutoConfig
-  testCompile project(':auto-exporters:opentelemetry-auto-exporter-otlp')
-  testCompile project(':auto-exporters:opentelemetry-auto-exporter-jaeger')
-  testCompile project(':auto-exporters:opentelemetry-auto-exporter-logging')
-  testCompile project(':auto-exporters:opentelemetry-auto-exporter-zipkin')
+  testImplementation deps.opentelemetrySdkAutoConfig
+  testImplementation project(':auto-exporters:opentelemetry-auto-exporter-otlp')
+  testImplementation project(':auto-exporters:opentelemetry-auto-exporter-jaeger')
+  testImplementation project(':auto-exporters:opentelemetry-auto-exporter-logging')
+  testImplementation project(':auto-exporters:opentelemetry-auto-exporter-zipkin')
 }
 
 tasks.withType(Test).configureEach() {
