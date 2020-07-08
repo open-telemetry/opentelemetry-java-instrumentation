@@ -1,30 +1,20 @@
 plugins {
-  id 'play'
+  id "org.gradle.playframework" version "0.9"
 }
 
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
+  playVersion = "2.6.20"
+  scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
 }
 
-def playVersion = "2.6.20"
-def scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
-
-model {
-  components {
-    play {
-      platform play: playVersion, scala: scalaVersion, java: '1.8'
-      injectedRoutesGenerator = true
-    }
+play {
+  platform {
+    playVersion = project.ext.playVersion
+    scalaVersion = project.ext.scalaVersion
+    javaVersion = JavaVersion.VERSION_1_8
   }
-  distributions {
-    playBinary {
-      contents {
-        from("conf") {
-          into "conf"
-        }
-      }
-    }
-  }
+  injectedRoutesGenerator = true
 }
 
 repositories {
@@ -45,9 +35,9 @@ apply from: "$rootDir/gradle/java.gradle"
 description = 'Play Integration Tests.'
 
 dependencies {
-  play "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
-  play "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
-  play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
   testImplementation project(':smoke-tests')
 }
