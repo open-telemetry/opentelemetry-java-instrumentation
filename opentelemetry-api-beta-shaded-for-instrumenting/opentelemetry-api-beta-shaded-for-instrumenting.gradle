@@ -5,7 +5,7 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compile deps.opentelemetryApi
+  implementation deps.opentelemetryApi
 }
 
 // OpenTelemetry API shaded so that it can be used in opentelemetry-api-beta instrumentation,

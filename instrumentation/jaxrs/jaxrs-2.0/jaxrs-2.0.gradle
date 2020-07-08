@@ -27,27 +27,27 @@ testSets {
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
 
-  testCompile project(':instrumentation:servlet:servlet-3.0')
-  testCompile project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0')
-  testCompile project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0')
-  testCompile project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1')
+  testImplementation project(':instrumentation:servlet:servlet-3.0')
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0')
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0')
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1')
 
   // Jersey
   // First version with DropwizardTestSupport:
-  testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
-  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
-  testCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
+  testImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+  testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
 
-  latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
+  latestDepTestImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
 
   // Resteasy
-  testCompile group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
+  testImplementation group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.0.0.Final'
 
   resteasy31TestCompile(group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.1.0.Final') {
     force = true
   }
 
-  latestDepTestCompile group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '+'
+  latestDepTestImplementation group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '+'
 }
 
 test.dependsOn resteasy31Test

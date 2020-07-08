@@ -150,4 +150,9 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> {
   void stopServer(ServerBootstrap server) {
     server?.shutdown()
   }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "netty.request"
+  }
 }

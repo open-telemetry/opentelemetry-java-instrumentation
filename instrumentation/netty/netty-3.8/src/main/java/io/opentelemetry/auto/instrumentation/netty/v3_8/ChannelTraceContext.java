@@ -16,6 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.netty.v3_8;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.trace.Span;
 import lombok.Data;
@@ -35,4 +36,5 @@ public class ChannelTraceContext {
   Span serverSpan;
   Span clientSpan;
   Span clientParentSpan;
+  Context context;
 }

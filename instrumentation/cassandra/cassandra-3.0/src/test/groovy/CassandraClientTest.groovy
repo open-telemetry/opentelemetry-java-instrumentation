@@ -16,11 +16,10 @@
 
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
 
@@ -126,13 +125,13 @@ class CassandraClientTest extends AgentTestRunner {
       } else {
         childOf((SpanData) parentSpan)
       }
-      tags {
-        "$MoreTags.NET_PEER_NAME" "localhost"
-        "$MoreTags.NET_PEER_IP" "127.0.0.1"
-        "$MoreTags.NET_PEER_PORT" EmbeddedCassandraServerHelper.getNativeTransportPort()
-        "$Tags.DB_TYPE" "cassandra"
-        "$Tags.DB_INSTANCE" keyspace
-        "$Tags.DB_STATEMENT" statement
+      attributes {
+        "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+        "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+        "${SemanticAttributes.NET_PEER_PORT.key()}" EmbeddedCassandraServerHelper.getNativeTransportPort()
+        "${SemanticAttributes.DB_TYPE.key()}" "cassandra"
+        "${SemanticAttributes.DB_INSTANCE.key()}" keyspace
+        "${SemanticAttributes.DB_STATEMENT.key()}" statement
       }
     }
   }

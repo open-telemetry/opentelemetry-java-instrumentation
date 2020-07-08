@@ -10,7 +10,7 @@ publishing {
   }
   publications {
     maven(MavenPublication) {
-      if (project.tasks.findByName("shadowJar") != null) {
+      if (project.tasks.findByName("shadowJar") != null && !findProperty('noShadowPublish')) {
         project.shadow.component(it)
         //These two are here just to satisfy Maven Central
         artifact sourcesJar

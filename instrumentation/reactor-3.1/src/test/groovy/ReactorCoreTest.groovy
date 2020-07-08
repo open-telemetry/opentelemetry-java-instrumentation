@@ -15,7 +15,6 @@
  */
 
 import io.opentelemetry.OpenTelemetry
-import io.opentelemetry.auto.instrumentation.reactor.shaded.TracingPublishers
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.TraceUtils
 import io.opentelemetry.trace.DefaultSpan
@@ -61,13 +60,13 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "publisher-parent"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
 
@@ -77,7 +76,7 @@ class ReactorCoreTest extends AgentTestRunner {
           span(i + 2) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -124,8 +123,8 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           errored true
           parent()
-          tags {
-            errorTags(RuntimeException, EXCEPTION_MESSAGE)
+          attributes {
+            errorAttributes(RuntimeException, EXCEPTION_MESSAGE)
           }
         }
 
@@ -157,8 +156,8 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           errored true
           parent()
-          tags {
-            errorTags(RuntimeException, EXCEPTION_MESSAGE)
+          attributes {
+            errorAttributes(RuntimeException, EXCEPTION_MESSAGE)
           }
         }
 
@@ -172,7 +171,7 @@ class ReactorCoreTest extends AgentTestRunner {
           span(i + 2) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -197,7 +196,7 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -221,7 +220,7 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -231,7 +230,7 @@ class ReactorCoreTest extends AgentTestRunner {
           span(i + 2) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -277,7 +276,7 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -288,7 +287,7 @@ class ReactorCoreTest extends AgentTestRunner {
           span(3 + i) {
             operationName "add two"
             childOf span(2)
-            tags {
+            attributes {
             }
           }
         }
@@ -296,7 +295,7 @@ class ReactorCoreTest extends AgentTestRunner {
           span(3 + workItems + i) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -336,7 +335,7 @@ class ReactorCoreTest extends AgentTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -346,7 +345,7 @@ class ReactorCoreTest extends AgentTestRunner {
           span(2 + i) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -356,7 +355,7 @@ class ReactorCoreTest extends AgentTestRunner {
           span(0) {
             operationName "add one"
             parent()
-            tags {
+            attributes {
             }
           }
         }

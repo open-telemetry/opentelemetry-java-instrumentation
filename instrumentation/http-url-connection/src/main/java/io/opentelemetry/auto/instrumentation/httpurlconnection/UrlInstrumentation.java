@@ -28,11 +28,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InternalJarURLHandler;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.util.Map;
@@ -88,11 +87,12 @@ public class UrlInstrumentation extends Instrumenter.Default {
         final Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
 
         try (final Scope scope = currentContextWith(span)) {
-          span.setAttribute(Tags.HTTP_URL, url.toString());
-          span.setAttribute(MoreTags.NET_PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
+          span.setAttribute(SemanticAttributes.HTTP_URL.key(), url.toString());
+          span.setAttribute(
+              SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
           final String host = url.getHost();
           if (host != null && !host.isEmpty()) {
-            span.setAttribute(MoreTags.NET_PEER_NAME, host);
+            span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), host);
           }
 
           DECORATE.onError(span, throwable);

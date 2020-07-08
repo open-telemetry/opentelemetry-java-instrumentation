@@ -40,9 +40,9 @@ compileJava {
 dependencies {
   compileOnly group: 'com.sparkjava', name: 'spark-core', version: '2.3'
 
-  testCompile project(':instrumentation:jetty-8.0')
+  testImplementation project(':instrumentation:jetty-8.0')
 
-  testCompile group: 'com.sparkjava', name: 'spark-core', version: '2.4'
+  testImplementation group: 'com.sparkjava', name: 'spark-core', version: '2.4'
 
-  latestDepTestCompile group: 'com.sparkjava', name: 'spark-core', version: '+'
+  latestDepTestImplementation group: 'com.sparkjava', name: 'spark-core', version: '+'
 }

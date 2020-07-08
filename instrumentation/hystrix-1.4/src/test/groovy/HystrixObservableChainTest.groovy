@@ -81,14 +81,14 @@ class HystrixObservableChainTest extends AgentTestRunner {
           operationName "parent"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "ExampleGroup.HystrixObservableChainTest\$1.execute"
           childOf span(0)
           errored false
-          tags {
+          attributes {
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -98,14 +98,14 @@ class HystrixObservableChainTest extends AgentTestRunner {
           operationName "tracedMethod"
           childOf span(1)
           errored false
-          tags {
+          attributes {
           }
         }
         span(3) {
           operationName "OtherGroup.HystrixObservableChainTest\$2.execute"
           childOf span(1)
           errored false
-          tags {
+          attributes {
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
             "hystrix.circuit-open" false
@@ -115,7 +115,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
           operationName "anotherTracedMethod"
           childOf span(3)
           errored false
-          tags {
+          attributes {
           }
         }
       }

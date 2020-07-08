@@ -20,10 +20,10 @@ dependencies {
 
   compileOnly group: 'org.glassfish.grizzly', name: 'grizzly-http', version: '2.0'
 
-  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
-  testCompile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
-  testCompile group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.0'
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+  testImplementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
+  testImplementation group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.0'
 
-  latestDepTestCompile group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.+'
-  latestDepTestCompile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
+  latestDepTestImplementation group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.+'
+  latestDepTestImplementation group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
 }

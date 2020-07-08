@@ -1,4 +1,3 @@
-
 /*
  * Copyright The OpenTelemetry Authors
  *
@@ -18,7 +17,6 @@
 package io.opentelemetry.instrumentation.reactor
 
 import io.opentelemetry.OpenTelemetry
-
 import io.opentelemetry.auto.test.InstrumentationTestRunner
 import io.opentelemetry.auto.test.utils.TraceUtils
 import io.opentelemetry.trace.DefaultSpan
@@ -76,13 +74,13 @@ class ReactorCoreTest extends InstrumentationTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "publisher-parent"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
 
@@ -92,7 +90,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           span(i + 2) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -139,8 +137,8 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           operationName "trace-parent"
           errored true
           parent()
-          tags {
-            errorTags(RuntimeException, EXCEPTION_MESSAGE)
+          attributes {
+            errorAttributes(RuntimeException, EXCEPTION_MESSAGE)
           }
         }
 
@@ -172,8 +170,8 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           operationName "trace-parent"
           errored true
           parent()
-          tags {
-            errorTags(RuntimeException, EXCEPTION_MESSAGE)
+          attributes {
+            errorAttributes(RuntimeException, EXCEPTION_MESSAGE)
           }
         }
 
@@ -187,7 +185,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           span(i + 2) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -212,7 +210,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -236,7 +234,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -246,7 +244,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           span(i + 2) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -292,7 +290,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -303,7 +301,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           span(3 + i) {
             operationName "add two"
             childOf span(2)
-            tags {
+            attributes {
             }
           }
         }
@@ -311,7 +309,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           span(3 + workItems + i) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -351,7 +349,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
         span(0) {
           operationName "trace-parent"
           parent()
-          tags {
+          attributes {
           }
         }
 
@@ -361,7 +359,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           span(2 + i) {
             operationName "add one"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -371,7 +369,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
           span(0) {
             operationName "add one"
             parent()
-            tags {
+            attributes {
             }
           }
         }

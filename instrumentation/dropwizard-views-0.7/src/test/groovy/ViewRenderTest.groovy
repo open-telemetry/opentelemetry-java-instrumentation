@@ -43,7 +43,7 @@ class ViewRenderTest extends AgentTestRunner {
         span(1) {
           operationName "Render $template"
           childOf span(0)
-          tags {
+          attributes {
             "span.origin.type" renderer.class.simpleName
           }
         }

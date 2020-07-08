@@ -25,8 +25,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletRequest;
@@ -40,12 +41,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * Class <code>javax.servlet.http.HttpServletResponse</code> got method <code>getStatus</code> only
  * in Servlet specification version 3.0. This means that we cannot set {@link
- * io.opentelemetry.auto.instrumentation.api.Tags#HTTP_STATUS} attribute on the created span using
- * just response object.
+ * io.opentelemetry.trace.attributes.SemanticAttributes#HTTP_STATUS_CODE} attribute on the created
+ * span using just response object.
  *
  * <p>This instrumentation intercepts status setting methods from Servlet 2.0 specification and
  * stores that status into context store. Then {@link Servlet2Advice#stopSpan(ServletRequest,
- * ServletResponse, SpanWithScope, Throwable)} can get it from context and set required span
+ * ServletResponse, Throwable, Span, Scope)} can get it from context and set required span
  * attribute.
  */
 @AutoService(Instrumenter.class)

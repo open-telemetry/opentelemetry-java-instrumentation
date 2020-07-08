@@ -43,9 +43,7 @@ public class TracingPublishers {
     Hooks.onEachOperator(TracingPublishers.class.getName(), TracingPublishers::wrap);
   }
 
-  /**
-   * Unregisters the hook registered by {@link #registerOnEachOperator()}.
-   */
+  /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public static void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingPublishers.class.getName());
   }

@@ -32,7 +32,7 @@ testSets {
 dependencies {
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
-  testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
+  testImplementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
-  latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
+  latestDepTestImplementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
 }

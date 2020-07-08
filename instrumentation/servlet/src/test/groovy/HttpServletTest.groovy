@@ -58,13 +58,13 @@ class HttpServletTest extends AgentTestRunner {
         span(1) {
           operationName "HttpServlet.service"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(2) {
           operationName "${expectedSpanName}.doGet"
           childOf span(1)
-          tags {
+          attributes {
           }
         }
       }
@@ -106,16 +106,16 @@ class HttpServletTest extends AgentTestRunner {
           operationName "HttpServlet.service"
           childOf span(0)
           errored true
-          tags {
-            errorTags(ex.class, ex.message)
+          attributes {
+            errorAttributes(ex.class, ex.message)
           }
         }
         span(2) {
           operationName "${servlet.class.name}.doGet"
           childOf span(1)
           errored true
-          tags {
-            errorTags(ex.class, ex.message)
+          attributes {
+            errorAttributes(ex.class, ex.message)
           }
         }
       }

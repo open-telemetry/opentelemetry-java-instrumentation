@@ -17,13 +17,13 @@
 package io.opentelemetry.auto.instrumentation.grizzly;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
-import org.glassfish.grizzly.http.HttpHeader;
+import org.glassfish.grizzly.http.HttpRequestPacket;
 
-public class ExtractAdapter implements HttpTextFormat.Getter<HttpHeader> {
+public class ExtractAdapter implements HttpTextFormat.Getter<HttpRequestPacket> {
   public static final ExtractAdapter GETTER = new ExtractAdapter();
 
   @Override
-  public String get(final HttpHeader carrier, final String key) {
-    return carrier.getHeader(key);
+  public String get(final HttpRequestPacket request, final String key) {
+    return request.getHeader(key);
   }
 }

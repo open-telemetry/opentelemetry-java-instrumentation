@@ -25,8 +25,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
@@ -43,8 +42,11 @@ import lombok.extern.slf4j.Slf4j;
 
 // TODO In search for a better home package
 @Slf4j
-public abstract class HttpServerTracer<REQUEST> {
+public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
   public static final String CONTEXT_ATTRIBUTE = "io.opentelemetry.instrumentation.context";
+  // Keeps track of the server span for the current trace.
+  private static final Context.Key<Span> CONTEXT_SERVER_SPAN_KEY =
+      Context.key("opentelemetry-trace-server-span-key");
 
   protected final Tracer tracer;
 
@@ -56,25 +58,31 @@ public abstract class HttpServerTracer<REQUEST> {
 
   protected abstract String getVersion();
 
-  public Span startSpan(REQUEST request, Method origin, String originType) {
+  public Span startSpan(REQUEST request, CONNECTION connection, Method origin, String originType) {
+    String spanName = spanNameForMethod(origin);
+    return startSpan(request, connection, spanName, originType);
+  }
+
+  public Span startSpan(
+      REQUEST request, CONNECTION connection, String spanName, String originType) {
     final Span.Builder builder =
         tracer
-            .spanBuilder(spanNameForMethod(origin))
+            .spanBuilder(spanName)
             .setSpanKind(SERVER)
             .setParent(extract(request, getGetter()))
             // TODO Where span.origin.type is defined?
             .setAttribute("span.origin.type", originType);
 
     Span span = builder.startSpan();
-    onConnection(span, request);
+    onConnection(span, connection);
     onRequest(span, request);
 
     return span;
   }
 
-  protected void onConnection(Span span, REQUEST request) {
-    SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(request));
-    final Integer port = peerPort(request);
+  protected void onConnection(Span span, CONNECTION connection) {
+    SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(connection));
+    final Integer port = peerPort(connection);
     // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
     if (port != null && port > 0) {
       SemanticAttributes.NET_PEER_PORT.set(span, port);
@@ -116,11 +124,11 @@ public abstract class HttpServerTracer<REQUEST> {
           urlBuilder.append("#").append(fragment);
         }
 
-        span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
+        span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
 
         if (Config.get().isHttpServerTagQueryString()) {
-          span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
-          span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
+          span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
+          span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
         }
       }
     } catch (final Exception e) {
@@ -133,7 +141,7 @@ public abstract class HttpServerTracer<REQUEST> {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
    */
-  protected String spanNameForMethod(final Method method) {
+  private String spanNameForMethod(final Method method) {
     return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
   }
 
@@ -141,7 +149,7 @@ public abstract class HttpServerTracer<REQUEST> {
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
    */
-  public String spanNameForClass(final Class clazz) {
+  private String spanNameForClass(final Class clazz) {
     if (!clazz.isAnonymousClass()) {
       return clazz.getSimpleName();
     }
@@ -161,16 +169,21 @@ public abstract class HttpServerTracer<REQUEST> {
 
   // TODO semantic attributes
   public static void addThrowable(final Span span, final Throwable throwable) {
-    span.setAttribute(MoreTags.ERROR_MSG, throwable.getMessage());
-    span.setAttribute(MoreTags.ERROR_TYPE, throwable.getClass().getName());
+    span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
+    span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
     final StringWriter errorString = new StringWriter();
     throwable.printStackTrace(new PrintWriter(errorString));
-    span.setAttribute(MoreTags.ERROR_STACK, errorString.toString());
+    span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
   }
 
   public Span getCurrentSpan() {
     return tracer.getCurrentSpan();
+  }
+
+  public Span getServerSpan(STORAGE storage) {
+    Context attachedContext = getServerContext(storage);
+    return attachedContext == null ? null : CONTEXT_SERVER_SPAN_KEY.get(attachedContext);
   }
 
   /**
@@ -178,9 +191,11 @@ public abstract class HttpServerTracer<REQUEST> {
    *
    * <p>Attaches new context to the request to avoid creating duplicate server spans.
    */
-  public Scope startScope(Span span, REQUEST request) {
-    Context newContext = withSpan(span, Context.current());
-    attachContextToRequest(newContext, request);
+  public Scope startScope(Span span, STORAGE storage) {
+    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
+    Context serverSpanContext = Context.current().withValue(CONTEXT_SERVER_SPAN_KEY, span);
+    Context newContext = withSpan(span, serverSpanContext);
+    attachServerContext(newContext, storage);
     return withScopedContext(newContext);
   }
 
@@ -188,6 +203,11 @@ public abstract class HttpServerTracer<REQUEST> {
   public void end(Span span, int responseStatus) {
     setStatus(span, responseStatus);
     span.end();
+  }
+
+  /** Ends given span exceptionally with default response status code 500. */
+  public void endExceptionally(Span span, Throwable throwable) {
+    endExceptionally(span, throwable, 500);
   }
 
   public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
@@ -218,9 +238,9 @@ public abstract class HttpServerTracer<REQUEST> {
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
   }
 
-  protected abstract Integer peerPort(REQUEST request);
+  protected abstract Integer peerPort(CONNECTION connection);
 
-  protected abstract String peerHostIP(REQUEST request);
+  protected abstract String peerHostIP(CONNECTION connection);
 
   protected abstract HttpTextFormat.Getter<REQUEST> getGetter();
 
@@ -228,13 +248,16 @@ public abstract class HttpServerTracer<REQUEST> {
 
   protected abstract String method(REQUEST request);
 
-  /** Stores given context in the given request in implementation specific way. */
-  protected abstract void attachContextToRequest(Context context, REQUEST request);
+  /**
+   * Stores given context in the given request-response-loop storage in implementation specific way.
+   */
+  protected abstract void attachServerContext(Context context, STORAGE storage);
 
   /**
-   * Returns context stored to given request by {@link #attachContextToRequest(Context, REQUEST)}.
+   * Returns context stored to the given request-response-loop storage by {@link
+   * #attachServerContext(Context, STORAGE)}.
    *
    * <p>May be null.
    */
-  public abstract Context getAttachedContext(REQUEST request);
+  public abstract Context getServerContext(STORAGE storage);
 }

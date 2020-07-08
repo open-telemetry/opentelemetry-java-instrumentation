@@ -17,8 +17,7 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
@@ -58,7 +57,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      span.setAttribute(Tags.HTTP_METHOD, method(request));
+      span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));
 
       final String userAgent = requestHeader(request, USER_AGENT);
       if (userAgent != null) {
@@ -76,13 +75,13 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           }
           if (url.getHost() != null) {
             urlBuilder.append(url.getHost());
-            span.setAttribute(MoreTags.NET_PEER_NAME, url.getHost());
+            span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), url.getHost());
             String peerService = mapToPeer(url.getHost());
             if (peerService != null) {
               span.setAttribute("peer.service", peerService);
             }
             if (url.getPort() > 0) {
-              span.setAttribute(MoreTags.NET_PEER_PORT, url.getPort());
+              span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), url.getPort());
               if (url.getPort() != 80 && url.getPort() != 443) {
                 urlBuilder.append(":");
                 urlBuilder.append(url.getPort());
@@ -104,11 +103,11 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
             urlBuilder.append("#").append(fragment);
           }
 
-          span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
+          span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
-            span.setAttribute(MoreTags.HTTP_QUERY, query);
-            span.setAttribute(MoreTags.HTTP_FRAGMENT, fragment);
+            span.setAttribute(MoreAttributes.HTTP_QUERY, query);
+            span.setAttribute(MoreAttributes.HTTP_FRAGMENT, fragment);
           }
         }
       } catch (final Exception e) {
@@ -123,7 +122,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     if (response != null) {
       final Integer status = status(response);
       if (status != null) {
-        span.setAttribute(Tags.HTTP_STATUS, status);
+        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
       }
     }
