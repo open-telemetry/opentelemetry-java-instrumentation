@@ -50,12 +50,12 @@ import com.rabbitmq.client.MessageProperties;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -145,7 +145,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         spanBuilder.setSpanKind(CLIENT);
       }
       final Span span = spanBuilder.startSpan();
-      span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       CURRENT_RABBIT_SPAN.set(span);
@@ -267,7 +267,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (response != null) {
         span.setAttribute("message.size", response.getBody().length);
       }
-      span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
       try (final Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onGet(span, queue);

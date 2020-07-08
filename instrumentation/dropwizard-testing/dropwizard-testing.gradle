@@ -10,14 +10,14 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 //}
 
 dependencies {
-  testCompile project(':instrumentation:jaxrs:jaxrs-2.0')
-  testCompile project(':instrumentation:servlet:servlet-3.0')
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0')
+  testImplementation project(':instrumentation:servlet:servlet-3.0')
 
   // First version with DropwizardTestSupport:
-  testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
-  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
-  testCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
+  testImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+  testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
 
   // Anything 1.0+ fails with a java.lang.NoClassDefFoundError: org/eclipse/jetty/server/RequestLog
-//  latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
+//  latestDepTestImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
 }

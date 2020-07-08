@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Retry
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -53,20 +53,25 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
       } else {
         parent()
       }
-      tags {
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_STATUS" endpoint.status
+      attributes {
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
+  }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "akka.request"
   }
 }
 

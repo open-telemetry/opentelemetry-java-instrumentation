@@ -23,6 +23,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecor
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 
+// TODO Finatra does not create server spans, should not use HttpServerDecorator
 public class FinatraDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final FinatraDecorator DECORATE = new FinatraDecorator();
 

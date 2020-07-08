@@ -24,7 +24,7 @@ import io.opentelemetry.trace.Status
 
 import java.util.regex.Pattern
 
-import static TagsAssert.assertTags
+import static AttributesAssert.assertAttributes
 import static io.opentelemetry.auto.test.asserts.EventAssert.assertEvent
 
 class SpanAssert {
@@ -145,9 +145,9 @@ class SpanAssert {
     }
   }
 
-  void tags(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TagsAssert'])
-            @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    assertTags(span.attributes, spec)
+  void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
+            @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+    assertAttributes(span.attributes, spec)
   }
 
   void assertEventsAllVerified() {

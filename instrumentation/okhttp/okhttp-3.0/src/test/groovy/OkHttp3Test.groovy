@@ -30,8 +30,6 @@ class OkHttp3Test extends HttpClientTest {
 
   def client = new OkHttpClient.Builder()
     .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-    .readTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-    .writeTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
     .build()
 
   @Override

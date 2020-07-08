@@ -47,7 +47,7 @@ public class Servlet3Advice {
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    Context attachedContext = TRACER.getAttachedContext(httpServletRequest);
+    Context attachedContext = TRACER.getServerContext(httpServletRequest);
     if (attachedContext != null) {
       if (TRACER.needsRescoping(attachedContext)) {
         scope = withScopedContext(attachedContext);
@@ -56,7 +56,9 @@ public class Servlet3Advice {
       return;
     }
 
-    span = TRACER.startSpan(httpServletRequest, method, servlet.getClass().getName());
+    span =
+        TRACER.startSpan(
+            httpServletRequest, httpServletRequest, method, servlet.getClass().getName());
     scope = TRACER.startScope(span, httpServletRequest);
   }
 

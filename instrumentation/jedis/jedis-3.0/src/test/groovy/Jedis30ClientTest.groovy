@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
@@ -63,10 +63,10 @@ class Jedis30ClientTest extends AgentTestRunner {
         span(0) {
           operationName "SET"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_URL" "localhost:$port"
-            "$Tags.DB_STATEMENT" "SET"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
       }
@@ -86,10 +86,10 @@ class Jedis30ClientTest extends AgentTestRunner {
         span(0) {
           operationName "SET"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_URL" "localhost:$port"
-            "$Tags.DB_STATEMENT" "SET"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
       }
@@ -97,10 +97,10 @@ class Jedis30ClientTest extends AgentTestRunner {
         span(0) {
           operationName "GET"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_URL" "localhost:$port"
-            "$Tags.DB_STATEMENT" "GET"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }
@@ -120,10 +120,10 @@ class Jedis30ClientTest extends AgentTestRunner {
         span(0) {
           operationName "SET"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_URL" "localhost:$port"
-            "$Tags.DB_STATEMENT" "SET"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
       }
@@ -131,10 +131,10 @@ class Jedis30ClientTest extends AgentTestRunner {
         span(0) {
           operationName "RANDOMKEY"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "redis"
-            "$Tags.DB_URL" "localhost:$port"
-            "$Tags.DB_STATEMENT" "RANDOMKEY"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_URL.key()}" "localhost:$port"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
           }
         }
       }

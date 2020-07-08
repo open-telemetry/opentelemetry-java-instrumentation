@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import javax.servlet.http.HttpServletRequest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -122,12 +122,12 @@ class JettyServlet2Test extends HttpServerTest<Server> {
       } else {
         parent()
       }
-      tags {
-        "$MoreTags.NET_PEER_IP" "127.0.0.1"
+      attributes {
+        "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
         // No peer port
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_STATUS" endpoint.status
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         "servlet.context" "/$CONTEXT"
         "servlet.path" endpoint.path
         "span.origin.type" TestServlet2.Sync.name
@@ -137,7 +137,7 @@ class JettyServlet2Test extends HttpServerTest<Server> {
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }

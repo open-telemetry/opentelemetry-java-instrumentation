@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -39,7 +39,7 @@ class SlickTest extends AgentTestRunner {
           operationName "run query"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -47,12 +47,12 @@ class SlickTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" SlickUtils.Db()
-            "$Tags.DB_USER" SlickUtils.Username()
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(SlickUtils.TestQuery())
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" SlickUtils.Db()
+            "${SemanticAttributes.DB_USER.key()}" SlickUtils.Username()
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(SlickUtils.TestQuery())
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }

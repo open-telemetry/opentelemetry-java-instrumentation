@@ -15,11 +15,10 @@
  */
 
 import com.google.common.io.Files
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -109,12 +108,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored false
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
@@ -124,7 +123,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Compile /$jspFileName"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -134,7 +133,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /$jspFileName"
           errored false
-          tags {
+          attributes {
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -171,12 +170,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored false
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/getQuery.jsp"
@@ -186,7 +185,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Compile /getQuery.jsp"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -196,7 +195,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /getQuery.jsp"
           errored false
-          tags {
+          attributes {
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -230,12 +229,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored false
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/post.jsp"
-            "$Tags.HTTP_METHOD" "POST"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/post.jsp"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/post.jsp"
@@ -245,7 +244,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Compile /post.jsp"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -255,7 +254,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /post.jsp"
           errored false
-          tags {
+          attributes {
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -286,12 +285,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 500
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
@@ -308,7 +307,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Compile /$jspFileName"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -318,7 +317,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /$jspFileName"
           errored true
-          tags {
+          attributes {
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -361,12 +360,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored false
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeHtml.jsp"
@@ -376,7 +375,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Compile /includes/includeHtml.jsp"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -386,7 +385,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /includes/includeHtml.jsp"
           errored false
-          tags {
+          attributes {
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -421,12 +420,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored false
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeMulti.jsp"
@@ -436,7 +435,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Compile /includes/includeMulti.jsp"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -446,7 +445,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(0)
           operationName "Render /includes/includeMulti.jsp"
           errored false
-          tags {
+          attributes {
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -461,7 +460,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(3)
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -471,7 +470,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(3)
           operationName "Render /common/javaLoopH2.jsp"
           errored false
-          tags {
+          attributes {
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -486,7 +485,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(6)
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -496,7 +495,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           childOf span(6)
           operationName "Render /common/javaLoopH2.jsp"
           errored false
-          tags {
+          attributes {
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -526,27 +525,27 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$jspFileName"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 500
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
-            errorTags(JasperException, String)
+            errorAttributes(JasperException, String)
           }
         }
         span(1) {
           childOf span(0)
           operationName "Compile /$jspFileName"
           errored true
-          tags {
+          attributes {
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            errorTags(JasperException, String)
+            errorAttributes(JasperException, String)
           }
         }
       }
@@ -582,12 +581,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           // FIXME: this is not a great span name for serving static content.
           // spanName "GET /$jspWebappContext/$staticFile"
           errored false
-          tags {
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "http://localhost:$port/$jspWebappContext/$staticFile"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$staticFile"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$staticFile"

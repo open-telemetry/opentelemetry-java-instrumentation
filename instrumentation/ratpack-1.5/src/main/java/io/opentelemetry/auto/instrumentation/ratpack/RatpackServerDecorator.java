@@ -30,6 +30,7 @@ import ratpack.http.Response;
 import ratpack.http.Status;
 import ratpack.server.PublicAddress;
 
+// TODO Ratpack does not create server spans, should not use HttpServerDecorator
 @Slf4j
 public class RatpackServerDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final RatpackServerDecorator DECORATE = new RatpackServerDecorator();

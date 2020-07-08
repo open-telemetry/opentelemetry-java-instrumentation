@@ -47,7 +47,7 @@ public final class HttpCodecFilterInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".GrizzlyDecorator", packageName + ".ExtractAdapter"};
+    return new String[] {packageName + ".GrizzlyHttpServerTracer", packageName + ".ExtractAdapter"};
   }
 
   @Override

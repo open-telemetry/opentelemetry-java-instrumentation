@@ -21,11 +21,12 @@ import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -83,13 +84,13 @@ public abstract class BaseDecorator {
       } else {
         // Failed DNS lookup, the host string is the name.
         final String hostString = remoteConnection.getHostString();
-        span.setAttribute(MoreTags.NET_PEER_NAME, hostString);
+        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), hostString);
         String peerService = mapToPeer(hostString);
         if (peerService != null) {
           span.setAttribute("peer.service", peerService);
         }
       }
-      span.setAttribute(MoreTags.NET_PEER_PORT, remoteConnection.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
     return span;
   }
@@ -98,9 +99,9 @@ public abstract class BaseDecorator {
     assert span != null;
     final String hostName = remoteAddress.getHostName();
     if (!hostName.equals(remoteAddress.getHostAddress())) {
-      span.setAttribute(MoreTags.NET_PEER_NAME, remoteAddress.getHostName());
+      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteAddress.getHostName());
     }
-    span.setAttribute(MoreTags.NET_PEER_IP, remoteAddress.getHostAddress());
+    span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), remoteAddress.getHostAddress());
 
     String peerService = mapToPeer(hostName);
     if (peerService == null) {
@@ -113,12 +114,12 @@ public abstract class BaseDecorator {
   }
 
   public static void addThrowable(final Span span, final Throwable throwable) {
-    span.setAttribute(MoreTags.ERROR_MSG, throwable.getMessage());
-    span.setAttribute(MoreTags.ERROR_TYPE, throwable.getClass().getName());
+    span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
+    span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
     final StringWriter errorString = new StringWriter();
     throwable.printStackTrace(new PrintWriter(errorString));
-    span.setAttribute(MoreTags.ERROR_STACK, errorString.toString());
+    span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
   }
 
   /**

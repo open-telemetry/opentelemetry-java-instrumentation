@@ -18,8 +18,7 @@ package io.opentelemetry.auto.test.base
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
 import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -44,7 +43,6 @@ import static org.junit.Assume.assumeTrue
 abstract class HttpClientTest extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 1000
-  protected static final READ_TIMEOUT_MS = 2000
   protected static final BASIC_AUTH_KEY = "custom authorization header"
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 
@@ -427,24 +425,24 @@ abstract class HttpClientTest extends AgentTestRunner {
       operationName expectedOperationName(method)
       spanKind CLIENT
       errored exception != null
-      tags {
-        "$MoreTags.NET_PEER_NAME" uri.host
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$MoreTags.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 } // Optional
-        "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
-        "$Tags.HTTP_METHOD" method
+      attributes {
+        "${SemanticAttributes.NET_PEER_NAME.key()}" uri.host
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port > 0 ? uri.port : { it == null || it == 443 } // Optional
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
         if (userAgent) {
           "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith(userAgent) }
         }
         if (status) {
-          "$Tags.HTTP_STATUS" status
+          "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
         }
         if (tagQueryString) {
-          "$MoreTags.HTTP_QUERY" uri.query
-          "$MoreTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
+          "$MoreAttributes.HTTP_QUERY" uri.query
+          "$MoreAttributes.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
         }
         if (exception) {
-          errorTags(exception.class, exception.message)
+          errorAttributes(exception.class, exception.message)
         }
       }
     }
@@ -460,7 +458,7 @@ abstract class HttpClientTest extends AgentTestRunner {
       } else {
         childOf((SpanData) parentSpan)
       }
-      tags {
+      attributes {
       }
     }
   }

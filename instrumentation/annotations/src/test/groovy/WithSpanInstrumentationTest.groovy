@@ -48,7 +48,7 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
           operationName "TracedWithSpan.otel"
           parent()
           errored false
-          tags {
+          attributes {
             "providerAttr" "Otel"
           }
         }
@@ -67,7 +67,7 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
           operationName "manualName"
           parent()
           errored false
-          tags {
+          attributes {
             "providerAttr" "Otel"
           }
         }

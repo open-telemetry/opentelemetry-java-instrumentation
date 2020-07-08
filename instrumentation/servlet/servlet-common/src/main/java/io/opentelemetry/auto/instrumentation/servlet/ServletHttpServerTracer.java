@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.servlet;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
 import java.net.URI;
@@ -29,7 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServletRequest> {
+public abstract class ServletHttpServerTracer
+    extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 
   @Override
   protected String getVersion() {
@@ -50,25 +51,25 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   }
 
   @Override
-  public Context getAttachedContext(HttpServletRequest request) {
+  public Context getServerContext(HttpServletRequest request) {
     Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
   }
 
   @Override
-  protected void attachContextToRequest(Context context, HttpServletRequest request) {
+  protected void attachServerContext(Context context, HttpServletRequest request) {
     request.setAttribute(CONTEXT_ATTRIBUTE, context);
   }
 
   @Override
-  protected Integer peerPort(HttpServletRequest request) {
+  protected Integer peerPort(HttpServletRequest connection) {
     // HttpServletResponse doesn't have accessor for remote port prior to Servlet spec 3.0
     return null;
   }
 
   @Override
-  protected String peerHostIP(HttpServletRequest request) {
-    return request.getRemoteAddr();
+  protected String peerHostIP(HttpServletRequest connection) {
+    return connection.getRemoteAddr();
   }
 
   @Override
@@ -105,7 +106,7 @@ public abstract class ServletHttpServerTracer extends HttpServerTracer<HttpServl
   public void setPrincipal(Span span, HttpServletRequest request) {
     final Principal principal = request.getUserPrincipal();
     if (principal != null) {
-      span.setAttribute(MoreTags.USER_NAME, principal.getName());
+      span.setAttribute(MoreAttributes.USER_NAME, principal.getName());
     }
   }
 }

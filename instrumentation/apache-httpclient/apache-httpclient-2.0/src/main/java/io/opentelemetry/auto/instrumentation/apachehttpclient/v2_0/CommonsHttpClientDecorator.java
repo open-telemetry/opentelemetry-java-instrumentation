@@ -55,16 +55,13 @@ public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, 
 
   @Override
   protected String requestHeader(HttpMethod httpMethod, String name) {
-    return header(httpMethod, name);
+    final Header header = httpMethod.getRequestHeader(name);
+    return header != null ? header.getValue() : null;
   }
 
   @Override
   protected String responseHeader(HttpMethod httpMethod, String name) {
-    return header(httpMethod, name);
-  }
-
-  private static String header(HttpMethod httpMethod, String name) {
-    final Header header = httpMethod.getRequestHeader(name);
+    final Header header = httpMethod.getResponseHeader(name);
     return header != null ? header.getValue() : null;
   }
 }

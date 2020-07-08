@@ -5,10 +5,10 @@ apply from: "$rootDir/gradle/test-with-scala.gradle"
 dependencies {
   compileOnly deps.scala
 
-  testCompile deps.scala
-  testCompile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.3.16'
-  testCompile group: 'com.typesafe.akka', name: 'akka-testkit_2.11', version: '2.3.16'
+  testImplementation deps.scala
+  testImplementation group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.3.16'
+  testImplementation group: 'com.typesafe.akka', name: 'akka-testkit_2.11', version: '2.3.16'
 
-  testCompile project(':instrumentation:java-concurrent')
-  testCompile project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:java-concurrent')
+  testImplementation project(':instrumentation:annotations')
 }

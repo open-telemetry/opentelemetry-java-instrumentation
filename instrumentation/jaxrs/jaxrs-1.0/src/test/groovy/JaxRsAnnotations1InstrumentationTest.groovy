@@ -45,7 +45,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "POST /a"
-          tags {
+          attributes {
           }
         }
       }
@@ -65,13 +65,13 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
         span(0) {
           operationName name
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "${className}.call"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -158,7 +158,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "test"
-          tags {
+          attributes {
           }
         }
       }

@@ -59,7 +59,7 @@ abstract class LogEventsTestBase extends AgentTestRunner {
         if (capture) {
           span(1) {
             operationName "log.message"
-            tags {
+            attributes {
               "message" "xyz"
               "level" testMethod.toUpperCase()
               "loggerName" "abc"
@@ -89,7 +89,7 @@ abstract class LogEventsTestBase extends AgentTestRunner {
         trace(0, 1) {
           span(0) {
             operationName "log.message"
-            tags {
+            attributes {
               "message" "xyz"
               "level" testMethod.toUpperCase()
               "loggerName" "abc"

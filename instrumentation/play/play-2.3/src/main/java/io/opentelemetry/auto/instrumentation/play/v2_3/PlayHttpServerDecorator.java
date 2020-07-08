@@ -18,9 +18,9 @@ package io.opentelemetry.auto.instrumentation.play.v2_3;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URI;
@@ -30,6 +30,7 @@ import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.Option;
 
+// TODO Play does not create server spans, it should not use HttpServerDecorator
 @Slf4j
 public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Request, Result> {
   public static final PlayHttpServerDecorator DECORATE = new PlayHttpServerDecorator();
@@ -79,7 +80,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
 
   @Override
   public Span onError(final Span span, Throwable throwable) {
-    span.setAttribute(Tags.HTTP_STATUS, 500);
+    span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), 500);
     if (throwable != null
         // This can be moved to instanceof check when using Java 8.
         && throwable.getClass().getName().equals("java.util.concurrent.CompletionException")

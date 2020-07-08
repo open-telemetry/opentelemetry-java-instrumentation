@@ -49,7 +49,7 @@ class TracerTest extends AgentTestRunner {
           spanKind io.opentelemetry.trace.Span.Kind.PRODUCER
           parent()
           status io.opentelemetry.trace.Status.UNKNOWN
-          tags {
+          attributes {
             "string" "1"
             "long" 2
             "double" 3.0
@@ -78,13 +78,13 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "parent"
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "test"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -109,13 +109,13 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "parent"
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "test"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -141,13 +141,13 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "parent"
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "test"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -168,13 +168,13 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "parent"
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "test"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -197,7 +197,7 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "parent"
           parent()
-          tags {
+          attributes {
           }
         }
       }
@@ -205,7 +205,7 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "test"
           parent()
-          tags {
+          attributes {
           }
         }
       }
@@ -226,13 +226,13 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "parent"
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "test"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -252,7 +252,7 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "test2"
           parent()
-          tags {
+          attributes {
           }
         }
       }
@@ -274,7 +274,7 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "test2"
           parent()
-          tags {
+          attributes {
           }
         }
       }
@@ -296,7 +296,7 @@ class TracerTest extends AgentTestRunner {
         span(0) {
           operationName "test2"
           parent()
-          tags {
+          attributes {
           }
         }
       }
