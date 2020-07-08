@@ -162,7 +162,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -205,7 +205,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -262,7 +262,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -305,7 +305,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "RANDOMKEY"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -366,7 +366,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "HMSET"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -387,7 +387,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           operationName "HGETALL"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port

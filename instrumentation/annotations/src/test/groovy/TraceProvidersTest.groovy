@@ -48,7 +48,7 @@ class TraceProvidersTest extends AgentTestRunner {
           operationName "SayTracedHello.${provider.toLowerCase()}"
           parent()
           errored false
-          tags {
+          attributes {
             "providerAttr" provider
           }
         }

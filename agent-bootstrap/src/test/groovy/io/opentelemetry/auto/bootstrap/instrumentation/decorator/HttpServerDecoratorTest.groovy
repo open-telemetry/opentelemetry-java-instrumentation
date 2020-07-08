@@ -17,9 +17,9 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
 import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 
@@ -34,8 +34,8 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (req) {
-      1 * span.setAttribute(Tags.HTTP_METHOD, "test-method")
-      1 * span.setAttribute(Tags.HTTP_URL, url)
+      1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), "test-method")
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), url)
     }
     0 * _
 
@@ -60,13 +60,13 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (expectedUrl) {
-      1 * span.setAttribute(Tags.HTTP_URL, expectedUrl)
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
-      1 * span.setAttribute(MoreTags.HTTP_QUERY, expectedQuery)
-      1 * span.setAttribute(MoreTags.HTTP_FRAGMENT, expectedFragment)
+      1 * span.setAttribute(MoreAttributes.HTTP_QUERY, expectedQuery)
+      1 * span.setAttribute(MoreAttributes.HTTP_FRAGMENT, expectedFragment)
     }
-    1 * span.setAttribute(Tags.HTTP_METHOD, null)
+    1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), null)
     0 * _
 
     where:
@@ -97,13 +97,13 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (conn) {
-      1 * span.setAttribute(MoreTags.NET_PEER_PORT, 555)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), 555)
       if (ipv4) {
-        1 * span.setAttribute(MoreTags.NET_PEER_IP, "10.0.0.1")
+        1 * span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), "10.0.0.1")
       } else if (ipv4 != null) {
-        1 * span.setAttribute(MoreTags.NET_PEER_IP, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
+        1 * span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
       } else {
-        1 * span.setAttribute(MoreTags.NET_PEER_IP, null)
+        1 * span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), null)
       }
     }
     0 * _
@@ -125,7 +125,7 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (status) {
-      1 * span.setAttribute(Tags.HTTP_STATUS, status)
+      1 * span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status)
       1 * span.setStatus(HttpStatusConverter.statusFromHttpStatus(status))
     }
     0 * _

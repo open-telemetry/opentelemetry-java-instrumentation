@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 /** @deprecated use {@link DatabaseClientTracer} instead. */
 @Deprecated
@@ -37,7 +37,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   @Override
   public Span afterStart(final Span span) {
     assert span != null;
-    span.setAttribute(Tags.DB_TYPE, dbType());
+    span.setAttribute(SemanticAttributes.DB_TYPE.key(), dbType());
     return super.afterStart(span);
   }
 
@@ -45,16 +45,16 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setAttribute(Tags.DB_USER, dbUser(connection));
-      span.setAttribute(Tags.DB_INSTANCE, dbInstance(connection));
-      span.setAttribute(Tags.DB_URL, dbUrl(connection));
+      span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
+      span.setAttribute(SemanticAttributes.DB_INSTANCE.key(), dbInstance(connection));
+      span.setAttribute(SemanticAttributes.DB_URL.key(), dbUrl(connection));
     }
     return span;
   }
 
   public Span onStatement(final Span span, final String statement) {
     assert span != null;
-    span.setAttribute(Tags.DB_STATEMENT, statement);
+    span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), statement);
     return span;
   }
 }

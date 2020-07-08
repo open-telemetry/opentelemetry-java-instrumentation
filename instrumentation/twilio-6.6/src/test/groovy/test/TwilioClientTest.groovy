@@ -27,9 +27,8 @@ import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
@@ -152,14 +151,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -196,14 +195,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "CallCreator.create"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
             "twilio.account" "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.sid" "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -262,14 +261,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -280,11 +279,11 @@ class TwilioClientTest extends AgentTestRunner {
           operationName expectedOperationName("POST")
           spanKind CLIENT
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" String
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Long
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" String
+            "${SemanticAttributes.HTTP_URL.key()}" String
+            "${SemanticAttributes.HTTP_METHOD.key()}" String
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
           }
         }
       }
@@ -354,14 +353,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -372,22 +371,22 @@ class TwilioClientTest extends AgentTestRunner {
           operationName expectedOperationName("POST")
           spanKind CLIENT
           errored true
-          tags {
-            "$MoreTags.NET_PEER_NAME" String
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Long
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" String
+            "${SemanticAttributes.HTTP_URL.key()}" String
+            "${SemanticAttributes.HTTP_METHOD.key()}" String
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
           }
         }
         span(3) {
           operationName expectedOperationName("POST")
           spanKind CLIENT
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" String
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Long
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" String
+            "${SemanticAttributes.HTTP_URL.key()}" String
+            "${SemanticAttributes.HTTP_METHOD.key()}" String
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
           }
         }
       }
@@ -464,14 +463,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "MessageCreator.createAsync"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -482,7 +481,7 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -493,22 +492,22 @@ class TwilioClientTest extends AgentTestRunner {
           operationName expectedOperationName("POST")
           spanKind CLIENT
           errored true
-          tags {
-            "$MoreTags.NET_PEER_NAME" String
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Long
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" String
+            "${SemanticAttributes.HTTP_URL.key()}" String
+            "${SemanticAttributes.HTTP_METHOD.key()}" String
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
           }
         }
         span(4) {
           operationName expectedOperationName("POST")
           spanKind CLIENT
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" String
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Long
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" String
+            "${SemanticAttributes.HTTP_URL.key()}" String
+            "${SemanticAttributes.HTTP_METHOD.key()}" String
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
           }
         }
       }
@@ -546,16 +545,16 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored true
           parent()
-          tags {
-            errorTags(ApiException, "Testing Failure")
+          attributes {
+            errorAttributes(ApiException, "Testing Failure")
           }
         }
         span(1) {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored true
-          tags {
-            errorTags(ApiException, "Testing Failure")
+          attributes {
+            errorAttributes(ApiException, "Testing Failure")
           }
         }
       }
@@ -585,7 +584,7 @@ class TwilioClientTest extends AgentTestRunner {
           spanKind CLIENT
           parent()
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -631,14 +630,14 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "MessageCreator.createAsync"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -649,7 +648,7 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -702,24 +701,24 @@ class TwilioClientTest extends AgentTestRunner {
           operationName "test"
           errored true
           parent()
-          tags {
-            errorTags(ApiException, "Testing Failure")
+          attributes {
+            errorAttributes(ApiException, "Testing Failure")
           }
         }
         span(1) {
           operationName "MessageCreator.createAsync"
           spanKind CLIENT
           errored true
-          tags {
-            errorTags(ApiException, "Testing Failure")
+          attributes {
+            errorAttributes(ApiException, "Testing Failure")
           }
         }
         span(2) {
           operationName "MessageCreator.create"
           spanKind CLIENT
           errored true
-          tags {
-            errorTags(ApiException, "Testing Failure")
+          attributes {
+            errorAttributes(ApiException, "Testing Failure")
           }
         }
       }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
@@ -45,7 +45,7 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "toString test"
-          tags {
+          attributes {
           }
         }
       }
@@ -73,19 +73,19 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "JpaRepository.findAll"
           spanKind INTERNAL
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^select /
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -105,19 +105,19 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "CrudRepository.save"
           spanKind INTERNAL
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) { // insert
           operationName ~/^insert /
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^insert /
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -137,19 +137,19 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "CrudRepository.save"
           spanKind INTERNAL
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^select /
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -157,12 +157,12 @@ class SpringJpaTest extends AgentTestRunner {
           operationName ~/^update /
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^update /
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^update /
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -180,19 +180,19 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "JpaCustomerRepository.findByLastName"
           spanKind INTERNAL
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^select /
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -210,19 +210,19 @@ class SpringJpaTest extends AgentTestRunner {
           operationName "CrudRepository.delete"
           spanKind INTERNAL
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) { // select
           operationName ~/^select /
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^select /
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -230,12 +230,12 @@ class SpringJpaTest extends AgentTestRunner {
           operationName ~/^delete /
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^delete /
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }

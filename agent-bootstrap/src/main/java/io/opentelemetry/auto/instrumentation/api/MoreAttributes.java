@@ -16,15 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.api;
 
-// standard tag names (and span kind values) from OpenTracing (see io.opentracing.tag.Tags)
-public class Tags {
+public class MoreAttributes {
+  public static final String HTTP_QUERY = "http.query.string";
+  public static final String HTTP_FRAGMENT = "http.fragment.string";
 
-  public static final String HTTP_URL = "http.url";
-  public static final String HTTP_STATUS = "http.status_code";
-  public static final String HTTP_METHOD = "http.method";
-  public static final String DB_TYPE = "db.type";
-  public static final String DB_INSTANCE = "db.instance";
-  public static final String DB_USER = "db.user";
-  public static final String DB_STATEMENT = "db.statement";
-  public static final String DB_URL = "db.url";
+  public static final String USER_NAME = "user.principal";
+
+  public static final String ERROR_MSG = "error.msg"; // string representing the error message
+  public static final String ERROR_TYPE = "error.type"; // string representing the type of the error
+  public static final String ERROR_STACK = "error.stack"; // human readable version of the stack
 }

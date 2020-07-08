@@ -18,8 +18,8 @@ import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
 
@@ -78,16 +78,16 @@ class LagomTest extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored false
-          tags {
-            "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 101
+          attributes {
+            "${SemanticAttributes.HTTP_URL.key()}" "ws://localhost:${server.port()}/echo"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 101
           }
         }
         span(1) {
           childOf span(0)
           operationName 'tracedMethod'
-          tags {
+          attributes {
           }
         }
       }
@@ -113,10 +113,10 @@ class LagomTest extends AgentTestRunner {
           operationName expectedOperationName()
           spanKind SERVER
           errored true
-          tags {
-            "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 500
+          attributes {
+            "${SemanticAttributes.HTTP_URL.key()}" "ws://localhost:${server.port()}/error"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
           }
         }
       }

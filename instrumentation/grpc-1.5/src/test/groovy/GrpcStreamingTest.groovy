@@ -22,10 +22,10 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.trace.Status
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -121,10 +121,10 @@ class GrpcStreamingTest extends AgentTestRunner {
           parent()
           errored false
           status(Status.OK)
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" port
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
           (1..(clientMessageCount * serverMessageCount)).each {
             def messageId = it
@@ -143,10 +143,10 @@ class GrpcStreamingTest extends AgentTestRunner {
           childOf span(0)
           errored false
           status(Status.OK)
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }
           clientRange.each {
             def messageId = it

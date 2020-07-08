@@ -146,7 +146,7 @@ class JMS1Test extends AgentTestRunner {
           operationName expectedSpanName
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -178,7 +178,7 @@ class JMS1Test extends AgentTestRunner {
           operationName expectedSpanName
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -225,7 +225,7 @@ class JMS1Test extends AgentTestRunner {
           operationName expectedSpanName
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -250,7 +250,7 @@ class JMS1Test extends AgentTestRunner {
       spanKind PRODUCER
       errored false
       parent()
-      tags {
+      attributes {
         "span.origin.type" ActiveMQMessageProducer.name
       }
     }
@@ -268,7 +268,7 @@ class JMS1Test extends AgentTestRunner {
         hasLink((SpanData) parentOrLinkedSpan)
       }
       errored false
-      tags {
+      attributes {
         "span.origin.type" origin.name
       }
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot
@@ -38,9 +38,9 @@ class TomcatClassloadingTest extends AgentTestRunner {
 
     when:
     // If instrumentation didn't work this would blow up with NPE due to incomplete resources mocking
-    def clazz = classloader.loadClass("io.opentelemetry.auto.instrumentation.api.Tags")
+    def clazz = classloader.loadClass("io.opentelemetry.auto.instrumentation.api.MoreAttributes")
 
     then:
-    clazz == Tags
+    clazz == MoreAttributes
   }
 }

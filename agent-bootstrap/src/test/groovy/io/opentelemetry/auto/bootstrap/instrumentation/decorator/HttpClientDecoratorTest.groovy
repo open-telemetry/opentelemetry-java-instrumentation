@@ -17,8 +17,7 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
 import io.opentelemetry.auto.config.Config
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
@@ -42,10 +41,10 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (req) {
-      1 * span.setAttribute(Tags.HTTP_METHOD, req.method)
-      1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
-      1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), req.url.port)
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
     }
     0 * _
@@ -71,10 +70,10 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (req) {
-      1 * span.setAttribute(Tags.HTTP_METHOD, req.method)
-      1 * span.setAttribute(Tags.HTTP_URL, "$req.url")
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, req.url.host)
-      1 * span.setAttribute(MoreTags.NET_PEER_PORT, req.url.port)
+      1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), req.method)
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), "$req.url")
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), req.url.host)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), req.url.port)
       1 * span.setAttribute("peer.service", "reservation-service")
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT.key(), req["User-Agent"])
     }
@@ -92,18 +91,18 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (expectedUrl) {
-      1 * span.setAttribute(Tags.HTTP_URL, expectedUrl)
+      1 * span.setAttribute(SemanticAttributes.HTTP_URL.key(), expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
-      1 * span.setAttribute(MoreTags.HTTP_QUERY, expectedQuery)
-      1 * span.setAttribute(MoreTags.HTTP_FRAGMENT, expectedFragment)
+      1 * span.setAttribute(MoreAttributes.HTTP_QUERY, expectedQuery)
+      1 * span.setAttribute(MoreAttributes.HTTP_FRAGMENT, expectedFragment)
     }
-    1 * span.setAttribute(Tags.HTTP_METHOD, null)
+    1 * span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), null)
     if (hostname) {
-      1 * span.setAttribute(MoreTags.NET_PEER_NAME, hostname)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), hostname)
     }
     if (port) {
-      1 * span.setAttribute(MoreTags.NET_PEER_PORT, port)
+      1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), port)
     }
     0 * _
 
@@ -134,7 +133,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (status) {
-      1 * span.setAttribute(Tags.HTTP_STATUS, status)
+      1 * span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status)
       1 * span.setStatus(HttpStatusConverter.statusFromHttpStatus(status))
     }
     0 * _

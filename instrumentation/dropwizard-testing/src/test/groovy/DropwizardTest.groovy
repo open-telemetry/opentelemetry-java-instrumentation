@@ -20,12 +20,12 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.servlet.ServletHandler
 import spock.lang.Retry
 
@@ -98,9 +98,9 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
       spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
-      tags {
+      attributes {
         if (endpoint == EXCEPTION) {
-          errorTags(Exception, EXCEPTION.body)
+          errorAttributes(Exception, EXCEPTION.body)
         }
       }
     }
@@ -118,12 +118,12 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
       } else {
         parent()
       }
-      tags {
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$MoreTags.NET_PEER_PORT" Long
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_STATUS" endpoint.status
+      attributes {
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         "span.origin.type" ServletHandler.CachedChain.name
         "servlet.context" ""
         "servlet.path" ""
@@ -133,7 +133,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
