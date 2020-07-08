@@ -56,7 +56,13 @@ public class RestTemplateDecorator extends HttpClientDecorator<HttpRequest, Clie
   }
 
   @Override
-  protected String userAgent(HttpRequest request) {
-    return request.getHeaders().getFirst(USER_AGENT);
+  protected String requestHeader(HttpRequest request, String name) {
+    return request.getHeaders().getFirst(name);
+  }
+
+  @Override
+  protected String responseHeader(ClientHttpResponse response, String name) {
+    // TODO Auto-generated method stub
+    return response.getHeaders().getFirst(name);
   }
 }

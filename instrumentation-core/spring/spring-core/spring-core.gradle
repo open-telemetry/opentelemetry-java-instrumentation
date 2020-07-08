@@ -24,6 +24,8 @@ dependencies {
   testImplementation "org.springframework:spring-test:3.1.0.RELEASE"
 }
 
-test {
-  useJUnitPlatform()
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
 }
