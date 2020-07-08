@@ -3,7 +3,6 @@ ext {
 }
 
 group = 'io.opentelemetry.instrumentation.spring.webflux'
-version = '0.0.1-SNAPSHOT'
 
 apply from: "$rootDir/gradle/java.gradle"
 
