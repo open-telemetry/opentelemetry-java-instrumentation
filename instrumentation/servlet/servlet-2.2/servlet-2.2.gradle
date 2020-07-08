@@ -23,7 +23,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
   api(project(':instrumentation-core:servlet'))
 
   testImplementation(project(':testing')) {

@@ -146,7 +146,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
 | [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
-| [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.3+                           |
+| [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.2+                           |
 | [Spark Web Framework](https://github.com/perwendel/spark)                                                                             | 2.3+                           |
 | [Spring Data](https://spring.io/projects/spring-data)                                                                                 | 1.8+                           |
 | [Spring Scheduling](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html)       | 3.1+                           |

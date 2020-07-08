@@ -135,7 +135,7 @@ include ':instrumentation:rmi'
 include ':instrumentation:rxjava-1.0'
 include ':instrumentation:servlet:glassfish-testing'
 include ':instrumentation:servlet:servlet-common'
-include ':instrumentation:servlet:servlet-2.3'
+include ':instrumentation:servlet:servlet-2.2'
 include ':instrumentation:servlet:servlet-3.0'
 // FIXME this instrumentation relied on scope listener
 // include ':instrumentation:slf4j-mdc'

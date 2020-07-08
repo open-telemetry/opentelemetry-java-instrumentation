@@ -1,5 +1,19 @@
 # Instrumentation for Java Servlets
 
+## A word about version
+
+We support Servlet API starting from version 2.2.
+But various instrumentations apply to different versions of the API.
+They are divided into 3 sub-modules:
+
+`servlet-common` contains instrumentations applicable to all API versions that we support.
+
+`servlet-2.2` contains instrumentations applicable to Servlet API 2.2, but not to to 3+.
+
+`servlet-3.0` contains instrumentations that require Servlet API 3.0 or newer.
+
+## Implementation details
+
 In order to fully understand how java servlet instrumentation work,
 let us first take a look at the following stacktrace from Spring PetClinic application.
 Unimportant frames are redacted, points of interests are highlighted and discussed below.
