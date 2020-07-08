@@ -93,10 +93,10 @@ class JettyServlet2Test extends HttpServerTest<Server> {
   }
 
 //Contributed by HttpServletResponseInstrumentation
-  @Override
-  boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT || endpoint == ERROR
-  }
+//  @Override
+//  boolean hasResponseSpan(ServerEndpoint endpoint) {
+//    endpoint == REDIRECT || endpoint == ERROR
+//  }
 
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
@@ -105,7 +105,7 @@ class JettyServlet2Test extends HttpServerTest<Server> {
       spanKind INTERNAL
       errored false
       childOf((SpanData) parent)
-      tags {
+      attributes {
       }
     }
   }

@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet;
+package io.opentelemetry.auto.instrumentation.servlet.http;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
-import javax.servlet.http.HttpServletRequest;
+import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
+import io.opentelemetry.trace.Tracer;
 
-public class HttpServletRequestGetter implements HttpTextFormat.Getter<HttpServletRequest> {
-
-  public static final HttpServletRequestGetter GETTER = new HttpServletRequestGetter();
-
-  @Override
-  public String get(HttpServletRequest carrier, String key) {
-    return carrier.getHeader(key);
-  }
+public class HttpServletResponseDecorator extends BaseDecorator {
+  public static final HttpServletResponseDecorator DECORATE = new HttpServletResponseDecorator();
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.servlet");
 }

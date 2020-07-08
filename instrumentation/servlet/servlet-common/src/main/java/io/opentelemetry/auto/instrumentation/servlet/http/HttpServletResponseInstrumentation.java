@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet.v2_3;
+package io.opentelemetry.auto.instrumentation.servlet.http;
 
-import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletResponseDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.servlet.v2_3.HttpServletResponseDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.servlet.http.HttpServletResponseDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;

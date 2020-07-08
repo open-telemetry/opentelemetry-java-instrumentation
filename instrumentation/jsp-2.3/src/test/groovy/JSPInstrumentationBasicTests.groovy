@@ -354,7 +354,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -391,11 +391,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "jsp.requestURL" reqUrl
           }
         }
-        span(3) {
-          childOf span(2)
-          operationName "servlet.include"
-          errored false
-        }
       }
     }
     res.code() == 200
@@ -414,7 +409,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
 
     then:
     assertTraces(1) {
-      trace(0, 9) {
+      trace(0, 7) {
         span(0) {
           parent()
           operationName expectedOperationName()
@@ -453,11 +448,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(2)
-          operationName "servlet.include"
-          errored false
-        }
-        span(4) {
-          childOf span(3)
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
@@ -466,8 +456,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(5) {
-          childOf span(3)
+        span(4) {
+          childOf span(2)
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
@@ -476,13 +466,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "jsp.requestURL" reqUrl
           }
         }
-        span(6) {
+        span(5) {
           childOf span(2)
-          operationName "servlet.include"
-          errored false
-        }
-        span(7) {
-          childOf span(6)
           operationName "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
@@ -491,8 +476,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(8) {
-          childOf span(6)
+        span(6) {
+          childOf span(2)
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
