@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.servlet.v3_0;
+package io.opentelemetry.auto.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -22,6 +22,7 @@ import static io.opentelemetry.auto.tooling.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -32,15 +33,18 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class Servlet3Instrumentation extends Instrumenter.Default {
-  public Servlet3Instrumentation() {
-    super("servlet", "servlet-3");
+public final class Servlet2Instrumentation extends Instrumenter.Default {
+
+  public Servlet2Instrumentation() {
+    super("servlet", "servlet-2");
   }
 
+  // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
-    return hasClassesNamed("javax.servlet.http.HttpServlet");
+    return hasClassesNamed("javax.servlet.http.HttpServlet")
+        .and(not(hasClassesNamed("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener")));
   }
 
   @Override
@@ -50,12 +54,16 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public Map<String, String> contextStore() {
+    return singletonMap("javax.servlet.ServletResponse", Integer.class.getName());
+  }
+
+  @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      packageName + ".Servlet3HttpServerTracer",
-      packageName + ".TagSettingAsyncListener"
+      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
+      packageName + ".Servlet2HttpServerTracer"
     };
   }
 
@@ -71,6 +79,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        packageName + ".Servlet3Advice");
+        packageName + ".Servlet2Advice");
   }
 }

@@ -5,17 +5,26 @@ muzzle {
   pass {
     group = "javax.servlet"
     module = "servlet-api"
-    versions = "[2.2,)"
+    versions = "[2.2, 3.0)"
     assertInverse = true
+  }
+
+  fail {
+    group = "javax.servlet"
+    module = 'javax.servlet-api'
+    versions = "[3.0,)"
   }
 }
 
 testSets {
-  latestDepTest
+  latestDepTest {
+    dirName = 'test'
+  }
 }
 
 dependencies {
-  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+  api(project(':instrumentation-core:servlet'))
 
   testImplementation(project(':testing')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
@@ -23,6 +32,6 @@ dependencies {
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
 
-  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
-  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
+  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.+'
+  latestDepTestImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.+'
 }
