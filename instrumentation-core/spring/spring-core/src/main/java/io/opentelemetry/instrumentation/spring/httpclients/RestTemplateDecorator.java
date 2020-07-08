@@ -28,7 +28,7 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
-public class RestTemplateDecorator extends HttpClientDecorator<HttpRequest, ClientHttpResponse> {
+class RestTemplateDecorator extends HttpClientDecorator<HttpRequest, ClientHttpResponse> {
 
   public static final RestTemplateDecorator DECORATE = new RestTemplateDecorator();
 

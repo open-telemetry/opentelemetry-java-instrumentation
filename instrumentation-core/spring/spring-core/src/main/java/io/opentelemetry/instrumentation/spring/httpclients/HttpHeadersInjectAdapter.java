@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.spring.httpclients;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.springframework.http.HttpRequest;
 
-public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpRequest> {
+class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpRequest> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

@@ -1,14 +1,7 @@
-ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_7
-}
-
 group = 'io.opentelemetry.instrumentation.spring'
-version = '0.0.1-SNAPSHOT'
 
 apply plugin: 'java'
 apply from: "$rootDir/gradle/java.gradle"
-
-sourceCompatibility = '7'
 
 dependencies {
   
