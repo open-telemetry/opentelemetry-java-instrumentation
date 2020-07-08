@@ -22,7 +22,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +31,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class WebMVCTracingFilter extends OncePerRequestFilter implements Ordered {
 
-  private static final String CLASS_NAME = "WebMVCTracingFilter";
+  private static final String FILTER_CLASS = "WebMVCTracingFilter";
+  private static final String FILTER_METHOD = "doFilterInteral";
   private final Tracer tracer;
 
   public WebMVCTracingFilter(Tracer tracer) {
@@ -45,8 +45,7 @@ public class WebMVCTracingFilter extends OncePerRequestFilter implements Ordered
       throws ServletException, IOException {
     HttpServletRequest req = (HttpServletRequest) request;
 
-    Method doFilterInteral = this.getClass().getEnclosingMethod();
-    Span serverSpan = DECORATE.startSpan(tracer, request, doFilterInteral, CLASS_NAME);
+    Span serverSpan = DECORATE.startSpan(tracer, req, req, FILTER_METHOD, FILTER_CLASS);
 
     try (Scope scope = tracer.withSpan(serverSpan)) {
       filterChain.doFilter(req, response);
