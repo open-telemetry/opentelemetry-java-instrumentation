@@ -11,7 +11,7 @@ dependencies {
   // the agent, like Agent.
   api project(':auto-bootstrap')
   
-  api "org.springframework:spring-webmvc:3.1.0.RELEASE"
+  api "org.springframework:spring-web:3.1.0.RELEASE"
   api deps.opentelemetryApi
 
   testImplementation "org.springframework:spring-test:3.1.0.RELEASE"
