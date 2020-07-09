@@ -62,7 +62,6 @@ class RestTemplateDecorator extends HttpClientDecorator<HttpRequest, ClientHttpR
 
   @Override
   protected String responseHeader(ClientHttpResponse response, String name) {
-    // TODO Auto-generated method stub
     return response.getHeaders().getFirst(name);
   }
 }
