@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.kubernetes;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class KubernetesResource {
+class KubernetesResource {
 
   public static final Pattern CORE_RESOURCE_URL_PATH_PATTERN =
       Pattern.compile(
@@ -35,13 +35,14 @@ public class KubernetesResource {
     if (!matcher.matches()) {
       throw new ParseKubernetesResourceException();
     }
-    KubernetesResource resource = new KubernetesResource();
-    resource.apiGroup = "";
-    resource.apiVersion = "v1";
-    resource.resource = matcher.group("resource");
-    resource.subResource = matcher.group("subresource");
-    resource.namespace = matcher.group("namespace");
-    resource.name = matcher.group("name");
+    KubernetesResource resource =
+        new KubernetesResource(
+            "",
+            "v1",
+            matcher.group("resource"),
+            matcher.group("subresource"),
+            matcher.group("namespace"),
+            matcher.group("name"));
     return resource;
   }
 
@@ -51,23 +52,39 @@ public class KubernetesResource {
     if (!matcher.matches()) {
       throw new ParseKubernetesResourceException();
     }
-    KubernetesResource resource = new KubernetesResource();
-    resource.apiGroup = matcher.group("group");
-    resource.apiVersion = matcher.group("version");
-    resource.resource = matcher.group("resource");
-    resource.subResource = matcher.group("subresource");
-    resource.namespace = matcher.group("namespace");
-    resource.name = matcher.group("name");
+    KubernetesResource resource =
+        new KubernetesResource(
+            matcher.group("group"),
+            matcher.group("version"),
+            matcher.group("resource"),
+            matcher.group("subresource"),
+            matcher.group("namespace"),
+            matcher.group("name"));
     return resource;
   }
 
-  private String apiGroup;
-  private String apiVersion;
-  private String resource;
-  private String subResource;
+  KubernetesResource(
+      String apiGroup,
+      String apiVersion,
+      String resource,
+      String subResource,
+      String namespace,
+      String name) {
+    this.apiGroup = apiGroup;
+    this.apiVersion = apiVersion;
+    this.resource = resource;
+    this.subResource = subResource;
+    this.namespace = namespace;
+    this.name = name;
+  }
 
-  private String namespace;
-  private String name;
+  private final String apiGroup;
+  private final String apiVersion;
+  private final String resource;
+  private final String subResource;
+
+  private final String namespace;
+  private final String name;
 
   public String getApiGroup() {
     return apiGroup;

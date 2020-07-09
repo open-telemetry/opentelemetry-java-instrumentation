@@ -16,6 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.kubernetes;
 
+import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -31,10 +33,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import okhttp3.Interceptor;
 
-/**
- * @author zuoxiu.jm
- * @version : KubernetesClientInstrumentation.java, v 0.1 2020年07月08日 4:35 PM zuoxiu.jm Exp $
- */
 @AutoService(Instrumenter.class)
 public class KubernetesClientInstrumentation extends Instrumenter.Default {
 
@@ -43,8 +41,14 @@ public class KubernetesClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed("io.kubernetes.client.openapi.ApiClient");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.kubernetes.client.openapi.ApiClient");
+    return extendsClass(named("io.kubernetes.client.openapi.ApiClient"));
   }
 
   @Override
@@ -56,6 +60,7 @@ public class KubernetesClientInstrumentation extends Instrumenter.Default {
       packageName + ".KubernetesResource",
       packageName + ".KubernetesVerb",
       packageName + ".ParseKubernetesResourceException",
+      "com.google.common.base.Strings",
     };
   }
 

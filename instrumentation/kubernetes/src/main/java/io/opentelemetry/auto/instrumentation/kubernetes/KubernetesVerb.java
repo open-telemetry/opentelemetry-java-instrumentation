@@ -16,10 +16,6 @@
 
 package io.opentelemetry.auto.instrumentation.kubernetes;
 
-/**
- * @author zuoxiu.jm
- * @version : KubernetesVerb.java, v 0.1 2020年07月08日 8:16 PM zuoxiu.jm Exp $
- */
 public enum KubernetesVerb {
   GET("get"),
   LIST("list"),

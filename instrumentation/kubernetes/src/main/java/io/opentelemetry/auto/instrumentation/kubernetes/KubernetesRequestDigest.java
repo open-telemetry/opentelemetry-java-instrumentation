@@ -16,18 +16,24 @@
 
 package io.opentelemetry.auto.instrumentation.kubernetes;
 
+import com.google.common.base.Strings;
 import java.util.regex.Pattern;
 import okhttp3.Request;
-import org.apache.commons.lang.StringUtils;
 
-public class KubernetesRequestDigest {
+class KubernetesRequestDigest {
 
   public static final Pattern RESOURCE_URL_PATH_PATTERN =
       Pattern.compile("^/(api|apis)(/\\S+)?/v\\d\\w*/\\S+");
 
-  private KubernetesRequestDigest(String urlPath, boolean isNonResourceRequest) {
+  KubernetesRequestDigest(
+      String urlPath,
+      boolean isNonResourceRequest,
+      KubernetesResource resourceMeta,
+      KubernetesVerb verb) {
     this.urlPath = urlPath;
     this.isNonResourceRequest = isNonResourceRequest;
+    this.resourceMeta = resourceMeta;
+    this.verb = verb;
   }
 
   public static KubernetesRequestDigest parse(Request request) {
@@ -36,25 +42,26 @@ public class KubernetesRequestDigest {
       return nonResource(urlPath);
     }
     try {
-      KubernetesRequestDigest digest = new KubernetesRequestDigest(urlPath, false);
-      if (StringUtils.startsWith(urlPath, "/api/v1")) {
-        digest.resourceMeta = KubernetesResource.parseCoreResource(urlPath);
+      KubernetesResource resourceMeta;
+      if (urlPath.startsWith("/api/v1")) {
+        resourceMeta = KubernetesResource.parseCoreResource(urlPath);
       } else {
-        digest.resourceMeta = KubernetesResource.parseRegularResource(urlPath);
+        resourceMeta = KubernetesResource.parseRegularResource(urlPath);
       }
-      digest.verb =
+
+      return new KubernetesRequestDigest(
+          urlPath,
+          false,
+          resourceMeta,
           KubernetesVerb.of(
-              request.method(),
-              hasNamePathParameter(digest.resourceMeta),
-              hasWatchParameter(request));
-      return digest;
+              request.method(), hasNamePathParameter(resourceMeta), hasWatchParameter(request)));
     } catch (ParseKubernetesResourceException e) {
       return nonResource(urlPath);
     }
   }
 
   private static KubernetesRequestDigest nonResource(String urlPath) {
-    KubernetesRequestDigest digest = new KubernetesRequestDigest(urlPath, true);
+    KubernetesRequestDigest digest = new KubernetesRequestDigest(urlPath, true, null, null);
     return digest;
   }
 
@@ -63,18 +70,18 @@ public class KubernetesRequestDigest {
   }
 
   private static boolean hasWatchParameter(Request request) {
-    return !StringUtils.isEmpty(request.url().queryParameter("watch"));
+    return !Strings.isNullOrEmpty(request.url().queryParameter("watch"));
   }
 
   private static boolean hasNamePathParameter(KubernetesResource resource) {
-    return !StringUtils.isEmpty(resource.getName());
+    return !Strings.isNullOrEmpty(resource.getName());
   }
 
   private final String urlPath;
   private final boolean isNonResourceRequest;
 
-  private KubernetesResource resourceMeta;
-  private KubernetesVerb verb;
+  private final KubernetesResource resourceMeta;
+  private final KubernetesVerb verb;
 
   public String getUrlPath() {
     return urlPath;
@@ -95,23 +102,29 @@ public class KubernetesRequestDigest {
   @Override
   public String toString() {
     if (isNonResourceRequest) {
-      return String.format("%s %s", verb, urlPath);
+      return new StringBuilder().append(verb).append(' ').append(urlPath).toString();
     }
 
     String groupVersion;
-    if (StringUtils.isEmpty(resourceMeta.getApiGroup())) { // core resource
+    if (Strings.isNullOrEmpty(resourceMeta.getApiGroup())) { // core resource
       groupVersion = "";
     } else { // regular resource
       groupVersion = resourceMeta.getApiGroup() + "/" + resourceMeta.getApiVersion();
     }
 
     String targetResourceName;
-    if (StringUtils.isEmpty(resourceMeta.getSubResource())) {
+    if (Strings.isNullOrEmpty(resourceMeta.getSubResource())) {
       targetResourceName = resourceMeta.getResource();
     } else { // subresource
       targetResourceName = resourceMeta.getResource() + "/" + resourceMeta.getSubResource();
     }
 
-    return String.format("%s %s %s", verb.value(), groupVersion, targetResourceName);
+    return new StringBuilder()
+        .append(verb.value())
+        .append(' ')
+        .append(groupVersion)
+        .append(' ')
+        .append(targetResourceName)
+        .toString();
   }
 }

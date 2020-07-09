@@ -16,4 +16,4 @@
 
 package io.opentelemetry.auto.instrumentation.kubernetes;
 
-public class ParseKubernetesResourceException extends Exception {}
+class ParseKubernetesResourceException extends Exception {}
