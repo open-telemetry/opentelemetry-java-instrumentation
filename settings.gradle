@@ -133,10 +133,9 @@ include ':instrumentation:reactor-3.1'
 include ':instrumentation:rediscala-1.8'
 include ':instrumentation:rmi'
 include ':instrumentation:rxjava-1.0'
-include ':instrumentation:servlet'
 include ':instrumentation:servlet:glassfish-testing'
 include ':instrumentation:servlet:servlet-common'
-include ':instrumentation:servlet:servlet-2.3'
+include ':instrumentation:servlet:servlet-2.2'
 include ':instrumentation:servlet:servlet-3.0'
 // FIXME this instrumentation relied on scope listener
 // include ':instrumentation:slf4j-mdc'
@@ -152,7 +151,8 @@ include ':instrumentation:vertx-reactive-3.5'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2'
 include ':instrumentation-core:reactor-3.1'
-include ':instrumentation-core:spring'
+include ':instrumentation-core:servlet'
+include ':instrumentation-core:spring:spring-web-3.1'
 
 // exporter adapters
 include ":auto-exporters"

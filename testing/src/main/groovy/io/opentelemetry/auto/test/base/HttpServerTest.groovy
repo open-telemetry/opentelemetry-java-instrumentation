@@ -389,7 +389,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         spanCount++
       }
       if (hasErrorPageSpans(endpoint)) {
-        spanCount += 2
+        spanCount ++
       }
     }
     assertTraces(size * 2) {
