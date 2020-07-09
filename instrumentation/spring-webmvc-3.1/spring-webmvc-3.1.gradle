@@ -32,7 +32,6 @@ dependencies {
   }
 
   // Include servlet instrumentation for verifying the tomcat requests
-  testImplementation project(':instrumentation:servlet')
   testImplementation project(':instrumentation:servlet:servlet-3.0')
 
   testImplementation group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
