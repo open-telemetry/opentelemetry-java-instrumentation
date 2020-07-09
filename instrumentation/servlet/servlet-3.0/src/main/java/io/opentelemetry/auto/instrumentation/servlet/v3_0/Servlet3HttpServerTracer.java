@@ -19,7 +19,7 @@ package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer;
+import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import javax.servlet.http.HttpServletRequest;
@@ -35,8 +35,8 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
   }
 
   @Override
-  protected Integer peerPort(HttpServletRequest request) {
-    return request.getRemotePort();
+  protected Integer peerPort(HttpServletRequest connection) {
+    return connection.getRemotePort();
   }
 
   public void onTimeout(Span span, long timeout) {

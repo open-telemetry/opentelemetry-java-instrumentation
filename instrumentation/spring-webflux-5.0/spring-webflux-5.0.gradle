@@ -32,17 +32,17 @@ testSets {
 dependencies {
   implementation project(':instrumentation-core:spring:spring-webflux-5.0-core')
 
-  testCompile project(':instrumentation:annotations')
-  testCompile project(':instrumentation:netty:netty-4.1')
-  testCompile project(':instrumentation:reactor-3.1')
+  testImplementation project(':instrumentation:annotations')
+  testImplementation project(':instrumentation:netty:netty-4.1')
+  testImplementation project(':instrumentation:reactor-3.1')
 
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
-  testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
+  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
+  testImplementation group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
 
   // FIXME: reactor-netty packages have changed so test imports are failing
-  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.+'
-  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'
-  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.+'
+  latestDepTestImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.+'
+  latestDepTestImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'
+  latestDepTestImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.+'
 }

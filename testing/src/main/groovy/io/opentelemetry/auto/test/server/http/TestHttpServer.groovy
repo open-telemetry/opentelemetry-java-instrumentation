@@ -128,7 +128,7 @@ class TestHttpServer implements AutoCloseable {
       } else {
         childOf(parentSpan)
       }
-      tags {
+      attributes {
       }
     }
   }

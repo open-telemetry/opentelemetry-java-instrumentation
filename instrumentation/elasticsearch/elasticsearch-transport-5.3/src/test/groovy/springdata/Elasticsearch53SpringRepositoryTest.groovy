@@ -16,8 +16,8 @@
 
 package springdata
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
@@ -84,7 +84,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "CrudRepository.findAll"
           spanKind INTERNAL
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -92,8 +92,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -120,15 +120,15 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "ElasticsearchRepository.index"
           spanKind INTERNAL
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "IndexAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -144,8 +144,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           operationName "PutMappingAction"
           spanKind CLIENT
           childOf span(1)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -154,8 +154,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -177,15 +177,15 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "CrudRepository.findById"
           spanKind INTERNAL
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "GetAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -211,15 +211,15 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "ElasticsearchRepository.index"
           spanKind INTERNAL
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "IndexAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -235,8 +235,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -250,15 +250,15 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "CrudRepository.findById"
           spanKind INTERNAL
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "GetAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -283,15 +283,15 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "CrudRepository.deleteById"
           spanKind INTERNAL
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "DeleteAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
@@ -306,8 +306,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           operationName "RefreshAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -322,15 +322,15 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "CrudRepository.findAll"
           spanKind INTERNAL
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "SearchAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

@@ -19,9 +19,9 @@ package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
 import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 
 public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
 
@@ -48,8 +48,8 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   @Override
   public Span onConnection(final Span span, final RedisURI connection) {
     if (connection != null) {
-      span.setAttribute(MoreTags.NET_PEER_NAME, connection.getHost());
-      span.setAttribute(MoreTags.NET_PEER_PORT, connection.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), connection.getHost());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
 
       span.setAttribute("db.redis.dbIndex", connection.getDatabase());
     }

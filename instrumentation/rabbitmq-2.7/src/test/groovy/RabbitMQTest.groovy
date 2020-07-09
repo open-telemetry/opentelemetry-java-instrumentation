@@ -24,10 +24,10 @@ import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
@@ -120,7 +120,7 @@ class RabbitMQTest extends AgentTestRunner {
       trace(0, 6) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         rabbitSpan(it, 1, "exchange.declare", span(0))
@@ -374,15 +374,15 @@ class RabbitMQTest extends AgentTestRunner {
 
       errored exception != null
 
-      tags {
-        "$MoreTags.NET_PEER_NAME" { it == null || it instanceof String }
-        "$MoreTags.NET_PEER_IP" { "127.0.0.1" }
-        "$MoreTags.NET_PEER_PORT" { it == null || it instanceof Long }
+      attributes {
+        "${SemanticAttributes.NET_PEER_NAME.key()}" { it == null || it instanceof String }
+        "${SemanticAttributes.NET_PEER_IP.key()}" { "127.0.0.1" }
+        "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         if (expectTimestamp) {
           "record.queue_time_ms" { it instanceof Long && it >= 0 }
         }
 
-        switch (tag("amqp.command")?.stringValue) {
+        switch (attribute("amqp.command")?.stringValue) {
           case "basic.publish":
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
@@ -407,7 +407,7 @@ class RabbitMQTest extends AgentTestRunner {
             "amqp.command" { it == null || it == resource }
         }
         if (exception) {
-          errorTags(exception.class, errorMsg)
+          errorAttributes(exception.class, errorMsg)
         }
       }
     }

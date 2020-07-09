@@ -28,13 +28,13 @@ class AkkaActorTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "$expectedGreeting, Akka"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }

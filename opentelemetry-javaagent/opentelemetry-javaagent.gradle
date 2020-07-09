@@ -96,13 +96,13 @@ tasks.withType(ShadowJar).configureEach {
 }
 
 dependencies {
-  testCompile project(':auto-bootstrap')
-  testCompile project(':utils:test-utils')
+  testImplementation project(':auto-bootstrap')
+  testImplementation project(':utils:test-utils')
 
-  testCompile deps.testLogging
-  testCompile deps.guava
+  testImplementation deps.testLogging
+  testImplementation deps.guava
 
-  testCompile 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
+  testImplementation 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
 
   shadowInclude project(path: ':auto-bootstrap')
 }

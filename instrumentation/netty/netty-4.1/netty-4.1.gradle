@@ -41,17 +41,17 @@ testSets {
 dependencies {
   compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
 
-  testCompile project(':instrumentation:annotations')
-  testCompile group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
-  testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
+  testImplementation project(':instrumentation:annotations')
+  testImplementation group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
+  testImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
 
-  latestDepTestCompile group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
+  latestDepTestImplementation group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
   // latest async-http-client incompatable with 5.0+ netty
-  latestDepTestCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '+'
+  latestDepTestImplementation group: 'org.asynchttpclient', name: 'async-http-client', version: '+'
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-configurations.testCompile {
+configurations.testImplementation {
   resolutionStrategy {
     eachDependency { DependencyResolveDetails details ->
       //specifying a fixed version for all libraries with io.netty' group

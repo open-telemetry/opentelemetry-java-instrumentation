@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import io.opentelemetry.trace.Span;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,28 +32,28 @@ public class State {
         }
       };
 
-  private final AtomicReference<Span> parentSpanRef = new AtomicReference<>(null);
+  private final AtomicReference<Context> parentContextRef = new AtomicReference<>(null);
 
   private State() {}
 
-  public void setParentSpan(final Span parentSpan) {
-    final boolean result = parentSpanRef.compareAndSet(null, parentSpan);
-    if (!result && parentSpanRef.get() != parentSpan) {
+  public void setParentSpan(final Context parentContext) {
+    final boolean result = parentContextRef.compareAndSet(null, parentContext);
+    if (!result && parentContextRef.get() != parentContext) {
       if (log.isDebugEnabled()) {
         log.debug(
-            "Failed to set parent span because another parent span is already set {}: new: {}, old: {}",
+            "Failed to set parent context because another parent context is already set {}: new: {}, old: {}",
             this,
-            parentSpan,
-            parentSpanRef.get());
+            parentContext,
+            parentContextRef.get());
       }
     }
   }
 
-  public void clearParentSpan() {
-    parentSpanRef.set(null);
+  public void clearParentContext() {
+    parentContextRef.set(null);
   }
 
-  public Span getAndResetParentSpan() {
-    return parentSpanRef.getAndSet(null);
+  public Context getAndResetParentContext() {
+    return parentContextRef.getAndSet(null);
   }
 }

@@ -16,11 +16,11 @@
 
 package server
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import play.BuiltInComponents
 import play.Mode
 import play.mvc.Results
@@ -96,16 +96,16 @@ class PlayServerTest extends HttpServerTest<Server> {
       spanKind INTERNAL
       errored endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
       childOf((SpanData) parent)
-      tags {
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_URL" String
-        "$Tags.HTTP_METHOD" String
-        "$Tags.HTTP_STATUS" Long
+      attributes {
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.HTTP_URL.key()}" String
+        "${SemanticAttributes.HTTP_METHOD.key()}" String
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
         if (endpoint == EXCEPTION) {
-          errorTags(Exception, EXCEPTION.body)
+          errorAttributes(Exception, EXCEPTION.body)
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
@@ -122,19 +122,25 @@ class PlayServerTest extends HttpServerTest<Server> {
       } else {
         parent()
       }
-      tags {
-        "$Tags.HTTP_STATUS" endpoint.status
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "$Tags.HTTP_METHOD" method
+      attributes {
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
   }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "akka.request"
+  }
+
 }

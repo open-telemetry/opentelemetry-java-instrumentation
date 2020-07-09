@@ -17,10 +17,10 @@
 package io.opentelemetry.auto.instrumentation.grpc.common;
 
 import io.grpc.Status.Code;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Status.CanonicalCode;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -66,19 +66,20 @@ public final class GrpcHelper {
         serviceName = fullServiceName.substring(dot + 1);
       }
     }
-    span.setAttribute(MoreTags.RPC_SERVICE, serviceName);
+    span.setAttribute(SemanticAttributes.RPC_SERVICE.key(), serviceName);
     if (peerAddress != null) {
-      span.setAttribute(MoreTags.NET_PEER_PORT, peerAddress.getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), peerAddress.getPort());
       if (server) {
-        span.setAttribute(MoreTags.NET_PEER_IP, peerAddress.getAddress().getHostAddress());
+        span.setAttribute(
+            SemanticAttributes.NET_PEER_IP.key(), peerAddress.getAddress().getHostAddress());
       } else {
-        span.setAttribute(MoreTags.NET_PEER_NAME, peerAddress.getHostName());
+        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), peerAddress.getHostName());
       }
     } else {
       // The spec says these fields must be populated, so put some values in even if we don't have
       // an address recorded.
-      span.setAttribute(MoreTags.NET_PEER_PORT, 0);
-      span.setAttribute(MoreTags.NET_PEER_NAME, "(unknown)");
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), 0);
+      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), "(unknown)");
     }
   }
 

@@ -106,4 +106,9 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
       return null
     }
   }
+
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return "HttpCodecFilter.handleRead"
+  }
 }

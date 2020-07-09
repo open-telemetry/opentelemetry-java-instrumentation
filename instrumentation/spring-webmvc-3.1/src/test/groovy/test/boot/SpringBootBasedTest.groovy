@@ -16,11 +16,11 @@
 
 package test.boot
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import okhttp3.FormBody
 import okhttp3.RequestBody
 import org.apache.catalina.core.ApplicationFilterChain
@@ -56,11 +56,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   boolean hasHandlerSpan() {
     true
-  }
-
-  @Override
-  boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT
   }
 
   @Override
@@ -103,14 +98,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       trace(0, 1) {
         basicSpan(it, 0, "TEST_SPAN")
       }
-      trace(1, 2) {
+      trace(1, 1) {
         serverSpan(it, 0, null, null, "POST", LOGIN)
-        span(1) {
-          operationName "HttpServletResponse.sendRedirect"
-          childOf span(0)
-          tags {
-          }
-        }
       }
     }
 
@@ -124,7 +113,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       operationName "HttpServletResponse.sendRedirect"
       spanKind INTERNAL
       errored false
-      tags {
+      attributes {
       }
     }
   }
@@ -135,7 +124,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       operationName "Render RedirectView"
       spanKind INTERNAL
       errored false
-      tags {
+      attributes {
         "view.type" RedirectView.simpleName
       }
     }
@@ -148,9 +137,9 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       spanKind INTERNAL
       errored endpoint == EXCEPTION
       childOf((SpanData) parent)
-      tags {
+      attributes {
         if (endpoint == EXCEPTION) {
-          errorTags(Exception, EXCEPTION.body)
+          errorAttributes(Exception, EXCEPTION.body)
         }
       }
     }
@@ -168,12 +157,12 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       } else {
         parent()
       }
-      tags {
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$MoreTags.NET_PEER_PORT" Long
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_STATUS" endpoint.status
+      attributes {
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         "span.origin.type" ApplicationFilterChain.name
         "servlet.path" endpoint.path
         "servlet.context" ""
@@ -183,7 +172,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
           "error.stack" { it == null || it instanceof String }
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }

@@ -27,7 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.InstrumentationContext;
-import io.opentelemetry.auto.instrumentation.netty.v3_8.server.NettyHttpServerDecorator;
+import io.opentelemetry.auto.instrumentation.netty.v3_8.client.NettyHttpClientDecorator;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
@@ -66,7 +66,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       packageName + ".AbstractNettyAdvice",
       packageName + ".ChannelTraceContext",
       packageName + ".ChannelTraceContext$Factory",
-      packageName + ".server.NettyHttpServerDecorator",
+      packageName + ".client.NettyHttpClientDecorator",
+      packageName + ".server.NettyHttpServerTracer",
       packageName + ".server.NettyRequestExtractAdapter"
     };
   }
@@ -110,13 +111,13 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (continuation == null) {
         return null;
       }
-      final Scope parentScope = NettyHttpServerDecorator.TRACER.withSpan(continuation);
+      final Scope parentScope = NettyHttpClientDecorator.TRACER.withSpan(continuation);
 
       final Span errorSpan =
-          NettyHttpServerDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-      try (final Scope scope = NettyHttpServerDecorator.TRACER.withSpan(errorSpan)) {
-        NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
-        NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);
+          NettyHttpClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
+      try (final Scope scope = NettyHttpClientDecorator.TRACER.withSpan(errorSpan)) {
+        NettyHttpClientDecorator.DECORATE.onError(errorSpan, cause);
+        NettyHttpClientDecorator.DECORATE.beforeFinish(errorSpan);
         errorSpan.end();
       }
 

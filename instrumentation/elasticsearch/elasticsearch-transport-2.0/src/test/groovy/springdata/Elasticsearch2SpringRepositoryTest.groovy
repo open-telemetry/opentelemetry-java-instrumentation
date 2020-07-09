@@ -16,9 +16,9 @@
 
 package springdata
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
@@ -57,8 +57,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
           operationName "SearchAction"
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -85,11 +85,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "IndexAction"
           spanKind CLIENT
-          tags {
-            "$MoreTags.NET_PEER_NAME" "local"
-            "$MoreTags.NET_PEER_IP" "0.0.0.0"
-            "$MoreTags.NET_PEER_PORT" 0
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "local"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "0.0.0.0"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" 0
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -100,8 +100,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
           operationName "PutMappingAction"
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
             "elasticsearch.request.indices" indexName
@@ -112,8 +112,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "RefreshAction"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -135,11 +135,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "GetAction"
           spanKind CLIENT
-          tags {
-            "$MoreTags.NET_PEER_NAME" "local"
-            "$MoreTags.NET_PEER_IP" "0.0.0.0"
-            "$MoreTags.NET_PEER_PORT" 0
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "local"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "0.0.0.0"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" 0
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -165,11 +165,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "IndexAction"
           spanKind CLIENT
-          tags {
-            "$MoreTags.NET_PEER_NAME" "local"
-            "$MoreTags.NET_PEER_IP" "0.0.0.0"
-            "$MoreTags.NET_PEER_PORT" 0
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "local"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "0.0.0.0"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" 0
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -181,8 +181,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "RefreshAction"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -196,11 +196,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "GetAction"
           spanKind CLIENT
-          tags {
-            "$MoreTags.NET_PEER_NAME" "local"
-            "$MoreTags.NET_PEER_IP" "0.0.0.0"
-            "$MoreTags.NET_PEER_PORT" 0
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "local"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "0.0.0.0"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" 0
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -225,11 +225,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "DeleteAction"
           spanKind CLIENT
-          tags {
-            "$MoreTags.NET_PEER_NAME" "local"
-            "$MoreTags.NET_PEER_IP" "0.0.0.0"
-            "$MoreTags.NET_PEER_PORT" 0
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "local"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "0.0.0.0"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" 0
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
@@ -241,8 +241,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "RefreshAction"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -256,8 +256,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
         span(0) {
           operationName "SearchAction"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

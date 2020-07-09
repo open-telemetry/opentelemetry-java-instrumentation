@@ -52,8 +52,8 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "io.opentelemetry.auto.instrumentation.servlet.HttpServletRequestGetter",
-      "io.opentelemetry.auto.instrumentation.servlet.ServletHttpServerTracer",
+      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
+      "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
       packageName + ".Servlet3HttpServerTracer",
       packageName + ".TagSettingAsyncListener"
     };

@@ -16,9 +16,8 @@
 
 import io.opentelemetry.auto.bootstrap.AgentClassLoader
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.auto.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
@@ -46,8 +45,8 @@ class UrlConnectionTest extends AgentTestRunner {
           operationName "someTrace"
           parent()
           errored true
-          tags {
-            errorTags ConnectException, String
+          attributes {
+            errorAttributes ConnectException, String
           }
         }
         span(1) {
@@ -55,12 +54,12 @@ class UrlConnectionTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored true
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" UNUSABLE_PORT
-            "$Tags.HTTP_URL" "$url/"
-            "$Tags.HTTP_METHOD" "GET"
-            errorTags ConnectException, String
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" UNUSABLE_PORT
+            "${SemanticAttributes.HTTP_URL.key()}" "$url/"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            errorAttributes ConnectException, String
           }
         }
       }
@@ -91,8 +90,8 @@ class UrlConnectionTest extends AgentTestRunner {
           operationName "someTrace"
           parent()
           errored true
-          tags {
-            errorTags IllegalArgumentException, String
+          attributes {
+            errorAttributes IllegalArgumentException, String
           }
         }
         span(1) {
@@ -100,11 +99,11 @@ class UrlConnectionTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored true
-          tags {
-            "$MoreTags.NET_PEER_PORT" 80
-            // FIXME: These tags really make no sense for non-http connections, why do we set them?
-            "$Tags.HTTP_URL" "$url"
-            errorTags IllegalArgumentException, String
+          attributes {
+            "${SemanticAttributes.NET_PEER_PORT.key()}" 80
+            // FIXME: These attributes really make no sense for non-http connections, why do we set them?
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
+            errorAttributes IllegalArgumentException, String
           }
         }
       }
@@ -131,8 +130,8 @@ class UrlConnectionTest extends AgentTestRunner {
           operationName "someTrace"
           parent()
           errored true
-          tags {
-            errorTags ClassNotFoundException, String
+          attributes {
+            errorAttributes ClassNotFoundException, String
           }
         }
       }

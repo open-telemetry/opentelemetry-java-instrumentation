@@ -20,7 +20,7 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.trace.Event
 
-import static TagsAssert.assertTags
+import static AttributesAssert.assertAttributes
 
 class EventAssert {
   private final Event event
@@ -51,8 +51,8 @@ class EventAssert {
     checked.name = true
   }
 
-  void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.TagsAssert'])
-                  @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    assertTags(event.attributes, spec)
+  void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
+                  @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+    assertAttributes(event.attributes, spec)
   }
 }

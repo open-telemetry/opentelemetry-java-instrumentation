@@ -40,18 +40,18 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         (0..2).each {
           span("produce_$it") {
             childOf span(0)
-            tags {
+            attributes {
             }
           }
           span("consume_$it") {
             childOf span(0)
-            tags {
+            attributes {
             }
           }
         }
@@ -74,12 +74,12 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("preLaunch") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -101,12 +101,12 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("nested") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -128,27 +128,27 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("future1") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("keptPromise") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("keptPromise2") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("brokenPromise") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -170,22 +170,22 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("timeout1") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("timeout2") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("timeout3") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }

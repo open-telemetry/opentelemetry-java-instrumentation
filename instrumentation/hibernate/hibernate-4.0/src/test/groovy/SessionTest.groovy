@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.hibernate.LockMode
 import org.hibernate.MappingException
 import org.hibernate.Query
@@ -60,25 +60,25 @@ class SessionTest extends AbstractHibernateTest {
             operationName "Session"
             spanKind INTERNAL
             parent()
-            tags {
+            attributes {
             }
           }
           span(1) {
             operationName "Session.$methodName $resource"
             spanKind INTERNAL
             childOf span(0)
-            tags {
+            attributes {
             }
           }
           span(2) {
             childOf span(1)
             spanKind CLIENT
-            tags {
-              "$Tags.DB_TYPE" "sql"
-              "$Tags.DB_INSTANCE" "db1"
-              "$Tags.DB_USER" "sa"
-              "$Tags.DB_STATEMENT" String
-              "$Tags.DB_URL" "h2:mem:"
+            attributes {
+              "${SemanticAttributes.DB_TYPE.key()}" "sql"
+              "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+              "${SemanticAttributes.DB_USER.key()}" "sa"
+              "${SemanticAttributes.DB_STATEMENT.key()}" String
+              "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
               "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             }
           }
@@ -86,7 +86,7 @@ class SessionTest extends AbstractHibernateTest {
             operationName "Transaction.commit"
             spanKind INTERNAL
             childOf span(0)
-            tags {
+            attributes {
             }
           }
         }
@@ -143,26 +143,26 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Session"
           spanKind INTERNAL
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "Session.$methodName $resource"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(2) {
           operationName ~/^select /
           spanKind CLIENT
           childOf span(1)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^select /
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -170,18 +170,18 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(4) {
           spanKind CLIENT
           childOf span(3)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" String
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" String
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -226,7 +226,7 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Session"
           spanKind INTERNAL
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -234,15 +234,15 @@ class SessionTest extends AbstractHibernateTest {
           spanKind INTERNAL
           childOf span(0)
           errored(true)
-          tags {
-            errorTags(MappingException, "Unknown entity: java.lang.Long")
+          attributes {
+            errorAttributes(MappingException, "Unknown entity: java.lang.Long")
           }
         }
         span(2) {
           operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -273,32 +273,32 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Session"
           spanKind INTERNAL
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "Session.$methodName $resource"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(2) {
           operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(3) {
           spanKind CLIENT
           childOf span(2)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" String
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" String
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -353,25 +353,25 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Session"
           spanKind INTERNAL
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName resource
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(2) {
           spanKind CLIENT
           childOf span(1)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" String
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" String
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -379,7 +379,7 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -419,47 +419,47 @@ class SessionTest extends AbstractHibernateTest {
       trace(0, 12) {
         span(0) {
           operationName "overlapping Sessions"
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "Session"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(2) {
           operationName "Session.save Value"
           spanKind INTERNAL
           childOf span(1)
-          tags {
+          attributes {
           }
         }
         span(3) {
           operationName "Session.delete Value"
           spanKind INTERNAL
           childOf span(1)
-          tags {
+          attributes {
           }
         }
         span(4) {
           operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(1)
-          tags {
+          attributes {
           }
         }
         span(5) {
           operationName ~/^insert /
           spanKind CLIENT
           childOf span(4)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^insert /
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -467,12 +467,12 @@ class SessionTest extends AbstractHibernateTest {
           operationName ~/^delete /
           spanKind CLIENT
           childOf span(4)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^delete /
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -480,26 +480,26 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Session"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(8) {
           operationName "Session.insert Value"
           spanKind INTERNAL
           childOf span(7)
-          tags {
+          attributes {
           }
         }
         span(9) {
           operationName ~/^insert /
           spanKind CLIENT
           childOf span(8)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^insert /
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -507,14 +507,14 @@ class SessionTest extends AbstractHibernateTest {
           operationName "Session"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(11) {
           operationName "Session.save Value"
           spanKind INTERNAL
           childOf span(10)
-          tags {
+          attributes {
           }
         }
       }

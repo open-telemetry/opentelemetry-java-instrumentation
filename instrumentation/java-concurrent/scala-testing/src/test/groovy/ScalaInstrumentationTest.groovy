@@ -30,27 +30,27 @@ class ScalaInstrumentationTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("goodFuture") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("badFuture") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("successCallback") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("failureCallback") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -69,12 +69,12 @@ class ScalaInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("callback") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -93,27 +93,27 @@ class ScalaInstrumentationTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("future1") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("keptPromise") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("keptPromise2") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("brokenPromise") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -132,22 +132,22 @@ class ScalaInstrumentationTest extends AgentTestRunner {
       trace(0, 4) {
         span(0) {
           operationName "parent"
-          tags {
+          attributes {
           }
         }
         span("timeout1") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("timeout2") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span("timeout3") {
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }

@@ -25,10 +25,10 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.auto.common.exec.CommonTaskExecutor
-import io.opentelemetry.auto.instrumentation.api.MoreTags
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.PortUtils
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.TimeUnit
 
@@ -93,10 +93,10 @@ class GrpcTest extends AgentTestRunner {
               "message.id" 1
             }
           }
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" port
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
         }
         span(2) {
@@ -112,10 +112,10 @@ class GrpcTest extends AgentTestRunner {
               "message.id" 1
             }
           }
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }
         }
       }
@@ -166,10 +166,10 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           status(GrpcHelper.statusFromGrpcStatus(grpcStatus))
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" port
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" port
           }
         }
         span(1) {
@@ -185,12 +185,12 @@ class GrpcTest extends AgentTestRunner {
               "message.id" 1
             }
           }
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             if (grpcStatus.cause != null) {
-              errorTags grpcStatus.cause.class, grpcStatus.cause.message
+              errorAttributes grpcStatus.cause.class, grpcStatus.cause.message
             }
           }
         }
@@ -250,10 +250,10 @@ class GrpcTest extends AgentTestRunner {
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
           status(io.opentelemetry.trace.Status.UNKNOWN)
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" Long
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
           }
         }
         span(1) {
@@ -269,12 +269,12 @@ class GrpcTest extends AgentTestRunner {
               "message.id" 1
             }
           }
-          tags {
-            "$MoreTags.RPC_SERVICE" "Greeter"
-            "$MoreTags.NET_PEER_IP" "127.0.0.1"
-            "$MoreTags.NET_PEER_PORT" Long
+          attributes {
+            "${SemanticAttributes.RPC_SERVICE.key()}" "Greeter"
+            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
             if (grpcStatus.cause != null) {
-              errorTags grpcStatus.cause.class, grpcStatus.cause.message
+              errorAttributes grpcStatus.cause.class, grpcStatus.cause.message
             }
           }
         }

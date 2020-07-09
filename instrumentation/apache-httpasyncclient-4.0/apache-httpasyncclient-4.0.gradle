@@ -23,7 +23,7 @@ testSets {
 dependencies {
   compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
 
-  testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
+  testImplementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
 
-  latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '+'
+  latestDepTestImplementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '+'
 }

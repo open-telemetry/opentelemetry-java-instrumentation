@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
@@ -29,7 +29,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.afterStart(span)
 
     then:
-    1 * span.setAttribute(Tags.DB_TYPE, "test-db")
+    1 * span.setAttribute(SemanticAttributes.DB_TYPE.key(), "test-db")
     0 * _
 
     where:
@@ -45,9 +45,9 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (session) {
-      1 * span.setAttribute(Tags.DB_USER, session.user)
-      1 * span.setAttribute(Tags.DB_INSTANCE, session.instance)
-      1 * span.setAttribute(Tags.DB_URL, session.url)
+      1 * span.setAttribute(SemanticAttributes.DB_USER.key(), session.user)
+      1 * span.setAttribute(SemanticAttributes.DB_INSTANCE.key(), session.instance)
+      1 * span.setAttribute(SemanticAttributes.DB_URL.key(), session.url)
     }
     0 * _
 
@@ -68,7 +68,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     decorator.onStatement(span, statement)
 
     then:
-    1 * span.setAttribute(Tags.DB_STATEMENT, statement)
+    1 * span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), statement)
     0 * _
 
     where:

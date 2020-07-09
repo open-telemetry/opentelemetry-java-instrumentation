@@ -28,15 +28,15 @@ testSets {
 compileTestJava.dependsOn tasks.getByPath(':instrumentation:mongo:mongo-common:testClasses')
 
 dependencies {
-  compile(project(':instrumentation:mongo:mongo-common'))
+  implementation(project(':instrumentation:mongo:mongo-common'))
 
   compileOnly group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.3.0'
 
-  testCompile project(':instrumentation:mongo:mongo-common').sourceSets.test.output
-  testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+  testImplementation project(':instrumentation:mongo:mongo-common').sourceSets.test.output
+  testImplementation group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
 
-  testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.3.0'
-  latestDepTestCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '+'
+  testImplementation group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.3.0'
+  latestDepTestImplementation group: 'org.mongodb', name: 'mongodb-driver-async', version: '+'
 
-  testCompile project(':instrumentation:mongo:mongo-3.7')
+  testImplementation project(':instrumentation:mongo:mongo-3.7')
 }

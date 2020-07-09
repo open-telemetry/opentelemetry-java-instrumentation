@@ -16,9 +16,8 @@
 
 import groovy.json.JsonSlurper
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils
@@ -99,22 +98,22 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           operationName "GET _cluster/health"
           spanKind INTERNAL
           parent()
-          tags {
-            "$MoreTags.NET_PEER_NAME" httpTransportAddress.address
-            "$MoreTags.NET_PEER_PORT" httpTransportAddress.port
-            "$Tags.HTTP_URL" "_cluster/health"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.DB_TYPE" "elasticsearch"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" httpTransportAddress.address
+            "${SemanticAttributes.NET_PEER_PORT.key()}" httpTransportAddress.port
+            "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.DB_TYPE.key()}" "elasticsearch"
           }
         }
         span(1) {
           operationName expectedOperationName("GET")
           spanKind CLIENT
           childOf span(0)
-          tags {
-            "$Tags.HTTP_URL" "_cluster/health"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.HTTP_URL.key()}" "_cluster/health"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
           }
         }
       }
