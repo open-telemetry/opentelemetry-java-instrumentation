@@ -33,9 +33,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class WebClientFilterInstrumentation extends Instrumenter.Default {
 
-  static final String CORE_INSTRUMENATION_PACKAGE_NAME =
-      "io.opentelemetry.instrumentation.springwebflux.client";
-
   public WebClientFilterInstrumentation() {
     super("spring-webflux", "spring-webflux-client");
   }
@@ -49,9 +46,9 @@ public class WebClientFilterInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      CORE_INSTRUMENATION_PACKAGE_NAME + ".SpringWebfluxHttpClientDecorator",
-      CORE_INSTRUMENATION_PACKAGE_NAME + ".HttpHeadersInjectAdapter",
-      CORE_INSTRUMENATION_PACKAGE_NAME + ".WebClientTracingFilter"
+      packageName + ".shaded.SpringWebfluxHttpClientDecorator",
+      packageName + ".shaded.HttpHeadersInjectAdapter",
+      packageName + ".shaded.WebClientTracingFilter"
     };
   }
 

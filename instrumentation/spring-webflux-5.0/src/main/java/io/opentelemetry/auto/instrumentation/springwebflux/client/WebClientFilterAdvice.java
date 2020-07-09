@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.springwebflux.client;
 
-import io.opentelemetry.instrumentation.springwebflux.client.WebClientTracingFilter;
+import io.opentelemetry.auto.instrumentation.springwebflux.client.shaded.WebClientTracingFilter;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.reactive.function.client.WebClient;
 
