@@ -6,8 +6,6 @@ group = 'io.opentelemetry.instrumentation.spring.webflux'
 
 apply from: "$rootDir/gradle/java.gradle"
 
-sourceCompatibility = '8'
-
 testSets {
   latestDepTest {
     dirName = 'test'
