@@ -37,7 +37,7 @@ class ReactorCoreTest extends InstrumentationTestRunner {
   public static final String EXCEPTION_MESSAGE = "test exception"
 
   private static final Tracer TEST_TRACER =
-    OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.reactor");
+    OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.reactor")
 
   def setupSpec() {
     TracingPublishers.registerOnEachOperator()
