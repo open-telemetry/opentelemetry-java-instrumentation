@@ -112,7 +112,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           operationName "SET"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -146,7 +146,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -188,7 +188,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           operationName "GET"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -228,7 +228,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           operationName "RANDOMKEY"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -258,7 +258,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           operationName "COMMAND"
           spanKind CLIENT
           errored false
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -303,7 +303,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           operationName "test-parent"
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -311,7 +311,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -331,7 +331,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -364,7 +364,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           operationName "test-parent"
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -372,7 +372,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -392,7 +392,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -426,7 +426,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           operationName "test-parent"
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -434,7 +434,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port
@@ -454,7 +454,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "net.transport" "IP.TCP"
             "net.peer.ip" "127.0.0.1"
             "net.peer.port" port

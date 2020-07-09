@@ -60,14 +60,14 @@ class HystrixTest extends AgentTestRunner {
           operationName "parent"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "ExampleGroup.HystrixTest\$1.execute"
           childOf span(0)
           errored false
-          tags {
+          attributes {
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
@@ -77,7 +77,7 @@ class HystrixTest extends AgentTestRunner {
           operationName "tracedMethod"
           childOf span(1)
           errored false
-          tags {
+          attributes {
           }
         }
       }
@@ -123,25 +123,25 @@ class HystrixTest extends AgentTestRunner {
           operationName "parent"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "ExampleGroup.HystrixTest\$2.execute"
           childOf span(0)
           errored true
-          tags {
+          attributes {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            errorTags(IllegalArgumentException)
+            errorAttributes(IllegalArgumentException)
           }
         }
         span(2) {
           operationName "ExampleGroup.HystrixTest\$2.fallback"
           childOf span(1)
           errored false
-          tags {
+          attributes {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false

@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Ignore
 import spock.lang.Requires
 import spock.lang.Timeout
@@ -92,7 +91,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           operationName "someTrace"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -100,12 +99,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "$url"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" STATUS
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
           }
         }
         span(2) {
@@ -113,12 +112,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "$url"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" STATUS
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
           }
         }
       }
@@ -163,7 +162,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           operationName "someTrace"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -171,12 +170,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "$url"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" STATUS
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
           }
         }
         span(2) {
@@ -184,12 +183,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "$url"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" STATUS
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
           }
         }
       }
@@ -219,7 +218,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           operationName "someTrace"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -227,12 +226,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "$url"
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" STATUS
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
           }
         }
       }
@@ -278,7 +277,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
           operationName "someTrace"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -286,12 +285,12 @@ class HttpUrlConnectionTest extends HttpClientTest {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "$url"
-            "$Tags.HTTP_METHOD" "POST"
-            "$Tags.HTTP_STATUS" STATUS
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" STATUS
           }
         }
       }

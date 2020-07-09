@@ -17,9 +17,9 @@
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      span.setAttribute(Tags.HTTP_METHOD, method(request));
+      span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));
 
       // Copy of HttpClientDecorator url handling
       try {
@@ -85,11 +85,11 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
             urlBuilder.append("#").append(fragment);
           }
 
-          span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
+          span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
-            span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
-            span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
+            span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
+            span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {
@@ -103,11 +103,11 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setAttribute(MoreTags.NET_PEER_IP, peerHostIP(connection));
+      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), peerHostIP(connection));
       final Integer port = peerPort(connection);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setAttribute(MoreTags.NET_PEER_PORT, port);
+        span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), port);
       }
     }
     return span;
@@ -118,7 +118,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     if (response != null) {
       final Integer status = status(response);
       if (status != null) {
-        span.setAttribute(Tags.HTTP_STATUS, status);
+        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
       }
     }

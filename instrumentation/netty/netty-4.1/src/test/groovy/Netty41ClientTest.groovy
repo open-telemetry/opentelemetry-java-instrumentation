@@ -111,7 +111,7 @@ class Netty41ClientTest extends HttpClientTest {
             operationName "CONNECT"
             childOf span(0)
             errored true
-            tags {
+            attributes {
               "error.type" AbstractChannel.AnnotatedConnectException.name
               "error.stack" String
               // slightly different message on windows
@@ -216,7 +216,7 @@ class Netty41ClientTest extends HttpClientTest {
           childOf span(0)
           operationName "tracedMethod"
           errored false
-          tags {
+          attributes {
           }
         }
         clientSpan(it, 2, span(1), method)

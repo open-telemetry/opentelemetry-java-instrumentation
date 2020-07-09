@@ -23,9 +23,9 @@ import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayHttpServerDeco
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
-import io.opentelemetry.auto.instrumentation.api.Tags;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Request;
@@ -70,7 +70,7 @@ public class PlayAdvice {
           ((Action) thisAction).executionContext());
     } else {
       DECORATE.onError(playControllerSpan, throwable);
-      playControllerSpan.setAttribute(Tags.HTTP_STATUS, 500);
+      playControllerSpan.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), 500);
       DECORATE.beforeFinish(playControllerSpan);
       playControllerSpan.end();
     }

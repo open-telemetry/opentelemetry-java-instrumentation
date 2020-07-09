@@ -15,8 +15,6 @@
  */
 
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -102,12 +100,12 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
           spanKind CLIENT
           errored false
           parent()
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
-            "$Tags.HTTP_METHOD" "$method"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
@@ -193,12 +191,12 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
           spanKind CLIENT
           errored false
           parent()
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" { it.startsWith("${server.address}${path}") }
-            "$Tags.HTTP_METHOD" "$method"
-            "$Tags.HTTP_STATUS" 200
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
             "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
@@ -294,16 +292,16 @@ class Aws2ClientCoreTest extends InstrumentationTestRunner {
           spanKind CLIENT
           errored true
           parent()
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" server.address.port
-            "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
-            "$Tags.HTTP_METHOD" "GET"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key()}" "$server.address/somebucket/somekey"
+            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "aws.service" "S3"
             "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
-            errorTags SdkClientException, "Unable to execute HTTP request: Read timed out"
+            errorAttributes SdkClientException, "Unable to execute HTTP request: Read timed out"
           }
         }
       }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
@@ -86,26 +86,26 @@ class ProcedureCallTest extends AgentTestRunner {
           operationName "Session"
           spanKind INTERNAL
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "ProcedureCall.getOutputs TEST_PROC"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(2) {
           operationName "{call TEST_PROC()}"
           spanKind CLIENT
           childOf span(1)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" "{call TEST_PROC()}"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "{call TEST_PROC()}"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCCallableStatement"
           }
         }
@@ -113,7 +113,7 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           operationName "Transaction.commit"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
@@ -145,7 +145,7 @@ class ProcedureCallTest extends AgentTestRunner {
           operationName "Session"
           spanKind INTERNAL
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
@@ -153,15 +153,15 @@ class ProcedureCallTest extends AgentTestRunner {
           spanKind INTERNAL
           childOf span(0)
           errored(true)
-          tags {
-            errorTags(SQLGrammarException, "could not prepare statement")
+          attributes {
+            errorAttributes(SQLGrammarException, "could not prepare statement")
           }
         }
         span(2) {
           operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }

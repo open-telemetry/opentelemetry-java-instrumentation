@@ -17,9 +17,9 @@
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -193,14 +193,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
             if (username != null) {
-              "$Tags.DB_USER" username
+              "${SemanticAttributes.DB_USER.key()}" username
             }
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" url
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" url
             "span.origin.type" String
           }
         }
@@ -250,14 +250,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
             if (username != null) {
-              "$Tags.DB_USER" username
+              "${SemanticAttributes.DB_USER.key()}" username
             }
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" url
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" url
             "span.origin.type" String
           }
         }
@@ -299,14 +299,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
             if (username != null) {
-              "$Tags.DB_USER" username
+              "${SemanticAttributes.DB_USER.key()}" username
             }
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" url
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" url
             "span.origin.type" String
           }
         }
@@ -348,14 +348,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
             if (username != null) {
-              "$Tags.DB_USER" username
+              "${SemanticAttributes.DB_USER.key()}" username
             }
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" url
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" url
             "span.origin.type" String
           }
         }
@@ -397,14 +397,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
             if (username != null) {
-              "$Tags.DB_USER" username
+              "${SemanticAttributes.DB_USER.key()}" username
             }
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" url
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" url
             "span.origin.type" String
           }
         }
@@ -449,14 +449,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
             if (username != null) {
-              "$Tags.DB_USER" username
+              "${SemanticAttributes.DB_USER.key()}" username
             }
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" url
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" url
             "span.origin.type" String
           }
         }
@@ -513,17 +513,17 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
+          attributes {
             if (prepareStatement) {
             } else {
             }
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
             if (username != null) {
-              "$Tags.DB_USER" username
+              "${SemanticAttributes.DB_USER.key()}" username
             }
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" url
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" url
             "span.origin.type" String
           }
         }
@@ -571,14 +571,14 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         span(1) {
           operationName "${datasource.class.simpleName}.getConnection"
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         if (recursive) {
           span(2) {
             operationName "${datasource.class.simpleName}.getConnection"
             childOf span(1)
-            tags {
+            attributes {
             }
           }
         }
@@ -620,10 +620,10 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" "testdb://localhost"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" "testdb://localhost"
             "span.origin.type" TestStatement.name
           }
         }
@@ -681,12 +681,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           operationName JDBCUtils.normalizeSql(query)
           spanKind CLIENT
           errored false
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" dbName.toLowerCase()
-            "$Tags.DB_USER" "SA"
-            "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+            "${SemanticAttributes.DB_USER.key()}" "SA"
+            "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" String
           }
         }
@@ -697,12 +697,12 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             operationName JDBCUtils.normalizeSql(query)
             spanKind CLIENT
             errored false
-            tags {
-              "$Tags.DB_TYPE" "sql"
-              "$Tags.DB_INSTANCE" dbName.toLowerCase()
-              "$Tags.DB_USER" "SA"
-              "$Tags.DB_STATEMENT" JDBCUtils.normalizeSql(query)
-              "$Tags.DB_URL" "hsqldb:mem:"
+            attributes {
+              "${SemanticAttributes.DB_TYPE.key()}" "sql"
+              "${SemanticAttributes.DB_INSTANCE.key()}" dbName.toLowerCase()
+              "${SemanticAttributes.DB_USER.key()}" "SA"
+              "${SemanticAttributes.DB_STATEMENT.key()}" JDBCUtils.normalizeSql(query)
+              "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
               "span.origin.type" String
             }
           }

@@ -18,9 +18,9 @@ import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.base.HttpClientTest
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
@@ -77,13 +77,13 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
         span(0) {
           spanKind CLIENT
           errored true
-          tags {
-            "$MoreTags.NET_PEER_NAME" "localhost"
-            "$MoreTags.NET_PEER_PORT" Long
-            "$Tags.HTTP_URL" "${uri}"
-            "$Tags.HTTP_METHOD" method
-            "$Tags.HTTP_STATUS" 500
-            "$MoreTags.ERROR_MSG" "Server Error"
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.HTTP_URL.key()}" "${uri}"
+            "${SemanticAttributes.HTTP_METHOD.key()}" method
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
+            "$MoreAttributes.ERROR_MSG" "Server Error"
           }
         }
         server.distributedRequestSpan(it, 1, span(0))

@@ -18,14 +18,14 @@ package io.opentelemetry.auto.test.base
 
 import ch.qos.logback.classic.Level
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.utils.OkHttpUtils
 import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -389,7 +389,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         spanCount++
       }
       if (hasErrorPageSpans(endpoint)) {
-        spanCount += 2
+        spanCount ++
       }
     }
     assertTraces(size * 2) {
@@ -430,9 +430,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       operationName "controller"
       errored errorMessage != null
       childOf((SpanData) parent)
-      tags {
+      attributes {
         if (errorMessage) {
-          errorTags(Exception, errorMessage)
+          errorAttributes(Exception, errorMessage)
         }
       }
     }
@@ -466,18 +466,18 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       } else {
         parent()
       }
-      tags {
-        "$MoreTags.NET_PEER_PORT" Long
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_STATUS" endpoint.status
+      attributes {
+        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
         // OkHttp never sends the fragment in the request.
 //        if (endpoint.fragment) {
-//          "$MoreTags.HTTP_FRAGMENT" endpoint.fragment
+//          "$MoreAttributes.HTTP_FRAGMENT" endpoint.fragment
 //        }
       }
     }

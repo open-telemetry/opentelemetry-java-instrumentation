@@ -41,7 +41,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "SayTracedHello.sayHello"
           parent()
           errored false
-          tags {
+          attributes {
             "myattr" "test"
           }
         }
@@ -61,7 +61,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "SayTracedHello.sayHELLOsayHA"
           parent()
           errored false
-          tags {
+          attributes {
             "myattr" "test2"
           }
         }
@@ -69,7 +69,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "SayTracedHello.sayHello"
           childOf span(0)
           errored false
-          tags {
+          attributes {
             "myattr" "test"
           }
         }
@@ -77,7 +77,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "SayTracedHello.sayHello"
           childOf span(0)
           errored false
-          tags {
+          attributes {
             "myattr" "test"
           }
         }
@@ -100,8 +100,8 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           operationName "SayTracedHello.sayERROR"
           errored true
-          tags {
-            errorTags(error.class)
+          attributes {
+            errorAttributes(error.class)
           }
         }
       }
@@ -118,7 +118,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "SayTracedHello\$1.call"
-          tags {
+          attributes {
           }
         }
       }
@@ -139,13 +139,13 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "SayTracedHello\$1.call"
-          tags {
+          attributes {
           }
         }
         trace(1, 1) {
           span(0) {
             operationName "TraceAnnotationsTest\$1.call"
-            tags {
+            attributes {
             }
           }
         }

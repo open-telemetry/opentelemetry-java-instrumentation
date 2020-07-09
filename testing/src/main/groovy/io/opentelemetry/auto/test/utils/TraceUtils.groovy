@@ -65,9 +65,9 @@ class TraceUtils {
       }
       operationName operation
       errored exception != null
-      tags {
+      attributes {
         if (exception) {
-          errorTags(exception.class, exception.message)
+          errorAttributes(exception.class, exception.message)
         }
       }
     }

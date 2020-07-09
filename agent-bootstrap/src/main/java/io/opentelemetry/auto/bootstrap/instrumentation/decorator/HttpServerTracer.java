@@ -25,8 +25,7 @@ import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.config.Config;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
-import io.opentelemetry.auto.instrumentation.api.Tags;
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
@@ -125,11 +124,11 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
           urlBuilder.append("#").append(fragment);
         }
 
-        span.setAttribute(Tags.HTTP_URL, urlBuilder.toString());
+        span.setAttribute(SemanticAttributes.HTTP_URL.key(), urlBuilder.toString());
 
         if (Config.get().isHttpServerTagQueryString()) {
-          span.setAttribute(MoreTags.HTTP_QUERY, url.getQuery());
-          span.setAttribute(MoreTags.HTTP_FRAGMENT, url.getFragment());
+          span.setAttribute(MoreAttributes.HTTP_QUERY, url.getQuery());
+          span.setAttribute(MoreAttributes.HTTP_FRAGMENT, url.getFragment());
         }
       }
     } catch (final Exception e) {
@@ -170,12 +169,12 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
 
   // TODO semantic attributes
   public static void addThrowable(final Span span, final Throwable throwable) {
-    span.setAttribute(MoreTags.ERROR_MSG, throwable.getMessage());
-    span.setAttribute(MoreTags.ERROR_TYPE, throwable.getClass().getName());
+    span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
+    span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
     final StringWriter errorString = new StringWriter();
     throwable.printStackTrace(new PrintWriter(errorString));
-    span.setAttribute(MoreTags.ERROR_STACK, errorString.toString());
+    span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
   }
 
   public Span getCurrentSpan() {

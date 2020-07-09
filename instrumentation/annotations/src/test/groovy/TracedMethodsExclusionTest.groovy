@@ -76,14 +76,14 @@ class TracedMethodsExclusionTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "TestClass.included"
-          tags {
+          attributes {
           }
         }
       }
       trace(1, 1) {
         span(0) {
           operationName "TestClass.annotated"
-          tags {
+          attributes {
           }
         }
       }

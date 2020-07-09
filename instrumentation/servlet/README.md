@@ -1,5 +1,19 @@
 # Instrumentation for Java Servlets
 
+## A word about version
+
+We support Servlet API starting from version 2.2.
+But various instrumentations apply to different versions of the API.
+They are divided into 3 sub-modules:
+
+`servlet-common` contains instrumentations applicable to all API versions that we support.
+
+`servlet-2.2` contains instrumentations applicable to Servlet API 2.2, but not to to 3+.
+
+`servlet-3.0` contains instrumentations that require Servlet API 3.0 or newer.
+
+## Implementation details
+
 In order to fully understand how java servlet instrumentation work,
 let us first take a look at the following stacktrace from Spring PetClinic application.
 Unimportant frames are redacted, points of interests are highlighted and discussed below.
@@ -66,9 +80,23 @@ Span created by Spring MVC instrumentation will have `kind=INTERNAL` and named `
 The state described above has one significant problem.
 Observability backends usually aggregate traces based on their root spans.
 This means that ALL traces from any application deployed to Servlet container will be grouped together.
-Becaue their root spans will all have the same named based on common entry point.
+Because their root spans will all have the same named based on common entry point.
 In order to alleviate this problem, instrumentations for specific frameworks, such as Spring MVC here,
 _update_ name of the span corresponding to the entry point.
 Each framework instrumentation can decide what is the best span name based on framework implementation details.
 Of course, still adhering to OpenTelemetry
 [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md).
+
+## Additional instrumentations
+`RequestDispatcherInstrumentation` instruments `javax.servlet.RequestDispatcher.forward` and
+`javax.servlet.RequestDispatcher.include` methods to create new `INTERNAL` spans around their
+invocations.
+
+`ServletContextInstrumentation` instruments `javax.servlet.ServletContext.getRequestDispatcher` and
+`javax.servlet.ServletContext.getNamedDispatcher`. The only job of this instrumentation is to
+preserve the input parameter of those methods and to make that available for `RequestDispatcherInstrumentation`
+described above. The latter uses that name for `dispatcher.target` span attribute.
+
+`HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`
+and `javax.servlet.http.HttpServletResponse.sendRedirect` methods to create new `INTERNAL` spans
+around their invocations.
