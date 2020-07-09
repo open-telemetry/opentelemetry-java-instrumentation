@@ -12,8 +12,8 @@ dependencies {
   compileOnly project(':instrumentation-core:servlet')
 
   api deps.opentelemetryApi
-  api group: 'org.springframework', name: 'spring-webmvc', version: '3.1.0.RELEASE'
-  api group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+  compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '3.1.0.RELEASE'
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
   
   testImplementation group: 'org.springframework', name: 'spring-test', version: '3.1.0.RELEASE'
 }
