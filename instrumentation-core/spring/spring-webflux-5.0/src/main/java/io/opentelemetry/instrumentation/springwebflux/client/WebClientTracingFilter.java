@@ -25,6 +25,7 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -34,6 +35,16 @@ import reactor.core.publisher.Mono;
 
 public class WebClientTracingFilter implements ExchangeFilterFunction {
 
+  private final Tracer tracer;
+
+  public WebClientTracingFilter() {
+    this.tracer = TRACER;
+  }
+
+  public WebClientTracingFilter(Tracer tracer) {
+    this.tracer = tracer;
+  }
+
   public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
     exchangeFilterFunctions.add(0, new WebClientTracingFilter());
   }
@@ -41,7 +52,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
   @Override
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
     final Span span =
-        TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
+        tracer.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
     DECORATE.afterStart(span);
 
     try (final Scope scope = TRACER.withSpan(span)) {
