@@ -3,14 +3,6 @@
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 
-byteBuddy {
-  transformation {
-    // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
-    tasks = ['compileJava', 'compileScala', 'compileKotlin']
-    plugin = 'io.opentelemetry.auto.tooling.muzzle.MuzzleGradlePlugin$NoOp'
-  }
-}
-
 apply from: "$rootDir/gradle/java.gradle"
 if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
