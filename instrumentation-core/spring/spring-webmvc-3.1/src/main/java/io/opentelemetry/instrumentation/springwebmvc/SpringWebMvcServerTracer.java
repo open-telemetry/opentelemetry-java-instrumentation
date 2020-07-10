@@ -17,17 +17,20 @@
 package io.opentelemetry.instrumentation.springwebmvc;
 
 import io.grpc.Context;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracerBase;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter;
+import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 
 public class SpringWebMvcServerTracer
-    extends HttpServerTracerBase<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
+    extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 
-  public static final SpringWebMvcServerTracer DECORATE = new SpringWebMvcServerTracer();
+  public SpringWebMvcServerTracer(Tracer tracer) {
+    super(tracer);
+  }
 
   @Override
   protected Integer peerPort(HttpServletRequest request) {
@@ -63,5 +66,15 @@ public class SpringWebMvcServerTracer
   public Context getServerContext(HttpServletRequest request) {
     Object context = request.getAttribute(CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
+  }
+
+  @Override
+  protected String getInstrumentationName() {
+    return null;
+  }
+
+  @Override
+  protected String getVersion() {
+    return null;
   }
 }

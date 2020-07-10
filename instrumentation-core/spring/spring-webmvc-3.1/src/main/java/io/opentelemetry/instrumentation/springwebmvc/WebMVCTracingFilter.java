@@ -16,8 +16,6 @@
 
 package io.opentelemetry.instrumentation.springwebmvc;
 
-import static io.opentelemetry.instrumentation.springwebmvc.SpringWebMvcServerTracer.DECORATE;
-
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -33,25 +31,25 @@ public class WebMVCTracingFilter extends OncePerRequestFilter implements Ordered
 
   private static final String FILTER_CLASS = "WebMVCTracingFilter";
   private static final String FILTER_METHOD = "doFilterInteral";
-  private final Tracer tracer;
+  private final SpringWebMvcServerTracer tracer;
 
   public WebMVCTracingFilter(Tracer tracer) {
-    this.tracer = tracer;
+
+    this.tracer = new SpringWebMvcServerTracer(tracer);
   }
 
   @Override
   public void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    HttpServletRequest req = (HttpServletRequest) request;
+    Span serverSpan = tracer.startSpan(request, request, FILTER_METHOD, FILTER_CLASS);
 
-    Span serverSpan = DECORATE.startSpan(tracer, req, req, FILTER_METHOD, FILTER_CLASS);
-
-    try (Scope scope = tracer.withSpan(serverSpan)) {
-      filterChain.doFilter(req, response);
-      DECORATE.end(serverSpan, response.getStatus());
+    try (Scope scope = tracer.startScope(serverSpan, request)) {
+      filterChain.doFilter(request, response);
+      tracer.end(serverSpan, response.getStatus());
     } catch (Throwable t) {
-      DECORATE.endExceptionally(serverSpan, t, response.getStatus());
+      tracer.endExceptionally(serverSpan, t, response.getStatus());
+      throw t;
     }
   }
 
