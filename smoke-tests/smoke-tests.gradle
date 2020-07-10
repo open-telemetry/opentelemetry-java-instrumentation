@@ -11,6 +11,7 @@ dependencies {
 }
 
 subprojects { subProject ->
+  subProject.tasks.withType(Javadoc).configureEach { enabled = false }
   subProject.tasks.withType(Test).configureEach {
     dependsOn = [':opentelemetry-javaagent:shadowJar', ':auto-exporters:opentelemetry-auto-exporter-logging:shadowJar']
 

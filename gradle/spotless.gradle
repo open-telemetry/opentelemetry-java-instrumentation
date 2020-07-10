@@ -12,6 +12,7 @@ spotless {
   scala {
     scalafmt()
     licenseHeaderFile rootProject.file('gradle/enforcement/spotless.license.java'), '(package|import|public)'
+    target 'src/**/*.scala'
   }
   kotlin {
     // ktfmt() // only supports 4 space indentation

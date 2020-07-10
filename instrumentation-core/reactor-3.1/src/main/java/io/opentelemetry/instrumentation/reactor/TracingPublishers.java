@@ -14,31 +14,39 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.reactor;
+package io.opentelemetry.instrumentation.reactor;
 
 import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.trace.Tracer;
 import java.util.function.Consumer;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
 import reactor.core.Fuseable;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.GroupedFlux;
+import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.ParallelFlux;
 
 public class TracingPublishers {
-  private static final Logger log = LoggerFactory.getLogger(TracingPublishers.class);
 
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.reactor");
+  /**
+   * Registers a hook that applies to every operator, propagating {@link Context} to downstream
+   * callbacks to ensure spans in the {@link Context} are available throughout the lifetime of a
+   * reactive stream. This should generally be called in a static initializer block in your
+   * application.
+   */
+  public static void registerOnEachOperator() {
+    Hooks.onEachOperator(TracingPublishers.class.getName(), TracingPublishers::wrap);
+  }
+
+  /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
+  public static void resetOnEachOperator() {
+    Hooks.resetOnEachOperator(TracingPublishers.class.getName());
+  }
 
   /**
    * Instead of using {@link reactor.core.publisher.Operators#lift} (available in reactor 3.1) or

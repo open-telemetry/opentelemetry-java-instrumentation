@@ -17,4 +17,6 @@ targetCompatibility = 1.8
 subprojects { sub ->
   sub.apply plugin: 'com.github.johnrengelman.shadow'
   sub.apply from: "$rootDir/gradle/java.gradle"
+
+  javadoc.enabled = false
 }
