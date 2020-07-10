@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-  api(gradleApi())
+  implementation(gradleApi())
   implementation(localGroovy())
 
   implementation("org.eclipse.aether", "aether-connector-basic", "1.1.0")

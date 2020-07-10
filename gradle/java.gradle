@@ -286,11 +286,3 @@ tasks.withType(Test).configureEach {
   // Disable all tests if skipTests property was specified
   enabled = isJavaVersionAllowed(JavaVersion.current()) && !project.rootProject.hasProperty("skipTests")
 }
-
-plugins.withType(BasePlugin) {
-  project.afterEvaluate {
-    def deleteTasks = tasks.withType(Delete) + project.tasks.findByPath('clean')
-    def otherTasks = tasks - deleteTasks
-    otherTasks*.mustRunAfter deleteTasks
-  }
-}

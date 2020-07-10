@@ -1,27 +1,29 @@
 plugins {
-  id 'play'
-  // id 'idea'
+  id "org.gradle.playframework" version "0.9"
 }
 
-def playVersion = "2.6.20"
-def scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  playVersion = "2.6.20"
+  scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
+}
 
-model {
-  components {
-    play {
-      platform play: playVersion, scala: scalaVersion, java: '1.8'
-      injectedRoutesGenerator = true
-    }
+play {
+  platform {
+    playVersion = project.ext.playVersion
+    scalaVersion = project.ext.scalaVersion
+    javaVersion = JavaVersion.VERSION_1_8
   }
+  injectedRoutesGenerator = true
 }
 
 dependencies {
-  play "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
-  play "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
-  play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
+  implementation "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
-  play project(':auto-bootstrap')
-  play project(':benchmark-integration')
+  implementation project(':auto-bootstrap')
+  implementation project(':benchmark-integration')
 }
 
 repositories {

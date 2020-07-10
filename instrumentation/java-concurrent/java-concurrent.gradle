@@ -25,12 +25,12 @@ dependencies {
 
   testImplementation project(':instrumentation:annotations')
 
-  slickTestCompile project(':instrumentation:java-concurrent')
-  slickTestCompile project(':instrumentation:annotations')
-  slickTestCompile project(':instrumentation:jdbc')
-  slickTestCompile deps.scala
-  slickTestCompile group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
-  slickTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
+  slickTestImplementation project(':instrumentation:java-concurrent')
+  slickTestImplementation project(':instrumentation:annotations')
+  slickTestImplementation project(':instrumentation:jdbc')
+  slickTestImplementation deps.scala
+  slickTestImplementation group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
+  slickTestImplementation group: 'com.h2database', name: 'h2', version: '1.4.197'
 }
 
 // Run Slick library tests along with the rest of unit tests

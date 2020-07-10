@@ -80,13 +80,13 @@ dependencies {
   testImplementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
   testImplementation project(':instrumentation:annotations')
 
-  lagomTestCompile project(':instrumentation:akka-http-10.0')
+  lagomTestImplementation project(':instrumentation:akka-http-10.0')
 
-  lagomTestCompile group: 'com.lightbend.lagom', name: 'lagom-javadsl-testkit_2.11', version: '1.4.0'
+  lagomTestImplementation group: 'com.lightbend.lagom', name: 'lagom-javadsl-testkit_2.11', version: '1.4.0'
 
   // There are some internal API changes in 10.1 that we would like to test separately for
-  version101TestCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.1.0'
-  version101TestCompile group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.5.11'
+  version101TestImplementation group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.1.0'
+  version101TestImplementation group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '2.5.11'
 
   latestDepTestImplementation group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '+'
   latestDepTestImplementation group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '+'
