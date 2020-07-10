@@ -34,7 +34,6 @@ public class WebMVCTracingFilter extends OncePerRequestFilter implements Ordered
   private final SpringWebMvcServerTracer tracer;
 
   public WebMVCTracingFilter(Tracer tracer) {
-
     this.tracer = new SpringWebMvcServerTracer(tracer);
   }
 
