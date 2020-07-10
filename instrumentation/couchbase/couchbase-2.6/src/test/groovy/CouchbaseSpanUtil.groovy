@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
@@ -34,15 +33,15 @@ class CouchbaseSpanUtil {
       } else {
         childOf((SpanData) parentSpan)
       }
-      tags {
+      attributes {
 
-        // Because of caching, not all requests hit the server so these tags may be absent
-        "$MoreTags.NET_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == null }
-        "$MoreTags.NET_PEER_PORT" { it == null || Number }
+        // Because of caching, not all requests hit the server so these attributes may be absent
+        "${SemanticAttributes.NET_PEER_NAME.key()}" { it == "localhost" || it == "127.0.0.1" || it == null }
+        "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || Number }
 
-        "$Tags.DB_TYPE" "couchbase"
+        "${SemanticAttributes.DB_TYPE.key()}" "couchbase"
         if (bucketName != null) {
-          "$Tags.DB_INSTANCE" bucketName
+          "${SemanticAttributes.DB_INSTANCE.key()}" bucketName
         }
 
         // Because of caching, not all requests hit the server so this tag may be absent
@@ -53,7 +52,7 @@ class CouchbaseSpanUtil {
         // that do have operation ids
         "couchbase.operation_id" { it == null || String }
 
-        "$Tags.DB_STATEMENT" name
+        "${SemanticAttributes.DB_STATEMENT.key()}" name
       }
     }
   }

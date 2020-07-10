@@ -16,12 +16,12 @@
 
 package io.opentelemetry.auto.instrumentation.reactor;
 
+import io.opentelemetry.auto.instrumentation.reactor.shaded.TracingPublishers;
 import net.bytebuddy.asm.Advice;
-import reactor.core.publisher.Hooks;
 
 public class ReactorHooksAdvice {
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void postStaticInitializer() {
-    Hooks.onEachOperator(TracingPublishers.class.getName(), TracingPublishers::wrap);
+    TracingPublishers.registerOnEachOperator();
   }
 }

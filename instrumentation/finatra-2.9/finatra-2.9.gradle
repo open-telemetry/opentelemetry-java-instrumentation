@@ -32,16 +32,16 @@ muzzle {
 dependencies {
   compileOnly group: 'com.twitter', name: 'finatra-http_2.11', version: '2.9.0'
 
-  testCompile project(':instrumentation:netty:netty-4.1')
+  testImplementation project(':instrumentation:netty:netty-4.1')
 
-  testCompile group: 'com.twitter', name: 'finatra-http_2.11', version: '19.12.0'
-  testCompile(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.10')
+  testImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '19.12.0'
+  testImplementation(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.10')
   // Required for older versions of finatra on JDKs >= 11
-  testCompile group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
+  testImplementation group: 'com.sun.activation', name: 'javax.activation', version: '1.2.0'
 
-  latestDepTestCompile project(':instrumentation:netty:netty-4.1')
-  latestDepTestCompile group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
-  latestDepTestCompile(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0')
+  latestDepTestImplementation project(':instrumentation:netty:netty-4.1')
+  latestDepTestImplementation group: 'com.twitter', name: 'finatra-http_2.11', version: '+'
+  latestDepTestImplementation(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.0')
 }
 
 compileLatestDepTestGroovy {

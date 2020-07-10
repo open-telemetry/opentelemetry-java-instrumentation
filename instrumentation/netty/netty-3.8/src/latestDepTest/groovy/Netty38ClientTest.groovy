@@ -97,7 +97,7 @@ class Netty38ClientTest extends HttpClientTest {
           operationName "CONNECT"
           childOf span(0)
           errored true
-          tags {
+          attributes {
             Class errorClass = ConnectException
             try {
               errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 import spring.jpa.Customer
@@ -48,12 +48,12 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -75,12 +75,12 @@ class SpringJpaTest extends AgentTestRunner {
           span(0) {
             operationName "call next value for hibernate_sequence"
             spanKind CLIENT
-            tags {
-              "$Tags.DB_TYPE" "sql"
-              "$Tags.DB_INSTANCE" "test"
-              "$Tags.DB_USER" "sa"
-              "$Tags.DB_STATEMENT" "call next value for hibernate_sequence"
-              "$Tags.DB_URL" "hsqldb:mem:"
+            attributes {
+              "${SemanticAttributes.DB_TYPE.key()}" "sql"
+              "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+              "${SemanticAttributes.DB_USER.key()}" "sa"
+              "${SemanticAttributes.DB_STATEMENT.key()}" "call next value for hibernate_sequence"
+              "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
               "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
             }
           }
@@ -90,12 +90,12 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -114,12 +114,12 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -128,12 +128,12 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName "update Customer set firstName=?, lastName=? where id=?"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" "update Customer set firstName=?, lastName=? where id=?"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "update Customer set firstName=?, lastName=? where id=?"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -152,12 +152,12 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -174,12 +174,12 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
@@ -188,12 +188,12 @@ class SpringJpaTest extends AgentTestRunner {
         span(0) {
           operationName "delete from Customer where id=?"
           spanKind CLIENT
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "test"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" "delete from Customer where id=?"
-            "$Tags.DB_URL" "hsqldb:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "test"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "delete from Customer where id=?"
+            "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
             "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }

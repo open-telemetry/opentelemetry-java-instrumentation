@@ -42,18 +42,18 @@ public final class ReactorHooksInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".TracingPublishers",
-      packageName + ".TracingPublishers$MonoTracingPublisher",
-      packageName + ".TracingPublishers$ParallelFluxTracingPublisher",
-      packageName + ".TracingPublishers$ConnectableFluxTracingPublisher",
-      packageName + ".TracingPublishers$GroupedFluxTracingPublisher",
-      packageName + ".TracingPublishers$FluxTracingPublisher",
-      packageName + ".TracingPublishers$FuseableMonoTracingPublisher",
-      packageName + ".TracingPublishers$FuseableParallelFluxTracingPublisher",
-      packageName + ".TracingPublishers$FuseableConnectableFluxTracingPublisher",
-      packageName + ".TracingPublishers$FuseableGroupedFluxTracingPublisher",
-      packageName + ".TracingPublishers$FuseableFluxTracingPublisher",
-      packageName + ".TracingSubscriber"
+      packageName + ".shaded.TracingPublishers",
+      packageName + ".shaded.TracingPublishers$MonoTracingPublisher",
+      packageName + ".shaded.TracingPublishers$ParallelFluxTracingPublisher",
+      packageName + ".shaded.TracingPublishers$ConnectableFluxTracingPublisher",
+      packageName + ".shaded.TracingPublishers$GroupedFluxTracingPublisher",
+      packageName + ".shaded.TracingPublishers$FluxTracingPublisher",
+      packageName + ".shaded.TracingPublishers$FuseableMonoTracingPublisher",
+      packageName + ".shaded.TracingPublishers$FuseableParallelFluxTracingPublisher",
+      packageName + ".shaded.TracingPublishers$FuseableConnectableFluxTracingPublisher",
+      packageName + ".shaded.TracingPublishers$FuseableGroupedFluxTracingPublisher",
+      packageName + ".shaded.TracingPublishers$FuseableFluxTracingPublisher",
+      packageName + ".shaded.TracingSubscriber"
     };
   }
 

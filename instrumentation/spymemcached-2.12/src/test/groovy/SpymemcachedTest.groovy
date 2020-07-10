@@ -15,10 +15,10 @@
  */
 
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.auto.instrumentation.api.Tags
 import io.opentelemetry.auto.instrumentation.spymemcached.CompletionListener
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -624,7 +624,7 @@ class SpymemcachedTest extends AgentTestRunner {
       operationName parentOperation
       parent()
       errored false
-      tags {
+      attributes {
       }
     }
   }
@@ -639,8 +639,8 @@ class SpymemcachedTest extends AgentTestRunner {
       spanKind CLIENT
       errored(error != null && error != "canceled")
 
-      tags {
-        "$Tags.DB_TYPE" "memcached"
+      attributes {
+        "${SemanticAttributes.DB_TYPE.key()}" "memcached"
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true
@@ -655,13 +655,13 @@ class SpymemcachedTest extends AgentTestRunner {
         }
 
         if (error == "timeout") {
-          errorTags(
+          errorAttributes(
             CheckedOperationTimeoutException,
             "Operation timed out. - failing node: ${memcachedAddress.address}:${memcachedAddress.port}")
         }
 
         if (error == "long key") {
-          errorTags(
+          errorAttributes(
             IllegalArgumentException,
             "Key is too long (maxlen = 250)")
         }

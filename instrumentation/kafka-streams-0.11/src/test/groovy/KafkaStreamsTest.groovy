@@ -142,7 +142,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           spanKind PRODUCER
           errored false
           parent()
-          tags {
+          attributes {
           }
         }
         // CONSUMER span 0
@@ -151,7 +151,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           spanKind CONSUMER
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }
@@ -163,7 +163,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           spanKind CONSUMER
           errored false
           childOf span(0)
-          tags {
+          attributes {
             "partition" { it >= 0 }
             "offset" 0
             "asdf" "testing"
@@ -175,7 +175,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           spanKind PRODUCER
           errored false
           childOf span(2)
-          tags {
+          attributes {
           }
         }
         // CONSUMER span 0
@@ -184,7 +184,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           spanKind CONSUMER
           errored false
           childOf span(3)
-          tags {
+          attributes {
             "partition" { it >= 0 }
             "offset" 0
             "record.queue_time_ms" { it >= 0 }

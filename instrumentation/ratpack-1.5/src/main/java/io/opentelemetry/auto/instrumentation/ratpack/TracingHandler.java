@@ -19,6 +19,7 @@ package io.opentelemetry.auto.instrumentation.ratpack;
 import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -36,17 +37,17 @@ public final class TracingHandler implements Handler {
    * io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys. The key string must be kept
    * consistent.
    */
-  public static final AttributeKey<Span> SERVER_ATTRIBUTE_KEY =
+  public static final AttributeKey<io.grpc.Context> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(
-          "io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler.span");
+          "io.opentelemetry.auto.instrumentation.netty.v4_1.server.HttpServerTracingHandler.context");
 
   @Override
   public void handle(final Context ctx) {
     final Request request = ctx.getRequest();
 
-    final Attribute<Span> spanAttribute =
+    final Attribute<io.grpc.Context> spanAttribute =
         ctx.getDirectChannelAccess().getChannel().attr(SERVER_ATTRIBUTE_KEY);
-    final Span nettySpan = spanAttribute.get();
+    final io.grpc.Context serverSpanContext = spanAttribute.get();
 
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
     final Span ratpackSpan = TRACER.spanBuilder("ratpack.handler").startSpan();
@@ -59,9 +60,9 @@ public final class TracingHandler implements Handler {
         .beforeSend(
             response -> {
               try (final Scope ignored = currentContextWith(ratpackSpan)) {
-                if (nettySpan != null) {
+                if (serverSpanContext != null) {
                   // Rename the netty span name with the ratpack route.
-                  DECORATE.onContext(nettySpan, ctx);
+                  DECORATE.onContext(getSpan(serverSpanContext), ctx);
                 }
                 DECORATE.onResponse(ratpackSpan, response);
                 DECORATE.onContext(ratpackSpan, ctx);

@@ -109,11 +109,11 @@ repositories {
 }
 
 dependencies {
-  testCompile deps.spock
-  testCompile deps.groovy
-  testCompile deps.testLogging
-  testCompile group: 'info.solidsoft.spock', name: 'spock-global-unroll', version: '0.5.1'
-  testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+  testImplementation deps.spock
+  testImplementation deps.groovy
+  testImplementation deps.testLogging
+  testImplementation group: 'info.solidsoft.spock', name: 'spock-global-unroll', version: '0.5.1'
+  testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 }
 
 jar {
@@ -155,8 +155,8 @@ project.afterEvaluate {
   if (project.plugins.hasPlugin('org.unbroken-dome.test-sets') && configurations.hasProperty("latestDepTestRuntime")) {
     tasks.withType(Test).configureEach {
       doFirst {
-        def testArtifacts = configurations.testRuntime.resolvedConfiguration.resolvedArtifacts
-        def latestTestArtifacts = configurations.latestDepTestRuntime.resolvedConfiguration.resolvedArtifacts
+        def testArtifacts = configurations.testRuntimeClasspath.resolvedConfiguration.resolvedArtifacts
+        def latestTestArtifacts = configurations.latestDepTestRuntimeClasspath.resolvedConfiguration.resolvedArtifacts
         assert testArtifacts != latestTestArtifacts: "latestDepTest dependencies are identical to test"
       }
     }
@@ -285,12 +285,4 @@ tasks.withType(Test).configureEach {
   // Disable all tests if current JVM doesn't match version requirements
   // Disable all tests if skipTests property was specified
   enabled = isJavaVersionAllowed(JavaVersion.current()) && !project.rootProject.hasProperty("skipTests")
-}
-
-plugins.withType(BasePlugin) {
-  project.afterEvaluate {
-    def deleteTasks = tasks.withType(Delete) + project.tasks.findByPath('clean')
-    def otherTasks = tasks - deleteTasks
-    otherTasks*.mustRunAfter deleteTasks
-  }
 }

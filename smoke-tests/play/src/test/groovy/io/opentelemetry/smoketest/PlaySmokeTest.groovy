@@ -24,13 +24,13 @@ class PlaySmokeTest extends AbstractServerSmokeTest {
   static final HTTP_REQUEST_SPAN = 'LOGGED_SPAN GET /welcome'
 
   @Shared
-  File playDirectory = new File("${buildDirectory}/stage/playBinary")
+  File playDirectory = new File("${buildDirectory}/stage/main")
 
   @Override
   ProcessBuilder createProcessBuilder() {
     String ext = System.getProperty("os.name").startsWith("Windows") ? ".bat" : ""
     ProcessBuilder processBuilder =
-      new ProcessBuilder("${playDirectory}/bin/playBinary" + ext)
+      new ProcessBuilder("${playDirectory}/bin/main" + ext)
     processBuilder.directory(playDirectory)
 
     processBuilder.environment().put("JAVA_OPTS",

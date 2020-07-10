@@ -1,9 +1,9 @@
 dependencies {
-  compile project(':auto-bootstrap')
-  compile project(':benchmark-integration')
+  implementation project(':auto-bootstrap')
+  implementation project(':benchmark-integration')
 
-  compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
-  compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.1.v20170120'
+  implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
+  implementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.1.v20170120'
 }
 
 jar {

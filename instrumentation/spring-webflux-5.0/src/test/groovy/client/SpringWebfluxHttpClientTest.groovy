@@ -16,8 +16,7 @@
 
 package client
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpClientTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
@@ -55,22 +54,22 @@ class SpringWebfluxHttpClientTest extends HttpClientTest {
         operationName "HTTP $method"
         spanKind CLIENT
         errored exception != null
-        tags {
-          "$MoreTags.NET_PEER_NAME" "localhost"
-          "$MoreTags.NET_PEER_PORT" uri.port
-          "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-          "$Tags.HTTP_URL" { it == "${uri}" || it == "${removeFragment(uri)}" }
-          "$Tags.HTTP_METHOD" method
+        attributes {
+          "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
+          "${SemanticAttributes.NET_PEER_PORT.key()}" uri.port
+          "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+          "${SemanticAttributes.HTTP_URL.key()}" { it == "${uri}" || it == "${removeFragment(uri)}" }
+          "${SemanticAttributes.HTTP_METHOD.key()}" method
           "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("ReactorNetty") }
           if (status) {
-            "$Tags.HTTP_STATUS" status
+            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" status
           }
           if (tagQueryString) {
-            "$MoreTags.HTTP_QUERY" uri.query
-            "$MoreTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
+            "$MoreAttributes.HTTP_QUERY" uri.query
+            "$MoreAttributes.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
           }
           if (exception) {
-            errorTags(exception.class, exception.message)
+            errorAttributes(exception.class, exception.message)
           }
         }
       }

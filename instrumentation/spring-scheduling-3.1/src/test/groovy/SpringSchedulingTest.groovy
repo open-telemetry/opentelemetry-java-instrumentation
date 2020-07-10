@@ -34,7 +34,7 @@ class SpringSchedulingTest extends AgentTestRunner {
           operationName "TriggerTask.run"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
       }
@@ -56,7 +56,7 @@ class SpringSchedulingTest extends AgentTestRunner {
           operationName "IntervalTask.run"
           parent()
           errored false
-          tags {
+          attributes {
           }
         }
       }

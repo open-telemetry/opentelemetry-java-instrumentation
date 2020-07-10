@@ -16,6 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.grizzly;
 
+import static io.opentelemetry.auto.instrumentation.grizzly.GrizzlyHttpServerTracer.TRACER;
+
+import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.http.HttpResponsePacket;
@@ -25,6 +28,9 @@ public class HttpServerFilterAdvice {
   public static void onExit(
       @Advice.Argument(0) final FilterChainContext ctx,
       @Advice.Argument(2) final HttpResponsePacket response) {
-    GrizzlyDecorator.onHttpServerFilterPrepareResponseExit(ctx, response);
+    Span span = TRACER.getServerSpan(ctx);
+    if (span != null) {
+      TRACER.end(span, response.getStatus());
+    }
   }
 }

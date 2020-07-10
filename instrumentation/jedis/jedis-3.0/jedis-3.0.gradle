@@ -24,11 +24,11 @@ testSets {
 dependencies {
   compileOnly group: 'redis.clients', name: 'jedis', version: '3.0.0'
 
-  testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
-  testCompile group: 'redis.clients', name: 'jedis', version: '3.0.0'
+  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  testImplementation group: 'redis.clients', name: 'jedis', version: '3.0.0'
   // ensures jedis-1.4 instrumentation does not load with jedis 3.0+ by failing
   // the tests in the event it does. The tests will end up with double spans
-  testCompile project(':instrumentation:jedis:jedis-1.4')
+  testImplementation project(':instrumentation:jedis:jedis-1.4')
 
-  latestDepTestCompile group: 'redis.clients', name: 'jedis', version: '3.+'
+  latestDepTestImplementation group: 'redis.clients', name: 'jedis', version: '3.+'
 }

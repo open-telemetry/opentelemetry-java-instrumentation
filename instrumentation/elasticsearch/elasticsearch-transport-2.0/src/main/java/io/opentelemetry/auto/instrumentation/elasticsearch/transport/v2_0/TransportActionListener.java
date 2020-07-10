@@ -19,8 +19,8 @@ package io.opentelemetry.auto.instrumentation.elasticsearch.transport.v2_0;
 import static io.opentelemetry.auto.instrumentation.elasticsearch.transport.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
-import io.opentelemetry.auto.instrumentation.api.MoreTags;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
@@ -69,9 +69,10 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   @Override
   public void onResponse(final T response) {
     if (response.remoteAddress() != null) {
-      span.setAttribute(MoreTags.NET_PEER_NAME, response.remoteAddress().getHost());
-      span.setAttribute(MoreTags.NET_PEER_IP, response.remoteAddress().getAddress());
-      span.setAttribute(MoreTags.NET_PEER_PORT, response.remoteAddress().getPort());
+      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), response.remoteAddress().getHost());
+      span.setAttribute(
+          SemanticAttributes.NET_PEER_IP.key(), response.remoteAddress().getAddress());
+      span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), response.remoteAddress().getPort());
     }
 
     if (response instanceof GetResponse) {

@@ -28,6 +28,6 @@ dependencies {
   testImplementation project(':testing')
 
   instrumentationMuzzle sourceSets.main.output
-  instrumentationMuzzle configurations.compile
+  instrumentationMuzzle configurations.implementation
 }
 

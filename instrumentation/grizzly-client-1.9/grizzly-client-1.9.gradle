@@ -29,7 +29,7 @@ testSets {
 dependencies {
   compileOnly group: 'org.glassfish.grizzly', name: 'grizzly-http-client', version: '1.9'
   // for some reason, the tests don't *load* until 1.12, but muzzles works as far back as 1.9
-  testCompile group: 'org.glassfish.grizzly', name: 'grizzly-http-client', version: '1.12'
+  testImplementation group: 'org.glassfish.grizzly', name: 'grizzly-http-client', version: '1.12'
 
-  latestDepTestCompile group: 'org.glassfish.grizzly', name: 'grizzly-http-client', version: '1.16'
+  latestDepTestImplementation group: 'org.glassfish.grizzly', name: 'grizzly-http-client', version: '1.16'
 }

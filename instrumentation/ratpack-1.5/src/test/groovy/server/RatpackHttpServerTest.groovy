@@ -16,11 +16,11 @@
 
 package server
 
-import io.opentelemetry.auto.instrumentation.api.MoreTags
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import ratpack.error.ServerErrorHandler
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
@@ -128,17 +128,17 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
       spanKind INTERNAL
       errored endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
       childOf((SpanData) parent)
-      tags {
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$MoreTags.NET_PEER_PORT" Long
-        "$Tags.HTTP_URL" String
-        "$Tags.HTTP_METHOD" String
-        "$Tags.HTTP_STATUS" Long
+      attributes {
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.HTTP_URL.key()}" String
+        "${SemanticAttributes.HTTP_METHOD.key()}" String
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
         if (endpoint == EXCEPTION) {
-          errorTags(Exception, EXCEPTION.body)
+          errorAttributes(Exception, EXCEPTION.body)
         }
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
@@ -155,14 +155,14 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
       } else {
         parent()
       }
-      tags {
-        "$MoreTags.NET_PEER_PORT" Long
-        "$MoreTags.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_URL" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "$Tags.HTTP_METHOD" method
-        "$Tags.HTTP_STATUS" endpoint.status
+      attributes {
+        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key()}" method
+        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         if (endpoint.query) {
-          "$MoreTags.HTTP_QUERY" endpoint.query
+          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }

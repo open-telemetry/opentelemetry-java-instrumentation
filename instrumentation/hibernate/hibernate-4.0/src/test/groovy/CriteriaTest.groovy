@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.Tags
+import io.opentelemetry.trace.attributes.SemanticAttributes
 import org.hibernate.Criteria
 import org.hibernate.Session
 import org.hibernate.criterion.Order
@@ -43,26 +43,26 @@ class CriteriaTest extends AbstractHibernateTest {
           operationName "Session"
           spanKind INTERNAL
           parent()
-          tags {
+          attributes {
           }
         }
         span(1) {
           operationName "Criteria.$methodName"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
         span(2) {
           operationName ~/^select /
           spanKind CLIENT
           childOf span(1)
-          tags {
-            "$Tags.DB_TYPE" "sql"
-            "$Tags.DB_INSTANCE" "db1"
-            "$Tags.DB_USER" "sa"
-            "$Tags.DB_STATEMENT" ~/^select /
-            "$Tags.DB_URL" "h2:mem:"
+          attributes {
+            "${SemanticAttributes.DB_TYPE.key()}" "sql"
+            "${SemanticAttributes.DB_INSTANCE.key()}" "db1"
+            "${SemanticAttributes.DB_USER.key()}" "sa"
+            "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
+            "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
@@ -70,7 +70,7 @@ class CriteriaTest extends AbstractHibernateTest {
           operationName "Transaction.commit"
           spanKind INTERNAL
           childOf span(0)
-          tags {
+          attributes {
           }
         }
       }
