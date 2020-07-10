@@ -15,7 +15,7 @@
  */
 
 import io.opentelemetry.auto.tooling.ExporterClassLoader
-import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory
+import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory
 import spock.lang.Shared
 import spock.lang.Specification
 

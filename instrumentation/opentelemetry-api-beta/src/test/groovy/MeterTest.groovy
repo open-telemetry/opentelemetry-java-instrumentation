@@ -16,6 +16,7 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.metrics.data.MetricData
 import unshaded.io.opentelemetry.OpenTelemetry
 import unshaded.io.opentelemetry.common.Labels
 import unshaded.io.opentelemetry.metrics.AsynchronousInstrument
@@ -52,7 +53,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
@@ -105,7 +106,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
@@ -188,7 +189,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
@@ -233,15 +234,17 @@ class MeterTest extends AgentTestRunner {
       .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
 
-    def batchRecorder = meter.newBatchRecorder("q", "r")
-    batchRecorder.put(longCounter, 5)
-    batchRecorder.put(longCounter, 6)
-    batchRecorder.put(doubleMeasure, 5.5)
-    batchRecorder.put(doubleMeasure, 6.6)
-    batchRecorder.record()
+    meter.newBatchRecorder("q", "r")
+      .put(longCounter, 5)
+      .put(longCounter, 6)
+      .put(doubleMeasure, 5.5)
+      .put(doubleMeasure, 6.6)
+      .record()
+
+    def allMetrics = OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics()
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(allMetrics, instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
@@ -254,7 +257,7 @@ class MeterTest extends AgentTestRunner {
     point.labels == io.opentelemetry.common.Labels.of("q", "r")
     point.value == 11
 
-    def metricData2 = this.metricData(instrumentationName, "test2")
+    def metricData2 = findMetric(allMetrics, instrumentationName, "test2")
     metricData2 != null
     metricData2.descriptor.description == "d"
     metricData2.descriptor.unit == "u"
@@ -269,8 +272,8 @@ class MeterTest extends AgentTestRunner {
     point2.sum == 12.1
   }
 
-  def metricData(instrumentationName, metricName) {
-    for (def metric : OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics()) {
+  def findMetric(Collection<MetricData> allMetrics, instrumentationName, metricName) {
+    for (def metric : allMetrics) {
       if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.descriptor.name == metricName) {
         return metric
       }

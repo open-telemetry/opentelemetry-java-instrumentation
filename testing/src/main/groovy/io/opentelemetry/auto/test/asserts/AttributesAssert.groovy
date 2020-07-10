@@ -23,7 +23,7 @@ import io.opentelemetry.common.ReadableAttributes
 import io.opentelemetry.common.ReadableKeyValuePairs
 import java.util.regex.Pattern
 
-class TagsAssert {
+class AttributesAssert {
   private final ReadableAttributes attributes
   private final Set<String> assertedAttributes = new TreeSet<>()
 
@@ -60,7 +60,7 @@ class TagsAssert {
       return
     }
     assertedAttributes.add(name)
-    def val = getVal(attributes[name])
+    def val = getVal(attributes.get(name))
     if (value instanceof Pattern) {
       assert val =~ value
     } else if (value instanceof Class) {
@@ -83,20 +83,20 @@ class TagsAssert {
     attribute(name, args[0])
   }
 
-  void assertTagsAllVerified() {
-    Set<String> allTags = new TreeSet<>()
-    tags.forEach(new ReadableKeyValuePairs.KeyValueConsumer<AttributeValue>() {
+  void assertAttributesAllVerified() {
+    Set<String> allAttributes = new TreeSet<>()
+    attributes.forEach(new ReadableKeyValuePairs.KeyValueConsumer<AttributeValue>() {
       @Override
       void consume(String key, AttributeValue value) {
-        allTags.add(key)
+        allAttributes.add(key)
       }
     })
-    Set<String> unverifiedTags = new TreeSet(allTags)
-    unverifiedTags.removeAll(assertedTags)
+    Set<String> unverifiedAttributes = new TreeSet(allAttributes)
+    unverifiedAttributes.removeAll(assertedAttributes)
     // The first and second condition in the assert are exactly the same
     // but both are included in order to provide better context in the error message.
-    // containsAll because tests may assert more tags than span actually has
-    assert unverifiedTags.isEmpty() && assertedTags.containsAll(allTags)
+    // containsAll because tests may assert more attributes than span actually has
+    assert unverifiedAttributes.isEmpty() && assertedAttributes.containsAll(allAttributes)
   }
 
   private static Object getVal(AttributeValue attributeValue) {

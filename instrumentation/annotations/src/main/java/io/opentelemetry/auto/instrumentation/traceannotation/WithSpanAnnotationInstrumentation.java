@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.contrib.auto.annotations.WithSpan;
+import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import java.util.Map;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
@@ -32,7 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * Instrumentation for methods annotated with {@link
- * io.opentelemetry.contrib.auto.annotations.WithSpan} annotation. As that is Otel annotation, we
+ * io.opentelemetry.extensions.auto.annotations.WithSpan} annotation. As that is Otel annotation, we
  * provide full support for all its attributes, as opposed to bare minimum functionality of {@link
  * TraceAnnotationsInstrumentation} for third party annotations.
  */
