@@ -14,7 +14,9 @@ muzzle {
 }
 
 testSets {
-  latestDepTest
+  latestDepTest {
+    dirName = 'test'
+  }
 }
 
 dependencies {
@@ -22,21 +24,7 @@ dependencies {
 
   compileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
-  // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
-  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
-  // Also include netty instrumentation because it is used by aws async client
-  testImplementation project(':instrumentation:netty:netty-4.1')
-  testImplementation group: 'software.amazon.awssdk', name: 'apache-client', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'ec2', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'sqs', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'kinesis', version: '2.2.0'
-  testImplementation deps.guava
-
-  latestDepTestImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0')
-  latestDepTestImplementation project(':instrumentation:netty:netty-4.1')
+  testImplementation project(':instrumentation:aws-sdk:aws-sdk-2.2:testing_')
 
   latestDepTestImplementation group: 'software.amazon.awssdk', name: 'apache-client', version: '+'
   latestDepTestImplementation group: 'software.amazon.awssdk', name: 's3', version: '+'

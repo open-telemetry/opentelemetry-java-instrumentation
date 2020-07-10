@@ -7,20 +7,15 @@ apply from: "$rootDir/gradle/instrumentation-library.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  latestDepTest
+  latestDepTest {
+    dirName = 'test'
+  }
 }
 
 dependencies {
   api group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
-  testImplementation group: 'software.amazon.awssdk', name: 'apache-client', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'ec2', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'sqs', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.2.0'
-  testImplementation group: 'software.amazon.awssdk', name: 'kinesis', version: '2.2.0'
-  testImplementation deps.guava
+  testImplementation project(':instrumentation:aws-sdk:aws-sdk-2.2:testing_')
 
   latestDepTestImplementation group: 'software.amazon.awssdk', name: 'apache-client', version: '+'
   latestDepTestImplementation group: 'software.amazon.awssdk', name: 's3', version: '+'
