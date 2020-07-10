@@ -25,7 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 
-public class SpringWebMvcServerTracer
+class SpringWebMvcServerTracer
     extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 
   public SpringWebMvcServerTracer(Tracer tracer) {
