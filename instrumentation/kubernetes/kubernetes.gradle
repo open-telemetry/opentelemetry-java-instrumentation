@@ -1,0 +1,33 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+muzzle {
+  pass {
+    group = "io.kubernetes"
+    module = "client-java-api"
+    versions = "[7.0.0,)"
+    assertInverse = true
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+
+  compileOnly(group: 'io.kubernetes', name: 'client-java-api', version: '7.0.0')
+
+  implementation project(':auto-tooling')
+
+  testImplementation group: 'io.kubernetes', name: 'client-java-api', version: '7.0.0'
+
+  latestDepTestImplementation group: 'io.kubernetes', name: 'client-java-api', version: '+'
+}
+

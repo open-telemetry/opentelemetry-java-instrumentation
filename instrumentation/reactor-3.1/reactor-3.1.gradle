@@ -1,7 +1,6 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
@@ -23,9 +22,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
-
-  testImplementation project(':instrumentation:annotations')
+  implementation project(path: ':instrumentation-core:reactor-3.1', configuration: 'shadow')
 
   testImplementation group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 

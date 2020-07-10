@@ -104,6 +104,7 @@ include ':instrumentation:jsp-2.3'
 include ':instrumentation:kafka-clients-0.11'
 include ':instrumentation:kafka-streams-0.11'
 include ':instrumentation:khttp-0.1'
+include ':instrumentation:kubernetes'
 include ':instrumentation:lettuce:lettuce-4.0'
 include ':instrumentation:lettuce:lettuce-5.0'
 include ':instrumentation:lettuce:lettuce-5.1'
@@ -150,9 +151,11 @@ include ':instrumentation:vertx-3.0'
 include ':instrumentation:vertx-reactive-3.5'
 
 include ':instrumentation-core:aws-sdk:aws-sdk-2.2'
+include ':instrumentation-core:reactor-3.1'
 include ':instrumentation-core:servlet'
 include ':instrumentation-core:spring:spring-web-3.1'
 include ':instrumentation-core:spring:spring-webflux-5.0'
+include ':instrumentation-core:spring:spring-webmvc-3.1'
 
 // exporter adapters
 include ":auto-exporters"

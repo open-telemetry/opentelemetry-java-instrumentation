@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.reactor;
+package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
