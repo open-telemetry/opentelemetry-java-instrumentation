@@ -9,11 +9,11 @@ dependencies {
   // the agent, like Agent.
   api project(':auto-bootstrap')
 
-  compileOnly project(':instrumentation-core:servlet')
-
   api deps.opentelemetryApi
   compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '3.1.0.RELEASE'
+  
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+  api project(':instrumentation-core:servlet')
   
   testImplementation group: 'org.springframework', name: 'spring-test', version: '3.1.0.RELEASE'
 }
