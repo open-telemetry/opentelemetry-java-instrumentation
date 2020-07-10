@@ -3,6 +3,10 @@
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
 
+ext {
+  packageInAgentBundle = true
+}
+
 byteBuddy {
   transformation {
     // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task

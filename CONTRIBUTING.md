@@ -128,29 +128,26 @@ For example, if we are targeting an RPC framework `yarpc` at version `1.0` we wo
 instrumentation ->
     ...
     yarpc-1.0 ->
-        auto
-            yarpc-1.0-auto.build.gradle
-        core
-            yarpc-1.0.build.gradle
+        agent
+            agent.gradle
+        library
+            library.gradle
         testing
-            yarpc-1.0-testing.build.gradle
+            testing.gradle
 ```
 
 and in the top level `settings.gradle`
 
 ```groovy
 
-include 'instrumentation:yarpc-1.0:auto'
-project('instrumentation:yarpc-1.0:auto').name = 'yarpc-1.0-auto'
-include 'instrumentation:yarpc-1.0:core'
-project('instrumentation:yarpc-1.0:core').name = 'yarpc-1.0'
+include 'instrumentation:yarpc-1.0:agent'
+include 'instrumentation:yarpc-1.0:library'
 include 'instrumentation:yarpc-1.0:testing'
-project('instrumentation:yarpc-1.0:testing').name = 'yarpc-1.0-testing'
 ```
 
 #### Writing manual instrumentation
 
-Begin by writing the instrumentation for the library in `core`. This generally involves defining a
+Begin by writing the instrumentation for the library in `library`. This generally involves defining a
 `Tracer` and using the typed tracers in our `instrumentation-common` library to create and annotate
 spans as part of the implementation of an interceptor for the library. The module should generally
 only depend on the OpenTelemetry API, `instrumentation-common`, and the instrumented library itself.
@@ -167,7 +164,7 @@ while in an auto test, it will generally just use the library's API as is. Creat
 abstract class with an abstract method that returns an instrumented object like a client. The class
 should itself extend from `Specification` to be recognized by Spock.
 
-After writing a test or two, go back to the `core` package, make sure it has a test dependency on the
+After writing a test or two, go back to the `library` package, make sure it has a test dependency on the
 `testing` submodule and top level agent `:testing` module and add a test that inherits from the
 abstract test class. You should implement the method to initialize the client using the library's
 mechanism to register interceptors, perhaps a method like `registerInterceptor` or wrapping the
@@ -178,7 +175,7 @@ trait for common setup logic. If the tests pass, manual instrumentation is worki
 
 Now that we have working instrumentation, we can implement auto instrumentation so users of the agent
 do not have to modify their apps to use it. Make sure the `auto` submodule has a dependency on the
-`core` submodule and a test dependency on the `testing` submodule. Auto instrumentation defines 
+`library` submodule and a test dependency on the `testing` submodule. Auto instrumentation defines 
 classes to match against to generate bytecode for. You will often match against the class you used 
 in the unit test for manual instrumentation, for example the builder of a client. And then you could 
 match against the method that creates the builder, for example its constructor. Auto instrumentation 
