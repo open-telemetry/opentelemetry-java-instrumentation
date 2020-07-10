@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
+import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientProperties;
+import io.opentelemetry.trace.Tracer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,8 +25,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
-import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientProperties;
-import io.opentelemetry.trace.Tracer;
 
 /** Configures RestTemplateBeanPostProcessor bean */
 @Configuration

@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.helpers.PropertiesBase;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Loads opentelemetry.trace.web.enabled from application.properties <br>
