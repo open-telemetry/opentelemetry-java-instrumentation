@@ -75,7 +75,7 @@ public class Config {
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
-  public static final String KAFKA_INJECT_HEADERS = "kafka.inject.headers";
+  public static final String KAFKA_CLIENT_PROPAGATION_ENABLED = "kafka.client.propagation.enabled";
 
   public static final String LOG_INJECTION_ENABLED = "log.injection.enabled";
   public static final String EXPERIMENTAL_LOG_CAPTURE_THRESHOLD =
@@ -95,7 +95,7 @@ public class Config {
   public static final boolean DEFAULT_LOG_INJECTION_ENABLED = false;
   public static final String DEFAULT_EXPERIMENTAL_LOG_CAPTURE_THRESHOLD = null;
 
-  public static final boolean DEFAULT_KAFKA_INJECT_HEADERS = true;
+  public static final boolean DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED = true;
 
   private static final String DEFAULT_TRACE_ANNOTATIONS = null;
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
@@ -145,7 +145,7 @@ public class Config {
 
   @Getter private final boolean sqlNormalizerEnabled;
 
-  @Getter private final boolean kafkaInjectHeaders;
+  @Getter private final boolean kafkaClientPropagationEnabled;
 
   @Getter private final Map<String, String> endpointPeerServiceMapping;
 
@@ -203,8 +203,9 @@ public class Config {
     sqlNormalizerEnabled =
         getBooleanSettingFromEnvironment(SQL_NORMALIZER_ENABLED, DEFAULT_SQL_NORMALIZER_ENABLED);
 
-    kafkaInjectHeaders =
-        getBooleanSettingFromEnvironment(KAFKA_INJECT_HEADERS, DEFAULT_KAFKA_INJECT_HEADERS);
+    kafkaClientPropagationEnabled =
+        getBooleanSettingFromEnvironment(
+            KAFKA_CLIENT_PROPAGATION_ENABLED, DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED);
 
     endpointPeerServiceMapping = getMapSettingFromEnvironment(ENDPOINT_PEER_SERVICE_MAPPING);
 
@@ -260,8 +261,9 @@ public class Config {
     sqlNormalizerEnabled =
         getPropertyBooleanValue(properties, SQL_NORMALIZER_ENABLED, parent.sqlNormalizerEnabled);
 
-    kafkaInjectHeaders =
-        getPropertyBooleanValue(properties, KAFKA_INJECT_HEADERS, parent.kafkaInjectHeaders);
+    kafkaClientPropagationEnabled =
+        getPropertyBooleanValue(
+            properties, KAFKA_CLIENT_PROPAGATION_ENABLED, parent.kafkaClientPropagationEnabled);
 
     endpointPeerServiceMapping =
         getPropertyMapValue(

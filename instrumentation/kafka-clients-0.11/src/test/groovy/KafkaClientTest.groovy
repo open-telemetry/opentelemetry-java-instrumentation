@@ -17,8 +17,6 @@
 import io.opentelemetry.auto.config.Config
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -35,6 +33,9 @@ import org.springframework.kafka.test.rule.KafkaEmbedded
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Unroll
+
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.auto.test.utils.ConfigUtils.withConfigOverride
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
@@ -311,7 +312,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when:
     String message = "Testing without headers"
-    withConfigOverride(Config.KAFKA_INJECT_HEADERS, value) {
+    withConfigOverride(Config.KAFKA_CLIENT_PROPAGATION_ENABLED, value) {
       kafkaTemplate.send(SHARED_TOPIC, message)
     }
 
@@ -326,10 +327,10 @@ class KafkaClientTest extends AgentTestRunner {
     container?.stop()
 
     where:
-    value                                               | expected
-    "false"                                             | false
-    "true"                                              | true
-    String.valueOf(Config.DEFAULT_KAFKA_INJECT_HEADERS) | true
+    value                                                           | expected
+    "false"                                                         | false
+    "true"                                                          | true
+    String.valueOf(Config.DEFAULT_KAFKA_CLIENT_PROPAGATION_ENABLED) | true
 
   }
 
@@ -341,7 +342,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when: "send message"
     String message = "Testing without headers"
-    withConfigOverride(Config.KAFKA_INJECT_HEADERS, "true") {
+    withConfigOverride(Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "true") {
       kafkaTemplate.send(SHARED_TOPIC, message)
     }
 
@@ -395,7 +396,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     when: "read message without context propagation"
     ConfigUtils.updateConfig {
-      System.setProperty("ota." + Config.KAFKA_INJECT_HEADERS, "false")
+      System.setProperty("ota."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED, "false")
     }
     records.clear()
     container = startConsumer("consumer-without-propagation", records)
@@ -446,7 +447,7 @@ class KafkaClientTest extends AgentTestRunner {
     producerFactory.stop()
     container?.stop()
     ConfigUtils.updateConfig {
-      System.clearProperty("ota." + Config.KAFKA_INJECT_HEADERS)
+      System.clearProperty("ota."+Config.KAFKA_CLIENT_PROPAGATION_ENABLED)
     }
 
   }
