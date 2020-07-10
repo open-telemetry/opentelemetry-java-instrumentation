@@ -106,7 +106,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       // headers attempt to read messages that were produced by clients > 0.11 and the magic
       // value of the broker(s) is >= 2
       if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2
-          && Config.get().isKafkaClientPropagationEnabled()
+          && Config.get().isKafkaInjectHeaders()
           // Must not interfere with tombstones
           && !isTombstone) {
         final Context context = withSpan(span, Context.current());

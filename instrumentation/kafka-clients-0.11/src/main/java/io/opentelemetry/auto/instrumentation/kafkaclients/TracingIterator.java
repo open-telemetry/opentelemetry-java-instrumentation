@@ -76,7 +76,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }
-        if (Config.get().isKafkaClientPropagationEnabled()) {
+        if (Config.get().isKafkaInjectHeaders()) {
           final SpanContext spanContext = extract(next.headers(), GETTER);
           if (spanContext.isValid()) {
             if (consumer) {
