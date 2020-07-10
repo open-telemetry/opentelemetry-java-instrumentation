@@ -13,6 +13,10 @@ apply from: "$rootDir/gradle/java.gradle"
 
 sourceCompatibility = '8'
 
+bootJar {
+  enabled = false
+}
+
 dependencies {
   implementation 'org.springframework.boot:spring-boot-autoconfigure'
   implementation 'org.springframework.boot:spring-boot-starter-aop'
