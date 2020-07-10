@@ -58,6 +58,10 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
 
   protected abstract String getVersion();
 
+  public HttpServerTracer(Tracer tracer) {
+    this.tracer = tracer;
+  }
+
   public Span startSpan(REQUEST request, CONNECTION connection, Method origin, String originType) {
     String spanName = spanNameForMethod(origin);
     return startSpan(request, connection, spanName, originType);
