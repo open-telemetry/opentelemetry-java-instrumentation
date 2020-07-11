@@ -16,10 +16,9 @@
 
 package io.opentelemetry.auto.tooling
 
-
-import io.opentelemetry.sdk.contrib.auto.config.Config
-import io.opentelemetry.sdk.contrib.auto.config.MetricExporterFactory
-import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory
+import io.opentelemetry.sdk.extensions.auto.config.Config
+import io.opentelemetry.sdk.extensions.auto.config.MetricExporterFactory
+import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory
 import io.opentelemetry.sdk.metrics.export.MetricExporter
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import java.nio.charset.StandardCharsets

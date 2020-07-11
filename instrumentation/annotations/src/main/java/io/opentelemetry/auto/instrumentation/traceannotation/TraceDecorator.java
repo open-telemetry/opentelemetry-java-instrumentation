@@ -18,7 +18,7 @@ package io.opentelemetry.auto.instrumentation.traceannotation;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
-import io.opentelemetry.contrib.auto.annotations.WithSpan;
+import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 

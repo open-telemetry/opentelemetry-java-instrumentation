@@ -16,7 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.Map;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
+import unshaded.io.opentelemetry.common.Labels;
 import unshaded.io.opentelemetry.metrics.DoubleValueRecorder;
 
 class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
@@ -33,13 +34,13 @@ class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
   }
 
   @Override
-  public void record(final double delta, final String... labelKeyValuePairs) {
-    shadedDoubleValueRecorder.record(delta, labelKeyValuePairs);
+  public void record(final double delta, final Labels labels) {
+    shadedDoubleValueRecorder.record(delta, LabelsShader.shade(labels));
   }
 
   @Override
-  public BoundDoubleValueRecorder bind(final String... labelKeyValuePairs) {
-    return new BoundInstrument(shadedDoubleValueRecorder.bind(labelKeyValuePairs));
+  public BoundDoubleValueRecorder bind(final Labels labels) {
+    return new BoundInstrument(shadedDoubleValueRecorder.bind(LabelsShader.shade(labels)));
   }
 
   static class BoundInstrument implements DoubleValueRecorder.BoundDoubleValueRecorder {
@@ -85,8 +86,8 @@ class UnshadedDoubleValueRecorder implements DoubleValueRecorder {
     }
 
     @Override
-    public DoubleValueRecorder.Builder setConstantLabels(final Map<String, String> constantLabels) {
-      shadedBuilder.setConstantLabels(constantLabels);
+    public DoubleValueRecorder.Builder setConstantLabels(final Labels constantLabels) {
+      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
       return this;
     }
 

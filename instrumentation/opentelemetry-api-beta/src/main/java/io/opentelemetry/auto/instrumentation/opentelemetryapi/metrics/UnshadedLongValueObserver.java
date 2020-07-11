@@ -16,7 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import java.util.Map;
+import io.opentelemetry.auto.instrumentation.opentelemetryapi.LabelsShader;
+import unshaded.io.opentelemetry.common.Labels;
 import unshaded.io.opentelemetry.metrics.LongValueObserver;
 
 class UnshadedLongValueObserver implements LongValueObserver {
@@ -29,41 +30,39 @@ class UnshadedLongValueObserver implements LongValueObserver {
   }
 
   @Override
-  public void setCallback(final Callback<ResultLongValueObserver> metricUpdater) {
+  public void setCallback(final Callback<LongResult> metricUpdater) {
     shadedLongValueObserver.setCallback(new ShadedResultLongValueObserver(metricUpdater));
   }
 
   public static class ShadedResultLongValueObserver
       implements io.opentelemetry.metrics.AsynchronousInstrument.Callback<
-          io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver> {
+          io.opentelemetry.metrics.LongValueObserver.LongResult> {
 
-    private final Callback<ResultLongValueObserver> metricUpdater;
+    private final Callback<LongResult> metricUpdater;
 
-    public ShadedResultLongValueObserver(final Callback<ResultLongValueObserver> metricUpdater) {
+    public ShadedResultLongValueObserver(final Callback<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(
-        final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver result) {
+    public void update(final io.opentelemetry.metrics.LongValueObserver.LongResult result) {
       metricUpdater.update(new UnshadedResultLongValueObserver(result));
     }
   }
 
-  public static class UnshadedResultLongValueObserver implements ResultLongValueObserver {
+  public static class UnshadedResultLongValueObserver implements LongResult {
 
-    private final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver
+    private final io.opentelemetry.metrics.LongValueObserver.LongResult
         shadedResultLongValueObserver;
 
     public UnshadedResultLongValueObserver(
-        final io.opentelemetry.metrics.LongValueObserver.ResultLongValueObserver
-            shadedResultLongValueObserver) {
+        final io.opentelemetry.metrics.LongValueObserver.LongResult shadedResultLongValueObserver) {
       this.shadedResultLongValueObserver = shadedResultLongValueObserver;
     }
 
     @Override
-    public void observe(final long value, final String... keyValueLabelPairs) {
-      shadedResultLongValueObserver.observe(value, keyValueLabelPairs);
+    public void observe(final long value, final Labels labels) {
+      shadedResultLongValueObserver.observe(value, LabelsShader.shade(labels));
     }
   }
 
@@ -88,8 +87,8 @@ class UnshadedLongValueObserver implements LongValueObserver {
     }
 
     @Override
-    public LongValueObserver.Builder setConstantLabels(final Map<String, String> constantLabels) {
-      shadedBuilder.setConstantLabels(constantLabels);
+    public LongValueObserver.Builder setConstantLabels(final Labels constantLabels) {
+      shadedBuilder.setConstantLabels(LabelsShader.shade(constantLabels));
       return this;
     }
 

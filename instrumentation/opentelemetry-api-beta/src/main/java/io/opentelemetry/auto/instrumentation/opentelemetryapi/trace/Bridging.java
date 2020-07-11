@@ -16,10 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
-import java.util.HashMap;
-import java.util.Map;
+import io.opentelemetry.common.Attributes.Builder;
 import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.common.AttributeValue;
+import unshaded.io.opentelemetry.common.Attributes;
+import unshaded.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
 import unshaded.io.opentelemetry.trace.DefaultSpan;
 import unshaded.io.opentelemetry.trace.EndSpanOptions;
 import unshaded.io.opentelemetry.trace.Span;
@@ -101,17 +102,20 @@ public class Bridging {
     }
   }
 
-  public static Map<String, io.opentelemetry.common.AttributeValue> toShaded(
-      final Map<String, AttributeValue> unshadedAttributes) {
-    final Map<String, io.opentelemetry.common.AttributeValue> shadedAttributes = new HashMap<>();
-    for (final Map.Entry<String, AttributeValue> entry : unshadedAttributes.entrySet()) {
-      final AttributeValue value = entry.getValue();
-      final io.opentelemetry.common.AttributeValue shadedValue = toShadedOrNull(value);
-      if (shadedValue != null) {
-        shadedAttributes.put(entry.getKey(), shadedValue);
-      }
-    }
-    return shadedAttributes;
+  public static io.opentelemetry.common.Attributes toShaded(final Attributes unshadedAttributes) {
+    final Builder builder = io.opentelemetry.common.Attributes.newBuilder();
+    unshadedAttributes.forEach(
+        new KeyValueConsumer<AttributeValue>() {
+          @Override
+          public void consume(String key, AttributeValue attributeValue) {
+            final io.opentelemetry.common.AttributeValue shadedValue =
+                toShadedOrNull(attributeValue);
+            if (shadedValue != null) {
+              builder.setAttribute(key, shadedValue);
+            }
+          }
+        });
+    return builder.build();
   }
 
   public static io.opentelemetry.common.AttributeValue toShadedOrNull(

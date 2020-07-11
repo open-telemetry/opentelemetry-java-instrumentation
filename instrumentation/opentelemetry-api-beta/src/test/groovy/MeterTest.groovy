@@ -16,14 +16,10 @@
 
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.metrics.data.MetricData
 import unshaded.io.opentelemetry.OpenTelemetry
+import unshaded.io.opentelemetry.common.Labels
 import unshaded.io.opentelemetry.metrics.AsynchronousInstrument
-import unshaded.io.opentelemetry.metrics.DoubleSumObserver
-import unshaded.io.opentelemetry.metrics.DoubleUpDownSumObserver
-import unshaded.io.opentelemetry.metrics.DoubleValueObserver
-import unshaded.io.opentelemetry.metrics.LongSumObserver
-import unshaded.io.opentelemetry.metrics.LongUpDownSumObserver
-import unshaded.io.opentelemetry.metrics.LongValueObserver
 
 import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_DOUBLE
 import static io.opentelemetry.sdk.metrics.data.MetricData.Descriptor.Type.MONOTONIC_LONG
@@ -43,34 +39,34 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(["m": "n", "o": "p"])
+      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     if (bind) {
-      instrument = instrument.bind()
+      instrument = instrument.bind(Labels.empty())
     }
     if (bind) {
       instrument.add(value1)
       instrument.add(value2)
     } else {
-      instrument.add(value1, "q", "r")
-      instrument.add(value2, "q", "r")
+      instrument.add(value1, Labels.of("q", "r"))
+      instrument.add(value2, Labels.of("q", "r"))
     }
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == expectedType
-    metricData.descriptor.constantLabels == ["m": "n", "o": "p"]
+    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
     if (bind) {
-      point.labels == ["w": "x", "y": "z"]
+      point.labels == io.opentelemetry.common.Labels.of("w", "x", "y", "z")
     } else {
-      point.labels == ["q": "r"]
+      point.labels == io.opentelemetry.common.Labels.of("q", "r")
     }
     point.value == expectedValue
 
@@ -96,34 +92,34 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(["m": "n", "o": "p"])
+      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     if (bind) {
-      instrument = instrument.bind()
+      instrument = instrument.bind(Labels.empty())
     }
     if (bind) {
       instrument.record(value1)
       instrument.record(value2)
     } else {
-      instrument.record(value1, "q", "r")
-      instrument.record(value2, "q", "r")
+      instrument.record(value1, Labels.of("q", "r"))
+      instrument.record(value2, Labels.of("q", "r"))
     }
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == SUMMARY
-    metricData.descriptor.constantLabels == ["m": "n", "o": "p"]
+    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
     if (bind) {
-      point.labels == ["w": "x", "y": "z"]
+      point.labels == io.opentelemetry.common.Labels.of("w", "x", "y", "z")
     } else {
-      point.labels == ["q": "r"]
+      point.labels == io.opentelemetry.common.Labels.of("q", "r")
     }
     point.count == 2
     point.sum == sum
@@ -146,64 +142,64 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(["m": "n", "o": "p"])
+      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     if (builderMethod == "longSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<LongSumObserver.ResultLongSumObserver>() {
+      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.LongResult>() {
         @Override
-        void update(LongSumObserver.ResultLongSumObserver resultLongSumObserver) {
-          resultLongSumObserver.observe(123, "q", "r")
+        void update(AsynchronousInstrument.LongResult resultLongSumObserver) {
+          resultLongSumObserver.observe(123, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "longUpDownSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<LongUpDownSumObserver.ResultLongUpDownSumObserver>() {
+      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.LongResult>() {
         @Override
-        void update(LongUpDownSumObserver.ResultLongUpDownSumObserver resultLongUpDownSumObserver) {
-          resultLongUpDownSumObserver.observe(123, "q", "r")
+        void update(AsynchronousInstrument.LongResult resultLongUpDownSumObserver) {
+          resultLongUpDownSumObserver.observe(123, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "longValueObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<LongValueObserver.ResultLongValueObserver>() {
+      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.LongResult>() {
         @Override
-        void update(LongValueObserver.ResultLongValueObserver resultLongObserver) {
-          resultLongObserver.observe(123, "q", "r")
+        void update(AsynchronousInstrument.LongResult resultLongObserver) {
+          resultLongObserver.observe(123, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "doubleSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<DoubleSumObserver.ResultDoubleSumObserver>() {
+      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.DoubleResult>() {
         @Override
-        void update(DoubleSumObserver.ResultDoubleSumObserver resultDoubleSumObserver) {
-          resultDoubleSumObserver.observe(1.23, "q", "r")
+        void update(AsynchronousInstrument.DoubleResult resultDoubleSumObserver) {
+          resultDoubleSumObserver.observe(1.23, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "doubleUpDownSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<DoubleUpDownSumObserver.ResultDoubleUpDownSumObserver>() {
+      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.DoubleResult>() {
         @Override
-        void update(DoubleUpDownSumObserver.ResultDoubleUpDownSumObserver resultDoubleUpDownSumObserver) {
-          resultDoubleUpDownSumObserver.observe(1.23, "q", "r")
+        void update(AsynchronousInstrument.DoubleResult resultDoubleUpDownSumObserver) {
+          resultDoubleUpDownSumObserver.observe(1.23, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "doubleValueObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<DoubleValueObserver.ResultDoubleValueObserver>() {
+      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.DoubleResult>() {
         @Override
-        void update(DoubleValueObserver.ResultDoubleValueObserver resultDoubleObserver) {
-          resultDoubleObserver.observe(1.23, "q", "r")
+        void update(AsynchronousInstrument.DoubleResult resultDoubleObserver) {
+          resultDoubleObserver.observe(1.23, Labels.of("q", "r"))
         }
       })
     }
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics(), instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == expectedType
-    metricData.descriptor.constantLabels == ["m": "n", "o": "p"]
+    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
-    point.labels == ["q": "r"]
+    point.labels == io.opentelemetry.common.Labels.of("q", "r")
     if (builderMethod.startsWith("long")) {
       point."$valueMethod" == 123
     } else {
@@ -230,52 +226,54 @@ class MeterTest extends AgentTestRunner {
     def longCounter = meter.longCounterBuilder("test")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(["m": "n", "o": "p"])
+      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
     def doubleMeasure = meter.doubleValueRecorderBuilder("test2")
       .setDescription("d")
       .setUnit("u")
-      .setConstantLabels(["m": "n", "o": "p"])
+      .setConstantLabels(Labels.of("m", "n", "o", "p"))
       .build()
 
-    def batchRecorder = meter.newBatchRecorder("q", "r")
-    batchRecorder.put(longCounter, 5)
-    batchRecorder.put(longCounter, 6)
-    batchRecorder.put(doubleMeasure, 5.5)
-    batchRecorder.put(doubleMeasure, 6.6)
-    batchRecorder.record()
+    meter.newBatchRecorder("q", "r")
+      .put(longCounter, 5)
+      .put(longCounter, 6)
+      .put(doubleMeasure, 5.5)
+      .put(doubleMeasure, 6.6)
+      .record()
+
+    def allMetrics = OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics()
 
     then:
-    def metricData = metricData(instrumentationName, "test")
+    def metricData = findMetric(allMetrics, instrumentationName, "test")
     metricData != null
     metricData.descriptor.description == "d"
     metricData.descriptor.unit == "u"
     metricData.descriptor.type == MONOTONIC_LONG
-    metricData.descriptor.constantLabels == ["m": "n", "o": "p"]
+    metricData.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1
     def point = metricData.points.iterator().next()
-    point.labels == ["q": "r"]
+    point.labels == io.opentelemetry.common.Labels.of("q", "r")
     point.value == 11
 
-    def metricData2 = this.metricData(instrumentationName, "test2")
+    def metricData2 = findMetric(allMetrics, instrumentationName, "test2")
     metricData2 != null
     metricData2.descriptor.description == "d"
     metricData2.descriptor.unit == "u"
     metricData2.descriptor.type == SUMMARY
-    metricData2.descriptor.constantLabels == ["m": "n", "o": "p"]
+    metricData2.descriptor.constantLabels == io.opentelemetry.common.Labels.of("m", "n", "o", "p")
     metricData2.instrumentationLibraryInfo.name == instrumentationName
     metricData2.instrumentationLibraryInfo.version == "1.2.3"
     metricData2.points.size() == 1
     def point2 = metricData2.points.iterator().next()
-    point2.labels == ["q": "r"]
+    point2.labels == io.opentelemetry.common.Labels.of("q", "r")
     point2.count == 2
     point2.sum == 12.1
   }
 
-  def metricData(instrumentationName, metricName) {
-    for (def metric : OpenTelemetrySdk.getMeterProvider().getMetricProducer().getAllMetrics()) {
+  def findMetric(Collection<MetricData> allMetrics, instrumentationName, metricName) {
+    for (def metric : allMetrics) {
       if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.descriptor.name == metricName) {
         return metric
       }

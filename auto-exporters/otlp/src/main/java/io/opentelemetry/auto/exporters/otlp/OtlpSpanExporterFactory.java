@@ -18,8 +18,8 @@ package io.opentelemetry.auto.exporters.otlp;
 
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.exporters.otlp.OtlpGrpcSpanExporter;
-import io.opentelemetry.sdk.contrib.auto.config.Config;
-import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
+import io.opentelemetry.sdk.extensions.auto.config.Config;
+import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class OtlpSpanExporterFactory implements SpanExporterFactory {

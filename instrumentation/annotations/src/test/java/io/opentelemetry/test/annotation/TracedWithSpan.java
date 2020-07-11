@@ -17,7 +17,7 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.contrib.auto.annotations.WithSpan;
+import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.opentelemetry.trace.Tracer;
 
 public class TracedWithSpan {

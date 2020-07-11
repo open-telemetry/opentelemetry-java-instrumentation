@@ -3,7 +3,7 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 muzzle {
   pass {
     group = "io.opentelemetry"
-    module = "opentelemetry-contrib-auto-annotations"
+    module = "opentelemetry-extension-auto-annotations"
     versions = "(,)"
     extraDependency 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
   }
