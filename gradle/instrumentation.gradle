@@ -20,9 +20,6 @@ if (project.ext.find("skipPublish") != true) {
   apply from: "$rootDir/gradle/publish.gradle"
 }
 
-tasks.withType(Test) {
-  forkEvery = 1
-}
 
 afterEvaluate {
   archivesBaseName =  'opentelemetry-auto-' + archivesBaseName
@@ -58,5 +55,11 @@ afterEvaluate {
     testAnnotationProcessor deps.autoservice
     testImplementation deps.autoservice
     testImplementation project(':utils:test-utils')
+  }
+}
+
+tasks.withType(Test) {
+  useJUnit {
+    excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
   }
 }
