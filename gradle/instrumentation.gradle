@@ -63,3 +63,15 @@ tasks.withType(Test) {
     excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
   }
 }
+
+task integrationTest(type: Test) {
+  description = 'Runs instrumentation tests.'
+  group = 'verification'
+  shouldRunAfter test
+
+  useJUnit {
+    includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+  }
+}
+
+check.dependsOn integrationTest
