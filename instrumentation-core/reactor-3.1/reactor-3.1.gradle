@@ -20,6 +20,7 @@ plugins {
 
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
+  noShadowPublish = true
 }
 
 group = 'io.opentelemetry.instrumentation'
