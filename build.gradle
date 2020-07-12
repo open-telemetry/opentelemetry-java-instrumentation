@@ -1,4 +1,5 @@
 plugins {
+  id 'idea'
   id 'io.franzbecker.gradle-lombok' version '1.14' // Last to support Java 7
 
   id "com.jfrog.artifactory" version "4.15.2" apply false
@@ -14,6 +15,13 @@ plugins {
 
   id "com.diffplug.gradle.spotless" version "4.3.0"
   id "com.github.spotbugs" version "4.0.1"
+}
+
+idea {
+    module {
+        downloadJavadoc = false
+        downloadSources = false
+    }
 }
 
 release {
@@ -46,6 +54,15 @@ wrapper {
 }
 
 allprojects {
+  apply plugin: 'idea'
+
+  idea {
+    module {
+      downloadJavadoc = false
+      downloadSources = false
+    }
+  }
+
   tasks.withType(JavaForkOptions).configureEach {
     maxHeapSize = System.properties["ota.forkedMaxHeapSize"]
     minHeapSize = System.properties["ota.forkedMinHeapSize"]
