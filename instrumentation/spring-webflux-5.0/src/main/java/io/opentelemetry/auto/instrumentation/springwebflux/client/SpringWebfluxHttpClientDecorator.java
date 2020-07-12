@@ -22,11 +22,9 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-@Slf4j
 public class SpringWebfluxHttpClientDecorator
     extends HttpClientDecorator<ClientRequest, ClientResponse> {
 

@@ -38,7 +38,6 @@ import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -47,7 +46,6 @@ import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-@Slf4j
 @AutoService(Instrumenter.class)
 public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   public AkkaHttpClientInstrumentation() {

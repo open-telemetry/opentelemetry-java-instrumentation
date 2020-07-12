@@ -21,12 +21,15 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecorator {
+
+  private static final Logger log = LoggerFactory.getLogger(HttpClientDecorator.class);
 
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
 

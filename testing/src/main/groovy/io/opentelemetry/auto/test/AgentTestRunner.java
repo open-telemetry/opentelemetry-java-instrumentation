@@ -44,7 +44,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -75,8 +74,10 @@ import org.spockframework.runtime.model.SpecMetadata;
  */
 @RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
-@Slf4j
 public abstract class AgentTestRunner extends AgentSpecification {
+
+  private static final org.slf4j.Logger log = LoggerFactory.getLogger(AgentTestRunner.class);
+
   private static final long TIMEOUT_MILLIS = 10 * 1000;
   /**
    * For test runs, agent's global tracer will report to this list writer.

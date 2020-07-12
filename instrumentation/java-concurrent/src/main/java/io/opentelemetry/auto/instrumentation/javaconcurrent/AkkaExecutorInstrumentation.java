@@ -32,12 +32,10 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@Slf4j
 @AutoService(Instrumenter.class)
 public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 

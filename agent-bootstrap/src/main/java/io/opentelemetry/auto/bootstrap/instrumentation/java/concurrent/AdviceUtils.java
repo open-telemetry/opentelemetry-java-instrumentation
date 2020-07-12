@@ -24,10 +24,8 @@ import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.trace.Tracer;
-import lombok.extern.slf4j.Slf4j;
 
 /** Helper utils for Runnable/Callable instrumentation */
-@Slf4j
 public class AdviceUtils {
 
   public static final Tracer TRACER =

@@ -25,10 +25,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
-import lombok.Data;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -853,10 +853,28 @@ public class PatchLoggerTest {
     verifyNoMoreInteractions(slf4jLogger);
   }
 
-  @Data
   static class MethodSignature {
     String name;
     List<String> parameterTypes = new ArrayList<>();
     String returnType;
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      MethodSignature that = (MethodSignature) o;
+      return Objects.equals(name, that.name) &&
+              Objects.equals(parameterTypes, that.parameterTypes) &&
+              Objects.equals(returnType, that.returnType);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, parameterTypes, returnType);
+    }
   }
 }

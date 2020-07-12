@@ -20,14 +20,18 @@ import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import lombok.extern.slf4j.Slf4j;
 
 /** @deprecated use {@link HttpServerTracer} instead. */
 @Deprecated
-@Slf4j
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
+
+  private static final Logger log = LoggerFactory.getLogger(HttpServerDecorator.class);
+
   public static final String RESPONSE_ATTRIBUTE = "io.opentelemetry.auto.response";
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
 

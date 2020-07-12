@@ -16,7 +16,6 @@ ext {
     spock        : "1.3-groovy-$spockGroovyVer",
     groovy       : groovyVer,
     logback      : "1.2.3",
-    lombok       : "1.18.10",
     bytebuddy    : "1.10.10",
     scala        : "2.11.12",  // Last version to support Java 7 (2.12+ require Java 8+)
     kotlin       : "1.3.72",

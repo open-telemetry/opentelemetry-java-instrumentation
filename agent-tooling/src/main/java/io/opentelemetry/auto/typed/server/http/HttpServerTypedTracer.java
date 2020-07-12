@@ -21,9 +21,7 @@ import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDeco
 import io.opentelemetry.auto.typed.server.ServerTypedTracer;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.trace.Span;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public abstract class HttpServerTypedTracer<
         T extends HttpServerTypedSpan<T, REQUEST, RESPONSE>, REQUEST, RESPONSE>
     extends ServerTypedTracer<T, REQUEST, RESPONSE> {

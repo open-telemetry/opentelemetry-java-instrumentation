@@ -32,15 +32,17 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Future;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @AutoService(Instrumenter.class)
 public final class FutureInstrumentation extends Instrumenter.Default {
+
+  private static final Logger log = LoggerFactory.getLogger(FutureInstrumentation.class);
 
   /**
    * Only apply executor instrumentation to whitelisted executors. In the future, this restriction

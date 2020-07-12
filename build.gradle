@@ -1,6 +1,5 @@
 plugins {
   id 'idea'
-  id 'io.franzbecker.gradle-lombok' version '1.14' // Last to support Java 7
 
   id "com.jfrog.artifactory" version "4.15.2" apply false
   id 'com.jfrog.bintray' version '1.8.5' apply false

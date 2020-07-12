@@ -18,11 +18,14 @@ package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
-import java.util.concurrent.atomic.AtomicReference;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
+import java.util.concurrent.atomic.AtomicReference;
+
 public class State {
+
+  private static final Logger log = LoggerFactory.getLogger(State.class);
 
   public static ContextStore.Factory<State> FACTORY =
       new ContextStore.Factory<State>() {

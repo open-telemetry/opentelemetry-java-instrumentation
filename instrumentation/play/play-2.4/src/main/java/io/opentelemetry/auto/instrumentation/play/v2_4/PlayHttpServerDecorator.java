@@ -26,13 +26,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.Option;
 
 // TODO Play does not create server spans, it should not use HttpServerDecorator
-@Slf4j
 public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Request, Result> {
   public static final PlayHttpServerDecorator DECORATE = new PlayHttpServerDecorator();
 

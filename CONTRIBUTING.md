@@ -183,9 +183,6 @@ It does not support all required rules, so you still have to run
 
 ### Intellij IDEA
 
-Required plugins:
-* [Lombok](https://plugins.jetbrains.com/plugin/6317-lombok-plugin)
-
 Suggested plugins and settings:
 
 * Editor > Code Style > Java/Groovy > Imports

@@ -33,9 +33,7 @@ import io.opentelemetry.auto.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override

@@ -18,7 +18,6 @@ package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import lombok.Getter;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
@@ -27,7 +26,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.AbstractHttpMessage;
 
 /** Wraps HttpHost and HttpRequest into a HttpUriRequest for decorators and injectors */
-@Getter
 public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implements HttpUriRequest {
 
   private final String method;
@@ -67,4 +65,29 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
   public void addHeader(final String name, final String value) {
     actualRequest.addHeader(name, value);
   }
+
+  @Override
+  public String getMethod() {
+    return method;
+  }
+
+  @Override
+  public RequestLine getRequestLine() {
+    return requestLine;
+  }
+
+  @Override
+  public ProtocolVersion getProtocolVersion() {
+    return protocolVersion;
+  }
+
+  @Override
+  public java.net.URI getURI() {
+    return URI;
+  }
+
+  public HttpRequest getActualRequest() {
+    return actualRequest;
+  }
+
 }

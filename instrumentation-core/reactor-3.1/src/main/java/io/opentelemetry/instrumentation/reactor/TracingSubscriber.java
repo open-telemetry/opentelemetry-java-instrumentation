@@ -18,14 +18,12 @@ package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
-import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.util.context.Context;
 
-@Slf4j
 public class TracingSubscriber<T>
     implements Subscription, CoreSubscriber<T>, Fuseable.QueueSubscription<T>, Scannable {
 

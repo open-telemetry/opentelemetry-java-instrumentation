@@ -19,14 +19,17 @@ package io.opentelemetry.auto.tooling.log;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A scope listener that receives the MDC/ThreadContext put and receive methods and update the trace
  * and span reference anytime a new scope is activated or closed.
  */
-@Slf4j
 public class LogContextScopeListener {
+
+  private static final Logger log = LoggerFactory.getLogger(LogContextScopeListener.class);
+
   private static final String TRACE_ID_KEY = "ot.trace_id";
   private static final String SPAN_ID_KEY = "ot.span_id";
 

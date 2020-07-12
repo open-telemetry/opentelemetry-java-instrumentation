@@ -16,16 +16,20 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Callable;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is used to wrap lambda callables since currently we cannot instrument them
  *
  * <p>FIXME: We should remove this once https://github.com/raphw/byte-buddy/issues/558 is fixed
  */
-@Slf4j
 public final class CallableWrapper implements Callable {
+
+  private static final Logger log = LoggerFactory.getLogger(CallableWrapper.class);
+
   private final Callable callable;
 
   public CallableWrapper(final Callable callable) {

@@ -25,10 +25,12 @@ import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class LogbackSpans {
+
+  private static final Logger log = LoggerFactory.getLogger(LogbackSpans.class);
 
   private static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.logback-1.0");

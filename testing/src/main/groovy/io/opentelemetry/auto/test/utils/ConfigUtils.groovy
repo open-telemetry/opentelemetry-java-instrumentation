@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.test.utils
 
 import io.opentelemetry.auto.config.Config
-import lombok.SneakyThrows
 
 import java.lang.reflect.Modifier
 import java.util.concurrent.Callable
@@ -26,23 +25,26 @@ class ConfigUtils {
 
   static final CONFIG_INSTANCE_FIELD = Config.getDeclaredField("INSTANCE")
 
-  @SneakyThrows
   synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
-    // Ensure the class was retransformed properly in AgentSpecification.makeConfigInstanceModifiable()
-    assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
-    assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
-    assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
-    assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
-
-    def existingConfig = Config.get()
-    Properties properties = new Properties()
-    properties.put(name, value)
-    CONFIG_INSTANCE_FIELD.set(null, new Config(properties, existingConfig))
-    assert Config.get() != existingConfig
     try {
-      return r.call()
-    } finally {
-      CONFIG_INSTANCE_FIELD.set(null, existingConfig)
+      // Ensure the class was retransformed properly in AgentSpecification.makeConfigInstanceModifiable()
+      assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
+      assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
+      assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
+      assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
+
+      def existingConfig = Config.get()
+      Properties properties = new Properties()
+      properties.put(name, value)
+      CONFIG_INSTANCE_FIELD.set(null, new Config(properties, existingConfig))
+      assert Config.get() != existingConfig
+      try {
+        return r.call()
+      } finally {
+        CONFIG_INSTANCE_FIELD.set(null, existingConfig)
+      }
+    } catch (Throwable t) {
+      throw new RuntimeException(t)
     }
   }
 

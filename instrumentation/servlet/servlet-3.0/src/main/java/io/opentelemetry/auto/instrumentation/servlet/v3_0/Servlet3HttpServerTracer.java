@@ -23,10 +23,9 @@ import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import javax.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class Servlet3HttpServerTracer extends ServletHttpServerTracer {
+
   public static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
   @Override

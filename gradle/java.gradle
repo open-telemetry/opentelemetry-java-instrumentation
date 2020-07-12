@@ -53,14 +53,6 @@ tasks.withType(ScalaCompile) {
   options.compilerArgs.addAll(['--release', project.ext.release.majorVersion])
 }
 
-
-apply plugin: "io.franzbecker.gradle-lombok"
-
-lombok { // optional: values below are the defaults
-  version = versions.lombok
-  sha256 = ""
-}
-
 apply plugin: "eclipse"
 eclipse {
   classpath {

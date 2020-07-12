@@ -16,14 +16,18 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class SafeServiceLoader {
+
+  private static final Logger log = LoggerFactory.getLogger(SafeServiceLoader.class);
+
   /**
    * Delegates to {@link ServiceLoader#load(Class, ClassLoader)} and then eagerly iterates over
    * returned {@code Iterable}, ignoring any potential {@link UnsupportedClassVersionError}.

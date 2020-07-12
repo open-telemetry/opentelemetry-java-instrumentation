@@ -22,12 +22,15 @@ import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.trace.Span;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.Executor;
-import lombok.extern.slf4j.Slf4j;
 
 /** Utils for concurrent instrumentations. */
-@Slf4j
 public class ExecutorInstrumentationUtils {
+
+  private static final Logger log = LoggerFactory.getLogger(ExecutorInstrumentationUtils.class);
 
   private static final WeakMap<Executor, Boolean> EXECUTORS_DISABLED_FOR_WRAPPED_TASKS =
       WeakMap.Provider.newWeakMap();
