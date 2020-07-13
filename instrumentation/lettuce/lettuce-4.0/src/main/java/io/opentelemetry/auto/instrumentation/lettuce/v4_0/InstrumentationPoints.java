@@ -36,7 +36,6 @@ public final class InstrumentationPoints {
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
   public static SpanWithScope beforeCommand(final RedisCommand<?, ?, ?> command) {
-    //    final String spanName = command == null ? "Redis Command" : command.getType().name();
     final Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command, null);
     return new SpanWithScope(span, LettuceDatabaseClientTracer.TRACER.startScope(span));
   }
@@ -54,13 +53,11 @@ public final class InstrumentationPoints {
           (value, ex) -> {
             if (ex == null) {
               LettuceDatabaseClientTracer.TRACER.end(span);
+            } else if (ex instanceof CancellationException) {
+              span.setAttribute("db.command.cancelled", true);
+              LettuceDatabaseClientTracer.TRACER.end(span);
             } else {
-              if (ex instanceof CancellationException) {
-                span.setAttribute("db.command.cancelled", true);
-                LettuceDatabaseClientTracer.TRACER.end(span);
-              } else {
-                LettuceDatabaseClientTracer.TRACER.endExceptionally(span, ex);
-              }
+              LettuceDatabaseClientTracer.TRACER.endExceptionally(span, ex);
             }
             return null;
           });
