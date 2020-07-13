@@ -184,11 +184,10 @@ you can enable it by add the following system property:
 
 ## Manually instrumenting
 
-> :warning: prior to version 1.0, `opentelemetry-javaagent-all.jar`
-only supports interoperability with the same version of `opentelemetry-api`.
-E.g. version 0.6.0 of `opentelemetry-javaagent-all.jar` only interoperates with version 0.6.0 of
-`opentelemetry-api`. Starting with 1.0, the Java agent will start supporting multiple (1.0+)
-versions of `opentelemetry-api`.
+> :warning: starting with 0.6.0, and prior to version 1.0.0, `opentelemetry-javaagent-all.jar`
+only supports manual instrumentation using the `opentelemetry-api` version with the same version
+number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
+multiple (1.0.0+) versions of `opentelemetry-api`.
 
 You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
 manually instrument your Java application.
