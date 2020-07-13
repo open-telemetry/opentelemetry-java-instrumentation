@@ -44,9 +44,7 @@ public class LettuceAsyncCommandsAdvice {
       @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    if (scope != null) {
-      scope.close();
-    }
+    scope.close();
 
     if (throwable != null) {
       TRACER.endExceptionally(span, throwable);

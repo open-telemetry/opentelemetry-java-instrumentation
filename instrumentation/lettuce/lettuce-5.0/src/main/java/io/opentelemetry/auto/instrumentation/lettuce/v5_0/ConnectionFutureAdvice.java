@@ -41,9 +41,7 @@ public class ConnectionFutureAdvice {
       @Advice.Return final ConnectionFuture<?> connectionFuture,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    if (scope != null) {
-      scope.close();
-    }
+    scope.close();
 
     if (throwable != null) {
       TRACER.endExceptionally(span, throwable);
