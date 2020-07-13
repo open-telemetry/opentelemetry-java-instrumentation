@@ -16,13 +16,6 @@ plugins {
   id "com.github.spotbugs" version "4.0.1"
 }
 
-idea {
-    module {
-        downloadJavadoc = false
-        downloadSources = false
-    }
-}
-
 release {
   defaultVersionStrategy = nebula.plugin.release.git.opinion.Strategies.SNAPSHOT
 }
