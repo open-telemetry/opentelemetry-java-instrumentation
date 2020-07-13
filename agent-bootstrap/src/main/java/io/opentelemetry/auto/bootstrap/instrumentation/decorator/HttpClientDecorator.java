@@ -21,11 +21,10 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.attributes.SemanticAttributes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecorator {
 

@@ -22,10 +22,9 @@ import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.bootstrap.WeakMap;
 import io.opentelemetry.trace.Span;
+import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.Executor;
 
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {

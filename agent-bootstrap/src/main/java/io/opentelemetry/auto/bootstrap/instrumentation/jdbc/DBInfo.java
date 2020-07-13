@@ -31,8 +31,15 @@ public class DBInfo {
   private final String host;
   private final Integer port;
 
-  public DBInfo(String type, String subtype, String shortUrl, String user, String instance, String db, String host,
-                Integer port) {
+  public DBInfo(
+      String type,
+      String subtype,
+      String shortUrl,
+      String user,
+      String instance,
+      String db,
+      String host,
+      Integer port) {
     this.type = type;
     this.subtype = subtype;
     this.shortUrl = shortUrl;
@@ -77,14 +84,14 @@ public class DBInfo {
 
   public Builder toBuilder() {
     return new Builder()
-            .type(type)
-            .subtype(subtype)
-            .shortUrl(shortUrl)
-            .user(user)
-            .instance(instance)
-            .db(db)
-            .host(host)
-            .port(port);
+        .type(type)
+        .subtype(subtype)
+        .shortUrl(shortUrl)
+        .user(user)
+        .instance(instance)
+        .db(db)
+        .host(host)
+        .port(port);
   }
 
   @Override
@@ -96,14 +103,14 @@ public class DBInfo {
       return false;
     }
     DBInfo dbInfo = (DBInfo) o;
-    return Objects.equals(type, dbInfo.type) &&
-            Objects.equals(subtype, dbInfo.subtype) &&
-            Objects.equals(shortUrl, dbInfo.shortUrl) &&
-            Objects.equals(user, dbInfo.user) &&
-            Objects.equals(instance, dbInfo.instance) &&
-            Objects.equals(db, dbInfo.db) &&
-            Objects.equals(host, dbInfo.host) &&
-            Objects.equals(port, dbInfo.port);
+    return Objects.equals(type, dbInfo.type)
+        && Objects.equals(subtype, dbInfo.subtype)
+        && Objects.equals(shortUrl, dbInfo.shortUrl)
+        && Objects.equals(user, dbInfo.user)
+        && Objects.equals(instance, dbInfo.instance)
+        && Objects.equals(db, dbInfo.db)
+        && Objects.equals(host, dbInfo.host)
+        && Objects.equals(port, dbInfo.port);
   }
 
   @Override
@@ -165,5 +172,4 @@ public class DBInfo {
       return new DBInfo(type, subtype, shortUrl, user, instance, db, host, port);
     }
   }
-
 }

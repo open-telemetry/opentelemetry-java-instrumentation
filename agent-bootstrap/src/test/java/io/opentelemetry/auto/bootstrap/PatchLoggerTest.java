@@ -867,9 +867,9 @@ public class PatchLoggerTest {
         return false;
       }
       MethodSignature that = (MethodSignature) o;
-      return Objects.equals(name, that.name) &&
-              Objects.equals(parameterTypes, that.parameterTypes) &&
-              Objects.equals(returnType, that.returnType);
+      return Objects.equals(name, that.name)
+          && Objects.equals(parameterTypes, that.parameterTypes)
+          && Objects.equals(returnType, that.returnType);
     }
 
     @Override

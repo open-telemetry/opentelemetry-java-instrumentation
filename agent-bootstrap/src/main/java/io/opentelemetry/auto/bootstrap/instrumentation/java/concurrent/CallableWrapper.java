@@ -16,10 +16,9 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
+import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.Callable;
 
 /**
  * This is used to wrap lambda callables since currently we cannot instrument them

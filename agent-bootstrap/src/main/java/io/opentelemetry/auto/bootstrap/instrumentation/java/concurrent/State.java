@@ -18,10 +18,9 @@ package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.ContextStore;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 public class State {
 

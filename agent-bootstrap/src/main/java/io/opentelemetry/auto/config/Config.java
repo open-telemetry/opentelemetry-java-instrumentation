@@ -372,9 +372,10 @@ public class Config {
    * @return The public facing environment variable name
    */
   private static String propertyNameToEnvironmentVariableName(final String setting) {
-    return Objects.requireNonNull(ENV_REPLACEMENT
-        .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
-        .replaceAll("_"));
+    return Objects.requireNonNull(
+        ENV_REPLACEMENT
+            .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
+            .replaceAll("_"));
   }
 
   /**
@@ -396,8 +397,7 @@ public class Config {
    * @return value == null || value.trim().isEmpty() ? defaultValue : tClass.valueOf(value)
    * @throws NumberFormatException
    */
-  private static <T> T valueOf(
-      final String value, final Class<T> tClass, final T defaultValue) {
+  private static <T> T valueOf(final String value, final Class<T> tClass, final T defaultValue) {
     Objects.requireNonNull(tClass);
     if (value == null || value.trim().isEmpty()) {
       return defaultValue;
@@ -615,28 +615,53 @@ public class Config {
 
   @Override
   public String toString() {
-    return "Config{" +
-            "exporterJar='" + exporterJar + '\'' +
-            ", exporter='" + exporter + '\'' +
-            ", propagators=" + propagators +
-            ", traceEnabled=" + traceEnabled +
-            ", integrationsEnabled=" + integrationsEnabled +
-            ", excludedClasses=" + excludedClasses +
-            ", httpServerTagQueryString=" + httpServerTagQueryString +
-            ", httpClientTagQueryString=" + httpClientTagQueryString +
-            ", scopeDepthLimit=" + scopeDepthLimit +
-            ", runtimeContextFieldInjection=" + runtimeContextFieldInjection +
-            ", logInjectionEnabled=" + logInjectionEnabled +
-            ", experimentalLogCaptureThreshold='" + experimentalLogCaptureThreshold + '\'' +
-            ", traceAnnotations='" + traceAnnotations + '\'' +
-            ", traceMethods='" + traceMethods + '\'' +
-            ", traceMethodsExclude='" + traceMethodsExclude + '\'' +
-            ", traceExecutorsAll=" + traceExecutorsAll +
-            ", traceExecutors=" + traceExecutors +
-            ", sqlNormalizerEnabled=" + sqlNormalizerEnabled +
-            ", kafkaClientPropagationEnabled=" + kafkaClientPropagationEnabled +
-            ", endpointPeerServiceMapping=" + endpointPeerServiceMapping +
-            '}';
+    return "Config{"
+        + "exporterJar='"
+        + exporterJar
+        + '\''
+        + ", exporter='"
+        + exporter
+        + '\''
+        + ", propagators="
+        + propagators
+        + ", traceEnabled="
+        + traceEnabled
+        + ", integrationsEnabled="
+        + integrationsEnabled
+        + ", excludedClasses="
+        + excludedClasses
+        + ", httpServerTagQueryString="
+        + httpServerTagQueryString
+        + ", httpClientTagQueryString="
+        + httpClientTagQueryString
+        + ", scopeDepthLimit="
+        + scopeDepthLimit
+        + ", runtimeContextFieldInjection="
+        + runtimeContextFieldInjection
+        + ", logInjectionEnabled="
+        + logInjectionEnabled
+        + ", experimentalLogCaptureThreshold='"
+        + experimentalLogCaptureThreshold
+        + '\''
+        + ", traceAnnotations='"
+        + traceAnnotations
+        + '\''
+        + ", traceMethods='"
+        + traceMethods
+        + '\''
+        + ", traceMethodsExclude='"
+        + traceMethodsExclude
+        + '\''
+        + ", traceExecutorsAll="
+        + traceExecutorsAll
+        + ", traceExecutors="
+        + traceExecutors
+        + ", sqlNormalizerEnabled="
+        + sqlNormalizerEnabled
+        + ", kafkaClientPropagationEnabled="
+        + kafkaClientPropagationEnabled
+        + ", endpointPeerServiceMapping="
+        + endpointPeerServiceMapping
+        + '}';
   }
-
 }

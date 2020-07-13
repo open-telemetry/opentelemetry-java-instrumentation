@@ -16,13 +16,12 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SafeServiceLoader {
 

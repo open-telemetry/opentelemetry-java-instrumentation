@@ -17,8 +17,6 @@
 package io.opentelemetry.auto.bootstrap;
 
 import io.opentelemetry.auto.bootstrap.instrumentation.api.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +29,8 @@ import java.net.URLStreamHandler;
 import java.security.Permission;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InternalJarURLHandler extends URLStreamHandler {
 
