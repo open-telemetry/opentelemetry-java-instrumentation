@@ -73,11 +73,14 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 
 A simple wrapper for the OTLP exporter of opentelemetry-java.
 
-| System property                  | Environment variable             | Purpose                                                              |
-|----------------------------------|----------------------------------|----------------------------------------------------------------------|
-| ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                           |
-| ota.exporter.jar                 | OTA_EXPORTER_JAR                 | Path to the exporter fat-jar that you want to use                    |
-| ota.exporter.otlp.endpoint       | OTA_EXPORTER_OTLP_ENDPOINT       | The OTLP endpoint to connect to.                                     |
+| System property                  | Environment variable             | Purpose                                                                 |
+|----------------------------------|----------------------------------|-------------------------------------------------------------------------|
+| ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                              |
+| ota.exporter.jar                 | OTA_EXPORTER_JAR                 | Path to the exporter fat-jar that you want to use                       |
+| otel.otlp.endpoint               | OTEL_OTLP_ENDPOINT               | The OTLP endpoint to connect to.                                        |
+| otel.otlp.use.tls                | OTEL_OTLP_USE_TLS                | To use or not TLS, default is false.                                    |
+| otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
+| otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
 
 #### Logging Exporter
 
@@ -132,6 +135,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
 | [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1.0+                         |
+| [Kubernetes](https://github.com/kubernetes-client/java)                                                                               | 7.0.0+                         |
 | [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j](https://logging.apache.org/log4j/2.x/)                                                                                        | 1.1+                           |
 | [Logback](https://github.com/qos-ch/logback)                                                                                          | 1.0+                           |

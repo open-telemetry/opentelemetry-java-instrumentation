@@ -16,7 +16,7 @@
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.contrib.auto.annotations.WithSpan;
+import io.opentelemetry.extensions.auto.annotations.WithSpan;
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;

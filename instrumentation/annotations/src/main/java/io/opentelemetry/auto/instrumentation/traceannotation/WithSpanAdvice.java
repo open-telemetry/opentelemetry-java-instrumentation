@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
 
 /**
  * Instrumentation for methods annotated with {@link
- * io.opentelemetry.contrib.auto.annotations.WithSpan} annotation.
+ * io.opentelemetry.extensions.auto.annotations.WithSpan} annotation.
  *
  * @see WithSpanAnnotationInstrumentation
  */

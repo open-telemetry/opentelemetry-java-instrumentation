@@ -22,6 +22,7 @@ import static io.opentelemetry.auto.instrumentation.kafkaclients.TextMapExtractA
 import static io.opentelemetry.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
+import io.opentelemetry.auto.config.Config;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
@@ -75,12 +76,14 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }
-        final SpanContext spanContext = extract(next.headers(), GETTER);
-        if (spanContext.isValid()) {
-          if (consumer) {
-            spanBuilder.setParent(spanContext);
-          } else {
-            spanBuilder.addLink(spanContext);
+        if (Config.get().isKafkaClientPropagationEnabled()) {
+          final SpanContext spanContext = extract(next.headers(), GETTER);
+          if (spanContext.isValid()) {
+            if (consumer) {
+              spanBuilder.setParent(spanContext);
+            } else {
+              spanBuilder.addLink(spanContext);
+            }
           }
         }
         final long startTimeMillis = System.currentTimeMillis();

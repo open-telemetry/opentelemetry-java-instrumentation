@@ -28,9 +28,10 @@ public class VersionLogger {
   /** Log version string for java-agent */
   public static void logAllVersions() {
     log.info(
-        "opentelemetry-auto - version: {}",
+        "opentelemetry-javaagent - version: {}",
         getVersionString(
-            ClassLoader.getSystemClassLoader().getResourceAsStream("opentelemetry-auto.version")));
+            ClassLoader.getSystemClassLoader()
+                .getResourceAsStream("opentelemetry-javaagent.version")));
     if (log.isDebugEnabled()) {
       log.debug(
           "Running on Java {}. JVM {} - {} - {}",

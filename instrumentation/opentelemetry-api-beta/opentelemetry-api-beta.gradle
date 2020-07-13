@@ -1,7 +1,7 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-  // this instrumentation needs to be able to be able to reference both the OpenTelemetry API
+  // this instrumentation needs to be able to reference both the OpenTelemetry API
   // that is shaded in the bootstrap class loader (for sending telemetry to the agent),
   // and the OpenTelemetry API that the user brings (in order to capture that telemetry)
   //

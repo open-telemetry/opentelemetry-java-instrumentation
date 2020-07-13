@@ -18,8 +18,8 @@ package io.opentelemetry.auto.exporters.otlp;
 
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.exporters.otlp.OtlpGrpcMetricExporter;
-import io.opentelemetry.sdk.contrib.auto.config.Config;
-import io.opentelemetry.sdk.contrib.auto.config.MetricExporterFactory;
+import io.opentelemetry.sdk.extensions.auto.config.Config;
+import io.opentelemetry.sdk.extensions.auto.config.MetricExporterFactory;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 
 public class OtlpMetricExporterFactory implements MetricExporterFactory {

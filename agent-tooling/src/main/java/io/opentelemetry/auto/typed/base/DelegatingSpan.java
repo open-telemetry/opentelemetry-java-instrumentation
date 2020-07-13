@@ -17,12 +17,12 @@
 package io.opentelemetry.auto.typed.base;
 
 import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.common.Attributes;
 import io.opentelemetry.trace.EndSpanOptions;
 import io.opentelemetry.trace.Event;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
-import java.util.Map;
 
 // TODO: This should be moved into the API.
 public class DelegatingSpan implements Span {
@@ -68,13 +68,12 @@ public class DelegatingSpan implements Span {
   }
 
   @Override
-  public void addEvent(final String name, final Map<String, AttributeValue> attributes) {
+  public void addEvent(final String name, final Attributes attributes) {
     delegate.addEvent(name, attributes);
   }
 
   @Override
-  public void addEvent(
-      final String name, final Map<String, AttributeValue> attributes, final long timestamp) {
+  public void addEvent(final String name, final Attributes attributes, final long timestamp) {
     delegate.addEvent(name, attributes, timestamp);
   }
 

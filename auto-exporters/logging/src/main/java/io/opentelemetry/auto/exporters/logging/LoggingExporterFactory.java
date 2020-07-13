@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.exporters.logging;
 
-import io.opentelemetry.sdk.contrib.auto.config.Config;
-import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
+import io.opentelemetry.sdk.extensions.auto.config.Config;
+import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class LoggingExporterFactory implements SpanExporterFactory {

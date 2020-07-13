@@ -193,11 +193,11 @@ public class AgentBootstrap {
       }
     }
     throw new RuntimeException(
-        "opentelemetry-auto is not installed, because class '"
+        "opentelemetry-javaagent is not installed, because class '"
             + thisClass.getCanonicalName()
             + "' is located in '"
             + jarUrl
-            + "'. Make sure you don't have this .class file anywhere, besides opentelemetry-auto.jar");
+            + "'. Make sure you don't have this .class file anywhere, besides opentelemetry-javaagent.jar");
   }
 
   /**

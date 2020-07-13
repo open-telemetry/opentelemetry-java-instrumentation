@@ -36,11 +36,10 @@ import io.grpc.Status;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.grpc.common.GrpcHelper;
 import io.opentelemetry.common.AttributeValue;
+import io.opentelemetry.common.Attributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TracingClientInterceptor implements ClientInterceptor {
@@ -129,9 +128,10 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onMessage(final RespT message) {
-      final Map<String, AttributeValue> attributes = new HashMap<>();
-      attributes.put("message.type", AttributeValue.stringAttributeValue("SENT"));
-      attributes.put("message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
+      Attributes attributes =
+          Attributes.of(
+              "message.type", AttributeValue.stringAttributeValue("SENT"),
+              "message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
       span.addEvent("message", attributes);
       try (final Scope scope = currentContextWith(span)) {
         delegate().onMessage(message);

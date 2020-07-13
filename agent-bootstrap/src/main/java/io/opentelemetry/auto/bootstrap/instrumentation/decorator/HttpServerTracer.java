@@ -58,6 +58,10 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
 
   protected abstract String getVersion();
 
+  public HttpServerTracer(Tracer tracer) {
+    this.tracer = tracer;
+  }
+
   public Span startSpan(REQUEST request, CONNECTION connection, Method origin, String originType) {
     String spanName = spanNameForMethod(origin);
     return startSpan(request, connection, spanName, originType);
@@ -226,8 +230,11 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
   }
 
   private <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
+    // Using Context.ROOT here may be quite unexpected, but the reason is simple.
+    // We want either span context extracted from the carrier or invalid one.
+    // We DO NOT want any span context potentially lingering in the current context.
     final Context context =
-        getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
+        getPropagators().getHttpTextFormat().extract(Context.ROOT, carrier, getter);
     final Span span = getSpan(context);
     return span.getContext();
   }

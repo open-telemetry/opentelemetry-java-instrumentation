@@ -19,18 +19,19 @@ package io.opentelemetry.auto.test.asserts
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.common.AttributeValue
-
+import io.opentelemetry.common.ReadableAttributes
+import io.opentelemetry.common.ReadableKeyValuePairs
 import java.util.regex.Pattern
 
 class AttributesAssert {
-  private final Map<String, AttributeValue> attributes
+  private final ReadableAttributes attributes
   private final Set<String> assertedAttributes = new TreeSet<>()
 
-  private AttributesAssert(attributes) {
+  private AttributesAssert(ReadableAttributes attributes) {
     this.attributes = attributes
   }
 
-  static void assertAttributes(Map<String, AttributeValue> attributes,
+  static void assertAttributes(ReadableAttributes attributes,
                                @ClosureParams(value = SimpleType, options = ['io.opentelemetry.auto.test.asserts.AttributesAssert'])
                          @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new AttributesAssert(attributes)
@@ -59,7 +60,7 @@ class AttributesAssert {
       return
     }
     assertedAttributes.add(name)
-    def val = getVal(attributes[name])
+    def val = getVal(attributes.get(name))
     if (value instanceof Pattern) {
       assert val =~ value
     } else if (value instanceof Class) {
@@ -83,12 +84,19 @@ class AttributesAssert {
   }
 
   void assertAttributesAllVerified() {
-    def set = new TreeMap<>(attributes).keySet()
-    set.removeAll(assertedAttributes)
-    // The primary goal is to ensure the set is empty.
-    // attributes and assertedAttributes are included via an "always true" comparison
-    // so they provide better context in the error message.
-    assert (attributes.entrySet() != assertedAttributes || assertedAttributes.isEmpty()) && set.isEmpty()
+    Set<String> allAttributes = new TreeSet<>()
+    attributes.forEach(new ReadableKeyValuePairs.KeyValueConsumer<AttributeValue>() {
+      @Override
+      void consume(String key, AttributeValue value) {
+        allAttributes.add(key)
+      }
+    })
+    Set<String> unverifiedAttributes = new TreeSet(allAttributes)
+    unverifiedAttributes.removeAll(assertedAttributes)
+    // The first and second condition in the assert are exactly the same
+    // but both are included in order to provide better context in the error message.
+    // containsAll because tests may assert more attributes than span actually has
+    assert unverifiedAttributes.isEmpty() && assertedAttributes.containsAll(allAttributes)
   }
 
   private static Object getVal(AttributeValue attributeValue) {

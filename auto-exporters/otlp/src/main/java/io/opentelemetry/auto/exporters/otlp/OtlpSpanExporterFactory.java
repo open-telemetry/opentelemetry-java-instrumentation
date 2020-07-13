@@ -16,23 +16,18 @@
 
 package io.opentelemetry.auto.exporters.otlp;
 
-import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.exporters.otlp.OtlpGrpcSpanExporter;
-import io.opentelemetry.sdk.contrib.auto.config.Config;
-import io.opentelemetry.sdk.contrib.auto.config.SpanExporterFactory;
+import io.opentelemetry.sdk.extensions.auto.config.Config;
+import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 
 public class OtlpSpanExporterFactory implements SpanExporterFactory {
-  private static final String OTLP_ENDPOINT = "otlp.endpoint";
 
   @Override
   public SpanExporter fromConfig(final Config config) {
-    final String otlpEndpoint = config.getString(OTLP_ENDPOINT, "localhost:55680");
-    if (otlpEndpoint.isEmpty()) {
-      throw new IllegalStateException("ota.exporter.otlp.endpoint is required");
-    }
     return OtlpGrpcSpanExporter.newBuilder()
-        .setChannel(ManagedChannelBuilder.forTarget(otlpEndpoint).usePlaintext().build())
+        .readEnvironmentVariables()
+        .readSystemProperties()
         .build();
   }
 }
