@@ -20,8 +20,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Loads opentelemetry.trace.tracer.name and opentelemetry.trace.tracer.loggingExporterIsEnabled
- * from application.properties <br>
- * Sets the default values if the configurations do not exist
+ * from application.properties
+ *
+ * <p>Sets the default values if the configurations do not exist
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.tracer")
 public final class TracerProperties {

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
+package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Loads opentelemetry.trace.web.enabled from application.properties
+ * Loads opentelemetry.trace.httpclients.enabled from application.properties
  *
- * <p>Sets a default value if the configuration does not exist
+ * <p>Sets default value to true if the configuration does not exist
  */
-@ConfigurationProperties(prefix = "opentelemetry.trace.web")
-public final class WebMVCProperties {
+@ConfigurationProperties(prefix = "opentelemetry.trace.httpclients")
+public final class HttpClientsProperties {
   private boolean enabled = true;
 
   public boolean isEnabled() {

@@ -24,16 +24,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Configures WebMVCFilter bean <br> */
+/** Configures WebMVCFilter bean */
 @Configuration
 @EnableConfigurationProperties(WebMVCProperties.class)
 @ConditionalOnProperty(prefix = "opentelemetry.trace.web", name = "enabled")
 public class WebMVCFilterAutoConfiguration {
 
-  @Autowired private Tracer tracer;
-
   @Bean
-  public WebMVCTracingFilter webMVCTracingFilter() {
+  @Autowired
+  public WebMVCTracingFilter webMVCTracingFilter(final Tracer tracer) {
     return new WebMVCTracingFilter(tracer);
   }
 }

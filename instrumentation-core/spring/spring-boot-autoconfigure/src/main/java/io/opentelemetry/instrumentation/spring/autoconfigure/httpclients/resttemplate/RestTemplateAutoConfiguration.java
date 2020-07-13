@@ -16,7 +16,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
 import io.opentelemetry.trace.Tracer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -29,7 +29,7 @@ import org.springframework.web.client.RestTemplate;
 /** Configures RestTemplateBeanPostProcessor bean */
 @Configuration
 @ConditionalOnClass(RestTemplate.class)
-@EnableConfigurationProperties(HttpClientProperties.class)
+@EnableConfigurationProperties(HttpClientsProperties.class)
 @ConditionalOnProperty(prefix = "opentelemetry.trace.httpclients", name = "enabled")
 public class RestTemplateAutoConfiguration {
 
