@@ -24,16 +24,16 @@ import io.opentelemetry.sdk.trace.data.SpanData
 
 trait InstrumentationTestTrait {
 
-  static InstrumentationTestRunner INSTRUMENTATION_TEST_RUNNER
-  static InMemoryExporter TEST_WRITER
+  static InstrumentationTestRunner instrumentationTestRunner
+  static InMemoryExporter testWriter
 
   def setupSpec() {
-    INSTRUMENTATION_TEST_RUNNER = new InstrumentationTestRunnerImpl()
-    TEST_WRITER = InstrumentationTestRunner.TEST_WRITER
+    instrumentationTestRunner = new InstrumentationTestRunnerImpl()
+    testWriter = InstrumentationTestRunner.TEST_WRITER
   }
 
   def setup() {
-    INSTRUMENTATION_TEST_RUNNER.beforeTest()
+    instrumentationTestRunner.beforeTest()
   }
 
   // Work around https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
@@ -43,22 +43,22 @@ trait InstrumentationTestTrait {
 
   void assertTraces(final int size,
                     @ClosureParams(
-                      value = SimpleType.class,
+                      value = SimpleType,
                       options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-                    @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+                    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
                     final Closure spec) {
-    INSTRUMENTATION_TEST_RUNNER.assertTraces(size, spec)
+    instrumentationTestRunner.assertTraces(size, spec)
   }
 
   void assertTracesWithFilter(
     final int size,
     final Predicate<List<SpanData>> excludes,
     @ClosureParams(
-      value = SimpleType.class,
+      value = SimpleType,
       options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
-    INSTRUMENTATION_TEST_RUNNER.assertTracesWithFilter(size, spec)
+    instrumentationTestRunner.assertTracesWithFilter(size, spec)
   }
 
   static class InstrumentationTestRunnerImpl extends InstrumentationTestRunner {}

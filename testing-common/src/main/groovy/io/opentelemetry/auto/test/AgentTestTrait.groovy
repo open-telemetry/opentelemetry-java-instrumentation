@@ -57,9 +57,9 @@ trait AgentTestTrait {
 
   void assertTraces(final int size,
                     @ClosureParams(
-                      value = SimpleType.class,
+                      value = SimpleType,
                       options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-                    @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+                    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
                     final Closure spec) {
     AgentTestRunner.assertTraces(size, spec)
   }
@@ -68,9 +68,9 @@ trait AgentTestTrait {
     final int size,
     final Predicate<List<SpanData>> excludes,
     @ClosureParams(
-      value = SimpleType.class,
+      value = SimpleType,
       options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
     AgentTestRunner.assertTracesWithFilter(size, excludes, spec)
   }
