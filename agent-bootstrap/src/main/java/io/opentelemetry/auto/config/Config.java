@@ -28,7 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
@@ -331,11 +330,11 @@ public class Config {
    */
   private static List<String> getListSettingFromEnvironment(
       final String name, final String defaultValue) {
-    return Objects.requireNonNull(parseList(getSettingFromEnvironment(name, defaultValue)));
+    return parseList(getSettingFromEnvironment(name, defaultValue));
   }
 
   private static Map<String, String> getMapSettingFromEnvironment(final String name) {
-    return Objects.requireNonNull(parseMap(getSettingFromEnvironment(name, null)));
+    return parseMap(getSettingFromEnvironment(name, null));
   }
 
   /**
@@ -372,10 +371,9 @@ public class Config {
    * @return The public facing environment variable name
    */
   private static String propertyNameToEnvironmentVariableName(final String setting) {
-    return Objects.requireNonNull(
-        ENV_REPLACEMENT
-            .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
-            .replaceAll("_"));
+    return ENV_REPLACEMENT
+        .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
+        .replaceAll("_");
   }
 
   /**
@@ -398,7 +396,6 @@ public class Config {
    * @throws NumberFormatException
    */
   private static <T> T valueOf(final String value, final Class<T> tClass, final T defaultValue) {
-    Objects.requireNonNull(tClass);
     if (value == null || value.trim().isEmpty()) {
       return defaultValue;
     }
