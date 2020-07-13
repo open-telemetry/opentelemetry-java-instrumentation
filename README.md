@@ -38,7 +38,7 @@ at `localhost:55680`.
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables (see below for full list). For example:
 ```
-java -javaagent:path/to/opentelemetry-auto-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -Dota.exporter=zipkin
      -jar myapp.jar
 ```
@@ -184,11 +184,11 @@ you can enable it by add the following system property:
 
 ## Manually instrumenting
 
-> :warning: prior to version 1.0, `opentelemetry-javaagent-<version>-all.jar`
+> :warning: prior to version 1.0, `opentelemetry-javaagent-all.jar`
 only supports interoperability with the same version of `opentelemetry-api`.
-E.g. `opentelemetry-javaagent-0.6.0-all.jar` only interoperates with `opentelemetry-api-0.6.0`.
-Starting with 1.0, the Java agent will start supporting multiple (1.0+) versions of
-`opentelemetry-api`.
+E.g. version 0.6.0 of `opentelemetry-javaagent-all.jar` only interoperates with version 0.6.0 of
+`opentelemetry-api`. Starting with 1.0, the Java agent will start supporting multiple (1.0+)
+versions of `opentelemetry-api`.
 
 You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
 manually instrument your Java application.
