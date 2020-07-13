@@ -86,16 +86,15 @@ public class ChannelTraceContext {
       return false;
     }
     ChannelTraceContext that = (ChannelTraceContext) o;
-    return Objects.equals(connectionContinuation, that.connectionContinuation) &&
-            Objects.equals(serverSpan, that.serverSpan) &&
-            Objects.equals(clientSpan, that.clientSpan) &&
-            Objects.equals(clientParentSpan, that.clientParentSpan) &&
-            Objects.equals(context, that.context);
+    return Objects.equals(connectionContinuation, that.connectionContinuation)
+        && Objects.equals(serverSpan, that.serverSpan)
+        && Objects.equals(clientSpan, that.clientSpan)
+        && Objects.equals(clientParentSpan, that.clientParentSpan)
+        && Objects.equals(context, that.context);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(connectionContinuation, serverSpan, clientSpan, clientParentSpan, context);
   }
-
 }

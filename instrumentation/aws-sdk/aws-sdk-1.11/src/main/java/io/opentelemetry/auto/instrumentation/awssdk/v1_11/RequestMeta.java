@@ -81,16 +81,15 @@ public class RequestMeta {
       return false;
     }
     RequestMeta that = (RequestMeta) o;
-    return Objects.equals(bucketName, that.bucketName) &&
-            Objects.equals(queueUrl, that.queueUrl) &&
-            Objects.equals(queueName, that.queueName) &&
-            Objects.equals(streamName, that.streamName) &&
-            Objects.equals(tableName, that.tableName);
+    return Objects.equals(bucketName, that.bucketName)
+        && Objects.equals(queueUrl, that.queueUrl)
+        && Objects.equals(queueName, that.queueName)
+        && Objects.equals(streamName, that.streamName)
+        && Objects.equals(tableName, that.tableName);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(bucketName, queueUrl, queueName, streamName, tableName);
   }
-
 }

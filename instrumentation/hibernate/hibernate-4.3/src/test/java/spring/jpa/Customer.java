@@ -16,11 +16,11 @@
 
 package spring.jpa;
 
+import java.util.Objects;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.util.Objects;
 
 @Entity
 public class Customer {
@@ -77,14 +77,13 @@ public class Customer {
       return false;
     }
     Customer customer = (Customer) o;
-    return Objects.equals(id, customer.id) &&
-            Objects.equals(firstName, customer.firstName) &&
-            Objects.equals(lastName, customer.lastName);
+    return Objects.equals(id, customer.id)
+        && Objects.equals(firstName, customer.firstName)
+        && Objects.equals(lastName, customer.lastName);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(id, firstName, lastName);
   }
-
 }

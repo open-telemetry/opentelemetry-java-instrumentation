@@ -89,5 +89,4 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
   public HttpRequest getActualRequest() {
     return actualRequest;
   }
-
 }
