@@ -23,19 +23,12 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import zipkin2.reporter.okhttp3.OkHttpSender;
 
 public class ZipkinExporterFactory implements SpanExporterFactory {
-  private static final String ZIPKIN_ENDPOINT = "zipkin.endpoint";
-  private static final String DEFAULT_ZIPKIN_ENDPOINT = "http://localhost:9411/api/v2/spans";
-
-  private static final String ZIPKIN_SERVICE_NAME = "zipkin.service.name";
-  private static final String DEFAULT_ZIPKIN_SERVICE_NAME = "(unknown service)";
 
   @Override
   public SpanExporter fromConfig(Config config) {
-    final String zipkinEndpoint = config.getString(ZIPKIN_ENDPOINT, DEFAULT_ZIPKIN_ENDPOINT);
-    final String serviceName = config.getString(ZIPKIN_SERVICE_NAME, DEFAULT_ZIPKIN_SERVICE_NAME);
     return ZipkinSpanExporter.newBuilder()
-        .setSender(OkHttpSender.create(zipkinEndpoint))
-        .setServiceName(serviceName)
+        .readEnvironmentVariables()
+        .readSystemProperties()
         .build();
   }
 }
