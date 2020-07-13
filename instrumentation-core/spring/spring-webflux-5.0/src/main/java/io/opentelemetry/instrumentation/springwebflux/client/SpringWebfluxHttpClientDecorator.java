@@ -25,8 +25,7 @@ import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-public class SpringWebfluxHttpClientDecorator
-    extends HttpClientDecorator<ClientRequest, ClientResponse> {
+class SpringWebfluxHttpClientDecorator extends HttpClientDecorator<ClientRequest, ClientResponse> {
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");

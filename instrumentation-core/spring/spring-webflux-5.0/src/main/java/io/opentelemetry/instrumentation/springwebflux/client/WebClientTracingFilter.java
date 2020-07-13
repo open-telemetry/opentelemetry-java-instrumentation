@@ -37,16 +37,17 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   private final Tracer tracer;
 
-  public WebClientTracingFilter() {
-    this.tracer = TRACER;
-  }
-
   public WebClientTracingFilter(Tracer tracer) {
     this.tracer = tracer;
   }
 
   public static void addFilter(final List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    exchangeFilterFunctions.add(0, new WebClientTracingFilter());
+    addFilter(exchangeFilterFunctions, TRACER);
+  }
+
+  public static void addFilter(
+      final List<ExchangeFilterFunction> exchangeFilterFunctions, Tracer tracer) {
+    exchangeFilterFunctions.add(0, new WebClientTracingFilter(tracer));
   }
 
   @Override
