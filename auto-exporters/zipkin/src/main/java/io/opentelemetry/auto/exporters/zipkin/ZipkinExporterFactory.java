@@ -20,7 +20,6 @@ import io.opentelemetry.exporters.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.extensions.auto.config.Config;
 import io.opentelemetry.sdk.extensions.auto.config.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import zipkin2.reporter.okhttp3.OkHttpSender;
 
 public class ZipkinExporterFactory implements SpanExporterFactory {
 
