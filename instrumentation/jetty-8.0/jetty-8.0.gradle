@@ -21,7 +21,7 @@ dependencies {
   implementation project(':instrumentation:servlet:servlet-3.0')
 
   // Don't want to conflict with jetty from the test server.
-  testImplementation(project(':testing')) {
+  testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
 

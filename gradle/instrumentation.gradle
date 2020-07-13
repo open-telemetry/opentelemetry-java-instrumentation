@@ -38,7 +38,7 @@ afterEvaluate {
     // Apply common dependencies for instrumentation.
     implementation(project(':auto-tooling')) {
       // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
-      // is brought in for tests by project(:testing) below
+      // is brought in for tests by project(:testing-common) below
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
     }
     implementation deps.bytebuddy
@@ -52,7 +52,7 @@ afterEvaluate {
     //testImplementation project(':instrumentation:http-url-connection')
     testImplementation project(':instrumentation:java-classloader')
 
-    testImplementation project(':testing')
+    testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice
     testImplementation deps.autoservice
     testImplementation project(':utils:test-utils')

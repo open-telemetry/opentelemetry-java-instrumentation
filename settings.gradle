@@ -28,7 +28,7 @@ include ':agent-tooling'
 include ':load-generator'
 
 // misc
-include ':testing'
+include ':testing-common'
 include ':utils:test-utils'
 include ':utils:thread-utils'
 

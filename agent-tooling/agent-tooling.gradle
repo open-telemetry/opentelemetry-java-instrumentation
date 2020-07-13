@@ -25,7 +25,7 @@ dependencies {
   implementation deps.autoservice
   implementation deps.slf4j
 
-  testImplementation project(':testing')
+  testImplementation project(':testing-common')
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.implementation

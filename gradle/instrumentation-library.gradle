@@ -17,7 +17,7 @@ dependencies {
 
   api deps.opentelemetryApi
 
-  testImplementation project(':testing')
+  testImplementation project(':testing-common')
 }
 
 shadowJar {

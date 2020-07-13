@@ -1,7 +1,7 @@
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  api project(':testing')
+  api project(':testing-common')
 
   api group: 'software.amazon.awssdk', name: 'apache-client', version: '2.2.0'
   api group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
