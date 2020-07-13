@@ -18,7 +18,7 @@ data from a Java application without code changes.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-auto-all.jar).
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar).
 
 This package includes the instrumentation agent,
 instrumentations for all supported libraries and all available data exporters.
@@ -26,7 +26,7 @@ This provides completely automatic out of the box experience.
 
 The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
 ```
-java -javaagent:path/to/opentelemetry-auto-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
 By default OpenTelemetry Java agent uses

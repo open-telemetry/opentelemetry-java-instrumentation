@@ -15,7 +15,7 @@ See [Executing tests with specific java version](#Executing tests with specific 
 OpenTelemetry Auto Instrumentation java agent's jar can logically be divided
 into 3 parts.
 
-#### `java-agent` module
+#### `opentelemetry-javaagent` module
 
 This module consists of single class
 `io.opentelemetry.auto.bootstrap.AgentBootstrap` which implements [Java
@@ -47,10 +47,9 @@ host application. This is achieved in the following way:
 
 - When `java-agent` module builds the final agent, it moves all classes from
 `instrumentation` submodules and `agent-tooling` module into a separate
-folder inside final jar file, called
-`auto-tooling-and-instrumentation.isolated`. In addition, the extension of
-all class files is changed from `class` to `classdata`. This ensures that
-general classloaders cannot find nor load these classes.
+folder inside final jar file, called`inst`.
+In addition, the extension of all class files is changed from `class` to `classdata`.
+This ensures that general classloaders cannot find nor load these classes.
 - When `io.opentelemetry.auto.bootstrap.Agent` starts up, it creates an
 instance of `io.opentelemetry.auto.bootstrap.AgentClassLoader`, loads an
 `io.opentelemetry.auto.tooling.AgentInstaller` from that `AgentClassLoader`
@@ -66,17 +65,14 @@ still access helper classes from bootstrap classloader.
 #### Agent jar structure
 
 If you now look inside
-`java-agent/build/libs/opentelemetry-auto-<version>.jar`, you will see the
+`java-agent/build/libs/opentelemetry-javaagent-<version>-all.jar`, you will see the
 following "clusters" of classes:
 
-- `auto-tooling-and-instrumentation.isolated/` - contains `agent-tooling`
-module and `instrumentation` submodules, loaded and isolated inside
+- `inst/` - contains `agent-tooling` module and `instrumentation` submodules, loaded and isolated inside
 `AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
-- `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and
-available in bootstrap classloader.
-- `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its
-dependencies. Shaded during creation of `java-agent` jar file by Shadow
-Gradle plugin.
+- `io/opentelemetry/auto/bootstrap/` - contains `agent-bootstrap` module and available in bootstrap classloader.
+- `io/opentelemetry/auto/shaded/` - contains OpenTelemetry API and its dependencies.
+Shaded during creation of `javaagent` jar file by Shadow Gradle plugin.
 
 ### Building
 
@@ -84,7 +80,7 @@ Gradle plugin.
 
 For developers testing code changes before a release is complete, there are
 snapshot builds of the `master` branch. They are available from
-[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/auto/)
+[JFrog OSS repository](https://oss.jfrog.org/artifactory/oss-snapshot-local/io/opentelemetry/instrumentation/)
 
 #### Building from source
 
@@ -93,7 +89,7 @@ Build using Java 11:
 ```gradle assemble```
 
 and then you can find the java agent artifact at
-`java-agent/build/lib/opentelemetry-auto-<version>-all.jar`.
+`java-agent/build/lib/opentelemetry-javaagent-<version>-all.jar`.
 
 ### Testing
 
@@ -141,9 +137,8 @@ plugin.
 
 ### Style guideline
 
-We follow the [Google Java Style
-Guide](https://google.github.io/styleguide/javaguide.html). Our build will
-fail if source code is not formatted according to that style.
+We follow the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
+Our build will fail if source code is not formatted according to that style.
 
 The main goal is to avoid extensive reformatting caused by different IDEs having different opinion
 about how things should be formatted by establishing.
@@ -179,9 +174,14 @@ git config core.hooksPath .githooks
 As additional convenience for IntelliJ Idea users, we provide `.editorconfig`
 file. Idea will automatically use it to adjust its code formatting settings.
 It does not support all required rules, so you still have to run
-`googleJavaFormat` from time to time.
+`spotlessApply` from time to time.
 
 ### Intellij IDEA
+
+**NB!** Please ensure that IDEA uses the same java installation as you do for building this project
+from command line.
+This ensures that Gradle task avoidance and build cache work properly and can greatly reduce
+build time.
 
 Required plugins:
 * [Lombok](https://plugins.jetbrains.com/plugin/6317-lombok-plugin)
