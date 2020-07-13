@@ -57,8 +57,8 @@ only supports gRPC as its communications protocol.
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | ota.exporter=jaeger              | OTA_EXPORTER=jaeger              | To select Jaeger exporter                                            |
-| ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
-| ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
+| JAEGER_ENDPOINT                  | JAEGER_ENDPOINT                  | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
+| JAEGER_SERVICE_NAME              | JAEGER_SERVICE_NAME              | The service name of this JVM instance                                |
 
 #### Zipkin exporter
 A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
@@ -66,8 +66,8 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | ota.exporter=zipkin              | OTA_EXPORTER=zipkin              | To select Zipkin exporter                                            |
-| ota.exporter.zipkin.endpoint     | OTA_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
-| ota.exporter.zipkin.service.name | OTA_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance
+| otel.zipkin.endpoint             | OTEL_ZIPKIN_ENDPOINT             | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
+| otel.zipkin.service.name         | OTEL_ZIPKIN_SERVICE_NAME         | The service name of this JVM instance                                |
 
 #### OTLP exporter
 
