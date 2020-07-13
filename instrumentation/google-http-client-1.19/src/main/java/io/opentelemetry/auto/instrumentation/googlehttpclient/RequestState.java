@@ -52,5 +52,4 @@ public class RequestState {
   public int hashCode() {
     return Objects.hash(span);
   }
-
 }
