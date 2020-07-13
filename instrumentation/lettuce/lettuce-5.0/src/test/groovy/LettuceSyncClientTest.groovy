@@ -30,7 +30,8 @@ import java.util.concurrent.CompletionException
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class LettuceSyncClientTest extends AgentTestRunner {
-  public static final String HOST = "127.0.0.1"
+  public static final String PEER_NAME = "localhost"
+  public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
@@ -65,14 +66,14 @@ class LettuceSyncClientTest extends AgentTestRunner {
   def setupSpec() {
     port = PortUtils.randomOpenPort()
     incorrectPort = PortUtils.randomOpenPort()
-    dbAddr = HOST + ":" + port + "/" + DB_INDEX
-    dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
+    dbAddr = PEER_NAME + ":" + port + "/" + DB_INDEX
+    dbAddrNonExistent = PEER_NAME + ":" + incorrectPort + "/" + DB_INDEX
     dbUriNonExistent = "redis://" + dbAddrNonExistent
     embeddedDbUri = "redis://" + dbAddr
 
     redisServer = RedisServer.builder()
     // bind to localhost to avoid firewall popup
-      .setting("bind " + HOST)
+      .setting("bind " + PEER_NAME)
     // set max memory to avoid problems in CI
       .setting("maxmemory 128M")
       .port(port).build()
@@ -114,9 +115,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
+            "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
             "${SemanticAttributes.NET_PEER_PORT.key()}" port
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
           }
         }
@@ -144,9 +147,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
           spanKind CLIENT
           errored true
           attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" HOST
+            "${SemanticAttributes.NET_PEER_NAME.key()}" PEER_NAME
+            "${SemanticAttributes.NET_PEER_IP.key()}" PEER_IP
             "${SemanticAttributes.NET_PEER_PORT.key()}" incorrectPort
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "CONNECT"
             "db.redis.dbIndex" 0
             errorAttributes CompletionException, String
           }
@@ -169,6 +174,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
       }
@@ -189,6 +195,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }
@@ -209,6 +216,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }
@@ -229,6 +237,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
           }
         }
       }
@@ -249,6 +258,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "LPUSH"
           }
         }
       }
@@ -269,6 +279,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "HMSET"
           }
         }
       }
@@ -289,6 +300,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "HGETALL"
           }
         }
       }
@@ -308,6 +320,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
           }
         }
       }
@@ -327,6 +340,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
           }
         }
       }

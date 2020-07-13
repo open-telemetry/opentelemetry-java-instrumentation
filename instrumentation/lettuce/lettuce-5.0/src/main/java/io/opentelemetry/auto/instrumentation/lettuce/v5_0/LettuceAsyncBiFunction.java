@@ -29,7 +29,7 @@ import java.util.function.BiFunction;
  * @param <R> the return type, should be null since nothing else should happen from tracing
  *     standpoint after the span is closed
  */
-public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R extends Object>
+public class LettuceAsyncBiFunction<T, U extends Throwable, R>
     implements BiFunction<T, Throwable, R> {
 
   private final Span span;
@@ -42,11 +42,10 @@ public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R ext
   public R apply(final T t, final Throwable throwable) {
     if (throwable instanceof CancellationException) {
       span.setAttribute("db.command.cancelled", true);
+      LettuceDatabaseClientTracer.TRACER.end(span);
     } else {
-      LettuceClientDecorator.DECORATE.onError(span, throwable);
+      LettuceDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
     }
-    LettuceClientDecorator.DECORATE.beforeFinish(span);
-    span.end();
     return null;
   }
 }

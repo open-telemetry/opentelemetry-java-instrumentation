@@ -91,7 +91,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(statement, sql);
         if (span != null) {
-          scope = TRACER.withSpan(span);
+          scope = TRACER.startScope(span);
         }
       }
     }

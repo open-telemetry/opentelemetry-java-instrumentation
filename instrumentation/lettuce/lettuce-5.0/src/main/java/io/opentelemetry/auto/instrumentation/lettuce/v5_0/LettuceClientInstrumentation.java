@@ -54,7 +54,7 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".LettuceClientDecorator",
+      packageName + ".LettuceDatabaseClientTracer",
       packageName + ".LettuceInstrumentationUtil",
       packageName + ".LettuceAsyncBiFunction"
     };
