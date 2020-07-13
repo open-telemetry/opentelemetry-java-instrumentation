@@ -39,10 +39,10 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
   }
 
   private WebClient.Builder wrapBuilder(WebClient.Builder webClientBuilder) {
-    return webClientBuilder.filters(addTraceExchangeFilterFunctionIfNotPresent());
+    return webClientBuilder.filters(addWebClientFilterFunctionIfNotPresent());
   }
 
-  private Consumer<List<ExchangeFilterFunction>> addTraceExchangeFilterFunctionIfNotPresent() {
+  private Consumer<List<ExchangeFilterFunction>> addWebClientFilterFunctionIfNotPresent() {
     return functions -> {
       boolean noneMatch = noneMatchWebClientTracingFilter(functions);
       if (noneMatch) {

@@ -24,16 +24,13 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Auto-configures OpenTelemetry instrumentation tools and interceptors Wraps
- * org.springframework.context.annotation.Configuration and
- * org.springframework.context.annotation.ComponentScan annotations <br>
- * Enables OpenTelemetry Tracing in spring applications by completing a component scan of the
- * autoconfigure trace module
+ * <p>Auto-configures OpenTelemetry instrumentation</p>
+ * <p>Enables OpenTelemetry Tracing in spring applications by completing a component scan<p>
  *
  * @since 0.5.0
  */
 @Configuration
-@ComponentScan(basePackages = "io.opentelemetry.spring.autoconfigure.trace")
+@ComponentScan(basePackages = "io.opentelemetry.instrumentation.spring.autoconfigure")
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EnableOpenTelemetryTracing {}

@@ -33,10 +33,9 @@ import org.springframework.web.client.RestTemplate;
 @ConditionalOnProperty(prefix = "opentelemetry.trace.httpclients", name = "enabled")
 public class RestTemplateAutoConfiguration {
 
-  @Autowired private Tracer tracer;
-
   @Bean
-  public RestTemplateBeanPostProcessor restTemplateBeanPostProcessor() {
+  @Autowired
+  public RestTemplateBeanPostProcessor restTemplateBeanPostProcessor(final Tracer tracer) {
     return new RestTemplateBeanPostProcessor(tracer);
   }
 }
