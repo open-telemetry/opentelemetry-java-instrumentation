@@ -24,27 +24,27 @@ import io.opentelemetry.sdk.trace.data.SpanData
 
 trait AgentTestTrait {
 
-  static AgentTestRunner AGENT_TEST_RUNNER
-  static InMemoryExporter TEST_WRITER
+  static AgentTestRunner agentTestRunner
+  static InMemoryExporter testWriter
 
   def setupSpec() {
-    AGENT_TEST_RUNNER = new AgentTestRunnerImpl()
-    TEST_WRITER = AgentTestRunner.TEST_WRITER
+    agentTestRunner = new AgentTestRunnerImpl()
+    testWriter = AgentTestRunner.TEST_WRITER
 
     AgentTestRunner.agentSetup()
-    AGENT_TEST_RUNNER.setupBeforeTests()
+    agentTestRunner.setupBeforeTests()
 
     childSetupSpec()
   }
 
   def setup() {
-    AGENT_TEST_RUNNER.beforeTest()
+    agentTestRunner.beforeTest()
 
     childSetup()
   }
 
   def cleanupSpec() {
-    AGENT_TEST_RUNNER.cleanUpAfterTests()
+    agentTestRunner.cleanUpAfterTests()
     AgentTestRunner.agentCleanup()
   }
 
@@ -72,7 +72,7 @@ trait AgentTestTrait {
       options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
-    AgentTestRunner.assertTracesWithFilter(size, excludes, spec);
+    AgentTestRunner.assertTracesWithFilter(size, excludes, spec)
   }
 
   static class AgentTestRunnerImpl extends AgentTestRunner {}
