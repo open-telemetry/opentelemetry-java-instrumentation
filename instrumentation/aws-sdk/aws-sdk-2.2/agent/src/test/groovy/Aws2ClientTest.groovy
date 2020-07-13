@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractAws2ClientTest
 import org.junit.runner.RunWith
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder
 
-@RunWith(SpockRunner.class)
+@RunWith(SpockRunner)
 class Aws2ClientTest extends AbstractAws2ClientTest implements AgentTestTrait {
   @Override
   void configureSdkClient(SdkClientBuilder builder) {
