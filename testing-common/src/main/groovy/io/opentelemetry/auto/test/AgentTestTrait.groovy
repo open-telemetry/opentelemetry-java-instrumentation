@@ -22,6 +22,10 @@ import groovy.transform.stc.SimpleType
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 
+/**
+ * A trait which initializes agent tests, including bytecode manipulation and a test span exporter.
+ * All agent tests should implement this trait.
+ */
 trait AgentTestTrait {
 
   static AgentTestRunner agentTestRunner

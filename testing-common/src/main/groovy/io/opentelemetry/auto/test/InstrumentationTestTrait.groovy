@@ -22,6 +22,10 @@ import groovy.transform.stc.SimpleType
 import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 
+/**
+ * A trait which initializes instrumentation library tests, including a test span exporter. All
+ * library tests should implement this trait.
+ */
 trait InstrumentationTestTrait {
 
   static InstrumentationTestRunner instrumentationTestRunner

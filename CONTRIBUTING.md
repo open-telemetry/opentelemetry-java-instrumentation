@@ -152,8 +152,8 @@ Begin by writing the instrumentation for the library in `library`. This generall
 spans as part of the implementation of an interceptor for the library. The module should generally
 only depend on the OpenTelemetry API, `instrumentation-common`, and the instrumented library itself.
 [instrumentation-library.gradle](./gradle/instrumentation-library.gradle) needs to be applied to
-configure build tooling for the library, e.g., to prevent conflict between manual instrumentation 
-loaded by the user and by the agent, we make sure to create a shaded version with no dependencies 
+configure build tooling for the library, e.g., to prevent conflict between manual instrumentation
+loaded by the user and by the agent, we make sure to create a shaded version with no dependencies
 for use from the auto instrumentation at a separate package. To configure this, you must define
 `ext.javaSubPackage` with the name of the sub package under `io.opentelemetry.auto` that the code
 lives in. In this example, we would use `yarpc.v1_0`.
@@ -169,10 +169,10 @@ should itself extend from `InstrumentationSpecification` to be recognized by Spo
 methods for assertions.
 
 After writing a test or two, go back to the `library` package, make sure it has a test dependency on the
-`testing` submodule and add a test that inherits from the abstract test class. You should implement 
-the method to initialize the client using the library's mechanism to register interceptors, perhaps 
-a method like `registerInterceptor` or wrapping the result of a library factory when delegating. The 
-test should implement the `InstrumentationTestRunner` trait for common setup logic. If the tests 
+`testing` submodule and add a test that inherits from the abstract test class. You should implement
+the method to initialize the client using the library's mechanism to register interceptors, perhaps
+a method like `registerInterceptor` or wrapping the result of a library factory when delegating. The
+test should implement the `InstrumentationTestRunner` trait for common setup logic. If the tests
 pass, manual instrumentation is working OK.
 
 #### Writing auto instrumentation

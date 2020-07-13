@@ -23,6 +23,11 @@ import io.opentelemetry.auto.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Specification
 
+/**
+ * Base class for test specifications that are shared between instrumentation libraries and agent.
+ * The methods in this class are implemented by {@link AgentTestTrait} and
+ * {@link InstrumentationTestTrait}.
+ */
 abstract class InstrumentationSpecification extends Specification {
   abstract void assertTraces(
       final int size,
