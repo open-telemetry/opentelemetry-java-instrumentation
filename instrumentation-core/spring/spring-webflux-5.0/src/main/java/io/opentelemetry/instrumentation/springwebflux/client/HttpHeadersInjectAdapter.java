@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+package io.opentelemetry.instrumentation.springwebflux.client;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.springframework.http.HttpHeaders;
 
-public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
+class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
