@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceConnectionDatabaseClientTracer.TRACER;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
@@ -31,7 +31,7 @@ public class ConnectionFutureAdvice {
       @Advice.Argument(1) final RedisURI redisURI,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = TRACER.startSpan("CONNECT", redisURI, null);
+    span = TRACER.startSpan(redisURI, "CONNECT", null);
     scope = TRACER.startScope(span);
   }
 

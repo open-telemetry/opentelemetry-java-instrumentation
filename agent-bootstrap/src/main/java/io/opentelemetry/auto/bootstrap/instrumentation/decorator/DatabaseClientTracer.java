@@ -50,13 +50,9 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
   public Span startSpan(CONNECTION connection, QUERY query, String originType) {
     String normalizedQuery = normalizeQuery(query);
 
-    return startSpan(normalizedQuery, connection, originType);
-  }
-
-  public Span startSpan(String spanName, CONNECTION connection, String originType) {
     final Span span =
         tracer
-            .spanBuilder(spanName(spanName))
+            .spanBuilder(spanName(normalizedQuery))
             .setSpanKind(CLIENT)
             .setAttribute(SemanticAttributes.DB_TYPE.key(), dbType())
             .setAttribute("span.origin.type", originType)
@@ -66,7 +62,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
       onConnection(span, connection);
       onPeerConnection(span, connection);
     }
-    onStatement(span, spanName);
+    onStatement(span, normalizedQuery);
 
     return span;
   }

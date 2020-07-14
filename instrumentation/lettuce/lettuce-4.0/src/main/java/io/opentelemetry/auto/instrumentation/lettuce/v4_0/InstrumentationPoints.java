@@ -69,16 +69,17 @@ public final class InstrumentationPoints {
   }
 
   public static SpanWithScope beforeConnect(final RedisURI redisURI) {
-    final Span span = LettuceDatabaseClientTracer.TRACER.startSpan("CONNECT", redisURI, null);
-    return new SpanWithScope(span, LettuceDatabaseClientTracer.TRACER.startScope(span));
+    final Span span =
+        LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT", null);
+    return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.TRACER.startScope(span));
   }
 
   public static void afterConnect(final SpanWithScope spanWithScope, final Throwable throwable) {
     final Span span = spanWithScope.getSpan();
     if (throwable != null) {
-      LettuceDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
+      LettuceConnectionDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
     } else {
-      LettuceDatabaseClientTracer.TRACER.end(span);
+      LettuceConnectionDatabaseClientTracer.TRACER.end(span);
     }
     spanWithScope.closeScope();
   }

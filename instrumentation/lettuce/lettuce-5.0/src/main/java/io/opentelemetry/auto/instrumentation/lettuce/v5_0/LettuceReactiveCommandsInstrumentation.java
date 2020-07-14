@@ -54,6 +54,8 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".LettuceAbstractDatabaseClientTracer",
+      packageName + ".LettuceConnectionDatabaseClientTracer",
       packageName + ".LettuceDatabaseClientTracer",
       packageName + ".LettuceInstrumentationUtil",
       packageName + ".rx.LettuceMonoCreationAdvice",

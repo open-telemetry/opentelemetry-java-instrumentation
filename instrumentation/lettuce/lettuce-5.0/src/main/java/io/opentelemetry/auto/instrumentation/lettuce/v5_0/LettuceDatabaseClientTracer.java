@@ -16,46 +16,11 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
-import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
-import io.opentelemetry.trace.Span;
-import java.net.InetSocketAddress;
 
 public class LettuceDatabaseClientTracer
-    extends DatabaseClientTracer<RedisURI, RedisCommand<?, ?, ?>> {
+    extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
   public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
-
-  @Override
-  protected String getInstrumentationName() {
-    return "io.opentelemetry.auto.lettuce-5.0";
-  }
-
-  @Override
-  protected String dbType() {
-    return "redis";
-  }
-
-  @Override
-  protected String dbUser(final RedisURI connection) {
-    return null;
-  }
-
-  @Override
-  protected String dbInstance(final RedisURI connection) {
-    return null;
-  }
-
-  @Override
-  protected InetSocketAddress peerAddress(RedisURI redisURI) {
-    return new InetSocketAddress(redisURI.getHost(), redisURI.getPort());
-  }
-
-  @Override
-  public Span onConnection(final Span span, final RedisURI connection) {
-    span.setAttribute("db.redis.dbIndex", connection.getDatabase());
-    return super.onConnection(span, connection);
-  }
 
   @Override
   protected String normalizeQuery(RedisCommand<?, ?, ?> command) {

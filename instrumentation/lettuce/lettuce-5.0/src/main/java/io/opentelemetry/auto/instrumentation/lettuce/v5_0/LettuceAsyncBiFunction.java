@@ -16,6 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
+
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
@@ -42,9 +44,9 @@ public class LettuceAsyncBiFunction<T, U extends Throwable, R>
   public R apply(final T t, final Throwable throwable) {
     if (throwable instanceof CancellationException) {
       span.setAttribute("db.command.cancelled", true);
-      LettuceDatabaseClientTracer.TRACER.end(span);
+      TRACER.end(span);
     } else {
-      LettuceDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
+      TRACER.endExceptionally(span, throwable);
     }
     return null;
   }

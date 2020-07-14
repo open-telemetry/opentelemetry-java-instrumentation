@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
+package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
-import com.lambdaworks.redis.protocol.RedisCommand;
-
-public class LettuceDatabaseClientTracer
-    extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
-
-  public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
+public class LettuceConnectionDatabaseClientTracer
+    extends LettuceAbstractDatabaseClientTracer<String> {
+  public static final LettuceConnectionDatabaseClientTracer TRACER =
+      new LettuceConnectionDatabaseClientTracer();
 
   @Override
-  protected String normalizeQuery(RedisCommand<?, ?, ?> command) {
-    return command.getType().name();
+  protected String normalizeQuery(String query) {
+    return query;
   }
 }
