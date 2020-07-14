@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_0;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Tracer;
@@ -30,6 +31,12 @@ public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriReques
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpclient-4.0");
+
+  public void inject(Context context, HttpUriRequest request) {
+    OpenTelemetry.getPropagators()
+        .getHttpTextFormat()
+        .inject(context, request, HttpHeadersInjectAdapter.SETTER);
+  }
 
   @Override
   protected String method(final HttpUriRequest httpRequest) {

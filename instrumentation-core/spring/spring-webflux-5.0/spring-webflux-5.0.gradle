@@ -9,7 +9,7 @@ ext {
 
 apply from: "$rootDir/gradle/java.gradle"
 
-group = 'io.opentelemetry.instrumentation.spring'
+group = 'io.opentelemetry.instrumentation'
 
 dependencies {
   compileOnly project(':auto-bootstrap')
