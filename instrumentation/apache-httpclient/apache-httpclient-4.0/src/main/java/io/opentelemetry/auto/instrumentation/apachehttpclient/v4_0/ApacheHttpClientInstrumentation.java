@@ -16,9 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
+import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.ApacheHttpClientDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.ApacheHttpClientDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
@@ -34,6 +34,7 @@ import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ClientDecorator;
+import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.HostAndRequestAsHttpUriRequest;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
@@ -75,9 +76,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".ApacheHttpClientDecorator",
-      packageName + ".HttpHeadersInjectAdapter",
-      packageName + ".HostAndRequestAsHttpUriRequest",
+      packageName + ".shaded.ApacheHttpClientDecorator",
+      packageName + ".shaded.HttpHeadersInjectAdapter",
+      packageName + ".shaded.HostAndRequestAsHttpUriRequest",
       getClass().getName() + "$HelperMethods",
       getClass().getName() + "$WrappingStatusSettingResponseHandler",
     };
