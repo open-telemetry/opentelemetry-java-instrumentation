@@ -38,7 +38,7 @@ at `localhost:55680`.
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables (see below for full list). For example:
 ```
-java -javaagent:path/to/opentelemetry-auto-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -Dota.exporter=zipkin
      -jar myapp.jar
 ```
@@ -210,6 +210,11 @@ you can enable it by add the following system property:
 `-Dota.integration.grizzly.enabled=true`
 
 ## Manually instrumenting
+
+> :warning: starting with 0.6.0, and prior to version 1.0.0, `opentelemetry-javaagent-all.jar`
+only supports manual instrumentation using the `opentelemetry-api` version with the same version
+number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
+multiple (1.0.0+) versions of `opentelemetry-api`.
 
 You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
 manually instrument your Java application.
