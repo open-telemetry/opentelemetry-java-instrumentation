@@ -82,7 +82,7 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
 | otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
 
-#### Logging Exporter
+#### Logging exporter
 
 The logging exporter simply prints the name of the span along with its
 attributes to stdout. It is used mainly for testing and debugging.
@@ -91,6 +91,33 @@ attributes to stdout. It is used mainly for testing and debugging.
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
 | ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
+
+#### Batch span processor
+
+| System property           | Environment variable      | Purpose                                                                      |
+|---------------------------|---------------------------|------------------------------------------------------------------------------|
+| otel.bsp.schedule.delay   | OTEL_BSP_SCHEDULE_DELAY   | The interval in milliseconds between two consecutive exports (default: 5000) |
+| otel.bsp.max.queue        | OTEL_BSP_MAX_QUEUE        | Maximum queue size (default: 2048)                                           |
+| otel.bsp.max.export.batch | OTEL_BSP_MAX_EXPORT_BATCH | Maximum batch size (default: 512)                                            |
+| otel.bsp.export.timeout   | OTEL_BSP_EXPORT_TIMEOUT   | Maximum allowed time in milliseconds to export data (default: 30000)         |
+| otel.bsp.export.sampled   | OTEL_BSP_EXPORT_SAMPLED   | Whether only sampled spans should be exported (default: true)                |
+
+#### Trace config
+
+| System property                 | Environment variable            | Purpose                                              |
+|---------------------------------|---------------------------------|------------------------------------------------------|
+| otel.config.sampler.probability | OTEL_CONFIG_SAMPLER_PROBABILITY | Sampling probability between 0 and 1 (default: 1)    |
+| otel.config.max.attrs           | OTEL_CONFIG_MAX_ATTRS           | Maximum number of attributes per span (default: 32)  |
+| otel.config.max.events          | OTEL_CONFIG_MAX_EVENTS          | Maximum number of events per span (default: 128)     |
+| otel.config.max.links           | OTEL_CONFIG_MAX_LINKS           | Maximum number of links per span (default: 32)       |
+| otel.config.max.event.attrs     | OTEL_CONFIG_MAX_EVENT_ATTRS     | Maximum number of attributes per event (default: 32) |
+| otel.config.max.link.attrs      | OTEL_CONFIG_MAX_LINK_ATTRS      | Maximum number of attributes per link (default: 32)  |
+
+#### Interval metric reader
+
+| System property          | Environment variable     | Purpose                                                                      |
+|--------------------------|--------------------------|------------------------------------------------------------------------------|
+| otel.imr.export.interval | OTEL_IMR_EXPORT_INTERVAL | The interval in milliseconds between pushes to the exporter (default: 60000) |
 
 ##### Customizing the OpenTelemetry SDK
 
