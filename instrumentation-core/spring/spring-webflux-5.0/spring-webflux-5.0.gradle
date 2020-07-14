@@ -9,7 +9,7 @@ ext {
 
 apply from: "$rootDir/gradle/java.gradle"
 
-group = 'io.opentelemetry.instrumentation.spring.webflux'
+group = 'io.opentelemetry.instrumentation.spring'
 
 dependencies {
   compileOnly project(':auto-bootstrap')
