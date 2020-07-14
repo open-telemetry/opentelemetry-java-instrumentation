@@ -62,8 +62,11 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
       return next.exchange(mutatedRequest)
           .doOnSuccessOrError(
               (clientResponse, throwable) -> {
-                DECORATE.onError(span, throwable);
-                DECORATE.onResponse(span, clientResponse);
+                if (throwable != null) {
+                  DECORATE.onError(span, throwable);
+                } else {
+                  DECORATE.onResponse(span, clientResponse);
+                }
                 DECORATE.beforeFinish(span);
                 span.end();
               })
