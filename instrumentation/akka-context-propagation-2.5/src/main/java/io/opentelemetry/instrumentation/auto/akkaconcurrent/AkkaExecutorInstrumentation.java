@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.akkaconcurrent;
 
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -46,6 +47,12 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
   @Override
   protected boolean defaultEnabled() {
     return false;
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME);
   }
 
   @Override

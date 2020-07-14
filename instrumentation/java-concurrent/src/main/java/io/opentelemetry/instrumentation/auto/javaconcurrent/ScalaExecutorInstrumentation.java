@@ -16,6 +16,7 @@
 
 package io.opentelemetry.instrumentation.auto.javaconcurrent;
 
+import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -40,6 +41,12 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
 
   public ScalaExecutorInstrumentation() {
     super(EXEC_NAME + ".scala_fork_join");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
+    // Optimization for expensive typeMatcher.
+    return hasClassesNamed(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME);
   }
 
   @Override
