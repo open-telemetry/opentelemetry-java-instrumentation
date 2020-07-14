@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.http.delegate;
+package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.trace.EndSpanOptions;
@@ -115,5 +115,4 @@ public class DelegatingSpan implements Span {
   public boolean isRecording() {
     return delegate.isRecording();
   }
-
 }

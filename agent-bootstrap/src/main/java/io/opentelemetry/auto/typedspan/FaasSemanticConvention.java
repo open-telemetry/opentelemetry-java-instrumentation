@@ -13,30 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentelemetry.auto.typed.http.delegate;
+package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
 
-public interface HttpSemanticConvention {
+public interface FaasSemanticConvention {
   void end();
 
   Span getSpan();
 
-  HttpSemanticConvention setMethod(String method);
+  /**
+   * Sets a value for faas.trigger
+   *
+   * @param faasTrigger Type of the trigger on which the function is executed..
+   */
+  public FaasSemanticConvention setFaasTrigger(String faasTrigger);
 
-  HttpSemanticConvention setUrl(String url);
-
-  HttpSemanticConvention setTarget(String target);
-
-  HttpSemanticConvention setHost(String host);
-
-  HttpSemanticConvention setScheme(String scheme);
-
-  HttpSemanticConvention setStatusCode(long status_code);
-
-  HttpSemanticConvention setStatusText(String status_text);
-
-  HttpSemanticConvention setFlavor(String flavor);
-
-  HttpSemanticConvention setUserAgent(String user_agent);
+  /**
+   * Sets a value for faas.execution
+   *
+   * @param faasExecution The execution id of the current function execution..
+   */
+  public FaasSemanticConvention setFaasExecution(String faasExecution);
 }
