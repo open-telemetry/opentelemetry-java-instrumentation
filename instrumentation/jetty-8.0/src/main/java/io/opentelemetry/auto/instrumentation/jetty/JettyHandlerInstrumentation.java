@@ -53,11 +53,11 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".JettyHttpServerTracer",
+      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
+      "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
       "io.opentelemetry.auto.instrumentation.servlet.v3_0.Servlet3HttpServerTracer",
       "io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener",
-      "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
+      packageName + ".JettyHttpServerTracer",
     };
   }
 
