@@ -65,7 +65,7 @@ still access helper classes from bootstrap classloader.
 #### Agent jar structure
 
 If you now look inside
-`java-agent/build/libs/opentelemetry-javaagent-<version>-all.jar`, you will see the
+`opentelemetry-javaagent/build/libs/opentelemetry-javaagent-<version>-all.jar`, you will see the
 following "clusters" of classes:
 
 - `inst/` - contains `agent-tooling` module and `instrumentation` submodules, loaded and isolated inside
@@ -86,10 +86,23 @@ snapshot builds of the `master` branch. They are available from
 
 Build using Java 11:
 
-```gradle assemble```
+```bash
+java -version
+```
+
+```bash
+./gradlew assemble
+```
+
+and then generate the -all artifact
+
+```bash
+./gradlew :opentelemetry-javaagent:shadowJar
+```
 
 and then you can find the java agent artifact at
-`java-agent/build/lib/opentelemetry-javaagent-<version>-all.jar`.
+
+`opentelemetry-javaagent/build/lib/opentelemetry-javaagent-<version>-all.jar`.
 
 ### Testing
 
@@ -142,6 +155,12 @@ Our build will fail if source code is not formatted according to that style.
 
 The main goal is to avoid extensive reformatting caused by different IDEs having different opinion
 about how things should be formatted by establishing.
+
+For Windows users, please set autocrlf to true and line endings will be converted to Unix style line endings when adding files to the repo:
+
+```bash
+git config --global core.autocrlf true
+```
 
 Running
 
