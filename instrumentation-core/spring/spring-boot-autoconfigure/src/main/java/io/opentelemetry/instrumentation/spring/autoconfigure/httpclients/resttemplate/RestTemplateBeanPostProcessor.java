@@ -23,7 +23,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
-/** Adds Open Telemetry instrumentation to WebClient beans after initialization */
+/** Adds Open Telemetry instrumentation to RestTemplate beans after initialization */
 public final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
 
   private final Tracer tracer;
