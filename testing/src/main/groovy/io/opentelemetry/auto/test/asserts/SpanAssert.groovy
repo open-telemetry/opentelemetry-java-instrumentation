@@ -21,7 +21,6 @@ import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Status
-
 import java.util.regex.Pattern
 
 import static AttributesAssert.assertAttributes

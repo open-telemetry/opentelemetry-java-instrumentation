@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
-import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
-import io.opentelemetry.trace.attributes.SemanticAttributes
 import spock.lang.Retry
-
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> {
 

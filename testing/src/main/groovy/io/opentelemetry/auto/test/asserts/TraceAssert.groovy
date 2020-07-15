@@ -22,7 +22,6 @@ import groovy.transform.stc.SimpleType
 import io.opentelemetry.auto.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.TraceId
-
 import java.util.concurrent.TimeUnit
 
 import static SpanAssert.assertSpan

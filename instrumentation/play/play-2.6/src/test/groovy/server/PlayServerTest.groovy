@@ -16,11 +16,11 @@
 
 package server
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
+
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.function.Supplier
 import play.BuiltInComponents
 import play.Mode
 import play.mvc.Results
@@ -28,16 +28,12 @@ import play.routing.RoutingDsl
 import play.server.Server
 import spock.lang.Retry
 
-import java.util.function.Supplier
-
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.trace.Span.Kind.SERVER
 
 @Retry(mode = Retry.Mode.SETUP_FEATURE_CLEANUP)
 class PlayServerTest extends HttpServerTest<Server> {

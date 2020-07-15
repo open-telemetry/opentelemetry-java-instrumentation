@@ -23,11 +23,8 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-
 import java.util.concurrent.TimeoutException
 
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.trace.Span.Kind.INTERNAL
@@ -91,8 +88,8 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
       operationName "FinatraController"
       spanKind INTERNAL
       childOf(parent as SpanData)
-        // Finatra doesn't propagate the stack trace or exception to the instrumentation
-        // so the normal errorAttributes() method can't be used
+      // Finatra doesn't propagate the stack trace or exception to the instrumentation
+      // so the normal errorAttributes() method can't be used
       errored false
       attributes {
       }
