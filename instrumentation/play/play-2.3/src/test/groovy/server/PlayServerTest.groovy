@@ -42,7 +42,6 @@ class PlayServerTest extends HttpServerTest<TestServer> {
     server.stop()
   }
 
-  // We don't have instrumentation for this version of netty yet
   @Override
   boolean hasHandlerSpan() {
     true
@@ -53,18 +52,11 @@ class PlayServerTest extends HttpServerTest<TestServer> {
     trace.span(index) {
       operationName "play.request"
       spanKind INTERNAL
-      errored endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
+      errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       attributes {
-        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.HTTP_URL.key()}" String
-        "${SemanticAttributes.HTTP_METHOD.key()}" String
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
         if (endpoint == EXCEPTION) {
           errorAttributes(Exception, EXCEPTION.body)
-        }
-        if (endpoint.query) {
-          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
