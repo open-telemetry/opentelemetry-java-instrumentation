@@ -156,7 +156,7 @@ Our build will fail if source code is not formatted according to that style.
 The main goal is to avoid extensive reformatting caused by different IDEs having different opinion
 about how things should be formatted by establishing.
 
-For Windows users, please set autocrlf to true and line endings will be converted to Unix style line endings when adding files to the repo:
+Note for Windows users: if you are seeing all of your files being changed by `./gradlew spotlessApply` (below), it's probably the line endings, and make sure you are using a `core.autocrlf` setting of either `true` or `input`.
 
 ```bash
 git config core.autocrlf true
