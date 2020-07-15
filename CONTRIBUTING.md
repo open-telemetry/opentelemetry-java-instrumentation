@@ -159,7 +159,7 @@ about how things should be formatted by establishing.
 For Windows users, please set autocrlf to true and line endings will be converted to Unix style line endings when adding files to the repo:
 
 ```bash
-git config --global core.autocrlf true
+git config core.autocrlf true
 ```
 
 Running
