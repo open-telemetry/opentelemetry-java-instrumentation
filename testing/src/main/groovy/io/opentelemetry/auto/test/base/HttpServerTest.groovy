@@ -476,6 +476,11 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
+        if (endpoint.errored) {
+          "error.msg" { it == null || it == EXCEPTION.body }
+          "error.type" { it == null || it == Exception.name }
+          "error.stack" { it == null || it instanceof String }
+        }
         // OkHttp never sends the fragment in the request.
 //        if (endpoint.fragment) {
 //          "$MoreAttributes.HTTP_FRAGMENT" endpoint.fragment

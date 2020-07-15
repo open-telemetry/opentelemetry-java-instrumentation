@@ -66,6 +66,6 @@ public class AkkaHttpServerTracer extends HttpServerTracer<HttpRequest, HttpRequ
 
   @Override
   protected Integer peerPort(final HttpRequest httpRequest) {
-    return null;
+    return httpRequest.uri().effectivePort();
   }
 }
