@@ -16,20 +16,17 @@
 
 package server
 
-import io.opentelemetry.auto.instrumentation.api.MoreAttributes
+
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.function.Supplier
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
 
-import java.util.function.Supplier
-
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -89,18 +86,11 @@ class PlayServerTest extends HttpServerTest<Server> {
     trace.span(index) {
       operationName "play.request"
       spanKind INTERNAL
-      errored endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
+      errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       attributes {
-        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.HTTP_URL.key()}" String
-        "${SemanticAttributes.HTTP_METHOD.key()}" String
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
         if (endpoint == EXCEPTION) {
           errorAttributes(Exception, EXCEPTION.body)
-        }
-        if (endpoint.query) {
-          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
