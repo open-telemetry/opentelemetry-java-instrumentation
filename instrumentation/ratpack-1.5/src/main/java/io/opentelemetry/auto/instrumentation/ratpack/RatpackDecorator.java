@@ -20,10 +20,8 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import lombok.extern.slf4j.Slf4j;
 import ratpack.handling.Context;
 
-@Slf4j
 public class RatpackDecorator extends BaseDecorator {
   public static final RatpackDecorator DECORATE = new RatpackDecorator();
 

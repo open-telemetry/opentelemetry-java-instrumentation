@@ -87,15 +87,14 @@ class FinatraServerTest extends HttpServerTest<HttpServer> {
 
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    def errorEndpoint = endpoint == EXCEPTION || endpoint == ERROR
     trace.span(index) {
       operationName "FinatraController"
       spanKind INTERNAL
-      errored errorEndpoint
       childOf(parent as SpanData)
-      attributes {
         // Finatra doesn't propagate the stack trace or exception to the instrumentation
         // so the normal errorAttributes() method can't be used
+      errored false
+      attributes {
       }
     }
   }
