@@ -74,6 +74,6 @@ public class PlayAdvice {
 
     final Span rootSpan = TRACER.getCurrentSpan();
     // set the span name on the upstream akka/netty span
-    DECORATE.updateServerSpanName(rootSpan, req);
+    DECORATE.updateSpanName(rootSpan, req);
   }
 }
