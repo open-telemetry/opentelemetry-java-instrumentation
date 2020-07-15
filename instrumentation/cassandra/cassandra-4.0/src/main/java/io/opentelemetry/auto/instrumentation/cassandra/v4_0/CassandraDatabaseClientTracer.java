@@ -20,13 +20,23 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 
-public class CassandraClientDecorator extends DatabaseClientDecorator<CqlSession> {
-  public static final CassandraClientDecorator DECORATE = new CassandraClientDecorator();
+public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSession, String> {
+  public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.cassandra-4.0";
+  }
+
+  @Override
+  protected String normalizeQuery(String query) {
+    return query;
+  }
 
   @Override
   protected String dbType() {
@@ -43,13 +53,16 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<CqlSession
     return session.getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
+  @Override
+  protected InetSocketAddress peerAddress(CqlSession cqlSession) {
+    return null;
+  }
+
   public void onResponse(final Span span, final ExecutionInfo executionInfo) {
-    if (executionInfo != null) {
-      final Node coordinator = executionInfo.getCoordinator();
-      if (coordinator != null) {
-        final Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();
-        address.ifPresent(inetSocketAddress -> onPeerConnection(span, inetSocketAddress));
-      }
+    final Node coordinator = executionInfo.getCoordinator();
+    if (coordinator != null) {
+      final Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();
+      address.ifPresent(inetSocketAddress -> onPeerConnection(span, inetSocketAddress));
     }
   }
 }

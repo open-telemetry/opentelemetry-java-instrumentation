@@ -48,7 +48,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      packageName + ".CassandraClientDecorator",
+      packageName + ".CassandraDatabaseClientTracer",
       packageName + ".TracingSession",
       packageName + ".TracingSession$1",
       packageName + ".TracingSession$2",
