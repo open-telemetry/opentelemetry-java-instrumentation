@@ -16,8 +16,6 @@
 
 package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.ApacheHttpClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.ApacheHttpClientDecorator.TRACER;
 import static io.opentelemetry.auto.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.auto.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -28,13 +26,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.ApacheHttpClientHelper;
 import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.HostAndRequestAsHttpUriRequest;
+import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.WrappingStatusSettingResponseHandler;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.trace.Span;
-import java.io.IOException;
+import io.opentelemetry.trace.Tracer;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -44,14 +43,15 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 
 @AutoService(Instrumenter.class)
 public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
+
+  public static final Tracer TRACER =
+      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
 
   public ApacheHttpClientInstrumentation() {
     super("httpclient", "apache-httpclient", "apache-http-client");
@@ -75,7 +75,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       packageName + ".shaded.HttpHeadersInjectAdapter",
       packageName + ".shaded.HostAndRequestAsHttpUriRequest",
       packageName + ".shaded.ApacheHttpClientHelper",
-      getClass().getName() + "$WrappingStatusSettingResponseHandler",
+      packageName + ".shaded.WrappingStatusSettingResponseHandler",
     };
   }
 
@@ -174,7 +174,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      return ApacheHttpClientHelper.doMethodEnter(request, TRACER, DECORATE);
+      return ApacheHttpClientHelper.doMethodEnter(request, TRACER);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -182,8 +182,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
-      ApacheHttpClientHelper.doResetCallDepthThread(spanWithScope);
-      ApacheHttpClientHelper.doMethodExit(spanWithScope, result, throwable, DECORATE);
+      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }
 
@@ -203,8 +202,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final SpanWithScope spanWithScope =
-          ApacheHttpClientHelper.doMethodEnter(request, TRACER, DECORATE);
+      final SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request, TRACER);
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
@@ -220,9 +218,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
-
-      ApacheHttpClientHelper.doResetCallDepthThread(spanWithScope);
-      ApacheHttpClientHelper.doMethodExit(spanWithScope, result, throwable, DECORATE);
+      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }
 
@@ -236,10 +232,10 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       }
 
       if (request instanceof HttpUriRequest) {
-        return ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request, TRACER, DECORATE);
+        return ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request, TRACER);
       } else {
         return ApacheHttpClientHelper.doMethodEnter(
-            new HostAndRequestAsHttpUriRequest(host, request), TRACER, DECORATE);
+            new HostAndRequestAsHttpUriRequest(host, request), TRACER);
       }
     }
 
@@ -248,9 +244,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
-
-      ApacheHttpClientHelper.doResetCallDepthThread(spanWithScope);
-      ApacheHttpClientHelper.doMethodExit(spanWithScope, result, throwable, DECORATE);
+      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }
 
@@ -274,12 +268,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       final SpanWithScope spanWithScope;
 
       if (request instanceof HttpUriRequest) {
-        spanWithScope =
-            ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request, TRACER, DECORATE);
+        spanWithScope = ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request, TRACER);
       } else {
         spanWithScope =
             ApacheHttpClientHelper.doMethodEnter(
-                new HostAndRequestAsHttpUriRequest(host, request), TRACER, DECORATE);
+                new HostAndRequestAsHttpUriRequest(host, request), TRACER);
       }
 
       // Wrap the handler so we capture the status code
@@ -296,28 +289,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter final SpanWithScope spanWithScope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
-
-      ApacheHttpClientHelper.doResetCallDepthThread(spanWithScope);
-      ApacheHttpClientHelper.doMethodExit(spanWithScope, result, throwable, DECORATE);
-    }
-  }
-
-  public static class WrappingStatusSettingResponseHandler implements ResponseHandler {
-    final Span span;
-    final ResponseHandler handler;
-
-    public WrappingStatusSettingResponseHandler(final Span span, final ResponseHandler handler) {
-      this.span = span;
-      this.handler = handler;
-    }
-
-    @Override
-    public Object handleResponse(final HttpResponse response)
-        throws ClientProtocolException, IOException {
-      if (null != span) {
-        DECORATE.onResponse(span, response);
-      }
-      return handler.handleResponse(response);
+      ApacheHttpClientHelper.doMethodExitAndResetCallDepthThread(spanWithScope, result, throwable);
     }
   }
 }

@@ -17,6 +17,7 @@
 package io.opentelemetry.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.context.ContextUtils.withScopedContext;
+import static io.opentelemetry.instrumentation.apachehttpclient.v4_0.ApacheHttpClientDecorator.DECORATE;
 
 import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
@@ -30,49 +31,42 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public class ApacheHttpClientHelper {
-  public static SpanWithScope doMethodEnter(
-      final HttpUriRequest request,
-      final Tracer tracer,
-      final ApacheHttpClientDecorator decorator) {
-    final Span span = decorator.getOrCreateSpan(request, tracer);
+  public static SpanWithScope doMethodEnter(final HttpUriRequest request, final Tracer tracer) {
+    final Span span = DECORATE.getOrCreateSpan(request, tracer);
 
-    decorator.afterStart(span);
-    decorator.onRequest(span, request);
+    DECORATE.afterStart(span);
+    DECORATE.onRequest(span, request);
 
     final Context context = ClientDecorator.currentContextWith(span);
     if (span.getContext().isValid()) {
-      decorator.inject(context, request);
+      DECORATE.inject(context, request);
     }
     final Scope scope = withScopedContext(context);
 
     return new SpanWithScope(span, scope);
   }
 
-  public static void doResetCallDepthThread(final SpanWithScope spanWithScope) {
+  public static void doMethodExitAndResetCallDepthThread(
+      final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
     if (spanWithScope == null) {
       return;
     }
     CallDepthThreadLocalMap.reset(HttpClient.class);
+
+    doMethodExit(spanWithScope, result, throwable);
   }
 
   public static void doMethodExit(
-      final SpanWithScope spanWithScope,
-      final Object result,
-      final Throwable throwable,
-      final ApacheHttpClientDecorator decorator) {
-    if (spanWithScope == null) {
-      return;
-    }
-
+      final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
     try {
       final Span span = spanWithScope.getSpan();
 
       if (result instanceof HttpResponse) {
-        decorator.onResponse(span, (HttpResponse) result);
+        DECORATE.onResponse(span, (HttpResponse) result);
       } // else they probably provided a ResponseHandler.
 
-      decorator.onError(span, throwable);
-      decorator.beforeFinish(span);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.end();
     } finally {
       spanWithScope.closeScope();

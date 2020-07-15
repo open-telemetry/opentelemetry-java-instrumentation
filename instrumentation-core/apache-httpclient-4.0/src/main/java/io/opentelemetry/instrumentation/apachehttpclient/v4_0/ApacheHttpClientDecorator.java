@@ -26,7 +26,7 @@ import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
+class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
   public static final ApacheHttpClientDecorator DECORATE = new ApacheHttpClientDecorator();
 
   public static final Tracer TRACER =
