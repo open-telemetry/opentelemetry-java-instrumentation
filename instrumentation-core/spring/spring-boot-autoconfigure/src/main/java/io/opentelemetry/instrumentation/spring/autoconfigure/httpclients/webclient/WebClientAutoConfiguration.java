@@ -35,7 +35,7 @@ public class WebClientAutoConfiguration {
 
   @Bean
   @Autowired
-  public WebClientBeanPostProcessor webClientBeanPostProcessor(final Tracer tracer) {
+  public WebClientBeanPostProcessor otelWebClientBeanPostProcessor(final Tracer tracer) {
     return new WebClientBeanPostProcessor(tracer);
   }
 }

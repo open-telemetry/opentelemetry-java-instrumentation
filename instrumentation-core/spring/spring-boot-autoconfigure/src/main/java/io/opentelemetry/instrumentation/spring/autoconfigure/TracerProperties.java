@@ -19,30 +19,29 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Loads opentelemetry.trace.tracer.name and opentelemetry.trace.tracer.loggingExporterIsEnabled
- * from application.properties
+ * Configuration for OpenTelemetry Tracer
  *
- * <p>Sets the default values if the configurations do not exist
+ * <p>Configures LoggingExporter and sets default tracer name
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.tracer")
 public final class TracerProperties {
 
-  private String name = "otel-spring-tracer";
-  private boolean loggingExporterIsEnabled = true;
+  private String tracerName = "otel-spring-tracer";
+  private boolean loggingExporterEnabled = true;
 
-  public String getName() {
-    return name;
+  public String getTracerName() {
+    return tracerName;
   }
 
-  public void setName(String tracerName) {
-    this.name = tracerName;
+  public void setTracerName(String tracerName) {
+    this.tracerName = tracerName;
   }
 
-  public boolean isLoggingExporterIsEnabled() {
-    return loggingExporterIsEnabled;
+  public boolean isLoggingExporterEnabled() {
+    return loggingExporterEnabled;
   }
 
-  public void setLoggingExporterIsEnabled(boolean loggingExporterIsEnabled) {
-    this.loggingExporterIsEnabled = loggingExporterIsEnabled;
+  public void setLoggingExporterEnabled(boolean loggingExporterEnabled) {
+    this.loggingExporterEnabled = loggingExporterEnabled;
   }
 }

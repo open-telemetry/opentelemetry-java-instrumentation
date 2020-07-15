@@ -28,10 +28,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Create an io.opentelemetry.trace.Tracer bean
+ * Create an {@link io.opentelemetry.trace.Tracer} bean
  *
- * <p>If TracerProperties.loggingExporterIsEnabled=True: Create a simple span processor using the
- * LoggingSpanExporter
+ * <p>If {@code TracerProperties.loggingExporterIsEnabled=True}: Create a simple span processor
+ * using the LoggingSpanExporter
  */
 @Configuration
 @EnableConfigurationProperties(TracerProperties.class)
@@ -41,13 +41,15 @@ public class TracerAutoConfiguration {
 
   @Bean
   public Tracer tracer() throws Exception {
-    Tracer tracer = OpenTelemetry.getTracer(tracerProperties.getName());
+    Tracer tracer = OpenTelemetry.getTracer(tracerProperties.getTracerName());
     setLoggingExporter();
     return tracer;
   }
 
   private void setLoggingExporter() {
-    if (!tracerProperties.isLoggingExporterIsEnabled()) return;
+    if (!tracerProperties.isLoggingExporterEnabled()) {
+      return;
+    }
 
     SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
     OpenTelemetrySdk.getTracerProvider().addSpanProcessor(logProcessor);

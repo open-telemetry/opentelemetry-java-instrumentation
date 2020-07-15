@@ -25,7 +25,9 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Inspired by: <a
+ * Adds Open Telemetry instrumentation to WebClient beans after initialization
+ *
+ * <p>Inspired by: <a
  * href="https://github.com/spring-cloud/spring-cloud-sleuth/blob/master/spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebClientAutoConfiguration.java">Spring
  * Cloud Sleuth</a>
  */
@@ -35,11 +37,6 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
   public WebClientBeanPostProcessor(Tracer tracer) {
     this.tracer = tracer;
-  }
-
-  @Override
-  public Object postProcessBeforeInitialization(Object bean, String beanName) {
-    return bean;
   }
 
   @Override
@@ -55,24 +52,14 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
   }
 
   private WebClient.Builder wrapBuilder(WebClient.Builder webClientBuilder) {
-    return webClientBuilder.filters(addWebClientFilterFunctionIfNotPresent());
+    return webClientBuilder.filters(webClientFilterFunctionConsumer());
   }
 
-  private Consumer<List<ExchangeFilterFunction>> addWebClientFilterFunctionIfNotPresent() {
+  private Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer() {
     return functions -> {
-      boolean noneMatch = noneMatchWebClientTracingFilter(functions);
-      if (noneMatch) {
+      if (functions.stream().noneMatch(filter -> filter instanceof WebClientTracingFilter)) {
         WebClientTracingFilter.addFilter(functions, tracer);
       }
     };
-  }
-
-  private boolean noneMatchWebClientTracingFilter(List<ExchangeFilterFunction> functions) {
-    for (ExchangeFilterFunction function : functions) {
-      if (function instanceof WebClientTracingFilter) {
-        return false;
-      }
-    }
-    return true;
   }
 }

@@ -32,7 +32,7 @@ public class WebMVCFilterAutoConfiguration {
 
   @Bean
   @Autowired
-  public WebMVCTracingFilter webMVCTracingFilter(final Tracer tracer) {
+  public WebMVCTracingFilter otelWebMVCTracingFilter(final Tracer tracer) {
     return new WebMVCTracingFilter(tracer);
   }
 }

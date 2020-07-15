@@ -19,9 +19,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Loads opentelemetry.trace.web.enabled from application.properties
+ * Configuration for the tracing instrumentation of Spring WebMVC
  *
- * <p>Sets a default value if the configuration does not exist
+ * <p>Sets default value of opentelemetry.trace.web.enabled to true if the configuration does not
+ * exist in application context
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.web")
 public final class WebMVCProperties {
