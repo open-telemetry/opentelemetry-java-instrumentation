@@ -66,8 +66,8 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | ota.exporter=zipkin              | OTA_EXPORTER=zipkin              | To select Zipkin exporter                                            |
-| otel.zipkin.endpoint             | OTEL_ZIPKIN_ENDPOINT             | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
-| otel.zipkin.service.name         | OTEL_ZIPKIN_SERVICE_NAME         | The service name of this JVM instance                                |
+| ota.exporter.zipkin.endpoint     | OTEL_ZIPKIN_ENDPOINT             | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
+| ota.exporter.zipkin.service.name | OTEL_ZIPKIN_SERVICE_NAME         | The service name of this JVM instance                                |
 
 #### OTLP exporter
 
