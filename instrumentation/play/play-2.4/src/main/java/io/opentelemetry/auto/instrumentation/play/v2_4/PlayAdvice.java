@@ -59,7 +59,7 @@ public class PlayAdvice {
     final Span playControllerSpan = playControllerScope.getSpan();
 
     // Call onRequest on return after tags are populated.
-    DECORATE.updateServerSpanName(playControllerSpan, req);
+    DECORATE.updateSpanName(playControllerSpan, req);
 
     if (throwable == null) {
       responseFuture.onComplete(
@@ -75,7 +75,7 @@ public class PlayAdvice {
 
     final Span rootSpan = TRACER.getCurrentSpan();
     // set the span name on the upstream akka/netty span
-    DECORATE.updateServerSpanName(rootSpan, req);
+    DECORATE.updateSpanName(rootSpan, req);
   }
 
   // Unused method for muzzle to allow only 2.4-2.5

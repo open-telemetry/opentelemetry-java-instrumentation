@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.test.base
 
 import ch.qos.logback.classic.Level
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -99,9 +98,8 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   abstract void stopServer(SERVER server)
 
-  //TODO rename to expectedServerSpanName
-  String expectedOperationName(String method, ServerEndpoint endpoint) {
-    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
+  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
+    return endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path
   }
 
   boolean hasHandlerSpan() {
@@ -458,7 +456,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName(method, endpoint)
+      operationName expectedServerSpanName(method, endpoint)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
@@ -468,7 +466,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         parent()
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method

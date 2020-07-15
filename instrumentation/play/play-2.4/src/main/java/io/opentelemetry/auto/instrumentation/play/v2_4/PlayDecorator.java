@@ -34,7 +34,7 @@ public class PlayDecorator extends BaseDecorator {
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.play-2.4");
 
-  public Span updateServerSpanName(final Span span, final Request request) {
+  public void updateSpanName(final Span span, final Request request) {
     if (request != null) {
       // more about routes here:
       // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md#router-tags-are-now-attributes
@@ -44,7 +44,6 @@ public class PlayDecorator extends BaseDecorator {
         span.updateName(request.method() + " " + path);
       }
     }
-    return span;
   }
 
   @Override
