@@ -99,11 +99,6 @@ class RatpackOtherTest extends AgentTestRunner {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" "${app.address.resolve(path)}"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
           }
         }
       }

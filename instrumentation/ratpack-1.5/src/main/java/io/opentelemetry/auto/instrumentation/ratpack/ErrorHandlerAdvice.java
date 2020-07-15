@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.ratpack.RatpackDecorator.DECORATE;
 
 import io.opentelemetry.trace.Span;
 import java.util.Optional;

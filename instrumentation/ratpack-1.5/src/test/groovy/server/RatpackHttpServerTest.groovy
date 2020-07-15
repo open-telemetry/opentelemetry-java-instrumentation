@@ -126,45 +126,18 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
     trace.span(index) {
       operationName endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
       spanKind INTERNAL
-      errored endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
+      errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       attributes {
-        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-        "${SemanticAttributes.HTTP_URL.key()}" String
-        "${SemanticAttributes.HTTP_METHOD.key()}" String
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" Long
         if (endpoint == EXCEPTION) {
           errorAttributes(Exception, EXCEPTION.body)
-        }
-        if (endpoint.query) {
-          "$MoreAttributes.HTTP_QUERY" endpoint.query
         }
       }
     }
   }
 
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      operationName endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
-      spanKind SERVER
-      errored endpoint.errored
-      if (parentID != null) {
-        traceId traceID
-        parentId parentID
-      } else {
-        parent()
-      }
-      attributes {
-        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "${SemanticAttributes.HTTP_METHOD.key()}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        if (endpoint.query) {
-          "$MoreAttributes.HTTP_QUERY" endpoint.query
-        }
-      }
-    }
+  @Override
+  String expectedOperationName(String method, ServerEndpoint endpoint) {
+    return endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
   }
 }

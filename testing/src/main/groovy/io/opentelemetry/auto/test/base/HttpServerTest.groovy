@@ -99,6 +99,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   abstract void stopServer(SERVER server)
 
+  //TODO rename to expectedServerSpanName
   String expectedOperationName(String method, ServerEndpoint endpoint) {
     return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
   }
