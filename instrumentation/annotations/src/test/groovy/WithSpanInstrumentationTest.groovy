@@ -17,9 +17,10 @@
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.TracedWithSpan
+import io.opentelemetry.trace.Span
 
 /**
- * This test verifies that auto instrumentation supports {@link io.opentelemetry.contrib.auto.annotations.WithSpan} contrib annotation.
+ * This test verifies that auto instrumentation supports {@link io.opentelemetry.extensions.auto.annotations.WithSpan} contrib annotation.
  */
 class WithSpanInstrumentationTest extends AgentTestRunner {
 
@@ -46,6 +47,7 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "TracedWithSpan.otel"
+          spanKind Span.Kind.INTERNAL
           parent()
           errored false
           attributes {
@@ -74,6 +76,27 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
       }
     }
   }
+
+  def "should take span kind from annotation"() {
+    setup:
+    new TracedWithSpan().oneOfAKind()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "TracedWithSpan.oneOfAKind"
+          spanKind Span.Kind.PRODUCER
+          parent()
+          errored false
+          attributes {
+            "providerAttr" "Otel"
+          }
+        }
+      }
+    }
+  }
+
 
   def "should ignore method excluded by trace.methods.exclude configuration"() {
     setup:
