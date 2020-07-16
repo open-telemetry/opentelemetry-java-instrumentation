@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
 
-import io.opentelemetry.context.propagation.HttpTextFormat;
-import org.springframework.http.HttpHeaders;
+public class LettuceConnectionDatabaseClientTracer
+    extends LettuceAbstractDatabaseClientTracer<String> {
 
-public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
-
-  public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
+  public static final LettuceConnectionDatabaseClientTracer TRACER =
+      new LettuceConnectionDatabaseClientTracer();
 
   @Override
-  public void set(final HttpHeaders carrier, final String key, final String value) {
-    carrier.set(key, value);
+  protected String normalizeQuery(String command) {
+    return command;
   }
 }

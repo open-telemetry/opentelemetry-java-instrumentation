@@ -33,7 +33,8 @@ import static io.opentelemetry.auto.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
 class LettuceReactiveClientTest extends AgentTestRunner {
-  public static final String HOST = "127.0.0.1"
+  public static final String PEER_HOST = "localhost"
+  public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
@@ -51,12 +52,12 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
   def setupSpec() {
     int port = PortUtils.randomOpenPort()
-    String dbAddr = HOST + ":" + port + "/" + DB_INDEX
+    String dbAddr = PEER_HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 
     redisServer = RedisServer.builder()
     // bind to localhost to avoid firewall popup
-      .setting("bind " + HOST)
+      .setting("bind " + PEER_HOST)
     // set max memory to avoid problems in CI
       .setting("maxmemory 128M")
       .port(port).build()
@@ -111,6 +112,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
       }
@@ -134,6 +136,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }
@@ -165,6 +168,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }
@@ -194,6 +198,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "RANDOMKEY"
           }
         }
       }
@@ -213,6 +218,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
             "db.command.results.count" 157
           }
         }
@@ -233,6 +239,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "COMMAND"
             "db.command.cancelled" true
             "db.command.results.count" 2
           }
@@ -246,7 +253,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     String res = null
 
     when:
-    res = reactiveCommands.digest()
+    res = reactiveCommands.digest(null)
 
     then:
     res != null
@@ -266,6 +273,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "DEBUG"
           }
         }
       }
@@ -285,6 +293,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           errored false
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SHUTDOWN"
           }
         }
       }
@@ -315,6 +324,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
         span(2) {
@@ -324,6 +334,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }
@@ -354,6 +365,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
         span(2) {
@@ -363,6 +375,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }
@@ -394,6 +407,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "SET"
           }
         }
         span(2) {
@@ -403,6 +417,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_TYPE.key()}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key()}" "GET"
           }
         }
       }

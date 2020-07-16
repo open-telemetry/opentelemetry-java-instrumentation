@@ -90,7 +90,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       if (callDepth.getAndIncrement() == 0) {
         span = TRACER.startSpan(statement);
         if (span != null) {
-          scope = TRACER.withSpan(span);
+          scope = TRACER.startScope(span);
         }
       }
     }

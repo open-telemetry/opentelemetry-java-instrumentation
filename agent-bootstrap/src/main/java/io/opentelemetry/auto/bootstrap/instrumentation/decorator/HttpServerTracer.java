@@ -54,10 +54,6 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 
-  protected abstract String getInstrumentationName();
-
-  protected abstract String getVersion();
-
   public HttpServerTracer(Tracer tracer) {
     this.tracer = tracer;
   }
@@ -83,6 +79,57 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
 
     return span;
   }
+
+  /**
+   * Creates new scoped context with the given span.
+   *
+   * <p>Attaches new context to the request to avoid creating duplicate server spans.
+   */
+  public Scope startScope(Span span, STORAGE storage) {
+    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
+    Context serverSpanContext = Context.current().withValue(CONTEXT_SERVER_SPAN_KEY, span);
+    Context newContext = withSpan(span, serverSpanContext);
+    attachServerContext(newContext, storage);
+    return withScopedContext(newContext);
+  }
+
+  // TODO should end methods remove SPAN attribute from request as well?
+  public void end(Span span, int responseStatus) {
+    setStatus(span, responseStatus);
+    span.end();
+  }
+
+  /** Ends given span exceptionally with default response status code 500. */
+  public void endExceptionally(Span span, Throwable throwable) {
+    endExceptionally(span, throwable, 500);
+  }
+
+  public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
+    if (responseStatus == 200) {
+      // TODO I think this is wrong.
+      // We must report that response status that was actually sent to end user
+      // We may change span status, but not http_status attribute
+      responseStatus = 500;
+    }
+    onError(span, unwrapThrowable(throwable));
+    end(span, responseStatus);
+  }
+
+  public Span getCurrentSpan() {
+    return tracer.getCurrentSpan();
+  }
+
+  public Span getServerSpan(STORAGE storage) {
+    Context attachedContext = getServerContext(storage);
+    return attachedContext == null ? null : CONTEXT_SERVER_SPAN_KEY.get(attachedContext);
+  }
+  /**
+   * Returns context stored to the given request-response-loop storage by {@link
+   * #attachServerContext(Context, STORAGE)}.
+   *
+   * <p>May be null.
+   */
+  public abstract Context getServerContext(STORAGE storage);
 
   protected void onConnection(Span span, CONNECTION connection) {
     SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(connection));
@@ -171,58 +218,13 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     addThrowable(span, unwrapThrowable(throwable));
   }
 
-  // TODO semantic attributes
-  public static void addThrowable(final Span span, final Throwable throwable) {
+  protected static void addThrowable(final Span span, final Throwable throwable) {
     span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
     span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
     final StringWriter errorString = new StringWriter();
     throwable.printStackTrace(new PrintWriter(errorString));
     span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
-  }
-
-  public Span getCurrentSpan() {
-    return tracer.getCurrentSpan();
-  }
-
-  public Span getServerSpan(STORAGE storage) {
-    Context attachedContext = getServerContext(storage);
-    return attachedContext == null ? null : CONTEXT_SERVER_SPAN_KEY.get(attachedContext);
-  }
-
-  /**
-   * Creates new scoped context with the given span.
-   *
-   * <p>Attaches new context to the request to avoid creating duplicate server spans.
-   */
-  public Scope startScope(Span span, STORAGE storage) {
-    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
-    Context serverSpanContext = Context.current().withValue(CONTEXT_SERVER_SPAN_KEY, span);
-    Context newContext = withSpan(span, serverSpanContext);
-    attachServerContext(newContext, storage);
-    return withScopedContext(newContext);
-  }
-
-  // TODO should end methods remove SPAN attribute from request as well?
-  public void end(Span span, int responseStatus) {
-    setStatus(span, responseStatus);
-    span.end();
-  }
-
-  /** Ends given span exceptionally with default response status code 500. */
-  public void endExceptionally(Span span, Throwable throwable) {
-    endExceptionally(span, throwable, 500);
-  }
-
-  public void endExceptionally(Span span, Throwable throwable, int responseStatus) {
-    if (responseStatus == 200) {
-      // TODO I think this is wrong.
-      // We must report that response status that was actually sent to end user
-      // We may change span status, but not http_status attribute
-      responseStatus = 500;
-    }
-    onError(span, unwrapThrowable(throwable));
-    end(span, responseStatus);
   }
 
   protected Throwable unwrapThrowable(Throwable throwable) {
@@ -245,6 +247,10 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
   }
 
+  protected abstract String getInstrumentationName();
+
+  protected abstract String getVersion();
+
   protected abstract Integer peerPort(CONNECTION connection);
 
   protected abstract String peerHostIP(CONNECTION connection);
@@ -259,12 +265,4 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
    * Stores given context in the given request-response-loop storage in implementation specific way.
    */
   protected abstract void attachServerContext(Context context, STORAGE storage);
-
-  /**
-   * Returns context stored to the given request-response-loop storage by {@link
-   * #attachServerContext(Context, STORAGE)}.
-   *
-   * <p>May be null.
-   */
-  public abstract Context getServerContext(STORAGE storage);
 }

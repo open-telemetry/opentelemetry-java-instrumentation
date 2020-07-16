@@ -16,14 +16,25 @@
 
 package io.opentelemetry.auto.instrumentation.cassandra.v3_0;
 
+import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.DatabaseClientTracer;
 import io.opentelemetry.trace.Span;
+import java.net.InetSocketAddress;
 
-public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
-  public static final CassandraClientDecorator DECORATE = new CassandraClientDecorator();
+public class CassandraDatabaseClientTracer extends DatabaseClientTracer<Session, String> {
+  public static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.auto.cassandra-3.0";
+  }
+
+  @Override
+  protected String normalizeQuery(String query) {
+    return query;
+  }
 
   @Override
   protected String dbType() {
@@ -40,11 +51,14 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
     return session.getLoggedKeyspace();
   }
 
-  public Span onResponse(final Span span, final ResultSet result) {
-    if (result != null) {
-      final Host host = result.getExecutionInfo().getQueriedHost();
-      onPeerConnection(span, host.getSocketAddress());
-    }
+  @Override
+  protected InetSocketAddress peerAddress(Session session) {
+    return null;
+  }
+
+  public Span onResponse(final Span span, final ExecutionInfo executionInfo) {
+    final Host host = executionInfo.getQueriedHost();
+    onPeerConnection(span, host.getSocketAddress());
     return span;
   }
 }

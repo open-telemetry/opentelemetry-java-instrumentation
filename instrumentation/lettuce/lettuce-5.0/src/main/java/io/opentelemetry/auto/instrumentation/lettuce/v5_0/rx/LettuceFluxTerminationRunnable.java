@@ -16,12 +16,9 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0.rx;
 
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
 
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil;
 import io.opentelemetry.trace.Span;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
@@ -30,14 +27,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
 
-public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnable {
+public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runnable {
 
   private Span span = null;
   private int numResults = 0;
-  private FluxOnSubscribeConsumer onSubscribeConsumer = null;
+  private FluxOnSubscribeConsumer onSubscribeConsumer;
 
   public LettuceFluxTerminationRunnable(
-      final RedisCommand command, final boolean finishSpanOnClose) {
+      final RedisCommand<?, ?, ?> command, final boolean finishSpanOnClose) {
     onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, finishSpanOnClose);
   }
 
@@ -51,9 +48,11 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
       if (isCommandCancelled) {
         span.setAttribute("db.command.cancelled", true);
       }
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (throwable == null) {
+        TRACER.end(span);
+      } else {
+        TRACER.endExceptionally(span, throwable);
+      }
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
@@ -74,25 +73,18 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
 
   @Override
   public void run() {
-    if (span != null) {
-      finishSpan(true, null);
-    } else {
-      LoggerFactory.getLogger(Flux.class)
-          .error(
-              "Failed to finish this.span to indicate cancellation, LettuceFluxTerminationRunnable"
-                  + " cannot find this.span because it probably wasn't started.");
-    }
+    finishSpan(true, null);
   }
 
   public static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
 
     private final LettuceFluxTerminationRunnable owner;
-    private final RedisCommand command;
+    private final RedisCommand<?, ?, ?> command;
     private final boolean finishSpanOnClose;
 
     public FluxOnSubscribeConsumer(
         final LettuceFluxTerminationRunnable owner,
-        final RedisCommand command,
+        final RedisCommand<?, ?, ?> command,
         final boolean finishSpanOnClose) {
       this.owner = owner;
       this.command = command;
@@ -101,16 +93,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
 
     @Override
     public void accept(final Subscription subscription) {
-      final Span span =
-          TRACER
-              .spanBuilder(LettuceInstrumentationUtil.getCommandName(command))
-              .setSpanKind(CLIENT)
-              .startSpan();
-      owner.span = span;
-      DECORATE.afterStart(span);
+      owner.span = TRACER.startSpan(null, command, null);
       if (finishSpanOnClose) {
-        DECORATE.beforeFinish(span);
-        span.end();
+        TRACER.end(owner.span);
       }
     }
   }

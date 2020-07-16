@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+package io.opentelemetry.instrumentation.springwebflux.client;
 
-import io.opentelemetry.auto.instrumentation.springwebflux.client.shaded.WebClientTracingFilter;
-import net.bytebuddy.asm.Advice;
-import org.springframework.web.reactive.function.client.WebClient;
+import io.opentelemetry.context.propagation.HttpTextFormat;
+import org.springframework.http.HttpHeaders;
 
-public class WebClientFilterAdvice {
+class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpHeaders> {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onBuild(@Advice.This final WebClient.Builder thiz) {
-    thiz.filters(WebClientTracingFilter::addFilter);
+  public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
+
+  @Override
+  public void set(final HttpHeaders carrier, final String key, final String value) {
+    carrier.set(key, value);
   }
 }

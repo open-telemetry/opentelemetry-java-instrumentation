@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.client;
+package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
-import io.opentelemetry.auto.instrumentation.springwebflux.client.shaded.WebClientTracingFilter;
-import net.bytebuddy.asm.Advice;
-import org.springframework.web.reactive.function.client.WebClient;
+import io.lettuce.core.protocol.RedisCommand;
 
-public class WebClientFilterAdvice {
+public class LettuceDatabaseClientTracer
+    extends LettuceAbstractDatabaseClientTracer<RedisCommand<?, ?, ?>> {
+  public static final LettuceDatabaseClientTracer TRACER = new LettuceDatabaseClientTracer();
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onBuild(@Advice.This final WebClient.Builder thiz) {
-    thiz.filters(WebClientTracingFilter::addFilter);
+  @Override
+  protected String normalizeQuery(RedisCommand<?, ?, ?> command) {
+    return LettuceInstrumentationUtil.getCommandName(command);
   }
 }

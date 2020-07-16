@@ -18,7 +18,7 @@ data from a Java application without code changes.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-auto-all.jar).
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar).
 
 This package includes the instrumentation agent,
 instrumentations for all supported libraries and all available data exporters.
@@ -26,7 +26,7 @@ This provides completely automatic out of the box experience.
 
 The instrumentation agent is enabled using the `-javaagent` flag to the JVM.
 ```
-java -javaagent:path/to/opentelemetry-auto-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
 By default OpenTelemetry Java agent uses
@@ -38,7 +38,7 @@ at `localhost:55680`.
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables (see below for full list). For example:
 ```
-java -javaagent:path/to/opentelemetry-auto-all.jar \
+java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -Dota.exporter=zipkin
      -jar myapp.jar
 ```
@@ -57,8 +57,8 @@ only supports gRPC as its communications protocol.
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | ota.exporter=jaeger              | OTA_EXPORTER=jaeger              | To select Jaeger exporter                                            |
-| ota.exporter.jaeger.endpoint     | OTA_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
-| ota.exporter.jaeger.service.name | OTA_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance                                |
+| JAEGER_ENDPOINT                  | JAEGER_ENDPOINT                  | The Jaeger endpoint to connect to. Currently only gRPC is supported. |
+| JAEGER_SERVICE_NAME              | JAEGER_SERVICE_NAME              | The service name of this JVM instance                                |
 
 #### Zipkin exporter
 A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
@@ -66,8 +66,8 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It POSTs json in
 | System property                  | Environment variable             | Purpose                                                              |
 |----------------------------------|----------------------------------|----------------------------------------------------------------------|
 | ota.exporter=zipkin              | OTA_EXPORTER=zipkin              | To select Zipkin exporter                                            |
-| ota.exporter.zipkin.endpoint     | OTA_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
-| ota.exporter.zipkin.service.name | OTA_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance
+| otel.zipkin.endpoint             | OTEL_ZIPKIN_ENDPOINT             | The Zipkin endpoint to connect to. Currently only HTTP is supported. |
+| otel.zipkin.service.name         | OTEL_ZIPKIN_SERVICE_NAME         | The service name of this JVM instance                                |
 
 #### OTLP exporter
 
@@ -76,13 +76,12 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | System property                  | Environment variable             | Purpose                                                                 |
 |----------------------------------|----------------------------------|-------------------------------------------------------------------------|
 | ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                              |
-| ota.exporter.jar                 | OTA_EXPORTER_JAR                 | Path to the exporter fat-jar that you want to use                       |
 | otel.otlp.endpoint               | OTEL_OTLP_ENDPOINT               | The OTLP endpoint to connect to.                                        |
 | otel.otlp.use.tls                | OTEL_OTLP_USE_TLS                | To use or not TLS, default is false.                                    |
 | otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
 | otel.otlp.span.timeout           | OTEL_OTLP_SPAN_TIMEOUT           | The max waiting time allowed to send each span batch, default is 1000.  |
 
-#### Logging Exporter
+#### Logging exporter
 
 The logging exporter simply prints the name of the span along with its
 attributes to stdout. It is used mainly for testing and debugging.
@@ -91,6 +90,33 @@ attributes to stdout. It is used mainly for testing and debugging.
 |-----------------------------|-----------------------------|------------------------------------------------------------------------------|
 | ota.exporter=logging        | OTA_EXPORTER=logging        | To select logging exporter                                                   |
 | ota.exporter.logging.prefix | OTA_EXPORTER_LOGGING_PREFIX | An optional string that is printed in front of the span name and attributes. |
+
+#### Batch span processor
+
+| System property           | Environment variable      | Purpose                                                                      |
+|---------------------------|---------------------------|------------------------------------------------------------------------------|
+| otel.bsp.schedule.delay   | OTEL_BSP_SCHEDULE_DELAY   | The interval in milliseconds between two consecutive exports (default: 5000) |
+| otel.bsp.max.queue        | OTEL_BSP_MAX_QUEUE        | Maximum queue size (default: 2048)                                           |
+| otel.bsp.max.export.batch | OTEL_BSP_MAX_EXPORT_BATCH | Maximum batch size (default: 512)                                            |
+| otel.bsp.export.timeout   | OTEL_BSP_EXPORT_TIMEOUT   | Maximum allowed time in milliseconds to export data (default: 30000)         |
+| otel.bsp.export.sampled   | OTEL_BSP_EXPORT_SAMPLED   | Whether only sampled spans should be exported (default: true)                |
+
+#### Trace config
+
+| System property                 | Environment variable            | Purpose                                              |
+|---------------------------------|---------------------------------|------------------------------------------------------|
+| otel.config.sampler.probability | OTEL_CONFIG_SAMPLER_PROBABILITY | Sampling probability between 0 and 1 (default: 1)    |
+| otel.config.max.attrs           | OTEL_CONFIG_MAX_ATTRS           | Maximum number of attributes per span (default: 32)  |
+| otel.config.max.events          | OTEL_CONFIG_MAX_EVENTS          | Maximum number of events per span (default: 128)     |
+| otel.config.max.links           | OTEL_CONFIG_MAX_LINKS           | Maximum number of links per span (default: 32)       |
+| otel.config.max.event.attrs     | OTEL_CONFIG_MAX_EVENT_ATTRS     | Maximum number of attributes per event (default: 32) |
+| otel.config.max.link.attrs      | OTEL_CONFIG_MAX_LINK_ATTRS      | Maximum number of attributes per link (default: 32)  |
+
+#### Interval metric reader
+
+| System property          | Environment variable     | Purpose                                                                      |
+|--------------------------|--------------------------|------------------------------------------------------------------------------|
+| otel.imr.export.interval | OTEL_IMR_EXPORT_INTERVAL | The interval in milliseconds between pushes to the exporter (default: 60000) |
 
 ##### Customizing the OpenTelemetry SDK
 
@@ -183,6 +209,11 @@ you can enable it by add the following system property:
 `-Dota.integration.grizzly.enabled=true`
 
 ## Manually instrumenting
+
+> :warning: starting with 0.6.0, and prior to version 1.0.0, `opentelemetry-javaagent-all.jar`
+only supports manual instrumentation using the `opentelemetry-api` version with the same version
+number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
+multiple (1.0.0+) versions of `opentelemetry-api`.
 
 You can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
 manually instrument your Java application.

@@ -60,9 +60,9 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
       } catch (final Exception ignored) {
         // mapping.getHandler() threw exception.  Ignore
       }
-
-      filterChain.doFilter(request, response);
     }
+
+    filterChain.doFilter(request, response);
   }
 
   /**
