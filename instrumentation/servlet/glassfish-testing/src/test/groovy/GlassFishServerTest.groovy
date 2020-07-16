@@ -18,7 +18,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import org.apache.catalina.servlets.DefaultServlet
 import org.glassfish.embeddable.BootstrapProperties
 import org.glassfish.embeddable.Deployer
 import org.glassfish.embeddable.GlassFish
