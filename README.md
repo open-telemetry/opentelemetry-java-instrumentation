@@ -76,7 +76,6 @@ A simple wrapper for the OTLP exporter of opentelemetry-java.
 | System property                  | Environment variable             | Purpose                                                                 |
 |----------------------------------|----------------------------------|-------------------------------------------------------------------------|
 | ota.exporter=otlp (default)      | OTA_EXPORTER=otlp                | To select OpenTelemetry exporter (default)                              |
-| ota.exporter.jar                 | OTA_EXPORTER_JAR                 | Path to the exporter fat-jar that you want to use                       |
 | otel.otlp.endpoint               | OTEL_OTLP_ENDPOINT               | The OTLP endpoint to connect to.                                        |
 | otel.otlp.use.tls                | OTEL_OTLP_USE_TLS                | To use or not TLS, default is false.                                    |
 | otel.otlp.metadata               | OTEL_OTLP_METADATA               | The key-value pairs separated by semicolon to pass as request metadata. |
