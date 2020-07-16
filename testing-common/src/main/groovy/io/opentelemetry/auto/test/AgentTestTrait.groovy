@@ -52,11 +52,22 @@ trait AgentTestTrait {
     AgentTestRunner.agentCleanup()
   }
 
-  // Work around https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
+  /**
+   * Initialization method called once per individual test. Equivalent to Spock's {@code setup} which
+   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
+   */
   def childSetup() {}
 
+  /**
+   * Initialization method called once per test class. Equivalent to Spock's {@code setupSpec} which
+   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
+   */
   def childSetupSpec() {}
 
+  /**
+   * Cleanup method called once per test class. Equivalent to Spock's {@code cleanupSpec} which
+   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
+   */
   def childCleanupSpec() {}
 
   void assertTraces(final int size,

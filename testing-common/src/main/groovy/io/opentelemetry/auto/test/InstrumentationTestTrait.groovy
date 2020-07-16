@@ -40,9 +40,16 @@ trait InstrumentationTestTrait {
     instrumentationTestRunner.beforeTest()
   }
 
-  // Work around https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
+  /**
+   * Initialization method called once per test class. Equivalent to Spock's {@code setupSpec} which
+   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
+   */
   def childSetupSpec() {}
 
+  /**
+   * Initialization method called once per individual test. Equivalent to Spock's {@code setup} which
+   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
+   */
   def childSetup() {}
 
   void assertTraces(final int size,
