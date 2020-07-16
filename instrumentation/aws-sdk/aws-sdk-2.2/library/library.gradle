@@ -13,7 +13,7 @@ testSets {
 }
 
 dependencies {
-  api group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
+  compileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
   testImplementation project(':instrumentation:aws-sdk:aws-sdk-2.2:testing')
 

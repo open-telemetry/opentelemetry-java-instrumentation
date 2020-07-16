@@ -25,6 +25,8 @@ tasks.withType(Test) {
 }
 
 afterEvaluate {
+  archivesBaseName =  'opentelemetry-auto-' + archivesBaseName
+
   byteBuddy {
     transformation {
       tasks = ['compileJava', 'compileScala', 'compileKotlin']

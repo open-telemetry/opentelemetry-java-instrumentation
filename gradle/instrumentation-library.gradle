@@ -9,6 +9,8 @@ apply from: "$rootDir/gradle/publish.gradle"
 
 apply plugin: 'com.github.johnrengelman.shadow'
 
+archivesBaseName = projectDir.parentFile.name
+
 dependencies {
   // TODO(anuraaga): We currently include common instrumentation logic like decorators in the
   // bootstrap, but we need to move it out so manual instrumentation does not depend on code from
@@ -26,4 +28,8 @@ shadowJar {
   configurations = []
 
   relocate "io.opentelemetry.instrumentation.${javaSubPackage}", "io.opentelemetry.auto.instrumentation.${javaSubPackage}.shaded"
+}
+
+afterEvaluate {
+  archivesBaseName =  'opentelemetry-' + archivesBaseName
 }

@@ -5,6 +5,9 @@ ext {
 apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
+// TODO(anuraaga): Move into instrumentation.gradle
+archivesBaseName = projectDir.parentFile.name
+
 muzzle {
   pass {
     group = "software.amazon.awssdk"

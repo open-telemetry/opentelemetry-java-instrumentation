@@ -110,8 +110,11 @@ auto instrumentation.
 
 #### Folder Structure
 
+Please also refer to some of our existing instrumentation for examples of our structure, for example,
+[aws-sdk-2.2](./instrumentation/aws-sdk/aws-sdk-2.2).
+
 When writing new instrumentation, create a new subfolder of `instrumentation` to correspond to the
-instrumented library and the version being targeted. Ideally an old version of the library is
+instrumented library and the oldest version being targeted. Ideally an old version of the library is
 targeted in a way that the instrumentation applies to a large range of versions, but this may be
 restricted by the interception APIs provided by the library.
 

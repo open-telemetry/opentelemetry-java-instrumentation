@@ -19,8 +19,6 @@ Project instr_project = project
 subprojects {
   afterEvaluate { Project subProj ->
     if (subProj.getPlugins().hasPlugin('java')) {
-      subProj.archivesBaseName = 'opentelemetry-auto-' + subProj.archivesBaseName
-
       // Make it so all instrumentation subproject tests can be run with a single command.
       instr_project.tasks.test.dependsOn(subProj.tasks.test)
 
