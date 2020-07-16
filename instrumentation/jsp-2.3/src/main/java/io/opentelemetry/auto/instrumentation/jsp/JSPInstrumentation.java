@@ -75,12 +75,10 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   public static class HttpJspPageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This final Object obj, @Advice.Argument(0) final HttpServletRequest req) {
+    public static SpanWithScope onEnter(@Advice.Argument(0) final HttpServletRequest req) {
       final Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameOnRender(req))
-              .setAttribute("span.origin.type", obj.getClass().getSimpleName())
               .setAttribute("servlet.context", req.getContextPath())
               .startSpan();
       DECORATE.afterStart(span);

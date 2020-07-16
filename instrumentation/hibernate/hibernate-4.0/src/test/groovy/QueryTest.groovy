@@ -67,7 +67,6 @@ class QueryTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
         span(3) {
@@ -105,7 +104,6 @@ class QueryTest extends AbstractHibernateTest {
               "${SemanticAttributes.DB_USER.key()}" "sa"
               "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
               "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-              "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             }
           }
         }
@@ -178,7 +176,6 @@ class QueryTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
         span(3) {

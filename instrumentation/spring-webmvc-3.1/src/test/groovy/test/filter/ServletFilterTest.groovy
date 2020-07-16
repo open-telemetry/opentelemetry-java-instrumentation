@@ -109,7 +109,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        "span.origin.type" ApplicationFilterChain.name
         "servlet.path" endpoint.path
         "servlet.context" ""
         if (endpoint.errored) {

@@ -80,7 +80,6 @@ class SessionTest extends AbstractHibernateTest {
               "${SemanticAttributes.DB_USER.key()}" "sa"
               "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
               "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-              "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             }
           }
           span(3) {
@@ -156,7 +155,6 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
       }
@@ -223,7 +221,6 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
         span(3) {
@@ -242,7 +239,6 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
       }
@@ -359,7 +355,6 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
       }
@@ -432,7 +427,6 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" String
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
         span(3) {
@@ -520,7 +514,6 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
         span(6) {
@@ -533,7 +526,6 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
             "${SemanticAttributes.DB_URL.key()}" "h2:mem:"
-            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
           }
         }
         span(7) {

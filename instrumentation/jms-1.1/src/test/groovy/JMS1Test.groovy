@@ -147,7 +147,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
       }
@@ -179,7 +178,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
       }
@@ -226,7 +224,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
       }
@@ -251,7 +248,6 @@ class JMS1Test extends AgentTestRunner {
       errored false
       parent()
       attributes {
-        "span.origin.type" ActiveMQMessageProducer.name
       }
     }
   }
@@ -269,7 +265,6 @@ class JMS1Test extends AgentTestRunner {
       }
       errored false
       attributes {
-        "span.origin.type" origin.name
       }
     }
   }

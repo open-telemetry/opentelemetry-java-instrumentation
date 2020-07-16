@@ -134,7 +134,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        "span.origin.type" handlerName
         "servlet.path" ''
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }

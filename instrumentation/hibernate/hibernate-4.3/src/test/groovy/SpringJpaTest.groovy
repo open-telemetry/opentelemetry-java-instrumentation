@@ -54,7 +54,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -81,7 +80,6 @@ class SpringJpaTest extends AgentTestRunner {
               "${SemanticAttributes.DB_USER.key()}" "sa"
               "${SemanticAttributes.DB_STATEMENT.key()}" "call next value for hibernate_sequence"
               "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-              "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
             }
           }
         }
@@ -96,7 +94,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -120,7 +117,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -134,7 +130,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "update Customer set firstName=?, lastName=? where id=?"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -158,7 +153,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -180,7 +174,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -194,7 +187,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "delete from Customer where id=?"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }

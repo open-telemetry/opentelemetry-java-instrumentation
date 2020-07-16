@@ -39,7 +39,7 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
 
   @Override
   public void accept(final R r) {
-    span = TRACER.startSpan(null, command, null);
+    span = TRACER.startSpan(null, command);
     if (finishSpanOnClose) {
       TRACER.end(span);
     }

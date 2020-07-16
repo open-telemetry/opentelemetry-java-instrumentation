@@ -102,7 +102,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
-        "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }

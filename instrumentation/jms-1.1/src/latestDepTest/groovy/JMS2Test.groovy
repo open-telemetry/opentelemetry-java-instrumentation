@@ -184,7 +184,6 @@ class JMS2Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" HornetQMessageConsumer.name
           }
         }
       }
@@ -216,7 +215,6 @@ class JMS2Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" HornetQMessageConsumer.name
           }
         }
       }
@@ -238,7 +236,6 @@ class JMS2Test extends AgentTestRunner {
       spanKind PRODUCER
       errored false
       attributes {
-        "span.origin.type" HornetQMessageProducer.name
       }
     }
   }
@@ -257,7 +254,6 @@ class JMS2Test extends AgentTestRunner {
       errored false
 
       attributes {
-        "span.origin.type" origin.name
       }
     }
   }

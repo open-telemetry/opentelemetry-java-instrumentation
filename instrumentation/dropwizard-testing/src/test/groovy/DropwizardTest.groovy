@@ -124,7 +124,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        "span.origin.type" ServletHandler.CachedChain.name
         "servlet.context" ""
         "servlet.path" ""
         if (endpoint.errored) {

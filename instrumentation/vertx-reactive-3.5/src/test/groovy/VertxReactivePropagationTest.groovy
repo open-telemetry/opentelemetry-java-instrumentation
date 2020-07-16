@@ -87,7 +87,6 @@ class VertxReactivePropagationTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "SA"
             "${SemanticAttributes.DB_STATEMENT.key()}" "SELECT id, name, price, weight FROM products"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" String
           }
         }
       }

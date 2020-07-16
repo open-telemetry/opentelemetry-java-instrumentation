@@ -97,7 +97,6 @@ public class TracedDelegatingConsumer implements Consumer {
       span =
           spanBuilder
               .setAttribute("message.size", body == null ? 0 : body.length)
-              .setAttribute("span.origin.type", delegate.getClass().getName())
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis))
               .startSpan();
       DECORATE.afterStart(span);
