@@ -16,25 +16,34 @@
 
 package io.opentelemetry.instrumentation.springwebflux.client;
 
-import io.opentelemetry.OpenTelemetry;
+import static io.opentelemetry.OpenTelemetry.getPropagators;
+import static io.opentelemetry.OpenTelemetry.getTracerProvider;
+import static io.opentelemetry.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
+
+import io.grpc.Context;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.util.List;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
 class SpringWebfluxHttpClientDecorator extends HttpClientDecorator<ClientRequest, ClientResponse> {
 
   public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
+      getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
   public static final SpringWebfluxHttpClientDecorator DECORATE =
       new SpringWebfluxHttpClientDecorator();
 
   public void onCancel(final Span span) {
     span.setAttribute("event", "cancelled");
     span.setAttribute("message", "The subscription was cancelled");
+  }
+
+  public void inject(Context context, HttpHeaders httpHeaders) {
+    getPropagators().getHttpTextFormat().inject(context, httpHeaders, SETTER);
   }
 
   @Override
