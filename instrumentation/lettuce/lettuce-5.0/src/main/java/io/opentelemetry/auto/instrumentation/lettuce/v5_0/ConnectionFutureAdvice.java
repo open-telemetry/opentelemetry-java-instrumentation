@@ -31,7 +31,7 @@ public class ConnectionFutureAdvice {
       @Advice.Argument(1) final RedisURI redisURI,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = TRACER.startSpan(redisURI, "CONNECT", null);
+    span = TRACER.startSpan(redisURI, "CONNECT");
     scope = TRACER.startScope(span);
   }
 

@@ -33,7 +33,7 @@ public class LettuceAsyncCommandsAdvice {
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
 
-    span = TRACER.startSpan(null, command, null);
+    span = TRACER.startSpan(null, command);
     scope = TRACER.startScope(span);
   }
 

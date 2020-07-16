@@ -47,7 +47,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
   }
 
-  public Span startSpan(CONNECTION connection, QUERY query, String originType) {
+  public Span startSpan(CONNECTION connection, QUERY query) {
     String normalizedQuery = normalizeQuery(query);
 
     final Span span =
@@ -55,7 +55,6 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
             .spanBuilder(spanName(normalizedQuery))
             .setSpanKind(CLIENT)
             .setAttribute(SemanticAttributes.DB_TYPE.key(), dbType())
-            .setAttribute("span.origin.type", originType)
             .startSpan();
 
     if (connection != null) {

@@ -78,7 +78,7 @@ public class TracingSession implements Session {
   @Override
   @NonNull
   public ResultSet execute(@NonNull String query) {
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(query);
@@ -95,7 +95,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(final String query, final Object... values) {
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(query, values);
@@ -112,7 +112,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(final String query, final Map<String, Object> values) {
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(query, values);
@@ -130,7 +130,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSet execute(final Statement statement) {
     final String query = getQuery(statement);
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(statement);
@@ -147,7 +147,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(final String query) {
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       final ResultSetFuture future = session.executeAsync(query);
       future.addListener(createListener(span, future), EXECUTOR_SERVICE);
@@ -158,7 +158,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(final String query, final Object... values) {
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       final ResultSetFuture future = session.executeAsync(query, values);
       future.addListener(createListener(span, future), EXECUTOR_SERVICE);
@@ -169,7 +169,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(final String query, final Map<String, Object> values) {
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       final ResultSetFuture future = session.executeAsync(query, values);
       future.addListener(createListener(span, future), EXECUTOR_SERVICE);
@@ -181,7 +181,7 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(final Statement statement) {
     final String query = getQuery(statement);
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       final ResultSetFuture future = session.executeAsync(statement);
       future.addListener(createListener(span, future), EXECUTOR_SERVICE);

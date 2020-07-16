@@ -66,7 +66,6 @@ class SparkJavaBasedTest extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/param/asdf1234"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "span.origin.type" spark.embeddedserver.jetty.JettyHandler.name
             "servlet.path" ''
           }
         }

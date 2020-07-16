@@ -68,8 +68,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
 
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.This final Object thiz, @Advice.Origin final Method method) {
+    public static SpanWithScope onEnter(@Advice.Origin final Method method) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
       if (callDepth > 0) {
         return null;
@@ -83,10 +82,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       } else {
         spanBuilder.setNoParent();
       }
-      final Span span =
-          spanBuilder
-              .setAttribute("span.origin.type", thiz.getClass().getCanonicalName())
-              .startSpan();
+      final Span span = spanBuilder.startSpan();
 
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));

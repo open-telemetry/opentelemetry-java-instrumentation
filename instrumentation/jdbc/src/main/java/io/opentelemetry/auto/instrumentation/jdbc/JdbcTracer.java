@@ -86,7 +86,7 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
     String originType = statement.getClass().getName();
     DBInfo dbInfo = extractDbInfo(connection);
 
-    return startSpan(dbInfo, query, originType);
+    return startSpan(dbInfo, query);
   }
 
   @Override

@@ -186,7 +186,7 @@ public class TracingCqlSession implements CqlSession {
   public ResultSet execute(@NonNull Statement<?> statement) {
     final String query = getQuery(statement);
 
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(statement);
@@ -205,7 +205,7 @@ public class TracingCqlSession implements CqlSession {
   @NonNull
   public ResultSet execute(@NonNull String query) {
 
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(query);
@@ -225,7 +225,7 @@ public class TracingCqlSession implements CqlSession {
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull Statement<?> statement) {
     final String query = getQuery(statement);
 
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       final CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
@@ -243,7 +243,7 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull String query) {
-    final Span span = TRACER.startSpan(session, query, null);
+    final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       final CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(

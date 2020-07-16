@@ -71,11 +71,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
         return null;
       }
       final Span span =
-          TRACER
-              .spanBuilder(DECORATE.spanNameForMethod(method))
-              .setSpanKind(CLIENT)
-              .setAttribute("span.origin.type", method.getDeclaringClass().getCanonicalName())
-              .startSpan();
+          TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));
     }

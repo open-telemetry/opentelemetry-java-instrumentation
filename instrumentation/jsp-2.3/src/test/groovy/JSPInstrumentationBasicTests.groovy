@@ -114,7 +114,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
           }
@@ -134,7 +133,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /$jspFileName"
           errored false
           attributes {
-            "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
@@ -176,7 +174,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/getQuery.jsp?$queryString"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/getQuery.jsp"
           }
@@ -196,7 +193,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /getQuery.jsp"
           errored false
           attributes {
-            "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
@@ -235,7 +231,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/post.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/post.jsp"
           }
@@ -255,7 +250,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /post.jsp"
           errored false
           attributes {
-            "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
@@ -291,7 +285,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
             "error.type" { String tagExceptionType ->
@@ -318,7 +311,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /$jspFileName"
           errored true
           attributes {
-            "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             "error.type" { String tagExceptionType ->
@@ -366,7 +358,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeHtml.jsp"
           }
@@ -386,7 +377,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /includes/includeHtml.jsp"
           errored false
           attributes {
-            "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
@@ -421,7 +411,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/includes/includeMulti.jsp"
           }
@@ -441,7 +430,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /includes/includeMulti.jsp"
           errored false
           attributes {
-            "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
@@ -461,7 +449,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
@@ -481,7 +468,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           operationName "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
-            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
           }
@@ -516,7 +502,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
             errorAttributes(JasperException, String)
@@ -572,7 +557,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "${SemanticAttributes.HTTP_URL.key()}" "http://localhost:$port/$jspWebappContext/$staticFile"
             "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$staticFile"
           }

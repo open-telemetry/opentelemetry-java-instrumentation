@@ -32,7 +32,6 @@ public class JettyHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.This final Object handler,
       @Advice.Origin final Method method,
       @Advice.This final Object source,
       @Advice.Argument(2) final HttpServletRequest httpServletRequest,
@@ -45,9 +44,7 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    span =
-        TRACER.startSpan(
-            httpServletRequest, httpServletRequest, method, handler.getClass().getName());
+    span = TRACER.startSpan(httpServletRequest, httpServletRequest, method);
     scope = TRACER.startScope(span, httpServletRequest);
   }
 

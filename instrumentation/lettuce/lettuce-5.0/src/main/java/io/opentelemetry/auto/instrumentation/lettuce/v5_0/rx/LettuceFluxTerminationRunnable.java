@@ -93,7 +93,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
     @Override
     public void accept(final Subscription subscription) {
-      owner.span = TRACER.startSpan(null, command, null);
+      owner.span = TRACER.startSpan(null, command);
       if (finishSpanOnClose) {
         TRACER.end(owner.span);
       }

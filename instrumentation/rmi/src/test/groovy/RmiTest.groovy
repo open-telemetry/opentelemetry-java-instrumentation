@@ -58,14 +58,12 @@ class RmiTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "span.origin.type" Greeter.canonicalName
           }
         }
         span(2) {
           operationName "Server.hello"
           spanKind SERVER
           attributes {
-            "span.origin.type" server.class.canonicalName
           }
         }
       }
@@ -116,7 +114,6 @@ class RmiTest extends AgentTestRunner {
           childOf span(0)
           errored true
           attributes {
-            "span.origin.type" Greeter.canonicalName
             errorAttributes(RuntimeException, String)
           }
         }
@@ -125,7 +122,6 @@ class RmiTest extends AgentTestRunner {
           spanKind SERVER
           errored true
           attributes {
-            "span.origin.type" server.class.canonicalName
             errorAttributes(RuntimeException, String)
           }
         }
@@ -157,7 +153,6 @@ class RmiTest extends AgentTestRunner {
           spanKind CLIENT
           childOf span(0)
           attributes {
-            "span.origin.type" Greeter.canonicalName
           }
         }
         span(2) {
@@ -165,7 +160,6 @@ class RmiTest extends AgentTestRunner {
           operationName "ServerLegacy.hello"
           spanKind SERVER
           attributes {
-            "span.origin.type" server.class.canonicalName
           }
         }
       }

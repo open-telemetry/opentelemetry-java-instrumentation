@@ -86,7 +86,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -118,7 +117,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^insert /
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -150,7 +148,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
         span(2) { // update
@@ -163,7 +160,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^update /
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -193,7 +189,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
@@ -223,7 +218,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^select /
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
         span(2) { // delete
@@ -236,7 +230,6 @@ class SpringJpaTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" ~/^delete /
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
           }
         }
       }
