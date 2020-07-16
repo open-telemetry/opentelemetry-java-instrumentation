@@ -19,18 +19,14 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_0;
 import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator;
-import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import org.apache.http.Header;
 import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
+public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
   public static final ApacheHttpClientDecorator DECORATE = new ApacheHttpClientDecorator();
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.apache-httpclient-4.0");
 
   public void inject(Context context, HttpUriRequest request) {
     OpenTelemetry.getPropagators()

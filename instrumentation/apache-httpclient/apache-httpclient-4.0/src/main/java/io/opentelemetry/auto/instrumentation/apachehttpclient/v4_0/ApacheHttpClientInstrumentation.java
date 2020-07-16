@@ -26,14 +26,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.CallDepthThreadLocalMap;
 import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.ApacheHttpClientHelper;
 import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.HostAndRequestAsHttpUriRequest;
 import io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0.shaded.WrappingStatusSettingResponseHandler;
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
-import io.opentelemetry.trace.Tracer;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -49,9 +47,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 
 @AutoService(Instrumenter.class)
 public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
-
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
 
   public ApacheHttpClientInstrumentation() {
     super("httpclient", "apache-httpclient", "apache-http-client");
@@ -174,7 +169,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      return ApacheHttpClientHelper.doMethodEnter(request, TRACER);
+      return ApacheHttpClientHelper.doMethodEnter(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -202,7 +197,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request, TRACER);
+      final SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request);
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
@@ -232,10 +227,10 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       }
 
       if (request instanceof HttpUriRequest) {
-        return ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request, TRACER);
+        return ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request);
       } else {
         return ApacheHttpClientHelper.doMethodEnter(
-            new HostAndRequestAsHttpUriRequest(host, request), TRACER);
+            new HostAndRequestAsHttpUriRequest(host, request));
       }
     }
 
@@ -268,11 +263,10 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       final SpanWithScope spanWithScope;
 
       if (request instanceof HttpUriRequest) {
-        spanWithScope = ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request, TRACER);
+        spanWithScope = ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request);
       } else {
         spanWithScope =
-            ApacheHttpClientHelper.doMethodEnter(
-                new HostAndRequestAsHttpUriRequest(host, request), TRACER);
+            ApacheHttpClientHelper.doMethodEnter(new HostAndRequestAsHttpUriRequest(host, request));
       }
 
       // Wrap the handler so we capture the status code
