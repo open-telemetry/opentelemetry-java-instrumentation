@@ -30,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @ConditionalOnClass(RestTemplate.class)
 @EnableConfigurationProperties(HttpClientsProperties.class)
-@ConditionalOnProperty(prefix = "opentelemetry.trace.httpclients", name = "enabled")
+@ConditionalOnProperty(prefix = "opentelemetry.trace.httpclients", name = "enabled", matchIfMissing=true)
 public class RestTemplateAutoConfiguration {
 
   @Bean
