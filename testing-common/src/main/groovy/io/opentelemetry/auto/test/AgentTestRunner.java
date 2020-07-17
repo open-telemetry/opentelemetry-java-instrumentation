@@ -226,9 +226,10 @@ public abstract class AgentTestRunner extends AgentSpecification {
   public static void assertTraces(
       final int size,
       @ClosureParams(
-          value = SimpleType.class,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) final Closure spec) {
+              value = SimpleType.class,
+              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          final Closure spec) {
     InMemoryExporterAssert.assertTraces(
         TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
   }
@@ -237,9 +238,10 @@ public abstract class AgentTestRunner extends AgentSpecification {
       final int size,
       final Predicate<List<SpanData>> excludes,
       @ClosureParams(
-          value = SimpleType.class,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) final Closure spec) {
+              value = SimpleType.class,
+              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          final Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
 
