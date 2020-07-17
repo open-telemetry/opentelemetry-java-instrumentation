@@ -30,7 +30,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 @ConditionalOnClass(WebClient.class)
 @EnableConfigurationProperties(HttpClientsProperties.class)
-@ConditionalOnProperty(prefix = "opentelemetry.trace.httpclients", name = "enabled", matchIfMissing=true)
+@ConditionalOnProperty(
+    prefix = "opentelemetry.trace.httpclients",
+    name = "enabled",
+    matchIfMissing = true)
 public class WebClientAutoConfiguration {
 
   @Bean
