@@ -18,7 +18,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
 import io.opentelemetry.instrumentation.springwebmvc.WebMVCTracingFilter;
 import io.opentelemetry.trace.Tracer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
