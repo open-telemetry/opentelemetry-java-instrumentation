@@ -106,7 +106,6 @@ class ProcedureCallTest extends AgentTestRunner {
             "${SemanticAttributes.DB_USER.key()}" "sa"
             "${SemanticAttributes.DB_STATEMENT.key()}" "{call TEST_PROC()}"
             "${SemanticAttributes.DB_URL.key()}" "hsqldb:mem:"
-            "span.origin.type" "org.hsqldb.jdbc.JDBCCallableStatement"
           }
         }
         span(3) {

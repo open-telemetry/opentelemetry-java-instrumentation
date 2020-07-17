@@ -21,7 +21,6 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import org.apache.catalina.core.ApplicationFilterChain
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import test.boot.SecurityConfig
@@ -109,7 +108,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        "span.origin.type" ApplicationFilterChain.name
         "servlet.path" endpoint.path
         "servlet.context" ""
         if (endpoint.errored) {

@@ -110,7 +110,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpResponse apply(final HttpRequest request) {
-      Span span = TRACER.startSpan(request, request, "akka.request", null);
+      Span span = TRACER.startSpan(request, request, "akka.request");
       try (Scope ignored = TRACER.startScope(span, null)) {
         final HttpResponse response = userHandler.apply(request);
         TRACER.end(span, response.status().intValue());
@@ -136,7 +136,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public Future<HttpResponse> apply(final HttpRequest request) {
-      Span span = TRACER.startSpan(request, request, "akka.request", null);
+      Span span = TRACER.startSpan(request, request, "akka.request");
       try (Scope ignored = TRACER.startScope(span, null)) {
         return userHandler
             .apply(request)

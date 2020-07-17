@@ -19,6 +19,8 @@ package io.opentelemetry.auto.instrumentation.traceannotation;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
+import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.Method;
 
@@ -41,5 +43,10 @@ public class TraceDecorator extends BaseDecorator {
     }
 
     return spanNameForMethod(method);
+  }
+
+  public Span.Kind extractSpanKind(final Method method) {
+    WithSpan annotation = method.getAnnotation(WithSpan.class);
+    return annotation != null ? annotation.kind() : Kind.INTERNAL;
   }
 }

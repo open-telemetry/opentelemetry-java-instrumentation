@@ -58,20 +58,14 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     this.tracer = tracer;
   }
 
-  public Span startSpan(REQUEST request, CONNECTION connection, Method origin, String originType) {
+  public Span startSpan(REQUEST request, CONNECTION connection, Method origin) {
     String spanName = spanNameForMethod(origin);
-    return startSpan(request, connection, spanName, originType);
+    return startSpan(request, connection, spanName);
   }
 
-  public Span startSpan(
-      REQUEST request, CONNECTION connection, String spanName, String originType) {
+  public Span startSpan(REQUEST request, CONNECTION connection, String spanName) {
     final Span.Builder builder =
-        tracer
-            .spanBuilder(spanName)
-            .setSpanKind(SERVER)
-            .setParent(extract(request, getGetter()))
-            // TODO Where span.origin.type is defined?
-            .setAttribute("span.origin.type", originType);
+        tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(extract(request, getGetter()));
 
     Span span = builder.startSpan();
     onConnection(span, connection);

@@ -1,4 +1,4 @@
-group = 'io.opentelemetry.instrumentation.spring'
+group = 'io.opentelemetry.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
 

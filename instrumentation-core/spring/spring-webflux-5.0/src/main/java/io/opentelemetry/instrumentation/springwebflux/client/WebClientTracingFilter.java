@@ -16,13 +16,10 @@
 
 package io.opentelemetry.instrumentation.springwebflux.client;
 
-import static io.opentelemetry.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
 import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
 import static io.opentelemetry.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
 
 import io.grpc.Context;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -52,18 +49,13 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   @Override
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
-    final Span span =
-        tracer.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
+    final Span span = DECORATE.getOrCreateSpan(request, tracer);
     DECORATE.afterStart(span);
 
     try (final Scope scope = TRACER.withSpan(span)) {
       final ClientRequest mutatedRequest =
           ClientRequest.from(request)
-              .headers(
-                  httpHeaders ->
-                      OpenTelemetry.getPropagators()
-                          .getHttpTextFormat()
-                          .inject(Context.current(), httpHeaders, SETTER))
+              .headers(httpHeaders -> DECORATE.inject(Context.current(), httpHeaders))
               .build();
       DECORATE.onRequest(span, mutatedRequest);
 

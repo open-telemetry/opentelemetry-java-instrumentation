@@ -36,7 +36,7 @@ public final class InstrumentationPoints {
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
   public static SpanWithScope beforeCommand(final RedisCommand<?, ?, ?> command) {
-    final Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command, null);
+    final Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command);
     return new SpanWithScope(span, LettuceDatabaseClientTracer.TRACER.startScope(span));
   }
 
@@ -69,8 +69,7 @@ public final class InstrumentationPoints {
   }
 
   public static SpanWithScope beforeConnect(final RedisURI redisURI) {
-    final Span span =
-        LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT", null);
+    final Span span = LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT");
     return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.TRACER.startScope(span));
   }
 
