@@ -35,7 +35,7 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
   private final Tracer tracer;
 
-  public WebClientBeanPostProcessor(Tracer tracer) {
+  WebClientBeanPostProcessor(Tracer tracer) {
     this.tracer = tracer;
   }
 
