@@ -16,17 +16,15 @@
 
 package io.opentelemetry.auto.instrumentation.play.v2_3;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
 import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayDecorator.DECORATE;
 import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayDecorator.TRACER;
-import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayHeaders.GETTER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
+import play.api.mvc.Headers;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.concurrent.Future;
@@ -34,18 +32,7 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
-    final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
-    if (!TRACER.getCurrentSpan().getContext().isValid()) {
-      // TODO should we do that for INTERNAL span?
-      final SpanContext extractedContext = extract(req.headers(), GETTER);
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
-      }
-    }
-    // An upstream framework (e.g. akka-http, netty) has already started the span.
-    // Do not extract the context.
-
-    final Span span = spanBuilder.startSpan();
+    final Span span = TRACER.spanBuilder("play.request").startSpan();
     DECORATE.afterStart(span);
 
     return new SpanWithScope(span, currentContextWith(span));
@@ -75,5 +62,10 @@ public class PlayAdvice {
     final Span rootSpan = TRACER.getCurrentSpan();
     // set the span name on the upstream akka/netty span
     DECORATE.updateSpanName(rootSpan, req);
+  }
+
+  // With this muzzle prevents this instrumentation from applying on Play 2.4+
+  public static void muzzleCheck(Headers headers) {
+    headers.get("aKey");
   }
 }
