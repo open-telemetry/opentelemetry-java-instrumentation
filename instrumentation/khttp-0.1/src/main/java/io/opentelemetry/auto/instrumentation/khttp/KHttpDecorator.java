@@ -46,8 +46,7 @@ public class KHttpDecorator extends HttpClientDecorator<RequestWrapper, Response
 
   @Override
   protected String requestHeader(RequestWrapper requestWrapper, String name) {
-    // TODO: Find out how to get request header.
-    return null;
+    return requestWrapper.headers.get(name);
   }
 
   @Override
