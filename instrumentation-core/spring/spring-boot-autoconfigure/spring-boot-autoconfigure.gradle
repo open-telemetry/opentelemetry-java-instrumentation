@@ -18,8 +18,7 @@ bootJar {
 }
 
 dependencies {
-  annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure'
-  implementation "org.springframework.boot:spring-boot-autoconfigure-processor"
+  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
   
   testImplementation('org.springframework.boot:spring-boot-starter-test') {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
