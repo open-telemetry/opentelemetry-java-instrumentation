@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Create an {@link io.opentelemetry.trace.Tracer} bean
+ * Create an {@link io.opentelemetry.trace.Tracer}.
  *
  * <p>If {@code TracerProperties.loggingExporterIsEnabled=True}: Create a simple span processor
  * using the LoggingSpanExporter
