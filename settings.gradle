@@ -47,7 +47,7 @@ include ':instrumentation:apache-httpasyncclient-4.0'
 include ':instrumentation:apache-httpclient:apache-httpclient-2.0'
 include ':instrumentation:apache-httpclient:apache-httpclient-4.0'
 include ':instrumentation:aws-sdk:aws-sdk-1.11'
-include ':instrumentation:aws-sdk:aws-sdk-2.2:agent'
+include ':instrumentation:aws-sdk:aws-sdk-2.2:auto'
 include ':instrumentation:aws-sdk:aws-sdk-2.2:library'
 include ':instrumentation:aws-sdk:aws-sdk-2.2:testing'
 include ':instrumentation:cassandra:cassandra-3.0'
@@ -172,7 +172,11 @@ include ':benchmark-integration:jetty-perftest'
 include ':benchmark-integration:play-perftest'
 
 def setBuildFile(project) {
-  project.buildFileName = "${project.name}.gradle"
+  if (['auto', 'library', 'testing'].contains(project.projectDir.name)) {
+    project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
+  } else {
+    project.buildFileName = "${project.name}.gradle"
+  }
   project.children.each {
     setBuildFile(it)
   }

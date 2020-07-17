@@ -119,7 +119,7 @@ targeted in a way that the instrumentation applies to a large range of versions,
 restricted by the interception APIs provided by the library.
 
 Within the subfolder, create three folders `library` (skip if manual instrumentation is not possible),
-`agent`, and `testing`.
+`auto`, and `testing`.
 
 For example, if we are targeting an RPC framework `yarpc` at version `1.0` we would have a tree like
 
@@ -127,12 +127,12 @@ For example, if we are targeting an RPC framework `yarpc` at version `1.0` we wo
 instrumentation ->
     ...
     yarpc-1.0 ->
-        agent
-            agent.gradle
+        auto
+            yarpc-1.0-auto.gradle
         library
-            library.gradle
+            yarpc-1.0-library.gradle
         testing
-            testing.gradle
+            yarpc-1.0-testing.gradle
 ```
 
 and in the top level `settings.gradle`
@@ -177,7 +177,7 @@ pass, manual instrumentation is working OK.
 #### Writing auto instrumentation
 
 Now that we have working instrumentation, we can implement auto instrumentation so users of the agent
-do not have to modify their apps to use it. Make sure the `agent` submodule has a dependency on the
+do not have to modify their apps to use it. Make sure the `auto` submodule has a dependency on the
 `library` submodule and a test dependency on the `testing` submodule. Auto instrumentation defines
 classes to match against to generate bytecode for. You will often match against the class you used
 in the unit test for manual instrumentation, for example the builder of a client. And then you could
