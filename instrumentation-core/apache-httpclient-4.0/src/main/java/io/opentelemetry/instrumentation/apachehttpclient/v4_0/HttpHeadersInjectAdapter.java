@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.instrumentation.apachehttpclient.v4_0;
 
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import org.apache.http.client.methods.HttpUriRequest;
 
-public class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpUriRequest> {
+class HttpHeadersInjectAdapter implements HttpTextFormat.Setter<HttpUriRequest> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
