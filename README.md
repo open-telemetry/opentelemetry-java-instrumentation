@@ -43,6 +43,13 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
 
+External exporter jar can be specified via `ota.exporter.jar` system property:
+```
+java -javaagent:path/to/opentelemetry-javaagent-all.jar \
+     -Dota.exporter.jar=path/to/external-exporter.jar
+     -jar myapp.jar
+```
+
 ### Configuration parameters (subject to change!)
 
 Note: These parameter names are very likely to change over time, so please check
