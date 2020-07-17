@@ -50,7 +50,7 @@ public class KHttpAdvice {
     final Span span = TRACER.spanBuilder("HTTP " + method).setSpanKind(CLIENT).startSpan();
 
     DECORATE.afterStart(span);
-    DECORATE.onRequest(span, new RequestWrapper(method, uri));
+    DECORATE.onRequest(span, new RequestWrapper(method, uri, headers));
 
     final Context context = withSpan(span, Context.current());
 
