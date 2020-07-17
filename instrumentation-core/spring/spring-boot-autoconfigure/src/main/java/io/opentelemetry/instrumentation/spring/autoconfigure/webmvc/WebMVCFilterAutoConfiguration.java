@@ -24,7 +24,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Configures WebMVCFilter bean */
+/** Configures {@link WebMVCFilter} for tracing. */
 @Configuration
 @EnableConfigurationProperties(WebMVCProperties.class)
 @ConditionalOnProperty(prefix = "opentelemetry.trace.web", name = "enabled", matchIfMissing = true)
