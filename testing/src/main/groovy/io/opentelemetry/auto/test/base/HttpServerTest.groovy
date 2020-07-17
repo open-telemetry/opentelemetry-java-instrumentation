@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.test.base
 
 import ch.qos.logback.classic.Level
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -26,6 +25,8 @@ import io.opentelemetry.auto.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.attributes.SemanticAttributes
+import java.util.concurrent.Callable
+import java.util.concurrent.atomic.AtomicBoolean
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -35,9 +36,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
 import spock.lang.Unroll
-
-import java.util.concurrent.Callable
-import java.util.concurrent.atomic.AtomicBoolean
 
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.auto.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -99,8 +97,8 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   abstract void stopServer(SERVER server)
 
-  String expectedOperationName(String method, ServerEndpoint endpoint) {
-    return method != null ? "HTTP $method" : HttpServerDecorator.DEFAULT_SPAN_NAME
+  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
+    return endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.resolvePath(address).path
   }
 
   boolean hasHandlerSpan() {
@@ -457,7 +455,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      operationName expectedOperationName(method, endpoint)
+      operationName expectedServerSpanName(method, endpoint)
       spanKind Span.Kind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
@@ -467,13 +465,18 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         parent()
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+        "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
         "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
         if (endpoint.query) {
           "$MoreAttributes.HTTP_QUERY" endpoint.query
+        }
+        if (endpoint.errored) {
+          "error.msg" { it == null || it == EXCEPTION.body }
+          "error.type" { it == null || it == Exception.name }
+          "error.stack" { it == null || it instanceof String }
         }
         // OkHttp never sends the fragment in the request.
 //        if (endpoint.fragment) {

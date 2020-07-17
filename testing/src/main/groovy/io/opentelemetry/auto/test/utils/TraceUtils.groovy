@@ -16,7 +16,6 @@
 
 package io.opentelemetry.auto.test.utils
 
-
 import io.opentelemetry.OpenTelemetry
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator
 import io.opentelemetry.auto.test.asserts.TraceAssert
@@ -24,9 +23,8 @@ import io.opentelemetry.context.Scope
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
-import lombok.SneakyThrows
-
 import java.util.concurrent.Callable
+import lombok.SneakyThrows
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 

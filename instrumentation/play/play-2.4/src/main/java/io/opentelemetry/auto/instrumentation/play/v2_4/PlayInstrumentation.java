@@ -50,11 +50,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".PlayHttpServerDecorator",
-      packageName + ".RequestCompleteCallback",
-      packageName + ".PlayHeaders",
-    };
+    return new String[] {packageName + ".PlayDecorator", packageName + ".RequestCompleteCallback"};
   }
 
   @Override

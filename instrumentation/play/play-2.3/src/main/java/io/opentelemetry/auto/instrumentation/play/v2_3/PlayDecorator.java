@@ -17,55 +17,21 @@
 package io.opentelemetry.auto.instrumentation.play.v2_3;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Request;
-import play.api.mvc.Result;
 import scala.Option;
 
-// TODO Play does not create server spans, it should not use HttpServerDecorator
-@Slf4j
-public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Request, Result> {
-  public static final PlayHttpServerDecorator DECORATE = new PlayHttpServerDecorator();
+public class PlayDecorator extends BaseDecorator {
+  public static final PlayDecorator DECORATE = new PlayDecorator();
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.play-2.4");
 
-  @Override
-  protected String method(final Request httpRequest) {
-    return httpRequest.method();
-  }
-
-  @Override
-  protected URI url(final Request request) throws URISyntaxException {
-    return new URI((request.secure() ? "https://" : "http://") + request.host() + request.uri());
-  }
-
-  @Override
-  protected String peerHostIP(final Request request) {
-    return request.remoteAddress();
-  }
-
-  @Override
-  protected Integer peerPort(final Request request) {
-    return null;
-  }
-
-  @Override
-  protected Integer status(final Result httpResponse) {
-    return httpResponse.header().status();
-  }
-
-  @Override
-  public Span onRequest(final Span span, final Request request) {
-    super.onRequest(span, request);
+  public Span updateSpanName(final Span span, final Request request) {
     if (request != null) {
       // more about routes here:
       // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md#router-tags-are-now-attributes
@@ -80,7 +46,6 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
 
   @Override
   public Span onError(final Span span, Throwable throwable) {
-    span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), 500);
     if (throwable != null
         // This can be moved to instanceof check when using Java 8.
         && throwable.getClass().getName().equals("java.util.concurrent.CompletionException")

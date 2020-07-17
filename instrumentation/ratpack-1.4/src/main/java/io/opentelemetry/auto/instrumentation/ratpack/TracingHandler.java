@@ -16,8 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.ratpack;
 
-import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.ratpack.RatpackServerDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.ratpack.RatpackDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.ratpack.RatpackDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 import static io.opentelemetry.trace.TracingContextUtils.getSpan;
 
@@ -27,7 +27,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
-import ratpack.http.Request;
 
 public final class TracingHandler implements Handler {
   public static Handler INSTANCE = new TracingHandler();
@@ -43,8 +42,6 @@ public final class TracingHandler implements Handler {
 
   @Override
   public void handle(final Context ctx) {
-    final Request request = ctx.getRequest();
-
     final Attribute<io.grpc.Context> spanAttribute =
         ctx.getDirectChannelAccess().getChannel().attr(SERVER_ATTRIBUTE_KEY);
     final io.grpc.Context serverSpanContext = spanAttribute.get();
@@ -52,8 +49,6 @@ public final class TracingHandler implements Handler {
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
     final Span ratpackSpan = TRACER.spanBuilder("ratpack.handler").startSpan();
     DECORATE.afterStart(ratpackSpan);
-    DECORATE.onConnection(ratpackSpan, request);
-    DECORATE.onRequest(ratpackSpan, request);
     ctx.getExecution().add(ratpackSpan);
 
     ctx.getResponse()
@@ -64,14 +59,13 @@ public final class TracingHandler implements Handler {
                   // Rename the netty span name with the ratpack route.
                   DECORATE.onContext(getSpan(serverSpanContext), ctx);
                 }
-                DECORATE.onResponse(ratpackSpan, response);
                 DECORATE.onContext(ratpackSpan, ctx);
                 DECORATE.beforeFinish(ratpackSpan);
                 ratpackSpan.end();
               }
             });
 
-    try (final Scope scope = currentContextWith(ratpackSpan)) {
+    try (final Scope ignored = currentContextWith(ratpackSpan)) {
       ctx.next();
     } catch (final Throwable e) {
       DECORATE.onError(ratpackSpan, e);

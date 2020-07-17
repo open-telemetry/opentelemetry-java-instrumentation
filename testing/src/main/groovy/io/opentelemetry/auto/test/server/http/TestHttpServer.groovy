@@ -23,17 +23,16 @@ import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
+import java.util.concurrent.atomic.AtomicReference
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.HandlerList
-
-import javax.servlet.ServletException
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.auto.test.server.http.HttpServletRequestExtractAdapter.GETTER
 import static io.opentelemetry.trace.Span.Kind.SERVER
