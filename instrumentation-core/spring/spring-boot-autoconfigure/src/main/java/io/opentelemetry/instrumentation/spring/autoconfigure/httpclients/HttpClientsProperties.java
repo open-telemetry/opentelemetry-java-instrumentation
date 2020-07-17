@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for the tracing instrumentation of HTTP clients
+ * Configuration for the tracing instrumentation of HTTP clients.
  *
  * <p>Sets default value of opentelemetry.trace.httpclients.enabled to true if the configuration
  * does not exist in application context
