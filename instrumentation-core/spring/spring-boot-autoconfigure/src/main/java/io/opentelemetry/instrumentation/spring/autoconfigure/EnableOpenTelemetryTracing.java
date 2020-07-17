@@ -24,8 +24,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Auto-configures OpenTelemetry. Enables OpenTelementry Tracing in Spring applications by
- * completing a component scan
+ * Auto-configures OpenTelemetry. Enables OpenTelementry Tracing in Spring applications 
+ * 
  */
 @Configuration
 @ComponentScan(basePackages = "io.opentelemetry.instrumentation.spring.autoconfigure")

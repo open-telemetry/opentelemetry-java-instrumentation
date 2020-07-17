@@ -26,7 +26,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-/** Configures {@link RestTemplate} for tracing. */
+/** Configures {@link RestTemplate} for tracing. 
+ * 
+ * Adds Open Telemetry instrumentation to RestTemplate beans after initialization
+ * */
 @Configuration
 @ConditionalOnClass(RestTemplate.class)
 @EnableConfigurationProperties(HttpClientsProperties.class)

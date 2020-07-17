@@ -26,15 +26,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "opentelemetry.trace.tracer")
 public final class TracerProperties {
 
-  private String tracerName = "otel-spring-tracer";
+  private String name = "otel-spring-tracer";
   private boolean loggingExporterEnabled = true;
 
-  public String getTracerName() {
-    return tracerName;
+  public String getName() {
+    return name;
   }
 
-  public void setTracerName(String tracerName) {
-    this.tracerName = tracerName;
+  public void setName(String name) {
+    this.name = name;
   }
 
   public boolean isLoggingExporterEnabled() {

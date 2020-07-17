@@ -23,6 +23,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.trace.Tracer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,8 +42,8 @@ public class TracerAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public Tracer tracer() throws Exception {
-    Tracer tracer = OpenTelemetry.getTracer(tracerProperties.getTracerName());
+  public Tracer otelTracer() throws Exception {
+    Tracer tracer = OpenTelemetry.getTracer(tracerProperties.getName());
     setLoggingExporter();
     return tracer;
   }

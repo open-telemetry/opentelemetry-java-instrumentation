@@ -26,7 +26,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
-/** Configures {@link WebClient} for tracing. */
+/** Configures {@link WebClient} for tracing. 
+ * 
+ * Adds Open Telemetry instrumentation to WebClient beans after initialization
+ * */
 @Configuration
 @ConditionalOnClass(WebClient.class)
 @EnableConfigurationProperties(HttpClientsProperties.class)

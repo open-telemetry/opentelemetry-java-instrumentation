@@ -31,7 +31,6 @@ import org.springframework.context.annotation.Configuration;
 public class WebMVCFilterAutoConfiguration {
 
   @Bean
-  @Autowired
   public WebMVCTracingFilter otelWebMVCTracingFilter(final Tracer tracer) {
     return new WebMVCTracingFilter(tracer);
   }
