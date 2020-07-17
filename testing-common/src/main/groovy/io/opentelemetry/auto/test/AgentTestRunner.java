@@ -79,7 +79,6 @@ public abstract class AgentTestRunner extends AgentSpecification {
 
   private static final org.slf4j.Logger log = LoggerFactory.getLogger(AgentTestRunner.class);
 
-  private static final long TIMEOUT_MILLIS = 10 * 1000;
   /**
    * For test runs, agent's global tracer will report to this list writer.
    *
@@ -149,12 +148,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
   @BeforeClass
   public static synchronized void agentSetup() {
     if (activeTransformer == null) {
-//    assert ServiceLoader.load(Instrumenter.class, AgentTestRunner.class.getClassLoader())
-//            .iterator()
-//            .hasNext()
-//        : "No instrumentation found";
-      activeTransformer = AgentInstaller
-          .installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
+      activeTransformer =
+          AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
     }
   }
 
@@ -231,9 +226,10 @@ public abstract class AgentTestRunner extends AgentSpecification {
   public static void assertTraces(
       final int size,
       @ClosureParams(
-          value = SimpleType.class,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) final Closure spec) {
+              value = SimpleType.class,
+              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          final Closure spec) {
     InMemoryExporterAssert.assertTraces(
         TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
   }
@@ -242,9 +238,10 @@ public abstract class AgentTestRunner extends AgentSpecification {
       final int size,
       final Predicate<List<SpanData>> excludes,
       @ClosureParams(
-          value = SimpleType.class,
-          options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
-      @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST) final Closure spec) {
+              value = SimpleType.class,
+              options = "io.opentelemetry.auto.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          final Closure spec) {
     InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
   }
 
