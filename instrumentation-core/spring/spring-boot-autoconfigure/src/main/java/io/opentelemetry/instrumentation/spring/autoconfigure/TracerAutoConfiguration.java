@@ -40,6 +40,7 @@ public class TracerAutoConfiguration {
   @Autowired TracerProperties tracerProperties;
 
   @Bean
+  @ConditionalOnMissingBean
   public Tracer tracer() throws Exception {
     Tracer tracer = OpenTelemetry.getTracer(tracerProperties.getTracerName());
     setLoggingExporter();
