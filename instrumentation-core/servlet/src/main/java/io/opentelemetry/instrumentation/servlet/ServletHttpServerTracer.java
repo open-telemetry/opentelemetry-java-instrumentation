@@ -107,4 +107,8 @@ public abstract class ServletHttpServerTracer
       span.setAttribute(MoreAttributes.USER_NAME, principal.getName());
     }
   }
+
+  public void setContentLength(Span span, int length) {
+    span.setAttribute(MoreAttributes.HTTP_RESPONSE_CONTENT_LENGTH, length);
+  }
 }
