@@ -31,6 +31,7 @@ import java.util.logging.Logger;
  *
  * <ul>
  * </ul>
+ *
  */
 public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
 
@@ -38,6 +39,7 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
     EMPTY,
     FAAS_TRIGGER,
     FAAS_EXECUTION;
+    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -65,7 +67,6 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(FaasSpan.class.getName());
-
   public final AttributeStatus status;
 
   protected FaasSpan(Span span, AttributeStatus status) {
@@ -73,16 +74,17 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
     this.status = status;
   }
 
-  /**
-   * Entry point to generate a {@link FaasSpan}.
-   *
-   * @param tracer Tracer to use
-   * @param spanName Name for the {@link Span}
-   * @return a {@link FaasSpan} object.
-   */
-  public static FaasSpanBuilder createFaasSpan(Tracer tracer, String spanName) {
+	/**
+	 * Entry point to generate a {@link FaasSpan}.
+	 * @param tracer Tracer to use
+	 * @param spanName Name for the {@link Span}
+	 * @return a {@link FaasSpan} object.
+	 */
+  public static FaasSpanBuilder createFaasSpanBuilder(Tracer tracer, String spanName) {
     return new FaasSpanBuilder(tracer, spanName);
   }
+
+  
 
   /** @return the Span used internally */
   @Override
@@ -104,10 +106,10 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
     // conditional attributes
   }
 
+
   /**
    * Sets faas.trigger.
-   *
-   * @param faasTrigger Type of the trigger on which the function is executed..
+   * @param faasTrigger Type of the trigger on which the function is executed.
    */
   @Override
   public FaasSemanticConvention setFaasTrigger(String faasTrigger) {
@@ -118,8 +120,7 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
 
   /**
    * Sets faas.execution.
-   *
-   * @param faasExecution The execution id of the current function execution..
+   * @param faasExecution The execution id of the current function execution.
    */
   @Override
   public FaasSemanticConvention setFaasExecution(String faasExecution) {
@@ -128,39 +129,42 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
     return this;
   }
 
-  /** Builder class for {@link FaasSpan}. */
-  public static class FaasSpanBuilder {
+
+	/**
+	 * Builder class for {@link FaasSpan}.
+	 */
+	public static class FaasSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Builder internalBuilder;
+    protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
 
     protected FaasSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public FaasSpanBuilder(Builder spanBuilder, long attributes) {
+    public FaasSpanBuilder(Span.Builder spanBuilder, long attributes) {
       this.internalBuilder = spanBuilder;
       this.status.set(attributes);
     }
 
-    public Builder getSpanBuilder() {
+    public Span.Builder getSpanBuilder() {
       return this.internalBuilder;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasSpanBuilder setParent(Span parent) {
+    public FaasSpanBuilder setParent(Span parent){
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasSpanBuilder setParent(SpanContext remoteParent) {
+    public FaasSpanBuilder setParent(SpanContext remoteParent){
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
 
     /** this method sets the type of the {@link Span} is only available in the builder. */
-    public FaasSpanBuilder setKind(Kind kind) {
+    public FaasSpanBuilder setKind(Span.Kind kind) {
       internalBuilder.setSpanKind(kind);
       return this;
     }
@@ -171,10 +175,10 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
       return new FaasSpan(this.internalBuilder.startSpan(), status);
     }
 
+    
     /**
      * Sets faas.trigger.
-     *
-     * @param faasTrigger Type of the trigger on which the function is executed..
+     * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasSpanBuilder setFaasTrigger(String faasTrigger) {
       status.set(AttributeStatus.FAAS_TRIGGER);
@@ -184,13 +188,13 @@ public class FaasSpan extends DelegatingSpan implements FaasSemanticConvention {
 
     /**
      * Sets faas.execution.
-     *
-     * @param faasExecution The execution id of the current function execution..
+     * @param faasExecution The execution id of the current function execution.
      */
     public FaasSpanBuilder setFaasExecution(String faasExecution) {
       status.set(AttributeStatus.FAAS_EXECUTION);
       internalBuilder.setAttribute("faas.execution", faasExecution);
       return this;
     }
+
   }
 }

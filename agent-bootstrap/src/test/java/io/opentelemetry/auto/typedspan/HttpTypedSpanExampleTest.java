@@ -28,7 +28,7 @@ public class HttpTypedSpanExampleTest {
   public void exampleUsage_span() {
     // https://github.com/open-telemetry/opentelemetry-java/issues/778
     HttpServerSpan span =
-        HttpServerSpan.createHttpServerSpan(
+        HttpServerSpan.createHttpServerSpanBuilder(
                 OpenTelemetry.getTracerProvider().get("test-tracer"), "https://example.com")
             .setHttpMethod("GET")
             .setHttpServerName("example.com")
@@ -50,11 +50,11 @@ public class HttpTypedSpanExampleTest {
   @Test
   public void testAttributeEnumBit_builder() {
     HttpSpan.HttpSpanBuilder span =
-        HttpSpan.createHttpSpan(
+        HttpSpan.createHttpSpanBuilder(
                 OpenTelemetry.getTracerProvider().get("test-tracer"), "https://example.com")
             .setHttpMethod("GET")
             .setHttpFlavor("1.1");
-    HttpServerSpan serverSpan = HttpServerSpan.createHttpServerSpan(span).start();
+    HttpServerSpan serverSpan = HttpServerSpan.createHttpServerSpanBuilder(span).start();
     serverSpan
         .setHttpStatusCode(200)
         .setHttpStatusText("OK")

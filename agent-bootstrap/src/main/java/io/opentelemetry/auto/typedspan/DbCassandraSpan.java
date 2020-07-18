@@ -24,25 +24,18 @@ import java.util.logging.Logger;
  * <b>Required attributes:</b>
  *
  * <ul>
- *   <li>db.system: An identifier for the database management system (DBMS) product being used. See
- *       below for a list of well-known identifiers.
- *   <li>db.cassandra.keyspace: The name of the keyspace being accessed. To be used instead of the
- *       generic `db.name` attribute.
+ *   <li>db.system: An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+ *   <li>db.cassandra.keyspace: The name of the keyspace being accessed. To be used instead of the generic `db.name` attribute.
  * </ul>
  *
  * <b>Conditional attributes:</b>
  *
  * <ul>
- *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the
- *       name of the database being accessed. For commands that switch the database, this should be
- *       set to the target database (even if the command fails).
+ *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
  *   <li>db.statement: The database statement being executed.
- *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command
- *       name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
- *       `findAndModify`.
+ *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
  *   <li>net.peer.name: Remote hostname or similar, see note below.
- *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or
- *       [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
+ *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
  *   <li>net.peer.port: Remote port number.
  *   <li>net.transport: Transport protocol used. See note below.
  * </ul>
@@ -63,8 +56,6 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     DB_SYSTEM,
     DB_CONNECTION_STRING,
     DB_USER,
-    DB_MSSQL_INSTANCE_NAME,
-    DB_JDBC_DRIVER_CLASSNAME,
     DB_NAME,
     DB_STATEMENT,
     DB_OPERATION,
@@ -73,6 +64,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     NET_PEER_PORT,
     NET_TRANSPORT,
     DB_CASSANDRA_KEYSPACE;
+    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -100,7 +92,6 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(DbCassandraSpan.class.getName());
-
   public final AttributeStatus status;
 
   protected DbCassandraSpan(Span span, AttributeStatus status) {
@@ -108,25 +99,23 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     this.status = status;
   }
 
-  /**
-   * Entry point to generate a {@link DbCassandraSpan}.
-   *
-   * @param tracer Tracer to use
-   * @param spanName Name for the {@link Span}
-   * @return a {@link DbCassandraSpan} object.
-   */
-  public static DbCassandraSpanBuilder createDbCassandraSpan(Tracer tracer, String spanName) {
+	/**
+	 * Entry point to generate a {@link DbCassandraSpan}.
+	 * @param tracer Tracer to use
+	 * @param spanName Name for the {@link Span}
+	 * @return a {@link DbCassandraSpan} object.
+	 */
+  public static DbCassandraSpanBuilder createDbCassandraSpanBuilder(Tracer tracer, String spanName) {
     return new DbCassandraSpanBuilder(tracer, spanName);
   }
 
   /**
-   * Creates a {@link DbCassandraSpan} from a {@link DbSpan}.
-   *
-   * @param builder {@link DbSpan.DbSpanBuilder} to use.
-   * @return a {@link DbCassandraSpan} object built from a {@link DbSpan}.
-   */
-  public static DbCassandraSpanBuilder createDbCassandraSpan(DbSpan.DbSpanBuilder builder) {
-    // we accept a builder from Db since DbCassandra "extends" Db
+	 * Creates a {@link DbCassandraSpan} from a {@link DbSpan}.
+	 * @param builder {@link DbSpan.DbSpanBuilder} to use.
+	 * @return a {@link DbCassandraSpan} object built from a {@link DbSpan}.
+	 */
+  public static DbCassandraSpanBuilder createDbCassandraSpanBuilder(DbSpan.DbSpanBuilder builder) {
+	  // we accept a builder from Db since DbCassandra "extends" Db
     return new DbCassandraSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -152,8 +141,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     // extra constraints.
     {
       boolean flag =
-          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
-              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
+        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ||
+        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ;
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -182,11 +171,10 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     }
   }
 
+
   /**
    * Sets db.system.
-   *
-   * @param dbSystem An identifier for the database management system (DBMS) product being used. See
-   *     below for a list of well-known identifiers..
+   * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
    */
   @Override
   public DbCassandraSemanticConvention setDbSystem(String dbSystem) {
@@ -197,9 +185,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets db.connection_string.
-   *
-   * @param dbConnectionString The connection string used to connect to the database..
-   *     <p>It is recommended to remove embedded credentials.
+   * @param dbConnectionString The connection string used to connect to the database.
+   * <p> It is recommended to remove embedded credentials.
    */
   @Override
   public DbCassandraSemanticConvention setDbConnectionString(String dbConnectionString) {
@@ -210,8 +197,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets db.user.
-   *
-   * @param dbUser Username for accessing the database..
+   * @param dbUser Username for accessing the database.
    */
   @Override
   public DbCassandraSemanticConvention setDbUser(String dbUser) {
@@ -221,41 +207,9 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
   }
 
   /**
-   * Sets db.mssql.instance_name.
-   *
-   * @param dbMssqlInstanceName The Microsoft SQL Server [instance
-   *     name](https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15)
-   *     connecting to. This name is used to determine the port of a named instance..
-   *     <p>If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but still
-   *     recommended if non-standard).
-   */
-  @Override
-  public DbCassandraSemanticConvention setDbMssqlInstanceName(String dbMssqlInstanceName) {
-    status.set(AttributeStatus.DB_MSSQL_INSTANCE_NAME);
-    delegate.setAttribute("db.mssql.instance_name", dbMssqlInstanceName);
-    return this;
-  }
-
-  /**
-   * Sets db.jdbc.driver_classname.
-   *
-   * @param dbJdbcDriverClassname The fully-qualified class name of the JDBC driver used to
-   *     connect..
-   */
-  @Override
-  public DbCassandraSemanticConvention setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-    status.set(AttributeStatus.DB_JDBC_DRIVER_CLASSNAME);
-    delegate.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
-    return this;
-  }
-
-  /**
    * Sets db.name.
-   *
-   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
-   *     name of the database being accessed. For commands that switch the database, this should be
-   *     set to the target database (even if the command fails)..
-   *     <p>In some SQL databases, the database name to be used is called "schema name".
+   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
+   * <p> In some SQL databases, the database name to be used is called "schema name".
    */
   @Override
   public DbCassandraSemanticConvention setDbName(String dbName) {
@@ -266,9 +220,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets db.statement.
-   *
-   * @param dbStatement The database statement being executed..
-   *     <p>The value may be sanitized to exclude sensitive information.
+   * @param dbStatement The database statement being executed.
+   * <p> The value may be sanitized to exclude sensitive information.
    */
   @Override
   public DbCassandraSemanticConvention setDbStatement(String dbStatement) {
@@ -279,13 +232,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets db.operation.
-   *
-   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
-   *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
-   *     `findAndModify`..
-   *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT`
-   *     or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement`
-   *     just to get this property (the back end can do that if required).
+   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
+   * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
    */
   @Override
   public DbCassandraSemanticConvention setDbOperation(String dbOperation) {
@@ -296,8 +244,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets net.peer.name.
-   *
-   * @param netPeerName Remote hostname or similar, see note below..
+   * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
   public DbCassandraSemanticConvention setNetPeerName(String netPeerName) {
@@ -308,9 +255,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets net.peer.ip.
-   *
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
-   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public DbCassandraSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -321,8 +266,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets net.peer.port.
-   *
-   * @param netPeerPort Remote port number..
+   * @param netPeerPort Remote port number.
    */
   @Override
   public DbCassandraSemanticConvention setNetPeerPort(long netPeerPort) {
@@ -333,8 +277,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets net.transport.
-   *
-   * @param netTransport Transport protocol used. See note below..
+   * @param netTransport Transport protocol used. See note below.
    */
   @Override
   public DbCassandraSemanticConvention setNetTransport(String netTransport) {
@@ -345,9 +288,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
   /**
    * Sets db.cassandra.keyspace.
-   *
-   * @param dbCassandraKeyspace The name of the keyspace being accessed. To be used instead of the
-   *     generic `db.name` attribute..
+   * @param dbCassandraKeyspace The name of the keyspace being accessed. To be used instead of the generic `db.name` attribute.
    */
   @Override
   public DbCassandraSemanticConvention setDbCassandraKeyspace(String dbCassandraKeyspace) {
@@ -356,39 +297,42 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     return this;
   }
 
-  /** Builder class for {@link DbCassandraSpan}. */
-  public static class DbCassandraSpanBuilder {
+
+	/**
+	 * Builder class for {@link DbCassandraSpan}.
+	 */
+	public static class DbCassandraSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Builder internalBuilder;
+    protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
 
     protected DbCassandraSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public DbCassandraSpanBuilder(Builder spanBuilder, long attributes) {
+    public DbCassandraSpanBuilder(Span.Builder spanBuilder, long attributes) {
       this.internalBuilder = spanBuilder;
       this.status.set(attributes);
     }
 
-    public Builder getSpanBuilder() {
+    public Span.Builder getSpanBuilder() {
       return this.internalBuilder;
     }
 
     /** sets the {@link Span} parent. */
-    public DbCassandraSpanBuilder setParent(Span parent) {
+    public DbCassandraSpanBuilder setParent(Span parent){
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public DbCassandraSpanBuilder setParent(SpanContext remoteParent) {
+    public DbCassandraSpanBuilder setParent(SpanContext remoteParent){
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
 
     /** this method sets the type of the {@link Span} is only available in the builder. */
-    public DbCassandraSpanBuilder setKind(Kind kind) {
+    public DbCassandraSpanBuilder setKind(Span.Kind kind) {
       internalBuilder.setSpanKind(kind);
       return this;
     }
@@ -399,11 +343,10 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
       return new DbCassandraSpan(this.internalBuilder.startSpan(), status);
     }
 
+    
     /**
      * Sets db.system.
-     *
-     * @param dbSystem An identifier for the database management system (DBMS) product being used.
-     *     See below for a list of well-known identifiers..
+     * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
      */
     public DbCassandraSpanBuilder setDbSystem(String dbSystem) {
       status.set(AttributeStatus.DB_SYSTEM);
@@ -413,9 +356,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets db.connection_string.
-     *
-     * @param dbConnectionString The connection string used to connect to the database..
-     *     <p>It is recommended to remove embedded credentials.
+     * @param dbConnectionString The connection string used to connect to the database.
+     * <p> It is recommended to remove embedded credentials.
      */
     public DbCassandraSpanBuilder setDbConnectionString(String dbConnectionString) {
       status.set(AttributeStatus.DB_CONNECTION_STRING);
@@ -425,8 +367,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets db.user.
-     *
-     * @param dbUser Username for accessing the database..
+     * @param dbUser Username for accessing the database.
      */
     public DbCassandraSpanBuilder setDbUser(String dbUser) {
       status.set(AttributeStatus.DB_USER);
@@ -435,39 +376,9 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
     }
 
     /**
-     * Sets db.mssql.instance_name.
-     *
-     * @param dbMssqlInstanceName The Microsoft SQL Server [instance
-     *     name](https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15)
-     *     connecting to. This name is used to determine the port of a named instance..
-     *     <p>If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but
-     *     still recommended if non-standard).
-     */
-    public DbCassandraSpanBuilder setDbMssqlInstanceName(String dbMssqlInstanceName) {
-      status.set(AttributeStatus.DB_MSSQL_INSTANCE_NAME);
-      internalBuilder.setAttribute("db.mssql.instance_name", dbMssqlInstanceName);
-      return this;
-    }
-
-    /**
-     * Sets db.jdbc.driver_classname.
-     *
-     * @param dbJdbcDriverClassname The fully-qualified class name of the JDBC driver used to
-     *     connect..
-     */
-    public DbCassandraSpanBuilder setDbJdbcDriverClassname(String dbJdbcDriverClassname) {
-      status.set(AttributeStatus.DB_JDBC_DRIVER_CLASSNAME);
-      internalBuilder.setAttribute("db.jdbc.driver_classname", dbJdbcDriverClassname);
-      return this;
-    }
-
-    /**
      * Sets db.name.
-     *
-     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
-     *     name of the database being accessed. For commands that switch the database, this should
-     *     be set to the target database (even if the command fails)..
-     *     <p>In some SQL databases, the database name to be used is called "schema name".
+     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
+     * <p> In some SQL databases, the database name to be used is called "schema name".
      */
     public DbCassandraSpanBuilder setDbName(String dbName) {
       status.set(AttributeStatus.DB_NAME);
@@ -477,9 +388,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets db.statement.
-     *
-     * @param dbStatement The database statement being executed..
-     *     <p>The value may be sanitized to exclude sensitive information.
+     * @param dbStatement The database statement being executed.
+     * <p> The value may be sanitized to exclude sensitive information.
      */
     public DbCassandraSpanBuilder setDbStatement(String dbStatement) {
       status.set(AttributeStatus.DB_STATEMENT);
@@ -489,13 +399,8 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets db.operation.
-     *
-     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
-     *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
-     *     `findAndModify`..
-     *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like
-     *     `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of
-     *     `db.statement` just to get this property (the back end can do that if required).
+     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
+     * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
      */
     public DbCassandraSpanBuilder setDbOperation(String dbOperation) {
       status.set(AttributeStatus.DB_OPERATION);
@@ -505,8 +410,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets net.peer.name.
-     *
-     * @param netPeerName Remote hostname or similar, see note below..
+     * @param netPeerName Remote hostname or similar, see note below.
      */
     public DbCassandraSpanBuilder setNetPeerName(String netPeerName) {
       status.set(AttributeStatus.NET_PEER_NAME);
@@ -516,9 +420,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets net.peer.ip.
-     *
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
-     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public DbCassandraSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -528,8 +430,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets net.peer.port.
-     *
-     * @param netPeerPort Remote port number..
+     * @param netPeerPort Remote port number.
      */
     public DbCassandraSpanBuilder setNetPeerPort(long netPeerPort) {
       status.set(AttributeStatus.NET_PEER_PORT);
@@ -539,8 +440,7 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets net.transport.
-     *
-     * @param netTransport Transport protocol used. See note below..
+     * @param netTransport Transport protocol used. See note below.
      */
     public DbCassandraSpanBuilder setNetTransport(String netTransport) {
       status.set(AttributeStatus.NET_TRANSPORT);
@@ -550,14 +450,13 @@ public class DbCassandraSpan extends DelegatingSpan implements DbCassandraSemant
 
     /**
      * Sets db.cassandra.keyspace.
-     *
-     * @param dbCassandraKeyspace The name of the keyspace being accessed. To be used instead of the
-     *     generic `db.name` attribute..
+     * @param dbCassandraKeyspace The name of the keyspace being accessed. To be used instead of the generic `db.name` attribute.
      */
     public DbCassandraSpanBuilder setDbCassandraKeyspace(String dbCassandraKeyspace) {
       status.set(AttributeStatus.DB_CASSANDRA_KEYSPACE);
       internalBuilder.setAttribute("db.cassandra.keyspace", dbCassandraKeyspace);
       return this;
     }
+
   }
 }

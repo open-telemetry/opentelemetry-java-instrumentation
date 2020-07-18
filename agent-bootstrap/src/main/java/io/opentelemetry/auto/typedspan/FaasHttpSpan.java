@@ -31,8 +31,7 @@ import java.util.logging.Logger;
  * <b>Conditional attributes:</b>
  *
  * <ul>
- *   <li>http.status_code: [HTTP response status
- *       code](https://tools.ietf.org/html/rfc7231#section-6).
+ *   <li>http.status_code: [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
  * </ul>
  *
  * <b>Additional constraints</b>
@@ -71,6 +70,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     NET_HOST_IP,
     NET_HOST_PORT,
     NET_HOST_NAME;
+    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -98,7 +98,6 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(FaasHttpSpan.class.getName());
-
   public final AttributeStatus status;
 
   protected FaasHttpSpan(Span span, AttributeStatus status) {
@@ -106,25 +105,23 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     this.status = status;
   }
 
-  /**
-   * Entry point to generate a {@link FaasHttpSpan}.
-   *
-   * @param tracer Tracer to use
-   * @param spanName Name for the {@link Span}
-   * @return a {@link FaasHttpSpan} object.
-   */
-  public static FaasHttpSpanBuilder createFaasHttpSpan(Tracer tracer, String spanName) {
+	/**
+	 * Entry point to generate a {@link FaasHttpSpan}.
+	 * @param tracer Tracer to use
+	 * @param spanName Name for the {@link Span}
+	 * @return a {@link FaasHttpSpan} object.
+	 */
+  public static FaasHttpSpanBuilder createFaasHttpSpanBuilder(Tracer tracer, String spanName) {
     return new FaasHttpSpanBuilder(tracer, spanName);
   }
 
   /**
-   * Creates a {@link FaasHttpSpan} from a {@link FaasSpan}.
-   *
-   * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
-   * @return a {@link FaasHttpSpan} object built from a {@link FaasSpan}.
-   */
-  public static FaasHttpSpanBuilder createFaasHttpSpan(FaasSpan.FaasSpanBuilder builder) {
-    // we accept a builder from Faas since FaasHttp "extends" Faas
+	 * Creates a {@link FaasHttpSpan} from a {@link FaasSpan}.
+	 * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
+	 * @return a {@link FaasHttpSpan} object built from a {@link FaasSpan}.
+	 */
+  public static FaasHttpSpanBuilder createFaasHttpSpanBuilder(FaasSpan.FaasSpanBuilder builder) {
+	  // we accept a builder from Faas since FaasHttp "extends" Faas
     return new FaasHttpSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -150,18 +147,10 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     // extra constraints.
     {
       boolean flag =
-          (!this.status.isSet(AttributeStatus.HTTP_URL))
-              || (!this.status.isSet(AttributeStatus.HTTP_SCHEME)
-                  && !this.status.isSet(AttributeStatus.HTTP_HOST)
-                  && !this.status.isSet(AttributeStatus.HTTP_TARGET))
-              || (!this.status.isSet(AttributeStatus.HTTP_SCHEME)
-                  && !this.status.isSet(AttributeStatus.HTTP_SERVER_NAME)
-                  && !this.status.isSet(AttributeStatus.NET_HOST_PORT)
-                  && !this.status.isSet(AttributeStatus.HTTP_TARGET))
-              || (!this.status.isSet(AttributeStatus.HTTP_SCHEME)
-                  && !this.status.isSet(AttributeStatus.NET_HOST_NAME)
-                  && !this.status.isSet(AttributeStatus.NET_HOST_PORT)
-                  && !this.status.isSet(AttributeStatus.HTTP_TARGET));
+        (!this.status.isSet(AttributeStatus.HTTP_URL) ) ||
+        (!this.status.isSet(AttributeStatus.HTTP_SCHEME) &&!this.status.isSet(AttributeStatus.HTTP_HOST) &&!this.status.isSet(AttributeStatus.HTTP_TARGET) ) ||
+        (!this.status.isSet(AttributeStatus.HTTP_SCHEME) &&!this.status.isSet(AttributeStatus.HTTP_SERVER_NAME) &&!this.status.isSet(AttributeStatus.NET_HOST_PORT) &&!this.status.isSet(AttributeStatus.HTTP_TARGET) ) ||
+        (!this.status.isSet(AttributeStatus.HTTP_SCHEME) &&!this.status.isSet(AttributeStatus.NET_HOST_NAME) &&!this.status.isSet(AttributeStatus.NET_HOST_PORT) &&!this.status.isSet(AttributeStatus.HTTP_TARGET) ) ;
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -172,10 +161,10 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     }
   }
 
+
   /**
    * Sets faas.trigger.
-   *
-   * @param faasTrigger Type of the trigger on which the function is executed..
+   * @param faasTrigger Type of the trigger on which the function is executed.
    */
   @Override
   public FaasHttpSemanticConvention setFaasTrigger(String faasTrigger) {
@@ -186,8 +175,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets faas.execution.
-   *
-   * @param faasExecution The execution id of the current function execution..
+   * @param faasExecution The execution id of the current function execution.
    */
   @Override
   public FaasHttpSemanticConvention setFaasExecution(String faasExecution) {
@@ -198,14 +186,8 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.server_name.
-   *
-   * @param httpServerName The primary server name of the matched virtual host. This should be
-   *     obtained via configuration. If no such configuration can be obtained, this attribute MUST
-   *     NOT be set ( `net.host.name` should be used instead)..
-   *     <p>http.url is usually not readily available on the server side but would have to be
-   *     assembled in a cumbersome and sometimes lossy process from other information (see e.g.
-   *     open-telemetry/opentelemetry-python/pull/148). It is thus preferred to supply the raw data
-   *     that is available.
+   * @param httpServerName The primary server name of the matched virtual host. This should be obtained via configuration. If no such configuration can be obtained, this attribute MUST NOT be set ( `net.host.name` should be used instead).
+   * <p> http.url is usually not readily available on the server side but would have to be assembled in a cumbersome and sometimes lossy process from other information (see e.g. open-telemetry/opentelemetry-python/pull/148). It is thus preferred to supply the raw data that is available.
    */
   @Override
   public FaasHttpSemanticConvention setHttpServerName(String httpServerName) {
@@ -216,8 +198,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.route.
-   *
-   * @param httpRoute The matched route (path template)..
+   * @param httpRoute The matched route (path template).
    */
   @Override
   public FaasHttpSemanticConvention setHttpRoute(String httpRoute) {
@@ -228,12 +209,8 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.client_ip.
-   *
-   * @param httpClientIp The IP address of the original client behind all proxies, if known (e.g.
-   *     from
-   *     [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For))..
-   *     <p>This is not necessarily the same as `net.peer.ip`, which would identify the
-   *     network-level peer, which may be a proxy.
+   * @param httpClientIp The IP address of the original client behind all proxies, if known (e.g. from [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)).
+   * <p> This is not necessarily the same as `net.peer.ip`, which would identify the network-level peer, which may be a proxy.
    */
   @Override
   public FaasHttpSemanticConvention setHttpClientIp(String httpClientIp) {
@@ -244,8 +221,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.method.
-   *
-   * @param httpMethod HTTP request method..
+   * @param httpMethod HTTP request method.
    */
   @Override
   public FaasHttpSemanticConvention setHttpMethod(String httpMethod) {
@@ -256,10 +232,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.url.
-   *
-   * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`.
-   *     Usually the fragment is not transmitted over HTTP, but if it is known, it should be
-   *     included nevertheless..
+   * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
    */
   @Override
   public FaasHttpSemanticConvention setHttpUrl(String httpUrl) {
@@ -270,8 +243,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.target.
-   *
-   * @param httpTarget The full request target as passed in a HTTP request line or equivalent..
+   * @param httpTarget The full request target as passed in a HTTP request line or equivalent.
    */
   @Override
   public FaasHttpSemanticConvention setHttpTarget(String httpTarget) {
@@ -282,10 +254,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.host.
-   *
-   * @param httpHost The value of the [HTTP host
-   *     header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not
-   *     present, this attribute should be the same..
+   * @param httpHost The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not present, this attribute should be the same.
    */
   @Override
   public FaasHttpSemanticConvention setHttpHost(String httpHost) {
@@ -296,8 +265,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.scheme.
-   *
-   * @param httpScheme The URI scheme identifying the used protocol..
+   * @param httpScheme The URI scheme identifying the used protocol.
    */
   @Override
   public FaasHttpSemanticConvention setHttpScheme(String httpScheme) {
@@ -308,9 +276,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.status_code.
-   *
-   * @param httpStatusCode [HTTP response status
-   *     code](https://tools.ietf.org/html/rfc7231#section-6)..
+   * @param httpStatusCode [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
    */
   @Override
   public FaasHttpSemanticConvention setHttpStatusCode(long httpStatusCode) {
@@ -321,8 +287,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.status_text.
-   *
-   * @param httpStatusText [HTTP reason phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2)..
+   * @param httpStatusText [HTTP reason phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2).
    */
   @Override
   public FaasHttpSemanticConvention setHttpStatusText(String httpStatusText) {
@@ -333,10 +298,8 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.flavor.
-   *
    * @param httpFlavor Kind of HTTP protocol used.
-   *     <p>If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if
-   *     `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
+   * <p> If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
    */
   @Override
   public FaasHttpSemanticConvention setHttpFlavor(String httpFlavor) {
@@ -347,9 +310,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets http.user_agent.
-   *
-   * @param httpUserAgent Value of the [HTTP
-   *     User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client..
+   * @param httpUserAgent Value of the [HTTP User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
    */
   @Override
   public FaasHttpSemanticConvention setHttpUserAgent(String httpUserAgent) {
@@ -360,8 +321,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets net.transport.
-   *
-   * @param netTransport Transport protocol used. See note below..
+   * @param netTransport Transport protocol used. See note below.
    */
   @Override
   public FaasHttpSemanticConvention setNetTransport(String netTransport) {
@@ -372,9 +332,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets net.peer.ip.
-   *
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
-   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public FaasHttpSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -385,8 +343,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets net.peer.port.
-   *
-   * @param netPeerPort Remote port number..
+   * @param netPeerPort Remote port number.
    */
   @Override
   public FaasHttpSemanticConvention setNetPeerPort(long netPeerPort) {
@@ -397,8 +354,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets net.peer.name.
-   *
-   * @param netPeerName Remote hostname or similar, see note below..
+   * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
   public FaasHttpSemanticConvention setNetPeerName(String netPeerName) {
@@ -409,8 +365,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets net.host.ip.
-   *
-   * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host..
+   * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
   public FaasHttpSemanticConvention setNetHostIp(String netHostIp) {
@@ -421,8 +376,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets net.host.port.
-   *
-   * @param netHostPort Like `net.peer.port` but for the host port..
+   * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
   public FaasHttpSemanticConvention setNetHostPort(long netHostPort) {
@@ -433,8 +387,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
   /**
    * Sets net.host.name.
-   *
-   * @param netHostName Local hostname or similar, see note below..
+   * @param netHostName Local hostname or similar, see note below.
    */
   @Override
   public FaasHttpSemanticConvention setNetHostName(String netHostName) {
@@ -443,39 +396,42 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
     return this;
   }
 
-  /** Builder class for {@link FaasHttpSpan}. */
-  public static class FaasHttpSpanBuilder {
+
+	/**
+	 * Builder class for {@link FaasHttpSpan}.
+	 */
+	public static class FaasHttpSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Builder internalBuilder;
+    protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
 
     protected FaasHttpSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public FaasHttpSpanBuilder(Builder spanBuilder, long attributes) {
+    public FaasHttpSpanBuilder(Span.Builder spanBuilder, long attributes) {
       this.internalBuilder = spanBuilder;
       this.status.set(attributes);
     }
 
-    public Builder getSpanBuilder() {
+    public Span.Builder getSpanBuilder() {
       return this.internalBuilder;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasHttpSpanBuilder setParent(Span parent) {
+    public FaasHttpSpanBuilder setParent(Span parent){
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasHttpSpanBuilder setParent(SpanContext remoteParent) {
+    public FaasHttpSpanBuilder setParent(SpanContext remoteParent){
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
 
     /** this method sets the type of the {@link Span} is only available in the builder. */
-    public FaasHttpSpanBuilder setKind(Kind kind) {
+    public FaasHttpSpanBuilder setKind(Span.Kind kind) {
       internalBuilder.setSpanKind(kind);
       return this;
     }
@@ -486,10 +442,10 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
       return new FaasHttpSpan(this.internalBuilder.startSpan(), status);
     }
 
+    
     /**
      * Sets faas.trigger.
-     *
-     * @param faasTrigger Type of the trigger on which the function is executed..
+     * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasHttpSpanBuilder setFaasTrigger(String faasTrigger) {
       status.set(AttributeStatus.FAAS_TRIGGER);
@@ -499,8 +455,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets faas.execution.
-     *
-     * @param faasExecution The execution id of the current function execution..
+     * @param faasExecution The execution id of the current function execution.
      */
     public FaasHttpSpanBuilder setFaasExecution(String faasExecution) {
       status.set(AttributeStatus.FAAS_EXECUTION);
@@ -510,14 +465,8 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.server_name.
-     *
-     * @param httpServerName The primary server name of the matched virtual host. This should be
-     *     obtained via configuration. If no such configuration can be obtained, this attribute MUST
-     *     NOT be set ( `net.host.name` should be used instead)..
-     *     <p>http.url is usually not readily available on the server side but would have to be
-     *     assembled in a cumbersome and sometimes lossy process from other information (see e.g.
-     *     open-telemetry/opentelemetry-python/pull/148). It is thus preferred to supply the raw
-     *     data that is available.
+     * @param httpServerName The primary server name of the matched virtual host. This should be obtained via configuration. If no such configuration can be obtained, this attribute MUST NOT be set ( `net.host.name` should be used instead).
+     * <p> http.url is usually not readily available on the server side but would have to be assembled in a cumbersome and sometimes lossy process from other information (see e.g. open-telemetry/opentelemetry-python/pull/148). It is thus preferred to supply the raw data that is available.
      */
     public FaasHttpSpanBuilder setHttpServerName(String httpServerName) {
       status.set(AttributeStatus.HTTP_SERVER_NAME);
@@ -527,8 +476,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.route.
-     *
-     * @param httpRoute The matched route (path template)..
+     * @param httpRoute The matched route (path template).
      */
     public FaasHttpSpanBuilder setHttpRoute(String httpRoute) {
       status.set(AttributeStatus.HTTP_ROUTE);
@@ -538,12 +486,8 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.client_ip.
-     *
-     * @param httpClientIp The IP address of the original client behind all proxies, if known (e.g.
-     *     from
-     *     [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For))..
-     *     <p>This is not necessarily the same as `net.peer.ip`, which would identify the
-     *     network-level peer, which may be a proxy.
+     * @param httpClientIp The IP address of the original client behind all proxies, if known (e.g. from [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)).
+     * <p> This is not necessarily the same as `net.peer.ip`, which would identify the network-level peer, which may be a proxy.
      */
     public FaasHttpSpanBuilder setHttpClientIp(String httpClientIp) {
       status.set(AttributeStatus.HTTP_CLIENT_IP);
@@ -553,8 +497,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.method.
-     *
-     * @param httpMethod HTTP request method..
+     * @param httpMethod HTTP request method.
      */
     public FaasHttpSpanBuilder setHttpMethod(String httpMethod) {
       status.set(AttributeStatus.HTTP_METHOD);
@@ -564,10 +507,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.url.
-     *
-     * @param httpUrl Full HTTP request URL in the form
-     *     `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted
-     *     over HTTP, but if it is known, it should be included nevertheless..
+     * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
      */
     public FaasHttpSpanBuilder setHttpUrl(String httpUrl) {
       status.set(AttributeStatus.HTTP_URL);
@@ -577,8 +517,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.target.
-     *
-     * @param httpTarget The full request target as passed in a HTTP request line or equivalent..
+     * @param httpTarget The full request target as passed in a HTTP request line or equivalent.
      */
     public FaasHttpSpanBuilder setHttpTarget(String httpTarget) {
       status.set(AttributeStatus.HTTP_TARGET);
@@ -588,10 +527,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.host.
-     *
-     * @param httpHost The value of the [HTTP host
-     *     header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not
-     *     present, this attribute should be the same..
+     * @param httpHost The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not present, this attribute should be the same.
      */
     public FaasHttpSpanBuilder setHttpHost(String httpHost) {
       status.set(AttributeStatus.HTTP_HOST);
@@ -601,8 +537,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.scheme.
-     *
-     * @param httpScheme The URI scheme identifying the used protocol..
+     * @param httpScheme The URI scheme identifying the used protocol.
      */
     public FaasHttpSpanBuilder setHttpScheme(String httpScheme) {
       status.set(AttributeStatus.HTTP_SCHEME);
@@ -612,9 +547,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.status_code.
-     *
-     * @param httpStatusCode [HTTP response status
-     *     code](https://tools.ietf.org/html/rfc7231#section-6)..
+     * @param httpStatusCode [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
      */
     public FaasHttpSpanBuilder setHttpStatusCode(long httpStatusCode) {
       status.set(AttributeStatus.HTTP_STATUS_CODE);
@@ -624,9 +557,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.status_text.
-     *
-     * @param httpStatusText [HTTP reason
-     *     phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2)..
+     * @param httpStatusText [HTTP reason phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2).
      */
     public FaasHttpSpanBuilder setHttpStatusText(String httpStatusText) {
       status.set(AttributeStatus.HTTP_STATUS_TEXT);
@@ -636,10 +567,8 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.flavor.
-     *
      * @param httpFlavor Kind of HTTP protocol used.
-     *     <p>If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if
-     *     `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
+     * <p> If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
      */
     public FaasHttpSpanBuilder setHttpFlavor(String httpFlavor) {
       status.set(AttributeStatus.HTTP_FLAVOR);
@@ -649,10 +578,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets http.user_agent.
-     *
-     * @param httpUserAgent Value of the [HTTP
-     *     User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the
-     *     client..
+     * @param httpUserAgent Value of the [HTTP User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
      */
     public FaasHttpSpanBuilder setHttpUserAgent(String httpUserAgent) {
       status.set(AttributeStatus.HTTP_USER_AGENT);
@@ -662,8 +588,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets net.transport.
-     *
-     * @param netTransport Transport protocol used. See note below..
+     * @param netTransport Transport protocol used. See note below.
      */
     public FaasHttpSpanBuilder setNetTransport(String netTransport) {
       status.set(AttributeStatus.NET_TRANSPORT);
@@ -673,9 +598,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets net.peer.ip.
-     *
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
-     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public FaasHttpSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -685,8 +608,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets net.peer.port.
-     *
-     * @param netPeerPort Remote port number..
+     * @param netPeerPort Remote port number.
      */
     public FaasHttpSpanBuilder setNetPeerPort(long netPeerPort) {
       status.set(AttributeStatus.NET_PEER_PORT);
@@ -696,8 +618,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets net.peer.name.
-     *
-     * @param netPeerName Remote hostname or similar, see note below..
+     * @param netPeerName Remote hostname or similar, see note below.
      */
     public FaasHttpSpanBuilder setNetPeerName(String netPeerName) {
       status.set(AttributeStatus.NET_PEER_NAME);
@@ -707,8 +628,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets net.host.ip.
-     *
-     * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host..
+     * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public FaasHttpSpanBuilder setNetHostIp(String netHostIp) {
       status.set(AttributeStatus.NET_HOST_IP);
@@ -718,8 +638,7 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets net.host.port.
-     *
-     * @param netHostPort Like `net.peer.port` but for the host port..
+     * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public FaasHttpSpanBuilder setNetHostPort(long netHostPort) {
       status.set(AttributeStatus.NET_HOST_PORT);
@@ -729,13 +648,13 @@ public class FaasHttpSpan extends DelegatingSpan implements FaasHttpSemanticConv
 
     /**
      * Sets net.host.name.
-     *
-     * @param netHostName Local hostname or similar, see note below..
+     * @param netHostName Local hostname or similar, see note below.
      */
     public FaasHttpSpanBuilder setNetHostName(String netHostName) {
       status.set(AttributeStatus.NET_HOST_NAME);
       internalBuilder.setAttribute("net.host.name", netHostName);
       return this;
     }
+
   }
 }

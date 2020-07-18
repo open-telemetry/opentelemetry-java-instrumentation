@@ -25,15 +25,14 @@ import java.util.logging.Logger;
  *
  * <ul>
  *   <li>faas.trigger: Type of the trigger on which the function is executed.
- *   <li>faas.time: A string containing the function invocation time in the [ISO
- *       8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in
- *       [UTC](https://www.w3.org/TR/NOTE-datetime).
+ *   <li>faas.time: A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
  * </ul>
  *
  * <b>Conditional attributes:</b>
  *
  * <ul>
  * </ul>
+ *
  */
 public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticConvention {
 
@@ -43,6 +42,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
     FAAS_EXECUTION,
     FAAS_TIME,
     FAAS_CRON;
+    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -70,7 +70,6 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(FaasTimerSpan.class.getName());
-
   public final AttributeStatus status;
 
   protected FaasTimerSpan(Span span, AttributeStatus status) {
@@ -78,25 +77,23 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
     this.status = status;
   }
 
-  /**
-   * Entry point to generate a {@link FaasTimerSpan}.
-   *
-   * @param tracer Tracer to use
-   * @param spanName Name for the {@link Span}
-   * @return a {@link FaasTimerSpan} object.
-   */
-  public static FaasTimerSpanBuilder createFaasTimerSpan(Tracer tracer, String spanName) {
+	/**
+	 * Entry point to generate a {@link FaasTimerSpan}.
+	 * @param tracer Tracer to use
+	 * @param spanName Name for the {@link Span}
+	 * @return a {@link FaasTimerSpan} object.
+	 */
+  public static FaasTimerSpanBuilder createFaasTimerSpanBuilder(Tracer tracer, String spanName) {
     return new FaasTimerSpanBuilder(tracer, spanName);
   }
 
   /**
-   * Creates a {@link FaasTimerSpan} from a {@link FaasSpan}.
-   *
-   * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
-   * @return a {@link FaasTimerSpan} object built from a {@link FaasSpan}.
-   */
-  public static FaasTimerSpanBuilder createFaasTimerSpan(FaasSpan.FaasSpanBuilder builder) {
-    // we accept a builder from Faas since FaasTimer "extends" Faas
+	 * Creates a {@link FaasTimerSpan} from a {@link FaasSpan}.
+	 * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
+	 * @return a {@link FaasTimerSpan} object built from a {@link FaasSpan}.
+	 */
+  public static FaasTimerSpanBuilder createFaasTimerSpanBuilder(FaasSpan.FaasSpanBuilder builder) {
+	  // we accept a builder from Faas since FaasTimer "extends" Faas
     return new FaasTimerSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -123,10 +120,10 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
     // conditional attributes
   }
 
+
   /**
    * Sets faas.trigger.
-   *
-   * @param faasTrigger Type of the trigger on which the function is executed..
+   * @param faasTrigger Type of the trigger on which the function is executed.
    */
   @Override
   public FaasTimerSemanticConvention setFaasTrigger(String faasTrigger) {
@@ -137,8 +134,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
 
   /**
    * Sets faas.execution.
-   *
-   * @param faasExecution The execution id of the current function execution..
+   * @param faasExecution The execution id of the current function execution.
    */
   @Override
   public FaasTimerSemanticConvention setFaasExecution(String faasExecution) {
@@ -149,10 +145,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
 
   /**
    * Sets faas.time.
-   *
-   * @param faasTime A string containing the function invocation time in the [ISO
-   *     8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in
-   *     [UTC](https://www.w3.org/TR/NOTE-datetime)..
+   * @param faasTime A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
    */
   @Override
   public FaasTimerSemanticConvention setFaasTime(String faasTime) {
@@ -163,9 +156,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
 
   /**
    * Sets faas.cron.
-   *
-   * @param faasCron A string containing the schedule period as [Cron
-   *     Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm)..
+   * @param faasCron A string containing the schedule period as [Cron Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm).
    */
   @Override
   public FaasTimerSemanticConvention setFaasCron(String faasCron) {
@@ -174,39 +165,42 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
     return this;
   }
 
-  /** Builder class for {@link FaasTimerSpan}. */
-  public static class FaasTimerSpanBuilder {
+
+	/**
+	 * Builder class for {@link FaasTimerSpan}.
+	 */
+	public static class FaasTimerSpanBuilder {
     // Protected because maybe we want to extend manually these classes
-    protected Builder internalBuilder;
+    protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
 
     protected FaasTimerSpanBuilder(Tracer tracer, String spanName) {
       internalBuilder = tracer.spanBuilder(spanName);
     }
 
-    public FaasTimerSpanBuilder(Builder spanBuilder, long attributes) {
+    public FaasTimerSpanBuilder(Span.Builder spanBuilder, long attributes) {
       this.internalBuilder = spanBuilder;
       this.status.set(attributes);
     }
 
-    public Builder getSpanBuilder() {
+    public Span.Builder getSpanBuilder() {
       return this.internalBuilder;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasTimerSpanBuilder setParent(Span parent) {
+    public FaasTimerSpanBuilder setParent(Span parent){
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasTimerSpanBuilder setParent(SpanContext remoteParent) {
+    public FaasTimerSpanBuilder setParent(SpanContext remoteParent){
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
 
     /** this method sets the type of the {@link Span} is only available in the builder. */
-    public FaasTimerSpanBuilder setKind(Kind kind) {
+    public FaasTimerSpanBuilder setKind(Span.Kind kind) {
       internalBuilder.setSpanKind(kind);
       return this;
     }
@@ -217,10 +211,10 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
       return new FaasTimerSpan(this.internalBuilder.startSpan(), status);
     }
 
+    
     /**
      * Sets faas.trigger.
-     *
-     * @param faasTrigger Type of the trigger on which the function is executed..
+     * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasTimerSpanBuilder setFaasTrigger(String faasTrigger) {
       status.set(AttributeStatus.FAAS_TRIGGER);
@@ -230,8 +224,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
 
     /**
      * Sets faas.execution.
-     *
-     * @param faasExecution The execution id of the current function execution..
+     * @param faasExecution The execution id of the current function execution.
      */
     public FaasTimerSpanBuilder setFaasExecution(String faasExecution) {
       status.set(AttributeStatus.FAAS_EXECUTION);
@@ -241,10 +234,7 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
 
     /**
      * Sets faas.time.
-     *
-     * @param faasTime A string containing the function invocation time in the [ISO
-     *     8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in
-     *     [UTC](https://www.w3.org/TR/NOTE-datetime)..
+     * @param faasTime A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
      */
     public FaasTimerSpanBuilder setFaasTime(String faasTime) {
       status.set(AttributeStatus.FAAS_TIME);
@@ -254,14 +244,13 @@ public class FaasTimerSpan extends DelegatingSpan implements FaasTimerSemanticCo
 
     /**
      * Sets faas.cron.
-     *
-     * @param faasCron A string containing the schedule period as [Cron
-     *     Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm)..
+     * @param faasCron A string containing the schedule period as [Cron Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm).
      */
     public FaasTimerSpanBuilder setFaasCron(String faasCron) {
       status.set(AttributeStatus.FAAS_CRON);
       internalBuilder.setAttribute("faas.cron", faasCron);
       return this;
     }
+
   }
 }
