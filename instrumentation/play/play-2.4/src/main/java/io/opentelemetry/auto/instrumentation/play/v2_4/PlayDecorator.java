@@ -23,11 +23,9 @@ import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
-import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Request;
 import scala.Option;
 
-@Slf4j
 public class PlayDecorator extends BaseDecorator {
   public static final PlayDecorator DECORATE = new PlayDecorator();
 

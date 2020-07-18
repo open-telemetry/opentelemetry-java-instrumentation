@@ -24,7 +24,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.trace.Span
 import io.opentelemetry.trace.Tracer
 import java.util.concurrent.Callable
-import lombok.SneakyThrows
 
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith
 
@@ -35,22 +34,25 @@ class TraceUtils {
 
   private static final Tracer TRACER = OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto")
 
-  @SneakyThrows
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
-    final Span span = TRACER.spanBuilder(rootOperationName).startSpan()
-    DECORATE.afterStart(span)
-
-    Scope scope = currentContextWith(span)
-
     try {
-      return r.call()
-    } catch (final Exception e) {
-      DECORATE.onError(span, e)
-      throw e
-    } finally {
-      DECORATE.beforeFinish(span)
-      span.end()
-      scope.close()
+      final Span span = TRACER.spanBuilder(rootOperationName).startSpan()
+      DECORATE.afterStart(span)
+
+      Scope scope = currentContextWith(span)
+
+      try {
+        return r.call()
+      } catch (final Exception e) {
+        DECORATE.onError(span, e)
+        throw e
+      } finally {
+        DECORATE.beforeFinish(span)
+        span.end()
+        scope.close()
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e)
     }
   }
 
