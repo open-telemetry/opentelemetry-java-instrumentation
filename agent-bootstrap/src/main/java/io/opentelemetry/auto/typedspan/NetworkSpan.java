@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -30,7 +31,6 @@ import java.util.logging.Logger;
  *
  * <ul>
  * </ul>
- *
  */
 public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConvention {
 
@@ -43,7 +43,6 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
     NET_HOST_IP,
     NET_HOST_PORT,
     NET_HOST_NAME;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -71,6 +70,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(NetworkSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected NetworkSpan(Span span, AttributeStatus status) {
@@ -78,17 +78,16 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link NetworkSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link NetworkSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link NetworkSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link NetworkSpan} object.
+   */
   public static NetworkSpanBuilder createNetworkSpanBuilder(Tracer tracer, String spanName) {
     return new NetworkSpanBuilder(tracer, spanName);
   }
-
-  
 
   /** @return the Span used internally */
   @Override
@@ -107,9 +106,9 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
     // conditional attributes
   }
 
-
   /**
    * Sets net.transport.
+   *
    * @param netTransport Transport protocol used. See note below.
    */
   @Override
@@ -121,7 +120,9 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public NetworkSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -132,6 +133,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -143,6 +145,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -154,6 +157,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
   /**
    * Sets net.host.ip.
+   *
    * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
@@ -165,6 +169,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
   /**
    * Sets net.host.port.
+   *
    * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
@@ -176,6 +181,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
   /**
    * Sets net.host.name.
+   *
    * @param netHostName Local hostname or similar, see note below.
    */
   @Override
@@ -185,11 +191,8 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link NetworkSpan}.
-	 */
-	public static class NetworkSpanBuilder {
+  /** Builder class for {@link NetworkSpan}. */
+  public static class NetworkSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -208,13 +211,13 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
     }
 
     /** sets the {@link Span} parent. */
-    public NetworkSpanBuilder setParent(Span parent){
+    public NetworkSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public NetworkSpanBuilder setParent(SpanContext remoteParent){
+    public NetworkSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -231,9 +234,9 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
       return new NetworkSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets net.transport.
+     *
      * @param netTransport Transport protocol used. See note below.
      */
     public NetworkSpanBuilder setNetTransport(String netTransport) {
@@ -244,7 +247,9 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public NetworkSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -254,6 +259,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public NetworkSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -264,6 +270,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public NetworkSpanBuilder setNetPeerName(String netPeerName) {
@@ -274,6 +281,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
     /**
      * Sets net.host.ip.
+     *
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public NetworkSpanBuilder setNetHostIp(String netHostIp) {
@@ -284,6 +292,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
     /**
      * Sets net.host.port.
+     *
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public NetworkSpanBuilder setNetHostPort(long netHostPort) {
@@ -294,6 +303,7 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
 
     /**
      * Sets net.host.name.
+     *
      * @param netHostName Local hostname or similar, see note below.
      */
     public NetworkSpanBuilder setNetHostName(String netHostName) {
@@ -301,6 +311,5 @@ public class NetworkSpan extends DelegatingSpan implements NetworkSemanticConven
       internalBuilder.setAttribute("net.host.name", netHostName);
       return this;
     }
-
   }
 }

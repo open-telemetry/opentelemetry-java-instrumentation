@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -30,9 +31,9 @@ import java.util.logging.Logger;
  * <b>Conditional attributes:</b>
  *
  * <ul>
- *   <li>http.status_code: [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
+ *   <li>http.status_code: [HTTP response status
+ *       code](https://tools.ietf.org/html/rfc7231#section-6).
  * </ul>
- *
  */
 public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
@@ -54,7 +55,6 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
     HTTP_STATUS_TEXT,
     HTTP_FLAVOR,
     HTTP_USER_AGENT;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -82,6 +82,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(HttpSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected HttpSpan(Span span, AttributeStatus status) {
@@ -89,17 +90,16 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link HttpSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link HttpSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link HttpSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link HttpSpan} object.
+   */
   public static HttpSpanBuilder createHttpSpanBuilder(Tracer tracer, String spanName) {
     return new HttpSpanBuilder(tracer, spanName);
   }
-
-  
 
   /** @return the Span used internally */
   @Override
@@ -124,9 +124,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
     }
   }
 
-
   /**
    * Sets net.transport.
+   *
    * @param netTransport Transport protocol used. See note below.
    */
   @Override
@@ -138,7 +138,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public HttpSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -149,6 +151,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -160,6 +163,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -171,6 +175,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets net.host.ip.
+   *
    * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
@@ -182,6 +187,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets net.host.port.
+   *
    * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
@@ -193,6 +199,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets net.host.name.
+   *
    * @param netHostName Local hostname or similar, see note below.
    */
   @Override
@@ -204,6 +211,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.method.
+   *
    * @param httpMethod HTTP request method.
    */
   @Override
@@ -215,7 +223,10 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.url.
-   * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
+   *
+   * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`.
+   *     Usually the fragment is not transmitted over HTTP, but if it is known, it should be
+   *     included nevertheless.
    */
   @Override
   public HttpSemanticConvention setHttpUrl(String httpUrl) {
@@ -226,6 +237,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.target.
+   *
    * @param httpTarget The full request target as passed in a HTTP request line or equivalent.
    */
   @Override
@@ -237,7 +249,10 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.host.
-   * @param httpHost The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not present, this attribute should be the same.
+   *
+   * @param httpHost The value of the [HTTP host
+   *     header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not
+   *     present, this attribute should be the same.
    */
   @Override
   public HttpSemanticConvention setHttpHost(String httpHost) {
@@ -248,6 +263,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.scheme.
+   *
    * @param httpScheme The URI scheme identifying the used protocol.
    */
   @Override
@@ -259,7 +275,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.status_code.
-   * @param httpStatusCode [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
+   *
+   * @param httpStatusCode [HTTP response status
+   *     code](https://tools.ietf.org/html/rfc7231#section-6).
    */
   @Override
   public HttpSemanticConvention setHttpStatusCode(long httpStatusCode) {
@@ -270,6 +288,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.status_text.
+   *
    * @param httpStatusText [HTTP reason phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2).
    */
   @Override
@@ -281,8 +300,10 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.flavor.
+   *
    * @param httpFlavor Kind of HTTP protocol used.
-   * <p> If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
+   *     <p>If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if
+   *     `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
    */
   @Override
   public HttpSemanticConvention setHttpFlavor(String httpFlavor) {
@@ -293,7 +314,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
   /**
    * Sets http.user_agent.
-   * @param httpUserAgent Value of the [HTTP User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
+   *
+   * @param httpUserAgent Value of the [HTTP
+   *     User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
    */
   @Override
   public HttpSemanticConvention setHttpUserAgent(String httpUserAgent) {
@@ -302,11 +325,8 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link HttpSpan}.
-	 */
-	public static class HttpSpanBuilder {
+  /** Builder class for {@link HttpSpan}. */
+  public static class HttpSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -325,13 +345,13 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
     }
 
     /** sets the {@link Span} parent. */
-    public HttpSpanBuilder setParent(Span parent){
+    public HttpSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public HttpSpanBuilder setParent(SpanContext remoteParent){
+    public HttpSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -348,9 +368,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
       return new HttpSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets net.transport.
+     *
      * @param netTransport Transport protocol used. See note below.
      */
     public HttpSpanBuilder setNetTransport(String netTransport) {
@@ -361,7 +381,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public HttpSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -371,6 +393,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public HttpSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -381,6 +404,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public HttpSpanBuilder setNetPeerName(String netPeerName) {
@@ -391,6 +415,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets net.host.ip.
+     *
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public HttpSpanBuilder setNetHostIp(String netHostIp) {
@@ -401,6 +426,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets net.host.port.
+     *
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public HttpSpanBuilder setNetHostPort(long netHostPort) {
@@ -411,6 +437,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets net.host.name.
+     *
      * @param netHostName Local hostname or similar, see note below.
      */
     public HttpSpanBuilder setNetHostName(String netHostName) {
@@ -421,6 +448,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.method.
+     *
      * @param httpMethod HTTP request method.
      */
     public HttpSpanBuilder setHttpMethod(String httpMethod) {
@@ -431,7 +459,10 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.url.
-     * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
+     *
+     * @param httpUrl Full HTTP request URL in the form
+     *     `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted
+     *     over HTTP, but if it is known, it should be included nevertheless.
      */
     public HttpSpanBuilder setHttpUrl(String httpUrl) {
       status.set(AttributeStatus.HTTP_URL);
@@ -441,6 +472,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.target.
+     *
      * @param httpTarget The full request target as passed in a HTTP request line or equivalent.
      */
     public HttpSpanBuilder setHttpTarget(String httpTarget) {
@@ -451,7 +483,10 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.host.
-     * @param httpHost The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not present, this attribute should be the same.
+     *
+     * @param httpHost The value of the [HTTP host
+     *     header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not
+     *     present, this attribute should be the same.
      */
     public HttpSpanBuilder setHttpHost(String httpHost) {
       status.set(AttributeStatus.HTTP_HOST);
@@ -461,6 +496,7 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.scheme.
+     *
      * @param httpScheme The URI scheme identifying the used protocol.
      */
     public HttpSpanBuilder setHttpScheme(String httpScheme) {
@@ -471,7 +507,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.status_code.
-     * @param httpStatusCode [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
+     *
+     * @param httpStatusCode [HTTP response status
+     *     code](https://tools.ietf.org/html/rfc7231#section-6).
      */
     public HttpSpanBuilder setHttpStatusCode(long httpStatusCode) {
       status.set(AttributeStatus.HTTP_STATUS_CODE);
@@ -481,7 +519,9 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.status_text.
-     * @param httpStatusText [HTTP reason phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2).
+     *
+     * @param httpStatusText [HTTP reason
+     *     phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2).
      */
     public HttpSpanBuilder setHttpStatusText(String httpStatusText) {
       status.set(AttributeStatus.HTTP_STATUS_TEXT);
@@ -491,8 +531,10 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.flavor.
+     *
      * @param httpFlavor Kind of HTTP protocol used.
-     * <p> If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
+     *     <p>If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if
+     *     `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
      */
     public HttpSpanBuilder setHttpFlavor(String httpFlavor) {
       status.set(AttributeStatus.HTTP_FLAVOR);
@@ -502,13 +544,14 @@ public class HttpSpan extends DelegatingSpan implements HttpSemanticConvention {
 
     /**
      * Sets http.user_agent.
-     * @param httpUserAgent Value of the [HTTP User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
+     *
+     * @param httpUserAgent Value of the [HTTP
+     *     User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
      */
     public HttpSpanBuilder setHttpUserAgent(String httpUserAgent) {
       status.set(AttributeStatus.HTTP_USER_AGENT);
       internalBuilder.setAttribute("http.user_agent", httpUserAgent);
       return this;
     }
-
   }
 }

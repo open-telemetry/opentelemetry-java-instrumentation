@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -24,17 +25,23 @@ import java.util.logging.Logger;
  * <b>Required attributes:</b>
  *
  * <ul>
- *   <li>db.system: An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+ *   <li>db.system: An identifier for the database management system (DBMS) product being used. See
+ *       below for a list of well-known identifiers.
  * </ul>
  *
  * <b>Conditional attributes:</b>
  *
  * <ul>
- *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
+ *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the
+ *       name of the database being accessed. For commands that switch the database, this should be
+ *       set to the target database (even if the command fails).
  *   <li>db.statement: The database statement being executed.
- *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
+ *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command
+ *       name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+ *       `findAndModify`.
  *   <li>net.peer.name: Remote hostname or similar, see note below.
- *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
+ *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or
+ *       [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
  *   <li>net.peer.port: Remote port number.
  *   <li>net.transport: Transport protocol used. See note below.
  * </ul>
@@ -63,7 +70,6 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
     NET_PEER_PORT,
     NET_TRANSPORT,
     DB_MSSQL_INSTANCE_NAME;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -91,6 +97,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(DbMysqlSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected DbMysqlSpan(Span span, AttributeStatus status) {
@@ -98,23 +105,25 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link DbMysqlSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link DbMysqlSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link DbMysqlSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link DbMysqlSpan} object.
+   */
   public static DbMysqlSpanBuilder createDbMysqlSpanBuilder(Tracer tracer, String spanName) {
     return new DbMysqlSpanBuilder(tracer, spanName);
   }
 
   /**
-	 * Creates a {@link DbMysqlSpan} from a {@link DbSpan}.
-	 * @param builder {@link DbSpan.DbSpanBuilder} to use.
-	 * @return a {@link DbMysqlSpan} object built from a {@link DbSpan}.
-	 */
+   * Creates a {@link DbMysqlSpan} from a {@link DbSpan}.
+   *
+   * @param builder {@link DbSpan.DbSpanBuilder} to use.
+   * @return a {@link DbMysqlSpan} object built from a {@link DbSpan}.
+   */
   public static DbMysqlSpanBuilder createDbMysqlSpanBuilder(DbSpan.DbSpanBuilder builder) {
-	  // we accept a builder from Db since DbMysql "extends" Db
+    // we accept a builder from Db since DbMysql "extends" Db
     return new DbMysqlSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -137,8 +146,8 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -167,10 +176,11 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
     }
   }
 
-
   /**
    * Sets db.system.
-   * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+   *
+   * @param dbSystem An identifier for the database management system (DBMS) product being used. See
+   *     below for a list of well-known identifiers.
    */
   @Override
   public DbMysqlSemanticConvention setDbSystem(String dbSystem) {
@@ -181,8 +191,9 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets db.connection_string.
+   *
    * @param dbConnectionString The connection string used to connect to the database.
-   * <p> It is recommended to remove embedded credentials.
+   *     <p>It is recommended to remove embedded credentials.
    */
   @Override
   public DbMysqlSemanticConvention setDbConnectionString(String dbConnectionString) {
@@ -193,6 +204,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets db.user.
+   *
    * @param dbUser Username for accessing the database.
    */
   @Override
@@ -204,8 +216,11 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets db.name.
-   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
-   * <p> In some SQL databases, the database name to be used is called "schema name".
+   *
+   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
+   *     name of the database being accessed. For commands that switch the database, this should be
+   *     set to the target database (even if the command fails).
+   *     <p>In some SQL databases, the database name to be used is called "schema name".
    */
   @Override
   public DbMysqlSemanticConvention setDbName(String dbName) {
@@ -216,8 +231,9 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets db.statement.
+   *
    * @param dbStatement The database statement being executed.
-   * <p> The value may be sanitized to exclude sensitive information.
+   *     <p>The value may be sanitized to exclude sensitive information.
    */
   @Override
   public DbMysqlSemanticConvention setDbStatement(String dbStatement) {
@@ -228,8 +244,13 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets db.operation.
-   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
-   * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
+   *
+   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
+   *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+   *     `findAndModify`.
+   *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT`
+   *     or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement`
+   *     just to get this property (the back end can do that if required).
    */
   @Override
   public DbMysqlSemanticConvention setDbOperation(String dbOperation) {
@@ -240,6 +261,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -251,7 +273,9 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public DbMysqlSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -262,6 +286,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -273,6 +298,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets net.transport.
+   *
    * @param netTransport Transport protocol used. See note below.
    */
   @Override
@@ -284,8 +310,12 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
   /**
    * Sets db.mssql.instance_name.
-   * @param dbMssqlInstanceName The Microsoft SQL Server [instance name](https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15) connecting to. This name is used to determine the port of a named instance.
-   * <p> If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but still recommended if non-standard).
+   *
+   * @param dbMssqlInstanceName The Microsoft SQL Server [instance
+   *     name](https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15)
+   *     connecting to. This name is used to determine the port of a named instance.
+   *     <p>If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but still
+   *     recommended if non-standard).
    */
   @Override
   public DbMysqlSemanticConvention setDbMssqlInstanceName(String dbMssqlInstanceName) {
@@ -294,11 +324,8 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link DbMysqlSpan}.
-	 */
-	public static class DbMysqlSpanBuilder {
+  /** Builder class for {@link DbMysqlSpan}. */
+  public static class DbMysqlSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -317,13 +344,13 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
     }
 
     /** sets the {@link Span} parent. */
-    public DbMysqlSpanBuilder setParent(Span parent){
+    public DbMysqlSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public DbMysqlSpanBuilder setParent(SpanContext remoteParent){
+    public DbMysqlSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -340,10 +367,11 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
       return new DbMysqlSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets db.system.
-     * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+     *
+     * @param dbSystem An identifier for the database management system (DBMS) product being used.
+     *     See below for a list of well-known identifiers.
      */
     public DbMysqlSpanBuilder setDbSystem(String dbSystem) {
       status.set(AttributeStatus.DB_SYSTEM);
@@ -353,8 +381,9 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets db.connection_string.
+     *
      * @param dbConnectionString The connection string used to connect to the database.
-     * <p> It is recommended to remove embedded credentials.
+     *     <p>It is recommended to remove embedded credentials.
      */
     public DbMysqlSpanBuilder setDbConnectionString(String dbConnectionString) {
       status.set(AttributeStatus.DB_CONNECTION_STRING);
@@ -364,6 +393,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets db.user.
+     *
      * @param dbUser Username for accessing the database.
      */
     public DbMysqlSpanBuilder setDbUser(String dbUser) {
@@ -374,8 +404,11 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets db.name.
-     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
-     * <p> In some SQL databases, the database name to be used is called "schema name".
+     *
+     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
+     *     name of the database being accessed. For commands that switch the database, this should
+     *     be set to the target database (even if the command fails).
+     *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbMysqlSpanBuilder setDbName(String dbName) {
       status.set(AttributeStatus.DB_NAME);
@@ -385,8 +418,9 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets db.statement.
+     *
      * @param dbStatement The database statement being executed.
-     * <p> The value may be sanitized to exclude sensitive information.
+     *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbMysqlSpanBuilder setDbStatement(String dbStatement) {
       status.set(AttributeStatus.DB_STATEMENT);
@@ -396,8 +430,13 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets db.operation.
-     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
-     * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
+     *
+     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
+     *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+     *     `findAndModify`.
+     *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like
+     *     `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of
+     *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbMysqlSpanBuilder setDbOperation(String dbOperation) {
       status.set(AttributeStatus.DB_OPERATION);
@@ -407,6 +446,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public DbMysqlSpanBuilder setNetPeerName(String netPeerName) {
@@ -417,7 +457,9 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public DbMysqlSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -427,6 +469,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public DbMysqlSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -437,6 +480,7 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets net.transport.
+     *
      * @param netTransport Transport protocol used. See note below.
      */
     public DbMysqlSpanBuilder setNetTransport(String netTransport) {
@@ -447,14 +491,17 @@ public class DbMysqlSpan extends DelegatingSpan implements DbMysqlSemanticConven
 
     /**
      * Sets db.mssql.instance_name.
-     * @param dbMssqlInstanceName The Microsoft SQL Server [instance name](https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15) connecting to. This name is used to determine the port of a named instance.
-     * <p> If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but still recommended if non-standard).
+     *
+     * @param dbMssqlInstanceName The Microsoft SQL Server [instance
+     *     name](https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15)
+     *     connecting to. This name is used to determine the port of a named instance.
+     *     <p>If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but
+     *     still recommended if non-standard).
      */
     public DbMysqlSpanBuilder setDbMssqlInstanceName(String dbMssqlInstanceName) {
       status.set(AttributeStatus.DB_MSSQL_INSTANCE_NAME);
       internalBuilder.setAttribute("db.mssql.instance_name", dbMssqlInstanceName);
       return this;
     }
-
   }
 }

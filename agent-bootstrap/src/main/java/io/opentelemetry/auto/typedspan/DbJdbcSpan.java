@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -24,17 +25,23 @@ import java.util.logging.Logger;
  * <b>Required attributes:</b>
  *
  * <ul>
- *   <li>db.system: An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+ *   <li>db.system: An identifier for the database management system (DBMS) product being used. See
+ *       below for a list of well-known identifiers.
  * </ul>
  *
  * <b>Conditional attributes:</b>
  *
  * <ul>
- *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
+ *   <li>db.name: If no tech-specific attribute is defined, this attribute is used to report the
+ *       name of the database being accessed. For commands that switch the database, this should be
+ *       set to the target database (even if the command fails).
  *   <li>db.statement: The database statement being executed.
- *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
+ *   <li>db.operation: The name of the operation being executed, e.g. the [MongoDB command
+ *       name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+ *       `findAndModify`.
  *   <li>net.peer.name: Remote hostname or similar, see note below.
- *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
+ *   <li>net.peer.ip: Remote address of the peer (dotted decimal for IPv4 or
+ *       [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6)
  *   <li>net.peer.port: Remote port number.
  *   <li>net.transport: Transport protocol used. See note below.
  * </ul>
@@ -63,7 +70,6 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
     NET_PEER_PORT,
     NET_TRANSPORT,
     DB_JDBC_JDBC_DRIVER_CLASSNAME;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -91,6 +97,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(DbJdbcSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected DbJdbcSpan(Span span, AttributeStatus status) {
@@ -98,23 +105,25 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link DbJdbcSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link DbJdbcSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link DbJdbcSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link DbJdbcSpan} object.
+   */
   public static DbJdbcSpanBuilder createDbJdbcSpanBuilder(Tracer tracer, String spanName) {
     return new DbJdbcSpanBuilder(tracer, spanName);
   }
 
   /**
-	 * Creates a {@link DbJdbcSpan} from a {@link DbSpan}.
-	 * @param builder {@link DbSpan.DbSpanBuilder} to use.
-	 * @return a {@link DbJdbcSpan} object built from a {@link DbSpan}.
-	 */
+   * Creates a {@link DbJdbcSpan} from a {@link DbSpan}.
+   *
+   * @param builder {@link DbSpan.DbSpanBuilder} to use.
+   * @return a {@link DbJdbcSpan} object built from a {@link DbSpan}.
+   */
   public static DbJdbcSpanBuilder createDbJdbcSpanBuilder(DbSpan.DbSpanBuilder builder) {
-	  // we accept a builder from Db since DbJdbc "extends" Db
+    // we accept a builder from Db since DbJdbc "extends" Db
     return new DbJdbcSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -137,8 +146,8 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -167,10 +176,11 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
     }
   }
 
-
   /**
    * Sets db.system.
-   * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+   *
+   * @param dbSystem An identifier for the database management system (DBMS) product being used. See
+   *     below for a list of well-known identifiers.
    */
   @Override
   public DbJdbcSemanticConvention setDbSystem(String dbSystem) {
@@ -181,8 +191,9 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets db.connection_string.
+   *
    * @param dbConnectionString The connection string used to connect to the database.
-   * <p> It is recommended to remove embedded credentials.
+   *     <p>It is recommended to remove embedded credentials.
    */
   @Override
   public DbJdbcSemanticConvention setDbConnectionString(String dbConnectionString) {
@@ -193,6 +204,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets db.user.
+   *
    * @param dbUser Username for accessing the database.
    */
   @Override
@@ -204,8 +216,11 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets db.name.
-   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
-   * <p> In some SQL databases, the database name to be used is called "schema name".
+   *
+   * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
+   *     name of the database being accessed. For commands that switch the database, this should be
+   *     set to the target database (even if the command fails).
+   *     <p>In some SQL databases, the database name to be used is called "schema name".
    */
   @Override
   public DbJdbcSemanticConvention setDbName(String dbName) {
@@ -216,8 +231,9 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets db.statement.
+   *
    * @param dbStatement The database statement being executed.
-   * <p> The value may be sanitized to exclude sensitive information.
+   *     <p>The value may be sanitized to exclude sensitive information.
    */
   @Override
   public DbJdbcSemanticConvention setDbStatement(String dbStatement) {
@@ -228,8 +244,13 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets db.operation.
-   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
-   * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
+   *
+   * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
+   *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+   *     `findAndModify`.
+   *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT`
+   *     or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement`
+   *     just to get this property (the back end can do that if required).
    */
   @Override
   public DbJdbcSemanticConvention setDbOperation(String dbOperation) {
@@ -240,6 +261,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -251,7 +273,9 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public DbJdbcSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -262,6 +286,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -273,6 +298,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets net.transport.
+   *
    * @param netTransport Transport protocol used. See note below.
    */
   @Override
@@ -284,7 +310,9 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
   /**
    * Sets db.jdbc.jdbc.driver_classname.
-   * @param dbJdbcJdbcDriverClassname The fully-qualified class name of the JDBC driver used to connect.
+   *
+   * @param dbJdbcJdbcDriverClassname The fully-qualified class name of the JDBC driver used to
+   *     connect.
    */
   @Override
   public DbJdbcSemanticConvention setDbJdbcJdbcDriverClassname(String dbJdbcJdbcDriverClassname) {
@@ -293,11 +321,8 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link DbJdbcSpan}.
-	 */
-	public static class DbJdbcSpanBuilder {
+  /** Builder class for {@link DbJdbcSpan}. */
+  public static class DbJdbcSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -316,13 +341,13 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
     }
 
     /** sets the {@link Span} parent. */
-    public DbJdbcSpanBuilder setParent(Span parent){
+    public DbJdbcSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public DbJdbcSpanBuilder setParent(SpanContext remoteParent){
+    public DbJdbcSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -339,10 +364,11 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
       return new DbJdbcSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets db.system.
-     * @param dbSystem An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
+     *
+     * @param dbSystem An identifier for the database management system (DBMS) product being used.
+     *     See below for a list of well-known identifiers.
      */
     public DbJdbcSpanBuilder setDbSystem(String dbSystem) {
       status.set(AttributeStatus.DB_SYSTEM);
@@ -352,8 +378,9 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets db.connection_string.
+     *
      * @param dbConnectionString The connection string used to connect to the database.
-     * <p> It is recommended to remove embedded credentials.
+     *     <p>It is recommended to remove embedded credentials.
      */
     public DbJdbcSpanBuilder setDbConnectionString(String dbConnectionString) {
       status.set(AttributeStatus.DB_CONNECTION_STRING);
@@ -363,6 +390,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets db.user.
+     *
      * @param dbUser Username for accessing the database.
      */
     public DbJdbcSpanBuilder setDbUser(String dbUser) {
@@ -373,8 +401,11 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets db.name.
-     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
-     * <p> In some SQL databases, the database name to be used is called "schema name".
+     *
+     * @param dbName If no tech-specific attribute is defined, this attribute is used to report the
+     *     name of the database being accessed. For commands that switch the database, this should
+     *     be set to the target database (even if the command fails).
+     *     <p>In some SQL databases, the database name to be used is called "schema name".
      */
     public DbJdbcSpanBuilder setDbName(String dbName) {
       status.set(AttributeStatus.DB_NAME);
@@ -384,8 +415,9 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets db.statement.
+     *
      * @param dbStatement The database statement being executed.
-     * <p> The value may be sanitized to exclude sensitive information.
+     *     <p>The value may be sanitized to exclude sensitive information.
      */
     public DbJdbcSpanBuilder setDbStatement(String dbStatement) {
       status.set(AttributeStatus.DB_STATEMENT);
@@ -395,8 +427,13 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets db.operation.
-     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`.
-     * <p> While it would semantically make sense to set this, e.g., to a SQL keyword like `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property (the back end can do that if required).
+     *
+     * @param dbOperation The name of the operation being executed, e.g. the [MongoDB command
+     *     name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as
+     *     `findAndModify`.
+     *     <p>While it would semantically make sense to set this, e.g., to a SQL keyword like
+     *     `SELECT` or `INSERT`, it is not recommended to attempt any client-side parsing of
+     *     `db.statement` just to get this property (the back end can do that if required).
      */
     public DbJdbcSpanBuilder setDbOperation(String dbOperation) {
       status.set(AttributeStatus.DB_OPERATION);
@@ -406,6 +443,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public DbJdbcSpanBuilder setNetPeerName(String netPeerName) {
@@ -416,7 +454,9 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public DbJdbcSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -426,6 +466,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public DbJdbcSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -436,6 +477,7 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets net.transport.
+     *
      * @param netTransport Transport protocol used. See note below.
      */
     public DbJdbcSpanBuilder setNetTransport(String netTransport) {
@@ -446,13 +488,14 @@ public class DbJdbcSpan extends DelegatingSpan implements DbJdbcSemanticConventi
 
     /**
      * Sets db.jdbc.jdbc.driver_classname.
-     * @param dbJdbcJdbcDriverClassname The fully-qualified class name of the JDBC driver used to connect.
+     *
+     * @param dbJdbcJdbcDriverClassname The fully-qualified class name of the JDBC driver used to
+     *     connect.
      */
     public DbJdbcSpanBuilder setDbJdbcJdbcDriverClassname(String dbJdbcJdbcDriverClassname) {
       status.set(AttributeStatus.DB_JDBC_JDBC_DRIVER_CLASSNAME);
       internalBuilder.setAttribute("db.jdbc.jdbc.driver_classname", dbJdbcJdbcDriverClassname);
       return this;
     }
-
   }
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -25,7 +26,8 @@ import java.util.logging.Logger;
  *
  * <ul>
  *   <li>messaging.system: A string identifying the messaging system.
- *   <li>messaging.destination: The message destination name. This might be equal to the span name but is required nevertheless.
+ *   <li>messaging.destination: The message destination name. This might be equal to the span name
+ *       but is required nevertheless.
  * </ul>
  *
  * <b>Conditional attributes:</b>
@@ -44,7 +46,8 @@ import java.util.logging.Logger;
  *   <li>net.peer.ip
  * </ul>
  */
-public class MessagingConsumerSpan extends DelegatingSpan implements MessagingConsumerSemanticConvention {
+public class MessagingConsumerSpan extends DelegatingSpan
+    implements MessagingConsumerSemanticConvention {
 
   enum AttributeStatus {
     EMPTY,
@@ -67,7 +70,6 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
     NET_HOST_PORT,
     NET_HOST_NAME,
     MESSAGING_OPERATION;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -95,6 +97,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(MessagingConsumerSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected MessagingConsumerSpan(Span span, AttributeStatus status) {
@@ -102,23 +105,27 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link MessagingConsumerSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link MessagingConsumerSpan} object.
-	 */
-  public static MessagingConsumerSpanBuilder createMessagingConsumerSpanBuilder(Tracer tracer, String spanName) {
+  /**
+   * Entry point to generate a {@link MessagingConsumerSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link MessagingConsumerSpan} object.
+   */
+  public static MessagingConsumerSpanBuilder createMessagingConsumerSpanBuilder(
+      Tracer tracer, String spanName) {
     return new MessagingConsumerSpanBuilder(tracer, spanName).setKind(Span.Kind.CONSUMER);
   }
 
   /**
-	 * Creates a {@link MessagingConsumerSpan} from a {@link MessagingSpan}.
-	 * @param builder {@link MessagingSpan.MessagingSpanBuilder} to use.
-	 * @return a {@link MessagingConsumerSpan} object built from a {@link MessagingSpan}.
-	 */
-  public static MessagingConsumerSpanBuilder createMessagingConsumerSpanBuilder(MessagingSpan.MessagingSpanBuilder builder) {
-	  // we accept a builder from Messaging since MessagingConsumer "extends" Messaging
+   * Creates a {@link MessagingConsumerSpan} from a {@link MessagingSpan}.
+   *
+   * @param builder {@link MessagingSpan.MessagingSpanBuilder} to use.
+   * @return a {@link MessagingConsumerSpan} object built from a {@link MessagingSpan}.
+   */
+  public static MessagingConsumerSpanBuilder createMessagingConsumerSpanBuilder(
+      MessagingSpan.MessagingSpanBuilder builder) {
+    // we accept a builder from Messaging since MessagingConsumer "extends" Messaging
     return new MessagingConsumerSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -144,8 +151,8 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -159,9 +166,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
     }
   }
 
-
   /**
    * Sets messaging.system.
+   *
    * @param messagingSystem A string identifying the messaging system.
    */
   @Override
@@ -173,7 +180,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.destination.
-   * @param messagingDestination The message destination name. This might be equal to the span name but is required nevertheless.
+   *
+   * @param messagingDestination The message destination name. This might be equal to the span name
+   *     but is required nevertheless.
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingDestination(String messagingDestination) {
@@ -184,10 +193,12 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.destination_kind.
+   *
    * @param messagingDestinationKind The kind of message destination.
    */
   @Override
-  public MessagingConsumerSemanticConvention setMessagingDestinationKind(String messagingDestinationKind) {
+  public MessagingConsumerSemanticConvention setMessagingDestinationKind(
+      String messagingDestinationKind) {
     status.set(AttributeStatus.MESSAGING_DESTINATION_KIND);
     delegate.setAttribute("messaging.destination_kind", messagingDestinationKind);
     return this;
@@ -195,10 +206,12 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.temp_destination.
+   *
    * @param messagingTempDestination A boolean that is true if the message destination is temporary.
    */
   @Override
-  public MessagingConsumerSemanticConvention setMessagingTempDestination(boolean messagingTempDestination) {
+  public MessagingConsumerSemanticConvention setMessagingTempDestination(
+      boolean messagingTempDestination) {
     status.set(AttributeStatus.MESSAGING_TEMP_DESTINATION);
     delegate.setAttribute("messaging.temp_destination", messagingTempDestination);
     return this;
@@ -206,6 +219,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.protocol.
+   *
    * @param messagingProtocol The name of the transport protocol.
    */
   @Override
@@ -217,10 +231,12 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.protocol_version.
+   *
    * @param messagingProtocolVersion The version of the transport protocol.
    */
   @Override
-  public MessagingConsumerSemanticConvention setMessagingProtocolVersion(String messagingProtocolVersion) {
+  public MessagingConsumerSemanticConvention setMessagingProtocolVersion(
+      String messagingProtocolVersion) {
     status.set(AttributeStatus.MESSAGING_PROTOCOL_VERSION);
     delegate.setAttribute("messaging.protocol_version", messagingProtocolVersion);
     return this;
@@ -228,6 +244,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.url.
+   *
    * @param messagingUrl Connection string.
    */
   @Override
@@ -239,7 +256,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.message_id.
-   * @param messagingMessageId A value used by the messaging system as an identifier for the message, represented as a string.
+   *
+   * @param messagingMessageId A value used by the messaging system as an identifier for the
+   *     message, represented as a string.
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingMessageId(String messagingMessageId) {
@@ -250,10 +269,13 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.conversation_id.
-   * @param messagingConversationId A value identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
+   *
+   * @param messagingConversationId A value identifying the conversation to which the message
+   *     belongs, represented as a string. Sometimes called "Correlation ID".
    */
   @Override
-  public MessagingConsumerSemanticConvention setMessagingConversationId(String messagingConversationId) {
+  public MessagingConsumerSemanticConvention setMessagingConversationId(
+      String messagingConversationId) {
     status.set(AttributeStatus.MESSAGING_CONVERSATION_ID);
     delegate.setAttribute("messaging.conversation_id", messagingConversationId);
     return this;
@@ -261,10 +283,14 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.message_payload_size_bytes.
-   * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
+   *
+   * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in
+   *     bytes. Also use this attribute if it is unknown whether the compressed or uncompressed
+   *     payload size is reported.
    */
   @Override
-  public MessagingConsumerSemanticConvention setMessagingMessagePayloadSizeBytes(long messagingMessagePayloadSizeBytes) {
+  public MessagingConsumerSemanticConvention setMessagingMessagePayloadSizeBytes(
+      long messagingMessagePayloadSizeBytes) {
     status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
     delegate.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
     return this;
@@ -272,17 +298,23 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.message_payload_compressed_size_bytes.
-   * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in bytes.
+   *
+   * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in
+   *     bytes.
    */
   @Override
-  public MessagingConsumerSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(long messagingMessagePayloadCompressedSizeBytes) {
+  public MessagingConsumerSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(
+      long messagingMessagePayloadCompressedSizeBytes) {
     status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES);
-    delegate.setAttribute("messaging.message_payload_compressed_size_bytes", messagingMessagePayloadCompressedSizeBytes);
+    delegate.setAttribute(
+        "messaging.message_payload_compressed_size_bytes",
+        messagingMessagePayloadCompressedSizeBytes);
     return this;
   }
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -294,6 +326,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets net.transport.
+   *
    * @param netTransport Strongly recommended for in-process queueing systems.
    */
   @Override
@@ -305,7 +338,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public MessagingConsumerSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -316,6 +351,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -327,6 +363,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets net.host.ip.
+   *
    * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
@@ -338,6 +375,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets net.host.port.
+   *
    * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
@@ -349,6 +387,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets net.host.name.
+   *
    * @param netHostName Local hostname or similar, see note below.
    */
   @Override
@@ -360,7 +399,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
   /**
    * Sets messaging.operation.
-   * @param messagingOperation A string identifying which part and kind of message consumption this span describes.
+   *
+   * @param messagingOperation A string identifying which part and kind of message consumption this
+   *     span describes.
    */
   @Override
   public MessagingConsumerSemanticConvention setMessagingOperation(String messagingOperation) {
@@ -369,11 +410,8 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link MessagingConsumerSpan}.
-	 */
-	public static class MessagingConsumerSpanBuilder {
+  /** Builder class for {@link MessagingConsumerSpan}. */
+  public static class MessagingConsumerSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -392,13 +430,13 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
     }
 
     /** sets the {@link Span} parent. */
-    public MessagingConsumerSpanBuilder setParent(Span parent){
+    public MessagingConsumerSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public MessagingConsumerSpanBuilder setParent(SpanContext remoteParent){
+    public MessagingConsumerSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -415,9 +453,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
       return new MessagingConsumerSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets messaging.system.
+     *
      * @param messagingSystem A string identifying the messaging system.
      */
     public MessagingConsumerSpanBuilder setMessagingSystem(String messagingSystem) {
@@ -428,7 +466,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.destination.
-     * @param messagingDestination The message destination name. This might be equal to the span name but is required nevertheless.
+     *
+     * @param messagingDestination The message destination name. This might be equal to the span
+     *     name but is required nevertheless.
      */
     public MessagingConsumerSpanBuilder setMessagingDestination(String messagingDestination) {
       status.set(AttributeStatus.MESSAGING_DESTINATION);
@@ -438,9 +478,11 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.destination_kind.
+     *
      * @param messagingDestinationKind The kind of message destination.
      */
-    public MessagingConsumerSpanBuilder setMessagingDestinationKind(String messagingDestinationKind) {
+    public MessagingConsumerSpanBuilder setMessagingDestinationKind(
+        String messagingDestinationKind) {
       status.set(AttributeStatus.MESSAGING_DESTINATION_KIND);
       internalBuilder.setAttribute("messaging.destination_kind", messagingDestinationKind);
       return this;
@@ -448,9 +490,12 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.temp_destination.
-     * @param messagingTempDestination A boolean that is true if the message destination is temporary.
+     *
+     * @param messagingTempDestination A boolean that is true if the message destination is
+     *     temporary.
      */
-    public MessagingConsumerSpanBuilder setMessagingTempDestination(boolean messagingTempDestination) {
+    public MessagingConsumerSpanBuilder setMessagingTempDestination(
+        boolean messagingTempDestination) {
       status.set(AttributeStatus.MESSAGING_TEMP_DESTINATION);
       internalBuilder.setAttribute("messaging.temp_destination", messagingTempDestination);
       return this;
@@ -458,6 +503,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.protocol.
+     *
      * @param messagingProtocol The name of the transport protocol.
      */
     public MessagingConsumerSpanBuilder setMessagingProtocol(String messagingProtocol) {
@@ -468,9 +514,11 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.protocol_version.
+     *
      * @param messagingProtocolVersion The version of the transport protocol.
      */
-    public MessagingConsumerSpanBuilder setMessagingProtocolVersion(String messagingProtocolVersion) {
+    public MessagingConsumerSpanBuilder setMessagingProtocolVersion(
+        String messagingProtocolVersion) {
       status.set(AttributeStatus.MESSAGING_PROTOCOL_VERSION);
       internalBuilder.setAttribute("messaging.protocol_version", messagingProtocolVersion);
       return this;
@@ -478,6 +526,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.url.
+     *
      * @param messagingUrl Connection string.
      */
     public MessagingConsumerSpanBuilder setMessagingUrl(String messagingUrl) {
@@ -488,7 +537,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.message_id.
-     * @param messagingMessageId A value used by the messaging system as an identifier for the message, represented as a string.
+     *
+     * @param messagingMessageId A value used by the messaging system as an identifier for the
+     *     message, represented as a string.
      */
     public MessagingConsumerSpanBuilder setMessagingMessageId(String messagingMessageId) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_ID);
@@ -498,7 +549,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.conversation_id.
-     * @param messagingConversationId A value identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
+     *
+     * @param messagingConversationId A value identifying the conversation to which the message
+     *     belongs, represented as a string. Sometimes called "Correlation ID".
      */
     public MessagingConsumerSpanBuilder setMessagingConversationId(String messagingConversationId) {
       status.set(AttributeStatus.MESSAGING_CONVERSATION_ID);
@@ -508,26 +561,37 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.message_payload_size_bytes.
-     * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
+     *
+     * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in
+     *     bytes. Also use this attribute if it is unknown whether the compressed or uncompressed
+     *     payload size is reported.
      */
-    public MessagingConsumerSpanBuilder setMessagingMessagePayloadSizeBytes(long messagingMessagePayloadSizeBytes) {
+    public MessagingConsumerSpanBuilder setMessagingMessagePayloadSizeBytes(
+        long messagingMessagePayloadSizeBytes) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
-      internalBuilder.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+      internalBuilder.setAttribute(
+          "messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
       return this;
     }
 
     /**
      * Sets messaging.message_payload_compressed_size_bytes.
-     * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in bytes.
+     *
+     * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload
+     *     in bytes.
      */
-    public MessagingConsumerSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(long messagingMessagePayloadCompressedSizeBytes) {
+    public MessagingConsumerSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(
+        long messagingMessagePayloadCompressedSizeBytes) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES);
-      internalBuilder.setAttribute("messaging.message_payload_compressed_size_bytes", messagingMessagePayloadCompressedSizeBytes);
+      internalBuilder.setAttribute(
+          "messaging.message_payload_compressed_size_bytes",
+          messagingMessagePayloadCompressedSizeBytes);
       return this;
     }
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public MessagingConsumerSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -538,6 +602,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets net.transport.
+     *
      * @param netTransport Strongly recommended for in-process queueing systems.
      */
     public MessagingConsumerSpanBuilder setNetTransport(String netTransport) {
@@ -548,7 +613,9 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public MessagingConsumerSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -558,6 +625,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public MessagingConsumerSpanBuilder setNetPeerName(String netPeerName) {
@@ -568,6 +636,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets net.host.ip.
+     *
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public MessagingConsumerSpanBuilder setNetHostIp(String netHostIp) {
@@ -578,6 +647,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets net.host.port.
+     *
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public MessagingConsumerSpanBuilder setNetHostPort(long netHostPort) {
@@ -588,6 +658,7 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets net.host.name.
+     *
      * @param netHostName Local hostname or similar, see note below.
      */
     public MessagingConsumerSpanBuilder setNetHostName(String netHostName) {
@@ -598,13 +669,14 @@ public class MessagingConsumerSpan extends DelegatingSpan implements MessagingCo
 
     /**
      * Sets messaging.operation.
-     * @param messagingOperation A string identifying which part and kind of message consumption this span describes.
+     *
+     * @param messagingOperation A string identifying which part and kind of message consumption
+     *     this span describes.
      */
     public MessagingConsumerSpanBuilder setMessagingOperation(String messagingOperation) {
       status.set(AttributeStatus.MESSAGING_OPERATION);
       internalBuilder.setAttribute("messaging.operation", messagingOperation);
       return this;
     }
-
   }
 }

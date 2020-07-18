@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -54,7 +55,6 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
     NET_HOST_PORT,
     NET_HOST_NAME,
     NET_PEER_PORT;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -82,6 +82,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(GrpcClientSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected GrpcClientSpan(Span span, AttributeStatus status) {
@@ -89,23 +90,25 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link GrpcClientSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link GrpcClientSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link GrpcClientSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link GrpcClientSpan} object.
+   */
   public static GrpcClientSpanBuilder createGrpcClientSpanBuilder(Tracer tracer, String spanName) {
     return new GrpcClientSpanBuilder(tracer, spanName).setKind(Span.Kind.CLIENT);
   }
 
   /**
-	 * Creates a {@link GrpcClientSpan} from a {@link RpcSpan}.
-	 * @param builder {@link RpcSpan.RpcSpanBuilder} to use.
-	 * @return a {@link GrpcClientSpan} object built from a {@link RpcSpan}.
-	 */
+   * Creates a {@link GrpcClientSpan} from a {@link RpcSpan}.
+   *
+   * @param builder {@link RpcSpan.RpcSpanBuilder} to use.
+   * @return a {@link GrpcClientSpan} object built from a {@link RpcSpan}.
+   */
   public static GrpcClientSpanBuilder createGrpcClientSpanBuilder(RpcSpan.RpcSpanBuilder builder) {
-	  // we accept a builder from Rpc since GrpcClient "extends" Rpc
+    // we accept a builder from Rpc since GrpcClient "extends" Rpc
     return new GrpcClientSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -131,8 +134,8 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_IP))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_NAME));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -140,9 +143,9 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
     // conditional attributes
   }
 
-
   /**
    * Sets rpc.service.
+   *
    * @param rpcService The service name, must be equal to the $service part in the span name.
    */
   @Override
@@ -154,6 +157,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   /**
    * Sets net.transport.
+   *
    * @param netTransport Transport protocol used. See note below.
    */
   @Override
@@ -165,7 +169,9 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public GrpcClientSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -176,6 +182,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -187,6 +194,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   /**
    * Sets net.host.ip.
+   *
    * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
@@ -198,6 +206,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   /**
    * Sets net.host.port.
+   *
    * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
@@ -209,6 +218,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   /**
    * Sets net.host.name.
+   *
    * @param netHostName Local hostname or similar, see note below.
    */
   @Override
@@ -220,6 +230,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort It describes the server port the client is connecting to.
    */
   @Override
@@ -229,11 +240,8 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link GrpcClientSpan}.
-	 */
-	public static class GrpcClientSpanBuilder {
+  /** Builder class for {@link GrpcClientSpan}. */
+  public static class GrpcClientSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -252,13 +260,13 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
     }
 
     /** sets the {@link Span} parent. */
-    public GrpcClientSpanBuilder setParent(Span parent){
+    public GrpcClientSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public GrpcClientSpanBuilder setParent(SpanContext remoteParent){
+    public GrpcClientSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -275,9 +283,9 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
       return new GrpcClientSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets rpc.service.
+     *
      * @param rpcService The service name, must be equal to the $service part in the span name.
      */
     public GrpcClientSpanBuilder setRpcService(String rpcService) {
@@ -288,6 +296,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
     /**
      * Sets net.transport.
+     *
      * @param netTransport Transport protocol used. See note below.
      */
     public GrpcClientSpanBuilder setNetTransport(String netTransport) {
@@ -298,7 +307,9 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public GrpcClientSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -308,6 +319,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public GrpcClientSpanBuilder setNetPeerName(String netPeerName) {
@@ -318,6 +330,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
     /**
      * Sets net.host.ip.
+     *
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public GrpcClientSpanBuilder setNetHostIp(String netHostIp) {
@@ -328,6 +341,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
     /**
      * Sets net.host.port.
+     *
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public GrpcClientSpanBuilder setNetHostPort(long netHostPort) {
@@ -338,6 +352,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
     /**
      * Sets net.host.name.
+     *
      * @param netHostName Local hostname or similar, see note below.
      */
     public GrpcClientSpanBuilder setNetHostName(String netHostName) {
@@ -348,6 +363,7 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort It describes the server port the client is connecting to.
      */
     public GrpcClientSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -355,6 +371,5 @@ public class GrpcClientSpan extends DelegatingSpan implements GrpcClientSemantic
       internalBuilder.setAttribute("net.peer.port", netPeerPort);
       return this;
     }
-
   }
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -22,17 +23,17 @@ public interface FaasSemanticConvention {
 
   Span getSpan();
 
-  
   /**
    * Sets a value for faas.trigger
+   *
    * @param faasTrigger Type of the trigger on which the function is executed.
    */
   FaasSemanticConvention setFaasTrigger(String faasTrigger);
 
   /**
    * Sets a value for faas.execution
+   *
    * @param faasExecution The execution id of the current function execution.
    */
   FaasSemanticConvention setFaasExecution(String faasExecution);
-
 }

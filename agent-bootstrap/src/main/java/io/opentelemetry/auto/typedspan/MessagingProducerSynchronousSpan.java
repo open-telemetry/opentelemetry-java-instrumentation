@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -25,7 +26,8 @@ import java.util.logging.Logger;
  *
  * <ul>
  *   <li>messaging.system: A string identifying the messaging system.
- *   <li>messaging.destination: The message destination name. This might be equal to the span name but is required nevertheless.
+ *   <li>messaging.destination: The message destination name. This might be equal to the span name
+ *       but is required nevertheless.
  * </ul>
  *
  * <b>Conditional attributes:</b>
@@ -44,7 +46,8 @@ import java.util.logging.Logger;
  *   <li>net.peer.ip
  * </ul>
  */
-public class MessagingProducerSynchronousSpan extends DelegatingSpan implements MessagingProducerSynchronousSemanticConvention {
+public class MessagingProducerSynchronousSpan extends DelegatingSpan
+    implements MessagingProducerSynchronousSemanticConvention {
 
   enum AttributeStatus {
     EMPTY,
@@ -66,7 +69,6 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
     NET_HOST_IP,
     NET_HOST_PORT,
     NET_HOST_NAME;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -93,7 +95,9 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
   }
 
   @SuppressWarnings("unused")
-  private static final Logger logger = Logger.getLogger(MessagingProducerSynchronousSpan.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(MessagingProducerSynchronousSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected MessagingProducerSynchronousSpan(Span span, AttributeStatus status) {
@@ -101,24 +105,29 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link MessagingProducerSynchronousSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link MessagingProducerSynchronousSpan} object.
-	 */
-  public static MessagingProducerSynchronousSpanBuilder createMessagingProducerSynchronousSpanBuilder(Tracer tracer, String spanName) {
+  /**
+   * Entry point to generate a {@link MessagingProducerSynchronousSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link MessagingProducerSynchronousSpan} object.
+   */
+  public static MessagingProducerSynchronousSpanBuilder
+      createMessagingProducerSynchronousSpanBuilder(Tracer tracer, String spanName) {
     return new MessagingProducerSynchronousSpanBuilder(tracer, spanName).setKind(Span.Kind.CLIENT);
   }
 
   /**
-	 * Creates a {@link MessagingProducerSynchronousSpan} from a {@link MessagingSpan}.
-	 * @param builder {@link MessagingSpan.MessagingSpanBuilder} to use.
-	 * @return a {@link MessagingProducerSynchronousSpan} object built from a {@link MessagingSpan}.
-	 */
-  public static MessagingProducerSynchronousSpanBuilder createMessagingProducerSynchronousSpanBuilder(MessagingSpan.MessagingSpanBuilder builder) {
-	  // we accept a builder from Messaging since MessagingProducerSynchronous "extends" Messaging
-    return new MessagingProducerSynchronousSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
+   * Creates a {@link MessagingProducerSynchronousSpan} from a {@link MessagingSpan}.
+   *
+   * @param builder {@link MessagingSpan.MessagingSpanBuilder} to use.
+   * @return a {@link MessagingProducerSynchronousSpan} object built from a {@link MessagingSpan}.
+   */
+  public static MessagingProducerSynchronousSpanBuilder
+      createMessagingProducerSynchronousSpanBuilder(MessagingSpan.MessagingSpanBuilder builder) {
+    // we accept a builder from Messaging since MessagingProducerSynchronous "extends" Messaging
+    return new MessagingProducerSynchronousSpanBuilder(
+        builder.getSpanBuilder(), builder.status.getValue());
   }
 
   /** @return the Span used internally */
@@ -143,8 +152,8 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -158,9 +167,9 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
     }
   }
 
-
   /**
    * Sets messaging.system.
+   *
    * @param messagingSystem A string identifying the messaging system.
    */
   @Override
@@ -172,10 +181,13 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.destination.
-   * @param messagingDestination The message destination name. This might be equal to the span name but is required nevertheless.
+   *
+   * @param messagingDestination The message destination name. This might be equal to the span name
+   *     but is required nevertheless.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingDestination(String messagingDestination) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingDestination(
+      String messagingDestination) {
     status.set(AttributeStatus.MESSAGING_DESTINATION);
     delegate.setAttribute("messaging.destination", messagingDestination);
     return this;
@@ -183,10 +195,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.destination_kind.
+   *
    * @param messagingDestinationKind The kind of message destination.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingDestinationKind(String messagingDestinationKind) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingDestinationKind(
+      String messagingDestinationKind) {
     status.set(AttributeStatus.MESSAGING_DESTINATION_KIND);
     delegate.setAttribute("messaging.destination_kind", messagingDestinationKind);
     return this;
@@ -194,10 +208,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.temp_destination.
+   *
    * @param messagingTempDestination A boolean that is true if the message destination is temporary.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingTempDestination(boolean messagingTempDestination) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingTempDestination(
+      boolean messagingTempDestination) {
     status.set(AttributeStatus.MESSAGING_TEMP_DESTINATION);
     delegate.setAttribute("messaging.temp_destination", messagingTempDestination);
     return this;
@@ -205,10 +221,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.protocol.
+   *
    * @param messagingProtocol The name of the transport protocol.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingProtocol(String messagingProtocol) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingProtocol(
+      String messagingProtocol) {
     status.set(AttributeStatus.MESSAGING_PROTOCOL);
     delegate.setAttribute("messaging.protocol", messagingProtocol);
     return this;
@@ -216,10 +234,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.protocol_version.
+   *
    * @param messagingProtocolVersion The version of the transport protocol.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingProtocolVersion(String messagingProtocolVersion) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingProtocolVersion(
+      String messagingProtocolVersion) {
     status.set(AttributeStatus.MESSAGING_PROTOCOL_VERSION);
     delegate.setAttribute("messaging.protocol_version", messagingProtocolVersion);
     return this;
@@ -227,6 +247,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.url.
+   *
    * @param messagingUrl Connection string.
    */
   @Override
@@ -238,10 +259,13 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.message_id.
-   * @param messagingMessageId A value used by the messaging system as an identifier for the message, represented as a string.
+   *
+   * @param messagingMessageId A value used by the messaging system as an identifier for the
+   *     message, represented as a string.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingMessageId(String messagingMessageId) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingMessageId(
+      String messagingMessageId) {
     status.set(AttributeStatus.MESSAGING_MESSAGE_ID);
     delegate.setAttribute("messaging.message_id", messagingMessageId);
     return this;
@@ -249,10 +273,13 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.conversation_id.
-   * @param messagingConversationId A value identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
+   *
+   * @param messagingConversationId A value identifying the conversation to which the message
+   *     belongs, represented as a string. Sometimes called "Correlation ID".
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingConversationId(String messagingConversationId) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingConversationId(
+      String messagingConversationId) {
     status.set(AttributeStatus.MESSAGING_CONVERSATION_ID);
     delegate.setAttribute("messaging.conversation_id", messagingConversationId);
     return this;
@@ -260,10 +287,14 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.message_payload_size_bytes.
-   * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
+   *
+   * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in
+   *     bytes. Also use this attribute if it is unknown whether the compressed or uncompressed
+   *     payload size is reported.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingMessagePayloadSizeBytes(long messagingMessagePayloadSizeBytes) {
+  public MessagingProducerSynchronousSemanticConvention setMessagingMessagePayloadSizeBytes(
+      long messagingMessagePayloadSizeBytes) {
     status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
     delegate.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
     return this;
@@ -271,17 +302,24 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets messaging.message_payload_compressed_size_bytes.
-   * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in bytes.
+   *
+   * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in
+   *     bytes.
    */
   @Override
-  public MessagingProducerSynchronousSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(long messagingMessagePayloadCompressedSizeBytes) {
+  public MessagingProducerSynchronousSemanticConvention
+      setMessagingMessagePayloadCompressedSizeBytes(
+          long messagingMessagePayloadCompressedSizeBytes) {
     status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES);
-    delegate.setAttribute("messaging.message_payload_compressed_size_bytes", messagingMessagePayloadCompressedSizeBytes);
+    delegate.setAttribute(
+        "messaging.message_payload_compressed_size_bytes",
+        messagingMessagePayloadCompressedSizeBytes);
     return this;
   }
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -293,6 +331,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets net.transport.
+   *
    * @param netTransport Strongly recommended for in-process queueing systems.
    */
   @Override
@@ -304,7 +343,9 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public MessagingProducerSynchronousSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -315,6 +356,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -326,6 +368,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets net.host.ip.
+   *
    * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
@@ -337,6 +380,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets net.host.port.
+   *
    * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
@@ -348,6 +392,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
   /**
    * Sets net.host.name.
+   *
    * @param netHostName Local hostname or similar, see note below.
    */
   @Override
@@ -357,11 +402,8 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link MessagingProducerSynchronousSpan}.
-	 */
-	public static class MessagingProducerSynchronousSpanBuilder {
+  /** Builder class for {@link MessagingProducerSynchronousSpan}. */
+  public static class MessagingProducerSynchronousSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -380,13 +422,13 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
     }
 
     /** sets the {@link Span} parent. */
-    public MessagingProducerSynchronousSpanBuilder setParent(Span parent){
+    public MessagingProducerSynchronousSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public MessagingProducerSynchronousSpanBuilder setParent(SpanContext remoteParent){
+    public MessagingProducerSynchronousSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -403,9 +445,9 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
       return new MessagingProducerSynchronousSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets messaging.system.
+     *
      * @param messagingSystem A string identifying the messaging system.
      */
     public MessagingProducerSynchronousSpanBuilder setMessagingSystem(String messagingSystem) {
@@ -416,9 +458,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.destination.
-     * @param messagingDestination The message destination name. This might be equal to the span name but is required nevertheless.
+     *
+     * @param messagingDestination The message destination name. This might be equal to the span
+     *     name but is required nevertheless.
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingDestination(String messagingDestination) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingDestination(
+        String messagingDestination) {
       status.set(AttributeStatus.MESSAGING_DESTINATION);
       internalBuilder.setAttribute("messaging.destination", messagingDestination);
       return this;
@@ -426,9 +471,11 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.destination_kind.
+     *
      * @param messagingDestinationKind The kind of message destination.
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingDestinationKind(String messagingDestinationKind) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingDestinationKind(
+        String messagingDestinationKind) {
       status.set(AttributeStatus.MESSAGING_DESTINATION_KIND);
       internalBuilder.setAttribute("messaging.destination_kind", messagingDestinationKind);
       return this;
@@ -436,9 +483,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.temp_destination.
-     * @param messagingTempDestination A boolean that is true if the message destination is temporary.
+     *
+     * @param messagingTempDestination A boolean that is true if the message destination is
+     *     temporary.
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingTempDestination(boolean messagingTempDestination) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingTempDestination(
+        boolean messagingTempDestination) {
       status.set(AttributeStatus.MESSAGING_TEMP_DESTINATION);
       internalBuilder.setAttribute("messaging.temp_destination", messagingTempDestination);
       return this;
@@ -446,6 +496,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.protocol.
+     *
      * @param messagingProtocol The name of the transport protocol.
      */
     public MessagingProducerSynchronousSpanBuilder setMessagingProtocol(String messagingProtocol) {
@@ -456,9 +507,11 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.protocol_version.
+     *
      * @param messagingProtocolVersion The version of the transport protocol.
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingProtocolVersion(String messagingProtocolVersion) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingProtocolVersion(
+        String messagingProtocolVersion) {
       status.set(AttributeStatus.MESSAGING_PROTOCOL_VERSION);
       internalBuilder.setAttribute("messaging.protocol_version", messagingProtocolVersion);
       return this;
@@ -466,6 +519,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.url.
+     *
      * @param messagingUrl Connection string.
      */
     public MessagingProducerSynchronousSpanBuilder setMessagingUrl(String messagingUrl) {
@@ -476,9 +530,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.message_id.
-     * @param messagingMessageId A value used by the messaging system as an identifier for the message, represented as a string.
+     *
+     * @param messagingMessageId A value used by the messaging system as an identifier for the
+     *     message, represented as a string.
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingMessageId(String messagingMessageId) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingMessageId(
+        String messagingMessageId) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_ID);
       internalBuilder.setAttribute("messaging.message_id", messagingMessageId);
       return this;
@@ -486,9 +543,12 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.conversation_id.
-     * @param messagingConversationId A value identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
+     *
+     * @param messagingConversationId A value identifying the conversation to which the message
+     *     belongs, represented as a string. Sometimes called "Correlation ID".
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingConversationId(String messagingConversationId) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingConversationId(
+        String messagingConversationId) {
       status.set(AttributeStatus.MESSAGING_CONVERSATION_ID);
       internalBuilder.setAttribute("messaging.conversation_id", messagingConversationId);
       return this;
@@ -496,26 +556,37 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets messaging.message_payload_size_bytes.
-     * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
+     *
+     * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in
+     *     bytes. Also use this attribute if it is unknown whether the compressed or uncompressed
+     *     payload size is reported.
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingMessagePayloadSizeBytes(long messagingMessagePayloadSizeBytes) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingMessagePayloadSizeBytes(
+        long messagingMessagePayloadSizeBytes) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
-      internalBuilder.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+      internalBuilder.setAttribute(
+          "messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
       return this;
     }
 
     /**
      * Sets messaging.message_payload_compressed_size_bytes.
-     * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in bytes.
+     *
+     * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload
+     *     in bytes.
      */
-    public MessagingProducerSynchronousSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(long messagingMessagePayloadCompressedSizeBytes) {
+    public MessagingProducerSynchronousSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(
+        long messagingMessagePayloadCompressedSizeBytes) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES);
-      internalBuilder.setAttribute("messaging.message_payload_compressed_size_bytes", messagingMessagePayloadCompressedSizeBytes);
+      internalBuilder.setAttribute(
+          "messaging.message_payload_compressed_size_bytes",
+          messagingMessagePayloadCompressedSizeBytes);
       return this;
     }
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public MessagingProducerSynchronousSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -526,6 +597,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets net.transport.
+     *
      * @param netTransport Strongly recommended for in-process queueing systems.
      */
     public MessagingProducerSynchronousSpanBuilder setNetTransport(String netTransport) {
@@ -536,7 +608,9 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public MessagingProducerSynchronousSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -546,6 +620,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public MessagingProducerSynchronousSpanBuilder setNetPeerName(String netPeerName) {
@@ -556,6 +631,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets net.host.ip.
+     *
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public MessagingProducerSynchronousSpanBuilder setNetHostIp(String netHostIp) {
@@ -566,6 +642,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets net.host.port.
+     *
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public MessagingProducerSynchronousSpanBuilder setNetHostPort(long netHostPort) {
@@ -576,6 +653,7 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
 
     /**
      * Sets net.host.name.
+     *
      * @param netHostName Local hostname or similar, see note below.
      */
     public MessagingProducerSynchronousSpanBuilder setNetHostName(String netHostName) {
@@ -583,6 +661,5 @@ public class MessagingProducerSynchronousSpan extends DelegatingSpan implements 
       internalBuilder.setAttribute("net.host.name", netHostName);
       return this;
     }
-
   }
 }

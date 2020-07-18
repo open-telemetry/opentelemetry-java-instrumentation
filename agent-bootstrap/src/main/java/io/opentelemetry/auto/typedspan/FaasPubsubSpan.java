@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -26,7 +27,8 @@ import java.util.logging.Logger;
  * <ul>
  *   <li>faas.trigger: Type of the trigger on which the function is executed.
  *   <li>messaging.system: A string identifying the messaging system.
- *   <li>messaging.destination: The message destination name. This might be equal to the span name but is required nevertheless.
+ *   <li>messaging.destination: The message destination name. This might be equal to the span name
+ *       but is required nevertheless.
  * </ul>
  *
  * <b>Conditional attributes:</b>
@@ -69,7 +71,6 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     NET_HOST_IP,
     NET_HOST_PORT,
     NET_HOST_NAME;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -97,6 +98,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(FaasPubsubSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected FaasPubsubSpan(Span span, AttributeStatus status) {
@@ -104,23 +106,26 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link FaasPubsubSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link FaasPubsubSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link FaasPubsubSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link FaasPubsubSpan} object.
+   */
   public static FaasPubsubSpanBuilder createFaasPubsubSpanBuilder(Tracer tracer, String spanName) {
     return new FaasPubsubSpanBuilder(tracer, spanName);
   }
 
   /**
-	 * Creates a {@link FaasPubsubSpan} from a {@link FaasSpan}.
-	 * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
-	 * @return a {@link FaasPubsubSpan} object built from a {@link FaasSpan}.
-	 */
-  public static FaasPubsubSpanBuilder createFaasPubsubSpanBuilder(FaasSpan.FaasSpanBuilder builder) {
-	  // we accept a builder from Faas since FaasPubsub "extends" Faas
+   * Creates a {@link FaasPubsubSpan} from a {@link FaasSpan}.
+   *
+   * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
+   * @return a {@link FaasPubsubSpan} object built from a {@link FaasSpan}.
+   */
+  public static FaasPubsubSpanBuilder createFaasPubsubSpanBuilder(
+      FaasSpan.FaasSpanBuilder builder) {
+    // we accept a builder from Faas since FaasPubsub "extends" Faas
     return new FaasPubsubSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -149,8 +154,8 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_NAME))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_IP));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -164,9 +169,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     }
   }
 
-
   /**
    * Sets faas.trigger.
+   *
    * @param faasTrigger Type of the trigger on which the function is executed.
    */
   @Override
@@ -178,6 +183,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets faas.execution.
+   *
    * @param faasExecution The execution id of the current function execution.
    */
   @Override
@@ -189,6 +195,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.system.
+   *
    * @param messagingSystem A string identifying the messaging system.
    */
   @Override
@@ -200,7 +207,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.destination.
-   * @param messagingDestination The message destination name. This might be equal to the span name but is required nevertheless.
+   *
+   * @param messagingDestination The message destination name. This might be equal to the span name
+   *     but is required nevertheless.
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingDestination(String messagingDestination) {
@@ -211,6 +220,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.destination_kind.
+   *
    * @param messagingDestinationKind The kind of message destination.
    */
   @Override
@@ -222,10 +232,12 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.temp_destination.
+   *
    * @param messagingTempDestination A boolean that is true if the message destination is temporary.
    */
   @Override
-  public FaasPubsubSemanticConvention setMessagingTempDestination(boolean messagingTempDestination) {
+  public FaasPubsubSemanticConvention setMessagingTempDestination(
+      boolean messagingTempDestination) {
     status.set(AttributeStatus.MESSAGING_TEMP_DESTINATION);
     delegate.setAttribute("messaging.temp_destination", messagingTempDestination);
     return this;
@@ -233,6 +245,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.protocol.
+   *
    * @param messagingProtocol The name of the transport protocol.
    */
   @Override
@@ -244,6 +257,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.protocol_version.
+   *
    * @param messagingProtocolVersion The version of the transport protocol.
    */
   @Override
@@ -255,6 +269,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.url.
+   *
    * @param messagingUrl Connection string.
    */
   @Override
@@ -266,7 +281,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.message_id.
-   * @param messagingMessageId A value used by the messaging system as an identifier for the message, represented as a string.
+   *
+   * @param messagingMessageId A value used by the messaging system as an identifier for the
+   *     message, represented as a string.
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingMessageId(String messagingMessageId) {
@@ -277,7 +294,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.conversation_id.
-   * @param messagingConversationId A value identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
+   *
+   * @param messagingConversationId A value identifying the conversation to which the message
+   *     belongs, represented as a string. Sometimes called "Correlation ID".
    */
   @Override
   public FaasPubsubSemanticConvention setMessagingConversationId(String messagingConversationId) {
@@ -288,10 +307,14 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.message_payload_size_bytes.
-   * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
+   *
+   * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in
+   *     bytes. Also use this attribute if it is unknown whether the compressed or uncompressed
+   *     payload size is reported.
    */
   @Override
-  public FaasPubsubSemanticConvention setMessagingMessagePayloadSizeBytes(long messagingMessagePayloadSizeBytes) {
+  public FaasPubsubSemanticConvention setMessagingMessagePayloadSizeBytes(
+      long messagingMessagePayloadSizeBytes) {
     status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
     delegate.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
     return this;
@@ -299,17 +322,23 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets messaging.message_payload_compressed_size_bytes.
-   * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in bytes.
+   *
+   * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in
+   *     bytes.
    */
   @Override
-  public FaasPubsubSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(long messagingMessagePayloadCompressedSizeBytes) {
+  public FaasPubsubSemanticConvention setMessagingMessagePayloadCompressedSizeBytes(
+      long messagingMessagePayloadCompressedSizeBytes) {
     status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES);
-    delegate.setAttribute("messaging.message_payload_compressed_size_bytes", messagingMessagePayloadCompressedSizeBytes);
+    delegate.setAttribute(
+        "messaging.message_payload_compressed_size_bytes",
+        messagingMessagePayloadCompressedSizeBytes);
     return this;
   }
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -321,6 +350,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets net.transport.
+   *
    * @param netTransport Strongly recommended for in-process queueing systems.
    */
   @Override
@@ -332,7 +362,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public FaasPubsubSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -343,6 +375,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -354,6 +387,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets net.host.ip.
+   *
    * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
@@ -365,6 +399,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets net.host.port.
+   *
    * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
@@ -376,6 +411,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
   /**
    * Sets net.host.name.
+   *
    * @param netHostName Local hostname or similar, see note below.
    */
   @Override
@@ -385,11 +421,8 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link FaasPubsubSpan}.
-	 */
-	public static class FaasPubsubSpanBuilder {
+  /** Builder class for {@link FaasPubsubSpan}. */
+  public static class FaasPubsubSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -408,13 +441,13 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
     }
 
     /** sets the {@link Span} parent. */
-    public FaasPubsubSpanBuilder setParent(Span parent){
+    public FaasPubsubSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasPubsubSpanBuilder setParent(SpanContext remoteParent){
+    public FaasPubsubSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -431,9 +464,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
       return new FaasPubsubSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets faas.trigger.
+     *
      * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasPubsubSpanBuilder setFaasTrigger(String faasTrigger) {
@@ -444,6 +477,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets faas.execution.
+     *
      * @param faasExecution The execution id of the current function execution.
      */
     public FaasPubsubSpanBuilder setFaasExecution(String faasExecution) {
@@ -454,6 +488,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.system.
+     *
      * @param messagingSystem A string identifying the messaging system.
      */
     public FaasPubsubSpanBuilder setMessagingSystem(String messagingSystem) {
@@ -464,7 +499,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.destination.
-     * @param messagingDestination The message destination name. This might be equal to the span name but is required nevertheless.
+     *
+     * @param messagingDestination The message destination name. This might be equal to the span
+     *     name but is required nevertheless.
      */
     public FaasPubsubSpanBuilder setMessagingDestination(String messagingDestination) {
       status.set(AttributeStatus.MESSAGING_DESTINATION);
@@ -474,6 +511,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.destination_kind.
+     *
      * @param messagingDestinationKind The kind of message destination.
      */
     public FaasPubsubSpanBuilder setMessagingDestinationKind(String messagingDestinationKind) {
@@ -484,7 +522,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.temp_destination.
-     * @param messagingTempDestination A boolean that is true if the message destination is temporary.
+     *
+     * @param messagingTempDestination A boolean that is true if the message destination is
+     *     temporary.
      */
     public FaasPubsubSpanBuilder setMessagingTempDestination(boolean messagingTempDestination) {
       status.set(AttributeStatus.MESSAGING_TEMP_DESTINATION);
@@ -494,6 +534,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.protocol.
+     *
      * @param messagingProtocol The name of the transport protocol.
      */
     public FaasPubsubSpanBuilder setMessagingProtocol(String messagingProtocol) {
@@ -504,6 +545,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.protocol_version.
+     *
      * @param messagingProtocolVersion The version of the transport protocol.
      */
     public FaasPubsubSpanBuilder setMessagingProtocolVersion(String messagingProtocolVersion) {
@@ -514,6 +556,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.url.
+     *
      * @param messagingUrl Connection string.
      */
     public FaasPubsubSpanBuilder setMessagingUrl(String messagingUrl) {
@@ -524,7 +567,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.message_id.
-     * @param messagingMessageId A value used by the messaging system as an identifier for the message, represented as a string.
+     *
+     * @param messagingMessageId A value used by the messaging system as an identifier for the
+     *     message, represented as a string.
      */
     public FaasPubsubSpanBuilder setMessagingMessageId(String messagingMessageId) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_ID);
@@ -534,7 +579,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.conversation_id.
-     * @param messagingConversationId A value identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
+     *
+     * @param messagingConversationId A value identifying the conversation to which the message
+     *     belongs, represented as a string. Sometimes called "Correlation ID".
      */
     public FaasPubsubSpanBuilder setMessagingConversationId(String messagingConversationId) {
       status.set(AttributeStatus.MESSAGING_CONVERSATION_ID);
@@ -544,26 +591,37 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets messaging.message_payload_size_bytes.
-     * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
+     *
+     * @param messagingMessagePayloadSizeBytes The (uncompressed) size of the message payload in
+     *     bytes. Also use this attribute if it is unknown whether the compressed or uncompressed
+     *     payload size is reported.
      */
-    public FaasPubsubSpanBuilder setMessagingMessagePayloadSizeBytes(long messagingMessagePayloadSizeBytes) {
+    public FaasPubsubSpanBuilder setMessagingMessagePayloadSizeBytes(
+        long messagingMessagePayloadSizeBytes) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
-      internalBuilder.setAttribute("messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
+      internalBuilder.setAttribute(
+          "messaging.message_payload_size_bytes", messagingMessagePayloadSizeBytes);
       return this;
     }
 
     /**
      * Sets messaging.message_payload_compressed_size_bytes.
-     * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload in bytes.
+     *
+     * @param messagingMessagePayloadCompressedSizeBytes The compressed size of the message payload
+     *     in bytes.
      */
-    public FaasPubsubSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(long messagingMessagePayloadCompressedSizeBytes) {
+    public FaasPubsubSpanBuilder setMessagingMessagePayloadCompressedSizeBytes(
+        long messagingMessagePayloadCompressedSizeBytes) {
       status.set(AttributeStatus.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES);
-      internalBuilder.setAttribute("messaging.message_payload_compressed_size_bytes", messagingMessagePayloadCompressedSizeBytes);
+      internalBuilder.setAttribute(
+          "messaging.message_payload_compressed_size_bytes",
+          messagingMessagePayloadCompressedSizeBytes);
       return this;
     }
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public FaasPubsubSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -574,6 +632,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets net.transport.
+     *
      * @param netTransport Strongly recommended for in-process queueing systems.
      */
     public FaasPubsubSpanBuilder setNetTransport(String netTransport) {
@@ -584,7 +643,9 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public FaasPubsubSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -594,6 +655,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public FaasPubsubSpanBuilder setNetPeerName(String netPeerName) {
@@ -604,6 +666,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets net.host.ip.
+     *
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public FaasPubsubSpanBuilder setNetHostIp(String netHostIp) {
@@ -614,6 +677,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets net.host.port.
+     *
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public FaasPubsubSpanBuilder setNetHostPort(long netHostPort) {
@@ -624,6 +688,7 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
 
     /**
      * Sets net.host.name.
+     *
      * @param netHostName Local hostname or similar, see note below.
      */
     public FaasPubsubSpanBuilder setNetHostName(String netHostName) {
@@ -631,6 +696,5 @@ public class FaasPubsubSpan extends DelegatingSpan implements FaasPubsubSemantic
       internalBuilder.setAttribute("net.host.name", netHostName);
       return this;
     }
-
   }
 }

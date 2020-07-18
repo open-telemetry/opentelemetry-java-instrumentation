@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -53,7 +54,6 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
     NET_HOST_PORT,
     NET_HOST_NAME,
     RPC_SERVICE;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -81,6 +81,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(RpcSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected RpcSpan(Span span, AttributeStatus status) {
@@ -88,17 +89,16 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link RpcSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link RpcSpan} object.
-	 */
+  /**
+   * Entry point to generate a {@link RpcSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link RpcSpan} object.
+   */
   public static RpcSpanBuilder createRpcSpanBuilder(Tracer tracer, String spanName) {
     return new RpcSpanBuilder(tracer, spanName);
   }
-
-  
 
   /** @return the Span used internally */
   @Override
@@ -119,8 +119,8 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
     // extra constraints.
     {
       boolean flag =
-        (!this.status.isSet(AttributeStatus.NET_PEER_IP) ) ||
-        (!this.status.isSet(AttributeStatus.NET_PEER_NAME) ) ;
+          (!this.status.isSet(AttributeStatus.NET_PEER_IP))
+              || (!this.status.isSet(AttributeStatus.NET_PEER_NAME));
       if (flag) {
         logger.info("Constraint not respected!");
       }
@@ -128,9 +128,9 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
     // conditional attributes
   }
 
-
   /**
    * Sets net.transport.
+   *
    * @param netTransport Transport protocol used. See note below.
    */
   @Override
@@ -142,7 +142,9 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   /**
    * Sets net.peer.ip.
-   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+   *
+   * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+   *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
   @Override
   public RpcSemanticConvention setNetPeerIp(String netPeerIp) {
@@ -153,6 +155,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   /**
    * Sets net.peer.port.
+   *
    * @param netPeerPort Remote port number.
    */
   @Override
@@ -164,6 +167,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   /**
    * Sets net.peer.name.
+   *
    * @param netPeerName Remote hostname or similar, see note below.
    */
   @Override
@@ -175,6 +179,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   /**
    * Sets net.host.ip.
+   *
    * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
   @Override
@@ -186,6 +191,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   /**
    * Sets net.host.port.
+   *
    * @param netHostPort Like `net.peer.port` but for the host port.
    */
   @Override
@@ -197,6 +203,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   /**
    * Sets net.host.name.
+   *
    * @param netHostName Local hostname or similar, see note below.
    */
   @Override
@@ -208,6 +215,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
   /**
    * Sets rpc.service.
+   *
    * @param rpcService The service name, must be equal to the $service part in the span name.
    */
   @Override
@@ -217,11 +225,8 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link RpcSpan}.
-	 */
-	public static class RpcSpanBuilder {
+  /** Builder class for {@link RpcSpan}. */
+  public static class RpcSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -240,13 +245,13 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
     }
 
     /** sets the {@link Span} parent. */
-    public RpcSpanBuilder setParent(Span parent){
+    public RpcSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public RpcSpanBuilder setParent(SpanContext remoteParent){
+    public RpcSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -263,9 +268,9 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
       return new RpcSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets net.transport.
+     *
      * @param netTransport Transport protocol used. See note below.
      */
     public RpcSpanBuilder setNetTransport(String netTransport) {
@@ -276,7 +281,9 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
     /**
      * Sets net.peer.ip.
-     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
+     *
+     * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or
+     *     [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
      */
     public RpcSpanBuilder setNetPeerIp(String netPeerIp) {
       status.set(AttributeStatus.NET_PEER_IP);
@@ -286,6 +293,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
     /**
      * Sets net.peer.port.
+     *
      * @param netPeerPort Remote port number.
      */
     public RpcSpanBuilder setNetPeerPort(long netPeerPort) {
@@ -296,6 +304,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
     /**
      * Sets net.peer.name.
+     *
      * @param netPeerName Remote hostname or similar, see note below.
      */
     public RpcSpanBuilder setNetPeerName(String netPeerName) {
@@ -306,6 +315,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
     /**
      * Sets net.host.ip.
+     *
      * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
      */
     public RpcSpanBuilder setNetHostIp(String netHostIp) {
@@ -316,6 +326,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
     /**
      * Sets net.host.port.
+     *
      * @param netHostPort Like `net.peer.port` but for the host port.
      */
     public RpcSpanBuilder setNetHostPort(long netHostPort) {
@@ -326,6 +337,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
     /**
      * Sets net.host.name.
+     *
      * @param netHostName Local hostname or similar, see note below.
      */
     public RpcSpanBuilder setNetHostName(String netHostName) {
@@ -336,6 +348,7 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
 
     /**
      * Sets rpc.service.
+     *
      * @param rpcService The service name, must be equal to the $service part in the span name.
      */
     public RpcSpanBuilder setRpcService(String rpcService) {
@@ -343,6 +356,5 @@ public class RpcSpan extends DelegatingSpan implements RpcSemanticConvention {
       internalBuilder.setAttribute("rpc.service", rpcService);
       return this;
     }
-
   }
 }

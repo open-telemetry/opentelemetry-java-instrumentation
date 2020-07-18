@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.trace.Span;
@@ -25,16 +26,19 @@ import java.util.logging.Logger;
  *
  * <ul>
  *   <li>faas.trigger: Type of the trigger on which the function is executed.
- *   <li>faas.document.collection: The name of the source on which the triggering operation was performed.
- *   <li>faas.document.operation: Describes the type of the operation that was performed on the data.
- *   <li>faas.document.time: A string containing the time when the data was accessed in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
+ *   <li>faas.document.collection: The name of the source on which the triggering operation was
+ *       performed.
+ *   <li>faas.document.operation: Describes the type of the operation that was performed on the
+ *       data.
+ *   <li>faas.document.time: A string containing the time when the data was accessed in the [ISO
+ *       8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in
+ *       [UTC](https://www.w3.org/TR/NOTE-datetime).
  * </ul>
  *
  * <b>Conditional attributes:</b>
  *
  * <ul>
  * </ul>
- *
  */
 public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasourceSemanticConvention {
 
@@ -46,7 +50,6 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
     FAAS_DOCUMENT_OPERATION,
     FAAS_DOCUMENT_TIME,
     FAAS_DOCUMENT_NAME;
-    
 
     @SuppressWarnings("ImmutableEnumChecker")
     private long flag;
@@ -74,6 +77,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
   @SuppressWarnings("unused")
   private static final Logger logger = Logger.getLogger(FaasDatasourceSpan.class.getName());
+
   public final AttributeStatus status;
 
   protected FaasDatasourceSpan(Span span, AttributeStatus status) {
@@ -81,23 +85,27 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
     this.status = status;
   }
 
-	/**
-	 * Entry point to generate a {@link FaasDatasourceSpan}.
-	 * @param tracer Tracer to use
-	 * @param spanName Name for the {@link Span}
-	 * @return a {@link FaasDatasourceSpan} object.
-	 */
-  public static FaasDatasourceSpanBuilder createFaasDatasourceSpanBuilder(Tracer tracer, String spanName) {
+  /**
+   * Entry point to generate a {@link FaasDatasourceSpan}.
+   *
+   * @param tracer Tracer to use
+   * @param spanName Name for the {@link Span}
+   * @return a {@link FaasDatasourceSpan} object.
+   */
+  public static FaasDatasourceSpanBuilder createFaasDatasourceSpanBuilder(
+      Tracer tracer, String spanName) {
     return new FaasDatasourceSpanBuilder(tracer, spanName);
   }
 
   /**
-	 * Creates a {@link FaasDatasourceSpan} from a {@link FaasSpan}.
-	 * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
-	 * @return a {@link FaasDatasourceSpan} object built from a {@link FaasSpan}.
-	 */
-  public static FaasDatasourceSpanBuilder createFaasDatasourceSpanBuilder(FaasSpan.FaasSpanBuilder builder) {
-	  // we accept a builder from Faas since FaasDatasource "extends" Faas
+   * Creates a {@link FaasDatasourceSpan} from a {@link FaasSpan}.
+   *
+   * @param builder {@link FaasSpan.FaasSpanBuilder} to use.
+   * @return a {@link FaasDatasourceSpan} object built from a {@link FaasSpan}.
+   */
+  public static FaasDatasourceSpanBuilder createFaasDatasourceSpanBuilder(
+      FaasSpan.FaasSpanBuilder builder) {
+    // we accept a builder from Faas since FaasDatasource "extends" Faas
     return new FaasDatasourceSpanBuilder(builder.getSpanBuilder(), builder.status.getValue());
   }
 
@@ -130,9 +138,9 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
     // conditional attributes
   }
 
-
   /**
    * Sets faas.trigger.
+   *
    * @param faasTrigger Type of the trigger on which the function is executed.
    */
   @Override
@@ -144,6 +152,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
   /**
    * Sets faas.execution.
+   *
    * @param faasExecution The execution id of the current function execution.
    */
   @Override
@@ -155,8 +164,11 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
   /**
    * Sets faas.document.collection.
-   * @param faasDocumentCollection The name of the source on which the triggering operation was performed.
-   * <p> For example, in Cloud Storage or S3 corresponds to the bucket name, and in Cosmos DB to the database name.
+   *
+   * @param faasDocumentCollection The name of the source on which the triggering operation was
+   *     performed.
+   *     <p>For example, in Cloud Storage or S3 corresponds to the bucket name, and in Cosmos DB to
+   *     the database name.
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentCollection(String faasDocumentCollection) {
@@ -167,7 +179,9 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
   /**
    * Sets faas.document.operation.
-   * @param faasDocumentOperation Describes the type of the operation that was performed on the data.
+   *
+   * @param faasDocumentOperation Describes the type of the operation that was performed on the
+   *     data.
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentOperation(String faasDocumentOperation) {
@@ -178,7 +192,10 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
   /**
    * Sets faas.document.time.
-   * @param faasDocumentTime A string containing the time when the data was accessed in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
+   *
+   * @param faasDocumentTime A string containing the time when the data was accessed in the [ISO
+   *     8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in
+   *     [UTC](https://www.w3.org/TR/NOTE-datetime).
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentTime(String faasDocumentTime) {
@@ -189,8 +206,10 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
   /**
    * Sets faas.document.name.
+   *
    * @param faasDocumentName The document name/table subjected to the operation.
-   * <p> For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the table name.
+   *     <p>For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the table
+   *     name.
    */
   @Override
   public FaasDatasourceSemanticConvention setFaasDocumentName(String faasDocumentName) {
@@ -199,11 +218,8 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
     return this;
   }
 
-
-	/**
-	 * Builder class for {@link FaasDatasourceSpan}.
-	 */
-	public static class FaasDatasourceSpanBuilder {
+  /** Builder class for {@link FaasDatasourceSpan}. */
+  public static class FaasDatasourceSpanBuilder {
     // Protected because maybe we want to extend manually these classes
     protected Span.Builder internalBuilder;
     protected AttributeStatus status = AttributeStatus.EMPTY;
@@ -222,13 +238,13 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
     }
 
     /** sets the {@link Span} parent. */
-    public FaasDatasourceSpanBuilder setParent(Span parent){
+    public FaasDatasourceSpanBuilder setParent(Span parent) {
       this.internalBuilder.setParent(parent);
       return this;
     }
 
     /** sets the {@link Span} parent. */
-    public FaasDatasourceSpanBuilder setParent(SpanContext remoteParent){
+    public FaasDatasourceSpanBuilder setParent(SpanContext remoteParent) {
       this.internalBuilder.setParent(remoteParent);
       return this;
     }
@@ -245,9 +261,9 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
       return new FaasDatasourceSpan(this.internalBuilder.startSpan(), status);
     }
 
-    
     /**
      * Sets faas.trigger.
+     *
      * @param faasTrigger Type of the trigger on which the function is executed.
      */
     public FaasDatasourceSpanBuilder setFaasTrigger(String faasTrigger) {
@@ -258,6 +274,7 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
     /**
      * Sets faas.execution.
+     *
      * @param faasExecution The execution id of the current function execution.
      */
     public FaasDatasourceSpanBuilder setFaasExecution(String faasExecution) {
@@ -268,8 +285,11 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
     /**
      * Sets faas.document.collection.
-     * @param faasDocumentCollection The name of the source on which the triggering operation was performed.
-     * <p> For example, in Cloud Storage or S3 corresponds to the bucket name, and in Cosmos DB to the database name.
+     *
+     * @param faasDocumentCollection The name of the source on which the triggering operation was
+     *     performed.
+     *     <p>For example, in Cloud Storage or S3 corresponds to the bucket name, and in Cosmos DB
+     *     to the database name.
      */
     public FaasDatasourceSpanBuilder setFaasDocumentCollection(String faasDocumentCollection) {
       status.set(AttributeStatus.FAAS_DOCUMENT_COLLECTION);
@@ -279,7 +299,9 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
     /**
      * Sets faas.document.operation.
-     * @param faasDocumentOperation Describes the type of the operation that was performed on the data.
+     *
+     * @param faasDocumentOperation Describes the type of the operation that was performed on the
+     *     data.
      */
     public FaasDatasourceSpanBuilder setFaasDocumentOperation(String faasDocumentOperation) {
       status.set(AttributeStatus.FAAS_DOCUMENT_OPERATION);
@@ -289,7 +311,10 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
     /**
      * Sets faas.document.time.
-     * @param faasDocumentTime A string containing the time when the data was accessed in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
+     *
+     * @param faasDocumentTime A string containing the time when the data was accessed in the [ISO
+     *     8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in
+     *     [UTC](https://www.w3.org/TR/NOTE-datetime).
      */
     public FaasDatasourceSpanBuilder setFaasDocumentTime(String faasDocumentTime) {
       status.set(AttributeStatus.FAAS_DOCUMENT_TIME);
@@ -299,14 +324,15 @@ public class FaasDatasourceSpan extends DelegatingSpan implements FaasDatasource
 
     /**
      * Sets faas.document.name.
+     *
      * @param faasDocumentName The document name/table subjected to the operation.
-     * <p> For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the table name.
+     *     <p>For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the
+     *     table name.
      */
     public FaasDatasourceSpanBuilder setFaasDocumentName(String faasDocumentName) {
       status.set(AttributeStatus.FAAS_DOCUMENT_NAME);
       internalBuilder.setAttribute("faas.document.name", faasDocumentName);
       return this;
     }
-
   }
 }

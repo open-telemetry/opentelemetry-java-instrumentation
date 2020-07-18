@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.auto.typedspan;
 
 import io.opentelemetry.common.AttributeValue;
@@ -22,7 +23,6 @@ import io.opentelemetry.trace.Event;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.Status;
-import java.util.Map;
 
 public class DelegatingSpan implements Span {
   protected final Span delegate;
