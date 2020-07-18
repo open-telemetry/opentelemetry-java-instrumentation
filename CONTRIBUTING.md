@@ -214,11 +214,11 @@ Suggested plugins and settings:
 
 Approvers:
 
-- [Anuraag Agrawal](https://github.com/anuraaga), AWS
 - [John Watson](https://github.com/jkwatson), New Relic
 
 Maintainers:
 
+- [Anuraag Agrawal](https://github.com/anuraaga), AWS
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 - [Tyler Benson](https://github.com/tylerbenson), DataDog
