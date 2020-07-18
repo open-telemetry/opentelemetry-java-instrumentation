@@ -51,8 +51,8 @@ class TraceUtils {
         span.end()
         scope.close()
       }
-    } catch (Exception e) {
-      throw new RuntimeException(e)
+    } catch (Throwable t) {
+      throw ExceptionUtils.sneakyThrow(t)
     }
   }
 

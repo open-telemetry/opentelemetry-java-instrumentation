@@ -43,7 +43,7 @@ class ConfigUtils {
         CONFIG_INSTANCE_FIELD.set(null, existingConfig)
       }
     } catch (Throwable t) {
-      throw new RuntimeException(t)
+      throw ExceptionUtils.sneakyThrow(t)
     }
   }
 
