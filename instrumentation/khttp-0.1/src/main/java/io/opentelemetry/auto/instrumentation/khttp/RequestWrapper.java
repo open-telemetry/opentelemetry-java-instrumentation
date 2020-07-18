@@ -16,12 +16,16 @@
 
 package io.opentelemetry.auto.instrumentation.khttp;
 
-public class RequestWrapper {
-  String method;
-  String uri;
+import java.util.Map;
 
-  public RequestWrapper(String method, String uri) {
+public class RequestWrapper {
+  final String method;
+  final String uri;
+  final Map<String, String> headers;
+
+  public RequestWrapper(String method, String uri, Map<String, String> headers) {
     this.method = method;
     this.uri = uri;
+    this.headers = headers;
   }
 }

@@ -16,44 +16,38 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
 import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand command) {
+  public static void onEnter(
+      @Advice.Argument(0) final RedisCommand<?, ?, ?> command,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
 
-    final Span span =
-        LettuceClientDecorator.TRACER
-            .spanBuilder(LettuceInstrumentationUtil.getCommandName(command))
-            .setSpanKind(CLIENT)
-            .startSpan();
-    LettuceClientDecorator.DECORATE.afterStart(span);
-
-    return new SpanWithScope(span, currentContextWith(span));
+    span = TRACER.startSpan(null, command);
+    scope = TRACER.startScope(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Argument(0) final RedisCommand command,
-      @Advice.Enter final SpanWithScope spanWithScope,
+      @Advice.Argument(0) final RedisCommand<?, ?, ?> command,
       @Advice.Thrown final Throwable throwable,
-      @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand) {
+      @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    scope.close();
 
-    final Span span = spanWithScope.getSpan();
     if (throwable != null) {
-      LettuceClientDecorator.DECORATE.onError(span, throwable);
-      LettuceClientDecorator.DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      TRACER.endExceptionally(span, throwable);
       return;
     }
 
@@ -61,10 +55,7 @@ public class LettuceAsyncCommandsAdvice {
     if (expectsResponse(command)) {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
     } else {
-      LettuceClientDecorator.DECORATE.beforeFinish(span);
-      span.end();
+      TRACER.end(span);
     }
-    spanWithScope.closeScope();
-    // span may be finished by LettuceAsyncBiFunction
   }
 }

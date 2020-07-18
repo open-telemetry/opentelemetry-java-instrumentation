@@ -16,8 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.auto.instrumentation.cassandra.v4_0.CassandraDatabaseClientTracer.TRACER;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -35,20 +34,12 @@ import com.datastax.oss.driver.api.core.session.Request;
 import com.datastax.oss.driver.api.core.type.reflect.GenericType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.Tracer;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class TracingCqlSession implements CqlSession {
-  private static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.cassandra-4.0");
-
-  private final ExecutorService executorService = Executors.newCachedThreadPool();
   private final CqlSession session;
 
   public TracingCqlSession(final CqlSession session) {
@@ -194,18 +185,18 @@ public class TracingCqlSession implements CqlSession {
   @NonNull
   public ResultSet execute(@NonNull Statement<?> statement) {
     final String query = getQuery(statement);
-    final Span span = startSpan(query);
 
-    try (final Scope scope = currentContextWith(span)) {
+    final Span span = TRACER.startSpan(session, query);
+    try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(statement);
-        beforeSpanFinish(span, resultSet);
+        TRACER.onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
       } catch (final RuntimeException e) {
-        beforeSpanFinish(span, e);
+        TRACER.endExceptionally(span, e);
         throw e;
       } finally {
-        span.end();
+        TRACER.end(span);
       }
     }
   }
@@ -213,17 +204,18 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public ResultSet execute(@NonNull String query) {
-    final Span span = startSpan(query);
-    try (final Scope scope = currentContextWith(span)) {
+
+    final Span span = TRACER.startSpan(session, query);
+    try (final Scope ignored = TRACER.startScope(span)) {
       try {
         final ResultSet resultSet = session.execute(query);
-        beforeSpanFinish(span, resultSet);
+        TRACER.onResponse(span, resultSet.getExecutionInfo());
         return resultSet;
       } catch (final RuntimeException e) {
-        beforeSpanFinish(span, e);
+        TRACER.endExceptionally(span, e);
         throw e;
       } finally {
-        span.end();
+        TRACER.end(span);
       }
     }
   }
@@ -232,18 +224,18 @@ public class TracingCqlSession implements CqlSession {
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull Statement<?> statement) {
     final String query = getQuery(statement);
-    final Span span = startSpan(query);
 
-    try (final Scope scope = currentContextWith(span)) {
+    final Span span = TRACER.startSpan(session, query);
+    try (final Scope ignored = TRACER.startScope(span)) {
       final CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              beforeSpanFinish(span, throwable);
+              TRACER.endExceptionally(span, throwable);
             } else {
-              beforeSpanFinish(span, asyncResultSet);
+              TRACER.onResponse(span, asyncResultSet.getExecutionInfo());
+              TRACER.end(span);
             }
-            span.end();
           });
     }
   }
@@ -251,17 +243,17 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull String query) {
-    final Span span = startSpan(query);
-    try (final Scope scope = currentContextWith(span)) {
+    final Span span = TRACER.startSpan(session, query);
+    try (final Scope ignored = TRACER.startScope(span)) {
       final CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              beforeSpanFinish(span, throwable);
+              TRACER.endExceptionally(span, throwable);
             } else {
-              beforeSpanFinish(span, asyncResultSet);
+              TRACER.onResponse(span, asyncResultSet.getExecutionInfo());
+              TRACER.end(span);
             }
-            span.end();
           });
     }
   }
@@ -275,32 +267,5 @@ public class TracingCqlSession implements CqlSession {
     }
 
     return query == null ? "" : query;
-  }
-
-  private Span startSpan(final String query) {
-    final Span span = TRACER.spanBuilder(query).setSpanKind(CLIENT).startSpan();
-    CassandraClientDecorator.DECORATE.afterStart(span);
-    CassandraClientDecorator.DECORATE.onConnection(span, session);
-    CassandraClientDecorator.DECORATE.onStatement(span, query);
-    return span;
-  }
-
-  private static void beforeSpanFinish(final Span span, final ResultSet resultSet) {
-    if (resultSet != null) {
-      CassandraClientDecorator.DECORATE.onResponse(span, resultSet.getExecutionInfo());
-    }
-    CassandraClientDecorator.DECORATE.beforeFinish(span);
-  }
-
-  private static void beforeSpanFinish(final Span span, final Throwable e) {
-    CassandraClientDecorator.DECORATE.onError(span, e);
-    CassandraClientDecorator.DECORATE.beforeFinish(span);
-  }
-
-  private void beforeSpanFinish(Span span, AsyncResultSet asyncResultSet) {
-    if (asyncResultSet != null) {
-      CassandraClientDecorator.DECORATE.onResponse(span, asyncResultSet.getExecutionInfo());
-    }
-    CassandraClientDecorator.DECORATE.beforeFinish(span);
   }
 }

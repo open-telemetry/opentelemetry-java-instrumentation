@@ -16,7 +16,7 @@
 
 package io.opentelemetry.auto.instrumentation.play.v2_3;
 
-import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayDecorator.DECORATE;
 
 import io.opentelemetry.trace.Span;
 import org.slf4j.Logger;
@@ -39,8 +39,6 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
     try {
       if (result.isFailure()) {
         DECORATE.onError(span, result.failed().get());
-      } else {
-        DECORATE.onResponse(span, result.get());
       }
       DECORATE.beforeFinish(span);
     } catch (final Throwable t) {

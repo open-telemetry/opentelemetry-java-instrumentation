@@ -35,7 +35,6 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import javax.jms.Message;
-import javax.jms.MessageListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -78,15 +77,13 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   public static class MessageListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope onEnter(
-        @Advice.Argument(0) final Message message, @Advice.This final MessageListener listener) {
+    public static SpanWithScope onEnter(@Advice.Argument(0) final Message message) {
 
       final Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForConsumer(message)).setSpanKind(CONSUMER);
       spanBuilder.setParent(extract(message, GETTER));
 
-      final Span span =
-          spanBuilder.setAttribute("span.origin.type", listener.getClass().getName()).startSpan();
+      final Span span = spanBuilder.startSpan();
       DECORATE.afterStart(span);
 
       return new SpanWithScope(span, currentContextWith(span));

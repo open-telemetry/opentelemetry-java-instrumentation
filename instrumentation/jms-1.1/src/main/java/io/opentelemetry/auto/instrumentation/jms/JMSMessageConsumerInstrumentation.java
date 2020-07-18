@@ -35,7 +35,6 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.SpanContext;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -101,7 +100,6 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
     public static void stopSpan(
         @Advice.This final MessageConsumer consumer,
         @Advice.Enter final long startTime,
-        @Advice.Origin final Method method,
         @Advice.Return final Message message,
         @Advice.Thrown final Throwable throwable) {
       String spanName;
@@ -124,8 +122,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
           spanBuilder.addLink(spanContext);
         }
       }
-      final Span span =
-          spanBuilder.setAttribute("span.origin.type", consumer.getClass().getName()).startSpan();
+      final Span span = spanBuilder.startSpan();
 
       try (final Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);

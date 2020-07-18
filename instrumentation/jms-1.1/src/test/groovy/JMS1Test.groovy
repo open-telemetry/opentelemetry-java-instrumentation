@@ -17,20 +17,18 @@
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.ActiveMQMessageConsumer
-import org.apache.activemq.ActiveMQMessageProducer
-import org.apache.activemq.command.ActiveMQTextMessage
-import org.apache.activemq.junit.EmbeddedActiveMQBroker
-import spock.lang.Shared
-
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Connection
 import javax.jms.Message
 import javax.jms.MessageListener
 import javax.jms.Session
 import javax.jms.TextMessage
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicReference
+import org.apache.activemq.ActiveMQConnectionFactory
+import org.apache.activemq.ActiveMQMessageConsumer
+import org.apache.activemq.command.ActiveMQTextMessage
+import org.apache.activemq.junit.EmbeddedActiveMQBroker
+import spock.lang.Shared
 
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 import static io.opentelemetry.trace.Span.Kind.CONSUMER
@@ -147,7 +145,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
       }
@@ -179,7 +176,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
       }
@@ -226,7 +222,6 @@ class JMS1Test extends AgentTestRunner {
           spanKind CLIENT
           errored false
           attributes {
-            "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
       }
@@ -251,7 +246,6 @@ class JMS1Test extends AgentTestRunner {
       errored false
       parent()
       attributes {
-        "span.origin.type" ActiveMQMessageProducer.name
       }
     }
   }
@@ -269,7 +263,6 @@ class JMS1Test extends AgentTestRunner {
       }
       errored false
       attributes {
-        "span.origin.type" origin.name
       }
     }
   }

@@ -167,7 +167,9 @@ jobs:
       - restore_cache:
           <<: *cache_keys
 
-      - run: ./gradlew -Prelease.useLastTag=true final
+      - run:
+          command: ./gradlew -Prelease.useLastTag=true final
+          no_output_timeout: 6h
 
   patch_release:
     <<: *defaults

@@ -1,9 +1,5 @@
-// The shadowJar of this project will be injected into the JVM's bootstrap classloader
-plugins {
-  id "com.github.johnrengelman.shadow"
-}
-
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 // FIXME: Improve test coverage.
 minimumBranchCoverage = 0.0

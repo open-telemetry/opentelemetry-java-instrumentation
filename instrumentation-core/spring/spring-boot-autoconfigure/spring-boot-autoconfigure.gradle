@@ -1,0 +1,40 @@
+plugins {
+  id 'org.springframework.boot' version '2.3.0.RELEASE'
+  id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+}
+
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+group = 'io.opentelemetry.instrumentation'
+
+apply from: "$rootDir/gradle/java.gradle"
+
+sourceCompatibility = '8'
+
+bootJar {
+  enabled = false
+}
+
+dependencies {
+  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+  
+  testImplementation('org.springframework.boot:spring-boot-starter-test') {
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
+  
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation project(':instrumentation-core:spring:spring-webmvc-3.1')
+  implementation project(':instrumentation-core:spring:spring-web-3.1')
+  
+  implementation 'org.springframework.boot:spring-boot-starter-webflux'
+  implementation project(':instrumentation-core:spring:spring-webflux-5.0')
+  
+  api deps.opentelemetryApi 
+  api "io.opentelemetry:opentelemetry-exporters-logging:0.5.0"
+}
+
+test {
+  useJUnitPlatform()
+}

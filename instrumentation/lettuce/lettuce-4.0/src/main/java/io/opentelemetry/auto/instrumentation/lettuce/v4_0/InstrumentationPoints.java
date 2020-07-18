@@ -19,8 +19,6 @@ package io.opentelemetry.auto.instrumentation.lettuce.v4_0;
 import static com.lambdaworks.redis.protocol.CommandKeyword.SEGFAULT;
 import static com.lambdaworks.redis.protocol.CommandType.DEBUG;
 import static com.lambdaworks.redis.protocol.CommandType.SHUTDOWN;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.protocol.AsyncCommand;
@@ -38,11 +36,8 @@ public final class InstrumentationPoints {
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
   public static SpanWithScope beforeCommand(final RedisCommand<?, ?, ?> command) {
-    final String spanName = command == null ? "Redis Command" : command.getType().name();
-    final Span span =
-        LettuceClientDecorator.TRACER.spanBuilder(spanName).setSpanKind(CLIENT).startSpan();
-    LettuceClientDecorator.DECORATE.afterStart(span);
-    return new SpanWithScope(span, currentContextWith(span));
+    final Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command);
+    return new SpanWithScope(span, LettuceDatabaseClientTracer.TRACER.startScope(span));
   }
 
   public static void afterCommand(
@@ -52,45 +47,39 @@ public final class InstrumentationPoints {
       final AsyncCommand<?, ?, ?> asyncCommand) {
     final Span span = spanWithScope.getSpan();
     if (throwable != null) {
-      LettuceClientDecorator.DECORATE.onError(span, throwable);
-      LettuceClientDecorator.DECORATE.beforeFinish(span);
-      span.end();
+      LettuceDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
     } else if (expectsResponse(command)) {
       asyncCommand.handleAsync(
           (value, ex) -> {
-            if (ex instanceof CancellationException) {
+            if (ex == null) {
+              LettuceDatabaseClientTracer.TRACER.end(span);
+            } else if (ex instanceof CancellationException) {
               span.setAttribute("db.command.cancelled", true);
+              LettuceDatabaseClientTracer.TRACER.end(span);
             } else {
-              LettuceClientDecorator.DECORATE.onError(span, ex);
+              LettuceDatabaseClientTracer.TRACER.endExceptionally(span, ex);
             }
-            LettuceClientDecorator.DECORATE.beforeFinish(span);
-            span.end();
             return null;
           });
     } else {
       // No response is expected, so we must finish the span now.
-      LettuceClientDecorator.DECORATE.beforeFinish(span);
-      span.end();
+      LettuceDatabaseClientTracer.TRACER.end(span);
     }
     spanWithScope.closeScope();
-    // span may be finished by handleAsync call above.
   }
 
   public static SpanWithScope beforeConnect(final RedisURI redisURI) {
-    final Span span =
-        LettuceClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-    LettuceClientDecorator.DECORATE.afterStart(span);
-    LettuceClientDecorator.DECORATE.onConnection(span, redisURI);
-    return new SpanWithScope(span, currentContextWith(span));
+    final Span span = LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT");
+    return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.TRACER.startScope(span));
   }
 
   public static void afterConnect(final SpanWithScope spanWithScope, final Throwable throwable) {
     final Span span = spanWithScope.getSpan();
     if (throwable != null) {
-      LettuceClientDecorator.DECORATE.onError(span, throwable);
-      LettuceClientDecorator.DECORATE.beforeFinish(span);
+      LettuceConnectionDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
+    } else {
+      LettuceConnectionDatabaseClientTracer.TRACER.end(span);
     }
-    span.end();
     spanWithScope.closeScope();
   }
 
@@ -99,7 +88,6 @@ public final class InstrumentationPoints {
    * added and the command is executed) because these commands have no return values/call backs, so
    * we must close the span early in order to provide info for the users
    *
-   * @param command
    * @return false if the span should finish early (the command will not have a return value)
    */
   public static boolean expectsResponse(final RedisCommand<?, ?, ?> command) {
