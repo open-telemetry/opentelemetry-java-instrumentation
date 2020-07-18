@@ -25,14 +25,14 @@ public interface FaasSemanticConvention {
   
   /**
    * Sets a value for faas.trigger
-   * @param faasTrigger Type of the trigger on which the function is executed..
+   * @param faasTrigger Type of the trigger on which the function is executed.
    */
-  public FaasSemanticConvention setFaasTrigger(String faasTrigger);
+  FaasSemanticConvention setFaasTrigger(String faasTrigger);
 
   /**
    * Sets a value for faas.execution
-   * @param faasExecution The execution id of the current function execution..
+   * @param faasExecution The execution id of the current function execution.
    */
-  public FaasSemanticConvention setFaasExecution(String faasExecution);
+  FaasSemanticConvention setFaasExecution(String faasExecution);
 
 }

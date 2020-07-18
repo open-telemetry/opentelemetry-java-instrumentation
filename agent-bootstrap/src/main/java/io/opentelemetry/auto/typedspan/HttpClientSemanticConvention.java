@@ -25,99 +25,99 @@ public interface HttpClientSemanticConvention {
   
   /**
    * Sets a value for http.method
-   * @param httpMethod HTTP request method..
+   * @param httpMethod HTTP request method.
    */
-  public HttpClientSemanticConvention setHttpMethod(String httpMethod);
+  HttpClientSemanticConvention setHttpMethod(String httpMethod);
 
   /**
    * Sets a value for http.url
-   * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless..
+   * @param httpUrl Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
    */
-  public HttpClientSemanticConvention setHttpUrl(String httpUrl);
+  HttpClientSemanticConvention setHttpUrl(String httpUrl);
 
   /**
    * Sets a value for http.target
-   * @param httpTarget The full request target as passed in a HTTP request line or equivalent..
+   * @param httpTarget The full request target as passed in a HTTP request line or equivalent.
    */
-  public HttpClientSemanticConvention setHttpTarget(String httpTarget);
+  HttpClientSemanticConvention setHttpTarget(String httpTarget);
 
   /**
    * Sets a value for http.host
-   * @param httpHost The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not present, this attribute should be the same..
+   * @param httpHost The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not present, this attribute should be the same.
    */
-  public HttpClientSemanticConvention setHttpHost(String httpHost);
+  HttpClientSemanticConvention setHttpHost(String httpHost);
 
   /**
    * Sets a value for http.scheme
-   * @param httpScheme The URI scheme identifying the used protocol..
+   * @param httpScheme The URI scheme identifying the used protocol.
    */
-  public HttpClientSemanticConvention setHttpScheme(String httpScheme);
+  HttpClientSemanticConvention setHttpScheme(String httpScheme);
 
   /**
    * Sets a value for http.status_code
-   * @param httpStatusCode [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6)..
+   * @param httpStatusCode [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
    */
-  public HttpClientSemanticConvention setHttpStatusCode(long httpStatusCode);
+  HttpClientSemanticConvention setHttpStatusCode(long httpStatusCode);
 
   /**
    * Sets a value for http.status_text
-   * @param httpStatusText [HTTP reason phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2)..
+   * @param httpStatusText [HTTP reason phrase](https://tools.ietf.org/html/rfc7230#section-3.1.2).
    */
-  public HttpClientSemanticConvention setHttpStatusText(String httpStatusText);
+  HttpClientSemanticConvention setHttpStatusText(String httpStatusText);
 
   /**
    * Sets a value for http.flavor
    * @param httpFlavor Kind of HTTP protocol used.
    * <p> If `net.transport` is not specified, it can be assumed to be `IP.TCP` except if `http.flavor` is `QUIC`, in which case `IP.UDP` is assumed.
    */
-  public HttpClientSemanticConvention setHttpFlavor(String httpFlavor);
+  HttpClientSemanticConvention setHttpFlavor(String httpFlavor);
 
   /**
    * Sets a value for http.user_agent
-   * @param httpUserAgent Value of the [HTTP User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client..
+   * @param httpUserAgent Value of the [HTTP User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
    */
-  public HttpClientSemanticConvention setHttpUserAgent(String httpUserAgent);
+  HttpClientSemanticConvention setHttpUserAgent(String httpUserAgent);
 
   /**
    * Sets a value for net.transport
-   * @param netTransport Transport protocol used. See note below..
+   * @param netTransport Transport protocol used. See note below.
    */
-  public HttpClientSemanticConvention setNetTransport(String netTransport);
+  HttpClientSemanticConvention setNetTransport(String netTransport);
 
   /**
    * Sets a value for net.peer.ip
    * @param netPeerIp Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
    */
-  public HttpClientSemanticConvention setNetPeerIp(String netPeerIp);
+  HttpClientSemanticConvention setNetPeerIp(String netPeerIp);
 
   /**
    * Sets a value for net.peer.port
-   * @param netPeerPort Remote port number..
+   * @param netPeerPort Remote port number.
    */
-  public HttpClientSemanticConvention setNetPeerPort(long netPeerPort);
+  HttpClientSemanticConvention setNetPeerPort(long netPeerPort);
 
   /**
    * Sets a value for net.peer.name
-   * @param netPeerName Remote hostname or similar, see note below..
+   * @param netPeerName Remote hostname or similar, see note below.
    */
-  public HttpClientSemanticConvention setNetPeerName(String netPeerName);
+  HttpClientSemanticConvention setNetPeerName(String netPeerName);
 
   /**
    * Sets a value for net.host.ip
-   * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host..
+   * @param netHostIp Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
    */
-  public HttpClientSemanticConvention setNetHostIp(String netHostIp);
+  HttpClientSemanticConvention setNetHostIp(String netHostIp);
 
   /**
    * Sets a value for net.host.port
-   * @param netHostPort Like `net.peer.port` but for the host port..
+   * @param netHostPort Like `net.peer.port` but for the host port.
    */
-  public HttpClientSemanticConvention setNetHostPort(long netHostPort);
+  HttpClientSemanticConvention setNetHostPort(long netHostPort);
 
   /**
    * Sets a value for net.host.name
-   * @param netHostName Local hostname or similar, see note below..
+   * @param netHostName Local hostname or similar, see note below.
    */
-  public HttpClientSemanticConvention setNetHostName(String netHostName);
+  HttpClientSemanticConvention setNetHostName(String netHostName);
 
 }
