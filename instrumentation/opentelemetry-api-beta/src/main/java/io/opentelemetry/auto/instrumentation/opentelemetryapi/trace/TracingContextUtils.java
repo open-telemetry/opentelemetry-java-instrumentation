@@ -22,14 +22,16 @@ import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridg
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.NoopScope;
 import io.opentelemetry.auto.instrumentation.opentelemetryapi.context.UnshadedScope;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.context.Scope;
 import unshaded.io.opentelemetry.trace.DefaultSpan;
 import unshaded.io.opentelemetry.trace.Span;
 
-@Slf4j
 public class TracingContextUtils {
+
+  private static final Logger log = LoggerFactory.getLogger(TracingContextUtils.class);
 
   public static Context withSpan(
       final Span span,

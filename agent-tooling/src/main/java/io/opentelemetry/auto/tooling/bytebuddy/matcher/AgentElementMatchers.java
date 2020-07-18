@@ -19,7 +19,6 @@ package io.opentelemetry.auto.tooling.bytebuddy.matcher;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -28,7 +27,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * This class provides some custom ByteBuddy element matchers to use when applying instrumentation
  */
-@Slf4j
 public class AgentElementMatchers {
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> extendsClass(

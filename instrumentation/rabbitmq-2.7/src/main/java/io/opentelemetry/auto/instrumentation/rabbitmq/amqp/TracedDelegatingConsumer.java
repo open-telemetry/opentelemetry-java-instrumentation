@@ -33,14 +33,17 @@ import io.opentelemetry.trace.Span;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Wrapping the consumer instead of instrumenting it directly because it doesn't get access to the
  * queue name when the message is consumed.
  */
-@Slf4j
 public class TracedDelegatingConsumer implements Consumer {
+
+  private static final Logger log = LoggerFactory.getLogger(TracedDelegatingConsumer.class);
+
   private final String queue;
   private final Consumer delegate;
 

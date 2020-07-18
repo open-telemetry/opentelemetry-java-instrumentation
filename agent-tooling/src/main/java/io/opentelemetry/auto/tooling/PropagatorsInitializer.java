@@ -25,10 +25,13 @@ import io.opentelemetry.extensions.trace.propagation.JaegerPropagator;
 import io.opentelemetry.trace.propagation.HttpTraceContext;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class PropagatorsInitializer {
+
+  private static final Logger log = LoggerFactory.getLogger(PropagatorsInitializer.class);
+
   private static final String TRACE_CONTEXT = "tracecontext";
   private static final String B3 = "b3";
   private static final String B3_SINGLE = "b3single";

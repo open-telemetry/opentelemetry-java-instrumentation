@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.auto.instrumentation.springwebflux.server;
+package io.opentelemetry.auto.test.utils;
 
-import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ServerDecorator;
-import io.opentelemetry.trace.Tracer;
+public class ExceptionUtils {
 
-public class SpringWebfluxHttpServerDecorator extends ServerDecorator {
-  public static final SpringWebfluxHttpServerDecorator DECORATE =
-      new SpringWebfluxHttpServerDecorator();
-  public static final Tracer TRACER =
-      OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.spring-webflux-5.0");
+  static RuntimeException sneakyThrow(Throwable t) {
+    if (t == null) throw new NullPointerException("t");
+    return ExceptionUtils.<RuntimeException>sneakyThrow0(t);
+  }
+
+  private static <T extends Throwable> T sneakyThrow0(Throwable t) throws T {
+    throw (T) t;
+  }
 }

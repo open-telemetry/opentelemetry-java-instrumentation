@@ -29,14 +29,12 @@ import io.opentelemetry.auto.instrumentation.netty.v3_8.ChannelTraceContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.net.InetSocketAddress;
-import lombok.extern.slf4j.Slf4j;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
-@Slf4j
 public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
 
   private final ContextStore<Channel, ChannelTraceContext> contextStore;

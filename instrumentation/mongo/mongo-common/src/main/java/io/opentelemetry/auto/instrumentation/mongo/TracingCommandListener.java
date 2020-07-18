@@ -25,9 +25,7 @@ import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class TracingCommandListener implements CommandListener {
 
   private final Map<Integer, Span> spanMap = new ConcurrentHashMap<>();

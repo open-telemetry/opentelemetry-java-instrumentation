@@ -29,13 +29,11 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@Slf4j
 @AutoService(Instrumenter.class)
 /**
  * Disable instrumentation for executors that cannot take our runnable wrappers.

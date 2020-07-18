@@ -22,11 +22,14 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ratpack.func.Action;
 
-@Slf4j
 public class ActionWrapper<T> implements Action<T> {
+
+  private static final Logger log = LoggerFactory.getLogger(ActionWrapper.class);
+
   private static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.ratpack-1.4");
 

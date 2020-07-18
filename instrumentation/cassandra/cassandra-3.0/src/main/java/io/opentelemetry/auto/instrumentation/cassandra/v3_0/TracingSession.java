@@ -36,10 +36,10 @@ import io.opentelemetry.auto.common.exec.DaemonThreadFactory;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import lombok.NonNull;
 
 public class TracingSession implements Session {
   private static final ExecutorService EXECUTOR_SERVICE =
@@ -76,8 +76,8 @@ public class TracingSession implements Session {
   }
 
   @Override
-  @NonNull
-  public ResultSet execute(@NonNull String query) {
+  public ResultSet execute(String query) {
+    Objects.requireNonNull(query);
     final Span span = TRACER.startSpan(session, query);
     try (final Scope ignored = TRACER.startScope(span)) {
       try {

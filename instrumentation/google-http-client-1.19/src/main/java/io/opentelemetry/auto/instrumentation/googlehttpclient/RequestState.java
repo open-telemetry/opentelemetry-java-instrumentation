@@ -17,10 +17,39 @@
 package io.opentelemetry.auto.instrumentation.googlehttpclient;
 
 import io.opentelemetry.trace.Span;
-import lombok.Data;
-import lombok.NonNull;
+import java.util.Objects;
 
-@Data
 public class RequestState {
-  @NonNull public Span span;
+
+  private Span span;
+
+  public RequestState(Span span) {
+    setSpan(span);
+  }
+
+  public Span getSpan() {
+    return span;
+  }
+
+  public void setSpan(Span span) {
+    Objects.requireNonNull(span);
+    this.span = span;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    RequestState that = (RequestState) o;
+    return Objects.equals(span, that.span);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(span);
+  }
 }

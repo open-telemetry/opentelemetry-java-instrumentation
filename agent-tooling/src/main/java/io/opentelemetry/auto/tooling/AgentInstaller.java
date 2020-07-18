@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -41,9 +40,13 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class AgentInstaller {
+
+  private static final Logger log = LoggerFactory.getLogger(AgentInstaller.class);
+
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
 
@@ -187,8 +190,9 @@ public class AgentInstaller {
     return matcher;
   }
 
-  @Slf4j
   static class RedefinitionLoggingListener implements AgentBuilder.RedefinitionStrategy.Listener {
+
+    private static final Logger log = LoggerFactory.getLogger(RedefinitionLoggingListener.class);
 
     @Override
     public void onBatch(final int index, final List<Class<?>> batch, final List<Class<?>> types) {}
@@ -213,8 +217,9 @@ public class AgentInstaller {
         final Map<List<Class<?>>, Throwable> failures) {}
   }
 
-  @Slf4j
   static class TransformLoggingListener implements AgentBuilder.Listener {
+
+    private static final Logger log = LoggerFactory.getLogger(TransformLoggingListener.class);
 
     @Override
     public void onError(

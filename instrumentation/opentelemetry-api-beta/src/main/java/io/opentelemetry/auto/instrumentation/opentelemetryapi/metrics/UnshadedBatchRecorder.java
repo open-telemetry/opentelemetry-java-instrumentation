@@ -16,7 +16,8 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.metrics;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import unshaded.io.opentelemetry.metrics.BatchRecorder;
 import unshaded.io.opentelemetry.metrics.DoubleCounter;
 import unshaded.io.opentelemetry.metrics.DoubleUpDownCounter;
@@ -25,8 +26,9 @@ import unshaded.io.opentelemetry.metrics.LongCounter;
 import unshaded.io.opentelemetry.metrics.LongUpDownCounter;
 import unshaded.io.opentelemetry.metrics.LongValueRecorder;
 
-@Slf4j
 class UnshadedBatchRecorder implements BatchRecorder {
+
+  private static final Logger log = LoggerFactory.getLogger(UnshadedBatchRecorder.class);
 
   private final io.opentelemetry.metrics.BatchRecorder shadedBatchRecorder;
 
