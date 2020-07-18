@@ -63,7 +63,7 @@ class TracerTest extends AgentTestRunner {
   def "capture span with implicit parent using Tracer.withSpan()"() {
     when:
     def tracer = OpenTelemetry.getTracerProvider().get("test")
-    final Span parentSpan = tracer.spanBuilder("parent").startSpan()
+    Span parentSpan = tracer.spanBuilder("parent").startSpan()
     Scope parentScope = tracer.withSpan(parentSpan)
 
     def testSpan = tracer.spanBuilder("test").startSpan()
@@ -94,7 +94,7 @@ class TracerTest extends AgentTestRunner {
   def "capture span with implicit parent using TracingContextUtils.currentContextWith()"() {
     when:
     def tracer = OpenTelemetry.getTracerProvider().get("test")
-    final Span parentSpan = tracer.spanBuilder("parent").startSpan()
+    Span parentSpan = tracer.spanBuilder("parent").startSpan()
     Scope parentScope = currentContextWith(parentSpan)
 
     def testSpan = tracer.spanBuilder("test").startSpan()
@@ -125,7 +125,7 @@ class TracerTest extends AgentTestRunner {
   def "capture span with implicit parent using TracingContextUtils.withSpan and ContextUtils.withScopedContext()"() {
     when:
     def tracer = OpenTelemetry.getTracerProvider().get("test")
-    final Span parentSpan = tracer.spanBuilder("parent").startSpan()
+    Span parentSpan = tracer.spanBuilder("parent").startSpan()
     def parentContext = withSpan(parentSpan, Context.current())
     Scope parentScope = withScopedContext(parentContext)
 

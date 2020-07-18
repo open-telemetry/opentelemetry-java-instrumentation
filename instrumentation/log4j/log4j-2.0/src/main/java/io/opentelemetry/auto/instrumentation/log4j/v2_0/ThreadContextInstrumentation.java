@@ -64,8 +64,8 @@ public class ThreadContextInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void mdcClassInitialized(@Advice.Origin final Class threadClass) {
       try {
-        final Method putMethod = threadClass.getMethod("put", String.class, String.class);
-        final Method removeMethod = threadClass.getMethod("remove", String.class);
+        Method putMethod = threadClass.getMethod("put", String.class, String.class);
+        Method removeMethod = threadClass.getMethod("remove", String.class);
         // FIXME this instrumentation relied on scope listener
         // GlobalTracer.get().addScopeListener(new LogContextScopeListener(putMethod,
         // removeMethod));

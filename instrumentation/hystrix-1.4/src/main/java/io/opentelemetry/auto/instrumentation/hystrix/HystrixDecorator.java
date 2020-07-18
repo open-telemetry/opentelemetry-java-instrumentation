@@ -26,11 +26,11 @@ public class HystrixDecorator extends BaseDecorator {
   public void onCommand(
       final Span span, final HystrixInvokableInfo<?> command, final String methodName) {
     if (command != null) {
-      final String commandName = command.getCommandKey().name();
-      final String groupName = command.getCommandGroup().name();
-      final boolean circuitOpen = command.isCircuitBreakerOpen();
+      String commandName = command.getCommandKey().name();
+      String groupName = command.getCommandGroup().name();
+      boolean circuitOpen = command.isCircuitBreakerOpen();
 
-      final String spanName = groupName + "." + commandName + "." + methodName;
+      String spanName = groupName + "." + commandName + "." + methodName;
 
       span.updateName(spanName);
       span.setAttribute("hystrix.command", commandName);

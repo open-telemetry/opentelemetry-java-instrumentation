@@ -69,7 +69,7 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(named("connect"))
@@ -87,9 +87,9 @@ public class NettyChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelConnectAdvice extends AbstractNettyAdvice {
     @Advice.OnMethodEnter
     public static void addConnectContinuation(@Advice.This final Channel channel) {
-      final Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
+      Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
-        final ContextStore<Channel, ChannelTraceContext> contextStore =
+        ContextStore<Channel, ChannelTraceContext> contextStore =
             InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
         if (contextStore

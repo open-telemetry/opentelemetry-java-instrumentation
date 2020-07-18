@@ -44,7 +44,7 @@ public class Servlet3Advice {
       return;
     }
 
-    final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
     Context attachedContext = TRACER.getServerContext(httpServletRequest);
     if (attachedContext != null) {
@@ -83,7 +83,7 @@ public class Servlet3Advice {
       return;
     }
 
-    final AtomicBoolean responseHandled = new AtomicBoolean(false);
+    AtomicBoolean responseHandled = new AtomicBoolean(false);
 
     // In case of async servlets wait for the actual response to be ready
     if (request.isAsyncStarted()) {

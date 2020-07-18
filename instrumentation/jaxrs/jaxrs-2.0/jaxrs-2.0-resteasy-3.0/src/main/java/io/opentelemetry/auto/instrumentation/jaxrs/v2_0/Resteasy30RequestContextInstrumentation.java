@@ -45,10 +45,10 @@ public class Resteasy30RequestContextInstrumentation extends AbstractRequestCont
       if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null
           && context instanceof PostMatchContainerRequestContext) {
 
-        final ResourceMethodInvoker resourceMethodInvoker =
+        ResourceMethodInvoker resourceMethodInvoker =
             ((PostMatchContainerRequestContext) context).getResourceMethod();
-        final Method method = resourceMethodInvoker.getMethod();
-        final Class resourceClass = resourceMethodInvoker.getResourceClass();
+        Method method = resourceMethodInvoker.getMethod();
+        Class resourceClass = resourceMethodInvoker.getResourceClass();
 
         return RequestFilterHelper.createOrUpdateAbortSpan(context, resourceClass, method);
       }

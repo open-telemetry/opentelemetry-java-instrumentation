@@ -95,15 +95,15 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
        - To return scope only if we have captured it.
        - To capture scope only in case of error.
        */
-      final Throwable cause = future.getCause();
+      Throwable cause = future.getCause();
       if (cause == null) {
         return null;
       }
 
-      final ContextStore<Channel, ChannelTraceContext> contextStore =
+      ContextStore<Channel, ChannelTraceContext> contextStore =
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
-      final Span continuation =
+      Span continuation =
           contextStore
               .putIfAbsent(future.getChannel(), ChannelTraceContext.Factory.INSTANCE)
               .getConnectionContinuation();
@@ -111,11 +111,11 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (continuation == null) {
         return null;
       }
-      final Scope parentScope = NettyHttpClientDecorator.TRACER.withSpan(continuation);
+      Scope parentScope = NettyHttpClientDecorator.TRACER.withSpan(continuation);
 
-      final Span errorSpan =
+      Span errorSpan =
           NettyHttpClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-      try (final Scope scope = NettyHttpClientDecorator.TRACER.withSpan(errorSpan)) {
+      try (Scope scope = NettyHttpClientDecorator.TRACER.withSpan(errorSpan)) {
         NettyHttpClientDecorator.DECORATE.onError(errorSpan, cause);
         NettyHttpClientDecorator.DECORATE.beforeFinish(errorSpan);
         errorSpan.end();

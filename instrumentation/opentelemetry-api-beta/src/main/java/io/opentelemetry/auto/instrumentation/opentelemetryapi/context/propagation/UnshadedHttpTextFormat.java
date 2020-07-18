@@ -43,7 +43,7 @@ class UnshadedHttpTextFormat implements HttpTextFormat {
   @Override
   public <C> Context extract(
       final Context context, final C carrier, final HttpTextFormat.Getter<C> getter) {
-    final io.grpc.Context shadedContext = contextStore.get(context);
+    io.grpc.Context shadedContext = contextStore.get(context);
     if (shadedContext == null) {
       if (log.isDebugEnabled()) {
         log.debug("unexpected context: {}", context, new Exception("unexpected context"));

@@ -89,7 +89,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
           parent = TRACER.getCurrentSpan();
           span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
 
-          final SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
+          SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
 
           DECORATE.afterStart(span);
           DECORATE.onJaxRsSpan(span, parent, resourceClass, method);
@@ -110,7 +110,7 @@ public abstract class AbstractRequestContextInstrumentation extends Instrumenter
         return;
       }
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }

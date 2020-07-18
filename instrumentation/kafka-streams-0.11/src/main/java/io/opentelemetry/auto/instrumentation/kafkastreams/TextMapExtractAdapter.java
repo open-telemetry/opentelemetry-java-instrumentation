@@ -27,7 +27,7 @@ public class TextMapExtractAdapter implements HttpTextFormat.Getter<Headers> {
 
   @Override
   public String get(final Headers headers, final String key) {
-    final Header header = headers.lastHeader(key);
+    Header header = headers.lastHeader(key);
     if (header == null) {
       return null;
     }

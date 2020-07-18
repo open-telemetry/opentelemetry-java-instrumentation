@@ -35,13 +35,13 @@ public class LogbackSpans {
 
   public static void capture(final ILoggingEvent event) {
 
-    final Level level = event.getLevel();
+    Level level = event.getLevel();
     if (level.toInt() < getThreshold().toInt()) {
       // this needs to be configurable
       return;
     }
 
-    final Object throwableProxy = event.getThrowableProxy();
+    Object throwableProxy = event.getThrowableProxy();
     Throwable t = null;
     if (throwableProxy instanceof ThrowableProxy) {
       // there is only one other subclass of ch.qos.logback.classic.spi.IThrowableProxy
@@ -49,7 +49,7 @@ public class LogbackSpans {
       t = ((ThrowableProxy) throwableProxy).getThrowable();
     }
 
-    final Span span =
+    Span span =
         TRACER
             .spanBuilder("log.message")
             .setAttribute("message", event.getFormattedMessage())
@@ -63,13 +63,13 @@ public class LogbackSpans {
   }
 
   private static String toString(final Throwable t) {
-    final StringWriter out = new StringWriter();
+    StringWriter out = new StringWriter();
     t.printStackTrace(new PrintWriter(out));
     return out.toString();
   }
 
   private static Level getThreshold() {
-    final String level = Config.get().getExperimentalLogCaptureThreshold();
+    String level = Config.get().getExperimentalLogCaptureThreshold();
     if (level == null) {
       return Level.OFF;
     }

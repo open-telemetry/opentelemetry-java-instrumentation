@@ -34,9 +34,9 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
-    final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
+    Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
     if (!TRACER.getCurrentSpan().getContext().isValid()) {
-      final SpanContext extractedContext = extract(req.headers(), GETTER);
+      SpanContext extractedContext = extract(req.headers(), GETTER);
       if (extractedContext.isValid()) {
         spanBuilder.setParent(extractedContext);
       }
@@ -44,7 +44,7 @@ public class PlayAdvice {
       // An upstream framework (e.g. akka-http, netty) has already started the span.
       // Do not extract the context.
     }
-    final Span span = spanBuilder.startSpan();
+    Span span = spanBuilder.startSpan();
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, req);
 
@@ -58,7 +58,7 @@ public class PlayAdvice {
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final Request req,
       @Advice.Return(readOnly = false) final Future<Result> responseFuture) {
-    final Span playControllerSpan = playControllerScope.getSpan();
+    Span playControllerSpan = playControllerScope.getSpan();
 
     // Call onRequest on return after tags are populated.
     DECORATE.onRequest(playControllerSpan, req);
@@ -75,7 +75,7 @@ public class PlayAdvice {
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
-    final Span rootSpan = TRACER.getCurrentSpan();
+    Span rootSpan = TRACER.getCurrentSpan();
     // set the span name on the upstream akka/netty span
     DECORATE.onRequest(rootSpan, req);
   }

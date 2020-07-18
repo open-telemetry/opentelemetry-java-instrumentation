@@ -28,8 +28,8 @@ public class MessageExtractAdapter implements HttpTextFormat.Getter<Message> {
 
   @Override
   public String get(final Message carrier, final String key) {
-    final String propName = key.replace("-", MessageInjectAdapter.DASH);
-    final Object value;
+    String propName = key.replace("-", MessageInjectAdapter.DASH);
+    Object value;
     try {
       value = carrier.getObjectProperty(propName);
     } catch (final JMSException e) {

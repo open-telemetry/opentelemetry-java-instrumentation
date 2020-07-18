@@ -43,9 +43,9 @@ public class AdviceUtils {
    */
   public static <T> SpanWithScope startTaskScope(
       final ContextStore<T, State> contextStore, final T task) {
-    final State state = contextStore.get(task);
+    State state = contextStore.get(task);
     if (state != null) {
-      final Context parentContext = state.getAndResetParentContext();
+      Context parentContext = state.getAndResetParentContext();
       if (parentContext != null) {
         return new SpanWithScope(
             getSpan(parentContext), ContextUtils.withScopedContext(parentContext));

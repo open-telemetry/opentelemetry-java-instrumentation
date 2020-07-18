@@ -29,7 +29,7 @@ public class EchoServiceImpl implements EchoService {
 
   @Override
   public ServiceCall<Source<String, NotUsed>, Source<String, NotUsed>> echo() {
-    final CompletableFuture<Source<String, NotUsed>> fut = new CompletableFuture<>();
+    CompletableFuture<Source<String, NotUsed>> fut = new CompletableFuture<>();
     ServiceTestModule.executor.submit(() -> fut.complete(Source.from(tracedMethod())));
     return req -> fut;
   }
@@ -40,7 +40,7 @@ public class EchoServiceImpl implements EchoService {
   }
 
   public List<String> tracedMethod() {
-    final Span span = TRACER.spanBuilder("tracedMethod").startSpan();
+    Span span = TRACER.spanBuilder("tracedMethod").startSpan();
     try {
       return java.util.Arrays.asList("msg1", "msg2", "msg3");
     } finally {

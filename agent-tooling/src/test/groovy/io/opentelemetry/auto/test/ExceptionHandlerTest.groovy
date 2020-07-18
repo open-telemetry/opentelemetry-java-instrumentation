@@ -62,7 +62,7 @@ class ExceptionHandlerTest extends AgentSpecification {
     ByteBuddyAgent.install()
     transformer = builder.installOn(ByteBuddyAgent.getInstrumentation())
 
-    final Logger logger = (Logger) LoggerFactory.getLogger(ExceptionLogger)
+    Logger logger = (Logger) LoggerFactory.getLogger(ExceptionLogger)
     testAppender.setContext(logger.getLoggerContext())
     logger.addAppender(testAppender)
     testAppender.start()

@@ -43,7 +43,7 @@ class MongoBaseTest extends AgentTestRunner {
   MongodProcess mongod
 
   def setup() throws Exception {
-    final IMongodConfig mongodConfig =
+    IMongodConfig mongodConfig =
       new MongodConfigBuilder()
         .version(Version.Main.PRODUCTION)
         .net(new Net("localhost", port, Network.localhostIsIPv6()))

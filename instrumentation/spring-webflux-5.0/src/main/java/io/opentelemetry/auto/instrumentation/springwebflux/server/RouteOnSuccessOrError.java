@@ -44,15 +44,14 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
   @Override
   public void accept(final HandlerFunction<?> handler, final Throwable throwable) {
     if (handler != null) {
-      final String predicateString = parsePredicateString();
+      String predicateString = parsePredicateString();
       if (predicateString != null) {
-        final Context context =
-            (Context) serverRequest.attributes().get(AdviceUtils.CONTEXT_ATTRIBUTE);
+        Context context = (Context) serverRequest.attributes().get(AdviceUtils.CONTEXT_ATTRIBUTE);
         if (context != null) {
           Span span = TracingContextUtils.getSpan(context);
           span.setAttribute("request.predicate", predicateString);
         }
-        final Context parentContext =
+        Context parentContext =
             (Context) serverRequest.attributes().get(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE);
         if (parentContext != null) {
           TracingContextUtils.getSpan(parentContext).updateName(parseRoute(predicateString));
@@ -62,7 +61,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
   }
 
   private String parsePredicateString() {
-    final String routerFunctionString = routerFunction.toString();
+    String routerFunctionString = routerFunction.toString();
     // Router functions containing lambda predicates should not end up in span tags since they are
     // confusing
     if (routerFunctionString.startsWith(

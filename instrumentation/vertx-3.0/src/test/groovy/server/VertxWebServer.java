@@ -34,8 +34,8 @@ public class VertxWebServer extends AbstractVerticle {
 
   @Override
   public void start(final Future<Void> startFuture) {
-    final int port = config().getInteger(VertxHttpServerTest.CONFIG_HTTP_SERVER_PORT);
-    final Router router = Router.router(vertx);
+    int port = config().getInteger(VertxHttpServerTest.CONFIG_HTTP_SERVER_PORT);
+    Router router = Router.router(vertx);
 
     //noinspection Convert2Lambda
     router

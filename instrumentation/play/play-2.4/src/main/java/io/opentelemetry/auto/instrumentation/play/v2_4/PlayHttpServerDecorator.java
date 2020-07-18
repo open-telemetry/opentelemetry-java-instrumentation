@@ -70,9 +70,9 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
     if (request != null) {
       // more about routes here:
       // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md#router-tags-are-now-attributes
-      final Option pathOption = request.tags().get("ROUTE_PATTERN");
+      Option pathOption = request.tags().get("ROUTE_PATTERN");
       if (!pathOption.isEmpty()) {
-        final String path = (String) pathOption.get();
+        String path = (String) pathOption.get();
         span.updateName(request.method() + " " + path);
       }
     }

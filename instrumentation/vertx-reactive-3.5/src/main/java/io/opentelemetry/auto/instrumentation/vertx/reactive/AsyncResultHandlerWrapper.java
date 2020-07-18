@@ -37,7 +37,7 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
   @Override
   public void handle(final Handler<AsyncResult<?>> asyncResultHandler) {
     if (executionContext != null) {
-      try (final Scope scope = ContextUtils.withScopedContext(executionContext)) {
+      try (Scope scope = ContextUtils.withScopedContext(executionContext)) {
         delegate.handle(asyncResultHandler);
       }
     } else {

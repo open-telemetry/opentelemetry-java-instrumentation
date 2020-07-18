@@ -50,15 +50,15 @@ public class ContextPayload {
   }
 
   public static ContextPayload from(final Span span) {
-    final ContextPayload payload = new ContextPayload();
-    final Context context = withSpan(span, Context.current());
+    ContextPayload payload = new ContextPayload();
+    Context context = withSpan(span, Context.current());
     OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, payload, SETTER);
     return payload;
   }
 
   public static ContextPayload read(final ObjectInput oi) throws IOException {
     try {
-      final Object object = oi.readObject();
+      Object object = oi.readObject();
       if (object instanceof Map) {
         return new ContextPayload((Map<String, String>) object);
       }

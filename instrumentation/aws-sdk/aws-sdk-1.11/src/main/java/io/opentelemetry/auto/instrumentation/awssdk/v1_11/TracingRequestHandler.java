@@ -49,7 +49,7 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    final Span span = decorate.getOrCreateSpan(request, TRACER);
+    Span span = decorate.getOrCreateSpan(request, TRACER);
     decorate.afterStart(span);
     decorate.onRequest(span, request);
     request.addHandlerContext(
@@ -60,11 +60,11 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void afterResponse(final Request<?> request, final Response<?> response) {
-    final SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
     if (spanWithScope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       spanWithScope.closeScope();
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       decorate.onResponse(span, response);
       decorate.beforeFinish(span);
       span.end();
@@ -73,11 +73,11 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
-    final SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+    SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
     if (spanWithScope != null) {
       request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
       spanWithScope.closeScope();
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       decorate.onError(span, e);
       decorate.beforeFinish(span);
       span.end();

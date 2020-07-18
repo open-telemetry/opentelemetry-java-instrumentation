@@ -53,28 +53,28 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       return;
     }
 
-    final ChannelTraceContext channelTraceContext =
+    ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
     Scope parentScope = null;
-    final Span continuation = channelTraceContext.getConnectionContinuation();
+    Span continuation = channelTraceContext.getConnectionContinuation();
     if (continuation != null) {
       parentScope = TRACER.withSpan(continuation);
       channelTraceContext.setConnectionContinuation(null);
     }
 
-    final HttpRequest request = (HttpRequest) msg.getMessage();
+    HttpRequest request = (HttpRequest) msg.getMessage();
 
     channelTraceContext.setClientParentSpan(TRACER.getCurrentSpan());
 
-    final Span span =
+    Span span =
         TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
-    try (final Scope scope = TRACER.withSpan(span)) {
+    try (Scope scope = TRACER.withSpan(span)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
       DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
 
-      final Context context = withSpan(span, Context.current());
+      Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request.headers(), SETTER);
 
       channelTraceContext.setClientSpan(span);

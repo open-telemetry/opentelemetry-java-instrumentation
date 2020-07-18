@@ -73,7 +73,7 @@ public class AgentClassLoader extends URLClassLoader {
     }
 
     if (!AGENT_INITIALIZER_JAR.isEmpty()) {
-      final URL url;
+      URL url;
       try {
         url = new File(AGENT_INITIALIZER_JAR).toURI().toURL();
       } catch (MalformedURLException e) {
@@ -90,7 +90,7 @@ public class AgentClassLoader extends URLClassLoader {
 
   @Override
   public URL getResource(final String resourceName) {
-    final URL bootstrapResource = bootstrapProxy.getResource(resourceName);
+    URL bootstrapResource = bootstrapProxy.getResource(resourceName);
     if (null == bootstrapResource) {
       return super.getResource(resourceName);
     } else {

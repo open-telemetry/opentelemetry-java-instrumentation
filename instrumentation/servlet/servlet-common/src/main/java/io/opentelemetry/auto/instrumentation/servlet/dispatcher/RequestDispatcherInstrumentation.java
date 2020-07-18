@@ -93,17 +93,17 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         @Advice.This final RequestDispatcher dispatcher,
         @Advice.Local("_originalContext") Object originalContext,
         @Advice.Argument(0) final ServletRequest request) {
-      final Span parentSpan = TRACER.getCurrentSpan();
+      Span parentSpan = TRACER.getCurrentSpan();
 
-      final Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
-      final Span servletSpan =
+      Object servletContextObject = request.getAttribute(CONTEXT_ATTRIBUTE);
+      Span servletSpan =
           servletContextObject instanceof Context ? getSpan((Context) servletContextObject) : null;
 
       if (!parentSpan.getContext().isValid() && servletSpan == null) {
         // Don't want to generate a new top-level span
         return null;
       }
-      final Span parent;
+      Span parent;
       if (servletSpan == null
           || (parentSpan.getContext().isValid()
               && servletSpan
@@ -118,9 +118,9 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
         parent = servletSpan;
       }
 
-      final String target =
+      String target =
           InstrumentationContext.get(RequestDispatcher.class, String.class).get(dispatcher);
-      final Span span =
+      Span span =
           TRACER
               .spanBuilder("servlet." + method)
               .setParent(parent)
@@ -156,7 +156,7 @@ public final class RequestDispatcherInstrumentation extends Instrumenter.Default
       // TODO review this logic. Seems like manual context management
       request.setAttribute(CONTEXT_ATTRIBUTE, originalContext);
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
 

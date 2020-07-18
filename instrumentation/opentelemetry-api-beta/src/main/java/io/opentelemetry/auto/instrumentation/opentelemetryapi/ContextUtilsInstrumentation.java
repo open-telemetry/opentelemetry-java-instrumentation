@@ -46,7 +46,7 @@ public class ContextUtilsInstrumentation extends AbstractInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -68,7 +68,7 @@ public class ContextUtilsInstrumentation extends AbstractInstrumentation {
     public static void methodExit(
         @Advice.Argument(0) final Context context, @Advice.Return(readOnly = false) Scope scope) {
 
-      final ContextStore<Context, io.grpc.Context> contextStore =
+      ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
       scope = ContextUtils.withScopedContext(context, contextStore);
     }

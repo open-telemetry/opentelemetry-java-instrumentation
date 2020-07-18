@@ -66,7 +66,7 @@ public final class RunnableInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope enter(@Advice.This final Runnable thiz) {
-      final ContextStore<Runnable, State> contextStore =
+      ContextStore<Runnable, State> contextStore =
           InstrumentationContext.get(Runnable.class, State.class);
       return AdviceUtils.startTaskScope(contextStore, thiz);
     }

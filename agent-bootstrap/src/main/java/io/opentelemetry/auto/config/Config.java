@@ -277,8 +277,8 @@ public class Config {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
-    for (final String name : integrationNames) {
-      final boolean configEnabled =
+    for (String name : integrationNames) {
+      boolean configEnabled =
           getBooleanSettingFromEnvironment("integration." + name + ".enabled", defaultEnabled);
       if (defaultEnabled) {
         anyEnabled &= configEnabled;
@@ -302,7 +302,7 @@ public class Config {
    */
   public static String getSettingFromEnvironment(final String name, final String defaultValue) {
     String value;
-    final String systemPropertyName = propertyNameToSystemPropertyName(name);
+    String systemPropertyName = propertyNameToSystemPropertyName(name);
 
     // System properties and properties provided from command line have the highest precedence
     value = System.getProperties().getProperty(systemPropertyName);
@@ -423,13 +423,13 @@ public class Config {
 
   private static List<String> getPropertyListValue(
       final Properties properties, final String name, final List<String> defaultValue) {
-    final String value = properties.getProperty(name);
+    String value = properties.getProperty(name);
     return value == null || value.trim().isEmpty() ? defaultValue : parseList(value);
   }
 
   private static Map<String, String> getPropertyMapValue(
       final Properties properties, final String name, final Map<String, String> defaultValue) {
-    final String value = properties.getProperty(name);
+    String value = properties.getProperty(name);
     return value == null || value.trim().isEmpty() ? defaultValue : parseMap(value);
   }
 
@@ -449,7 +449,7 @@ public class Config {
       return Collections.emptyList();
     }
 
-    final String[] tokens = str.split(",", -1);
+    String[] tokens = str.split(",", -1);
     // Remove whitespace from each item.
     for (int i = 0; i < tokens.length; i++) {
       tokens[i] = tokens[i].trim();
@@ -462,7 +462,7 @@ public class Config {
       return Collections.emptyMap();
     }
 
-    final Map<String, String> result = new LinkedHashMap<>();
+    Map<String, String> result = new LinkedHashMap<>();
     for (String token : str.split(",", -1)) {
       token = token.trim();
       String[] parts = token.split("=", -1);
@@ -482,7 +482,7 @@ public class Config {
    *     exist or if it is in a wrong format.
    */
   private static Properties loadConfigurationFile() {
-    final Properties properties = new Properties();
+    Properties properties = new Properties();
 
     // Reading from system property first and from env after
     String configurationFilePath =
@@ -500,13 +500,13 @@ public class Config {
         configurationFilePath.replaceFirst("^~", System.getProperty("user.home"));
 
     // Configuration properties file is optional
-    final File configurationFile = new File(configurationFilePath);
+    File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
       return properties;
     }
 
-    try (final FileReader fileReader = new FileReader(configurationFile)) {
+    try (FileReader fileReader = new FileReader(configurationFile)) {
       properties.load(fileReader);
     } catch (final FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);

@@ -14,13 +14,13 @@ class RangeQueryTest extends Specification {
   def "test range request"() {
     setup:
 //    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.0', ext: 'pom'
-    final Artifact directiveArtifact = new DefaultArtifact("org.codehaus.groovy", "groovy-all", "jar", "[2.5.0,2.5.8)")
-    final VersionRangeRequest rangeRequest = new VersionRangeRequest()
+    Artifact directiveArtifact = new DefaultArtifact("org.codehaus.groovy", "groovy-all", "jar", "[2.5.0,2.5.8)")
+    VersionRangeRequest rangeRequest = new VersionRangeRequest()
     rangeRequest.setRepositories(MuzzlePlugin.MUZZLE_REPOS)
     rangeRequest.setArtifact(directiveArtifact)
 
     // This call makes an actual network request, which may fail if network access is limited.
-    final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
+    VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
     expect:
     rangeResult.versions.size() >= 8

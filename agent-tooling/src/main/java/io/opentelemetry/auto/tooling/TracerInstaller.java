@@ -44,7 +44,7 @@ public class TracerInstaller {
 
       configure();
       // Try to create an exporter from external jar file
-      final String exporterJar = Config.get().getExporterJar();
+      String exporterJar = Config.get().getExporterJar();
       if (exporterJar != null) {
         installExportersFromJar(exporterJar);
       } else {
@@ -59,9 +59,9 @@ public class TracerInstaller {
   }
 
   private static synchronized void installExporters(final String exporterName) {
-    final SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
+    SpanExporterFactory spanExporterFactory = findSpanExporterFactory(exporterName);
     if (spanExporterFactory != null) {
-      final DefaultExporterConfig config = new DefaultExporterConfig("exporter");
+      DefaultExporterConfig config = new DefaultExporterConfig("exporter");
       installExporter(spanExporterFactory, config);
     } else {
       log.warn("No {} span exporter found", exporterName);
@@ -70,7 +70,7 @@ public class TracerInstaller {
   }
 
   private static SpanExporterFactory findSpanExporterFactory(String exporterName) {
-    final ServiceLoader<SpanExporterFactory> serviceLoader =
+    ServiceLoader<SpanExporterFactory> serviceLoader =
         ServiceLoader.load(SpanExporterFactory.class, TracerInstaller.class.getClassLoader());
 
     for (SpanExporterFactory spanExporterFactory : serviceLoader) {
@@ -86,7 +86,7 @@ public class TracerInstaller {
   }
 
   private static synchronized void installExportersFromJar(final String exporterJar) {
-    final URL url;
+    URL url;
     try {
       url = new File(exporterJar).toURI().toURL();
     } catch (final MalformedURLException e) {
@@ -94,11 +94,11 @@ public class TracerInstaller {
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
       return;
     }
-    final DefaultExporterConfig config = new DefaultExporterConfig("exporter");
-    final ExporterClassLoader exporterLoader =
+    DefaultExporterConfig config = new DefaultExporterConfig("exporter");
+    ExporterClassLoader exporterLoader =
         new ExporterClassLoader(url, TracerInstaller.class.getClassLoader());
 
-    final SpanExporterFactory spanExporterFactory =
+    SpanExporterFactory spanExporterFactory =
         getExporterFactory(SpanExporterFactory.class, exporterLoader);
 
     if (spanExporterFactory != null) {
@@ -108,7 +108,7 @@ public class TracerInstaller {
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
     }
 
-    final MetricExporterFactory metricExporterFactory =
+    MetricExporterFactory metricExporterFactory =
         getExporterFactory(MetricExporterFactory.class, exporterLoader);
     if (metricExporterFactory != null) {
       installExporter(metricExporterFactory, config);
@@ -117,7 +117,7 @@ public class TracerInstaller {
 
   private static void installExporter(
       MetricExporterFactory metricExporterFactory, DefaultExporterConfig config) {
-    final MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
+    MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
     IntervalMetricReader.builder()
         .readEnvironmentVariables()
         .readSystemProperties()
@@ -130,8 +130,8 @@ public class TracerInstaller {
 
   private static void installExporter(
       SpanExporterFactory spanExporterFactory, DefaultExporterConfig config) {
-    final SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
-    final BatchSpanProcessor spanProcessor =
+    SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
+    BatchSpanProcessor spanProcessor =
         BatchSpanProcessor.newBuilder(spanExporter)
             .readEnvironmentVariables()
             .readSystemProperties()
@@ -142,10 +142,10 @@ public class TracerInstaller {
 
   private static <F> F getExporterFactory(
       final Class<F> service, final ExporterClassLoader exporterLoader) {
-    final ServiceLoader<F> serviceLoader = ServiceLoader.load(service, exporterLoader);
-    final Iterator<F> i = serviceLoader.iterator();
+    ServiceLoader<F> serviceLoader = ServiceLoader.load(service, exporterLoader);
+    Iterator<F> i = serviceLoader.iterator();
     if (i.hasNext()) {
-      final F factory = i.next();
+      F factory = i.next();
       if (i.hasNext()) {
         log.warn(
             "Exporter JAR defines more than one {}. Only the first one found will be used",
@@ -158,15 +158,15 @@ public class TracerInstaller {
 
   private static void configure() {
     // Execute any user-provided (usually vendor-provided) configuration logic.
-    final ServiceLoader<TracerCustomizer> serviceLoader =
+    ServiceLoader<TracerCustomizer> serviceLoader =
         ServiceLoader.load(TracerCustomizer.class, TracerInstaller.class.getClassLoader());
-    final TracerSdkProvider tracerSdkProvider = OpenTelemetrySdk.getTracerProvider();
+    TracerSdkProvider tracerSdkProvider = OpenTelemetrySdk.getTracerProvider();
     for (TracerCustomizer customizer : serviceLoader) {
       customizer.configure(tracerSdkProvider);
     }
 
     /* Update trace config from env vars or sys props */
-    final TraceConfig activeTraceConfig = tracerSdkProvider.getActiveTraceConfig();
+    TraceConfig activeTraceConfig = tracerSdkProvider.getActiveTraceConfig();
     tracerSdkProvider.updateActiveTraceConfig(
         activeTraceConfig.toBuilder().readEnvironmentVariables().readSystemProperties().build());
   }

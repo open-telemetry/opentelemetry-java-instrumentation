@@ -69,7 +69,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>(2);
+    Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>(2);
     map.put(
         isMethod().and(named("build")),
         GrpcClientBuilderInstrumentation.class.getName() + "$AddInterceptorAdvice");
@@ -86,16 +86,16 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         @Advice.This final ManagedChannelBuilder thiz,
         @Advice.FieldValue("interceptors") final List<ClientInterceptor> interceptors) {
       boolean shouldRegister = true;
-      for (final ClientInterceptor interceptor : interceptors) {
+      for (ClientInterceptor interceptor : interceptors) {
         if (interceptor instanceof TracingClientInterceptor) {
           shouldRegister = false;
           break;
         }
       }
       if (shouldRegister) {
-        final ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
+        ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
             InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
-        final InetSocketAddress sockAddr = contextStore.get(thiz);
+        InetSocketAddress sockAddr = contextStore.get(thiz);
         interceptors.add(0, new TracingClientInterceptor(sockAddr));
       }
     }
@@ -107,7 +107,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final String address,
         @Advice.Argument(1) final int port,
         @Advice.Return final ManagedChannelBuilder builder) {
-      final ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
+      ContextStore<ManagedChannelBuilder, InetSocketAddress> contextStore =
           InstrumentationContext.get(ManagedChannelBuilder.class, InetSocketAddress.class);
       contextStore.put(builder, InetSocketAddress.createUnresolved(address, port));
     }

@@ -31,7 +31,7 @@ public class LoggingExporter implements SpanExporter {
 
   @Override
   public ResultCode export(final Collection<SpanData> list) {
-    for (final SpanData span : list) {
+    for (SpanData span : list) {
       System.out.print(
           prefix + " " + span.getName() + " " + span.getSpanId().toLowerBase16() + " ");
       span.getAttributes()

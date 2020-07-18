@@ -45,11 +45,11 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
 
   @Override
   protected URI url(final Request request) {
-    final HostAndPort address = request.getLocalAddress();
+    HostAndPort address = request.getLocalAddress();
     // This call implicitly uses request via a threadlocal provided by ratpack.
-    final PublicAddress publicAddress =
+    PublicAddress publicAddress =
         PublicAddress.inferred(address.getPort() == 443 ? "https" : "http");
-    final HttpUrlBuilder url =
+    HttpUrlBuilder url =
         publicAddress.builder().path(request.getPath()).params(request.getQueryParams());
     return url.build();
   }
@@ -66,7 +66,7 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
 
   @Override
   protected Integer status(final Response response) {
-    final Status status = response.getStatus();
+    Status status = response.getStatus();
     if (status != null) {
       return status.getCode();
     } else {

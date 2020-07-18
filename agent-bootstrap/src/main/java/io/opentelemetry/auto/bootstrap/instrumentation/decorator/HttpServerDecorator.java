@@ -45,7 +45,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
-    final String method = method(request);
+    String method = method(request);
     return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 
@@ -56,9 +56,9 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
 
       // Copy of HttpClientDecorator url handling
       try {
-        final URI url = url(request);
+        URI url = url(request);
         if (url != null) {
-          final StringBuilder urlBuilder = new StringBuilder();
+          StringBuilder urlBuilder = new StringBuilder();
           if (url.getScheme() != null) {
             urlBuilder.append(url.getScheme());
             urlBuilder.append("://");
@@ -70,17 +70,17 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
               urlBuilder.append(url.getPort());
             }
           }
-          final String path = url.getPath();
+          String path = url.getPath();
           if (path.isEmpty()) {
             urlBuilder.append("/");
           } else {
             urlBuilder.append(path);
           }
-          final String query = url.getQuery();
+          String query = url.getQuery();
           if (query != null) {
             urlBuilder.append("?").append(query);
           }
-          final String fragment = url.getFragment();
+          String fragment = url.getFragment();
           if (fragment != null) {
             urlBuilder.append("#").append(fragment);
           }
@@ -104,7 +104,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     assert span != null;
     if (connection != null) {
       span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), peerHostIP(connection));
-      final Integer port = peerPort(connection);
+      Integer port = peerPort(connection);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
         span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), port);
@@ -116,7 +116,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public Span onResponse(final Span span, final RESPONSE response) {
     assert span != null;
     if (response != null) {
-      final Integer status = status(response);
+      Integer status = status(response);
       if (status != null) {
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
@@ -129,7 +129,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   //  public Span onError(final Span span, final Throwable throwable) {
   //    assert span != null;
   //    // FIXME
-  //    final Object status = span.getTag("http.status");
+  //    Object status = span.getTag("http.status");
   //    if (status == null || status.equals(200)) {
   //      // Ensure status set correctly
   //      span.setAttribute("http.status", 500);

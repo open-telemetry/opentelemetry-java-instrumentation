@@ -43,7 +43,7 @@ public final class NonStandardExecutorInstrumentation extends AbstractExecutorIn
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put( // kotlinx.coroutines.scheduling.CoroutineScheduler
         named("dispatch")
             .and(takesArgument(0, Runnable.class))

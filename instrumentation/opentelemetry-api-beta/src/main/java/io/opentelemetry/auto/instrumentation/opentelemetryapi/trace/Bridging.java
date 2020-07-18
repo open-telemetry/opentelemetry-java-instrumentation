@@ -108,8 +108,7 @@ public class Bridging {
         new KeyValueConsumer<AttributeValue>() {
           @Override
           public void consume(String key, AttributeValue attributeValue) {
-            final io.opentelemetry.common.AttributeValue shadedValue =
-                toShadedOrNull(attributeValue);
+            io.opentelemetry.common.AttributeValue shadedValue = toShadedOrNull(attributeValue);
             if (shadedValue != null) {
               builder.setAttribute(key, shadedValue);
             }
@@ -140,7 +139,7 @@ public class Bridging {
   }
 
   public static io.opentelemetry.trace.Status toShadedOrNull(final Status unshadedStatus) {
-    final io.opentelemetry.trace.Status.CanonicalCode canonicalCode;
+    io.opentelemetry.trace.Status.CanonicalCode canonicalCode;
     try {
       canonicalCode =
           io.opentelemetry.trace.Status.CanonicalCode.valueOf(
@@ -169,13 +168,13 @@ public class Bridging {
   }
 
   private static TraceId toUnshaded(final io.opentelemetry.trace.TraceId shadedTraceId) {
-    final byte[] bytes = getBuffer();
+    byte[] bytes = getBuffer();
     shadedTraceId.copyBytesTo(bytes, 0);
     return TraceId.fromBytes(bytes, 0);
   }
 
   private static SpanId toUnshaded(final io.opentelemetry.trace.SpanId shadedSpanId) {
-    final byte[] bytes = getBuffer();
+    byte[] bytes = getBuffer();
     shadedSpanId.copyBytesTo(bytes, 0);
     return SpanId.fromBytes(bytes, 0);
   }
@@ -185,8 +184,8 @@ public class Bridging {
   }
 
   private static TraceState toUnshaded(final io.opentelemetry.trace.TraceState shadedTraceState) {
-    final TraceState.Builder builder = TraceState.builder();
-    for (final io.opentelemetry.trace.TraceState.Entry entry : shadedTraceState.getEntries()) {
+    TraceState.Builder builder = TraceState.builder();
+    for (io.opentelemetry.trace.TraceState.Entry entry : shadedTraceState.getEntries()) {
       builder.set(entry.getKey(), entry.getValue());
     }
     return builder.build();

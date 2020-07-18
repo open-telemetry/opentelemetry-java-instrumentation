@@ -61,7 +61,7 @@ public class JMSDecorator extends ClientDecorator {
   public static String toSpanName(Destination destination) {
     try {
       if (destination instanceof Queue) {
-        final String queueName = ((Queue) destination).getQueueName();
+        String queueName = ((Queue) destination).getQueueName();
         if (destination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX)) {
           return "queue/<temporary>";
         } else {
@@ -69,7 +69,7 @@ public class JMSDecorator extends ClientDecorator {
         }
       }
       if (destination instanceof Topic) {
-        final String topicName = ((Topic) destination).getTopicName();
+        String topicName = ((Topic) destination).getTopicName();
         if (destination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX)) {
           return "topic/<temporary>";
         } else {

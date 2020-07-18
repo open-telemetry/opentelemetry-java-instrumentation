@@ -110,20 +110,20 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
 
     @Override
     public Object invoke(final MethodInvocation methodInvocation) throws Throwable {
-      final Method invokedMethod = methodInvocation.getMethod();
-      final Class<?> clazz = invokedMethod.getDeclaringClass();
+      Method invokedMethod = methodInvocation.getMethod();
+      Class<?> clazz = invokedMethod.getDeclaringClass();
 
-      final boolean isRepositoryOp = Repository.class.isAssignableFrom(clazz);
+      boolean isRepositoryOp = Repository.class.isAssignableFrom(clazz);
       // Since this interceptor is the outer most interceptor, non-Repository methods
       // including Object methods will also flow through here.  Don't create spans for those.
       if (!isRepositoryOp) {
         return methodInvocation.proceed();
       }
 
-      final Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(invokedMethod)).startSpan();
+      Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(invokedMethod)).startSpan();
       DECORATE.afterStart(span);
 
-      final Scope scope = currentContextWith(span);
+      Scope scope = currentContextWith(span);
 
       Object result = null;
       try {

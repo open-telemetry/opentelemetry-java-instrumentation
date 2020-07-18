@@ -44,7 +44,7 @@ public class PlayWSClientInstrumentation extends BasePlayWSClientInstrumentation
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
       Context parentContext = Context.current();
 
-      final Span span =
+      Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameForRequest(request))
               .setSpanKind(CLIENT)

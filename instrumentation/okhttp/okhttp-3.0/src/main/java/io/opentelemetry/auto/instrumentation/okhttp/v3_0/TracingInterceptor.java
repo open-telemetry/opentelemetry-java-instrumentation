@@ -37,7 +37,7 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(final Chain chain) throws IOException {
-    final Span span =
+    Span span =
         TRACER
             .spanBuilder(DECORATE.spanNameForRequest(chain.request()))
             .setSpanKind(CLIENT)
@@ -46,15 +46,15 @@ public class TracingInterceptor implements Interceptor {
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, chain.request());
 
-    final Context context = withSpan(span, Context.current());
+    Context context = withSpan(span, Context.current());
 
-    final Request.Builder requestBuilder = chain.request().newBuilder();
+    Request.Builder requestBuilder = chain.request().newBuilder();
     OpenTelemetry.getPropagators()
         .getHttpTextFormat()
         .inject(context, requestBuilder, RequestBuilderInjectAdapter.SETTER);
 
-    final Response response;
-    try (final Scope scope = withScopedContext(context)) {
+    Response response;
+    try (Scope scope = withScopedContext(context)) {
       response = chain.proceed(requestBuilder.build());
     } catch (final Exception e) {
       DECORATE.onError(span, e);

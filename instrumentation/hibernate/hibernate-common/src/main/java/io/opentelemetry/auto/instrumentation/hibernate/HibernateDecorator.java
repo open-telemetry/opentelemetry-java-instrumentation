@@ -52,8 +52,8 @@ public class HibernateDecorator extends OrmClientDecorator {
       return null;
     }
     String name = null;
-    final Set<String> annotations = new HashSet<>();
-    for (final Annotation annotation : entity.getClass().getDeclaredAnnotations()) {
+    Set<String> annotations = new HashSet<>();
+    for (Annotation annotation : entity.getClass().getDeclaredAnnotations()) {
       annotations.add(annotation.annotationType().getName());
     }
 

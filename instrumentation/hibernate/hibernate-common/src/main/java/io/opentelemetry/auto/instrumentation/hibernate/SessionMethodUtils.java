@@ -42,18 +42,18 @@ public class SessionMethodUtils {
       final ENTITY entity,
       final boolean createSpan) {
 
-    final Span sessionSpan = contextStore.get(spanKey);
+    Span sessionSpan = contextStore.get(spanKey);
     if (sessionSpan == null) {
       return null; // No state found. We aren't in a Session.
     }
 
-    final int depth = CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class);
+    int depth = CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class);
     if (depth > 0) {
       return null; // This method call is being traced already.
     }
 
     if (createSpan) {
-      final Span span =
+      Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameForOperation(operationName, entity))
               .setParent(sessionSpan)
@@ -79,11 +79,11 @@ public class SessionMethodUtils {
     }
     CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
 
-    final Span span = spanWithScope.getSpan();
+    Span span = spanWithScope.getSpan();
     if (span != null) {
       DECORATE.onError(span, throwable);
       if (operationName != null && entity != null) {
-        final String entityName = DECORATE.entityName(entity);
+        String entityName = DECORATE.entityName(entity);
         if (entityName != null) {
           span.updateName(operationName + " " + entityName);
         }
@@ -102,7 +102,7 @@ public class SessionMethodUtils {
       final ContextStore<T, Span> targetContextStore,
       final T target) {
 
-    final Span sessionSpan = sourceContextStore.get(source);
+    Span sessionSpan = sourceContextStore.get(source);
     if (sessionSpan == null) {
       return;
     }

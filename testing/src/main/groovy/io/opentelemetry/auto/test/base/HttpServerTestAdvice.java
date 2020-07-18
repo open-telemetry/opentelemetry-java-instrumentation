@@ -40,7 +40,7 @@ public abstract class HttpServerTestAdvice {
         // Skip if not running the HttpServerTest.
         return null;
       }
-      final Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
+      Span span = TRACER.spanBuilder("TEST_SPAN").startSpan();
       return new SpanWithScope(span, currentContextWith(span));
     }
 

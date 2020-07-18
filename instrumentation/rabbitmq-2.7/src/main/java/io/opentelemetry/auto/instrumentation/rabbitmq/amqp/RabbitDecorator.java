@@ -31,8 +31,8 @@ public class RabbitDecorator extends ClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.rabbitmq-amqp-2.7");
 
   public void onPublish(final Span span, final String exchange, final String routingKey) {
-    final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
-    final String routing =
+    String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
+    String routing =
         routingKey == null || routingKey.isEmpty()
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
@@ -69,11 +69,11 @@ public class RabbitDecorator extends ClientDecorator {
     span.setAttribute("amqp.command", "basic.deliver");
 
     if (envelope != null) {
-      final String exchange = envelope.getExchange();
+      String exchange = envelope.getExchange();
       if (exchange != null && !exchange.isEmpty()) {
         span.setAttribute("amqp.exchange", exchange);
       }
-      final String routingKey = envelope.getRoutingKey();
+      String routingKey = envelope.getRoutingKey();
       if (routingKey != null && !routingKey.isEmpty()) {
         span.setAttribute("amqp.routing_key", routingKey);
       }
@@ -81,7 +81,7 @@ public class RabbitDecorator extends ClientDecorator {
   }
 
   public void onCommand(final Span span, final Command command) {
-    final String name = command.getMethod().protocolMethodName();
+    String name = command.getMethod().protocolMethodName();
 
     if (!name.equals("basic.publish")) {
       span.updateName(name);

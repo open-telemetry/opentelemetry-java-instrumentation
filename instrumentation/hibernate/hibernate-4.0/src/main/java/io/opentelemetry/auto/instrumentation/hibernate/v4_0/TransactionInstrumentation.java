@@ -61,7 +61,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startCommit(@Advice.This final Transaction transaction) {
 
-      final ContextStore<Transaction, Span> contextStore =
+      ContextStore<Transaction, Span> contextStore =
           InstrumentationContext.get(Transaction.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(

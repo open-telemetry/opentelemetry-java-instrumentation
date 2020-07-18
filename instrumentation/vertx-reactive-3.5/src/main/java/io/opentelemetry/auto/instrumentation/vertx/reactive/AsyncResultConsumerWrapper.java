@@ -38,7 +38,7 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   @Override
   public void accept(final Handler<AsyncResult<?>> asyncResultHandler) {
     if (executionContext != null) {
-      try (final Scope scope = ContextUtils.withScopedContext(executionContext)) {
+      try (Scope scope = ContextUtils.withScopedContext(executionContext)) {
         delegate.accept(asyncResultHandler);
       }
     } else {

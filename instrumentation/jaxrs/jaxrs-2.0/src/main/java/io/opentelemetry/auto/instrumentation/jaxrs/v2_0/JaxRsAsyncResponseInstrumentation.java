@@ -71,7 +71,7 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("resume").and(takesArgument(0, Object.class)).and(isPublic()),
         JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseAdvice");
@@ -89,10 +89,10 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
 
-      final ContextStore<AsyncResponse, Span> contextStore =
+      ContextStore<AsyncResponse, Span> contextStore =
           InstrumentationContext.get(AsyncResponse.class, Span.class);
 
-      final Span span = contextStore.get(asyncResponse);
+      Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         DECORATE.beforeFinish(span);
@@ -108,10 +108,10 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
         @Advice.This final AsyncResponse asyncResponse,
         @Advice.Argument(0) final Throwable throwable) {
 
-      final ContextStore<AsyncResponse, Span> contextStore =
+      ContextStore<AsyncResponse, Span> contextStore =
           InstrumentationContext.get(AsyncResponse.class, Span.class);
 
-      final Span span = contextStore.get(asyncResponse);
+      Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         DECORATE.onError(span, throwable);
@@ -126,10 +126,10 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
 
-      final ContextStore<AsyncResponse, Span> contextStore =
+      ContextStore<AsyncResponse, Span> contextStore =
           InstrumentationContext.get(AsyncResponse.class, Span.class);
 
-      final Span span = contextStore.get(asyncResponse);
+      Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         span.setAttribute("canceled", true);

@@ -45,8 +45,8 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Respo
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
-    final String awsServiceName = request.getServiceName();
-    final Class<?> awsOperation = request.getOriginalRequest().getClass();
+    String awsServiceName = request.getServiceName();
+    Class<?> awsOperation = request.getOriginalRequest().getClass();
     return remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation);
   }
 
@@ -55,9 +55,9 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Respo
     // Call super first because we override the span name below.
     super.onRequest(span, request);
 
-    final String awsServiceName = request.getServiceName();
-    final AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
-    final Class<?> awsOperation = originalRequest.getClass();
+    String awsServiceName = request.getServiceName();
+    AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
+    Class<?> awsOperation = originalRequest.getClass();
 
     span.setAttribute("aws.agent", COMPONENT_NAME);
     span.setAttribute("aws.service", awsServiceName);
@@ -65,7 +65,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Respo
     span.setAttribute("aws.endpoint", request.getEndpoint().toString());
 
     if (contextStore != null) {
-      final RequestMeta requestMeta = contextStore.get(originalRequest);
+      RequestMeta requestMeta = contextStore.get(originalRequest);
       if (requestMeta != null) {
         span.setAttribute("aws.bucket.name", requestMeta.getBucketName());
         span.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
@@ -81,7 +81,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request<?>, Respo
   @Override
   public Span onResponse(final Span span, final Response<?> response) {
     if (response.getAwsResponse() instanceof AmazonWebServiceResponse) {
-      final AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
+      AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
     return super.onResponse(span, response);

@@ -59,7 +59,7 @@ public class InternalJarURLHandler extends URLStreamHandler {
 
   @Override
   protected URLConnection openConnection(final URL url) throws IOException {
-    final String filename = url.getFile();
+    String filename = url.getFile();
     if ("/".equals(filename)) {
       // "/" is used as the default url of the jar
       // This is called by the SecureClassLoader trying to obtain permissions

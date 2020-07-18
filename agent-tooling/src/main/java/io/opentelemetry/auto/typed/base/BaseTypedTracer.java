@@ -50,7 +50,7 @@ public abstract class BaseTypedTracer<T extends BaseTypedSpan, INSTANCE> {
 
   private T startSpan(final INSTANCE instance, Span.Builder builder) {
     builder = buildSpan(instance, builder.setSpanKind(getSpanKind()));
-    final T wrappedSpan = wrapSpan(builder.startSpan());
+    T wrappedSpan = wrapSpan(builder.startSpan());
     return startSpan(instance, wrappedSpan);
   }
 

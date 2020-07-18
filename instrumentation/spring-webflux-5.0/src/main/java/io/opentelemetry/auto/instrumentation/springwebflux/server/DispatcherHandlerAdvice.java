@@ -46,7 +46,7 @@ public class DispatcherHandlerAdvice {
     Context parentContext = Context.current();
     exchange.getAttributes().put(AdviceUtils.PARENT_CONTEXT_ATTRIBUTE, parentContext);
 
-    final Span span =
+    Span span =
         TRACER
             .spanBuilder("DispatcherHandler.handle")
             .setParent(getSpan(parentContext))

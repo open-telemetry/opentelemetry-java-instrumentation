@@ -45,10 +45,10 @@ public class AgentTooling {
   }
 
   private static <K, V> Provider loadWeakCacheProvider() {
-    final Iterator<Provider> providers =
+    Iterator<Provider> providers =
         ServiceLoader.load(Provider.class, AgentInstaller.class.getClassLoader()).iterator();
     if (providers.hasNext()) {
-      final Provider provider = providers.next();
+      Provider provider = providers.next();
       if (providers.hasNext()) {
         throw new IllegalStateException(
             "Only one implementation of WeakCache.Provider suppose to be in classpath");

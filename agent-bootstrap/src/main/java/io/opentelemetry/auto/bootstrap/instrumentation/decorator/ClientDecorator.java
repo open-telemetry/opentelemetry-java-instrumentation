@@ -47,15 +47,15 @@ public abstract class ClientDecorator extends BaseDecorator {
    * Context}, or an invalid {@link Span} otherwise.
    */
   public static Span getOrCreateSpan(String name, Tracer tracer) {
-    final Context context = Context.current();
-    final Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
+    Context context = Context.current();
+    Span clientSpan = CONTEXT_CLIENT_SPAN_KEY.get(context);
 
     if (clientSpan != null) {
       // We don't want to create two client spans for a given client call, suppress inner spans.
       return DefaultSpan.getInvalid();
     }
 
-    final Span current = TracingContextUtils.getSpan(context);
+    Span current = TracingContextUtils.getSpan(context);
     return tracer.spanBuilder(name).setSpanKind(Kind.CLIENT).setParent(current).startSpan();
   }
 

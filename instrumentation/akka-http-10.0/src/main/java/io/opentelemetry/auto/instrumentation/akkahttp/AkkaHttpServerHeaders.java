@@ -27,7 +27,7 @@ public class AkkaHttpServerHeaders implements HttpTextFormat.Getter<HttpRequest>
 
   @Override
   public String get(final HttpRequest carrier, final String key) {
-    final Optional<HttpHeader> header = carrier.getHeader(key);
+    Optional<HttpHeader> header = carrier.getHeader(key);
     if (header.isPresent()) {
       return header.get().value();
     } else {

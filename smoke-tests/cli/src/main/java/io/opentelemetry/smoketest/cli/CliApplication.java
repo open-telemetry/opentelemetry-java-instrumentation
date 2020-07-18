@@ -30,7 +30,7 @@ public class CliApplication {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto");
 
   public static void main(final String[] args) throws InterruptedException {
-    final CliApplication app = new CliApplication();
+    CliApplication app = new CliApplication();
 
     // Sleep to ensure all of the processes are running
     Thread.sleep(5000);
@@ -43,8 +43,8 @@ public class CliApplication {
   }
 
   public void exampleTrace() throws InterruptedException {
-    final Span span = TRACER.spanBuilder("example").startSpan();
-    try (final Scope scope = currentContextWith(span)) {
+    Span span = TRACER.spanBuilder("example").startSpan();
+    try (Scope scope = currentContextWith(span)) {
       Thread.sleep(500);
       span.end();
     }

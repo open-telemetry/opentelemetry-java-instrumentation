@@ -91,7 +91,7 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final RedisCommand cmd) {
       String statement = DECORATE.spanNameForClass(cmd.getClass());
-      final Span span = TRACER.spanBuilder(statement).setSpanKind(CLIENT).startSpan();
+      Span span = TRACER.spanBuilder(statement).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onStatement(span, statement);
       return new SpanWithScope(span, currentContextWith(span));
@@ -104,7 +104,7 @@ public final class RediscalaInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("executionContext") final ExecutionContext ctx,
         @Advice.Return(readOnly = false) final Future<Object> responseFuture) {
 
-      final Span span = scope.getSpan();
+      Span span = scope.getSpan();
 
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), ctx);

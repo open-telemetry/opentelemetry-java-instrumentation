@@ -82,7 +82,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
-      final Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
+      Span span = TRACER.spanBuilder("Render " + view.getTemplateName()).startSpan();
       return new SpanWithScope(span, currentContextWith(span));
     }
 
@@ -92,7 +92,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       if (throwable != null) {
         span.setStatus(Status.UNKNOWN);
         BaseDecorator.addThrowable(span, throwable);

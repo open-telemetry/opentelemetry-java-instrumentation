@@ -74,7 +74,7 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
   public TraceAnnotationsInstrumentation() {
     super("trace", "trace-annotation");
 
-    final String configString = Config.get().getTraceAnnotations();
+    String configString = Config.get().getTraceAnnotations();
     if (configString == null) {
       additionalTraceAnnotations =
           Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));
@@ -86,9 +86,9 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
           configString);
       additionalTraceAnnotations = Collections.emptySet();
     } else {
-      final Set<String> annotations = Sets.newHashSet();
-      final String[] annotationClasses = configString.split(";", -1);
-      for (final String annotationClass : annotationClasses) {
+      Set<String> annotations = Sets.newHashSet();
+      String[] annotationClasses = configString.split(";", -1);
+      for (String annotationClass : annotationClasses) {
         if (!annotationClass.trim().isEmpty()) {
           annotations.add(annotationClass.trim());
         }
@@ -100,7 +100,7 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
       traceAnnotationMatcher = none();
     } else {
       ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
-      for (final String annotationName : additionalTraceAnnotations) {
+      for (String annotationName : additionalTraceAnnotations) {
         if (methodTraceMatcher == null) {
           methodTraceMatcher = named(annotationName);
         } else {
@@ -117,7 +117,7 @@ public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotati
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Optimization for expensive typeMatcher.
     ElementMatcher.Junction<ClassLoader> matcher = null;
-    for (final String name : additionalTraceAnnotations) {
+    for (String name : additionalTraceAnnotations) {
       if (matcher == null) {
         matcher = hasClassesNamed(name);
       } else {

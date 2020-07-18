@@ -49,11 +49,11 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
   @Override
   public Mono<ClientResponse> filter(final ClientRequest request, final ExchangeFunction next) {
-    final Span span = DECORATE.getOrCreateSpan(request, tracer);
+    Span span = DECORATE.getOrCreateSpan(request, tracer);
     DECORATE.afterStart(span);
 
-    try (final Scope scope = TRACER.withSpan(span)) {
-      final ClientRequest mutatedRequest =
+    try (Scope scope = TRACER.withSpan(span)) {
+      ClientRequest mutatedRequest =
           ClientRequest.from(request)
               .headers(httpHeaders -> DECORATE.inject(Context.current(), httpHeaders))
               .build();

@@ -37,8 +37,8 @@ public class LettuceFluxCreationAdvice {
       @Advice.Enter final RedisCommand command,
       @Advice.Return(readOnly = false) Flux<?> publisher) {
 
-    final boolean finishSpanOnClose = !expectsResponse(command);
-    final LettuceFluxTerminationRunnable handler =
+    boolean finishSpanOnClose = !expectsResponse(command);
+    LettuceFluxTerminationRunnable handler =
         new LettuceFluxTerminationRunnable(command, finishSpanOnClose);
     publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
     // don't register extra callbacks to finish the spans if the command being instrumented is one

@@ -45,14 +45,14 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         @Advice.This final ContainerRequestContext context) {
 
       if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null) {
-        final Span parent = TRACER.getCurrentSpan();
-        final Span span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
+        Span parent = TRACER.getCurrentSpan();
+        Span span = TRACER.spanBuilder("jax-rs.request.abort").startSpan();
 
         // Save spans so a more specific instrumentation can run later
         context.setProperty(JaxRsAnnotationsDecorator.ABORT_PARENT, parent);
         context.setProperty(JaxRsAnnotationsDecorator.ABORT_SPAN, span);
 
-        final Class filterClass =
+        Class filterClass =
             (Class) context.getProperty(JaxRsAnnotationsDecorator.ABORT_FILTER_CLASS);
         Method method = null;
         try {
@@ -80,7 +80,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         return;
       }
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
       }

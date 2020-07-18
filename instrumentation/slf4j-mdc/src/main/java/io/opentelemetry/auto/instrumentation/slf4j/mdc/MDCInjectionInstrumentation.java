@@ -77,8 +77,8 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void mdcClassInitialized(@Advice.Origin final Class mdcClass) {
       try {
-        final Method putMethod = mdcClass.getMethod("put", String.class, String.class);
-        final Method removeMethod = mdcClass.getMethod("remove", String.class);
+        Method putMethod = mdcClass.getMethod("put", String.class, String.class);
+        Method removeMethod = mdcClass.getMethod("remove", String.class);
         GlobalTracer.get().addScopeListener(new LogContextScopeListener(putMethod, removeMethod));
       } catch (final NoSuchMethodException e) {
         org.slf4j.LoggerFactory.getLogger(mdcClass).debug("Failed to add MDC span listener", e);

@@ -93,20 +93,20 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.This final HttpURLConnection thiz,
         @Advice.FieldValue("connected") final boolean connected) {
 
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final ContextStore<HttpURLConnection, HttpUrlState> contextStore =
+      ContextStore<HttpURLConnection, HttpUrlState> contextStore =
           InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
-      final HttpUrlState state = contextStore.putIfAbsent(thiz, HttpUrlState.FACTORY);
+      HttpUrlState state = contextStore.putIfAbsent(thiz, HttpUrlState.FACTORY);
 
       synchronized (state) {
         if (!state.hasSpan() && !state.isFinished()) {
-          final Span span = state.start(thiz);
+          Span span = state.start(thiz);
           if (!connected) {
-            final Context context = withSpan(span, Context.current());
+            Context context = withSpan(span, Context.current());
             OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, thiz, SETTER);
           }
         }
@@ -157,7 +157,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
               .spanBuilder(DECORATE.spanNameForRequest(connection))
               .setSpanKind(CLIENT)
               .startSpan();
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, connection);
         return span;
@@ -173,7 +173,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(final Throwable throwable) {
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();
@@ -189,7 +189,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        * (e.g. breaks getOutputStream).
        */
       if (responseCode > 0) {
-        try (final Scope scope = currentContextWith(span)) {
+        try (Scope scope = currentContextWith(span)) {
           DECORATE.onResponse(span, responseCode);
           DECORATE.beforeFinish(span);
           span.end();

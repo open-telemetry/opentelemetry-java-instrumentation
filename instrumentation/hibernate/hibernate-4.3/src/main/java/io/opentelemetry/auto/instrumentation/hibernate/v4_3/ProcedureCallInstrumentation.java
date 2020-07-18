@@ -80,7 +80,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
     public static SpanWithScope startMethod(
         @Advice.This final ProcedureCall call, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<ProcedureCall, Span> contextStore =
+      ContextStore<ProcedureCall, Span> contextStore =
           InstrumentationContext.get(ProcedureCall.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(

@@ -39,9 +39,9 @@ public class ClientResponseAdvice {
 
     // TODO I think all this should happen on exit, not on enter.
     // After response was handled by user provided handler.
-    final ContextStore<AsyncHandler, Pair> contextStore =
+    ContextStore<AsyncHandler, Pair> contextStore =
         InstrumentationContext.get(AsyncHandler.class, Pair.class);
-    final Pair<Context, Span> spanWithParent = contextStore.get(handler);
+    Pair<Context, Span> spanWithParent = contextStore.get(handler);
     if (null != spanWithParent) {
       contextStore.put(handler, null);
     }

@@ -214,8 +214,8 @@ public abstract class AgentTestRunner extends AgentSpecification {
     assert INSTRUMENTATION_ERROR_COUNT.get() == 0
         : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
 
-    final List<TypeDescription> ignoredClassesTransformed = new ArrayList<>();
-    for (final TypeDescription type : TRANSFORMED_CLASSES_TYPES) {
+    List<TypeDescription> ignoredClassesTransformed = new ArrayList<>();
+    for (TypeDescription type : TRANSFORMED_CLASSES_TYPES) {
       if (GLOBAL_LIBRARIES_IGNORES_MATCHER.matches(type)) {
         ignoredClassesTransformed.add(type);
       }
@@ -263,7 +263,7 @@ public abstract class AgentTestRunner extends AgentSpecification {
         final ClassLoader classLoader,
         final JavaModule module,
         final boolean loaded) {
-      for (final AgentTestRunner testRunner : activeTests) {
+      for (AgentTestRunner testRunner : activeTests) {
         if (!testRunner.shouldTransformClass(typeName, classLoader)) {
           throw new AbortTransformationException(
               "Aborting transform for class name = " + typeName + ", loader = " + classLoader);

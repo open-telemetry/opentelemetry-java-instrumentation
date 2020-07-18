@@ -26,7 +26,7 @@ public class PlayHeaders implements HttpTextFormat.Getter<Headers> {
 
   @Override
   public String get(final Headers headers, final String key) {
-    final Option<String> option = headers.get(key);
+    Option<String> option = headers.get(key);
     if (option.isDefined()) {
       return option.get();
     } else {

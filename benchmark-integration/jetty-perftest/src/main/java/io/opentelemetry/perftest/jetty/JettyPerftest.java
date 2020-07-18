@@ -69,7 +69,7 @@ public class JettyPerftest {
       if (request.getParameter("error") != null) {
         throw new RuntimeException("some sync error");
       }
-      final String workVal = request.getParameter("workTimeMS");
+      String workVal = request.getParameter("workTimeMS");
       long workTimeMS = 0l;
       if (null != workVal) {
         workTimeMS = Long.parseLong(workVal);
@@ -79,8 +79,8 @@ public class JettyPerftest {
     }
 
     private void scheduleWork(final long workTimeMS) {
-      final Span span = TRACER.spanBuilder("work").startSpan();
-      try (final Scope scope = currentContextWith(span)) {
+      Span span = TRACER.spanBuilder("work").startSpan();
+      try (Scope scope = currentContextWith(span)) {
         if (span != null) {
           span.setAttribute("work-time", workTimeMS);
           span.setAttribute("info", "interesting stuff");

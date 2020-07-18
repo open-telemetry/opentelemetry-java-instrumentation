@@ -33,7 +33,7 @@ public class SpanFinishingSubscription implements Subscription {
 
   @Override
   public void unsubscribe() {
-    final Span span = spanRef.getAndSet(null);
+    Span span = spanRef.getAndSet(null);
     if (span != null) {
       decorator.beforeFinish(span);
       span.end();

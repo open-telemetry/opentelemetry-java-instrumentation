@@ -52,7 +52,7 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("execute")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
@@ -75,7 +75,7 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
-        final ContextStore<ForkJoinTask, State> contextStore =
+        ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, task, Context.current());
       }

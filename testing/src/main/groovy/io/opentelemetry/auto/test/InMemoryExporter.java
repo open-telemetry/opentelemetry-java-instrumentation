@@ -59,7 +59,7 @@ public class InMemoryExporter implements SpanProcessor {
 
   @Override
   public void onStart(final ReadableSpan readableSpan) {
-    final SpanData sd = readableSpan.toSpanData();
+    SpanData sd = readableSpan.toSpanData();
     log.debug(
         ">>> SPAN START: {} id={} traceid={} parent={}, library={}",
         sd.getName(),
@@ -79,14 +79,14 @@ public class InMemoryExporter implements SpanProcessor {
 
   @Override
   public void onEnd(final ReadableSpan readableSpan) {
-    final SpanData sd = readableSpan.toSpanData();
+    SpanData sd = readableSpan.toSpanData();
     log.debug(
         "<<< SPAN END: {} id={} traceid={} parent={}",
         sd.getName(),
         sd.getSpanId().toLowerBase16(),
         sd.getTraceId().toLowerBase16(),
         sd.getParentSpanId().toLowerBase16());
-    final SpanData span = readableSpan.toSpanData();
+    SpanData span = readableSpan.toSpanData();
     synchronized (tracesLock) {
       if (!spanOrders.containsKey(span.getSpanId())) {
         // this happens on some tests where there are sporadic background traces,
@@ -95,7 +95,7 @@ public class InMemoryExporter implements SpanProcessor {
         return;
       }
       boolean found = false;
-      for (final List<SpanData> trace : traces) {
+      for (List<SpanData> trace : traces) {
         if (trace.get(0).getTraceId().equals(span.getTraceId())) {
           trace.add(span);
           found = true;
@@ -103,7 +103,7 @@ public class InMemoryExporter implements SpanProcessor {
         }
       }
       if (!found) {
-        final List<SpanData> trace = new CopyOnWriteArrayList<>();
+        List<SpanData> trace = new CopyOnWriteArrayList<>();
         trace.add(span);
         traces.add(trace);
         needsTraceSorting = true;
@@ -128,7 +128,7 @@ public class InMemoryExporter implements SpanProcessor {
       }
       if (!needsSpanSorting.isEmpty()) {
         for (int i = 0; i < traces.size(); i++) {
-          final List<SpanData> trace = traces.get(i);
+          List<SpanData> trace = traces.get(i);
           if (needsSpanSorting.contains(trace.get(0).getTraceId())) {
             traces.set(i, sort(trace));
           }
@@ -137,8 +137,8 @@ public class InMemoryExporter implements SpanProcessor {
       }
       // always return a copy so that future structural changes cannot cause race conditions during
       // test verification
-      final List<List<SpanData>> copy = new ArrayList<>(traces.size());
-      for (final List<SpanData> trace : traces) {
+      List<List<SpanData>> copy = new ArrayList<>(traces.size());
+      for (List<SpanData> trace : traces) {
         copy.add(new ArrayList<>(trace));
       }
       return copy;

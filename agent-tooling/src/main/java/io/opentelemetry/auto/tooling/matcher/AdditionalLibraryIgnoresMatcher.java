@@ -41,7 +41,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
    */
   @Override
   public boolean matches(final T target) {
-    final String name = target.getActualName();
+    String name = target.getActualName();
 
     if (name.startsWith("com.beust.jcommander.")
         || name.startsWith("com.fasterxml.classmate.")

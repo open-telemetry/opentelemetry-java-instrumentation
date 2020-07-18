@@ -46,9 +46,9 @@ class JMS1Test extends AgentTestRunner {
 
   def setupSpec() {
     broker.start()
-    final ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
+    ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
 
-    final Connection connection = connectionFactory.createConnection()
+    Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
   }

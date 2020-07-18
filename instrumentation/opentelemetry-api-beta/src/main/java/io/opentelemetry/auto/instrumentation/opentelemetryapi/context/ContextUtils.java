@@ -26,7 +26,7 @@ public class ContextUtils {
 
   public static Scope withScopedContext(
       final Context context, final ContextStore<Context, io.grpc.Context> contextStore) {
-    final io.grpc.Context shadedContext = contextStore.get(context);
+    io.grpc.Context shadedContext = contextStore.get(context);
     if (shadedContext == null) {
       if (log.isDebugEnabled()) {
         log.debug("unexpected context: {}", context, new Exception("unexpected context"));
@@ -34,7 +34,7 @@ public class ContextUtils {
       return NoopScope.getInstance();
     }
 
-    final io.opentelemetry.context.Scope scope =
+    io.opentelemetry.context.Scope scope =
         io.opentelemetry.context.ContextUtils.withScopedContext(shadedContext);
     return new UnshadedScope(scope);
   }

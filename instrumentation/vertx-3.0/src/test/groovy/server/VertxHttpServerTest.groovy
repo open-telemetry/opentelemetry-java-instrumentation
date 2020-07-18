@@ -36,7 +36,7 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> {
     // Useful for debugging:
     // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
       .setClusterPort(port))
-    final CompletableFuture<Void> future = new CompletableFuture<>()
+    CompletableFuture<Void> future = new CompletableFuture<>()
     server.deployVerticle(verticle().getName(),
       new DeploymentOptions()
         .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))

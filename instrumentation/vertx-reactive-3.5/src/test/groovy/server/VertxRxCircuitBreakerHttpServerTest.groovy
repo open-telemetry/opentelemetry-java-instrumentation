@@ -41,9 +41,9 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
 
     @Override
     void start(final Future<Void> startFuture) {
-      final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT)
-      final Router router = Router.router(super.@vertx)
-      final CircuitBreaker breaker =
+      int port = config().getInteger(CONFIG_HTTP_SERVER_PORT)
+      Router router = Router.router(super.@vertx)
+      CircuitBreaker breaker =
         CircuitBreaker.create(
           "my-circuit-breaker",
           super.@vertx,

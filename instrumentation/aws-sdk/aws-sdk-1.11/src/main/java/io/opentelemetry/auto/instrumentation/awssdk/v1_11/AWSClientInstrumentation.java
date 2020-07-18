@@ -76,7 +76,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
     public static void addHandler(
         @Advice.FieldValue("requestHandler2s") final List<RequestHandler2> handlers) {
       boolean hasAgentHandler = false;
-      for (final RequestHandler2 handler : handlers) {
+      for (RequestHandler2 handler : handlers) {
         if (handler instanceof TracingRequestHandler) {
           hasAgentHandler = true;
           break;

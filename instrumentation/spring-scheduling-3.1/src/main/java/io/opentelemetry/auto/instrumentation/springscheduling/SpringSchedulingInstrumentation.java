@@ -80,10 +80,10 @@ public final class SpringSchedulingInstrumentation extends Instrumenter.Default 
       if (runnable == null) {
         return;
       }
-      final Span span = TRACER.spanBuilder(DECORATE.spanNameOnRun(runnable)).startSpan();
+      Span span = TRACER.spanBuilder(DECORATE.spanNameOnRun(runnable)).startSpan();
       DECORATE.afterStart(span);
 
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         runnable.run();
       } catch (final Throwable throwable) {
         DECORATE.onError(span, throwable);

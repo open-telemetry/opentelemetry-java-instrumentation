@@ -36,7 +36,7 @@ public final class DaemonThreadFactory implements ThreadFactory {
 
   @Override
   public Thread newThread(final Runnable r) {
-    final Thread thread = new Thread(r, threadName);
+    Thread thread = new Thread(r, threadName);
     thread.setDaemon(true);
     thread.setContextClassLoader(null);
     return thread;

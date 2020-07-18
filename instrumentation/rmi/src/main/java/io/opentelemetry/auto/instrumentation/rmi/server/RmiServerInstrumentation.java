@@ -69,20 +69,20 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
   public static class ServerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Origin final Method method) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
       if (callDepth > 0) {
         return null;
       }
-      final SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
+      SpanContext context = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      final Span.Builder spanBuilder =
+      Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(SERVER);
       if (context != null) {
         spanBuilder.setParent(context);
       } else {
         spanBuilder.setNoParent();
       }
-      final Span span = spanBuilder.startSpan();
+      Span span = spanBuilder.startSpan();
 
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));
@@ -96,7 +96,7 @@ public final class RmiServerInstrumentation extends Instrumenter.Default {
       }
       CallDepthThreadLocalMap.reset(RemoteServer.class);
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       span.end();
 

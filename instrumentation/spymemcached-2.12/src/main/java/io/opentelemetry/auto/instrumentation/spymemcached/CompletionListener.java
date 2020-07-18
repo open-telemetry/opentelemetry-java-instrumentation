@@ -44,14 +44,14 @@ public abstract class CompletionListener<T> {
             .spanBuilder(DECORATE.spanNameOnOperation(methodName))
             .setSpanKind(CLIENT)
             .startSpan();
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
     }
   }
 
   protected void closeAsyncSpan(final T future) {
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       try {
         processResult(span, future);
       } catch (final CancellationException e) {
@@ -79,7 +79,7 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeSyncSpan(final Throwable thrown) {
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       DECORATE.onError(span, thrown);
       DECORATE.beforeFinish(span);
       span.end();

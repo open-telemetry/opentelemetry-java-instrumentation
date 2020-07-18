@@ -78,12 +78,12 @@ public abstract class BaseDecorator {
   public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
-      final InetAddress remoteAddress = remoteConnection.getAddress();
+      InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
         onPeerConnection(span, remoteAddress);
       } else {
         // Failed DNS lookup, the host string is the name.
-        final String hostString = remoteConnection.getHostString();
+        String hostString = remoteConnection.getHostString();
         span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), hostString);
         String peerService = mapToPeer(hostString);
         if (peerService != null) {
@@ -97,7 +97,7 @@ public abstract class BaseDecorator {
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
-    final String hostName = remoteAddress.getHostName();
+    String hostName = remoteAddress.getHostName();
     if (!hostName.equals(remoteAddress.getHostAddress())) {
       span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteAddress.getHostName());
     }
@@ -117,7 +117,7 @@ public abstract class BaseDecorator {
     span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
     span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
-    final StringWriter errorString = new StringWriter();
+    StringWriter errorString = new StringWriter();
     throwable.printStackTrace(new PrintWriter(errorString));
     span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
   }
@@ -195,9 +195,9 @@ public abstract class BaseDecorator {
   }
 
   public static <C> SpanContext extract(final C carrier, final HttpTextFormat.Getter<C> getter) {
-    final Context context =
+    Context context =
         getPropagators().getHttpTextFormat().extract(Context.current(), carrier, getter);
-    final Span span = getSpan(context);
+    Span span = getSpan(context);
     return span.getContext();
   }
 

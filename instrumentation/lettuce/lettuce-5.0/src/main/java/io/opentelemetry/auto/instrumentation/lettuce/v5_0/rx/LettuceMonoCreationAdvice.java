@@ -37,8 +37,8 @@ public class LettuceMonoCreationAdvice {
   public static void monitorSpan(
       @Advice.Enter final RedisCommand command,
       @Advice.Return(readOnly = false) Mono<?> publisher) {
-    final boolean finishSpanOnClose = !expectsResponse(command);
-    final LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(command, finishSpanOnClose);
+    boolean finishSpanOnClose = !expectsResponse(command);
+    LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(command, finishSpanOnClose);
     publisher = publisher.doOnSubscribe(mdc);
     // register the call back to close the span only if necessary
     if (!finishSpanOnClose) {

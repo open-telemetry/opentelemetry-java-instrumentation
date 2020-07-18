@@ -78,7 +78,7 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit
     public static void setSpanNameAddHeaders(@Advice.This final Command command) {
 
-      final Span span = CURRENT_RABBIT_SPAN.get();
+      Span span = CURRENT_RABBIT_SPAN.get();
       if (span != null && command.getMethod() != null) {
         DECORATE.onCommand(span, command);
       }

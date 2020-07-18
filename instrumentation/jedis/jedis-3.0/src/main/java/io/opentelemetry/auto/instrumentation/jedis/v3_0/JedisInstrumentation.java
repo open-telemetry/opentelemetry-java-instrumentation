@@ -75,12 +75,12 @@ public final class JedisInstrumentation extends Instrumenter.Default {
     public static SpanWithScope onEnter(
         @Advice.This final Connection connection,
         @Advice.Argument(0) final ProtocolCommand command) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final String query;
+      String query;
       if (command instanceof Protocol.Command) {
         query = ((Protocol.Command) command).name();
       } else {
@@ -88,7 +88,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
         // us if that changes
         query = new String(command.getRaw(), StandardCharsets.UTF_8);
       }
-      final Span span = TRACER.spanBuilder(query).setSpanKind(CLIENT).startSpan();
+      Span span = TRACER.spanBuilder(query).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onStatement(span, query);
@@ -103,7 +103,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       }
       CallDepthThreadLocalMap.reset(Connection.class);
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();

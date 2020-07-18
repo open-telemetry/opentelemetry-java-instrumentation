@@ -52,7 +52,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>();
     map.put("org.hibernate.SharedSessionContract", Span.class.getName());
     map.put("org.hibernate.Query", Span.class.getName());
     map.put("org.hibernate.Transaction", Span.class.getName());
@@ -67,7 +67,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod().and(named("close")).and(takesArguments(0)),
         SessionInstrumentation.class.getName() + "$SessionCloseAdvice");
@@ -125,9 +125,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         @Advice.This final SharedSessionContract session,
         @Advice.Thrown final Throwable throwable) {
 
-      final ContextStore<SharedSessionContract, Span> contextStore =
+      ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      final Span sessionSpan = contextStore.get(session);
+      Span sessionSpan = contextStore.get(session);
       if (sessionSpan == null) {
         return;
       }
@@ -146,8 +146,8 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         @Advice.Origin("#m") final String name,
         @Advice.Argument(0) final Object entity) {
 
-      final boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
-      final ContextStore<SharedSessionContract, Span> contextStore =
+      boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
+      ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
       return SessionMethodUtils.startScopeFrom(
           contextStore, session, "Session." + name, entity, startSpan);
@@ -170,9 +170,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void getQuery(
         @Advice.This final SharedSessionContract session, @Advice.Return final Query query) {
 
-      final ContextStore<SharedSessionContract, Span> sessionContextStore =
+      ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      final ContextStore<Query, Span> queryContextStore =
+      ContextStore<Query, Span> queryContextStore =
           InstrumentationContext.get(Query.class, Span.class);
 
       SessionMethodUtils.attachSpanFromStore(
@@ -187,9 +187,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         @Advice.This final SharedSessionContract session,
         @Advice.Return final Transaction transaction) {
 
-      final ContextStore<SharedSessionContract, Span> sessionContextStore =
+      ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      final ContextStore<Transaction, Span> transactionContextStore =
+      ContextStore<Transaction, Span> transactionContextStore =
           InstrumentationContext.get(Transaction.class, Span.class);
 
       SessionMethodUtils.attachSpanFromStore(
@@ -203,9 +203,9 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     public static void getCriteria(
         @Advice.This final SharedSessionContract session, @Advice.Return final Criteria criteria) {
 
-      final ContextStore<SharedSessionContract, Span> sessionContextStore =
+      ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      final ContextStore<Criteria, Span> criteriaContextStore =
+      ContextStore<Criteria, Span> criteriaContextStore =
           InstrumentationContext.get(Criteria.class, Span.class);
 
       SessionMethodUtils.attachSpanFromStore(

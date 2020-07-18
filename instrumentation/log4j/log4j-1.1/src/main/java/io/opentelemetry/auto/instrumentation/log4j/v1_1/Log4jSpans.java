@@ -50,7 +50,7 @@ public class Log4jSpans {
       return;
     }
 
-    final Span span = TRACER.spanBuilder("log.message").startSpan();
+    Span span = TRACER.spanBuilder("log.message").startSpan();
     span.setAttribute("message", String.valueOf(message));
     span.setAttribute("level", level.toString());
     span.setAttribute("loggerName", logger.getName());
@@ -61,13 +61,13 @@ public class Log4jSpans {
   }
 
   private static String toString(final Throwable t) {
-    final StringWriter out = new StringWriter();
+    StringWriter out = new StringWriter();
     t.printStackTrace(new PrintWriter(out));
     return out.toString();
   }
 
   private static int getThreshold() {
-    final String level = Config.get().getExperimentalLogCaptureThreshold();
+    String level = Config.get().getExperimentalLogCaptureThreshold();
     if (level == null) {
       return OFF_INT;
     }

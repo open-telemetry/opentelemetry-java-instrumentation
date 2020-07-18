@@ -65,19 +65,19 @@ public class TwilioClientDecorator extends ClientDecorator {
 
     // Instrument the most popular resource types directly
     if (result instanceof Message) {
-      final Message message = (Message) result;
+      Message message = (Message) result;
       span.setAttribute("twilio.account", message.getAccountSid());
       span.setAttribute("twilio.sid", message.getSid());
-      final Message.Status status = message.getStatus();
+      Message.Status status = message.getStatus();
       if (status != null) {
         span.setAttribute("twilio.status", status.toString());
       }
     } else if (result instanceof Call) {
-      final Call call = (Call) result;
+      Call call = (Call) result;
       span.setAttribute("twilio.account", call.getAccountSid());
       span.setAttribute("twilio.sid", call.getSid());
       span.setAttribute("twilio.parentSid", call.getParentCallSid());
-      final Call.Status status = call.getStatus();
+      Call.Status status = call.getStatus();
       if (status != null) {
         span.setAttribute("twilio.status", status.toString());
       }
@@ -100,8 +100,8 @@ public class TwilioClientDecorator extends ClientDecorator {
   private void setTagIfPresent(
       final Span span, final Object result, final String tag, final String getter) {
     try {
-      final Method method = result.getClass().getMethod(getter);
-      final Object value = method.invoke(result);
+      Method method = result.getClass().getMethod(getter);
+      Object value = method.invoke(result);
 
       if (value != null) {
         span.setAttribute(tag, value.toString());

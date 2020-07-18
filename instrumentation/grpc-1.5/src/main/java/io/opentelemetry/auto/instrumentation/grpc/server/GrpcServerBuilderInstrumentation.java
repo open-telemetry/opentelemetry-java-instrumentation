@@ -67,7 +67,7 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
     public static void addInterceptor(
         @Advice.FieldValue("interceptors") final List<ServerInterceptor> interceptors) {
       boolean shouldRegister = true;
-      for (final ServerInterceptor interceptor : interceptors) {
+      for (ServerInterceptor interceptor : interceptors) {
         if (interceptor instanceof TracingServerInterceptor) {
           shouldRegister = false;
           break;

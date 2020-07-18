@@ -30,7 +30,7 @@ public class MessageInjectAdapter implements HttpTextFormat.Setter<Message> {
 
   @Override
   public void set(final Message carrier, final String key, final String value) {
-    final String propName = key.replace("-", DASH);
+    String propName = key.replace("-", DASH);
     try {
       carrier.setStringProperty(propName, value);
     } catch (final JMSException e) {

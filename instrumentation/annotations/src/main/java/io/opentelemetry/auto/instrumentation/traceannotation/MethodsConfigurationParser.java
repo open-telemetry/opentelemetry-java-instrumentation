@@ -56,21 +56,21 @@ public class MethodsConfigurationParser {
           configString);
       return Collections.emptyMap();
     } else {
-      final Map<String, Set<String>> toTrace = Maps.newHashMap();
-      final String[] classMethods = configString.split(";", -1);
-      for (final String classMethod : classMethods) {
+      Map<String, Set<String>> toTrace = Maps.newHashMap();
+      String[] classMethods = configString.split(";", -1);
+      for (String classMethod : classMethods) {
         if (classMethod.trim().isEmpty()) {
           continue;
         }
-        final String[] splitClassMethod = classMethod.split("\\[", -1);
-        final String className = splitClassMethod[0];
-        final String method = splitClassMethod[1].trim();
-        final String methodNames = method.substring(0, method.length() - 1);
-        final String[] splitMethodNames = methodNames.split(",", -1);
-        final Set<String> trimmedMethodNames =
+        String[] splitClassMethod = classMethod.split("\\[", -1);
+        String className = splitClassMethod[0];
+        String method = splitClassMethod[1].trim();
+        String methodNames = method.substring(0, method.length() - 1);
+        String[] splitMethodNames = methodNames.split(",", -1);
+        Set<String> trimmedMethodNames =
             Sets.newHashSetWithExpectedSize(splitMethodNames.length);
-        for (final String methodName : splitMethodNames) {
-          final String trimmedMethodName = methodName.trim();
+        for (String methodName : splitMethodNames) {
+          String trimmedMethodName = methodName.trim();
           if (!trimmedMethodName.isEmpty()) {
             trimmedMethodNames.add(trimmedMethodName);
           }
@@ -84,7 +84,7 @@ public class MethodsConfigurationParser {
   }
 
   private static boolean validateConfigString(final String configString) {
-    for (final String segment : configString.split(";")) {
+    for (String segment : configString.split(";")) {
       if (!segment.trim().matches(CONFIG_FORMAT)) {
         return false;
       }

@@ -85,12 +85,12 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
   public static class ExecAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(@Advice.Argument(1) final HttpMethod httpMethod) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final Span span =
+      Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameForRequest(httpMethod))
               .setSpanKind(CLIENT)
@@ -99,9 +99,9 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, httpMethod);
 
-      final Context context = withSpan(span, Context.current());
+      Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, httpMethod, SETTER);
-      final Scope scope = withScopedContext(context);
+      Scope scope = withScopedContext(context);
 
       return new SpanWithScope(span, scope);
     }
@@ -118,7 +118,7 @@ public class CommonsHttpClientInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(HttpClient.class);
 
       try {
-        final Span span = spanWithScope.getSpan();
+        Span span = spanWithScope.getSpan();
         DECORATE.onResponse(span, httpMethod);
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);

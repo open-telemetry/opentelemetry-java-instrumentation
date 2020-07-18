@@ -148,7 +148,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
 
   def "backing map should not create strong refs to key class instances #keyValue.get().getClass().getName()"() {
     when:
-    final int count = keyValue.get().incrementContextCount()
+    int count = keyValue.get().incrementContextCount()
     WeakReference<KeyClass> instanceRef = new WeakReference(keyValue.get())
     keyValue.set(null)
     GCUtils.awaitGC(instanceRef)
@@ -218,11 +218,11 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
 
   @Override
   boolean onInstrumentationError(
-      final String typeName,
-      final ClassLoader classLoader,
-      final JavaModule module,
-      final boolean loaded,
-      final Throwable throwable) {
+    final String typeName,
+    final ClassLoader classLoader,
+    final JavaModule module,
+    final boolean loaded,
+    final Throwable throwable) {
     // Incorrect* classes assert on incorrect api usage. Error expected.
     return !(typeName.startsWith(ContextTestInstrumentation.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
   }

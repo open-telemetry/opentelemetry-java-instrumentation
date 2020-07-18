@@ -63,7 +63,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
     public static SpanWithScope startMethod(
         @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<Criteria, Span> contextStore =
+      ContextStore<Criteria, Span> contextStore =
           InstrumentationContext.get(Criteria.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(

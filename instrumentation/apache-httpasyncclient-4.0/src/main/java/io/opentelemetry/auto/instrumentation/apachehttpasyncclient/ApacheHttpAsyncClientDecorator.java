@@ -42,7 +42,7 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
     if (request instanceof HttpUriRequest) {
       return ((HttpUriRequest) request).getMethod();
     } else {
-      final RequestLine requestLine = request.getRequestLine();
+      RequestLine requestLine = request.getRequestLine();
       return requestLine == null ? null : requestLine.getMethod();
     }
   }
@@ -57,14 +57,14 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
     if (request instanceof HttpUriRequest) {
       return ((HttpUriRequest) request).getURI();
     } else {
-      final RequestLine requestLine = request.getRequestLine();
+      RequestLine requestLine = request.getRequestLine();
       return requestLine == null ? null : new URI(requestLine.getUri());
     }
   }
 
   @Override
   protected Integer status(final HttpResponse response) {
-    final StatusLine statusLine = response.getStatusLine();
+    StatusLine statusLine = response.getStatusLine();
     return statusLine != null ? statusLine.getStatusCode() : null;
   }
 

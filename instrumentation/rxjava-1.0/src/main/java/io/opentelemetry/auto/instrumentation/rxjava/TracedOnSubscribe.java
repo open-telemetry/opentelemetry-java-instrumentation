@@ -53,15 +53,15 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
   @Override
   public void call(final Subscriber<? super T> subscriber) {
     // span finished by TracedSubscriber
-    final Span.Builder spanBuilder = TRACER.spanBuilder(operationName).setSpanKind(spanKind);
+    Span.Builder spanBuilder = TRACER.spanBuilder(operationName).setSpanKind(spanKind);
     if (parentSpan != null) {
       spanBuilder.setParent(parentSpan);
     }
-    final Span span = spanBuilder.startSpan();
+    Span span = spanBuilder.startSpan();
 
     afterStart(span);
 
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       delegate.call(new TracedSubscriber(span, subscriber, decorator));
     }
   }

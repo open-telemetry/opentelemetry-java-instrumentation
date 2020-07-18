@@ -81,7 +81,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
     public static void injectTraceListener(
         @Advice.This final MongoClientOptions.Builder builder,
         @Advice.FieldValue("commandListeners") final List<CommandListener> commandListeners) {
-      for (final CommandListener commandListener : commandListeners) {
+      for (CommandListener commandListener : commandListeners) {
         if (commandListener instanceof TracingCommandListener) {
           return;
         }

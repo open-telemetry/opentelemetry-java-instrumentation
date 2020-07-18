@@ -24,19 +24,19 @@ import spock.lang.Specification
 class ShadowPackageRenamingTest extends Specification {
   def "agent dependencies renamed"() {
     setup:
-    final Class<?> clazz =
+    Class<?> clazz =
       IntegrationTestUtils.getAgentClassLoader()
         .loadClass("io.opentelemetry.auto.tooling.AgentInstaller")
-    final URL userGuava =
+    URL userGuava =
       MapMaker.getProtectionDomain().getCodeSource().getLocation()
-    final URL agentGuavaDep =
+    URL agentGuavaDep =
       clazz
         .getClassLoader()
         .loadClass("com.google.common.collect.MapMaker")
         .getProtectionDomain()
         .getCodeSource()
         .getLocation()
-    final URL agentSource =
+    URL agentSource =
       clazz.getProtectionDomain().getCodeSource().getLocation()
 
     expect:
@@ -55,13 +55,13 @@ class ShadowPackageRenamingTest extends Specification {
 
   def "agent jar contains no bootstrap classes"() {
     setup:
-    final ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
+    ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
 
-    final ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
-    final Set<String> bootstrapClasses = new HashSet<>()
-    final String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
-    final String[] agentPrefixes = IntegrationTestUtils.getAgentPackagePrefixes()
-    final List<String> badBootstrapPrefixes = []
+    ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
+    Set<String> bootstrapClasses = new HashSet<>()
+    String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
+    String[] agentPrefixes = IntegrationTestUtils.getAgentPackagePrefixes()
+    List<String> badBootstrapPrefixes = []
     for (ClassPath.ClassInfo info : bootstrapClasspath.getAllClasses()) {
       bootstrapClasses.add(info.getName())
       // make sure all bootstrap classes can be loaded from system
@@ -78,8 +78,8 @@ class ShadowPackageRenamingTest extends Specification {
       }
     }
 
-    final List<ClassPath.ClassInfo> agentDuplicateClassFile = new ArrayList<>()
-    final List<String> badAgentPrefixes = []
+    List<ClassPath.ClassInfo> agentDuplicateClassFile = new ArrayList<>()
+    List<String> badAgentPrefixes = []
     for (ClassPath.ClassInfo classInfo : agentClasspath.getAllClasses()) {
       if (bootstrapClasses.contains(classInfo.getName())) {
         agentDuplicateClassFile.add(classInfo)

@@ -67,7 +67,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
 
   @Override
   public Object onCompleted() throws Exception {
-    final Response response = builder.build();
+    Response response = builder.build();
     if (response != null) {
       DECORATE.onResponse(span, response);
     }
@@ -75,7 +75,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     span.end();
 
     if (parentSpan.getContext().isValid()) {
-      try (final Scope scope = currentContextWith(parentSpan)) {
+      try (Scope scope = currentContextWith(parentSpan)) {
         return delegate.onCompleted();
       }
     } else {
@@ -90,7 +90,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     span.end();
 
     if (parentSpan.getContext().isValid()) {
-      try (final Scope scope = currentContextWith(parentSpan)) {
+      try (Scope scope = currentContextWith(parentSpan)) {
         delegate.onThrowable(throwable);
       }
     } else {

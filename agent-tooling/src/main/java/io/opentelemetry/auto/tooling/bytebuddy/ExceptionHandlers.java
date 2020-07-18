@@ -47,8 +47,8 @@ public class ExceptionHandlers {
 
             @Override
             public Size apply(final MethodVisitor mv, final Implementation.Context context) {
-              final String name = context.getInstrumentedType().getName();
-              final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+              String name = context.getInstrumentedType().getName();
+              ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
               // writes the following bytecode:
               // try {
@@ -56,13 +56,13 @@ public class ExceptionHandlers {
               //     .debug("exception in instrumentation", t);
               // } catch (Throwable t2) {
               // }
-              final Label logStart = new Label();
-              final Label logEnd = new Label();
-              final Label eatException = new Label();
-              final Label handlerExit = new Label();
+              Label logStart = new Label();
+              Label logEnd = new Label();
+              Label eatException = new Label();
+              Label handlerExit = new Label();
 
               // Frames are only meaningful for class files in version 6 or later.
-              final boolean frames =
+              boolean frames =
                   context.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
 
               mv.visitTryCatchBlock(logStart, logEnd, eatException, "java/lang/Throwable");

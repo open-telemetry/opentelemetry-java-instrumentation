@@ -94,7 +94,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(nameStartsWith("add"))
@@ -163,9 +163,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
-      final Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
+      Span span = NettyHttpServerTracer.TRACER.getCurrentSpan();
       if (span.getContext().isValid()) {
-        final Attribute<Span> attribute =
+        Attribute<Span> attribute =
             pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY);
         attribute.compareAndSet(null, span);
       }

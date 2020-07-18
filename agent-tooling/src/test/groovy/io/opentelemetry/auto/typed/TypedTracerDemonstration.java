@@ -27,14 +27,14 @@ import io.opentelemetry.context.Scope;
 class TypedTracerDemonstration {
 
   private void serverDemonstration() {
-    final SampleHttpServerTypedTracer tracer = new SampleHttpServerTypedTracer();
+    SampleHttpServerTypedTracer tracer = new SampleHttpServerTypedTracer();
 
-    final SampleHttpServerTypedSpan span = tracer.startSpan("request instance");
+    SampleHttpServerTypedSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       // make request
-      final String response = "response instance";
+      String response = "response instance";
 
       span.end(response);
       // span.onResponse("response instance"); // implicitly called on end.
@@ -44,14 +44,14 @@ class TypedTracerDemonstration {
   }
 
   private void clientDemonstration() {
-    final SampleHttpClientTypedTracer tracer = new SampleHttpClientTypedTracer();
+    SampleHttpClientTypedTracer tracer = new SampleHttpClientTypedTracer();
 
-    final SampleHttpClientTypedSpan span = tracer.startSpan("request instance");
+    SampleHttpClientTypedSpan span = tracer.startSpan("request instance");
     // span.onRequest("request instance"); // implicitly called on start.
 
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       // make request
-      final String response = "response instance";
+      String response = "response instance";
 
       span.end(response);
       // span.onResponse("response instance"); // implicitly called on end.

@@ -40,7 +40,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(final ClientRequestContext requestContext) {
-    final Span span =
+    Span span =
         TRACER
             .spanBuilder(DECORATE.spanNameForRequest(requestContext))
             .setSpanKind(CLIENT)
@@ -49,7 +49,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, requestContext);
 
-    final Context context = withSpan(span, Context.current());
+    Context context = withSpan(span, Context.current());
     OpenTelemetry.getPropagators()
         .getHttpTextFormat()
         .inject(context, requestContext.getHeaders(), SETTER);
@@ -60,9 +60,9 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   @Override
   public void filter(
       final ClientRequestContext requestContext, final ClientResponseContext responseContext) {
-    final Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
+    Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
     if (spanObj instanceof Span) {
-      final Span span = (Span) spanObj;
+      Span span = (Span) spanObj;
       DECORATE.onResponse(span, responseContext);
       DECORATE.beforeFinish(span);
       span.end();

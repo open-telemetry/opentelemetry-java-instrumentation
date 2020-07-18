@@ -42,17 +42,17 @@ public class KHttpAdvice {
       @Advice.Argument(value = 1) String uri,
       @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers) {
 
-    final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(KHttp.class);
+    int callDepth = CallDepthThreadLocalMap.incrementCallDepth(KHttp.class);
     if (callDepth > 0) {
       return null;
     }
 
-    final Span span = TRACER.spanBuilder("HTTP " + method).setSpanKind(CLIENT).startSpan();
+    Span span = TRACER.spanBuilder("HTTP " + method).setSpanKind(CLIENT).startSpan();
 
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, new RequestWrapper(method, uri));
 
-    final Context context = withSpan(span, Context.current());
+    Context context = withSpan(span, Context.current());
 
     headers = asWritable(headers);
     OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
@@ -70,7 +70,7 @@ public class KHttpAdvice {
     CallDepthThreadLocalMap.reset(KHttp.class);
 
     try {
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
 
       DECORATE.onResponse(span, result);
       DECORATE.onError(span, throwable);

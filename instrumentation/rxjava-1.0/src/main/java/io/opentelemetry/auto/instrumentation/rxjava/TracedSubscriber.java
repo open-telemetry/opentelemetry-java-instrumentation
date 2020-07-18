@@ -35,16 +35,15 @@ public class TracedSubscriber<T> extends Subscriber<T> {
     spanRef = new AtomicReference<>(span);
     this.delegate = delegate;
     this.decorator = decorator;
-    final SpanFinishingSubscription subscription =
-        new SpanFinishingSubscription(decorator, spanRef);
+    SpanFinishingSubscription subscription = new SpanFinishingSubscription(decorator, spanRef);
     delegate.add(subscription);
   }
 
   @Override
   public void onStart() {
-    final Span span = spanRef.get();
+    Span span = spanRef.get();
     if (span != null) {
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         delegate.onStart();
       }
     } else {
@@ -54,9 +53,9 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onNext(final T value) {
-    final Span span = spanRef.get();
+    Span span = spanRef.get();
     if (span != null) {
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         delegate.onNext(value);
       } catch (final Throwable e) {
         onError(e);
@@ -68,10 +67,10 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onCompleted() {
-    final Span span = spanRef.getAndSet(null);
+    Span span = spanRef.getAndSet(null);
     if (span != null) {
       boolean errored = false;
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         delegate.onCompleted();
       } catch (final Throwable e) {
         // Repopulate the spanRef for onError
@@ -92,9 +91,9 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onError(final Throwable e) {
-    final Span span = spanRef.getAndSet(null);
+    Span span = spanRef.getAndSet(null);
     if (span != null) {
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         decorator.onError(span, e);
         delegate.onError(e);
       } catch (final Throwable e2) {

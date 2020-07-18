@@ -52,7 +52,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected URI url(final HttpRequest request) throws URISyntaxException {
-    final URI uri = new URI(request.getUri());
+    URI uri = new URI(request.getUri());
     if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
       return new URI("http://" + request.headers().get(HOST) + request.getUri());
     } else {
@@ -62,7 +62,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected String peerHostIP(final Channel channel) {
-    final SocketAddress socketAddress = channel.getRemoteAddress();
+    SocketAddress socketAddress = channel.getRemoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
     }
@@ -86,7 +86,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected Integer peerPort(final Channel channel) {
-    final SocketAddress socketAddress = channel.getRemoteAddress();
+    SocketAddress socketAddress = channel.getRemoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getPort();
     }

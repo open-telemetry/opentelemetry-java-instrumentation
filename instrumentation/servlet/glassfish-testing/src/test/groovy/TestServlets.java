@@ -27,7 +27,7 @@ public class TestServlets {
   public static class Success extends HttpServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -46,7 +46,7 @@ public class TestServlets {
   public static class Query extends HttpServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -65,7 +65,7 @@ public class TestServlets {
   public static class Redirect extends HttpServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -82,7 +82,7 @@ public class TestServlets {
   public static class Error extends HttpServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -100,7 +100,7 @@ public class TestServlets {
   public static class ExceptionServlet extends HttpServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,

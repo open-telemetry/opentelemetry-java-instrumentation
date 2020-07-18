@@ -120,7 +120,7 @@ public interface Instrumenter {
 
     private AgentBuilder.Identified.Extendable injectHelperClasses(
         AgentBuilder.Identified.Extendable agentBuilder) {
-      final String[] helperClassNames = helperClassNames();
+      String[] helperClassNames = helperClassNames();
       if (helperClassNames.length > 0) {
         agentBuilder =
             agentBuilder.transform(
@@ -131,7 +131,7 @@ public interface Instrumenter {
 
     private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
         AgentBuilder.Identified.Extendable agentBuilder) {
-      for (final Map.Entry<? extends ElementMatcher, String> entry : transformers().entrySet()) {
+      for (Map.Entry<? extends ElementMatcher, String> entry : transformers().entrySet()) {
         agentBuilder =
             agentBuilder.transform(
                 new AgentBuilder.Transformer.ForAdvice()
@@ -155,12 +155,12 @@ public interface Instrumenter {
          * prevents unnecessary loading of muzzle references during agentBuilder
          * setup.
          */
-        final ReferenceMatcher muzzle = getInstrumentationMuzzle();
+        ReferenceMatcher muzzle = getInstrumentationMuzzle();
         if (null != muzzle) {
-          final boolean isMatch = muzzle.matches(classLoader);
+          boolean isMatch = muzzle.matches(classLoader);
           if (!isMatch) {
             if (log.isDebugEnabled()) {
-              final List<Reference.Mismatch> mismatches =
+              List<Reference.Mismatch> mismatches =
                   muzzle.getMismatchedReferenceSources(classLoader);
               if (log.isDebugEnabled()) {
                 log.debug(
@@ -169,7 +169,7 @@ public interface Instrumenter {
                     Instrumenter.Default.this.getClass().getName(),
                     classLoader);
               }
-              for (final Reference.Mismatch mismatch : mismatches) {
+              for (Reference.Mismatch mismatch : mismatches) {
                 log.debug("-- {}", mismatch);
               }
             }

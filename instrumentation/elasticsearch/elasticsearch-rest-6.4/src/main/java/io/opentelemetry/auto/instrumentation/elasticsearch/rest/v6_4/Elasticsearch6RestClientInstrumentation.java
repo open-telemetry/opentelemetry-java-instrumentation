@@ -75,7 +75,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener) {
 
-      final Span span =
+      Span span =
           TRACER.spanBuilder(request.getMethod() + " " + request.getEndpoint()).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request.getMethod(), request.getEndpoint());
@@ -89,7 +89,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final Span span = spanWithScope.getSpan();
+        Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();

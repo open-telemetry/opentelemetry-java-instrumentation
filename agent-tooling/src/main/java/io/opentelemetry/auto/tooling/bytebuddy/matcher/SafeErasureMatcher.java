@@ -50,7 +50,7 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
 
   @Override
   public boolean matches(final T target) {
-    final TypeDescription erasure = safeAsErasure(target);
+    TypeDescription erasure = safeAsErasure(target);
     if (erasure == null) {
       return false;
     } else {

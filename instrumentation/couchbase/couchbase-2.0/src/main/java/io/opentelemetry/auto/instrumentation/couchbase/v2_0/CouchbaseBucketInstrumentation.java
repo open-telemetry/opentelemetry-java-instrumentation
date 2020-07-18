@@ -64,7 +64,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod().and(isPublic()).and(returns(named("rx.Observable"))).and(not(named("query"))),
         CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientAdvice");

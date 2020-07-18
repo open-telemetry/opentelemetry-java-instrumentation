@@ -103,8 +103,8 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(2) final HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      final Span parentSpan = TRACER.getCurrentSpan();
-      final Span clientSpan = TRACER.spanBuilder(DEFAULT_SPAN_NAME).setSpanKind(CLIENT).startSpan();
+      Span parentSpan = TRACER.getCurrentSpan();
+      Span clientSpan = TRACER.spanBuilder(DEFAULT_SPAN_NAME).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(clientSpan);
 
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
@@ -128,8 +128,8 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    final Span span;
-    final HttpAsyncRequestProducer delegate;
+    Span span;
+    HttpAsyncRequestProducer delegate;
 
     public DelegatingRequestProducer(final Span span, final HttpAsyncRequestProducer delegate) {
       this.span = span;
@@ -143,11 +143,11 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
-      final HttpRequest request = delegate.generateRequest();
+      HttpRequest request = delegate.generateRequest();
       span.updateName(DECORATE.spanNameForRequest(request));
       DECORATE.onRequest(span, request);
 
-      final Context context = withSpan(span, Context.current());
+      Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, SETTER);
 
       return request;
@@ -212,7 +212,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentSpan == null) {
         completeDelegate(result);
       } else {
-        try (final Scope scope = currentContextWith(parentSpan)) {
+        try (Scope scope = currentContextWith(parentSpan)) {
           completeDelegate(result);
         }
       }
@@ -228,7 +228,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentSpan == null) {
         failDelegate(ex);
       } else {
-        try (final Scope scope = currentContextWith(parentSpan)) {
+        try (Scope scope = currentContextWith(parentSpan)) {
           failDelegate(ex);
         }
       }
@@ -243,7 +243,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (parentSpan == null) {
         cancelDelegate();
       } else {
-        try (final Scope scope = currentContextWith(parentSpan)) {
+        try (Scope scope = currentContextWith(parentSpan)) {
           cancelDelegate();
         }
       }

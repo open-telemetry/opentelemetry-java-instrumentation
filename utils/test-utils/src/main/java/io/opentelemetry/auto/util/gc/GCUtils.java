@@ -22,7 +22,7 @@ public abstract class GCUtils {
 
   public static void awaitGC() throws InterruptedException {
     Object obj = new Object();
-    final WeakReference<Object> ref = new WeakReference<>(obj);
+    WeakReference<Object> ref = new WeakReference<>(obj);
     obj = null;
     awaitGC(ref);
   }

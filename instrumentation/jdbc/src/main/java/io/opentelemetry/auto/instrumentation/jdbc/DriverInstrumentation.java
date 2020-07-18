@@ -80,7 +80,7 @@ public final class DriverInstrumentation extends Instrumenter.Default {
         // Exception was probably thrown.
         return;
       }
-      final DBInfo dbInfo = JDBCConnectionUrlParser.parse(url, props);
+      DBInfo dbInfo = JDBCConnectionUrlParser.parse(url, props);
       JDBCMaps.connectionInfo.put(connection, dbInfo);
     }
   }

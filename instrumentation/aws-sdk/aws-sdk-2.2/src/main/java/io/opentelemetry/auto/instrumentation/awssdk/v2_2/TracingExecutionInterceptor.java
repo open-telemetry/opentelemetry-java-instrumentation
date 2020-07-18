@@ -148,7 +148,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeTransmission(
       BeforeTransmission context, ExecutionAttributes executionAttributes) {
     delegate.beforeTransmission(context, executionAttributes);
-    final Span span = AwsSdk.getSpanFromAttributes(executionAttributes);
+    Span span = AwsSdk.getSpanFromAttributes(executionAttributes);
     if (span != null) {
       // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
       // doesn't provide a way to run code in the same thread after transmission has been scheduled.

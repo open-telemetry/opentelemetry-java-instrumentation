@@ -31,8 +31,8 @@ public class CouchbaseOnSubscribe extends TracedOnSubscribe {
 
   public static CouchbaseOnSubscribe create(
       final Observable originalObservable, final String bucket, final Method method) {
-    final Class<?> declaringClass = method.getDeclaringClass();
-    final String className =
+    Class<?> declaringClass = method.getDeclaringClass();
+    String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
     return new CouchbaseOnSubscribe(originalObservable, bucket, className + "." + method.getName());
   }

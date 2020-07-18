@@ -72,7 +72,7 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    final AtomicBoolean responseHandled = new AtomicBoolean(false);
+    AtomicBoolean responseHandled = new AtomicBoolean(false);
 
     // In case of async servlets wait for the actual response to be ready
     if (request.isAsyncStarted()) {

@@ -71,7 +71,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     //
     // Instead, we're instrumenting the bindAndHandle function helpers by
     // wrapping the scala functions with our own handlers.
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
         AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpSyncAdvice");
@@ -112,7 +112,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public HttpResponse apply(final HttpRequest request) {
       Span span = TRACER.startSpan(request, request, "akka.request");
       try (Scope ignored = TRACER.startScope(span, null)) {
-        final HttpResponse response = userHandler.apply(request);
+        HttpResponse response = userHandler.apply(request);
         TRACER.end(span, response.status().intValue());
         return response;
       } catch (final Throwable t) {

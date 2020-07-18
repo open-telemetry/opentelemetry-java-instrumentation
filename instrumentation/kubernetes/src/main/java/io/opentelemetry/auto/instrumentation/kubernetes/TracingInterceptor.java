@@ -36,7 +36,7 @@ public class TracingInterceptor implements Interceptor {
 
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(chain.request());
 
-    final Span span =
+    Span span =
         TRACER
             .spanBuilder(digest.toString())
             .setSpanKind(CLIENT)
@@ -47,10 +47,10 @@ public class TracingInterceptor implements Interceptor {
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, chain.request());
 
-    final Context context = withSpan(span, Context.current());
+    Context context = withSpan(span, Context.current());
 
-    final Response response;
-    try (final Scope scope = withScopedContext(context)) {
+    Response response;
+    try (Scope scope = withScopedContext(context)) {
       response = chain.proceed(chain.request());
     } catch (final Exception e) {
       DECORATE.onError(span, e);

@@ -67,17 +67,17 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
       currentSpanWithScope = null;
     }
 
-    final ConsumerRecord next = delegateIterator.next();
+    ConsumerRecord next = delegateIterator.next();
 
     try {
       if (next != null) {
-        final boolean consumer = !TRACER.getCurrentSpan().getContext().isValid();
-        final Span.Builder spanBuilder = TRACER.spanBuilder(decorator.spanNameOnConsume(next));
+        boolean consumer = !TRACER.getCurrentSpan().getContext().isValid();
+        Span.Builder spanBuilder = TRACER.spanBuilder(decorator.spanNameOnConsume(next));
         if (consumer) {
           spanBuilder.setSpanKind(CONSUMER);
         }
         if (Config.get().isKafkaClientPropagationEnabled()) {
-          final SpanContext spanContext = extract(next.headers(), GETTER);
+          SpanContext spanContext = extract(next.headers(), GETTER);
           if (spanContext.isValid()) {
             if (consumer) {
               spanBuilder.setParent(spanContext);
@@ -86,9 +86,9 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
             }
           }
         }
-        final long startTimeMillis = System.currentTimeMillis();
+        long startTimeMillis = System.currentTimeMillis();
         spanBuilder.setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTimeMillis));
-        final Span span = spanBuilder.startSpan();
+        Span span = spanBuilder.startSpan();
         // tombstone checking logic here because it can only be inferred
         // from the record itself
         if (next.value() == null && !next.headers().iterator().hasNext()) {

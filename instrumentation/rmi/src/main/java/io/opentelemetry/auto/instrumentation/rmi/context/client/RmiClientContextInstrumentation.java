@@ -105,12 +105,12 @@ public class RmiClientContextInstrumentation extends Instrumenter.Default {
       if (PROPAGATOR.isRMIInternalObject(id)) {
         return;
       }
-      final Span activeSpan = TRACER.getCurrentSpan();
+      Span activeSpan = TRACER.getCurrentSpan();
       if (!activeSpan.getContext().isValid()) {
         return;
       }
 
-      final ContextStore<Connection, Boolean> knownConnections =
+      ContextStore<Connection, Boolean> knownConnections =
           InstrumentationContext.get(Connection.class, Boolean.class);
 
       PROPAGATOR.attemptToPropagateContext(knownConnections, c, activeSpan);

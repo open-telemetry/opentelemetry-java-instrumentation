@@ -93,7 +93,7 @@ public class Reference {
     if (!anotherReference.getClassName().equals(className)) {
       throw new IllegalStateException("illegal merge " + this + " != " + anotherReference);
     }
-    final String superName = null == this.superName ? anotherReference.superName : this.superName;
+    String superName = null == this.superName ? anotherReference.superName : this.superName;
 
     return new Reference(
         merge(sources, anotherReference.sources),
@@ -106,16 +106,16 @@ public class Reference {
   }
 
   private static <T> Set<T> merge(final Set<T> set1, final Set<T> set2) {
-    final Set<T> set = new HashSet<>();
+    Set<T> set = new HashSet<>();
     set.addAll(set1);
     set.addAll(set2);
     return set;
   }
 
   private static Set<Method> mergeMethods(final Set<Method> methods1, final Set<Method> methods2) {
-    final List<Method> merged = new ArrayList<>(methods1);
-    for (final Method method : methods2) {
-      final int i = merged.indexOf(method);
+    List<Method> merged = new ArrayList<>(methods1);
+    for (Method method : methods2) {
+      int i = merged.indexOf(method);
       if (i == -1) {
         merged.add(method);
       } else {
@@ -126,9 +126,9 @@ public class Reference {
   }
 
   private static Set<Field> mergeFields(final Set<Field> fields1, final Set<Field> fields2) {
-    final List<Field> merged = new ArrayList<>(fields1);
-    for (final Field field : fields2) {
-      final int i = merged.indexOf(field);
+    List<Field> merged = new ArrayList<>(fields1);
+    for (Field field : fields2) {
+      int i = merged.indexOf(field);
       if (i == -1) {
         merged.add(field);
       } else {
@@ -139,7 +139,7 @@ public class Reference {
   }
 
   private static Set<Flag> mergeFlags(final Set<Flag> flags1, final Set<Flag> flags2) {
-    final Set<Flag> merged = merge(flags1, flags2);
+    Set<Flag> merged = merge(flags1, flags2);
     // TODO: Assert flags are non-contradictory and resolve
     // public > protected > package-private > private
     return merged;
@@ -175,7 +175,7 @@ public class Reference {
     @Override
     public boolean equals(final Object o) {
       if (o instanceof Source) {
-        final Source other = (Source) o;
+        Source other = (Source) o;
         return name.equals(other.name) && line == other.line;
       }
       return false;
@@ -267,14 +267,14 @@ public class Reference {
 
       @Override
       String getMismatchDetails() {
-        final StringWriter sw = new StringWriter();
+        StringWriter sw = new StringWriter();
         sw.write("Failed to generate reference check for: ");
         sw.write(referenceBeingChecked.toString());
         sw.write(" on classloader ");
         sw.write(classLoaderBeingChecked.toString());
         sw.write("\n");
         // add exception message and stack trace
-        final PrintWriter pw = new PrintWriter(sw);
+        PrintWriter pw = new PrintWriter(sw);
         referenceCheckException.printStackTrace(pw);
         return sw.toString();
       }
@@ -515,11 +515,11 @@ public class Reference {
         throw new IllegalStateException("illegal merge " + this + " != " + anotherMethod);
       }
 
-      final Set<Source> mergedSources = new HashSet<>();
+      Set<Source> mergedSources = new HashSet<>();
       mergedSources.addAll(sources);
       mergedSources.addAll(anotherMethod.sources);
 
-      final Set<Flag> mergedFlags = new HashSet<>();
+      Set<Flag> mergedFlags = new HashSet<>();
       mergedFlags.addAll(flags);
       mergedFlags.addAll(anotherMethod.flags);
 
@@ -538,7 +538,7 @@ public class Reference {
     @Override
     public boolean equals(final Object o) {
       if (o instanceof Method) {
-        final Method m = (Method) o;
+        Method m = (Method) o;
         return name.equals(m.name) && getDescriptor().equals(m.getDescriptor());
       }
       return false;
@@ -599,7 +599,7 @@ public class Reference {
     @Override
     public boolean equals(final Object o) {
       if (o instanceof Field) {
-        final Field other = (Field) o;
+        Field other = (Field) o;
         return name.equals(other.name);
       }
       return false;
@@ -649,8 +649,8 @@ public class Reference {
         final Flag[] fieldFlags,
         final String fieldName,
         final Type fieldType) {
-      final Field field = new Field(sources, fieldFlags, fieldName, fieldType);
-      final int existingIndex = fields.indexOf(field);
+      Field field = new Field(sources, fieldFlags, fieldName, fieldType);
+      int existingIndex = fields.indexOf(field);
       if (existingIndex == -1) {
         fields.add(field);
       } else {
@@ -665,8 +665,8 @@ public class Reference {
         final String methodName,
         final Type returnType,
         final Type... methodArgs) {
-      final Method method = new Method(sources, methodFlags, methodName, returnType, methodArgs);
-      final int existingIndex = methods.indexOf(method);
+      Method method = new Method(sources, methodFlags, methodName, returnType, methodArgs);
+      int existingIndex = methods.indexOf(method);
       if (existingIndex == -1) {
         methods.add(method);
       } else {

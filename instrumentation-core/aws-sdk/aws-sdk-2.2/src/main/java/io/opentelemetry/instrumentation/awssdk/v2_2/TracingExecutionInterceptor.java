@@ -41,7 +41,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span =
+    Span span =
         ClientDecorator.getOrCreateSpan(DECORATE.spanName(executionAttributes), AwsSdk.tracer());
     DECORATE.afterStart(span);
     executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
@@ -50,7 +50,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
 
     if (span != null) {
       DECORATE.onRequest(span, context.httpRequest());
@@ -62,7 +62,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterExecution(
       final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       try {
         executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
@@ -80,7 +80,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       final Context.FailedExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       try {
         executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);

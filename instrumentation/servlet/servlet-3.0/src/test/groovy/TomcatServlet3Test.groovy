@@ -55,7 +55,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     tomcatServer.setPort(port)
     tomcatServer.getConnector().enableLookups = true // get localhost instead of 127.0.0.1
 
-    final File applicationDir = new File(baseDir, "/webapps/ROOT")
+    File applicationDir = new File(baseDir, "/webapps/ROOT")
     if (!applicationDir.exists()) {
       applicationDir.mkdirs()
       applicationDir.deleteOnExit()

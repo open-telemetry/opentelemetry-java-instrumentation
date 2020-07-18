@@ -43,14 +43,14 @@ public final class TracingHandler implements Handler {
 
   @Override
   public void handle(final Context ctx) {
-    final Request request = ctx.getRequest();
+    Request request = ctx.getRequest();
 
-    final Attribute<io.grpc.Context> spanAttribute =
+    Attribute<io.grpc.Context> spanAttribute =
         ctx.getDirectChannelAccess().getChannel().attr(SERVER_ATTRIBUTE_KEY);
-    final io.grpc.Context serverSpanContext = spanAttribute.get();
+    io.grpc.Context serverSpanContext = spanAttribute.get();
 
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
-    final Span ratpackSpan = TRACER.spanBuilder("ratpack.handler").startSpan();
+    Span ratpackSpan = TRACER.spanBuilder("ratpack.handler").startSpan();
     DECORATE.afterStart(ratpackSpan);
     DECORATE.onConnection(ratpackSpan, request);
     DECORATE.onRequest(ratpackSpan, request);
@@ -59,7 +59,7 @@ public final class TracingHandler implements Handler {
     ctx.getResponse()
         .beforeSend(
             response -> {
-              try (final Scope ignored = currentContextWith(ratpackSpan)) {
+              try (Scope ignored = currentContextWith(ratpackSpan)) {
                 if (serverSpanContext != null) {
                   // Rename the netty span name with the ratpack route.
                   DECORATE.onContext(getSpan(serverSpanContext), ctx);
@@ -71,7 +71,7 @@ public final class TracingHandler implements Handler {
               }
             });
 
-    try (final Scope scope = currentContextWith(ratpackSpan)) {
+    try (Scope scope = currentContextWith(ratpackSpan)) {
       ctx.next();
     } catch (final Throwable e) {
       DECORATE.onError(ratpackSpan, e);

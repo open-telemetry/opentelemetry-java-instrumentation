@@ -99,16 +99,16 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        final SpanScopeHolder holder = HOLDER.get();
+        SpanScopeHolder holder = HOLDER.get();
         if (holder == null) {
           // somehow nextRecord() was called outside of process()
           return;
         }
 
-        final Span.Builder spanBuilder =
+        Span.Builder spanBuilder =
             TRACER.spanBuilder(CONSUMER_DECORATE.spanNameForConsume(record)).setSpanKind(CONSUMER);
         spanBuilder.setParent(extract(record.value.headers(), GETTER));
-        final Span span = spanBuilder.startSpan();
+        Span span = spanBuilder.startSpan();
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onConsume(span, record);
 
@@ -149,7 +149,7 @@ public class KafkaStreamsProcessorInstrumentation {
 
       @Advice.OnMethodEnter
       public static SpanScopeHolder onEnter() {
-        final SpanScopeHolder holder = new SpanScopeHolder();
+        SpanScopeHolder holder = new SpanScopeHolder();
         HOLDER.set(holder);
         return holder;
       }
@@ -158,9 +158,9 @@ public class KafkaStreamsProcessorInstrumentation {
       public static void stopSpan(
           @Advice.Enter final SpanScopeHolder holder, @Advice.Thrown final Throwable throwable) {
         HOLDER.remove();
-        final SpanWithScope spanWithScope = holder.getSpanWithScope();
+        SpanWithScope spanWithScope = holder.getSpanWithScope();
         if (spanWithScope != null) {
-          final Span span = spanWithScope.getSpan();
+          Span span = spanWithScope.getSpan();
           CONSUMER_DECORATE.onError(span, throwable);
           CONSUMER_DECORATE.beforeFinish(span);
           span.end();

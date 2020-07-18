@@ -63,7 +63,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("setBucketName").and(takesArgument(0, String.class)),
         RequestInstrumentation.class.getName() + "$BucketNameAdvice");
@@ -92,7 +92,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
     public static void methodEnter(
         @Advice.Argument(0) final String value,
         @Advice.This final AmazonWebServiceRequest request) {
-      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
       if (requestMeta == null) {
@@ -108,7 +108,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
     public static void methodEnter(
         @Advice.Argument(0) final String value,
         @Advice.This final AmazonWebServiceRequest request) {
-      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
       if (requestMeta == null) {
@@ -124,7 +124,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
     public static void methodEnter(
         @Advice.Argument(0) final String value,
         @Advice.This final AmazonWebServiceRequest request) {
-      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
       if (requestMeta == null) {
@@ -140,7 +140,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
     public static void methodEnter(
         @Advice.Argument(0) final String value,
         @Advice.This final AmazonWebServiceRequest request) {
-      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
       if (requestMeta == null) {
@@ -156,7 +156,7 @@ public final class RequestInstrumentation extends Instrumenter.Default {
     public static void methodEnter(
         @Advice.Argument(0) final String value,
         @Advice.This final AmazonWebServiceRequest request) {
-      final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
           InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
       RequestMeta requestMeta = contextStore.get(request);
       if (requestMeta == null) {

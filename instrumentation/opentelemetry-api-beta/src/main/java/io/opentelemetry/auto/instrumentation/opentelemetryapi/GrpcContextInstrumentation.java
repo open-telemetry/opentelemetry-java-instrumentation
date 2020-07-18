@@ -45,7 +45,7 @@ public class GrpcContextInstrumentation extends AbstractInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod().and(isPublic()).and(isStatic()).and(named("current")).and(takesArguments(0)),
         GrpcContextInstrumentation.class.getName() + "$CurrentAdvice");
@@ -56,7 +56,7 @@ public class GrpcContextInstrumentation extends AbstractInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return final unshaded.io.grpc.Context context) {
-      final ContextStore<Context, io.grpc.Context> contextStore =
+      ContextStore<Context, io.grpc.Context> contextStore =
           InstrumentationContext.get(Context.class, io.grpc.Context.class);
       contextStore.put(context, io.grpc.Context.current());
     }

@@ -36,7 +36,7 @@ public class FilterAdvice {
       return;
     }
 
-    final Context context = TRACER.getServerContext(ctx);
+    Context context = TRACER.getServerContext(ctx);
     if (context != null) {
       scope = withScopedContext(context);
     }

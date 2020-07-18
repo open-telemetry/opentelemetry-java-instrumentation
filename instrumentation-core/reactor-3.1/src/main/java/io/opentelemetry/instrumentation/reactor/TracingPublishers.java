@@ -116,7 +116,7 @@ public class TracingPublishers {
 
     @Override
     public void subscribe(final CoreSubscriber<? super T> actual) {
-      try (final Scope scope = ContextUtils.withScopedContext(context)) {
+      try (Scope scope = ContextUtils.withScopedContext(context)) {
         delegate.subscribe(wrapSubscriber(context, actual));
       }
     }
@@ -138,8 +138,8 @@ public class TracingPublishers {
 
     @Override
     protected void subscribe(final CoreSubscriber<? super T>[] subscribers) {
-      try (final Scope scope = ContextUtils.withScopedContext(context)) {
-        for (final CoreSubscriber<? super T> subscriber : subscribers) {
+      try (Scope scope = ContextUtils.withScopedContext(context)) {
+        for (CoreSubscriber<? super T> subscriber : subscribers) {
           delegate.subscribe(wrapSubscriber(context, subscriber));
         }
       }
@@ -158,14 +158,14 @@ public class TracingPublishers {
 
     @Override
     public void connect(final Consumer<? super Disposable> cancelSupport) {
-      try (final Scope scope = ContextUtils.withScopedContext(context)) {
+      try (Scope scope = ContextUtils.withScopedContext(context)) {
         delegate.connect(cancelSupport);
       }
     }
 
     @Override
     public void subscribe(final CoreSubscriber<? super T> actual) {
-      try (final Scope scope = ContextUtils.withScopedContext(context)) {
+      try (Scope scope = ContextUtils.withScopedContext(context)) {
         delegate.subscribe(wrapSubscriber(context, actual));
       }
     }
@@ -187,7 +187,7 @@ public class TracingPublishers {
 
     @Override
     public void subscribe(final CoreSubscriber<? super T> actual) {
-      try (final Scope scope = ContextUtils.withScopedContext(context)) {
+      try (Scope scope = ContextUtils.withScopedContext(context)) {
         delegate.subscribe(wrapSubscriber(context, actual));
       }
     }
@@ -204,7 +204,7 @@ public class TracingPublishers {
 
     @Override
     public void subscribe(final CoreSubscriber<? super T> actual) {
-      try (final Scope scope = ContextUtils.withScopedContext(context)) {
+      try (Scope scope = ContextUtils.withScopedContext(context)) {
         delegate.subscribe(wrapSubscriber(context, actual));
       }
     }

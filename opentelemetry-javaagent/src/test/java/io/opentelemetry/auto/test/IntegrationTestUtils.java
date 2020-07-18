@@ -54,7 +54,7 @@ public class IntegrationTestUtils {
   private static ClassLoader getAgentFieldClassloader(final String fieldName) {
     Field classloaderField = null;
     try {
-      final Class<?> agentClass =
+      Class<?> agentClass =
           ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.Agent");
       classloaderField = agentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
@@ -70,8 +70,8 @@ public class IntegrationTestUtils {
 
   /** Returns the URL to the jar the agent appended to the bootstrap classpath * */
   public static ClassLoader getBootstrapProxy() throws Exception {
-    final ClassLoader agentClassLoader = getAgentClassLoader();
-    final Method getBootstrapProxy = agentClassLoader.getClass().getMethod("getBootstrapProxy");
+    ClassLoader agentClassLoader = getAgentClassLoader();
+    Method getBootstrapProxy = agentClassLoader.getClass().getMethod("getBootstrapProxy");
     return (ClassLoader) getBootstrapProxy.invoke(agentClassLoader);
   }
 
@@ -91,18 +91,18 @@ public class IntegrationTestUtils {
    */
   public static URL createJarWithClasses(final String mainClassname, final Class<?>... classes)
       throws IOException {
-    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
+    File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
     tmpJar.deleteOnExit();
 
-    final Manifest manifest = new Manifest();
+    Manifest manifest = new Manifest();
     if (mainClassname != null) {
-      final Attributes mainAttributes = manifest.getMainAttributes();
+      Attributes mainAttributes = manifest.getMainAttributes();
       mainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
       mainAttributes.put(Attributes.Name.MAIN_CLASS, mainClassname);
       mainAttributes.put(new Attributes.Name("Premain-Class"), mainClassname);
     }
-    final JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
-    for (final Class<?> clazz : classes) {
+    JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
+    for (Class<?> clazz : classes) {
       addToJar(clazz, target);
     }
     target.close();
@@ -119,13 +119,13 @@ public class IntegrationTestUtils {
       loader = ClassLoader.getSystemClassLoader();
     }
     try {
-      final JarEntry entry = new JarEntry(getResourceName(clazz.getName()));
+      JarEntry entry = new JarEntry(getResourceName(clazz.getName()));
       jarOutputStream.putNextEntry(entry);
       inputStream = loader.getResourceAsStream(getResourceName(clazz.getName()));
 
-      final byte[] buffer = new byte[1024];
+      byte[] buffer = new byte[1024];
       while (true) {
-        final int count = inputStream.read(buffer);
+        int count = inputStream.read(buffer);
         if (count == -1) {
           break;
         }
@@ -145,7 +145,7 @@ public class IntegrationTestUtils {
   }
 
   public static String[] getBootstrapPackagePrefixes() throws Exception {
-    final Field f =
+    Field f =
         getAgentClassLoader()
             .loadClass("io.opentelemetry.auto.tooling.Constants")
             .getField("BOOTSTRAP_PACKAGE_PREFIXES");
@@ -153,7 +153,7 @@ public class IntegrationTestUtils {
   }
 
   public static String[] getAgentPackagePrefixes() throws Exception {
-    final Field f =
+    Field f =
         getAgentClassLoader()
             .loadClass("io.opentelemetry.auto.tooling.Constants")
             .getField("AGENT_PACKAGE_PREFIXES");
@@ -161,8 +161,8 @@ public class IntegrationTestUtils {
   }
 
   private static String getAgentArgument() {
-    final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
-    for (final String arg : runtimeMxBean.getInputArguments()) {
+    RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+    for (String arg : runtimeMxBean.getInputArguments()) {
       if (arg.startsWith("-javaagent")) {
         return arg;
       }
@@ -178,7 +178,7 @@ public class IntegrationTestUtils {
       final Map<String, String> envVars,
       final boolean printOutputStreams)
       throws Exception {
-    final String classPath = System.getProperty("java.class.path");
+    String classPath = System.getProperty("java.class.path");
     return runOnSeparateJvm(
         mainClassName, jvmArgs, mainMethodArgs, envVars, classPath, printOutputStreams);
   }
@@ -200,27 +200,27 @@ public class IntegrationTestUtils {
       final boolean printOutputStreams)
       throws Exception {
 
-    final String separator = System.getProperty("file.separator");
-    final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+    String separator = System.getProperty("file.separator");
+    String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
-    final List<String> vmArgsList = new ArrayList<>(Arrays.asList(jvmArgs));
+    List<String> vmArgsList = new ArrayList<>(Arrays.asList(jvmArgs));
     vmArgsList.add(getAgentArgument());
 
-    final List<String> commands = new ArrayList<>();
+    List<String> commands = new ArrayList<>();
     commands.add(path);
     commands.addAll(vmArgsList);
     commands.add("-cp");
     commands.add(classpath);
     commands.add(mainClassName);
     commands.addAll(Arrays.asList(mainMethodArgs));
-    final ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
+    ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
     processBuilder.environment().putAll(envVars);
 
-    final Process process = processBuilder.start();
+    Process process = processBuilder.start();
 
-    final StreamGobbler errorGobbler =
+    StreamGobbler errorGobbler =
         new StreamGobbler(process.getErrorStream(), "ERROR", printOutputStreams);
-    final StreamGobbler outputGobbler =
+    StreamGobbler outputGobbler =
         new StreamGobbler(process.getInputStream(), "OUTPUT", printOutputStreams);
     outputGobbler.start();
     errorGobbler.start();
@@ -235,7 +235,7 @@ public class IntegrationTestUtils {
 
   private static void waitFor(final Process process, final long timeout, final TimeUnit unit)
       throws InterruptedException, TimeoutException {
-    final long startTime = System.nanoTime();
+    long startTime = System.nanoTime();
     long rem = unit.toNanos(timeout);
 
     do {
@@ -266,7 +266,7 @@ public class IntegrationTestUtils {
     @Override
     public void run() {
       try {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         String line = null;
         while ((line = reader.readLine()) != null) {
           if (print) {

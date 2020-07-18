@@ -86,7 +86,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("apiVersions") final ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
-      final Span span =
+      Span span =
           TRACER.spanBuilder(DECORATE.spanNameOnProduce(record)).setSpanKind(PRODUCER).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onProduce(span, record);
@@ -109,7 +109,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
           && Config.get().isKafkaClientPropagationEnabled()
           // Must not interfere with tombstones
           && !isTombstone) {
-        final Context context = withSpan(span, Context.current());
+        Context context = withSpan(span, Context.current());
         try {
           OpenTelemetry.getPropagators()
               .getHttpTextFormat()
@@ -137,7 +137,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       spanWithScope.closeScope();
@@ -156,7 +156,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         DECORATE.onError(span, exception);
         try {
           if (callback != null) {

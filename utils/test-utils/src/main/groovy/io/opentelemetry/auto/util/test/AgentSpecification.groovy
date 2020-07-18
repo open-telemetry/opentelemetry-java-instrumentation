@@ -45,10 +45,10 @@ abstract class AgentSpecification extends Specification {
   // it's needed here, because the test harness loads bytebuddy early
   // and then it's too late to set the property in AgentInstaller
   static void addByteBuddyRawSetting() {
-    final String savedPropertyValue = System.getProperty(TypeDefinition.RAW_TYPES_PROPERTY)
+    String savedPropertyValue = System.getProperty(TypeDefinition.RAW_TYPES_PROPERTY)
     try {
       System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, "true")
-      final boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES
+      boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES
       if (!rawTypes) {
         System.err.println("Too late to enable $TypeDefinition.RAW_TYPES_PROPERTY")
       }

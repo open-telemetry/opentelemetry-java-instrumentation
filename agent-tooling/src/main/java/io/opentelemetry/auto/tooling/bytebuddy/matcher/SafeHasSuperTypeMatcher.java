@@ -66,7 +66,7 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
 
   @Override
   public boolean matches(final T target) {
-    final Set<TypeDescription> checkedInterfaces = new HashSet<>(8);
+    Set<TypeDescription> checkedInterfaces = new HashSet<>(8);
     // We do not use foreach loop and iterator interface here because we need to catch exceptions
     // in {@code getSuperClass} calls
     TypeDefinition typeDefinition = target;
@@ -90,8 +90,8 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
    */
   private boolean hasInterface(
       final TypeDefinition typeDefinition, final Set<TypeDescription> checkedInterfaces) {
-    for (final TypeDefinition interfaceType : safeGetInterfaces(typeDefinition)) {
-      final TypeDescription erasure = safeAsErasure(interfaceType);
+    for (TypeDefinition interfaceType : safeGetInterfaces(typeDefinition)) {
+      TypeDescription erasure = safeAsErasure(interfaceType);
       if (erasure != null) {
         if (checkedInterfaces.add(interfaceType.asErasure())
             && (matcher.matches(interfaceType.asGenericType())

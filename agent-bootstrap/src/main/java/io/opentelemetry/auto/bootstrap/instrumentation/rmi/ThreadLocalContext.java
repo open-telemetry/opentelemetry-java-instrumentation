@@ -31,7 +31,7 @@ public class ThreadLocalContext {
   }
 
   public SpanContext getAndResetContext() {
-    final SpanContext context = local.get();
+    SpanContext context = local.get();
     if (context != null) {
       local.remove();
     }

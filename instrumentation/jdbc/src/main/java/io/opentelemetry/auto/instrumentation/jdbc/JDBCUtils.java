@@ -51,9 +51,9 @@ public abstract class JDBCUtils {
         if (connection != null) {
           // Attempt to work around c3po delegating to an connection that doesn't support
           // unwrapping.
-          final Class<? extends Connection> connectionClass = connection.getClass();
+          Class<? extends Connection> connectionClass = connection.getClass();
           if (connectionClass.getName().equals("com.mchange.v2.c3p0.impl.NewProxyConnection")) {
-            final Field inner = connectionClass.getDeclaredField("inner");
+            Field inner = connectionClass.getDeclaredField("inner");
             inner.setAccessible(true);
             c3poField = inner;
             return (Connection) c3poField.get(connection);

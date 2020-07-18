@@ -76,7 +76,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
       if (throwable != null) {
         // Various agent components end up calling `openConnection` indirectly
         // when loading classes. Avoid tracing these calls.
-        final boolean disableTracing = handler instanceof InternalJarURLHandler;
+        boolean disableTracing = handler instanceof InternalJarURLHandler;
         if (disableTracing) {
           return;
         }
@@ -84,13 +84,13 @@ public class UrlInstrumentation extends Instrumenter.Default {
         String protocol = url.getProtocol();
         protocol = protocol != null ? protocol : "url";
 
-        final Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
+        Span span = TRACER.spanBuilder(protocol + ".request").setSpanKind(CLIENT).startSpan();
 
-        try (final Scope scope = currentContextWith(span)) {
+        try (Scope scope = currentContextWith(span)) {
           span.setAttribute(SemanticAttributes.HTTP_URL.key(), url.toString());
           span.setAttribute(
               SemanticAttributes.NET_PEER_PORT.key(), url.getPort() == -1 ? 80 : url.getPort());
-          final String host = url.getHost();
+          String host = url.getHost();
           if (host != null && !host.isEmpty()) {
             span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), host);
           }
