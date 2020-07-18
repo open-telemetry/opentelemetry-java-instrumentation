@@ -32,7 +32,7 @@ public class TracingCommandListener implements CommandListener {
 
   @Override
   public void commandStarted(final CommandStartedEvent event) {
-    Span span = TRACER.startSpan(event, event.getCommand(), null);
+    Span span = TRACER.startSpan(event, event.getCommand());
     spanMap.put(event.getRequestId(), span);
   }
 

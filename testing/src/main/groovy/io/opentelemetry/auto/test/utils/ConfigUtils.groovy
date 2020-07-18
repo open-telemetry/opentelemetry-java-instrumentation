@@ -17,7 +17,6 @@
 package io.opentelemetry.auto.test.utils
 
 import io.opentelemetry.auto.config.Config
-
 import java.lang.reflect.Modifier
 import java.util.concurrent.Callable
 

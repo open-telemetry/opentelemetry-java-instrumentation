@@ -16,41 +16,37 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceConnectionDatabaseClientTracer.TRACER;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
-import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import net.bytebuddy.asm.Advice;
 
 public class ConnectionFutureAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope onEnter(@Advice.Argument(1) final RedisURI redisURI) {
-    final Span span =
-        LettuceClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-    LettuceClientDecorator.DECORATE.afterStart(span);
-    LettuceClientDecorator.DECORATE.onConnection(span, redisURI);
-    return new SpanWithScope(span, currentContextWith(span));
+  public static void onEnter(
+      @Advice.Argument(1) final RedisURI redisURI,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    span = TRACER.startSpan(redisURI, "CONNECT");
+    scope = TRACER.startScope(span);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Enter final SpanWithScope spanWithScope,
       @Advice.Thrown final Throwable throwable,
-      @Advice.Return final ConnectionFuture<?> connectionFuture) {
-    final Span span = spanWithScope.getSpan();
+      @Advice.Return final ConnectionFuture<?> connectionFuture,
+      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelScope") Scope scope) {
+    scope.close();
+
     if (throwable != null) {
-      LettuceClientDecorator.DECORATE.onError(span, throwable);
-      LettuceClientDecorator.DECORATE.beforeFinish(span);
-      span.end();
-      spanWithScope.closeScope();
+      TRACER.endExceptionally(span, throwable);
       return;
     }
     connectionFuture.handleAsync(new LettuceAsyncBiFunction<>(span));
-    spanWithScope.closeScope();
-    // span finished by LettuceAsyncBiFunction
   }
 }

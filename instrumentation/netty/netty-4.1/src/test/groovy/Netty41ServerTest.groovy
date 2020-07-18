@@ -123,7 +123,7 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> {
   }
 
   @Override
-  String expectedOperationName(String method, ServerEndpoint endpoint) {
+  String expectedServerSpanName(String method, ServerEndpoint endpoint) {
     return "netty.request"
   }
 }

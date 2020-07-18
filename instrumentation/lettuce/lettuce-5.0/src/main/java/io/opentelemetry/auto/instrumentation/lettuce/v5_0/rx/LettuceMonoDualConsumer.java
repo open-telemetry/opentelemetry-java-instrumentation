@@ -16,50 +16,43 @@
 
 package io.opentelemetry.auto.instrumentation.lettuce.v5_0.rx;
 
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceClientDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceClientDecorator.TRACER;
-import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.TRACER;
 
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.auto.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil;
 import io.opentelemetry.trace.Span;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-public class LettuceMonoDualConsumer<R, T, U extends Throwable>
-    implements Consumer<R>, BiConsumer<T, Throwable> {
+public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T, Throwable> {
 
   private Span span = null;
-  private final RedisCommand command;
+  private final RedisCommand<?, ?, ?> command;
   private final boolean finishSpanOnClose;
 
-  public LettuceMonoDualConsumer(final RedisCommand command, final boolean finishSpanOnClose) {
+  public LettuceMonoDualConsumer(
+      final RedisCommand<?, ?, ?> command, final boolean finishSpanOnClose) {
     this.command = command;
     this.finishSpanOnClose = finishSpanOnClose;
   }
 
   @Override
   public void accept(final R r) {
-    span =
-        TRACER
-            .spanBuilder(LettuceInstrumentationUtil.getCommandName(command))
-            .setSpanKind(CLIENT)
-            .startSpan();
-    DECORATE.afterStart(span);
+    span = TRACER.startSpan(null, command);
     if (finishSpanOnClose) {
-      DECORATE.beforeFinish(span);
-      span.end();
+      TRACER.end(span);
     }
   }
 
   @Override
   public void accept(final T t, final Throwable throwable) {
     if (span != null) {
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.end();
+      if (throwable == null) {
+        TRACER.end(span);
+      } else {
+        TRACER.endExceptionally(span, throwable);
+      }
     } else {
       LoggerFactory.getLogger(Mono.class)
           .error(

@@ -16,42 +16,13 @@
 
 package io.opentelemetry.auto.instrumentation.finatra;
 
-import com.twitter.finagle.http.Request;
-import com.twitter.finagle.http.Response;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerDecorator;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Tracer;
-import java.net.URI;
 
-// TODO Finatra does not create server spans, should not use HttpServerDecorator
-public class FinatraDecorator extends HttpServerDecorator<Request, Request, Response> {
+public class FinatraDecorator extends BaseDecorator {
   public static final FinatraDecorator DECORATE = new FinatraDecorator();
 
   public static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.finatra-2.9");
-
-  @Override
-  protected String method(final Request request) {
-    return request.method().name();
-  }
-
-  @Override
-  protected URI url(final Request request) {
-    return URI.create(request.uri());
-  }
-
-  @Override
-  protected String peerHostIP(final Request request) {
-    return request.remoteAddress().getHostAddress();
-  }
-
-  @Override
-  protected Integer peerPort(final Request request) {
-    return request.remotePort();
-  }
-
-  @Override
-  protected Integer status(final Response response) {
-    return response.statusCode();
-  }
 }

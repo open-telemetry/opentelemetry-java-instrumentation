@@ -18,6 +18,7 @@ package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.extensions.auto.annotations.WithSpan;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 
 public class TracedWithSpan {
@@ -39,6 +40,12 @@ public class TracedWithSpan {
 
   @WithSpan
   public String ignored() {
+    TRACER.getCurrentSpan().setAttribute("providerAttr", "Otel");
+    return "hello!";
+  }
+
+  @WithSpan(kind = Kind.PRODUCER)
+  public String oneOfAKind() {
     TRACER.getCurrentSpan().setAttribute("providerAttr", "Otel");
     return "hello!";
   }

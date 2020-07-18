@@ -18,7 +18,6 @@ import io.opentelemetry.auto.instrumentation.api.MoreAttributes
 import io.opentelemetry.auto.test.asserts.TraceAssert
 import io.opentelemetry.auto.test.base.HttpServerTest
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import org.apache.catalina.servlets.DefaultServlet
 import org.glassfish.embeddable.BootstrapProperties
 import org.glassfish.embeddable.Deployer
 import org.glassfish.embeddable.GlassFish
@@ -102,7 +101,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "servlet.context" "/$context"
         "servlet.path" endpoint.path
-        "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }
         if (endpoint.errored) {
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }

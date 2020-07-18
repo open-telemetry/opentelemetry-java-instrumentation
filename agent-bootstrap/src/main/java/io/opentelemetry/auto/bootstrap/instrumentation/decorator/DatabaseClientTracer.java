@@ -16,8 +16,11 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.decorator;
 
+import static io.opentelemetry.context.ContextUtils.withScopedContext;
 import static io.opentelemetry.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.trace.TracingContextUtils.withSpan;
 
+import io.grpc.Context;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.Scope;
@@ -32,12 +35,56 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
 public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
+  // Keeps track of the client span for the current trace.
+  private static final Context.Key<Span> CONTEXT_CLIENT_SPAN_KEY =
+      Context.key("opentelemetry-trace-client-span-key");
+
   private static final String DB_QUERY = "DB Query";
 
   protected final Tracer tracer;
 
   public DatabaseClientTracer() {
     tracer = OpenTelemetry.getTracerProvider().get(getInstrumentationName(), getVersion());
+  }
+
+  public Span startSpan(CONNECTION connection, QUERY query) {
+    String normalizedQuery = normalizeQuery(query);
+
+    final Span span =
+        tracer
+            .spanBuilder(spanName(normalizedQuery))
+            .setSpanKind(CLIENT)
+            .setAttribute(SemanticAttributes.DB_TYPE.key(), dbType())
+            .startSpan();
+
+    if (connection != null) {
+      onConnection(span, connection);
+      onPeerConnection(span, connection);
+    }
+    onStatement(span, normalizedQuery);
+
+    return span;
+  }
+
+  /**
+   * Creates new scoped context with the given span.
+   *
+   * <p>Attaches new context to the request to avoid creating duplicate client spans.
+   */
+  public Scope startScope(Span span) {
+    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
+    Context clientSpanContext = Context.current().withValue(CONTEXT_CLIENT_SPAN_KEY, span);
+    Context newContext = withSpan(span, clientSpanContext);
+    return withScopedContext(newContext);
+  }
+
+  public Span getCurrentSpan() {
+    return tracer.getCurrentSpan();
+  }
+
+  public Span getClientSpan() {
+    final Context context = Context.current();
+    return CONTEXT_CLIENT_SPAN_KEY.get(context);
   }
 
   // TODO make abstract when implemented in all subclasses
@@ -47,28 +94,6 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
 
   private String getVersion() {
     return null;
-  }
-
-  public Scope withSpan(Span span) {
-    return tracer.withSpan(span);
-  }
-
-  public Span startSpan(CONNECTION connection, QUERY query, String originType) {
-    String normalizedQuery = normalizeQuery(query);
-
-    final Span span =
-        tracer
-            .spanBuilder(spanName(normalizedQuery))
-            .setSpanKind(CLIENT)
-            .setAttribute(SemanticAttributes.DB_TYPE.key(), dbType())
-            .setAttribute("span.origin.type", originType)
-            .startSpan();
-
-    onConnection(span, connection);
-    onPeerConnection(span, connection);
-    onStatement(span, normalizedQuery);
-
-    return span;
   }
 
   public void end(Span span) {
@@ -87,17 +112,14 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
   }
 
   /** This should be called when the connection is being used, not when it's created. */
-  public Span onConnection(final Span span, final CONNECTION connection) {
-    assert span != null;
-    if (connection != null) {
-      span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
-      span.setAttribute(SemanticAttributes.DB_INSTANCE.key(), dbInstance(connection));
-      span.setAttribute(SemanticAttributes.DB_URL.key(), dbUrl(connection));
-    }
+  protected Span onConnection(final Span span, final CONNECTION connection) {
+    span.setAttribute(SemanticAttributes.DB_USER.key(), dbUser(connection));
+    span.setAttribute(SemanticAttributes.DB_INSTANCE.key(), dbInstance(connection));
+    span.setAttribute(SemanticAttributes.DB_URL.key(), dbUrl(connection));
     return span;
   }
 
-  public Span onError(final Span span, final Throwable throwable) {
+  protected Span onError(final Span span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
       span.setStatus(Status.UNKNOWN);
@@ -107,7 +129,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
     return span;
   }
 
-  public static void addThrowable(final Span span, final Throwable throwable) {
+  protected static void addThrowable(final Span span, final Throwable throwable) {
     span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
     span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
@@ -121,24 +143,20 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
   }
 
   protected void onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
-    assert span != null;
     if (remoteConnection != null) {
       onPeerConnection(span, remoteConnection.getAddress());
-
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
   }
 
   protected void onPeerConnection(final Span span, final InetAddress remoteAddress) {
-    assert span != null;
     if (remoteAddress != null) {
       span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteAddress.getHostName());
       span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), remoteAddress.getHostAddress());
     }
   }
 
-  public void onStatement(final Span span, final String statement) {
-    assert span != null;
+  protected void onStatement(final Span span, final String statement) {
     span.setAttribute(SemanticAttributes.DB_STATEMENT.key(), statement);
   }
 

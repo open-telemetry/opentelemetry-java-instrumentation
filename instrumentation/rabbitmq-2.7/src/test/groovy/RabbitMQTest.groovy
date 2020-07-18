@@ -399,7 +399,6 @@ class RabbitMQTest extends AgentTestRunner {
             break
           case "basic.deliver":
             "amqp.command" "basic.deliver"
-            "span.origin.type" { it == "RabbitMQTest\$1" || it == "RabbitMQTest\$2" }
             "amqp.exchange" { it == "some-exchange" || it == "some-error-exchange" }
             "message.size" Long
             break

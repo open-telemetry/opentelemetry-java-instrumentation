@@ -58,7 +58,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
 
     final HttpRequest request = (HttpRequest) msg.getMessage();
 
-    Span span = TRACER.startSpan(request, ctx.getChannel(), "netty.request", null);
+    Span span = TRACER.startSpan(request, ctx.getChannel(), "netty.request");
     try (final Scope ignored = TRACER.startScope(span, channelTraceContext)) {
       ctx.sendUpstream(msg);
     } catch (final Throwable throwable) {

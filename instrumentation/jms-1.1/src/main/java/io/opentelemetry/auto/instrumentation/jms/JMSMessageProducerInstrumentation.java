@@ -109,7 +109,6 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
           TRACER
               .spanBuilder(DECORATE.spanNameForProducer(message, defaultDestination))
               .setSpanKind(PRODUCER)
-              .setAttribute("span.origin.type", producer.getClass().getName())
               .startSpan();
       DECORATE.afterStart(span);
 
@@ -141,8 +140,7 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
         @Advice.Argument(0) final Destination destination,
-        @Advice.Argument(1) final Message message,
-        @Advice.This final MessageProducer producer) {
+        @Advice.Argument(1) final Message message) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
         return null;
@@ -152,7 +150,6 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
           TRACER
               .spanBuilder(DECORATE.spanNameForProducer(message, destination))
               .setSpanKind(PRODUCER)
-              .setAttribute("span.origin.type", producer.getClass().getName())
               .startSpan();
       DECORATE.afterStart(span);
 
