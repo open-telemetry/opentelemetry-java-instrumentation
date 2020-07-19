@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecorator
-import io.opentelemetry.auto.test.AgentTestRunner
+package io.opentelemetry.instrumentation.awssdk.v2_2
+
+import io.opentelemetry.auto.test.InstrumentationSpecification
 import io.opentelemetry.trace.attributes.SemanticAttributes
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.core.client.builder.SdkClientBuilder
 import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
@@ -52,7 +54,7 @@ import java.util.concurrent.atomic.AtomicReference
 import static io.opentelemetry.auto.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.trace.Span.Kind.CLIENT
 
-class Aws2ClientTest extends AgentTestRunner {
+abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER = StaticCredentialsProvider
     .create(AwsBasicCredentials.create("my-access-key", "my-secret-key"))
@@ -70,8 +72,11 @@ class Aws2ClientTest extends AgentTestRunner {
     }
   }
 
-  def "send #operation request with builder {#builder.class.getName()} mocked response"() {
+  abstract void configureSdkClient(SdkClientBuilder builder)
+
+  def "send #operation request with builder #builder.class.getName() mocked response"() {
     setup:
+    configureSdkClient(builder)
     def client = builder
       .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
@@ -159,8 +164,9 @@ class Aws2ClientTest extends AgentTestRunner {
         """
   }
 
-  def "send #operation async request with builder {#builder.class.getName()} mocked response"() {
+  def "send #operation async request with builder #builder.class.getName() mocked response"() {
     setup:
+    configureSdkClient(builder)
     def client = builder
       .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
@@ -176,7 +182,7 @@ class Aws2ClientTest extends AgentTestRunner {
     expect:
     response != null
 
-    assertTraces(2) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "$service.$operation"
@@ -205,24 +211,6 @@ class Aws2ClientTest extends AgentTestRunner {
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             }
-          }
-        }
-      }
-      // TODO: this should be part of the same trace but netty instrumentation doesn't cooperate
-      trace(1, 1) {
-        span(0) {
-          operationName expectedOperationName(method)
-          spanKind CLIENT
-          errored false
-          parent()
-          attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
           }
         }
       }
@@ -266,34 +254,9 @@ class Aws2ClientTest extends AgentTestRunner {
         """
   }
 
-  def "client can be customized by user"() {
-    setup:
-    def client = DynamoDbClient.builder()
-      .endpointOverride(server.address)
-      .region(Region.AP_NORTHEAST_1)
-      .credentialsProvider(CREDENTIALS_PROVIDER)
-      .overrideConfiguration {
-        it.putHeader("x-name", "value")
-      }
-      .build()
-
-    when:
-    responseBody.set("")
-    client.createTable(CreateTableRequest.builder().tableName("sometable").build())
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {}
-      }
-    }
-    server.lastRequest.headers.get("x-name") == "value"
-
-    cleanup:
-    server.close()
-  }
-
-  // TODO(anuraaga): Add events for retries.
+  // TODO(anuraaga): Without AOP instrumentation of the HTTP client, we cannot model retries as
+  // spans because of https://github.com/aws/aws-sdk-java-v2/issues/1741. We should at least tweak
+  // the instrumentation to add Events for retries instead.
   def "timeout and retry errors not captured"() {
     setup:
     def server = httpServer {
@@ -304,7 +267,9 @@ class Aws2ClientTest extends AgentTestRunner {
         }
       }
     }
-    def client = S3Client.builder()
+    def builder = S3Client.builder()
+    configureSdkClient(builder)
+    def client = builder
       .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
@@ -346,4 +311,5 @@ class Aws2ClientTest extends AgentTestRunner {
   String expectedOperationName(String method) {
     return method != null ? "HTTP $method" : HttpClientDecorator.DEFAULT_SPAN_NAME
   }
+
 }

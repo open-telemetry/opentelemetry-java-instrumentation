@@ -25,7 +25,6 @@ dependencies {
 
   implementation project(':auto-tooling')
 
-  testImplementation project(':testing')
   testImplementation project(':instrumentation:java-concurrent')
   testImplementation group: 'com.squareup.okhttp', name: 'okhttp', version: '2.2.0'
 

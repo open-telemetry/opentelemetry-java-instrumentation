@@ -171,7 +171,6 @@ public abstract class AgentTestRunner extends AgentSpecification {
   public void beforeTest() {
     assert !getTestTracer().getCurrentSpan().getContext().isValid()
         : "Span is active before test has started: " + getTestTracer().getCurrentSpan();
-    log.debug("Starting test: '{}'", getSpecificationContext().getCurrentIteration().getName());
     TEST_WRITER.clear();
   }
 
