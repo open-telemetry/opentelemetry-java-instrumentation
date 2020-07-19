@@ -17,12 +17,17 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.exporters.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.MultiSpanProcessor;
+import io.opentelemetry.sdk.trace.Samplers;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.trace.Tracer;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -31,29 +36,47 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Create an {@link io.opentelemetry.trace.Tracer}.
  *
- * <p>If {@code TracerProperties.loggingExporterIsEnabled=True}: Create a simple span processor
- * using the LoggingSpanExporter
+ * <p>Adds Open Telemetry SpanProcessors to the tracer provider using available exporter beans
+ *
+ * <p>Sets Sampler probability
  */
 @Configuration
 @EnableConfigurationProperties(TracerProperties.class)
 public class TracerAutoConfiguration {
 
-  @Autowired TracerProperties tracerProperties;
-
   @Bean
   @ConditionalOnMissingBean
-  public Tracer otelTracer() throws Exception {
+  public Tracer otelTracer(
+      TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider)
+      throws Exception {
     Tracer tracer = OpenTelemetry.getTracer(tracerProperties.getName());
-    setLoggingExporter();
+
+    List<SpanExporter> spanExporters = spanExportersProvider.getIfAvailable();
+    if (spanExporters == null || spanExporters.isEmpty()) {
+      return tracer;
+    }
+
+    addSpanProcessors(spanExporters);
+    setSampler(tracerProperties);
+
     return tracer;
   }
 
-  private void setLoggingExporter() {
-    if (!tracerProperties.isLoggingExporterEnabled()) {
-      return;
-    }
+  private void addSpanProcessors(List<SpanExporter> spanExporters) {
 
-    SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
-    OpenTelemetrySdk.getTracerProvider().addSpanProcessor(logProcessor);
+    List<SpanProcessor> spanProcessors =
+        spanExporters.stream()
+            .map(spanExporter -> SimpleSpanProcessor.newBuilder(spanExporter).build())
+            .collect(Collectors.toList());
+
+    OpenTelemetrySdk.getTracerProvider()
+        .addSpanProcessor(MultiSpanProcessor.create(spanProcessors));
+  }
+
+  private void setSampler(TracerProperties tracerProperties) {
+    TraceConfig.getDefault()
+        .toBuilder()
+        .setSampler(Samplers.probability(tracerProperties.getSamplerProbability()))
+        .build();
   }
 }

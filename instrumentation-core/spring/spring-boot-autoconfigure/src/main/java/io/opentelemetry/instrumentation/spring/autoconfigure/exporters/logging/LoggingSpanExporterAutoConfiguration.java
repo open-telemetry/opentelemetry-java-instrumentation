@@ -14,35 +14,32 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
+package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
-import io.opentelemetry.trace.Tracer;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.opentelemetry.exporters.logging.LoggingSpanExporter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 
-/**
- * Configures {@link RestTemplate} for tracing.
- *
- * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization
- */
+/** Create LoggingSpanExporter */
 @Configuration
-@ConditionalOnClass(RestTemplate.class)
-@EnableConfigurationProperties(HttpClientsProperties.class)
+@EnableConfigurationProperties(LoggingSpanExporterProperties.class)
+@AutoConfigureBefore(TracerAutoConfiguration.class)
 @ConditionalOnProperty(
-    prefix = "opentelemetry.trace.httpclients",
+    prefix = "opentelemetry.trace.exporter.logging",
     name = "enabled",
     matchIfMissing = true)
-public class RestTemplateAutoConfiguration {
+@ConditionalOnClass(LoggingSpanExporter.class)
+public class LoggingSpanExporterAutoConfiguration {
 
   @Bean
-  @Autowired
-  public RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(final Tracer tracer) {
-    return new RestTemplateBeanPostProcessor(tracer);
+  @ConditionalOnMissingBean
+  public LoggingSpanExporter otelLoggingSpanExporter() {
+    return new LoggingSpanExporter();
   }
 }
