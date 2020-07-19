@@ -19,9 +19,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for JaegerExporter */
+/** Configuration for JaegerSpanExporter */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.jaeger")
-public class JaegerExporterProperties {
+public class JaegerSpanExporterProperties {
 
   private boolean enabled = true;
   private String serviceName = "otel-spring-boot-jaeger-exporter";

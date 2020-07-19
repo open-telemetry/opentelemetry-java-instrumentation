@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Create JaegerExporter */
+/** Creates OTLP Exporter bean */
 @Configuration
 @AutoConfigureBefore(TracerAutoConfiguration.class)
 @EnableConfigurationProperties(OtlpGrpcSpanExporterProperties.class)

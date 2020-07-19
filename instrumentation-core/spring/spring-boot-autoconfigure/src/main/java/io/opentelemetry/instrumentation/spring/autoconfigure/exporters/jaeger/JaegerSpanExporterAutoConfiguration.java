@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 /** Create JaegerExporter */
 @Configuration
 @AutoConfigureBefore(TracerAutoConfiguration.class)
-@EnableConfigurationProperties(JaegerExporterProperties.class)
+@EnableConfigurationProperties(JaegerSpanExporterProperties.class)
 @ConditionalOnProperty(
     prefix = "opentelemetry.trace.exporter.jaeger",
     name = "enabled",
@@ -42,17 +42,17 @@ public class JaegerSpanExporterAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   public JaegerGrpcSpanExporter otelJaegerSpanExporter(
-      JaegerExporterProperties jaegerExporterProperties) {
+      JaegerSpanExporterProperties jaegerSpanExporterProperties) {
 
     ManagedChannel channel =
         ManagedChannelBuilder.forAddress(
-                jaegerExporterProperties.getHost(), jaegerExporterProperties.getPort())
+                jaegerSpanExporterProperties.getHost(), jaegerSpanExporterProperties.getPort())
             .usePlaintext()
             .build();
 
     return JaegerGrpcSpanExporter.newBuilder()
-        .setServiceName(jaegerExporterProperties.getServiceName())
-        .setDeadlineMs(jaegerExporterProperties.getDeadline().toMillis())
+        .setServiceName(jaegerSpanExporterProperties.getServiceName())
+        .setDeadlineMs(jaegerSpanExporterProperties.getDeadline().toMillis())
         .setChannel(channel)
         .build();
   }
