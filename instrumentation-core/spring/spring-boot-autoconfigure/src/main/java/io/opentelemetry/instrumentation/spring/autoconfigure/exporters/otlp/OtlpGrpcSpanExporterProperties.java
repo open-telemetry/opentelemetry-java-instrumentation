@@ -19,7 +19,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for JaegerExporter */
+/** Configuration for OTLPGrpcSpanExporter */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.otlp")
 public class OtlpGrpcSpanExporterProperties {
 
