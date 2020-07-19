@@ -59,8 +59,14 @@ afterEvaluate {
 }
 
 tasks.withType(Test) {
-  useJUnit {
-    excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+  if (it.name == 'test') {
+    useJUnit {
+      excludeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+    }
+  } else {
+    useJUnit {
+      includeCategories 'io.opentelemetry.auto.test.BytecodeTests'
+    }
   }
 }
 

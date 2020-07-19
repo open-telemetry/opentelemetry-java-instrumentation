@@ -260,6 +260,7 @@ def addTestRule(String testTaskName) {
 }
 
 addTestRule("test")
+addTestRule("integrationTest")
 addTestRule("latestDepTest")
 
 tasks.withType(Test).configureEach {

@@ -15,6 +15,7 @@
  */
 
 import io.opentelemetry.auto.test.AgentTestRunner
+import io.opentelemetry.auto.test.utils.ConfigUtils
 import listener.Config
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -27,6 +28,18 @@ import static JMS2Test.consumerSpan
 import static JMS2Test.producerSpan
 
 class SpringListenerJMS2Test extends AgentTestRunner {
+
+  static {
+    ConfigUtils.updateConfig {
+      System.setProperty("ota.trace.classes.exclude", "org.springframework.jms.config.JmsListenerEndpointRegistry\$AggregatingCallback,org.springframework.context.support.DefaultLifecycleProcessor\$1")
+    }
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.updateConfig {
+      System.clearProperty("ota.trace.classes.exclude")
+    }
+  }
 
   def "receiving message in spring listener generates spans"() {
     setup:
@@ -45,5 +58,8 @@ class SpringListenerJMS2Test extends AgentTestRunner {
         consumerSpan(it, 0, "queue/SpringListenerJMS2", false, HornetQMessageConsumer, traces[0][0])
       }
     }
+
+    cleanup:
+    context.close()
   }
 }
