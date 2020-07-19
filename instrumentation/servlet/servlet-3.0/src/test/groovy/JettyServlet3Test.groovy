@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import javax.servlet.Servlet
 import javax.servlet.http.HttpServletRequest
