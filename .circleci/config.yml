@@ -201,7 +201,6 @@ workflows:
       - default_test_job:
           requires:
             - build
-          prefixTestTask: true
           name: test_8
           testTask: testJava8 integrationTestJava8
           filters:
