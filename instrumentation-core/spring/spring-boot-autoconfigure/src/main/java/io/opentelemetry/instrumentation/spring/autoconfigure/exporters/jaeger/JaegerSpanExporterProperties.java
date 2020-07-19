@@ -19,22 +19,15 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Configuration for {@link JaegerSpanExporter}
- *
- * <p>Get Exporter Service Name
- *
- * <p>Get Exporter Endpoint
- *
- * <p>Get max wait time for Collector to process Span Batches
- */
+/** Configuration for JaegerSpanExporter */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.jaeger")
-public final class JaegerSpanExporterProperties {
+public class JaegerSpanExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = "unknown";
-  private String endpoint = "localhost:14250";
-  private Duration spanTimeout = Duration.ofSeconds(1);
+  private String serviceName = "otel-spring-boot-jaeger-exporter";
+  private String host = "localhost";
+  private int port = 14250;
+  private Duration deadline = Duration.ofMillis(1000L);
 
   public boolean isEnabled() {
     return enabled;
@@ -52,19 +45,27 @@ public final class JaegerSpanExporterProperties {
     this.serviceName = serviceName;
   }
 
-  public String getEndpoint() {
-    return endpoint;
+  public String getHost() {
+    return host;
   }
 
-  public void setEndpoint(String endpoint) {
-    this.endpoint = endpoint;
+  public void setHost(String host) {
+    this.host = host;
   }
 
-  public Duration getSpanTimeout() {
-    return spanTimeout;
+  public int getPort() {
+    return port;
   }
 
-  public void setSpanTimeout(Duration spanTimeout) {
-    this.spanTimeout = spanTimeout;
+  public void setPort(int port) {
+    this.port = port;
+  }
+
+  public Duration getDeadline() {
+    return deadline;
+  }
+
+  public void setDeadline(Duration deadline) {
+    this.deadline = deadline;
   }
 }
