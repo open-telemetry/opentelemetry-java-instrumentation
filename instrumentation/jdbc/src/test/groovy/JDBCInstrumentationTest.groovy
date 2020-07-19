@@ -21,7 +21,6 @@ import io.opentelemetry.auto.instrumentation.jdbc.JDBCUtils
 import io.opentelemetry.auto.test.AgentTestRunner
 import io.opentelemetry.auto.test.utils.ConfigUtils
 import io.opentelemetry.trace.attributes.SemanticAttributes
-import io.opentelemetry.auto.test.utils.ConfigUtils
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
