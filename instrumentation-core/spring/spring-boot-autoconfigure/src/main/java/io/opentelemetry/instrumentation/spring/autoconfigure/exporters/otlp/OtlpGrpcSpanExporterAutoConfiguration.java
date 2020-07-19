@@ -28,11 +28,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configures {@link OtlpGrpcSpanExporter} for tracing.
- *
- * <p>Initializes {@link OtlpGrpcSpanExporter} bean if bean is missing.
- */
+/** Create JaegerExporter */
 @Configuration
 @AutoConfigureBefore(TracerAutoConfiguration.class)
 @EnableConfigurationProperties(OtlpGrpcSpanExporterProperties.class)
@@ -48,13 +44,14 @@ public class OtlpGrpcSpanExporterAutoConfiguration {
   public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(
       OtlpGrpcSpanExporterProperties otlpGrpcSpanExporterProperties) {
     ManagedChannel channel =
-        ManagedChannelBuilder.forTarget(otlpGrpcSpanExporterProperties.getEndpoint())
+        ManagedChannelBuilder.forAddress(
+                otlpGrpcSpanExporterProperties.getHost(), otlpGrpcSpanExporterProperties.getPort())
             .usePlaintext()
             .build();
 
     return OtlpGrpcSpanExporter.newBuilder()
         .setChannel(channel)
-        .setDeadlineMs(otlpGrpcSpanExporterProperties.getSpanTimeout().toMillis())
+        .setDeadlineMs(otlpGrpcSpanExporterProperties.getDeadline().toMillis())
         .build();
   }
 }

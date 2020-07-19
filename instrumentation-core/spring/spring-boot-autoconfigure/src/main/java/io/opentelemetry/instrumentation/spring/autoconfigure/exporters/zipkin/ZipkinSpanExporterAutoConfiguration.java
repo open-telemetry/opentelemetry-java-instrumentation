@@ -26,11 +26,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configures {@link ZipkinSpanExporter} for tracing.
- *
- * <p>Initializes {@link ZipkinSpanExporter} bean if bean is missing.
- */
+/** Create JaegerExporter */
 @Configuration
 @AutoConfigureBefore(TracerAutoConfiguration.class)
 @EnableConfigurationProperties(ZipkinSpanExporterProperties.class)
@@ -48,7 +44,11 @@ public class ZipkinSpanExporterAutoConfiguration {
 
     return ZipkinSpanExporter.newBuilder()
         .setServiceName(zipkinSpanExporterProperties.getServiceName())
-        .setEndpoint(zipkinSpanExporterProperties.getEndpoint())
+        .setEndpoint(getEndpoint(zipkinSpanExporterProperties))
         .build();
+  }
+
+  private String getEndpoint(ZipkinSpanExporterProperties zipkinSpanExporterProperties) {
+    return zipkinSpanExporterProperties.getHost() + ":" + zipkinSpanExporterProperties.getPort();
   }
 }

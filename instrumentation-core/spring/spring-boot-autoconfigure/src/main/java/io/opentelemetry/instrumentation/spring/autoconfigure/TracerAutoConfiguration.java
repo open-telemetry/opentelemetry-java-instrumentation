@@ -36,10 +36,9 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Create {@link io.opentelemetry.trace.Tracer} bean if bean is missing.
  *
- * <p>Adds span exporter beans to the active tracer provider {@code
- * OpenTelemetrySdk.getTracerProvider()}
+ * <p>Adds Open Telemetry SpanProcessors to the tracer provider using available exporter beans
  *
- * <p>Updates the sampler probability in the active {@link TraceConfig}
+ * <p>Sets Sampler probability
  */
 @Configuration
 @EnableConfigurationProperties(TracerProperties.class)
@@ -64,6 +63,7 @@ public class TracerAutoConfiguration {
   }
 
   private void addSpanProcessors(List<SpanExporter> spanExporters) {
+
     List<SpanProcessor> spanProcessors =
         spanExporters.stream()
             .map(spanExporter -> SimpleSpanProcessor.newBuilder(spanExporter).build())
@@ -74,13 +74,9 @@ public class TracerAutoConfiguration {
   }
 
   private void setSampler(TracerProperties tracerProperties) {
-    TraceConfig updatedTraceConfig =
-        OpenTelemetrySdk.getTracerProvider()
-            .getActiveTraceConfig()
-            .toBuilder()
-            .setSampler(Samplers.probability(tracerProperties.getSamplerProbability()))
-            .build();
-
-    OpenTelemetrySdk.getTracerProvider().updateActiveTraceConfig(updatedTraceConfig);
+    TraceConfig.getDefault()
+        .toBuilder()
+        .setSampler(Samplers.probability(tracerProperties.getSamplerProbability()))
+        .build();
   }
 }
