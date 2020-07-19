@@ -8,6 +8,9 @@ ext {
 }
 
 repositories {
+  mavenLocal()
+  jcenter()
+  mavenCentral()
   ivy {
     url 'https://download.jboss.org/'
     patternLayout {

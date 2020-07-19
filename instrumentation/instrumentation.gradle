@@ -2,6 +2,8 @@
 buildscript {
 
   repositories {
+    mavenLocal()
+    jcenter()
     mavenCentral()
   }
 
@@ -75,10 +77,6 @@ shadowJar {
   mergeServiceFiles()
 
   exclude '**/module-info.class'
-
-  dependencies {
-    exclude(dependency("org.projectlombok:lombok:$versions.lombok"))
-  }
 
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate 'org.slf4j', 'io.opentelemetry.auto.slf4j'

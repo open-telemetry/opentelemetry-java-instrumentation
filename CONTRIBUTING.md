@@ -316,9 +316,6 @@ from command line.
 This ensures that Gradle task avoidance and build cache work properly and can greatly reduce
 build time.
 
-Required plugins:
-* [Lombok](https://plugins.jetbrains.com/plugin/6317-lombok-plugin)
-
 Suggested plugins and settings:
 
 * Editor > Code Style > Java/Groovy > Imports
@@ -334,11 +331,11 @@ Suggested plugins and settings:
 
 Approvers:
 
-- [Anuraag Agrawal](https://github.com/anuraaga), AWS
 - [John Watson](https://github.com/jkwatson), New Relic
 
 Maintainers:
 
+- [Anuraag Agrawal](https://github.com/anuraaga), AWS
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 - [Tyler Benson](https://github.com/tylerbenson), DataDog

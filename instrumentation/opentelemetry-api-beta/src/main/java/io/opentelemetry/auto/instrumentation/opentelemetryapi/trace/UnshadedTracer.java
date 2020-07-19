@@ -16,12 +16,10 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
-import lombok.extern.slf4j.Slf4j;
 import unshaded.io.opentelemetry.context.Scope;
 import unshaded.io.opentelemetry.trace.Span;
 import unshaded.io.opentelemetry.trace.Tracer;
 
-@Slf4j
 class UnshadedTracer implements Tracer {
 
   private final io.opentelemetry.trace.Tracer shadedTracer;

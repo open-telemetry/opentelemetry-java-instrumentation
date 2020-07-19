@@ -43,6 +43,13 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
 
+External exporter jar can be specified via `ota.exporter.jar` system property:
+```
+java -javaagent:path/to/opentelemetry-javaagent-all.jar \
+     -Dota.exporter.jar=path/to/external-exporter.jar
+     -jar myapp.jar
+```
+
 ### Configuration parameters (subject to change!)
 
 Note: These parameter names are very likely to change over time, so please check
@@ -171,7 +178,7 @@ provide the path to a JAR file including an SPI implementation using the system 
 | [Play](https://github.com/playframework/playframework)                                                                                | 2.3+ (not including 2.8.x yet) |
 | [Play WS](https://github.com/playframework/play-ws)                                                                                   | 1.0+                           |
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
-| [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.5+                           |
+| [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |

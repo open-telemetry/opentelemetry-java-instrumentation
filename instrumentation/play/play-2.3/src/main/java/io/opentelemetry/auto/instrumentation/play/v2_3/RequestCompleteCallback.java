@@ -16,15 +16,18 @@
 
 package io.opentelemetry.auto.instrumentation.play.v2_3;
 
-import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayHttpServerDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.play.v2_3.PlayDecorator.DECORATE;
 
 import io.opentelemetry.trace.Span;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import play.api.mvc.Result;
 import scala.util.Try;
 
-@Slf4j
 public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try<Result>, Object> {
+
+  private static final Logger log = LoggerFactory.getLogger(RequestCompleteCallback.class);
+
   private final Span span;
 
   public RequestCompleteCallback(final Span span) {
@@ -36,8 +39,6 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
     try {
       if (result.isFailure()) {
         DECORATE.onError(span, result.failed().get());
-      } else {
-        DECORATE.onResponse(span, result.get());
       }
       DECORATE.beforeFinish(span);
     } catch (final Throwable t) {

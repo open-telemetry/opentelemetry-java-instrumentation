@@ -16,17 +16,15 @@
 
 package io.opentelemetry.auto.instrumentation.play.v2_4;
 
-import static io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator.extract;
-import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayHeaders.GETTER;
-import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator.DECORATE;
-import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayHttpServerDecorator.TRACER;
+import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayDecorator.DECORATE;
+import static io.opentelemetry.auto.instrumentation.play.v2_4.PlayDecorator.TRACER;
 import static io.opentelemetry.trace.TracingContextUtils.currentContextWith;
 
 import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.trace.Span;
-import io.opentelemetry.trace.SpanContext;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
+import play.api.mvc.Headers;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.concurrent.Future;
@@ -34,19 +32,8 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
-    final Span.Builder spanBuilder = TRACER.spanBuilder("play.request");
-    if (!TRACER.getCurrentSpan().getContext().isValid()) {
-      final SpanContext extractedContext = extract(req.headers(), GETTER);
-      if (extractedContext.isValid()) {
-        spanBuilder.setParent(extractedContext);
-      }
-    } else {
-      // An upstream framework (e.g. akka-http, netty) has already started the span.
-      // Do not extract the context.
-    }
-    final Span span = spanBuilder.startSpan();
+    final Span span = TRACER.spanBuilder("play.request").startSpan();
     DECORATE.afterStart(span);
-    DECORATE.onConnection(span, req);
 
     return new SpanWithScope(span, currentContextWith(span));
   }
@@ -61,7 +48,7 @@ public class PlayAdvice {
     final Span playControllerSpan = playControllerScope.getSpan();
 
     // Call onRequest on return after tags are populated.
-    DECORATE.onRequest(playControllerSpan, req);
+    DECORATE.updateSpanName(playControllerSpan, req);
 
     if (throwable == null) {
       responseFuture.onComplete(
@@ -77,11 +64,14 @@ public class PlayAdvice {
 
     final Span rootSpan = TRACER.getCurrentSpan();
     // set the span name on the upstream akka/netty span
-    DECORATE.onRequest(rootSpan, req);
+    DECORATE.updateSpanName(rootSpan, req);
   }
 
-  // Unused method for muzzle to allow only 2.4-2.5
-  public static void muzzleCheck() {
+  // Unused method for muzzle
+  public static void muzzleCheck(Headers headers) {
+    // This distinguishes between 2.3 and 2.4, excluding the former
+    headers.get("aKey");
+    // system() method was removed in 2.6, so this line prevents from applying in play 2.6
     play.libs.Akka.system();
   }
 }
