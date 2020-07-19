@@ -21,6 +21,7 @@ class KHttpClientTest extends HttpClientTest {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+    headers.put("User-Agent", "khttp")
     // khttp applies the same timeout for both connect and read
     def timeoutSeconds = CONNECT_TIMEOUT_MS / 1000
     def response = KHttp.request(method, uri.toString(), headers, Collections.emptyMap(), null, null, null, null, timeoutSeconds)
@@ -33,5 +34,10 @@ class KHttpClientTest extends HttpClientTest {
   @Override
   boolean testCircularRedirects() {
     return false
+  }
+
+  @Override
+  String userAgent() {
+    return "khttp"
   }
 }
