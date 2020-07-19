@@ -11,9 +11,8 @@ apply from: "$rootDir/gradle/publish.gradle"
 sourceCompatibility = '8'
 
 dependencies {
-  annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: springbootVersion
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: springbootVersion
-  
+  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
+  implementation "org.springframework.boot:spring-boot-starter-validation"
   
   testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springbootVersion) {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
@@ -34,6 +33,14 @@ dependencies {
   compileOnly deps.opentelemetryZipkin
   implementation group: 'io.zipkin.reporter2', name: 'zipkin-sender-okhttp3', version: '2.12.2'
   
+  api deps.opentelemetryApi 
+  
+  compileOnly deps.opentelemetryJaeger
+  compileOnly deps.opentelemetryOtlp
+  implementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
+  implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.24.0'
+  
+  compileOnly deps.opentelemetryZipkin
   compileOnly "io.opentelemetry:opentelemetry-exporters-logging:0.5.0"
 }
 

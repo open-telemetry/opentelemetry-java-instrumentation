@@ -19,19 +19,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Configuration for {@link OTLPGrpcSpanExporter}
- *
- * <p>Get Exporter Service Name {@link getServiceName()}
- *
- * <p>Get Exporter Host Name {@link getHost()}
- *
- * <p>Get Exporter Port {@link getPort()}
- *
- * <p>Get max wait time for Collector to process Span Batches {@link getDeadline()}
- */
+/** Configuration for JaegerExporter */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.otlp")
-public final class OtlpGrpcSpanExporterProperties {
+public class OtlpGrpcSpanExporterProperties {
 
   private boolean enabled = true;
   private String serviceName = "otel-spring-boot-zipkin-otlp";
