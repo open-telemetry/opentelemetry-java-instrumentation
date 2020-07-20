@@ -88,6 +88,8 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key()}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
+        "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key()}" { it == null || it == getContentLength(endpoint) }
+        // Optional
         if (context) {
           "servlet.context" "/$context"
         }
@@ -102,6 +104,20 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         }
       }
     }
+  }
+
+  protected static String getContentLength(ServerEndpoint endpoint) {
+    switch (endpoint.path) {
+      case SUCCESS.path:
+      case QUERY_PARAM.path:
+        return "${endpoint.body.length()}"
+      case ERROR.path:
+      case EXCEPTION.path:
+      case REDIRECT.path:
+      case AUTH_REQUIRED.path:
+        return "0"
+    }
+    return "0"
   }
 
   //Simple class name plus method name of the entry point of the given servlet container.
