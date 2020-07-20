@@ -30,7 +30,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   @Override
   public Map<String, String> supplyContextData() {
     Span currentSpan = TracingContextUtils.getCurrentSpan();
-    if (currentSpan == null || !currentSpan.getContext().isValid()) {
+    if (!currentSpan.getContext().isValid()) {
       return Collections.emptyMap();
     }
 
