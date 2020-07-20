@@ -61,8 +61,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope startMethod(@Advice.This final Query query) {
 
-      ContextStore<Query, Span> contextStore =
-          InstrumentationContext.get(Query.class, Span.class);
+      ContextStore<Query, Span> contextStore = InstrumentationContext.get(Query.class, Span.class);
 
       return SessionMethodUtils.startScopeFrom(
           contextStore, query, query.getQueryString(), null, true);

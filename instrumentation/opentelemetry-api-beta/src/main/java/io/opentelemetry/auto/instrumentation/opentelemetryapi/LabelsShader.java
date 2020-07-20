@@ -28,8 +28,7 @@ import unshaded.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
 public class LabelsShader {
 
   public static Labels shade(unshaded.io.opentelemetry.common.Labels labels) {
-    io.opentelemetry.common.Labels.Builder builder =
-        io.opentelemetry.common.Labels.newBuilder();
+    io.opentelemetry.common.Labels.Builder builder = io.opentelemetry.common.Labels.newBuilder();
     labels.forEach(new Consumer(builder));
     return builder.build();
   }

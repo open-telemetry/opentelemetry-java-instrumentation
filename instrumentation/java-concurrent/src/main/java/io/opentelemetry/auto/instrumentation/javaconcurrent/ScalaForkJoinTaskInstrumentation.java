@@ -100,8 +100,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
       if (thiz instanceof Runnable) {
         ContextStore<Runnable, State> runnableContextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        SpanWithScope newScope =
-            AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
+        SpanWithScope newScope = AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.closeScope();
@@ -113,8 +112,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
       if (thiz instanceof Callable) {
         ContextStore<Callable, State> callableContextStore =
             InstrumentationContext.get(Callable.class, State.class);
-        SpanWithScope newScope =
-            AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
+        SpanWithScope newScope = AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.closeScope();

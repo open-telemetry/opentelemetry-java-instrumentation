@@ -70,8 +70,7 @@ public class MethodsConfigurationParser {
         String method = splitClassMethod[1].trim();
         String methodNames = method.substring(0, method.length() - 1);
         String[] splitMethodNames = methodNames.split(",", -1);
-        Set<String> trimmedMethodNames =
-            Sets.newHashSetWithExpectedSize(splitMethodNames.length);
+        Set<String> trimmedMethodNames = Sets.newHashSetWithExpectedSize(splitMethodNames.length);
         for (String methodName : splitMethodNames) {
           String trimmedMethodName = methodName.trim();
           if (!trimmedMethodName.isEmpty()) {

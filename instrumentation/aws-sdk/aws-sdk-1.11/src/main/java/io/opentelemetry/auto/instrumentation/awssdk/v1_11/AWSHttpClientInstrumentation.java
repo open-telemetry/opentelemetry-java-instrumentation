@@ -112,8 +112,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           @Advice.FieldValue("request") final Request<?> request,
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
-          SpanWithScope spanWithScope =
-              request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
+          SpanWithScope spanWithScope = request.getHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY);
           if (spanWithScope != null) {
             request.addHandlerContext(SPAN_SCOPE_PAIR_CONTEXT_KEY, null);
             Span span = spanWithScope.getSpan();

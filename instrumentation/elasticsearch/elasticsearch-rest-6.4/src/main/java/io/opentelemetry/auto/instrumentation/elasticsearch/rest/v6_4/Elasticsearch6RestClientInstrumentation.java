@@ -75,8 +75,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener) {
 
-      Span span =
-          TRACER.spanBuilder(request.getMethod() + " " + request.getEndpoint()).startSpan();
+      Span span = TRACER.spanBuilder(request.getMethod() + " " + request.getEndpoint()).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request.getMethod(), request.getEndpoint());
 

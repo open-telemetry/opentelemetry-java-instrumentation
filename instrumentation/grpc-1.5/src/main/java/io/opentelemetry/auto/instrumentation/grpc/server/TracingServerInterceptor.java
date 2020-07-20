@@ -57,8 +57,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     spanBuilder.setParent(extract(headers, GETTER));
     Span span = spanBuilder.startSpan();
     SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
-    InetSocketAddress iAddr =
-        addr instanceof InetSocketAddress ? (InetSocketAddress) addr : null;
+    InetSocketAddress iAddr = addr instanceof InetSocketAddress ? (InetSocketAddress) addr : null;
     GrpcHelper.prepareSpan(span, methodName, iAddr, true);
 
     DECORATE.afterStart(span);
@@ -69,8 +68,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       try {
         // Wrap the server call so that we can decorate the span
         // with the resulting status
-        TracingServerCall<ReqT, RespT> tracingServerCall =
-            new TracingServerCall<>(span, call);
+        TracingServerCall<ReqT, RespT> tracingServerCall = new TracingServerCall<>(span, call);
 
         // call other interceptors
         result = next.startCall(tracingServerCall, headers);

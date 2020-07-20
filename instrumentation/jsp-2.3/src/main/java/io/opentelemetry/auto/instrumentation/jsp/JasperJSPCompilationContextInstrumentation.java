@@ -67,8 +67,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
         @Advice.This final JspCompilationContext jspCompilationContext) {
-      Span span =
-          TRACER.spanBuilder(DECORATE.spanNameOnCompile(jspCompilationContext)).startSpan();
+      Span span = TRACER.spanBuilder(DECORATE.spanNameOnCompile(jspCompilationContext)).startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));
     }
