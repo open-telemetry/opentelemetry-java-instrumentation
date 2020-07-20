@@ -62,8 +62,7 @@ public class ExceptionHandlers {
               Label handlerExit = new Label();
 
               // Frames are only meaningful for class files in version 6 or later.
-              boolean frames =
-                  context.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
+              boolean frames = context.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
 
               mv.visitTryCatchBlock(logStart, logEnd, eatException, "java/lang/Throwable");
 

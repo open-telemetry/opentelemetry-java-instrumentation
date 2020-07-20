@@ -101,8 +101,7 @@ public class HelperInjector implements Transformer {
     if (dynamicTypeMap.isEmpty()) {
       Map<String, byte[]> classnameToBytes = new LinkedHashMap<>();
 
-      ClassFileLocator locator =
-          ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader());
+      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader());
 
       for (String helperClassName : helperClassNames) {
         byte[] classBytes = locator.locate(helperClassName).resolve();

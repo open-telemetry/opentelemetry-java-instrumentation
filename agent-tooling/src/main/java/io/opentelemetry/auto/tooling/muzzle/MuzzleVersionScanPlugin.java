@@ -63,8 +63,7 @@ public class MuzzleVersionScanPlugin {
         m = instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
         m.setAccessible(true);
         ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
-        List<Reference.Mismatch> mismatches =
-            muzzle.getMismatchedReferenceSources(userClassLoader);
+        List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
         boolean classLoaderMatch =
             ((Instrumenter.Default) instrumenter).classLoaderMatcher().matches(userClassLoader);
@@ -134,8 +133,7 @@ public class MuzzleVersionScanPlugin {
 
   private static Map<String, byte[]> createHelperMap(final Instrumenter.Default instrumenter)
       throws IOException {
-    Map<String, byte[]> helperMap =
-        new LinkedHashMap<>(instrumenter.helperClassNames().length);
+    Map<String, byte[]> helperMap = new LinkedHashMap<>(instrumenter.helperClassNames().length);
     for (String helperName : instrumenter.helperClassNames()) {
       ClassFileLocator locator =
           ClassFileLocator.ForClassLoader.of(instrumenter.getClass().getClassLoader());
