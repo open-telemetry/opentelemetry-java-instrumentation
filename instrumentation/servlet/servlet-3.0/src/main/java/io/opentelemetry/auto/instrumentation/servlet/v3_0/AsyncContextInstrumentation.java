@@ -50,9 +50,9 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
     return new String[] {
       "io.opentelemetry.instrumentation.servlet.HttpServletRequestGetter",
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.CountingHttpServletResponse$CountingServletOutputStream",
-      "io.opentelemetry.auto.instrumentation.servlet.v3_0.TagSettingAsyncListener",
+      packageName + ".CountingHttpServletResponse",
+      packageName + ".CountingHttpServletResponse$CountingServletOutputStream",
+      packageName + ".TagSettingAsyncListener",
       packageName + ".Servlet3HttpServerTracer"
     };
   }

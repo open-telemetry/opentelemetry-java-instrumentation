@@ -70,7 +70,7 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
       delegate.write(b, off, len);
-      counter += len - off;
+      counter += len;
     }
 
     @Override

@@ -21,6 +21,7 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpServerTrace
 import io.opentelemetry.auto.instrumentation.api.MoreAttributes;
 import io.opentelemetry.context.propagation.HttpTextFormat.Getter;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
@@ -109,6 +110,6 @@ public abstract class ServletHttpServerTracer
   }
 
   public void setContentLength(Span span, int length) {
-    span.setAttribute(MoreAttributes.HTTP_RESPONSE_CONTENT_LENGTH, length);
+    SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.set(span, String.valueOf(length));
   }
 }
