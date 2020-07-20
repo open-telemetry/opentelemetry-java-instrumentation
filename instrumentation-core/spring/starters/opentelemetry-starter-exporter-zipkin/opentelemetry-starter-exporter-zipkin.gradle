@@ -19,7 +19,7 @@ bootJar {
 
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter'
-  api project(':instrumentation-core:spring:starters:starter-opentelemetry-spring')
-  api deps.opentelemetryJaeger
+  api project(':instrumentation-core:spring:starters:opentelemetry-starter-spring')
+  api deps.opentelemetryZipkin
 }
 
