@@ -151,8 +151,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
 
   protected void onPeerConnection(final Span span, final InetAddress remoteAddress) {
     if (remoteAddress != null) {
-      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteAddress.getHostName());
-      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), remoteAddress.getHostAddress());
+      BaseDecorator.setPeer(span, remoteAddress.getHostName(), remoteAddress.getHostAddress());
     }
   }
 

@@ -83,12 +83,8 @@ public abstract class BaseDecorator {
         onPeerConnection(span, remoteAddress);
       } else {
         // Failed DNS lookup, the host string is the name.
-        String hostString = remoteConnection.getHostString();
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), hostString);
-        String peerService = mapToPeer(hostString);
-        if (peerService != null) {
-          span.setAttribute("peer.service", peerService);
-        }
+        String peerName = remoteConnection.getHostString();
+        setPeer(span, peerName, null);
       }
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), remoteConnection.getPort());
     }
@@ -97,20 +93,39 @@ public abstract class BaseDecorator {
 
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
-    String hostName = remoteAddress.getHostName();
-    if (!hostName.equals(remoteAddress.getHostAddress())) {
-      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteAddress.getHostName());
-    }
-    span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), remoteAddress.getHostAddress());
+    String peerName = remoteAddress.getHostName();
+    String peerIp = remoteAddress.getHostAddress();
+    setPeer(span, peerName, peerIp);
+    return span;
+  }
 
-    String peerService = mapToPeer(hostName);
-    if (peerService == null) {
-      peerService = mapToPeer(remoteAddress.getHostAddress());
-    }
+  private static void setPeer(final Span span, String peerName) {
+    assert span != null;
+    span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), peerName);
+    String peerService = mapToPeer(peerName);
     if (peerService != null) {
       span.setAttribute("peer.service", peerService);
     }
-    return span;
+  }
+
+  public static void setPeer(final Span span, String peerName, String peerIp) {
+    assert span != null;
+    if (peerIp == null) {
+      setPeer(span, peerName);
+    } else {
+      if (peerName != null && !peerName.equals(peerIp)) {
+        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), peerName);
+      }
+      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), peerIp);
+
+      String peerService = mapToPeer(peerName);
+      if (peerService == null) {
+        peerService = mapToPeer(peerIp);
+      }
+      if (peerService != null) {
+        span.setAttribute("peer.service", peerService);
+      }
+    }
   }
 
   public static void addThrowable(final Span span, final Throwable throwable) {

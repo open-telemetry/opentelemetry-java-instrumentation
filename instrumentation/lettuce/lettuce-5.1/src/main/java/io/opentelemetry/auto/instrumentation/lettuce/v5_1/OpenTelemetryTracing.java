@@ -23,6 +23,7 @@ import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.OpenTelemetry;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Status;
@@ -98,7 +99,7 @@ public enum OpenTelemetryTracing implements Tracing {
     private final Context context;
 
     OpenTelemetryTraceContext() {
-      this.context = Context.current();
+      context = Context.current();
     }
 
     public Context getContext() {
@@ -273,12 +274,11 @@ public enum OpenTelemetryTracing implements Tracing {
 
     private static void fillEndpoint(Span.Builder span, OpenTelemetryEndpoint endpoint) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT.key(), "IP.TCP");
-      span.setAttribute(SemanticAttributes.NET_PEER_IP.key(), endpoint.ip);
+      BaseDecorator.setPeer((Span) span, endpoint.name, endpoint.ip);
 
       StringBuilder redisUrl = new StringBuilder("redis://");
 
       if (endpoint.name != null) {
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), endpoint.name);
         redisUrl.append(endpoint.name);
       } else {
         redisUrl.append(endpoint.ip);

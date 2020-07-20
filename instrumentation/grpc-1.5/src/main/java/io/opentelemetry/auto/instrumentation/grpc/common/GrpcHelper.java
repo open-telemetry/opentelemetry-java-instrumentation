@@ -17,6 +17,7 @@
 package io.opentelemetry.auto.instrumentation.grpc.common;
 
 import io.grpc.Status.Code;
+import io.opentelemetry.auto.bootstrap.instrumentation.decorator.BaseDecorator;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Status.CanonicalCode;
@@ -73,13 +74,13 @@ public final class GrpcHelper {
         span.setAttribute(
             SemanticAttributes.NET_PEER_IP.key(), peerAddress.getAddress().getHostAddress());
       } else {
-        span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), peerAddress.getHostName());
+        BaseDecorator.setPeer(span, peerAddress.getHostName(), null);
       }
     } else {
       // The spec says these fields must be populated, so put some values in even if we don't have
       // an address recorded.
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), 0);
-      span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), "(unknown)");
+      BaseDecorator.setPeer(span, "(unknown)", null);
     }
   }
 
