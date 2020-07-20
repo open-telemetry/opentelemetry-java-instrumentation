@@ -25,8 +25,19 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.core.util.ContextDataProvider;
 
+/**
+ * Implementation of Log4j 2's {@link ContextDataProvider} which is loaded via SPI. {@link
+ * #supplyContextData()} is called when a log entry is created.
+ */
 @AutoService(ContextDataProvider.class)
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
+
+  /**
+   * Returns context from the current span when available.
+   *
+   * @return A map containing string versions of the traceId, spanId, and traceFlags, which can then
+   *     be accessed from layout components
+   */
   @Override
   public Map<String, String> supplyContextData() {
     Span currentSpan = TracingContextUtils.getCurrentSpan();
@@ -38,6 +49,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     SpanContext spanContext = currentSpan.getContext();
     contextData.put("traceId", spanContext.getTraceId().toLowerBase16());
     contextData.put("spanId", spanContext.getSpanId().toLowerBase16());
+    contextData.put("traceFlags", spanContext.getTraceFlags().toLowerBase16());
     return contextData;
   }
 }

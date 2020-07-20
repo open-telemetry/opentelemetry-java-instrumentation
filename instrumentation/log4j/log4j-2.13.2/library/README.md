@@ -31,6 +31,7 @@ a log statement is made when a span is active.
 
 - `traceId`
 - `spanId`
+- `traceFlags`
 
 You can use these keys when defining an appender in your `log4j.xml` configuration, for example
 
