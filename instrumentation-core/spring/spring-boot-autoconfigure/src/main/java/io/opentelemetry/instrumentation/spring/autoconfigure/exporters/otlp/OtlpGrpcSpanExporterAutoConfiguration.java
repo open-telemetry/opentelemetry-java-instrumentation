@@ -28,7 +28,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Creates OTLP Exporter bean */
+/**
+ * Configures {@link OtlpGrpcSpanExporter} for tracing.
+ *
+ * <p>Initializes {@link OtlpGrpcSpanExporter} bean if bean is missing.
+ */
 @Configuration
 @AutoConfigureBefore(TracerAutoConfiguration.class)
 @EnableConfigurationProperties(OtlpGrpcSpanExporterProperties.class)

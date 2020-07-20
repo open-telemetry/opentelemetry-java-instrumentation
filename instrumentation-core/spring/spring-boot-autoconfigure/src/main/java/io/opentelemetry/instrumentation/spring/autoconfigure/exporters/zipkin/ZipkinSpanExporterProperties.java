@@ -18,7 +18,15 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for ZipkinSpanExporter */
+/**
+ * Configuration for {@link ZipkinSpanExporter}
+ *
+ * <p>Get Exporter Service Name {@link getServiceName()}
+ *
+ * <p>Get Exporter Host Name {@link getHost()}
+ *
+ * <p>Get Exporter Port {@link getPort()}
+ */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.zipkin")
 public class ZipkinSpanExporterProperties {
 

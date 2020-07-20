@@ -19,9 +19,19 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for JaegerSpanExporter */
+/**
+ * Configuration for {@link JaegerSpanExporter}
+ *
+ * <p>Get Exporter Service Name {@link getServiceName()}
+ *
+ * <p>Get Exporter Host Name {@link getHost()}
+ *
+ * <p>Get Exporter Port {@link getPort()}
+ *
+ * <p>Get max wait time for Collector to process Span Batches {@link getDeadline()}
+ */
 @ConfigurationProperties(prefix = "opentelemetry.trace.exporter.jaeger")
-public class JaegerSpanExporterProperties {
+public final class JaegerSpanExporterProperties {
 
   private boolean enabled = true;
   private String serviceName = "otel-spring-boot-jaeger-exporter";

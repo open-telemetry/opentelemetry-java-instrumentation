@@ -23,7 +23,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuration for OpenTelemetry Tracer
  *
- * <p>Sets default tracer name and sampler probability
+ * <p>Get Tracer Name {@link getName()}
+ *
+ * <p>Get Sampling Probability {@link getSamplerProbability()}
  */
 @ConfigurationProperties(prefix = "opentelemetry.trace.tracer")
 public final class TracerProperties {
