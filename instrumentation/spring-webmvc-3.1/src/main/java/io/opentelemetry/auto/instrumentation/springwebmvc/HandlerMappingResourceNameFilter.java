@@ -44,7 +44,7 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
       final FilterChain filterChain)
       throws ServletException, IOException {
 
-    final Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+    Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
     Span parentSpan = null;
     if (parentContext instanceof Context) {
       parentSpan = TracingContextUtils.getSpan((Context) parentContext);

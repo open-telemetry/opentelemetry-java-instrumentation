@@ -197,7 +197,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request);
+      SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request);
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {

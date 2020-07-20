@@ -51,7 +51,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   private static final Collection<String> WHITELISTED_FUTURES;
 
   static {
-    final String[] whitelist = {
+    String[] whitelist = {
       "akka.dispatch.forkjoin.ForkJoinTask",
       "akka.dispatch.forkjoin.ForkJoinTask$AdaptedCallable",
       "akka.dispatch.forkjoin.ForkJoinTask$AdaptedRunnable",

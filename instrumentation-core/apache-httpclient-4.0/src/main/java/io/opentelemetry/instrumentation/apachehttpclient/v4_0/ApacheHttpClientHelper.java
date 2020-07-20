@@ -41,16 +41,16 @@ public class ApacheHttpClientHelper {
   }
 
   public static SpanWithScope doMethodEnter(final HttpUriRequest request, final Tracer tracer) {
-    final Span span = DECORATE.getOrCreateSpan(request, tracer);
+    Span span = DECORATE.getOrCreateSpan(request, tracer);
 
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, request);
 
-    final Context context = ClientDecorator.currentContextWith(span);
+    Context context = ClientDecorator.currentContextWith(span);
     if (span.getContext().isValid()) {
       DECORATE.inject(context, request);
     }
-    final Scope scope = withScopedContext(context);
+    Scope scope = withScopedContext(context);
 
     return new SpanWithScope(span, scope);
   }
@@ -68,7 +68,7 @@ public class ApacheHttpClientHelper {
   public static void doMethodExit(
       final SpanWithScope spanWithScope, final Object result, final Throwable throwable) {
     try {
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
 
       if (result instanceof HttpResponse) {
         DECORATE.onResponse(span, (HttpResponse) result);

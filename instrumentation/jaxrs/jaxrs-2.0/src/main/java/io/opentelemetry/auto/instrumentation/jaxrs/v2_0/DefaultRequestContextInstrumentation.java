@@ -62,7 +62,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
           // can only be aborted inside the filter method
         }
 
-        final SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
+        SpanWithScope scope = new SpanWithScope(span, currentContextWith(span));
 
         DECORATE.afterStart(span);
         DECORATE.onJaxRsSpan(span, parent, filterClass, method);

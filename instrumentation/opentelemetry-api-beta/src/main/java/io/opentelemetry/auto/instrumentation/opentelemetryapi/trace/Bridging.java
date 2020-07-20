@@ -194,13 +194,13 @@ public class Bridging {
   }
 
   private static io.opentelemetry.trace.TraceId toShaded(final TraceId unshadedTraceId) {
-    final byte[] bytes = getBuffer();
+    byte[] bytes = getBuffer();
     unshadedTraceId.copyBytesTo(bytes, 0);
     return io.opentelemetry.trace.TraceId.fromBytes(bytes, 0);
   }
 
   private static io.opentelemetry.trace.SpanId toShaded(final SpanId unshadedSpanId) {
-    final byte[] bytes = getBuffer();
+    byte[] bytes = getBuffer();
     unshadedSpanId.copyBytesTo(bytes, 0);
     return io.opentelemetry.trace.SpanId.fromBytes(bytes, 0);
   }
@@ -210,8 +210,7 @@ public class Bridging {
   }
 
   private static io.opentelemetry.trace.TraceState toShaded(final TraceState unshadedTraceState) {
-    final io.opentelemetry.trace.TraceState.Builder builder =
-        io.opentelemetry.trace.TraceState.builder();
+    io.opentelemetry.trace.TraceState.Builder builder = io.opentelemetry.trace.TraceState.builder();
     for (final TraceState.Entry entry : unshadedTraceState.getEntries()) {
       builder.set(entry.getKey(), entry.getValue());
     }

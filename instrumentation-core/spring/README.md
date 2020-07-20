@@ -117,7 +117,7 @@ public class OtelConfig {
    private static final tracerName = "fooTracer";
    @Bean
    public Tracer otelTracer() throws Exception {
-      final Tracer tracer = OpenTelemetry.getTracer(tracerName);
+      Tracer tracer = OpenTelemetry.getTracer(tracerName);
 
       SpanProcessor logProcessor = SimpleSpanProcessor.newBuilder(new LoggingSpanExporter()).build();
       OpenTelemetrySdk.getTracerProvider().addSpanProcessor(logProcessor);

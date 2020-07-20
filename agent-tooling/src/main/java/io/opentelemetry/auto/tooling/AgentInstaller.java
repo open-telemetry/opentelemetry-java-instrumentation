@@ -337,7 +337,7 @@ public class AgentInstaller {
         final JavaModule javaModule,
         final boolean b) {
       synchronized (CLASS_LOAD_CALLBACKS) {
-        final List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
+        List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
         if (callbacks != null) {
           for (final Runnable callback : callbacks) {
             callback.run();
