@@ -1,0 +1,25 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  javaSubPackage = 'log4j.v2_13_2'
+}
+
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
+
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
+  testAnnotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.2'
+
+  latestDepTestImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '+'
+}
