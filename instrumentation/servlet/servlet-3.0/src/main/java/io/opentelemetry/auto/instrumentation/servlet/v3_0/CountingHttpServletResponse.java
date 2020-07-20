@@ -17,6 +17,9 @@
 package io.opentelemetry.auto.instrumentation.servlet.v3_0;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -24,6 +27,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 /** HttpServletResponseWrapper since servlet 2.3, not applicable to 2.2 */
 public class CountingHttpServletResponse extends HttpServletResponseWrapper {
   private CountingServletOutputStream outputStream = null;
+  private CountingPrintWriter printWriter = null;
 
   /**
    * Constructs a response adaptor wrapping the given response.
@@ -42,8 +46,25 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
     return outputStream;
   }
 
+  @Override
+  public PrintWriter getWriter() throws IOException {
+    if (printWriter == null) {
+      printWriter = new CountingPrintWriter(super.getWriter());
+    }
+    return printWriter;
+  }
+
   public int getContentLength() {
-    return outputStream.counter;
+    if (outputStream != null && printWriter != null) {
+      return outputStream.counter + printWriter.counter.get();
+    }
+    if (outputStream != null) {
+      return outputStream.counter;
+    }
+    if (printWriter != null) {
+      return printWriter.counter.get();
+    }
+    return 0;
   }
 
   static class CountingServletOutputStream extends ServletOutputStream {
@@ -81,6 +102,37 @@ public class CountingHttpServletResponse extends HttpServletResponseWrapper {
     @Override
     public void close() throws IOException {
       delegate.close();
+    }
+  }
+
+  static class CountingPrintWriter extends PrintWriter {
+    // PrintWriter is synchronised, so the counter has to be atomic
+    private AtomicInteger counter = new AtomicInteger(0);
+
+    /**
+     * write(String s) and write(char[] buf) are not overridden because they delegate to another
+     * write function which would result in their write being counted twice.
+     */
+    public CountingPrintWriter(Writer out) {
+      super(out);
+    }
+
+    @Override
+    public void write(int c) {
+      super.write(c);
+      counter.incrementAndGet();
+    }
+
+    @Override
+    public void write(char[] buf, int off, int len) {
+      super.write(buf, off, len);
+      counter.addAndGet(len);
+    }
+
+    @Override
+    public void write(String s, int off, int len) {
+      super.write(s, off, len);
+      counter.addAndGet(len);
     }
   }
 }

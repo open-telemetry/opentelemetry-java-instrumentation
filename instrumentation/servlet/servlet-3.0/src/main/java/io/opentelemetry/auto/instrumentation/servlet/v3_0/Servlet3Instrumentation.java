@@ -56,6 +56,7 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
       "io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer",
       packageName + ".CountingHttpServletResponse",
       packageName + ".CountingHttpServletResponse$CountingServletOutputStream",
+      packageName + ".CountingHttpServletResponse$CountingPrintWriter",
       packageName + ".Servlet3Advice",
       packageName + ".Servlet3HttpServerTracer",
       packageName + ".TagSettingAsyncListener"
