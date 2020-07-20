@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin;
+package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
+import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration for JaegerExporter */
-@ConfigurationProperties(prefix = "opentelemetry.trace.exporter.zipkin")
-public class ZipkinSpanExporterProperties {
+@ConfigurationProperties(prefix = "opentelemetry.trace.exporter.jaeger")
+public class JaegerExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = "otel-spring-boot-zipkin-exporter";
+  private String serviceName = "otel-spring-boot-jaeger-exporter";
   private String host = "localhost";
   private int port = 14250;
+  private Duration deadline = Duration.ofMillis(1000L);
 
   public boolean isEnabled() {
     return enabled;
@@ -57,5 +59,13 @@ public class ZipkinSpanExporterProperties {
 
   public void setPort(int port) {
     this.port = port;
+  }
+
+  public Duration getDeadline() {
+    return deadline;
+  }
+
+  public void setDeadline(Duration deadline) {
+    this.deadline = deadline;
   }
 }

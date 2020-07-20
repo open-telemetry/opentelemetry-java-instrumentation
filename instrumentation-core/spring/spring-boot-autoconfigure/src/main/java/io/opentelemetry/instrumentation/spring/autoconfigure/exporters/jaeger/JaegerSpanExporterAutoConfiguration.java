@@ -28,34 +28,31 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configures {@link JaegerGrpcSpanExporter} for tracing.
- *
- * <p>Initializes {@link JaegerGrpcSpanExporter} bean if bean is missing.
- */
+/** Create JaegerExporter */
 @Configuration
 @AutoConfigureBefore(TracerAutoConfiguration.class)
-@EnableConfigurationProperties(JaegerSpanExporterProperties.class)
+@EnableConfigurationProperties(JaegerExporterProperties.class)
 @ConditionalOnProperty(
     prefix = "opentelemetry.trace.exporter.jaeger",
     name = "enabled",
     matchIfMissing = true)
-@ConditionalOnClass({JaegerGrpcSpanExporter.class, ManagedChannel.class})
+@ConditionalOnClass(JaegerGrpcSpanExporter.class)
 public class JaegerSpanExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
   public JaegerGrpcSpanExporter otelJaegerSpanExporter(
-      JaegerSpanExporterProperties jaegerSpanExporterProperties) {
+      JaegerExporterProperties jaegerExporterProperties) {
 
     ManagedChannel channel =
-        ManagedChannelBuilder.forTarget(jaegerSpanExporterProperties.getEndpoint())
+        ManagedChannelBuilder.forAddress(
+                jaegerExporterProperties.getHost(), jaegerExporterProperties.getPort())
             .usePlaintext()
             .build();
 
     return JaegerGrpcSpanExporter.newBuilder()
-        .setServiceName(jaegerSpanExporterProperties.getServiceName())
-        .setDeadlineMs(jaegerSpanExporterProperties.getSpanTimeout().toMillis())
+        .setServiceName(jaegerExporterProperties.getServiceName())
+        .setDeadlineMs(jaegerExporterProperties.getDeadline().toMillis())
         .setChannel(channel)
         .build();
   }
