@@ -26,7 +26,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** Create ZipkinSpanExporter */
+/**
+ * Configures {@link ZipkinSpanExporter} for tracing.
+ *
+ * <p>Initializes {@link ZipkinSpanExporter} bean if bean is missing.
+ */
 @Configuration
 @AutoConfigureBefore(TracerAutoConfiguration.class)
 @EnableConfigurationProperties(ZipkinSpanExporterProperties.class)

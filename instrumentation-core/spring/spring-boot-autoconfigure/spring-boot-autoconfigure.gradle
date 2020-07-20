@@ -32,8 +32,6 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-webflux'
   implementation project(':instrumentation-core:spring:spring-webflux-5.0')
   
-  api deps.opentelemetryApi 
-  
   compileOnly deps.opentelemetryJaeger
   compileOnly deps.opentelemetryOtlp
   implementation group: 'io.grpc', name: 'grpc-api', version: '1.24.0'
