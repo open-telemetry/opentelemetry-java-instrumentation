@@ -28,12 +28,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public abstract class AbstractExecutorInstrumentation extends Instrumenter.Default {
+
+  private static final Logger log = LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
 
   public static final String EXEC_NAME = "java_concurrent";
 

@@ -22,11 +22,14 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ratpack.func.Block;
 
-@Slf4j
 public class BlockWrapper implements Block {
+
+  private static final Logger log = LoggerFactory.getLogger(BlockWrapper.class);
+
   private static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.ratpack-1.4");
 

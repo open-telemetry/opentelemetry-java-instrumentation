@@ -21,7 +21,6 @@ import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.lang.ref.WeakReference;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.annotation.AnnotationList;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.MethodList;
@@ -53,8 +52,8 @@ import net.bytebuddy.pool.TypePool;
  * <p>Eviction is handled almost entirely through a size restriction; however, softValues are still
  * used as a further safeguard.
  */
-@Slf4j
 public class AgentCachingPoolStrategy implements PoolStrategy {
+
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
 

@@ -26,11 +26,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import lombok.extern.slf4j.Slf4j;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
-@Slf4j
 public class NettyHttpServerTracer
     extends HttpServerTracer<HttpRequest, Channel, ChannelTraceContext> {
   public static final NettyHttpServerTracer TRACER = new NettyHttpServerTracer();

@@ -31,10 +31,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Config reads values with the following priority: 1) system properties, 2) environment variables,
@@ -45,9 +43,10 @@ import lombok.extern.slf4j.Slf4j;
  * <p>System properties are {@link Config#PREFIX}'ed. Environment variables are the same as the
  * system property, but uppercased and '.' is replaced with '_'.
  */
-@Slf4j
-@ToString(includeFieldNames = true)
 public class Config {
+
+  private static final Logger log = LoggerFactory.getLogger(Config.class);
+
   private static final MethodHandles.Lookup PUBLIC_LOOKUP = MethodHandles.publicLookup();
 
   /** Config keys below */
@@ -106,18 +105,18 @@ public class Config {
   public static final String SQL_NORMALIZER_ENABLED = "sql.normalizer.enabled";
   public static final boolean DEFAULT_SQL_NORMALIZER_ENABLED = true;
 
-  @Getter private final String exporterJar;
-  @Getter private final String exporter;
-  @Getter private final List<String> propagators;
-  @Getter private final boolean traceEnabled;
-  @Getter private final boolean integrationsEnabled;
-  @Getter private final List<String> excludedClasses;
-  @Getter private final boolean httpServerTagQueryString;
-  @Getter private final boolean httpClientTagQueryString;
-  @Getter private final Integer scopeDepthLimit;
-  @Getter private final boolean runtimeContextFieldInjection;
+  private final String exporterJar;
+  private final String exporter;
+  private final List<String> propagators;
+  private final boolean traceEnabled;
+  private final boolean integrationsEnabled;
+  private final List<String> excludedClasses;
+  private final boolean httpServerTagQueryString;
+  private final boolean httpClientTagQueryString;
+  private final Integer scopeDepthLimit;
+  private final boolean runtimeContextFieldInjection;
 
-  @Getter private final boolean logInjectionEnabled;
+  private final boolean logInjectionEnabled;
 
   // mapping of threshold values to different logging frameworks:
   //
@@ -133,21 +132,21 @@ public class Config {
   // | FINER        | FINER   | DEBUG   | DEBUG  |
   // | TRACE/FINEST | FINEST  | TRACE   | TRACE  |
   // | ALL          | ALL     | ALL     | ALL    |
-  @Getter private final String experimentalLogCaptureThreshold;
+  private final String experimentalLogCaptureThreshold;
 
-  @Getter private final String traceAnnotations;
+  private final String traceAnnotations;
 
-  @Getter private final String traceMethods;
-  @Getter private final String traceMethodsExclude;
+  private final String traceMethods;
+  private final String traceMethodsExclude;
 
-  @Getter private final boolean traceExecutorsAll;
-  @Getter private final List<String> traceExecutors;
+  private final boolean traceExecutorsAll;
+  private final List<String> traceExecutors;
 
-  @Getter private final boolean sqlNormalizerEnabled;
+  private final boolean sqlNormalizerEnabled;
 
-  @Getter private final boolean kafkaClientPropagationEnabled;
+  private final boolean kafkaClientPropagationEnabled;
 
-  @Getter private final Map<String, String> endpointPeerServiceMapping;
+  private final Map<String, String> endpointPeerServiceMapping;
 
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
@@ -329,13 +328,11 @@ public class Config {
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a list by
    * splitting on `,`.
    */
-  @NonNull
   private static List<String> getListSettingFromEnvironment(
       final String name, final String defaultValue) {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
 
-  @NonNull
   private static Map<String, String> getMapSettingFromEnvironment(final String name) {
     return parseMap(getSettingFromEnvironment(name, null));
   }
@@ -373,7 +370,6 @@ public class Config {
    * @param setting The setting name, e.g. `trace.enabled`
    * @return The public facing environment variable name
    */
-  @NonNull
   private static String propertyNameToEnvironmentVariableName(final String setting) {
     return ENV_REPLACEMENT
         .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
@@ -387,7 +383,6 @@ public class Config {
    * @param setting The setting name, e.g. `trace.config`
    * @return The public facing system property name
    */
-  @NonNull
   private static String propertyNameToSystemPropertyName(final String setting) {
     return PREFIX + setting;
   }
@@ -400,8 +395,7 @@ public class Config {
    * @return value == null || value.trim().isEmpty() ? defaultValue : tClass.valueOf(value)
    * @throws NumberFormatException
    */
-  private static <T> T valueOf(
-      final String value, @NonNull final Class<T> tClass, final T defaultValue) {
+  private static <T> T valueOf(final String value, final Class<T> tClass, final T defaultValue) {
     if (value == null || value.trim().isEmpty()) {
       return defaultValue;
     }
@@ -443,7 +437,6 @@ public class Config {
     return valueOf(properties.getProperty(name), Integer.class, defaultValue);
   }
 
-  @NonNull
   private static List<String> parseList(final String str) {
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyList();
@@ -535,5 +528,137 @@ public class Config {
     } else {
       return new Config(properties, INSTANCE);
     }
+  }
+
+  public String getExporterJar() {
+    return exporterJar;
+  }
+
+  public String getExporter() {
+    return exporter;
+  }
+
+  public List<String> getPropagators() {
+    return propagators;
+  }
+
+  public boolean isTraceEnabled() {
+    return traceEnabled;
+  }
+
+  public boolean isIntegrationsEnabled() {
+    return integrationsEnabled;
+  }
+
+  public List<String> getExcludedClasses() {
+    return excludedClasses;
+  }
+
+  public boolean isHttpServerTagQueryString() {
+    return httpServerTagQueryString;
+  }
+
+  public boolean isHttpClientTagQueryString() {
+    return httpClientTagQueryString;
+  }
+
+  public Integer getScopeDepthLimit() {
+    return scopeDepthLimit;
+  }
+
+  public boolean isRuntimeContextFieldInjection() {
+    return runtimeContextFieldInjection;
+  }
+
+  public boolean isLogInjectionEnabled() {
+    return logInjectionEnabled;
+  }
+
+  public String getExperimentalLogCaptureThreshold() {
+    return experimentalLogCaptureThreshold;
+  }
+
+  public String getTraceAnnotations() {
+    return traceAnnotations;
+  }
+
+  public String getTraceMethods() {
+    return traceMethods;
+  }
+
+  public String getTraceMethodsExclude() {
+    return traceMethodsExclude;
+  }
+
+  public boolean isTraceExecutorsAll() {
+    return traceExecutorsAll;
+  }
+
+  public List<String> getTraceExecutors() {
+    return traceExecutors;
+  }
+
+  public boolean isSqlNormalizerEnabled() {
+    return sqlNormalizerEnabled;
+  }
+
+  public boolean isKafkaClientPropagationEnabled() {
+    return kafkaClientPropagationEnabled;
+  }
+
+  public Map<String, String> getEndpointPeerServiceMapping() {
+    return endpointPeerServiceMapping;
+  }
+
+  @Override
+  public String toString() {
+    return "Config{"
+        + "exporterJar='"
+        + exporterJar
+        + '\''
+        + ", exporter='"
+        + exporter
+        + '\''
+        + ", propagators="
+        + propagators
+        + ", traceEnabled="
+        + traceEnabled
+        + ", integrationsEnabled="
+        + integrationsEnabled
+        + ", excludedClasses="
+        + excludedClasses
+        + ", httpServerTagQueryString="
+        + httpServerTagQueryString
+        + ", httpClientTagQueryString="
+        + httpClientTagQueryString
+        + ", scopeDepthLimit="
+        + scopeDepthLimit
+        + ", runtimeContextFieldInjection="
+        + runtimeContextFieldInjection
+        + ", logInjectionEnabled="
+        + logInjectionEnabled
+        + ", experimentalLogCaptureThreshold='"
+        + experimentalLogCaptureThreshold
+        + '\''
+        + ", traceAnnotations='"
+        + traceAnnotations
+        + '\''
+        + ", traceMethods='"
+        + traceMethods
+        + '\''
+        + ", traceMethodsExclude='"
+        + traceMethodsExclude
+        + '\''
+        + ", traceExecutorsAll="
+        + traceExecutorsAll
+        + ", traceExecutors="
+        + traceExecutors
+        + ", sqlNormalizerEnabled="
+        + sqlNormalizerEnabled
+        + ", kafkaClientPropagationEnabled="
+        + kafkaClientPropagationEnabled
+        + ", endpointPeerServiceMapping="
+        + endpointPeerServiceMapping
+        + '}';
   }
 }

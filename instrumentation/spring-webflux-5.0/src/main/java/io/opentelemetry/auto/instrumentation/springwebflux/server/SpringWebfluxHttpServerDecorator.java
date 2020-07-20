@@ -19,9 +19,7 @@ package io.opentelemetry.auto.instrumentation.springwebflux.server;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.auto.bootstrap.instrumentation.decorator.ServerDecorator;
 import io.opentelemetry.trace.Tracer;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class SpringWebfluxHttpServerDecorator extends ServerDecorator {
   public static final SpringWebfluxHttpServerDecorator DECORATE =
       new SpringWebfluxHttpServerDecorator();

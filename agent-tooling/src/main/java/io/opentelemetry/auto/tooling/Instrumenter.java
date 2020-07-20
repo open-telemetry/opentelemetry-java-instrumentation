@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
@@ -45,6 +44,8 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatcher.Junction;
 import net.bytebuddy.utility.JavaModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Built-in bytebuddy-based instrumentation for the agent.
@@ -61,8 +62,9 @@ public interface Instrumenter {
    */
   AgentBuilder instrument(AgentBuilder agentBuilder);
 
-  @Slf4j
   abstract class Default implements Instrumenter {
+
+    private static final Logger log = LoggerFactory.getLogger(Default.class);
 
     // Added here instead of AgentInstaller's ignores because it's relatively
     // expensive. https://github.com/DataDog/dd-trace-java/pull/1045

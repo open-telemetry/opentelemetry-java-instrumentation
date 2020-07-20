@@ -17,7 +17,8 @@
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
 import io.opentelemetry.common.Attributes.Builder;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import unshaded.io.opentelemetry.common.AttributeValue;
 import unshaded.io.opentelemetry.common.Attributes;
 import unshaded.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
@@ -44,8 +45,9 @@ import unshaded.io.opentelemetry.trace.TraceState;
  *
  * <p>Also see comments in this module's gradle file.
  */
-@Slf4j
 public class Bridging {
+
+  private static final Logger log = LoggerFactory.getLogger(Bridging.class);
 
   // this is just an optimization to save some byte array allocations
   public static final ThreadLocal<byte[]> BUFFER = new ThreadLocal<>();

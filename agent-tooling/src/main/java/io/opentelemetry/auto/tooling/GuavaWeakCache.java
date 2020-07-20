@@ -23,7 +23,8 @@ import io.opentelemetry.auto.bootstrap.WeakCache;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * no null keys nor null values are permitted
@@ -31,8 +32,10 @@ import lombok.extern.slf4j.Slf4j;
  * @param <K>
  * @param <V>
  */
-@Slf4j
 public final class GuavaWeakCache<K, V> implements WeakCache<K, V> {
+
+  private static final Logger log = LoggerFactory.getLogger(GuavaWeakCache.class);
+
   @AutoService(WeakCache.Provider.class)
   public static final class Provider<K, V> implements WeakCache.Provider<K, V> {
     private static final int CACHE_CONCURRENCY =

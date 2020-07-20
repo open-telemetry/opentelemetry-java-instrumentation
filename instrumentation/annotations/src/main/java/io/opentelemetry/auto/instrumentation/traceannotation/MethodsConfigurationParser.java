@@ -22,10 +22,13 @@ import io.opentelemetry.auto.config.Config;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class MethodsConfigurationParser {
+
+  private static final Logger log = LoggerFactory.getLogger(MethodsConfigurationParser.class);
+
   static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
   private static final String METHOD_LIST_REGEX = "\\s*(?:\\w+\\s*,)*\\s*(?:\\w+\\s*,?)\\s*";
   private static final String CONFIG_FORMAT =

@@ -16,15 +16,18 @@
 
 package io.opentelemetry.auto.bootstrap.instrumentation.java.concurrent;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is used to wrap lambda runnables since currently we cannot instrument them
  *
  * <p>FIXME: We should remove this once https://github.com/raphw/byte-buddy/issues/558 is fixed
  */
-@Slf4j
 public final class RunnableWrapper implements Runnable {
+
+  private static final Logger log = LoggerFactory.getLogger(RunnableWrapper.class);
+
   private final Runnable runnable;
 
   public RunnableWrapper(final Runnable runnable) {

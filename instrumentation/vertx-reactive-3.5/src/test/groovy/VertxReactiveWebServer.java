@@ -34,10 +34,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class VertxReactiveWebServer extends AbstractVerticle {
+
+  private static final Logger log = LoggerFactory.getLogger(VertxReactiveWebServer.class);
+
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;
 

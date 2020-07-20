@@ -21,10 +21,13 @@ import io.opentelemetry.context.ContextUtils;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>>> {
+
+  private static final Logger log = LoggerFactory.getLogger(AsyncResultHandlerWrapper.class);
+
   private final Handler<Handler<AsyncResult<?>>> delegate;
   private final Context executionContext;
 

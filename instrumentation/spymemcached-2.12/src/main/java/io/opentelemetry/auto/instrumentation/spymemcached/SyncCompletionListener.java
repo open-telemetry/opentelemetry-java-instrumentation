@@ -17,11 +17,14 @@
 package io.opentelemetry.auto.instrumentation.spymemcached;
 
 import io.opentelemetry.trace.Span;
-import lombok.extern.slf4j.Slf4j;
 import net.spy.memcached.MemcachedConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class SyncCompletionListener extends CompletionListener<Void> {
+
+  private static final Logger log = LoggerFactory.getLogger(SyncCompletionListener.class);
+
   public SyncCompletionListener(final MemcachedConnection connection, final String methodName) {
     super(connection, methodName);
   }

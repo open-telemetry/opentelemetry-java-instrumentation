@@ -25,10 +25,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.trace.Span;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import lombok.extern.slf4j.Slf4j;
 import net.spy.memcached.MemcachedConnection;
 
-@Slf4j
 public abstract class CompletionListener<T> {
 
   static final String DB_COMMAND_CANCELLED = "db.command.cancelled";

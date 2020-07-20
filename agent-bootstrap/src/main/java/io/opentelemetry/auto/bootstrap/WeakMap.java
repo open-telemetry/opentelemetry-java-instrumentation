@@ -20,7 +20,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public interface WeakMap<K, V> {
 
@@ -36,8 +37,10 @@ public interface WeakMap<K, V> {
 
   V computeIfAbsent(K key, ValueSupplier<? super K, ? extends V> supplier);
 
-  @Slf4j
   class Provider {
+
+    private static final Logger log = LoggerFactory.getLogger(Provider.class);
+
     private static final AtomicReference<Implementation> provider =
         new AtomicReference<>(Implementation.DEFAULT);
 
@@ -63,8 +66,9 @@ public interface WeakMap<K, V> {
 
     Implementation DEFAULT = new Default();
 
-    @Slf4j
     class Default implements Implementation {
+
+      private static final Logger log = LoggerFactory.getLogger(Default.class);
 
       @Override
       public <K, V> WeakMap<K, V> get() {

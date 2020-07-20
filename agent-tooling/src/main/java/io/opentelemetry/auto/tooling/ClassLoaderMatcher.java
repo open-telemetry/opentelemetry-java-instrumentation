@@ -18,11 +18,14 @@ package io.opentelemetry.auto.tooling;
 
 import io.opentelemetry.auto.bootstrap.PatchLogger;
 import io.opentelemetry.auto.bootstrap.WeakCache;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public final class ClassLoaderMatcher {
+
+  private static final Logger log = LoggerFactory.getLogger(ClassLoaderMatcher.class);
+
   public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
 
   /** A private constructor that must not be invoked. */

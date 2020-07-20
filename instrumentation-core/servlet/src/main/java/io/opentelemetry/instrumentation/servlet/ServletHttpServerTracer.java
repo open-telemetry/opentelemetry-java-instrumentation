@@ -26,9 +26,7 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public abstract class ServletHttpServerTracer
     extends HttpServerTracer<HttpServletRequest, HttpServletRequest, HttpServletRequest> {
 

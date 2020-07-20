@@ -1,5 +1,5 @@
 plugins {
-  id 'io.franzbecker.gradle-lombok' version '1.14' // Last to support Java 7
+  id 'idea'
 
   id "com.jfrog.artifactory" version "4.15.2" apply false
   id 'com.jfrog.bintray' version '1.8.5' apply false
@@ -46,6 +46,15 @@ wrapper {
 }
 
 allprojects {
+  apply plugin: 'idea'
+
+  idea {
+    module {
+      downloadJavadoc = false
+      downloadSources = false
+    }
+  }
+
   tasks.withType(JavaForkOptions).configureEach {
     maxHeapSize = System.properties["ota.forkedMaxHeapSize"]
     minHeapSize = System.properties["ota.forkedMinHeapSize"]

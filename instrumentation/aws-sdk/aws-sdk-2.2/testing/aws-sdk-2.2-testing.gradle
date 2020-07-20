@@ -1,0 +1,19 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api project(':testing-common')
+
+  api group: 'software.amazon.awssdk', name: 'apache-client', version: '2.2.0'
+  api group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
+  api group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
+  api group: 'software.amazon.awssdk', name: 'ec2', version: '2.2.0'
+  api group: 'software.amazon.awssdk', name: 'sqs', version: '2.2.0'
+  api group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.2.0'
+  api group: 'software.amazon.awssdk', name: 'kinesis', version: '2.2.0'
+
+  implementation deps.guava
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

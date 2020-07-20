@@ -22,13 +22,16 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
 import java.rmi.server.ObjID;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.rmi.transport.Connection;
 import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.TransportConstants;
 
-@Slf4j
 public class ContextPropagator {
+
+  private static final Logger log = LoggerFactory.getLogger(ContextPropagator.class);
+
   // Internal RMI object ids that we don't want to trace
   private static final ObjID ACTIVATOR_ID = new ObjID(ObjID.ACTIVATOR_ID);
   private static final ObjID DGC_ID = new ObjID(ObjID.DGC_ID);

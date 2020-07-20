@@ -23,11 +23,9 @@ import io.opentelemetry.auto.bootstrap.instrumentation.decorator.HttpClientDecor
 import io.opentelemetry.trace.Tracer;
 import java.net.URI;
 import java.net.URISyntaxException;
-import lombok.extern.slf4j.Slf4j;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
-@Slf4j
 public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
   public static final NettyHttpClientDecorator DECORATE = new NettyHttpClientDecorator();
 

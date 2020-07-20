@@ -20,7 +20,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Classloader used to run the core agent.
@@ -28,11 +29,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>It is built around the concept of a jar inside another jar. This classloader loads the files
  * of the internal jar to load classes and resources.
  */
-@Slf4j
 public class AgentClassLoader extends URLClassLoader {
   static {
     ClassLoader.registerAsParallelCapable();
   }
+
+  private static final Logger log = LoggerFactory.getLogger(AgentClassLoader.class);
 
   private static final String AGENT_INITIALIZER_JAR = System.getProperty("ota.initializer.jar", "");
 

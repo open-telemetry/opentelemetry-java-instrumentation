@@ -21,11 +21,14 @@ import static io.opentelemetry.auto.instrumentation.vertx.VertxDecorator.TRACER;
 import io.opentelemetry.trace.Span;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
-@Slf4j
 public final class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
+
+  private static final Logger log = LoggerFactory.getLogger(RoutingContextHandlerWrapper.class);
+
   private final Handler<RoutingContext> handler;
 
   public RoutingContextHandlerWrapper(final Handler<RoutingContext> handler) {

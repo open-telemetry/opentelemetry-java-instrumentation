@@ -18,12 +18,14 @@ package io.opentelemetry.auto.instrumentation.opentelemetryapi.context.propagati
 
 import io.opentelemetry.auto.bootstrap.ContextStore;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.context.propagation.HttpTextFormat;
 
-@Slf4j
 class UnshadedHttpTextFormat implements HttpTextFormat {
+
+  private static final Logger log = LoggerFactory.getLogger(UnshadedHttpTextFormat.class);
 
   private final io.opentelemetry.context.propagation.HttpTextFormat shadedHttpTextFormat;
   private final ContextStore<Context, io.grpc.Context> contextStore;

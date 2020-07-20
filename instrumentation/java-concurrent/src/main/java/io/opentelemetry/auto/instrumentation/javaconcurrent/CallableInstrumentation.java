@@ -31,14 +31,12 @@ import io.opentelemetry.auto.instrumentation.api.SpanWithScope;
 import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrument {@link Runnable} and {@link Callable} */
-@Slf4j
 @AutoService(Instrumenter.class)
 public final class CallableInstrumentation extends Instrumenter.Default {
 

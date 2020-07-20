@@ -32,15 +32,17 @@ import io.opentelemetry.auto.tooling.Instrumenter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @AutoService(Instrumenter.class)
 public final class TraceAnnotationsInstrumentation extends AbstractTraceAnnotationInstrumentation {
+
+  private static final Logger log = LoggerFactory.getLogger(TraceAnnotationsInstrumentation.class);
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 

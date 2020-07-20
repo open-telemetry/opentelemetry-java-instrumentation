@@ -33,10 +33,13 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.ServiceLoader;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class TracerInstaller {
+
+  private static final Logger log = LoggerFactory.getLogger(TracerInstaller.class);
+
   /** Register agent tracer if no agent tracer is already registered. */
   @SuppressWarnings("unused")
   public static synchronized void installAgentTracer() {

@@ -4,7 +4,7 @@ description = 'smoke-tests'
 
 dependencies {
   api deps.spock
-  api project(':testing')
+  api project(':testing-common')
 
   implementation project(':auto-exporters:opentelemetry-auto-exporter-logging')
   implementation deps.slf4j

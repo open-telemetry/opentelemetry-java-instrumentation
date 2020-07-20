@@ -26,10 +26,11 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class JavaUtilLoggingSpans {
+
+  private static final org.slf4j.Logger log = LoggerFactory.getLogger(JavaUtilLoggingSpans.class);
 
   private static final Tracer TRACER =
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.java-util-logging");
