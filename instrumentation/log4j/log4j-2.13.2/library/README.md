@@ -12,7 +12,7 @@ To use it, just add the module to your application's runtime classpath.
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-2.13.2</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
     <scope>runtime</scope>
   </dependency>
 </dependencies>
@@ -22,7 +22,7 @@ To use it, just add the module to your application's runtime classpath.
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.13.2:0.6.0-SNAPSHOT")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.13.2:0.7.0-SNAPSHOT")
 }
 ```
 
