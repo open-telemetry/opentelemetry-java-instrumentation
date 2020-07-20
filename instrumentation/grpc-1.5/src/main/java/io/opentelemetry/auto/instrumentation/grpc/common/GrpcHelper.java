@@ -58,10 +58,10 @@ public final class GrpcHelper {
       final boolean server) {
     String serviceName =
         "(unknown)"; // Spec says it's mandatory, so populate even if we couldn't determine it.
-    final int slash = methodName.indexOf('/');
+    int slash = methodName.indexOf('/');
     if (slash != -1) {
-      final String fullServiceName = methodName.substring(0, slash);
-      final int dot = fullServiceName.lastIndexOf('.');
+      String fullServiceName = methodName.substring(0, slash);
+      int dot = fullServiceName.lastIndexOf('.');
       if (dot != -1) {
         serviceName = fullServiceName.substring(dot + 1);
       }

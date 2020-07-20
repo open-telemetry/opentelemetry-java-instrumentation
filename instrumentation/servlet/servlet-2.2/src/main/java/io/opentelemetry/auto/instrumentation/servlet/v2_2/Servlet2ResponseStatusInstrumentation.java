@@ -73,7 +73,7 @@ public final class Servlet2ResponseStatusInstrumentation extends Instrumenter.De
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         namedOneOf("sendError", "setStatus"),
         Servlet2ResponseStatusInstrumentation.class.getName() + "$Servlet2ResponseStatusAdvice");

@@ -73,7 +73,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("getExecutionObservable").and(returns(named("rx.Observable"))),
         HystrixInstrumentation.class.getName() + "$ExecuteAdvice");

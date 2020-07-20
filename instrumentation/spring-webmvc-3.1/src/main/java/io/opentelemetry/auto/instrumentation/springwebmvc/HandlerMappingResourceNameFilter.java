@@ -44,7 +44,7 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
       final FilterChain filterChain)
       throws ServletException, IOException {
 
-    final Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+    Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
     Span parentSpan = null;
     if (parentContext instanceof Context) {
       parentSpan = TracingContextUtils.getSpan((Context) parentContext);
@@ -71,8 +71,8 @@ public class HandlerMappingResourceNameFilter extends OncePerRequestFilter imple
    * set as the resource name.
    */
   private boolean findMapping(final HttpServletRequest request) throws Exception {
-    for (final HandlerMapping mapping : handlerMappings) {
-      final HandlerExecutionChain handler = mapping.getHandler(request);
+    for (HandlerMapping mapping : handlerMappings) {
+      HandlerExecutionChain handler = mapping.getHandler(request);
       if (handler != null) {
         return true;
       }

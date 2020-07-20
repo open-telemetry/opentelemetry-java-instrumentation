@@ -52,7 +52,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
-    final String method = method(request);
+    String method = method(request);
     return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 
@@ -61,16 +61,16 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     if (request != null) {
       span.setAttribute(SemanticAttributes.HTTP_METHOD.key(), method(request));
 
-      final String userAgent = requestHeader(request, USER_AGENT);
+      String userAgent = requestHeader(request, USER_AGENT);
       if (userAgent != null) {
         SemanticAttributes.HTTP_USER_AGENT.set(span, userAgent);
       }
 
       // Copy of HttpServerDecorator url handling
       try {
-        final URI url = url(request);
+        URI url = url(request);
         if (url != null) {
-          final StringBuilder urlBuilder = new StringBuilder();
+          StringBuilder urlBuilder = new StringBuilder();
           if (url.getScheme() != null) {
             urlBuilder.append(url.getScheme());
             urlBuilder.append("://");
@@ -90,17 +90,17 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
               }
             }
           }
-          final String path = url.getPath();
+          String path = url.getPath();
           if (path.isEmpty()) {
             urlBuilder.append("/");
           } else {
             urlBuilder.append(path);
           }
-          final String query = url.getQuery();
+          String query = url.getQuery();
           if (query != null) {
             urlBuilder.append("?").append(query);
           }
-          final String fragment = url.getFragment();
+          String fragment = url.getFragment();
           if (fragment != null) {
             urlBuilder.append("#").append(fragment);
           }
@@ -122,7 +122,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
   public Span onResponse(final Span span, final RESPONSE response) {
     assert span != null;
     if (response != null) {
-      final Integer status = status(response);
+      Integer status = status(response);
       if (status != null) {
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE.key(), status);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));

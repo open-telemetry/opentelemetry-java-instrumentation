@@ -44,8 +44,8 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
   def setupSpec() {
     broker.start()
-    final ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
-    final Connection connection = connectionFactory.createConnection()
+    ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
+    Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 

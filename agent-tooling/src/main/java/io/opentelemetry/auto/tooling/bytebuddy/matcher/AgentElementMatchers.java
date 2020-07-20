@@ -75,7 +75,7 @@ public class AgentElementMatchers {
     try {
       return td.getTypeName();
     } catch (final IllegalStateException ex) {
-      final String message = ex.getMessage();
+      String message = ex.getMessage();
       if (message.startsWith("Cannot resolve type description for ")) {
         return message.replace("Cannot resolve type description for ", "");
       } else {

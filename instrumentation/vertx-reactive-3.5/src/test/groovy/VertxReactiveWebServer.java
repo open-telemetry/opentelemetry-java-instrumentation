@@ -48,9 +48,9 @@ public class VertxReactiveWebServer extends AbstractVerticle {
       throws ExecutionException, InterruptedException, TimeoutException {
     /* This is highly against Vertx ideas, but our tests are synchronous
     so we have to make sure server is up and running */
-    final CompletableFuture<Void> future = new CompletableFuture<>();
+    CompletableFuture<Void> future = new CompletableFuture<>();
 
-    final Vertx server = Vertx.vertx(new VertxOptions());
+    Vertx server = Vertx.vertx(new VertxOptions());
 
     client =
         JDBCClient.createShared(
@@ -65,7 +65,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
         new DeploymentOptions().setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port)),
         res -> {
           if (!res.succeeded()) {
-            final RuntimeException exception =
+            RuntimeException exception =
                 new RuntimeException("Cannot deploy server Verticle", res.cause());
             future.completeExceptionally(exception);
           }
@@ -81,8 +81,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   public void start(final io.vertx.core.Future<Void> startFuture) {
     setUpInitialData(
         ready -> {
-          final Router router = Router.router(vertx);
-          final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
+          Router router = Router.router(vertx);
+          int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
           log.info("Listening on port {}", port);
           router
               .route(SUCCESS.getPath())
@@ -100,8 +100,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   @WithSpan
   private void handleListProducts(final RoutingContext routingContext) {
-    final HttpServerResponse response = routingContext.response();
-    final Single<JsonArray> jsonArraySingle = listProducts();
+    HttpServerResponse response = routingContext.response();
+    Single<JsonArray> jsonArraySingle = listProducts();
 
     jsonArraySingle.subscribe(
         arr -> response.putHeader("content-type", "application/json").end(arr.encode()));
@@ -114,7 +114,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
         .flatMap(
             result -> {
               Thread.dumpStack();
-              final JsonArray arr = new JsonArray();
+              JsonArray arr = new JsonArray();
               result.getRows().forEach(arr::add);
               return Single.just(arr);
             });
@@ -127,7 +127,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
             throw new RuntimeException(res.cause());
           }
 
-          final SQLConnection conn = res.result();
+          SQLConnection conn = res.result();
 
           conn.execute(
               "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)",

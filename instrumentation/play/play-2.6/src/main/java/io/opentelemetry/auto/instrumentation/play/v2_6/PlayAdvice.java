@@ -31,7 +31,7 @@ import scala.concurrent.Future;
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Argument(0) final Request req) {
-    final Span span = TRACER.spanBuilder("play.request").startSpan();
+    Span span = TRACER.spanBuilder("play.request").startSpan();
     DECORATE.afterStart(span);
 
     return new SpanWithScope(span, currentContextWith(span));
@@ -44,7 +44,7 @@ public class PlayAdvice {
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final Request req,
       @Advice.Return(readOnly = false) final Future<Result> responseFuture) {
-    final Span playControllerSpan = playControllerScope.getSpan();
+    Span playControllerSpan = playControllerScope.getSpan();
 
     // Call onRequest on return after tags are populated.
     DECORATE.updateSpanName(playControllerSpan, req);
@@ -61,7 +61,7 @@ public class PlayAdvice {
     playControllerScope.closeScope();
     // span finished in RequestCompleteCallback
 
-    final Span rootSpan = TRACER.getCurrentSpan();
+    Span rootSpan = TRACER.getCurrentSpan();
     // set the span name on the upstream akka/netty span
     DECORATE.updateSpanName(rootSpan, req);
   }

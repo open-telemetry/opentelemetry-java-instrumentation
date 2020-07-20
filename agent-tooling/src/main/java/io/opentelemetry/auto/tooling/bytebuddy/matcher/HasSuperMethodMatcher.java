@@ -41,12 +41,12 @@ class HasSuperMethodMatcher<T extends MethodDescription>
     if (target.isConstructor()) {
       return false;
     }
-    final Junction<MethodDescription> signatureMatcher = hasSignature(target.asSignatureToken());
+    Junction<MethodDescription> signatureMatcher = hasSignature(target.asSignatureToken());
     TypeDefinition declaringType = target.getDeclaringType();
-    final Set<TypeDefinition> checkedInterfaces = new HashSet<>(8);
+    Set<TypeDefinition> checkedInterfaces = new HashSet<>(8);
 
     while (declaringType != null) {
-      for (final MethodDescription methodDescription : declaringType.getDeclaredMethods()) {
+      for (MethodDescription methodDescription : declaringType.getDeclaredMethods()) {
         if (signatureMatcher.matches(methodDescription) && matcher.matches(methodDescription)) {
           return true;
         }
@@ -63,9 +63,9 @@ class HasSuperMethodMatcher<T extends MethodDescription>
       final TypeList.Generic interfaces,
       final Junction<MethodDescription> signatureMatcher,
       final Set<TypeDefinition> checkedInterfaces) {
-    for (final TypeDefinition type : interfaces) {
+    for (TypeDefinition type : interfaces) {
       if (checkedInterfaces.add(type)) {
-        for (final MethodDescription methodDescription : type.getDeclaredMethods()) {
+        for (MethodDescription methodDescription : type.getDeclaredMethods()) {
           if (signatureMatcher.matches(methodDescription) && matcher.matches(methodDescription)) {
             return true;
           }

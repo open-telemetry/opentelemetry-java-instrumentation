@@ -68,7 +68,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     // This is mainly for compatibility with 10.0
     transformers.put(
         named("singleRequest").and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
@@ -91,20 +91,20 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpExt.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpExt.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final Span span =
+      Span span =
           TRACER.spanBuilder(DECORATE.spanNameForRequest(request)).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
-      final Context context = withSpan(span, Context.current());
+      Context context = withSpan(span, Context.current());
 
       if (request != null) {
-        final AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
+        AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
         OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, request, headers);
         // Request is immutable, so we have to assign new value once we update headers
         request = headers.getRequest();
@@ -124,7 +124,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       }
       CallDepthThreadLocalMap.reset(HttpExt.class);
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
 
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());

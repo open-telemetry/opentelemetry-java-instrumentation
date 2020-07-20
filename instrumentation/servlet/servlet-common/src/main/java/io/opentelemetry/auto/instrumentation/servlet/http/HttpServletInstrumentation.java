@@ -95,7 +95,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       }
 
       // Here we use the Method instead of "this.class.name" to distinguish calls to "super".
-      final Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
+      Span span = TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).startSpan();
       DECORATE.afterStart(span);
 
       return new SpanWithScope(span, currentContextWith(span));
@@ -107,7 +107,7 @@ public final class HttpServletInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();

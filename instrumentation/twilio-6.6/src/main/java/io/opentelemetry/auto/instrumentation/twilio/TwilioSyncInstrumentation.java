@@ -107,12 +107,12 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
       // case of async operations where we want visibility into how long the task was delayed from
       // starting. Our call depth checker does not span threads, so the async case is handled
       // automatically for us.
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Twilio.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Twilio.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final Span span =
+      Span span =
           TRACER
               .spanBuilder(DECORATE.spanNameOnServiceExecution(that, methodName))
               .setSpanKind(CLIENT)
@@ -135,7 +135,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
 
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       try {
-        final Span span = spanWithScope.getSpan();
+        Span span = spanWithScope.getSpan();
 
         DECORATE.onResult(span, response);
         DECORATE.onError(span, throwable);

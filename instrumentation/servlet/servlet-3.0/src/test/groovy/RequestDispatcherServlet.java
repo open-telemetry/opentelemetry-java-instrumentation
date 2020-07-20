@@ -33,9 +33,9 @@ public class RequestDispatcherServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp)
         throws ServletException, IOException {
-      final String target = req.getServletPath().replace("/dispatch", "");
-      final ServletContext context = getServletContext();
-      final RequestDispatcher dispatcher = context.getRequestDispatcher(target);
+      String target = req.getServletPath().replace("/dispatch", "");
+      ServletContext context = getServletContext();
+      RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       dispatcher.forward(req, resp);
     }
   }
@@ -45,9 +45,9 @@ public class RequestDispatcherServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp)
         throws ServletException, IOException {
-      final String target = req.getServletPath().replace("/dispatch", "");
-      final ServletContext context = getServletContext();
-      final RequestDispatcher dispatcher = context.getRequestDispatcher(target);
+      String target = req.getServletPath().replace("/dispatch", "");
+      ServletContext context = getServletContext();
+      RequestDispatcher dispatcher = context.getRequestDispatcher(target);
       dispatcher.include(req, resp);
     }
   }

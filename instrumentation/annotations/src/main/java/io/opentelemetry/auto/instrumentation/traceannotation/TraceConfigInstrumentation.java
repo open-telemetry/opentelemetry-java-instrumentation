@@ -68,8 +68,8 @@ public class TraceConfigInstrumentation implements Instrumenter {
       return agentBuilder;
     }
 
-    for (final Map.Entry<String, Set<String>> entry : classMethodsToTrace.entrySet()) {
-      final TracerClassInstrumentation tracerConfigClass =
+    for (Map.Entry<String, Set<String>> entry : classMethodsToTrace.entrySet()) {
+      TracerClassInstrumentation tracerConfigClass =
           new TracerClassInstrumentation(entry.getKey(), entry.getValue());
       agentBuilder = tracerConfigClass.instrument(agentBuilder);
     }
@@ -113,7 +113,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     @Override
     public Map<ElementMatcher<? super MethodDescription>, String> transformers() {
       ElementMatcher.Junction<MethodDescription> methodMatchers = null;
-      for (final String methodName : methodNames) {
+      for (String methodName : methodNames) {
         if (methodMatchers == null) {
           methodMatchers = named(methodName);
         } else {

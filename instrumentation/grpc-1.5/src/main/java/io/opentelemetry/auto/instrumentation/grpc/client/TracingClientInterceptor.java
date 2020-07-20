@@ -55,13 +55,13 @@ public class TracingClientInterceptor implements ClientInterceptor {
       final CallOptions callOptions,
       final Channel next) {
 
-    final String methodName = method.getFullMethodName();
-    final Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();
-    try (final Scope scope = currentContextWith(span)) {
+    String methodName = method.getFullMethodName();
+    Span span = TRACER.spanBuilder(methodName).setSpanKind(CLIENT).startSpan();
+    try (Scope scope = currentContextWith(span)) {
       DECORATE.afterStart(span);
       GrpcHelper.prepareSpan(span, methodName, peerAddress, false);
 
-      final ClientCall<ReqT, RespT> result;
+      ClientCall<ReqT, RespT> result;
       try {
         // call other interceptors
         result = next.newCall(method, callOptions);
@@ -91,9 +91,9 @@ public class TracingClientInterceptor implements ClientInterceptor {
       // (luckily the grpc instrumentation doesn't need to reference unshaded grpc Context, so we
       // don't need to worry about distinguishing them like in the opentelemetry-api
       // instrumentation)
-      final Context context = withSpan(span, Context.current());
+      Context context = withSpan(span, Context.current());
       OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         super.start(new TracingClientCallListener<>(span, responseListener), headers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -105,7 +105,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(final ReqT message) {
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         super.sendMessage(message);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -133,7 +133,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
               "message.type", AttributeValue.stringAttributeValue("SENT"),
               "message.id", AttributeValue.longAttributeValue(messageId.incrementAndGet()));
       span.addEvent("message", attributes);
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         delegate().onMessage(message);
       }
     }
@@ -142,7 +142,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onClose(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
       // Finishes span.
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         delegate().onClose(status, trailers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -155,7 +155,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onReady() {
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         delegate().onReady();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);

@@ -66,11 +66,11 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final SharedSessionContract session) {
 
-      final Span span = TRACER.spanBuilder("Session").startSpan();
+      Span span = TRACER.spanBuilder("Session").startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, session);
 
-      final ContextStore<SharedSessionContract, Span> contextStore =
+      ContextStore<SharedSessionContract, Span> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
       contextStore.putIfAbsent(session, span);
     }

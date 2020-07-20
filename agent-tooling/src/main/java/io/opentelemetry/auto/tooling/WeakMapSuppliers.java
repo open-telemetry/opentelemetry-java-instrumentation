@@ -51,7 +51,7 @@ class WeakMapSuppliers {
 
     @Override
     public <K, V> WeakMap<K, V> get() {
-      final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false, true);
+      WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false, true);
       CommonTaskExecutor.INSTANCE.scheduleAtFixedRate(
           MapCleaningTask.INSTANCE,
           map,
@@ -115,7 +115,7 @@ class WeakMapSuppliers {
           if (map.containsKey(key)) {
             return map.get(key);
           } else {
-            final V value = supplier.get(key);
+            V value = supplier.get(key);
 
             map.put(key, value);
             return value;

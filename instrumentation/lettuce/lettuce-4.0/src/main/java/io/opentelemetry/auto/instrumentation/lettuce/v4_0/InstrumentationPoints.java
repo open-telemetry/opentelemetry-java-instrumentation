@@ -36,7 +36,7 @@ public final class InstrumentationPoints {
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
   public static SpanWithScope beforeCommand(final RedisCommand<?, ?, ?> command) {
-    final Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command);
+    Span span = LettuceDatabaseClientTracer.TRACER.startSpan(null, command);
     return new SpanWithScope(span, LettuceDatabaseClientTracer.TRACER.startScope(span));
   }
 
@@ -45,7 +45,7 @@ public final class InstrumentationPoints {
       final SpanWithScope spanWithScope,
       final Throwable throwable,
       final AsyncCommand<?, ?, ?> asyncCommand) {
-    final Span span = spanWithScope.getSpan();
+    Span span = spanWithScope.getSpan();
     if (throwable != null) {
       LettuceDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
     } else if (expectsResponse(command)) {
@@ -69,12 +69,12 @@ public final class InstrumentationPoints {
   }
 
   public static SpanWithScope beforeConnect(final RedisURI redisURI) {
-    final Span span = LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT");
+    Span span = LettuceConnectionDatabaseClientTracer.TRACER.startSpan(redisURI, "CONNECT");
     return new SpanWithScope(span, LettuceConnectionDatabaseClientTracer.TRACER.startScope(span));
   }
 
   public static void afterConnect(final SpanWithScope spanWithScope, final Throwable throwable) {
-    final Span span = spanWithScope.getSpan();
+    Span span = spanWithScope.getSpan();
     if (throwable != null) {
       LettuceConnectionDatabaseClientTracer.TRACER.endExceptionally(span, throwable);
     } else {
@@ -91,7 +91,7 @@ public final class InstrumentationPoints {
    * @return false if the span should finish early (the command will not have a return value)
    */
   public static boolean expectsResponse(final RedisCommand<?, ?, ?> command) {
-    final ProtocolKeyword keyword = command.getType();
+    ProtocolKeyword keyword = command.getType();
     return !(isNonInstrumentingCommand(keyword) || isNonInstrumentingKeyword(keyword));
   }
 

@@ -38,7 +38,7 @@ public class SpringWebMvcDecorator extends BaseDecorator {
 
   public Span onRequest(final Span span, final HttpServletRequest request) {
     if (request != null) {
-      final Object bestMatchingPattern =
+      Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (bestMatchingPattern != null) {
         span.updateName(bestMatchingPattern.toString());
@@ -48,12 +48,12 @@ public class SpringWebMvcDecorator extends BaseDecorator {
   }
 
   public String spanNameOnHandle(final Object handler) {
-    final Class<?> clazz;
-    final String methodName;
+    Class<?> clazz;
+    String methodName;
 
     if (handler instanceof HandlerMethod) {
       // name span based on the class and method name defined in the handler
-      final Method method = ((HandlerMethod) handler).getMethod();
+      Method method = ((HandlerMethod) handler).getMethod();
       clazz = method.getDeclaringClass();
       methodName = method.getName();
     } else if (handler instanceof HttpRequestHandler) {
@@ -78,11 +78,11 @@ public class SpringWebMvcDecorator extends BaseDecorator {
   }
 
   public String spanNameOnRender(final ModelAndView mv) {
-    final String viewName = mv.getViewName();
+    String viewName = mv.getViewName();
     if (viewName != null) {
       return "Render " + viewName;
     }
-    final View view = mv.getView();
+    View view = mv.getView();
     if (view != null) {
       return "Render " + view.getClass().getSimpleName();
     }
@@ -92,7 +92,7 @@ public class SpringWebMvcDecorator extends BaseDecorator {
 
   public Span onRender(final Span span, final ModelAndView mv) {
     span.setAttribute("view.name", mv.getViewName());
-    final View view = mv.getView();
+    View view = mv.getView();
     if (view != null) {
       span.setAttribute("view.type", spanNameForClass(view.getClass()));
     }

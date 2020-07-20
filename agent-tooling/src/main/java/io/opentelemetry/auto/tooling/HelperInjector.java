@@ -90,8 +90,8 @@ public class HelperInjector implements Transformer {
 
   public static HelperInjector forDynamicTypes(
       final String requestingName, final Collection<DynamicType.Unloaded<?>> helpers) {
-    final Map<String, byte[]> bytes = new HashMap<>(helpers.size());
-    for (final DynamicType.Unloaded<?> helper : helpers) {
+    Map<String, byte[]> bytes = new HashMap<>(helpers.size());
+    for (DynamicType.Unloaded<?> helper : helpers) {
       bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
     }
     return new HelperInjector(requestingName, bytes);
@@ -99,13 +99,12 @@ public class HelperInjector implements Transformer {
 
   private Map<String, byte[]> getHelperMap() throws IOException {
     if (dynamicTypeMap.isEmpty()) {
-      final Map<String, byte[]> classnameToBytes = new LinkedHashMap<>();
+      Map<String, byte[]> classnameToBytes = new LinkedHashMap<>();
 
-      final ClassFileLocator locator =
-          ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader());
+      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader());
 
-      for (final String helperClassName : helperClassNames) {
-        final byte[] classBytes = locator.locate(helperClassName).resolve();
+      for (String helperClassName : helperClassNames) {
+        byte[] classBytes = locator.locate(helperClassName).resolve();
         classnameToBytes.put(helperClassName, classBytes);
       }
 
@@ -130,8 +129,8 @@ public class HelperInjector implements Transformer {
         try {
           log.debug("Injecting classes onto classloader {} -> {}", classLoader, helperClassNames);
 
-          final Map<String, byte[]> classnameToBytes = getHelperMap();
-          final Map<String, Class<?>> classes;
+          Map<String, byte[]> classnameToBytes = getHelperMap();
+          Map<String, Class<?>> classes;
           if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
             classes = injectBootstrapClassLoader(classnameToBytes);
           } else {
@@ -142,7 +141,7 @@ public class HelperInjector implements Transformer {
           // And there's exactly one unnamed module per classloader
           // Use the module of the first class for convenience
           if (JavaModule.isSupported()) {
-            final JavaModule javaModule = JavaModule.ofType(classes.values().iterator().next());
+            JavaModule javaModule = JavaModule.ofType(classes.values().iterator().next());
             helperModules.add(new WeakReference<>(javaModule.unwrap()));
           }
         } catch (final Exception e) {
@@ -172,7 +171,7 @@ public class HelperInjector implements Transformer {
     // a reference count -- but for now, starting simple.
 
     // Failures to create a tempDir are propagated as IOException and handled by transform
-    final File tempDir = createTempDir();
+    File tempDir = createTempDir();
     try {
       return ClassInjector.UsingInstrumentation.of(
               tempDir,
@@ -192,10 +191,10 @@ public class HelperInjector implements Transformer {
 
   private void ensureModuleCanReadHelperModules(final JavaModule target) {
     if (JavaModule.isSupported() && target != JavaModule.UNSUPPORTED && target.isNamed()) {
-      for (final WeakReference<Object> helperModuleReference : helperModules) {
-        final Object realModule = helperModuleReference.get();
+      for (WeakReference<Object> helperModuleReference : helperModules) {
+        Object realModule = helperModuleReference.get();
         if (realModule != null) {
-          final JavaModule helperModule = JavaModule.of(realModule);
+          JavaModule helperModule = JavaModule.of(realModule);
 
           if (!target.canRead(helperModule)) {
             log.debug("Adding module read from {} to {}", target, helperModule);
@@ -220,7 +219,7 @@ public class HelperInjector implements Transformer {
     // Not using Files.delete for deleting the directory because failures
     // create Exceptions which may prove expensive.  Instead using the
     // older File API which simply returns a boolean.
-    final boolean deleted = file.delete();
+    boolean deleted = file.delete();
     if (!deleted) {
       file.deleteOnExit();
     }

@@ -62,7 +62,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isProtected())
@@ -97,7 +97,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
         @Advice.Argument(0) final ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") final List<HandlerMapping> handlerMappings) {
       if (springCtx.containsBean("otelAutoDispatcherFilter")) {
-        final HandlerMappingResourceNameFilter filter =
+        HandlerMappingResourceNameFilter filter =
             (HandlerMappingResourceNameFilter) springCtx.getBean("otelAutoDispatcherFilter");
         if (handlerMappings != null && filter != null) {
           filter.setHandlerMappings(handlerMappings);
@@ -110,7 +110,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
-      final Span span = TRACER.spanBuilder(DECORATE.spanNameOnRender(mv)).startSpan();
+      Span span = TRACER.spanBuilder(DECORATE.spanNameOnRender(mv)).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRender(span, mv);
       return new SpanWithScope(span, currentContextWith(span));
@@ -119,7 +119,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
@@ -130,7 +130,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   public static class ErrorHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) final Exception exception) {
-      final Span span = TRACER.getCurrentSpan();
+      Span span = TRACER.getCurrentSpan();
       if (span.getContext().isValid() && exception != null) {
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)

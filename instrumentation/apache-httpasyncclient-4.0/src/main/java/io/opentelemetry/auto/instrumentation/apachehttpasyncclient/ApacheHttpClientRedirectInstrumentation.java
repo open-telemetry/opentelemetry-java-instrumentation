@@ -86,8 +86,8 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
         // (same work as Apache HttpClient 4.0.1+ does w/o instrumentation)
         redirect.setHeaders(original.getAllHeaders());
       } else {
-        for (final Header header : original.getAllHeaders()) {
-          final String name = header.getName().toLowerCase();
+        for (Header header : original.getAllHeaders()) {
+          String name = header.getName().toLowerCase();
           if (name.equals("traceparent") || name.equals("tracestate")) {
             if (!redirect.containsHeader(header.getName())) {
               redirect.setHeader(header.getName(), header.getValue());

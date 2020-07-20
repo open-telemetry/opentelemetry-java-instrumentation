@@ -26,7 +26,7 @@ class ClassLoaderMatcherTest extends AgentSpecification {
   def "skips agent classloader"() {
     setup:
     URL root = new URL("file://")
-    final URLClassLoader agentLoader = new AgentClassLoader(root, null, null)
+    URLClassLoader agentLoader = new AgentClassLoader(root, null, null)
     expect:
     ClassLoaderMatcher.skipClassLoader().matches(agentLoader)
   }
@@ -34,14 +34,14 @@ class ClassLoaderMatcherTest extends AgentSpecification {
   def "skips exporter classloader"() {
     setup:
     URL url = new URL("file://")
-    final URLClassLoader exporterLoader = new ExporterClassLoader(url, null)
+    URLClassLoader exporterLoader = new ExporterClassLoader(url, null)
     expect:
     ClassLoaderMatcher.skipClassLoader().matches(exporterLoader)
   }
 
   def "does not skip empty classloader"() {
     setup:
-    final ClassLoader emptyLoader = new ClassLoader() {}
+    ClassLoader emptyLoader = new ClassLoader() {}
     expect:
     !ClassLoaderMatcher.skipClassLoader().matches(emptyLoader)
   }

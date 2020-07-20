@@ -80,12 +80,12 @@ public final class JedisInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope onEnter(
         @Advice.This final Connection connection, @Advice.Argument(0) final Command command) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Connection.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final Span span = TRACER.spanBuilder(command.name()).setSpanKind(CLIENT).startSpan();
+      Span span = TRACER.spanBuilder(command.name()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onStatement(span, command.name());
@@ -100,7 +100,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       }
       CallDepthThreadLocalMap.reset(Connection.class);
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();

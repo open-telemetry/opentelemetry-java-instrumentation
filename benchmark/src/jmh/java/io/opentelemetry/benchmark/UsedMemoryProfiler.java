@@ -51,10 +51,10 @@ public class UsedMemoryProfiler implements InternalProfiler {
       final IterationParams iterationParams,
       final IterationResult result) {
 
-    final long totalHeap = Runtime.getRuntime().totalMemory();
-    final long usedHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+    long totalHeap = Runtime.getRuntime().totalMemory();
+    long usedHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-    final Collection<ScalarResult> results = new ArrayList<>();
+    Collection<ScalarResult> results = new ArrayList<>();
     results.add(
         new ScalarResult("heap.total.before", totalHeapBefore, "bytes", AggregationPolicy.AVG));
     results.add(

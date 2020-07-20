@@ -102,7 +102,7 @@ public abstract class ServletHttpServerTracer
   }
 
   public void setPrincipal(Span span, HttpServletRequest request) {
-    final Principal principal = request.getUserPrincipal();
+    Principal principal = request.getUserPrincipal();
     if (principal != null) {
       span.setAttribute(MoreAttributes.USER_NAME, principal.getName());
     }

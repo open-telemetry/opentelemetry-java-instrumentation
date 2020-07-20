@@ -35,7 +35,7 @@ public class WithSpanAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static SpanWithScope onEnter(@Advice.Origin final Method method) {
-    final Span span =
+    Span span =
         TRACER
             .spanBuilder(DECORATE.spanNameForMethodWithAnnotation(method))
             .setSpanKind(DECORATE.extractSpanKind(method))
@@ -47,7 +47,7 @@ public class WithSpanAdvice {
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
       @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
-    final Span span = spanWithScope.getSpan();
+    Span span = spanWithScope.getSpan();
     DECORATE.onError(span, throwable);
     DECORATE.beforeFinish(span);
     span.end();

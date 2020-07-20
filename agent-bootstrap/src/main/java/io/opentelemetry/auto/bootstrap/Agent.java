@@ -58,7 +58,7 @@ public class Agent {
   public static void start(final Instrumentation inst, final URL bootstrapURL) {
     startAgent(inst, bootstrapURL);
 
-    final boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
+    boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
 
     /*
      * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
@@ -89,9 +89,9 @@ public class Agent {
 
   private static void registerLogManagerCallback(final ClassLoadCallBack callback) {
     try {
-      final Class<?> agentInstallerClass =
+      Class<?> agentInstallerClass =
           AGENT_CLASSLOADER.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");
-      final Method registerCallbackMethod =
+      Method registerCallbackMethod =
           agentInstallerClass.getMethod("registerClassLoadCallback", String.class, Runnable.class);
       registerCallbackMethod.invoke(null, "java.util.logging.LogManager", callback);
     } catch (final Exception ex) {
@@ -108,7 +108,7 @@ public class Agent {
        * to load classes being transformed. To avoid this we start a thread here that calls the callback.
        * This seems to resolve this problem.
        */
-      final Thread thread =
+      Thread thread =
           new Thread(
               new Runnable() {
                 @Override
@@ -146,10 +146,10 @@ public class Agent {
   private static synchronized void startAgent(final Instrumentation inst, final URL bootstrapURL) {
     if (AGENT_CLASSLOADER == null) {
       try {
-        final ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapURL);
-        final Class<?> agentInstallerClass =
+        ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapURL);
+        Class<?> agentInstallerClass =
             agentClassLoader.loadClass("io.opentelemetry.auto.tooling.AgentInstaller");
-        final Method agentInstallerMethod =
+        Method agentInstallerMethod =
             agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
         agentInstallerMethod.invoke(null, inst);
         AGENT_CLASSLOADER = agentClassLoader;
@@ -167,11 +167,11 @@ public class Agent {
     // so there is no need to have a 'agentTracerInstalled' flag here.
     try {
       // install global tracer
-      final Class<?> tracerInstallerClass =
+      Class<?> tracerInstallerClass =
           AGENT_CLASSLOADER.loadClass("io.opentelemetry.auto.tooling.TracerInstaller");
-      final Method tracerInstallerMethod = tracerInstallerClass.getMethod("installAgentTracer");
+      Method tracerInstallerMethod = tracerInstallerClass.getMethod("installAgentTracer");
       tracerInstallerMethod.invoke(null);
-      final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
+      Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
       logVersionInfoMethod.invoke(null);
     } catch (final Throwable ex) {
       log.error("Throwable thrown while installing the agent tracer", ex);
@@ -204,7 +204,7 @@ public class Agent {
    */
   private static ClassLoader createAgentClassLoader(
       final String innerJarFilename, final URL bootstrapURL) throws Exception {
-    final ClassLoader agentParent;
+    ClassLoader agentParent;
     if (isJavaBefore9()) {
       agentParent = null; // bootstrap
     } else {
@@ -212,10 +212,10 @@ public class Agent {
       agentParent = getPlatformClassLoader();
     }
 
-    final Class<?> loaderClass =
+    Class<?> loaderClass =
         ClassLoader.getSystemClassLoader()
             .loadClass("io.opentelemetry.auto.bootstrap.AgentClassLoader");
-    final Constructor constructor =
+    Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
     return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);
   }
@@ -226,7 +226,7 @@ public class Agent {
      Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
      compatible with java 7 + 8.
     */
-    final Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
+    Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
     return (ClassLoader) method.invoke(null);
   }
 
@@ -236,14 +236,14 @@ public class Agent {
    * @return true if we should
    */
   private static boolean isDebugMode() {
-    final String tracerDebugLevelSysprop = "ota.trace.debug";
-    final String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
+    String tracerDebugLevelSysprop = "ota.trace.debug";
+    String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
 
     if (tracerDebugLevelProp != null) {
       return Boolean.parseBoolean(tracerDebugLevelProp);
     }
 
-    final String tracerDebugLevelEnv =
+    String tracerDebugLevelEnv =
         System.getenv(tracerDebugLevelSysprop.replace('.', '_').toUpperCase());
 
     if (tracerDebugLevelEnv != null) {
@@ -259,9 +259,9 @@ public class Agent {
    * @return true if we detect a custom log manager being used.
    */
   private static boolean isAppUsingCustomLogManager() {
-    final String tracerCustomLogManSysprop = "ota.app.customlogmanager";
-    final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
-    final String customLogManagerEnv =
+    String tracerCustomLogManSysprop = "ota.app.customlogmanager";
+    String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
+    String customLogManagerEnv =
         System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
 
     if (customLogManagerProp != null || customLogManagerEnv != null) {
@@ -272,7 +272,7 @@ public class Agent {
           || Boolean.parseBoolean(customLogManagerEnv);
     }
 
-    final String jbossHome = System.getenv("JBOSS_HOME");
+    String jbossHome = System.getenv("JBOSS_HOME");
     if (jbossHome != null) {
       log.debug("Env - jboss: " + jbossHome);
       // JBoss/Wildfly is known to set a custom log manager after startup.
@@ -283,9 +283,9 @@ public class Agent {
       return true;
     }
 
-    final String logManagerProp = System.getProperty("java.util.logging.manager");
+    String logManagerProp = System.getProperty("java.util.logging.manager");
     if (logManagerProp != null) {
-      final boolean onSysClasspath =
+      boolean onSysClasspath =
           ClassLoader.getSystemResource(logManagerProp.replaceAll("\\.", "/") + ".class") != null;
       log.debug("Prop - logging.manager: " + logManagerProp);
       log.debug("logging.manager on system classpath: " + onSysClasspath);
@@ -309,7 +309,7 @@ public class Agent {
     // FIXME: this is quite a hack because there maybe jfr classes on classpath somehow that have
     // nothing to do with JDK but this should be safe because only thing this does is to delay
     // tracer install
-    final String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
+    String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
     return Thread.currentThread().getContextClassLoader().getResource(jfrClassResourceName) != null;
   }
 }

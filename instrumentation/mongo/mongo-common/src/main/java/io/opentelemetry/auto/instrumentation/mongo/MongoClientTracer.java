@@ -54,15 +54,15 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   @Override
   protected String dbInstance(final CommandStartedEvent event) {
     // Use description if set.
-    final ConnectionDescription connectionDescription = event.getConnectionDescription();
+    ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
-      final ConnectionId connectionId = connectionDescription.getConnectionId();
+      ConnectionId connectionId = connectionDescription.getConnectionId();
       if (connectionId != null) {
-        final ServerId serverId = connectionId.getServerId();
+        ServerId serverId = connectionId.getServerId();
         if (serverId != null) {
-          final ClusterId clusterId = serverId.getClusterId();
+          ClusterId clusterId = serverId.getClusterId();
           if (clusterId != null) {
-            final String description = clusterId.getDescription();
+            String description = clusterId.getDescription();
             if (description != null) {
               return description;
             }
@@ -86,13 +86,13 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
 
   @Override
   protected String dbUrl(final CommandStartedEvent event) {
-    final ConnectionDescription connectionDescription = event.getConnectionDescription();
+    ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
-      final ServerAddress sa = connectionDescription.getServerAddress();
+      ServerAddress sa = connectionDescription.getServerAddress();
       if (sa != null) {
         // https://docs.mongodb.com/manual/reference/connection-string/
-        final String host = sa.getHost();
-        final int port = sa.getPort();
+        String host = sa.getHost();
+        int port = sa.getPort();
         if (host != null && port != 0) {
           return "mongodb://" + host + ":" + port;
         }
@@ -104,7 +104,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   @Override
   public String normalizeQuery(final BsonDocument statement) {
     // scrub the Mongo command so that parameters are removed from the string
-    final BsonDocument scrubbed = scrub(statement);
+    BsonDocument scrubbed = scrub(statement);
     return scrubbed.toString();
   }
 
@@ -118,12 +118,12 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   private static final BsonValue HIDDEN_CHAR = new BsonString("?");
 
   private static BsonDocument scrub(final BsonDocument origin) {
-    final BsonDocument scrub = new BsonDocument();
-    for (final Map.Entry<String, BsonValue> entry : origin.entrySet()) {
+    BsonDocument scrub = new BsonDocument();
+    for (Map.Entry<String, BsonValue> entry : origin.entrySet()) {
       if (UNSCRUBBED_FIELDS.contains(entry.getKey()) && entry.getValue().isString()) {
         scrub.put(entry.getKey(), entry.getValue());
       } else {
-        final BsonValue child = scrub(entry.getValue());
+        BsonValue child = scrub(entry.getValue());
         scrub.put(entry.getKey(), child);
       }
     }
@@ -131,16 +131,16 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   private static BsonValue scrub(final BsonArray origin) {
-    final BsonArray scrub = new BsonArray();
-    for (final BsonValue value : origin) {
-      final BsonValue child = scrub(value);
+    BsonArray scrub = new BsonArray();
+    for (BsonValue value : origin) {
+      BsonValue child = scrub(value);
       scrub.add(child);
     }
     return scrub;
   }
 
   private static BsonValue scrub(final BsonValue origin) {
-    final BsonValue scrubbed;
+    BsonValue scrubbed;
     if (origin.isDocument()) {
       scrubbed = scrub(origin.asDocument());
     } else if (origin.isArray()) {

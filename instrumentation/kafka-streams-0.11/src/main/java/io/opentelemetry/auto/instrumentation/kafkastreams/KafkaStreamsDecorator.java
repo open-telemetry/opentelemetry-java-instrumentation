@@ -32,7 +32,7 @@ public class KafkaStreamsDecorator extends ClientDecorator {
     if (record == null) {
       return null;
     }
-    final String topic = record.topic();
+    String topic = record.topic();
     if (topic != null) {
       return topic;
     } else {

@@ -41,7 +41,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
 
   @Override
   public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent msg) {
-    final ChannelTraceContext channelTraceContext =
+    ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
     Span parent = channelTraceContext.getClientParentSpan();
@@ -49,12 +49,12 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
       parent = DefaultSpan.getInvalid();
       channelTraceContext.setClientParentSpan(DefaultSpan.getInvalid());
     }
-    final Span span = channelTraceContext.getClientSpan();
+    Span span = channelTraceContext.getClientSpan();
 
-    final boolean finishSpan = msg.getMessage() instanceof HttpResponse;
+    boolean finishSpan = msg.getMessage() instanceof HttpResponse;
 
     if (span != null && finishSpan) {
-      try (final Scope scope = TRACER.withSpan(span)) {
+      try (Scope scope = TRACER.withSpan(span)) {
         DECORATE.onResponse(span, (HttpResponse) msg.getMessage());
         DECORATE.beforeFinish(span);
         span.end();
@@ -62,7 +62,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
     }
 
     // We want the callback in the scope of the parent, not the client span
-    try (final Scope scope = TRACER.withSpan(parent)) {
+    try (Scope scope = TRACER.withSpan(parent)) {
       ctx.sendUpstream(msg);
     }
   }

@@ -102,10 +102,10 @@ public class Utils {
 
   /** @return The current stack trace with multiple entries on new lines. */
   public static String getStackTraceAsString() {
-    final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    final StringBuilder stringBuilder = new StringBuilder();
-    final String lineSeparator = System.getProperty("line.separator");
-    for (final StackTraceElement element : stackTrace) {
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    StringBuilder stringBuilder = new StringBuilder();
+    String lineSeparator = System.getProperty("line.separator");
+    for (StackTraceElement element : stackTrace) {
       stringBuilder.append(element.toString());
       stringBuilder.append(lineSeparator);
     }

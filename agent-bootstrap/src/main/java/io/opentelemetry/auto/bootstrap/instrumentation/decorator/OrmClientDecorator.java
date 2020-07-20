@@ -22,7 +22,7 @@ public abstract class OrmClientDecorator extends DatabaseClientDecorator {
 
   public String spanNameForOperation(final String operationName, final Object entity) {
     if (entity != null) {
-      final String entityName = entityName(entity);
+      String entityName = entityName(entity);
       if (entityName != null) {
         return operationName + " " + entityName;
       }

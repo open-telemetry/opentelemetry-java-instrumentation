@@ -35,7 +35,7 @@ public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
 
   @Override
   public ClassFileLocator classFileLocator(ClassLoader classLoader, final JavaModule javaModule) {
-    final List<ClassFileLocator> locators = new ArrayList<>();
+    List<ClassFileLocator> locators = new ArrayList<>();
     locators.add(ClassFileLocator.ForClassLoader.of(Utils.getBootstrapProxy()));
     while (classLoader != null) {
       locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));

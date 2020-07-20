@@ -104,9 +104,9 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       }
 
       // Rename the parent span according to the path represented by these annotations.
-      final Span parent = TRACER.getCurrentSpan();
+      Span parent = TRACER.getCurrentSpan();
 
-      final Span span = TRACER.spanBuilder(JAX_ENDPOINT_OPERATION_NAME).startSpan();
+      Span span = TRACER.spanBuilder(JAX_ENDPOINT_OPERATION_NAME).startSpan();
       DECORATE.onControllerStart(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
@@ -121,7 +121,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       }
       CallDepthThreadLocalMap.reset(Path.class);
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();

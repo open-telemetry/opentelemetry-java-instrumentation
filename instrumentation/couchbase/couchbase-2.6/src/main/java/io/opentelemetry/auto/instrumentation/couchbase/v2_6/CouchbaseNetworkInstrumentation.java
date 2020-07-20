@@ -85,15 +85,15 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("remoteSocket") final String remoteSocket,
         @Advice.FieldValue("localSocket") final String localSocket,
         @Advice.Argument(1) final CouchbaseRequest request) {
-      final ContextStore<CouchbaseRequest, Span> contextStore =
+      ContextStore<CouchbaseRequest, Span> contextStore =
           InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
-      final Span span = contextStore.get(request);
+      Span span = contextStore.get(request);
       if (span != null) {
         span.setAttribute(SemanticAttributes.NET_PEER_NAME.key(), remoteHostname);
 
         if (remoteSocket != null) {
-          final int splitIndex = remoteSocket.lastIndexOf(":");
+          int splitIndex = remoteSocket.lastIndexOf(":");
           if (splitIndex != -1) {
             span.setAttribute(
                 SemanticAttributes.NET_PEER_PORT.key(),

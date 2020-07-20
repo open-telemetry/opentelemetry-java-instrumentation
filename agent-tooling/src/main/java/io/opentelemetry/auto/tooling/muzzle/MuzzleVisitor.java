@@ -138,9 +138,9 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
     public Reference[] generateReferences() {
       // track sources we've generated references from to avoid recursion
-      final Set<String> referenceSources = new HashSet<>();
-      final Map<String, Reference> references = new HashMap<>();
-      final Set<String> adviceClassNames = new HashSet<>();
+      Set<String> referenceSources = new HashSet<>();
+      Map<String, Reference> references = new HashMap<>();
+      Set<String> adviceClassNames = new HashSet<>();
 
       for (String adviceClassName : instrumenter.transformers().values()) {
         adviceClassNames.add(adviceClassName);
@@ -180,7 +180,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
          * }
          */
         try {
-          final MethodVisitor mv =
+          MethodVisitor mv =
               super.visitMethod(
                   Opcodes.ACC_PROTECTED + Opcodes.ACC_SYNCHRONIZED,
                   MUZZLE_METHOD_NAME,
@@ -189,9 +189,9 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
                   null);
 
           mv.visitCode();
-          final Label start = new Label();
-          final Label ret = new Label();
-          final Label finish = new Label();
+          Label start = new Label();
+          Label ret = new Label();
+          Label finish = new Label();
 
           mv.visitLabel(start);
           mv.visitInsn(Opcodes.ACONST_NULL);
@@ -216,7 +216,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
               "()[Ljava/lang/String;",
               false);
 
-          final Reference[] references = generateReferences();
+          Reference[] references = generateReferences();
           mv.visitLdcInsn(references.length);
           mv.visitTypeInsn(Opcodes.ANEWARRAY, "io/opentelemetry/auto/tooling/muzzle/Reference");
 

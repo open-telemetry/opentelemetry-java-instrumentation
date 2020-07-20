@@ -44,7 +44,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
 
   public String spanNameOnOperation(final String methodName) {
 
-    final char[] chars =
+    char[] chars =
         methodName
             .replaceFirst("^async", "")
             // 'CAS' name is special, we have to lowercase whole name

@@ -59,9 +59,9 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   }
 
   public void onResponse(final Span span, final ExecutionInfo executionInfo) {
-    final Node coordinator = executionInfo.getCoordinator();
+    Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      final Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();
+      Optional<InetSocketAddress> address = coordinator.getBroadcastRpcAddress();
       address.ifPresent(inetSocketAddress -> onPeerConnection(span, inetSocketAddress));
     }
   }

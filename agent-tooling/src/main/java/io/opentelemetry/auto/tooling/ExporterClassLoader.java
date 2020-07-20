@@ -88,7 +88,7 @@ public class ExporterClassLoader extends URLClassLoader {
       throw new ClassNotFoundException(name);
     }
     try {
-      final byte[] bytes = remapClassBytes(in);
+      byte[] bytes = remapClassBytes(in);
       definePackageIfNeeded(name);
       return defineClass(name, bytes, 0, bytes.length);
     } catch (final IOException e) {
@@ -137,8 +137,8 @@ public class ExporterClassLoader extends URLClassLoader {
   }
 
   private static byte[] remapClassBytes(InputStream in) throws IOException {
-    final ClassWriter cw = new ClassWriter(0);
-    final ClassReader cr = new ClassReader(in);
+    ClassWriter cw = new ClassWriter(0);
+    ClassReader cr = new ClassReader(in);
     cr.accept(new ClassRemapper(cw, remapper), ClassReader.EXPAND_FRAMES);
     return cw.toByteArray();
   }

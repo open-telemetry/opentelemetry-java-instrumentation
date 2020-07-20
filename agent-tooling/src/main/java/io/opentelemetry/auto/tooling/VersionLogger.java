@@ -47,8 +47,8 @@ public class VersionLogger {
   private static String getVersionString(final InputStream stream) {
     String v;
     try {
-      final StringBuilder sb = new StringBuilder();
-      final BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+      StringBuilder sb = new StringBuilder();
+      BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
       for (int c = br.read(); c != -1; c = br.read()) {
         sb.append((char) c);
       }

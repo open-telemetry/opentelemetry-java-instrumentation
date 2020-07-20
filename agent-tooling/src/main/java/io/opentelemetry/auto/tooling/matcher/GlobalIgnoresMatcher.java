@@ -62,7 +62,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
    */
   @Override
   public boolean matches(final T target) {
-    final String name = target.getActualName();
+    String name = target.getActualName();
 
     if (name.startsWith("net.bytebuddy.")
         || name.startsWith("jdk.")

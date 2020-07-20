@@ -43,9 +43,9 @@ public class AdviceUtils {
       "io.opentelemetry.auto.instrumentation.springwebflux.ParentContext";
 
   public static String parseOperationName(final Object handler) {
-    final String className = DECORATE.spanNameForClass(handler.getClass());
-    final String operationName;
-    final int lambdaIdx = className.indexOf("$$Lambda$");
+    String className = DECORATE.spanNameForClass(handler.getClass());
+    String operationName;
+    int lambdaIdx = className.indexOf("$$Lambda$");
 
     if (lambdaIdx > -1) {
       operationName = className.substring(0, lambdaIdx) + ".lambda";
@@ -87,7 +87,7 @@ public class AdviceUtils {
   private static void finishSpanIfPresentInAttributes(
       final Map<String, Object> attributes, final Throwable throwable) {
 
-    final io.grpc.Context context = (io.grpc.Context) attributes.remove(CONTEXT_ATTRIBUTE);
+    io.grpc.Context context = (io.grpc.Context) attributes.remove(CONTEXT_ATTRIBUTE);
     finishSpanIfPresent(context, throwable);
   }
 
@@ -117,14 +117,14 @@ public class AdviceUtils {
 
     @Override
     public void onSubscribe(final Subscription s) {
-      try (final Scope scope = withScopedContext(otelContext)) {
+      try (Scope scope = withScopedContext(otelContext)) {
         subscriber.onSubscribe(s);
       }
     }
 
     @Override
     public void onNext(final T t) {
-      try (final Scope scope = withScopedContext(otelContext)) {
+      try (Scope scope = withScopedContext(otelContext)) {
         subscriber.onNext(t);
       }
     }

@@ -71,12 +71,12 @@ public class ContextPropagator {
 
   private boolean checkIfContextCanBePassed(
       final ContextStore<Connection, Boolean> knownConnections, final Connection c) {
-    final Boolean storedResult = knownConnections.get(c);
+    Boolean storedResult = knownConnections.get(c);
     if (storedResult != null) {
       return storedResult;
     }
 
-    final boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OPERATION_ID);
+    boolean result = syntheticCall(c, null, CONTEXT_CHECK_CALL_OPERATION_ID);
     knownConnections.put(c, result);
     return result;
   }
@@ -84,11 +84,11 @@ public class ContextPropagator {
   /** @return true when no error happened during call */
   private boolean syntheticCall(
       final Connection c, final ContextPayload payload, final int operationId) {
-    final StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
+    StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);
 
-      final ObjectOutput out = shareContextCall.getOutputStream();
+      ObjectOutput out = shareContextCall.getOutputStream();
 
       CONTEXT_CALL_ID.write(out);
 
@@ -108,7 +108,7 @@ public class ContextPropagator {
       try {
         shareContextCall.executeCall();
       } catch (final Exception e) {
-        final Exception ex = shareContextCall.getServerException();
+        Exception ex = shareContextCall.getServerException();
         if (ex != null) {
           if (ex instanceof NoSuchObjectException) {
             return false;

@@ -44,13 +44,13 @@ public class ActionWrapper<T> implements Action<T> {
 
   @Override
   public void execute(final T t) throws Exception {
-    try (final Scope scope = currentContextWith(span)) {
+    try (Scope scope = currentContextWith(span)) {
       delegate.execute(t);
     }
   }
 
   public static <T> Action<T> wrapIfNeeded(final Action<T> delegate) {
-    final Span span = TRACER.getCurrentSpan();
+    Span span = TRACER.getCurrentSpan();
     if (delegate instanceof ActionWrapper || !span.getContext().isValid()) {
       return delegate;
     }

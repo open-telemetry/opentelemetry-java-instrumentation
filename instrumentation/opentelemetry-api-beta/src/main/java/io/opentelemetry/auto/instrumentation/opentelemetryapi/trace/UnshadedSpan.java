@@ -64,7 +64,7 @@ class UnshadedSpan implements Span {
 
   @Override
   public void setAttribute(final String key, final AttributeValue value) {
-    final io.opentelemetry.common.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
+    io.opentelemetry.common.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
     if (convertedValue != null) {
       shadedSpan.setAttribute(key, convertedValue);
     }
@@ -102,7 +102,7 @@ class UnshadedSpan implements Span {
 
   @Override
   public void setStatus(final Status status) {
-    final io.opentelemetry.trace.Status shadedStatus = toShadedOrNull(status);
+    io.opentelemetry.trace.Status shadedStatus = toShadedOrNull(status);
     if (shadedStatus != null) {
       shadedSpan.setStatus(shadedStatus);
     }
@@ -217,7 +217,7 @@ class UnshadedSpan implements Span {
 
     @Override
     public Span.Builder setAttribute(final String key, final AttributeValue value) {
-      final io.opentelemetry.common.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
+      io.opentelemetry.common.AttributeValue convertedValue = Bridging.toShadedOrNull(value);
       if (convertedValue != null) {
         shadedBuilder.setAttribute(key, convertedValue);
       }
@@ -226,7 +226,7 @@ class UnshadedSpan implements Span {
 
     @Override
     public Span.Builder setSpanKind(final Span.Kind spanKind) {
-      final io.opentelemetry.trace.Span.Kind shadedSpanKind = toShadedOrNull(spanKind);
+      io.opentelemetry.trace.Span.Kind shadedSpanKind = toShadedOrNull(spanKind);
       if (shadedSpanKind != null) {
         shadedBuilder.setSpanKind(shadedSpanKind);
       }

@@ -49,7 +49,7 @@ public class OkHttpUtils {
   }
 
   static OkHttpClient.Builder clientBuilder() {
-    final TimeUnit unit = TimeUnit.MINUTES;
+    TimeUnit unit = TimeUnit.MINUTES;
     return new OkHttpClient.Builder()
         .addInterceptor(LOGGING_INTERCEPTOR)
         .connectTimeout(1, unit)

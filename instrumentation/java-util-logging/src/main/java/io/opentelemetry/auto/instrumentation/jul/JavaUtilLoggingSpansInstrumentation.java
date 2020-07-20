@@ -57,7 +57,7 @@ public class JavaUtilLoggingSpansInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -82,7 +82,7 @@ public class JavaUtilLoggingSpansInstrumentation extends Instrumenter.Default {
         @Advice.This final Logger logger, @Advice.Argument(0) final LogRecord logRecord) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      final boolean topLevel = CallDepthThreadLocalMap.incrementCallDepth(LoggerDepth.class) == 0;
+      boolean topLevel = CallDepthThreadLocalMap.incrementCallDepth(LoggerDepth.class) == 0;
       if (topLevel) {
         JavaUtilLoggingSpans.capture(logger, logRecord);
       }

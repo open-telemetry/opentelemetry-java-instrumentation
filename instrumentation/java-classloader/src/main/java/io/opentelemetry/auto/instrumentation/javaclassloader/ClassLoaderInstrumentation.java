@@ -94,12 +94,12 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
       // back to this instrumentation over and over, causing a StackOverflowError
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
       if (callDepth > 0) {
         return null;
       }
       try {
-        for (final String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
+        for (String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);

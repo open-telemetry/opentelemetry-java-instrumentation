@@ -65,7 +65,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -107,7 +107,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(MemcachedClient.class);
 
       if (future != null) {
-        final OperationCompletionListener listener =
+        OperationCompletionListener listener =
             new OperationCompletionListener(client.getConnection(), methodName);
         future.addListener(listener);
       }
@@ -133,7 +133,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(MemcachedClient.class);
 
       if (future != null) {
-        final GetCompletionListener listener =
+        GetCompletionListener listener =
             new GetCompletionListener(client.getConnection(), methodName);
         future.addListener(listener);
       }
@@ -159,7 +159,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(MemcachedClient.class);
 
       if (future != null) {
-        final BulkGetCompletionListener listener =
+        BulkGetCompletionListener listener =
             new BulkGetCompletionListener(client.getConnection(), methodName);
         future.addListener(listener);
       }
@@ -171,7 +171,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SyncCompletionListener methodEnter(
         @Advice.This final MemcachedClient client, @Advice.Origin("#m") final String methodName) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class);
       if (callDepth > 0) {
         return null;
       }

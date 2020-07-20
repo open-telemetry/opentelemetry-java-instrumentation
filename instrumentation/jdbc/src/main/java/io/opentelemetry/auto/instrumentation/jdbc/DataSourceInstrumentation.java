@@ -72,7 +72,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Span span =
+      Span span =
           TRACER
               .spanBuilder(ds.getClass().getSimpleName() + ".getConnection")
               .setSpanKind(CLIENT)
@@ -88,7 +88,7 @@ public final class DataSourceInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();

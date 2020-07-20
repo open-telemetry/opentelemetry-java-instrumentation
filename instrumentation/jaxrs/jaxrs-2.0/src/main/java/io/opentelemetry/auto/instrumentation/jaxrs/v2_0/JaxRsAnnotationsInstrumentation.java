@@ -108,7 +108,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         @Advice.AllArguments final Object[] args,
         @Advice.Local("asyncResponse") AsyncResponse asyncResponse) {
       ContextStore<AsyncResponse, Span> contextStore = null;
-      for (final Object arg : args) {
+      for (Object arg : args) {
         if (arg instanceof AsyncResponse) {
           asyncResponse = (AsyncResponse) arg;
           contextStore = InstrumentationContext.get(AsyncResponse.class, Span.class);
@@ -130,9 +130,9 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       }
 
       // Rename the parent span according to the path represented by these annotations.
-      final Span parent = TRACER.getCurrentSpan();
+      Span parent = TRACER.getCurrentSpan();
 
-      final Span span = TRACER.spanBuilder(JAX_ENDPOINT_OPERATION_NAME).startSpan();
+      Span span = TRACER.spanBuilder(JAX_ENDPOINT_OPERATION_NAME).startSpan();
       DECORATE.onJaxRsSpan(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
@@ -153,7 +153,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       }
       CallDepthThreadLocalMap.reset(Path.class);
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);

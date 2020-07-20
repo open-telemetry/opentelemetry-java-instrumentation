@@ -65,11 +65,11 @@ public class AgentBootstrap {
   public static void agentmain(final String agentArgs, final Instrumentation inst) {
     try {
 
-      final URL bootstrapURL = installBootstrapJar(inst);
+      URL bootstrapURL = installBootstrapJar(inst);
 
-      final Class<?> agentClass =
+      Class<?> agentClass =
           ClassLoader.getSystemClassLoader().loadClass("io.opentelemetry.auto.bootstrap.Agent");
-      final Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
+      Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
       startMethod.invoke(null, inst, bootstrapURL);
     } catch (final Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
@@ -83,11 +83,11 @@ public class AgentBootstrap {
     URL javaAgentJarURL = null;
 
     // First try Code Source
-    final CodeSource codeSource = thisClass.getProtectionDomain().getCodeSource();
+    CodeSource codeSource = thisClass.getProtectionDomain().getCodeSource();
 
     if (codeSource != null) {
       javaAgentJarURL = codeSource.getLocation();
-      final File bootstrapFile = new File(javaAgentJarURL.toURI());
+      File bootstrapFile = new File(javaAgentJarURL.toURI());
 
       if (!bootstrapFile.isDirectory()) {
         checkJarManifestMainClassIsThis(javaAgentJarURL);
@@ -103,10 +103,10 @@ public class AgentBootstrap {
     // - On IBM-based JDKs since at least 1.7
     // This prevents custom log managers from working correctly
     // Use reflection to bypass the loading of the class
-    final List<String> arguments = getVMArgumentsThroughReflection();
+    List<String> arguments = getVMArgumentsThroughReflection();
 
     String agentArgument = null;
-    for (final String arg : arguments) {
+    for (String arg : arguments) {
       if (arg.startsWith("-javaagent")) {
         if (agentArgument == null) {
           agentArgument = arg;
@@ -123,13 +123,13 @@ public class AgentBootstrap {
     }
 
     // argument is of the form -javaagent:/path/to/java-agent.jar=optionalargumentstring
-    final Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(agentArgument);
+    Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(agentArgument);
 
     if (!matcher.matches()) {
       throw new RuntimeException("Unable to parse javaagent parameter: " + agentArgument);
     }
 
-    final File javaagentFile = new File(matcher.group(1));
+    File javaagentFile = new File(matcher.group(1));
     if (!(javaagentFile.exists() || javaagentFile.isFile())) {
       throw new RuntimeException("Unable to find javaagent file: " + javaagentFile);
     }
@@ -143,11 +143,10 @@ public class AgentBootstrap {
   private static List<String> getVMArgumentsThroughReflection() {
     try {
       // Try Oracle-based
-      final Class managementFactoryHelperClass =
+      Class managementFactoryHelperClass =
           thisClass.getClassLoader().loadClass("sun.management.ManagementFactoryHelper");
 
-      final Class vmManagementClass =
-          thisClass.getClassLoader().loadClass("sun.management.VMManagement");
+      Class vmManagementClass = thisClass.getClassLoader().loadClass("sun.management.VMManagement");
 
       Object vmManagement;
 
@@ -156,7 +155,7 @@ public class AgentBootstrap {
             managementFactoryHelperClass.getDeclaredMethod("getVMManagement").invoke(null);
       } catch (final NoSuchMethodException e) {
         // Older vm before getVMManagement() existed
-        final Field field = managementFactoryHelperClass.getDeclaredField("jvm");
+        Field field = managementFactoryHelperClass.getDeclaredField("jvm");
         field.setAccessible(true);
         vmManagement = field.get(null);
         field.setAccessible(false);
@@ -166,8 +165,8 @@ public class AgentBootstrap {
 
     } catch (final ReflectiveOperationException e) {
       try { // Try IBM-based.
-        final Class VMClass = thisClass.getClassLoader().loadClass("com.ibm.oti.vm.VM");
-        final String[] argArray = (String[]) VMClass.getMethod("getVMArgs").invoke(null);
+        Class VMClass = thisClass.getClassLoader().loadClass("com.ibm.oti.vm.VM");
+        String[] argArray = (String[]) VMClass.getMethod("getVMArgs").invoke(null);
         return Arrays.asList(argArray);
       } catch (final ReflectiveOperationException e1) {
         // Fallback to default
@@ -180,9 +179,9 @@ public class AgentBootstrap {
   }
 
   private static boolean checkJarManifestMainClassIsThis(final URL jarUrl) throws IOException {
-    final URL manifestUrl = new URL("jar:" + jarUrl + "!/META-INF/MANIFEST.MF");
-    final String mainClassLine = "Main-Class: " + thisClass.getCanonicalName();
-    try (final BufferedReader reader =
+    URL manifestUrl = new URL("jar:" + jarUrl + "!/META-INF/MANIFEST.MF");
+    String mainClassLine = "Main-Class: " + thisClass.getCanonicalName();
+    try (BufferedReader reader =
         new BufferedReader(
             new InputStreamReader(manifestUrl.openStream(), StandardCharsets.UTF_8))) {
       String line;
@@ -220,8 +219,8 @@ public class AgentBootstrap {
    * @return Agent version
    */
   public static String getAgentVersion() throws IOException {
-    final StringBuilder sb = new StringBuilder();
-    try (final BufferedReader reader =
+    StringBuilder sb = new StringBuilder();
+    try (BufferedReader reader =
         new BufferedReader(
             new InputStreamReader(
                 thisClass.getResourceAsStream("/opentelemetry-javaagent.version"),

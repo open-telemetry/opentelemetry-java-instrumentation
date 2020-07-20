@@ -78,7 +78,7 @@ public class AgentInstaller {
       final boolean skipAdditionalLibraryMatcher,
       final AgentBuilder.Listener... listeners) {
 
-    final ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
+    ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
       // calling (shaded) OpenTelemetry.getTracerProvider() with context class loader set to the
       // agent class loader, so that SPI finds the agent's (isolated) SDK, and (shaded)
@@ -128,7 +128,7 @@ public class AgentInstaller {
               .with(new TransformLoggingListener());
     }
 
-    for (final AgentBuilder.Listener listener : listeners) {
+    for (AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
     }
     int numInstrumenters = 0;
@@ -148,10 +148,10 @@ public class AgentInstaller {
   }
 
   private static void addByteBuddyRawSetting() {
-    final String savedPropertyValue = System.getProperty(TypeDefinition.RAW_TYPES_PROPERTY);
+    String savedPropertyValue = System.getProperty(TypeDefinition.RAW_TYPES_PROPERTY);
     try {
       System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, "true");
-      final boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES;
+      boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES;
       if (!rawTypes) {
         log.debug("Too late to enable {}", TypeDefinition.RAW_TYPES_PROPERTY);
       }
@@ -165,7 +165,7 @@ public class AgentInstaller {
   }
 
   private static ElementMatcher.Junction<Object> matchesConfiguredExcludes() {
-    final List<String> excludedClasses = Config.get().getExcludedClasses();
+    List<String> excludedClasses = Config.get().getExcludedClasses();
     ElementMatcher.Junction matcher = none();
     List<String> literals = new ArrayList<>();
     List<String> prefixes = new ArrayList<>();
@@ -337,7 +337,7 @@ public class AgentInstaller {
         final JavaModule javaModule,
         final boolean b) {
       synchronized (CLASS_LOAD_CALLBACKS) {
-        final List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
+        List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
         if (callbacks != null) {
           for (final Runnable callback : callbacks) {
             callback.run();

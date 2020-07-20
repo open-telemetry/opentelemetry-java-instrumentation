@@ -82,7 +82,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static boolean methodEnter(@Advice.This final Object thiz) {
       if (thiz instanceof MakeAsyncHttpRequestStage) {
-        final Scope scope = CURRENT.get();
+        Scope scope = CURRENT.get();
         if (scope != null) {
           CURRENT.set(null);
           scope.close();
@@ -95,7 +95,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Enter final boolean scopeAlreadyClosed) {
       if (!scopeAlreadyClosed) {
-        final Scope scope = CURRENT.get();
+        Scope scope = CURRENT.get();
         if (scope != null) {
           CURRENT.set(null);
           scope.close();

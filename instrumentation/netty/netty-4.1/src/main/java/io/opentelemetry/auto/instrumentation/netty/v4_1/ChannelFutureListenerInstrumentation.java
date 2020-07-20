@@ -94,20 +94,20 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
        - To return scope only if we have captured it.
        - To capture scope only in case of error.
        */
-      final Throwable cause = future.cause();
+      Throwable cause = future.cause();
       if (cause == null) {
         return null;
       }
-      final Span parentSpan =
+      Span parentSpan =
           future.channel().attr(AttributeKeys.PARENT_CONNECT_SPAN_ATTRIBUTE_KEY).getAndRemove();
       if (parentSpan == null) {
         return null;
       }
-      final Scope parentScope = currentContextWith(parentSpan);
+      Scope parentScope = currentContextWith(parentSpan);
 
-      final Span errorSpan =
+      Span errorSpan =
           NettyHttpClientDecorator.TRACER.spanBuilder("CONNECT").setSpanKind(CLIENT).startSpan();
-      try (final Scope ignored = currentContextWith(errorSpan)) {
+      try (Scope ignored = currentContextWith(errorSpan)) {
         NettyHttpClientDecorator.DECORATE.onError(errorSpan, cause);
         NettyHttpClientDecorator.DECORATE.beforeFinish(errorSpan);
         errorSpan.end();

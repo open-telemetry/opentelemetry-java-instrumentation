@@ -45,14 +45,14 @@ public class ShadingRemapper extends Remapper {
   private final TreeMap<String, String> map = new TreeMap<>();
 
   public ShadingRemapper(final Rule... rules) {
-    for (final Rule rule : rules) {
+    for (Rule rule : rules) {
       map.put(rule.from, rule.to);
     }
   }
 
   @Override
   public String map(final String internalName) {
-    final Map.Entry<String, String> e = map.floorEntry(internalName);
+    Map.Entry<String, String> e = map.floorEntry(internalName);
     if (e != null && internalName.startsWith(e.getKey())) {
       return e.getValue() + internalName.substring(e.getKey().length());
     }

@@ -52,14 +52,14 @@ public class ContextDispatcher implements Dispatcher {
 
   @Override
   public void dispatch(final Remote obj, final RemoteCall call) throws IOException {
-    final ObjectInput in = call.getInputStream();
-    final int operationId = in.readInt();
+    ObjectInput in = call.getInputStream();
+    int operationId = in.readInt();
     in.readLong(); // skip 8 bytes
 
     if (PROPAGATOR.isOperationWithPayload(operationId)) {
-      final ContextPayload payload = ContextPayload.read(in);
+      ContextPayload payload = ContextPayload.read(in);
       if (payload != null) {
-        final SpanContext context = extract(payload, GETTER);
+        SpanContext context = extract(payload, GETTER);
         if (context.isValid()) {
           THREAD_LOCAL_CONTEXT.set(context);
         } else {

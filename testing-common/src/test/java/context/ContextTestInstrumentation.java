@@ -51,7 +51,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>(7);
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>(7);
     transformers.put(named("isInstrumented"), MarkInstrumentedAdvice.class.getName());
     transformers.put(
         named("incrementContextCount"), StoreAndIncrementApiUsageAdvice.class.getName());
@@ -74,7 +74,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> store = new HashMap<>(2);
+    Map<String, String> store = new HashMap<>(2);
     store.put(getClass().getName() + "$KeyClass", getClass().getName() + "$Context");
     store.put(getClass().getName() + "$UntransformableKeyClass", getClass().getName() + "$Context");
     store.put(getClass().getName() + "$DisabledKeyClass", getClass().getName() + "$Context");
@@ -92,9 +92,9 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      final ContextStore<KeyClass, Context> contextStore =
+      ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
-      final Context context = contextStore.putIfAbsent(thiz, new Context());
+      Context context = contextStore.putIfAbsent(thiz, new Context());
       contextCount = ++context.count;
     }
   }
@@ -103,9 +103,9 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      final ContextStore<KeyClass, Context> contextStore =
+      ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
-      final Context context = contextStore.putIfAbsent(thiz, Context.FACTORY);
+      Context context = contextStore.putIfAbsent(thiz, Context.FACTORY);
       contextCount = ++context.count;
     }
   }
@@ -114,7 +114,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      final ContextStore<KeyClass, Context> contextStore =
+      ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       contextCount = contextStore.get(thiz).count;
     }
@@ -124,9 +124,9 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This final KeyClass thiz, @Advice.Argument(0) final int value) {
-      final ContextStore<KeyClass, Context> contextStore =
+      ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
-      final Context context = new Context();
+      Context context = new Context();
       context.count = value;
       contextStore.put(thiz, context);
     }
@@ -151,7 +151,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     public static void methodExit() {
       // Our instrumentation doesn't handle variables being passed to InstrumentationContext.get,
       // so we make sure that this actually fails instrumentation.
-      final Class clazz = null;
+      Class clazz = null;
       InstrumentationContext.get(clazz, Object.class);
     }
   }

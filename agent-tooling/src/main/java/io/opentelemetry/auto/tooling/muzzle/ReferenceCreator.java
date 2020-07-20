@@ -60,24 +60,24 @@ public class ReferenceCreator extends ClassVisitor {
    */
   public static Map<String, Reference> createReferencesFrom(
       final String entryPointClassName, final ClassLoader loader) {
-    final Set<String> visitedSources = new HashSet<>();
-    final Map<String, Reference> references = new HashMap<>();
+    Set<String> visitedSources = new HashSet<>();
+    Map<String, Reference> references = new HashMap<>();
 
-    final Queue<String> instrumentationQueue = new ArrayDeque<>();
+    Queue<String> instrumentationQueue = new ArrayDeque<>();
     instrumentationQueue.add(entryPointClassName);
 
     while (!instrumentationQueue.isEmpty()) {
-      final String className = instrumentationQueue.remove();
+      String className = instrumentationQueue.remove();
       visitedSources.add(className);
-      final InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
+      InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
       try {
-        final ReferenceCreator cv = new ReferenceCreator();
+        ReferenceCreator cv = new ReferenceCreator();
         // only start from method bodies on the first pass
-        final ClassReader reader = new ClassReader(in);
+        ClassReader reader = new ClassReader(in);
         reader.accept(cv, ClassReader.SKIP_FRAMES);
 
-        final Map<String, Reference> instrumentationReferences = cv.getReferences();
-        for (final Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
+        Map<String, Reference> instrumentationReferences = cv.getReferences();
+        for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
           // Don't generate references created outside of the instrumentation package.
           if (!visitedSources.contains(entry.getKey())
               && entry.getKey().startsWith(REFERENCE_CREATION_PACKAGE)) {
@@ -268,13 +268,13 @@ public class ReferenceCreator extends ClassVisitor {
       // * DONE field-source class (descriptor)
       //   * DONE field-source visibility from this point (PRIVATE?)
 
-      final Type ownerType =
+      Type ownerType =
           owner.startsWith("[")
               ? underlyingType(Type.getType(owner))
               : Type.getType("L" + owner + ";");
-      final Type fieldType = Type.getType(descriptor);
+      Type fieldType = Type.getType(descriptor);
 
-      final List<Reference.Flag> fieldFlags = new ArrayList<>();
+      List<Reference.Flag> fieldFlags = new ArrayList<>();
       fieldFlags.add(computeMinimumFieldAccess(refSourceType, ownerType));
       fieldFlags.add(
           opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC
@@ -294,7 +294,7 @@ public class ReferenceCreator extends ClassVisitor {
                   fieldType)
               .build());
 
-      final Type underlyingFieldType = underlyingType(fieldType);
+      Type underlyingFieldType = underlyingType(fieldType);
       if (underlyingFieldType.getSort() == Type.OBJECT) {
         addReference(
             new Reference.Builder(underlyingFieldType.getInternalName())
@@ -321,10 +321,10 @@ public class ReferenceCreator extends ClassVisitor {
       // * Class names from the method descriptor
       //   * params classes
       //   * return type
-      final Type methodType = Type.getMethodType(descriptor);
+      Type methodType = Type.getMethodType(descriptor);
 
       { // ref for method return type
-        final Type returnType = underlyingType(methodType.getReturnType());
+        Type returnType = underlyingType(methodType.getReturnType());
         if (returnType.getSort() == Type.OBJECT) {
           addReference(
               new Reference.Builder(returnType.getInternalName())
@@ -345,12 +345,12 @@ public class ReferenceCreator extends ClassVisitor {
         }
       }
 
-      final Type ownerType =
+      Type ownerType =
           owner.startsWith("[")
               ? underlyingType(Type.getType(owner))
               : Type.getType("L" + owner + ";");
 
-      final List<Reference.Flag> methodFlags = new ArrayList<>();
+      List<Reference.Flag> methodFlags = new ArrayList<>();
       methodFlags.add(
           opcode == Opcodes.INVOKESTATIC ? Reference.Flag.STATIC : Reference.Flag.NON_STATIC);
       methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType, methodType));
@@ -375,7 +375,7 @@ public class ReferenceCreator extends ClassVisitor {
     @Override
     public void visitLdcInsn(final Object value) {
       if (value instanceof Type) {
-        final Type type = underlyingType((Type) value);
+        Type type = underlyingType((Type) value);
         if (type.getSort() == Type.OBJECT) {
           addReference(
               new Reference.Builder(type.getInternalName())

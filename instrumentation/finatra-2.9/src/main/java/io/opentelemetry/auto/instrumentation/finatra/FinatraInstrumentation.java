@@ -85,10 +85,10 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("routeInfo") final RouteInfo routeInfo,
         @Advice.FieldValue("clazz") final Class clazz) {
 
-      final Span parent = TRACER.getCurrentSpan();
+      Span parent = TRACER.getCurrentSpan();
       parent.updateName(routeInfo.path());
 
-      final Span span = TRACER.spanBuilder(DECORATE.spanNameForClass(clazz)).startSpan();
+      Span span = TRACER.spanBuilder(DECORATE.spanNameForClass(clazz)).startSpan();
       DECORATE.afterStart(span);
 
       return new SpanWithScope(span, currentContextWith(span));
@@ -104,7 +104,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       if (throwable != null) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
@@ -126,7 +126,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onSuccess(final Response response) {
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.beforeFinish(span);
       span.end();
       spanWithScope.closeScope();
@@ -134,7 +134,7 @@ public class FinatraInstrumentation extends Instrumenter.Default {
 
     @Override
     public void onFailure(final Throwable cause) {
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, cause);
       DECORATE.beforeFinish(span);
       span.end();

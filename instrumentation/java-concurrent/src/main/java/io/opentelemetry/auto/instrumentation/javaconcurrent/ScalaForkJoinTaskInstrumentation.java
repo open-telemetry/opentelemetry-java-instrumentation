@@ -70,7 +70,7 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>();
     map.put(Runnable.class.getName(), State.class.getName());
     map.put(Callable.class.getName(), State.class.getName());
     map.put(TASK_CLASS_NAME, State.class.getName());
@@ -94,14 +94,13 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope enter(@Advice.This final ForkJoinTask thiz) {
-      final ContextStore<ForkJoinTask, State> contextStore =
+      ContextStore<ForkJoinTask, State> contextStore =
           InstrumentationContext.get(ForkJoinTask.class, State.class);
       SpanWithScope scope = AdviceUtils.startTaskScope(contextStore, thiz);
       if (thiz instanceof Runnable) {
-        final ContextStore<Runnable, State> runnableContextStore =
+        ContextStore<Runnable, State> runnableContextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        final SpanWithScope newScope =
-            AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
+        SpanWithScope newScope = AdviceUtils.startTaskScope(runnableContextStore, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.closeScope();
@@ -111,10 +110,9 @@ public final class ScalaForkJoinTaskInstrumentation extends Instrumenter.Default
         }
       }
       if (thiz instanceof Callable) {
-        final ContextStore<Callable, State> callableContextStore =
+        ContextStore<Callable, State> callableContextStore =
             InstrumentationContext.get(Callable.class, State.class);
-        final SpanWithScope newScope =
-            AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
+        SpanWithScope newScope = AdviceUtils.startTaskScope(callableContextStore, (Callable) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.closeScope();

@@ -50,7 +50,7 @@ public class BlockWrapper implements Block {
   }
 
   public static Block wrapIfNeeded(final Block delegate) {
-    final Span span = TRACER.getCurrentSpan();
+    Span span = TRACER.getCurrentSpan();
     if (delegate instanceof BlockWrapper || !span.getContext().isValid()) {
       return delegate;
     }

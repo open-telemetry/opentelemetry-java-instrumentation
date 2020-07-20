@@ -63,12 +63,12 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingInterceptor(
         @Advice.Argument(0) final OkHttpClient.Builder builder) {
-      for (final Interceptor interceptor : builder.interceptors()) {
+      for (Interceptor interceptor : builder.interceptors()) {
         if (interceptor instanceof TracingInterceptor) {
           return;
         }
       }
-      final TracingInterceptor interceptor = new TracingInterceptor();
+      TracingInterceptor interceptor = new TracingInterceptor();
       builder.addInterceptor(interceptor);
     }
   }

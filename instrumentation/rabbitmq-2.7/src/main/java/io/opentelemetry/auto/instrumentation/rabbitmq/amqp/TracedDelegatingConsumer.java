@@ -87,8 +87,8 @@ public class TracedDelegatingConsumer implements Consumer {
     Span span = null;
     Scope scope = null;
     try {
-      final Map<String, Object> headers = properties.getHeaders();
-      final Span.Builder spanBuilder =
+      Map<String, Object> headers = properties.getHeaders();
+      Span.Builder spanBuilder =
           TRACER.spanBuilder(DECORATE.spanNameOnDeliver(queue)).setSpanKind(CONSUMER);
       if (headers != null) {
         spanBuilder.setParent(extract(headers, GETTER));
@@ -96,7 +96,7 @@ public class TracedDelegatingConsumer implements Consumer {
         spanBuilder.setNoParent();
       }
 
-      final long startTimeMillis = System.currentTimeMillis();
+      long startTimeMillis = System.currentTimeMillis();
       span =
           spanBuilder
               .setAttribute("message.size", body == null ? 0 : body.length)
@@ -108,8 +108,8 @@ public class TracedDelegatingConsumer implements Consumer {
       if (properties.getTimestamp() != null) {
         // this will be set if the sender sets the timestamp,
         // or if a plugin is installed on the rabbitmq broker
-        final long produceTime = properties.getTimestamp().getTime();
-        final long consumeTime = NANOSECONDS.toMillis(startTimeMillis);
+        long produceTime = properties.getTimestamp().getTime();
+        long consumeTime = NANOSECONDS.toMillis(startTimeMillis);
         span.setAttribute("record.queue_time_ms", Math.max(0L, consumeTime - produceTime));
       }
 

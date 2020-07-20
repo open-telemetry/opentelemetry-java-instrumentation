@@ -80,7 +80,7 @@ public final class GuavaWeakCache<K, V> implements WeakCache<K, V> {
 
   @Override
   public V getIfPresentOrCompute(final K key, final Callable<? extends V> loader) {
-    final V v = cache.getIfPresent(key);
+    V v = cache.getIfPresent(key);
     if (v != null) {
       return v;
     }

@@ -62,7 +62,7 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
 
     transformers.put(
         isMethod().and(isPublic()).and(named("invoke")),
@@ -82,9 +82,9 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
         @Advice.FieldValue("requestContext") final ClientRequest context,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
+        Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          final Span span = (Span) prop;
+          Span span = (Span) prop;
           DECORATE.onError(span, throwable);
           span.end();
         }
@@ -134,9 +134,9 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       try {
         return wrapped.get();
       } catch (final ExecutionException e) {
-        final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
+        Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          final Span span = (Span) prop;
+          Span span = (Span) prop;
           DECORATE.onError(span, e.getCause());
           span.end();
         }
@@ -150,9 +150,9 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
       try {
         return wrapped.get(timeout, unit);
       } catch (final ExecutionException e) {
-        final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
+        Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
-          final Span span = (Span) prop;
+          Span span = (Span) prop;
           DECORATE.onError(span, e.getCause());
           span.end();
         }

@@ -67,7 +67,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
   }
 
   public Span startSpan(REQUEST request, CONNECTION connection, String spanName) {
-    final Span.Builder builder =
+    Span.Builder builder =
         tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(extract(request, getGetter()));
 
     Span span = builder.startSpan();
@@ -130,7 +130,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
 
   protected void onConnection(Span span, CONNECTION connection) {
     SemanticAttributes.NET_PEER_IP.set(span, peerHostIP(connection));
-    final Integer port = peerPort(connection);
+    Integer port = peerPort(connection);
     // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
     if (port != null && port > 0) {
       SemanticAttributes.NET_PEER_PORT.set(span, port);
@@ -143,9 +143,9 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
 
     // Copy of HttpClientDecorator url handling
     try {
-      final URI url = url(request);
+      URI url = url(request);
       if (url != null) {
-        final StringBuilder urlBuilder = new StringBuilder();
+        StringBuilder urlBuilder = new StringBuilder();
         if (url.getScheme() != null) {
           urlBuilder.append(url.getScheme());
           urlBuilder.append("://");
@@ -157,17 +157,17 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
             urlBuilder.append(url.getPort());
           }
         }
-        final String path = url.getPath();
+        String path = url.getPath();
         if (path.isEmpty()) {
           urlBuilder.append("/");
         } else {
           urlBuilder.append(path);
         }
-        final String query = url.getQuery();
+        String query = url.getQuery();
         if (query != null) {
           urlBuilder.append("?").append(query);
         }
-        final String fragment = url.getFragment();
+        String fragment = url.getFragment();
         if (fragment != null) {
           urlBuilder.append("#").append(fragment);
         }
@@ -203,7 +203,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     }
     String className = clazz.getName();
     if (clazz.getPackage() != null) {
-      final String pkgName = clazz.getPackage().getName();
+      String pkgName = clazz.getPackage().getName();
       if (!pkgName.isEmpty()) {
         className = clazz.getName().replace(pkgName, "").substring(1);
       }
@@ -219,7 +219,7 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
     span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
-    final StringWriter errorString = new StringWriter();
+    StringWriter errorString = new StringWriter();
     throwable.printStackTrace(new PrintWriter(errorString));
     span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
   }
@@ -232,9 +232,8 @@ public abstract class HttpServerTracer<REQUEST, CONNECTION, STORAGE> {
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    final Context context =
-        getPropagators().getHttpTextFormat().extract(Context.ROOT, carrier, getter);
-    final Span span = getSpan(context);
+    Context context = getPropagators().getHttpTextFormat().extract(Context.ROOT, carrier, getter);
+    Span span = getSpan(context);
     return span.getContext();
   }
 

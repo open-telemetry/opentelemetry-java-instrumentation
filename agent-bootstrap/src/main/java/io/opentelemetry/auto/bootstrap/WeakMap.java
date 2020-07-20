@@ -137,7 +137,7 @@ public interface WeakMap<K, V> {
         if (map.containsKey(key)) {
           return map.get(key);
         } else {
-          final V value = supplier.get(key);
+          V value = supplier.get(key);
 
           map.put(key, value);
           return value;

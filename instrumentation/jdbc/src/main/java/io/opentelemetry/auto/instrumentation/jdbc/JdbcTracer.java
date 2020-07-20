@@ -78,7 +78,7 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
   }
 
   public Span startSpan(Statement statement, String query) {
-    final Connection connection = connectionFromStatement(statement);
+    Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
@@ -106,8 +106,8 @@ public class JdbcTracer extends DatabaseClientTracer<DBInfo, String> {
     {
       if (dbInfo == null) {
         try {
-          final DatabaseMetaData metaData = connection.getMetaData();
-          final String url = metaData.getURL();
+          DatabaseMetaData metaData = connection.getMetaData();
+          String url = metaData.getURL();
           if (url != null) {
             try {
               dbInfo = JDBCConnectionUrlParser.parse(url, connection.getClientInfo());

@@ -49,7 +49,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>();
     map.put("org.hibernate.SharedSessionContract", Span.class.getName());
     map.put("org.hibernate.procedure.ProcedureCall", Span.class.getName());
     return Collections.unmodifiableMap(map);
@@ -88,9 +88,9 @@ public class SessionInstrumentation extends Instrumenter.Default {
         @Advice.This final SharedSessionContract session,
         @Advice.Return final ProcedureCall returned) {
 
-      final ContextStore<SharedSessionContract, Span> sessionContextStore =
+      ContextStore<SharedSessionContract, Span> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, Span.class);
-      final ContextStore<ProcedureCall, Span> returnedContextStore =
+      ContextStore<ProcedureCall, Span> returnedContextStore =
           InstrumentationContext.get(ProcedureCall.class, Span.class);
 
       SessionMethodUtils.attachSpanFromStore(

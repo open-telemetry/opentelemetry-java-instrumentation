@@ -139,7 +139,7 @@ public final class ClassLoaderMatcher {
     }
 
     private boolean hasResources(final ClassLoader cl) {
-      for (final String resource : resources) {
+      for (String resource : resources) {
         if (cl.getResource(resource) == null) {
           return false;
         }
@@ -153,11 +153,11 @@ public final class ClassLoaderMatcher {
         // Can't match the bootstrap classloader.
         return false;
       }
-      final Boolean cached;
+      Boolean cached;
       if ((cached = cache.getIfPresent(cl)) != null) {
         return cached;
       }
-      final boolean value = hasResources(cl);
+      boolean value = hasResources(cl);
       cache.put(cl, value);
       return value;
     }

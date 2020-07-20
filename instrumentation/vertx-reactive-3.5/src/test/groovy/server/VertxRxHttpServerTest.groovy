@@ -43,7 +43,7 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> {
     // Useful for debugging:
     // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
       .setClusterPort(port))
-    final CompletableFuture<Void> future = new CompletableFuture<>()
+    CompletableFuture<Void> future = new CompletableFuture<>()
     server.deployVerticle(verticle().getName(),
       new DeploymentOptions()
         .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
@@ -91,8 +91,8 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> {
 
     @Override
     void start(final Future<Void> startFuture) {
-      final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT)
-      final Router router = Router.router(super.@vertx)
+      int port = config().getInteger(CONFIG_HTTP_SERVER_PORT)
+      Router router = Router.router(super.@vertx)
 
       router.route(SUCCESS.path).handler { ctx ->
         controller(SUCCESS) {

@@ -66,9 +66,9 @@ public class Log4jMDCInstrumentation extends Instrumenter.Default {
       }
 
       try {
-        final Class<?> mdcClass = instance.getClass();
-        final Method putMethod = mdcClass.getMethod("put", String.class, Object.class);
-        final Method removeMethod = mdcClass.getMethod("remove", String.class);
+        Class<?> mdcClass = instance.getClass();
+        Method putMethod = mdcClass.getMethod("put", String.class, Object.class);
+        Method removeMethod = mdcClass.getMethod("remove", String.class);
         // FIXME this instrumentation relied on scope listener
         // GlobalTracer.get().addScopeListener(new LogContextScopeListener(putMethod,
         // removeMethod));

@@ -39,7 +39,7 @@ public class NettyHttpClientDecorator extends HttpClientDecorator<HttpRequest, H
 
   @Override
   protected URI url(final HttpRequest request) throws URISyntaxException {
-    final URI uri = new URI(request.uri());
+    URI uri = new URI(request.uri());
     if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
       return new URI("http://" + request.headers().get(HOST) + request.uri());
     } else {

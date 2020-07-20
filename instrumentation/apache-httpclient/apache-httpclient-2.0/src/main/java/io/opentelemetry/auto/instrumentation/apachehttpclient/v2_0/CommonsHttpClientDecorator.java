@@ -49,19 +49,19 @@ public class CommonsHttpClientDecorator extends HttpClientDecorator<HttpMethod, 
 
   @Override
   protected Integer status(final HttpMethod httpMethod) {
-    final StatusLine statusLine = httpMethod.getStatusLine();
+    StatusLine statusLine = httpMethod.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
   }
 
   @Override
   protected String requestHeader(HttpMethod httpMethod, String name) {
-    final Header header = httpMethod.getRequestHeader(name);
+    Header header = httpMethod.getRequestHeader(name);
     return header != null ? header.getValue() : null;
   }
 
   @Override
   protected String responseHeader(HttpMethod httpMethod, String name) {
-    final Header header = httpMethod.getResponseHeader(name);
+    Header header = httpMethod.getResponseHeader(name);
     return header != null ? header.getValue() : null;
   }
 }

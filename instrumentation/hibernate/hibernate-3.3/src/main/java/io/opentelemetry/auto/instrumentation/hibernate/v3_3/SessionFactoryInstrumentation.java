@@ -46,7 +46,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> stores = new HashMap<>();
+    Map<String, String> stores = new HashMap<>();
     stores.put("org.hibernate.Session", Span.class.getName());
     stores.put("org.hibernate.StatelessSession", Span.class.getName());
     stores.put("org.hibernate.SharedSessionContract", Span.class.getName());
@@ -76,16 +76,16 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final Object session) {
 
-      final Span span = TRACER.spanBuilder("Session").startSpan();
+      Span span = TRACER.spanBuilder("Session").startSpan();
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, session);
 
       if (session instanceof Session) {
-        final ContextStore<Session, Span> contextStore =
+        ContextStore<Session, Span> contextStore =
             InstrumentationContext.get(Session.class, Span.class);
         contextStore.putIfAbsent((Session) session, span);
       } else if (session instanceof StatelessSession) {
-        final ContextStore<StatelessSession, Span> contextStore =
+        ContextStore<StatelessSession, Span> contextStore =
             InstrumentationContext.get(StatelessSession.class, Span.class);
         contextStore.putIfAbsent((StatelessSession) session, span);
       }

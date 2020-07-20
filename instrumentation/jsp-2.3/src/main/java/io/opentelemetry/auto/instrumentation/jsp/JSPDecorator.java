@@ -44,12 +44,12 @@ public class JSPDecorator extends BaseDecorator {
 
   public void onCompile(final Span span, final JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
-      final ServletContext servletContext = jspCompilationContext.getServletContext();
+      ServletContext servletContext = jspCompilationContext.getServletContext();
       if (servletContext != null) {
         span.setAttribute("servlet.context", servletContext.getContextPath());
       }
 
-      final Compiler compiler = jspCompilationContext.getCompiler();
+      Compiler compiler = jspCompilationContext.getCompiler();
       if (compiler != null) {
         span.setAttribute("jsp.compiler", compiler.getClass().getName());
       }
@@ -59,7 +59,7 @@ public class JSPDecorator extends BaseDecorator {
 
   public String spanNameOnRender(final HttpServletRequest req) {
     // get the JSP file name being rendered in an include action
-    final Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
+    Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
     String spanName = req.getServletPath();
     if (includeServletPath instanceof String) {
       spanName = includeServletPath.toString();
@@ -68,7 +68,7 @@ public class JSPDecorator extends BaseDecorator {
   }
 
   public void onRender(final Span span, final HttpServletRequest req) {
-    final Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
+    Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
     if (forwardOrigin instanceof String) {
       span.setAttribute("jsp.forwardOrigin", forwardOrigin.toString());
     }

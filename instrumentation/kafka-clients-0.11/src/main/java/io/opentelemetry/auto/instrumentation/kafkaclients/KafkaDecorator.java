@@ -31,7 +31,7 @@ public class KafkaDecorator extends ClientDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.kafka-clients-0.11");
 
   public String spanNameOnConsume(final ConsumerRecord record) {
-    final String topic = record.topic();
+    String topic = record.topic();
     if (topic != null) {
       return topic;
     } else {
@@ -41,7 +41,7 @@ public class KafkaDecorator extends ClientDecorator {
 
   public String spanNameOnProduce(final ProducerRecord record) {
     if (record != null) {
-      final String topic = record.topic();
+      String topic = record.topic();
       if (topic != null) {
         return topic;
       }
@@ -54,7 +54,7 @@ public class KafkaDecorator extends ClientDecorator {
     span.setAttribute("offset", record.offset());
     // don't record a duration if the message was sent from an old Kafka client
     if (record.timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {
-      final long produceTime = record.timestamp();
+      long produceTime = record.timestamp();
       // this attribute shows how much time elapsed between the producer and the consumer of this
       // message, which can be helpful for identifying queue bottlenecks
       span.setAttribute("record.queue_time_ms", Math.max(0L, startTimeMillis - produceTime));
@@ -63,7 +63,7 @@ public class KafkaDecorator extends ClientDecorator {
 
   public void onProduce(final Span span, final ProducerRecord record) {
     if (record != null) {
-      final Integer partition = record.partition();
+      Integer partition = record.partition();
       if (partition != null) {
         span.setAttribute("partition", partition);
       }

@@ -41,11 +41,11 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   public void onControllerStart(
       final Span span, final Span parent, final Class target, final Method method) {
-    final String spanName = getPathSpanName(target, method);
+    String spanName = getPathSpanName(target, method);
     updateParent(parent, spanName);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
-    final boolean isRootScope = !parent.getContext().isValid();
+    boolean isRootScope = !parent.getContext().isValid();
     if (isRootScope && !spanName.isEmpty()) {
       span.updateName(spanName);
     } else {
@@ -81,9 +81,9 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (spanName == null) {
       String httpMethod = null;
       Path methodPath = null;
-      final Path classPath = findClassPath(target);
-      for (final Class currentClass : new ClassHierarchyIterable(target)) {
-        final Method currentMethod;
+      Path classPath = findClassPath(target);
+      for (Class currentClass : new ClassHierarchyIterable(target)) {
+        Method currentMethod;
         if (currentClass.equals(target)) {
           currentMethod = method;
         } else {
@@ -112,7 +112,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   private String locateHttpMethod(final Method method) {
     String httpMethod = null;
-    for (final Annotation ann : method.getDeclaredAnnotations()) {
+    for (Annotation ann : method.getDeclaredAnnotations()) {
       if (ann.annotationType().getAnnotation(HttpMethod.class) != null) {
         httpMethod = ann.annotationType().getSimpleName();
       }
@@ -125,8 +125,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   }
 
   private Path findClassPath(final Class<?> target) {
-    for (final Class<?> currentClass : new ClassHierarchyIterable(target)) {
-      final Path annotation = currentClass.getAnnotation(Path.class);
+    for (Class<?> currentClass : new ClassHierarchyIterable(target)) {
+      Path annotation = currentClass.getAnnotation(Path.class);
       if (annotation != null) {
         // Annotation overridden, no need to continue.
         return annotation;
@@ -138,7 +138,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   private Method findMatchingMethod(final Method baseMethod, final Method[] methods) {
     nextMethod:
-    for (final Method method : methods) {
+    for (Method method : methods) {
       if (!baseMethod.getReturnType().equals(method.getReturnType())) {
         continue;
       }
@@ -147,8 +147,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
         continue;
       }
 
-      final Class<?>[] baseParameterTypes = baseMethod.getParameterTypes();
-      final Class<?>[] parameterTypes = method.getParameterTypes();
+      Class<?>[] baseParameterTypes = baseMethod.getParameterTypes();
+      Class<?>[] parameterTypes = method.getParameterTypes();
       if (baseParameterTypes.length != parameterTypes.length) {
         continue;
       }
@@ -164,8 +164,8 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   private String buildSpanName(
       final String httpMethod, final Path classPath, final Path methodPath) {
-    final String spanName;
-    final StringBuilder spanNameBuilder = new StringBuilder();
+    String spanName;
+    StringBuilder spanNameBuilder = new StringBuilder();
     if (httpMethod != null) {
       spanNameBuilder.append(httpMethod);
       spanNameBuilder.append(" ");

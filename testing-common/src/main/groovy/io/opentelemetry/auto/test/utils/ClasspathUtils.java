@@ -42,9 +42,9 @@ public class ClasspathUtils {
   private static final ClassPath testClasspath = computeTestClasspath();
 
   public static byte[] convertToByteArray(final InputStream resource) throws IOException {
-    final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     int bytesRead;
-    final byte[] data = new byte[1024];
+    byte[] data = new byte[1024];
     while ((bytesRead = resource.read(data, 0, data.length)) != -1) {
       buffer.write(data, 0, bytesRead);
     }
@@ -77,12 +77,12 @@ public class ClasspathUtils {
    */
   public static URL createJarWithClasses(final ClassLoader loader, final String... resourceNames)
       throws IOException {
-    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
+    File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
     tmpJar.deleteOnExit();
 
-    final Manifest manifest = new Manifest();
-    final JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
-    for (final String resourceName : resourceNames) {
+    Manifest manifest = new Manifest();
+    JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
+    for (String resourceName : resourceNames) {
       InputStream is = null;
       try {
         is = loader.getResourceAsStream(resourceName);
@@ -108,12 +108,12 @@ public class ClasspathUtils {
    * @throws IOException
    */
   public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
-    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
+    File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
     tmpJar.deleteOnExit();
 
-    final Manifest manifest = new Manifest();
-    final JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
-    for (final Class<?> clazz : classes) {
+    Manifest manifest = new Manifest();
+    JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
+    for (Class<?> clazz : classes) {
       addToJar(Utils.getResourceName(clazz.getName()), convertToByteArray(clazz), target);
     }
     target.close();
@@ -129,7 +129,7 @@ public class ClasspathUtils {
   private static void addToJar(
       final String resourceName, final byte[] bytes, final JarOutputStream jarOutputStream)
       throws IOException {
-    final JarEntry entry = new JarEntry(resourceName);
+    JarEntry entry = new JarEntry(resourceName);
     jarOutputStream.putNextEntry(entry);
     jarOutputStream.write(bytes, 0, bytes.length);
     jarOutputStream.closeEntry();
@@ -157,8 +157,8 @@ public class ClasspathUtils {
    * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
    */
   private static ClassLoader buildJavaClassPathClassLoader() {
-    final ImmutableList.Builder<URL> urls = ImmutableList.builder();
-    for (final String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
+    ImmutableList.Builder<URL> urls = ImmutableList.builder();
+    for (String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
       try {
         try {
           urls.add(new File(entry).toURI().toURL());
@@ -177,12 +177,11 @@ public class ClasspathUtils {
   // Moved this to a java class because groovy was adding a hard ref to classLoader
   public static boolean isClassLoaded(final String className, final ClassLoader classLoader) {
     try {
-      final Method findLoadedClassMethod =
+      Method findLoadedClassMethod =
           ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
       try {
         findLoadedClassMethod.setAccessible(true);
-        final Class<?> loadedClass =
-            (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
+        Class<?> loadedClass = (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
         return null != loadedClass && loadedClass.getClassLoader() == classLoader;
       } catch (final Exception e) {
         throw new IllegalStateException(e);

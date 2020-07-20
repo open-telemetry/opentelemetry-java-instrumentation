@@ -62,13 +62,12 @@ public class MuzzleVersionScanPlugin {
       try {
         m = instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
         m.setAccessible(true);
-        final ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
-        final List<Reference.Mismatch> mismatches =
-            muzzle.getMismatchedReferenceSources(userClassLoader);
+        ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
+        List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
-        final boolean classLoaderMatch =
+        boolean classLoaderMatch =
             ((Instrumenter.Default) instrumenter).classLoaderMatcher().matches(userClassLoader);
-        final boolean passed = mismatches.isEmpty() && classLoaderMatch;
+        boolean passed = mismatches.isEmpty() && classLoaderMatch;
 
         if (passed && !assertPass) {
           System.err.println(
@@ -84,7 +83,7 @@ public class MuzzleVersionScanPlugin {
             System.err.println("-- classloader mismatch");
           }
 
-          for (final Reference.Mismatch mismatch : mismatches) {
+          for (Reference.Mismatch mismatch : mismatches) {
             System.err.println("-- " + mismatch);
           }
           throw new RuntimeException("Instrumentation failed Muzzle validation");
@@ -113,10 +112,10 @@ public class MuzzleVersionScanPlugin {
           // only default Instrumenters use muzzle. Skip custom instrumenters.
           continue;
         }
-        final Instrumenter.Default defaultInstrumenter = (Instrumenter.Default) instrumenter;
+        Instrumenter.Default defaultInstrumenter = (Instrumenter.Default) instrumenter;
         try {
           // verify helper injector works
-          final String[] helperClassNames = defaultInstrumenter.helperClassNames();
+          String[] helperClassNames = defaultInstrumenter.helperClassNames();
           if (helperClassNames.length > 0) {
             new HelperInjector(
                     MuzzleVersionScanPlugin.class.getSimpleName(),
@@ -134,25 +133,24 @@ public class MuzzleVersionScanPlugin {
 
   private static Map<String, byte[]> createHelperMap(final Instrumenter.Default instrumenter)
       throws IOException {
-    final Map<String, byte[]> helperMap =
-        new LinkedHashMap<>(instrumenter.helperClassNames().length);
-    for (final String helperName : instrumenter.helperClassNames()) {
-      final ClassFileLocator locator =
+    Map<String, byte[]> helperMap = new LinkedHashMap<>(instrumenter.helperClassNames().length);
+    for (String helperName : instrumenter.helperClassNames()) {
+      ClassFileLocator locator =
           ClassFileLocator.ForClassLoader.of(instrumenter.getClass().getClassLoader());
-      final byte[] classBytes = locator.locate(helperName).resolve();
+      byte[] classBytes = locator.locate(helperName).resolve();
       helperMap.put(helperName, classBytes);
     }
     return helperMap;
   }
 
   public static void printMuzzleReferences(final ClassLoader instrumentationLoader) {
-    for (final Instrumenter instrumenter :
+    for (Instrumenter instrumenter :
         ServiceLoader.load(Instrumenter.class, instrumentationLoader)) {
       if (instrumenter instanceof Instrumenter.Default) {
         try {
-          final Method getMuzzleMethod =
+          Method getMuzzleMethod =
               instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
-          final ReferenceMatcher muzzle;
+          ReferenceMatcher muzzle;
           try {
             getMuzzleMethod.setAccessible(true);
             muzzle = (ReferenceMatcher) getMuzzleMethod.invoke(instrumenter);
@@ -160,7 +158,7 @@ public class MuzzleVersionScanPlugin {
             getMuzzleMethod.setAccessible(false);
           }
           System.out.println(instrumenter.getClass().getName());
-          for (final Reference ref : muzzle.getReferences()) {
+          for (Reference ref : muzzle.getReferences()) {
             System.out.println(prettyPrint("  ", ref));
           }
         } catch (final Exception e) {
@@ -178,32 +176,32 @@ public class MuzzleVersionScanPlugin {
   }
 
   private static String prettyPrint(final String prefix, final Reference ref) {
-    final StringBuilder builder = new StringBuilder(prefix).append(ref.getClassName());
+    StringBuilder builder = new StringBuilder(prefix).append(ref.getClassName());
     if (ref.getSuperName() != null) {
       builder.append(" extends<").append(ref.getSuperName()).append(">");
     }
     if (!ref.getInterfaces().isEmpty()) {
       builder.append(" implements ");
-      for (final String iface : ref.getInterfaces()) {
+      for (String iface : ref.getInterfaces()) {
         builder.append(" <").append(iface).append(">");
       }
     }
-    for (final Reference.Source source : ref.getSources()) {
+    for (Reference.Source source : ref.getSources()) {
       builder.append("\n").append(prefix).append(prefix);
       builder.append("Source: ").append(source.toString());
     }
-    for (final Reference.Field field : ref.getFields()) {
+    for (Reference.Field field : ref.getFields()) {
       builder.append("\n").append(prefix).append(prefix);
       builder.append("Field: ");
-      for (final Reference.Flag flag : field.getFlags()) {
+      for (Reference.Flag flag : field.getFlags()) {
         builder.append(flag).append(" ");
       }
       builder.append(field.toString());
     }
-    for (final Reference.Method method : ref.getMethods()) {
+    for (Reference.Method method : ref.getMethods()) {
       builder.append("\n").append(prefix).append(prefix);
       builder.append("Method: ");
-      for (final Reference.Flag flag : method.getFlags()) {
+      for (Reference.Flag flag : method.getFlags()) {
         builder.append(flag).append(" ");
       }
       builder.append(method.toString());

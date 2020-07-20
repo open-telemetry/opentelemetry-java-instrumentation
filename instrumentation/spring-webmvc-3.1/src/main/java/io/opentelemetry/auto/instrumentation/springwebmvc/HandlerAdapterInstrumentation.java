@@ -83,7 +83,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
-      final Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
+      Object parentContext = request.getAttribute(CONTEXT_ATTRIBUTE);
       if (parentContext instanceof Context) {
         DECORATE.onRequest(getSpan((Context) parentContext), request);
       }
@@ -94,7 +94,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
       // Now create a span for handler/controller execution.
 
-      final Span span = TRACER.spanBuilder(DECORATE.spanNameOnHandle(handler)).startSpan();
+      Span span = TRACER.spanBuilder(DECORATE.spanNameOnHandle(handler)).startSpan();
       DECORATE.afterStart(span);
 
       return new SpanWithScope(span, currentContextWith(span));
@@ -106,7 +106,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();

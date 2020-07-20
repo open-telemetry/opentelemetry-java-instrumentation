@@ -42,7 +42,7 @@ public class ClientRequestAdvice {
       @Advice.Argument(1) final AsyncHandler<?> handler) {
     Context parentContext = Context.current();
 
-    final Span span =
+    Span span =
         TRACER
             .spanBuilder(DECORATE.spanNameForRequest(request))
             .setSpanKind(CLIENT)
@@ -55,7 +55,7 @@ public class ClientRequestAdvice {
     InstrumentationContext.get(AsyncHandler.class, Pair.class)
         .put(handler, Pair.of(parentContext, span));
 
-    final Context newContext = withSpan(span, parentContext);
+    Context newContext = withSpan(span, parentContext);
     OpenTelemetry.getPropagators().getHttpTextFormat().inject(newContext, request, SETTER);
     return withScopedContext(newContext);
   }

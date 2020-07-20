@@ -82,8 +82,8 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
       log.warn("Periodic task scheduler is shutdown. Will not run: {}", name);
     } else {
       try {
-        final PeriodicTask<T> periodicTask = new PeriodicTask<>(task, target);
-        final ScheduledFuture<?> future =
+        PeriodicTask<T> periodicTask = new PeriodicTask<>(task, target);
+        ScheduledFuture<?> future =
             executorService.scheduleAtFixedRate(periodicTask, initialDelay, period, unit);
         periodicTask.setFuture(future);
         return future;
@@ -167,7 +167,7 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
 
     @Override
     public void run() {
-      final T t = target.get();
+      T t = target.get();
       if (t != null) {
         task.run(t);
       } else if (future != null) {

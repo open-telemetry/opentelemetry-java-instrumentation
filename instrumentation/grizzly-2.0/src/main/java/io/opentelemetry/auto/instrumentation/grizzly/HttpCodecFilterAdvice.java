@@ -40,7 +40,7 @@ public class HttpCodecFilterAdvice {
     if (context != null || !(httpHeader instanceof HttpRequestPacket)) {
       return;
     }
-    final HttpRequestPacket httpRequest = (HttpRequestPacket) httpHeader;
+    HttpRequestPacket httpRequest = (HttpRequestPacket) httpHeader;
     Span span = TRACER.startSpan(httpRequest, httpRequest, method);
 
     TRACER.startScope(span, ctx);

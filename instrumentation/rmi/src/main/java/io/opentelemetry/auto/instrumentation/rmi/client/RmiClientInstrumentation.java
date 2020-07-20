@@ -70,7 +70,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
       if (!TRACER.getCurrentSpan().getContext().isValid()) {
         return null;
       }
-      final Span span =
+      Span span =
           TRACER.spanBuilder(DECORATE.spanNameForMethod(method)).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       return new SpanWithScope(span, currentContextWith(span));
@@ -82,7 +82,7 @@ public final class RmiClientInstrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       span.end();
       spanWithScope.closeScope();

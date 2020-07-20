@@ -243,7 +243,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
   def "get non existent key command with handleAsync and chained with thenApply"() {
     setup:
     def conds = new AsyncConditions()
-    final String successStr = "KEY MISSING"
+    String successStr = "KEY MISSING"
     BiFunction<String, Throwable, String> firstStage = new BiFunction<String, Throwable, String>() {
       @Override
       String apply(String res, Throwable throwable) {

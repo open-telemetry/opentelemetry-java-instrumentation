@@ -220,7 +220,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
               // we do not really have a good way for attributing work to correct parent span
               // if we reuse Callable/Runnable.
               // Solution for now is to never reuse a Callable/Runnable.
-              final JavaAsyncChild child = new JavaAsyncChild(false, true)
+              JavaAsyncChild child = new JavaAsyncChild(false, true)
               children.add(child)
               try {
                 Future f = m(pool, child)

@@ -77,7 +77,7 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
         throw new NoSuchElementException();
       }
 
-      final Class<?> next = this.next;
+      Class<?> next = this.next;
       this.next = null;
       return next;
     }
@@ -92,7 +92,7 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
         next = classesToExpand.remove();
         queueNewInterfaces(next.getInterfaces());
 
-        final Class<?> superClass = next.getSuperclass();
+        Class<?> superClass = next.getSuperclass();
         if (superClass != null) {
           classesToExpand.add(next.getSuperclass());
         }
@@ -100,7 +100,7 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
     }
 
     private void queueNewInterfaces(final Class[] interfaces) {
-      for (final Class clazz : interfaces) {
+      for (Class clazz : interfaces) {
         if (queuedInterfaces.add(clazz)) {
           classesToExpand.add(clazz);
         }

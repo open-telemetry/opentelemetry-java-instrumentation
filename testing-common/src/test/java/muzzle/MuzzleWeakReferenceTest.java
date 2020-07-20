@@ -32,14 +32,14 @@ public class MuzzleWeakReferenceTest {
    */
   public static boolean classLoaderRefIsGarbageCollected() throws InterruptedException {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
-    final WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
-    final Reference[] refs =
+    WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
+    Reference[] refs =
         ReferenceCreator.createReferencesFrom(
                 TestClasses.MethodBodyAdvice.class.getName(),
                 MuzzleWeakReferenceTest.class.getClassLoader())
             .values()
             .toArray(new Reference[0]);
-    final ReferenceMatcher refMatcher = new ReferenceMatcher(refs);
+    ReferenceMatcher refMatcher = new ReferenceMatcher(refs);
     refMatcher.getMismatchedReferenceSources(loader);
     loader = null;
     GCUtils.awaitGC(clRef);

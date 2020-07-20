@@ -68,8 +68,8 @@ class MuzzlePlugin implements Plugin<Project> {
       doLast {
         if (!project.muzzle.directives.any { it.assertPass }) {
           project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
-          final ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
-          final ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
+          ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
+          ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
           Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, true)
@@ -81,7 +81,7 @@ class MuzzlePlugin implements Plugin<Project> {
       group = 'Muzzle'
       description = "Print references created by instrumentation muzzle"
       doLast {
-        final ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
+        ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
         Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
           .getMethod('printMuzzleReferences', ClassLoader.class)
         assertionMethod.invoke(null, instrumentationCL)
@@ -109,8 +109,8 @@ class MuzzlePlugin implements Plugin<Project> {
       return
     }
 
-    final RepositorySystem system = newRepositorySystem()
-    final RepositorySystemSession session = newRepositorySystemSession(system)
+    RepositorySystem system = newRepositorySystem()
+    RepositorySystemSession session = newRepositorySystemSession(system)
 
     project.afterEvaluate {
       // use runAfter to set up task finalizers in version order
@@ -139,7 +139,7 @@ class MuzzlePlugin implements Plugin<Project> {
 
   private static ClassLoader getOrCreateToolingLoader(Project toolingProject) {
     synchronized (TOOLING_LOADER) {
-      final ClassLoader toolingLoader = TOOLING_LOADER.get()
+      ClassLoader toolingLoader = TOOLING_LOADER.get()
       if (toolingLoader == null) {
         Set<URL> urls = new HashSet<>()
         toolingProject.getLogger().info('creating classpath for auto-tooling')
@@ -191,7 +191,7 @@ class MuzzlePlugin implements Plugin<Project> {
    * Create a classloader with dependencies for a single muzzle task.
    */
   private static ClassLoader createClassLoaderForTask(Project project, Project bootstrapProject, String muzzleTaskName) {
-    final List<URL> userUrls = new ArrayList<>()
+    List<URL> userUrls = new ArrayList<>()
 
     project.getLogger().info("Creating task classpath")
     project.configurations.getByName(muzzleTaskName).resolvedConfiguration.files.each { File jarFile ->
@@ -210,20 +210,20 @@ class MuzzlePlugin implements Plugin<Project> {
    * Convert a muzzle directive to a list of artifacts
    */
   private static Set<Artifact> muzzleDirectiveToArtifacts(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
-    final Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
+    Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
 
-    final VersionRangeRequest rangeRequest = new VersionRangeRequest()
+    VersionRangeRequest rangeRequest = new VersionRangeRequest()
     rangeRequest.setRepositories(MUZZLE_REPOS)
     rangeRequest.setArtifact(directiveArtifact)
-    final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
-    final Set<Version> versions = rangeResult.versions.toSet()
+    VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
+    Set<Version> versions = rangeResult.versions.toSet()
 
     limitLargeRanges(rangeResult, versions, muzzleDirective.skipVersions)
 
 //    println "Range Request: " + rangeRequest
 //    println "Range Result: " + rangeResult
 
-    final Set<Artifact> allVersionArtifacts = filterVersion(versions, muzzleDirective.skipVersions).collect { version ->
+    Set<Artifact> allVersionArtifacts = filterVersion(versions, muzzleDirective.skipVersions).collect { version ->
       new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version.toString())
     }.toSet()
 
@@ -240,24 +240,24 @@ class MuzzlePlugin implements Plugin<Project> {
   private static Set<MuzzleDirective> inverseOf(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
     Set<MuzzleDirective> inverseDirectives = new HashSet<>()
 
-    final Artifact allVerisonsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
-    final Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
+    Artifact allVerisonsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
+    Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
 
 
-    final VersionRangeRequest allRangeRequest = new VersionRangeRequest()
+    VersionRangeRequest allRangeRequest = new VersionRangeRequest()
     allRangeRequest.setRepositories(MUZZLE_REPOS)
     allRangeRequest.setArtifact(allVerisonsArtifact)
-    final VersionRangeResult allRangeResult = system.resolveVersionRange(session, allRangeRequest)
+    VersionRangeResult allRangeResult = system.resolveVersionRange(session, allRangeRequest)
 
-    final VersionRangeRequest rangeRequest = new VersionRangeRequest()
+    VersionRangeRequest rangeRequest = new VersionRangeRequest()
     rangeRequest.setRepositories(MUZZLE_REPOS)
     rangeRequest.setArtifact(directiveArtifact)
-    final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
-    final Set<Version> versions = rangeResult.versions.toSet()
+    VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
+    Set<Version> versions = rangeResult.versions.toSet()
 
     filterVersion(allRangeResult.versions.toSet(), muzzleDirective.skipVersions).collect { version ->
       if (!versions.contains(version)) {
-        final MuzzleDirective inverseDirective = new MuzzleDirective()
+        MuzzleDirective inverseDirective = new MuzzleDirective()
         inverseDirective.group = muzzleDirective.group
         inverseDirective.module = muzzleDirective.module
         inverseDirective.versions = "$version"
@@ -324,7 +324,7 @@ class MuzzlePlugin implements Plugin<Project> {
 
     def muzzleTask = instrumentationProject.task(taskName) {
       doLast {
-        final ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject, toolingProject)
+        ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject, toolingProject)
         def ccl = Thread.currentThread().contextClassLoader
         def bogusLoader = new SecureClassLoader() {
           @Override
@@ -333,7 +333,7 @@ class MuzzlePlugin implements Plugin<Project> {
           }
         }
         Thread.currentThread().contextClassLoader = bogusLoader
-        final ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
+        ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
         try {
           // find all instrumenters, get muzzle, and assert
           Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.auto.tooling.muzzle.MuzzleVersionScanPlugin')
@@ -478,7 +478,7 @@ class MuzzleExtension {
   }
 
   void pass(Action<? super MuzzleDirective> action) {
-    final MuzzleDirective pass = objectFactory.newInstance(MuzzleDirective)
+    MuzzleDirective pass = objectFactory.newInstance(MuzzleDirective)
     action.execute(pass)
     postConstruct(pass)
     pass.assertPass = true
@@ -486,7 +486,7 @@ class MuzzleExtension {
   }
 
   void fail(Action<? super MuzzleDirective> action) {
-    final MuzzleDirective fail = objectFactory.newInstance(MuzzleDirective)
+    MuzzleDirective fail = objectFactory.newInstance(MuzzleDirective)
     action.execute(fail)
     postConstruct(fail)
     fail.assertPass = false

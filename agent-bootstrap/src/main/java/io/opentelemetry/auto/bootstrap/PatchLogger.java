@@ -94,7 +94,7 @@ public class PatchLogger {
   }
 
   public void log(final LogRecord record) {
-    final Level level = record.getLevel();
+    Level level = record.getLevel();
     if (level.intValue() >= Level.SEVERE.intValue()) {
       if (slf4jLogger.isErrorEnabled()) {
         slf4jLogger.error(getMessage(record), record.getThrown());
@@ -372,8 +372,8 @@ public class PatchLogger {
   }
 
   private static String getMessage(final LogRecord record) {
-    final String msg = record.getMessage();
-    final Object[] params = record.getParameters();
+    String msg = record.getMessage();
+    Object[] params = record.getParameters();
     if (params == null) {
       return msg;
     } else {

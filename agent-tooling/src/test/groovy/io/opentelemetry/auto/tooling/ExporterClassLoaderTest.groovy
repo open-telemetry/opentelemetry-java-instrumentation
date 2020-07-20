@@ -87,11 +87,11 @@ class ExporterClassLoaderTest extends Specification {
 
   static URL createJarWithClasses(final Class<?>... classes)
     throws IOException {
-    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar")
+    File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar")
     tmpJar.deleteOnExit()
 
-    final JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar))
-    for (final Class<?> clazz : classes) {
+    JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar))
+    for (Class<?> clazz : classes) {
       addToJar(clazz, clazz.getInterfaces()[0], target)
     }
     target.close()
@@ -112,13 +112,13 @@ class ExporterClassLoaderTest extends Specification {
 
     InputStream inputStream = null
     try {
-      final JarEntry entry = new JarEntry(resourceName)
+      JarEntry entry = new JarEntry(resourceName)
       jarOutputStream.putNextEntry(entry)
       inputStream = loader.getResourceAsStream(resourceName)
 
-      final byte[] buffer = new byte[1024]
+      byte[] buffer = new byte[1024]
       while (true) {
-        final int count = inputStream.read(buffer)
+        int count = inputStream.read(buffer)
         if (count == -1) {
           break
         }
@@ -126,7 +126,7 @@ class ExporterClassLoaderTest extends Specification {
       }
       jarOutputStream.closeEntry()
 
-      final JarEntry serviceEntry = new JarEntry("META-INF/services/" + serviceInterface.getName())
+      JarEntry serviceEntry = new JarEntry("META-INF/services/" + serviceInterface.getName())
       jarOutputStream.putNextEntry(serviceEntry)
       jarOutputStream.write(clazz.getName().getBytes(StandardCharsets.UTF_8))
       jarOutputStream.closeEntry()

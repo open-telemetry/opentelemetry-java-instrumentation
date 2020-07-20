@@ -76,7 +76,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     // There are 8 execute(...) methods.  Depending on the version, they may or may not delegate to
     // eachother. Thus, all methods need to be instrumented.  Because of argument position and type,
     // some methods can share the same advice class.  The call depth tracking ensures only 1 span is
@@ -164,7 +164,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   public static class UriRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
       }
@@ -192,12 +192,12 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
             Object handler) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request);
+      SpanWithScope spanWithScope = ApacheHttpClientHelper.doMethodEnter(request);
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
@@ -221,7 +221,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope methodEnter(
         @Advice.Argument(0) final HttpHost host, @Advice.Argument(1) final HttpRequest request) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
       }
@@ -255,12 +255,12 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
             Object handler) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final SpanWithScope spanWithScope;
+      SpanWithScope spanWithScope;
 
       if (request instanceof HttpUriRequest) {
         spanWithScope = ApacheHttpClientHelper.doMethodEnter((HttpUriRequest) request);

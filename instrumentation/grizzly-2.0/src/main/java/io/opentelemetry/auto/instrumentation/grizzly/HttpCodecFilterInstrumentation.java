@@ -52,7 +52,7 @@ public final class HttpCodecFilterInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     // this is for 2.3 through 2.3.19
     transformers.put(
         named("handleRead")

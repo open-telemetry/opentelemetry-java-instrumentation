@@ -98,8 +98,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     // We want the advice applied in a specific order, so use an ordered map.
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers =
-        new LinkedHashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new LinkedHashMap<>();
     transformers.put(
         isMethod()
             .and(
@@ -131,20 +130,20 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter
     public static SpanWithScope onEnter(
         @Advice.This final Channel channel, @Advice.Origin("Channel.#m") final String method) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
+      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final Connection connection = channel.getConnection();
+      Connection connection = channel.getConnection();
 
-      final Span.Builder spanBuilder = TRACER.spanBuilder(method);
+      Span.Builder spanBuilder = TRACER.spanBuilder(method);
       if (method.equals("Channel.basicPublish")) {
         spanBuilder.setSpanKind(PRODUCER);
       } else {
         spanBuilder.setSpanKind(CLIENT);
       }
-      final Span span = spanBuilder.startSpan();
+      Span span = spanBuilder.startSpan();
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
@@ -161,7 +160,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       CallDepthThreadLocalMap.reset(Channel.class);
 
       CURRENT_RABBIT_SPAN.remove();
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.end();
@@ -176,7 +175,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) final String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) final byte[] body) {
-      final Span span = TRACER.getCurrentSpan();
+      Span span = TRACER.getCurrentSpan();
 
       if (span.getContext().isValid()) {
         DECORATE.afterStart(span); // Overwrite tags set by generic decorator.
@@ -187,7 +186,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         if (props == null) {
           props = MessageProperties.MINIMAL_BASIC;
         }
-        final Integer deliveryMode = props.getDeliveryMode();
+        Integer deliveryMode = props.getDeliveryMode();
         if (deliveryMode != null) {
           span.setAttribute("amqp.delivery_mode", deliveryMode);
         }
@@ -196,7 +195,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<String, Object>() : new HashMap<>(headers);
 
-        final Context context = withSpan(span, Context.current());
+        Context context = withSpan(span, Context.current());
 
         OpenTelemetry.getPropagators().getHttpTextFormat().inject(context, headers, SETTER);
 
@@ -244,31 +243,31 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       // can't create span and put into scope in method enter above, because can't add links after
       // span creation
-      final Span.Builder spanBuilder =
+      Span.Builder spanBuilder =
           TRACER
               .spanBuilder(DECORATE.spanNameOnGet(queue))
               .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
 
       if (response != null && response.getProps() != null) {
-        final Map<String, Object> headers = response.getProps().getHeaders();
+        Map<String, Object> headers = response.getProps().getHeaders();
 
         if (headers != null) {
-          final SpanContext extractedContext = extract(headers, GETTER);
+          SpanContext extractedContext = extract(headers, GETTER);
           if (extractedContext.isValid()) {
             spanBuilder.addLink(extractedContext);
           }
         }
       }
 
-      final Connection connection = channel.getConnection();
+      Connection connection = channel.getConnection();
 
-      final Span span = spanBuilder.startSpan();
+      Span span = spanBuilder.startSpan();
       if (response != null) {
         span.setAttribute("message.size", response.getBody().length);
       }
       span.setAttribute(SemanticAttributes.NET_PEER_PORT.key(), connection.getPort());
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onGet(span, queue);
         DECORATE.onPeerConnection(span, connection.getAddress());

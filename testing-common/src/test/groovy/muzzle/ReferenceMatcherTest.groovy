@@ -159,7 +159,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
   }
 
   private static Set<Class> getMismatchClassSet(List<Reference.Mismatch> mismatches) {
-    final Set<Class> mismatchClasses = new HashSet<>(mismatches.size())
+    Set<Class> mismatchClasses = new HashSet<>(mismatches.size())
     for (Reference.Mismatch mismatch : mismatches) {
       mismatchClasses.add(mismatch.getClass())
     }

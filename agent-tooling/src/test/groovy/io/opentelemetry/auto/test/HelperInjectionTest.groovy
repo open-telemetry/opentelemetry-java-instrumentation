@@ -92,10 +92,10 @@ class HelperInjectionTest extends AgentSpecification {
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
 
     // Copied from HelperInjector:
-    final ClassFileLocator locator =
+    ClassFileLocator locator =
       ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader())
-    final byte[] classBytes = locator.locate(helperClassName).resolve()
-    final TypeDescription typeDesc =
+    byte[] classBytes = locator.locate(helperClassName).resolve()
+    TypeDescription typeDesc =
       new TypeDescription.Latent(
         helperClassName, 0, null, Collections.<TypeDescription.Generic> emptyList())
 

@@ -200,8 +200,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               final String descriptor,
               final String signature,
               final String[] exceptions) {
-            final MethodVisitor mv =
-                super.visitMethod(access, name, descriptor, signature, exceptions);
+            MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
             return new MethodVisitor(Opcodes.ASM7, mv) {
               /** The most recent objects pushed to the stack. */
               private final Object[] stack = {null, null};
@@ -231,9 +230,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                           && insnStack[1] == Opcodes.LDC
                           && insnStack[2] == Opcodes.LDC)
                       && (stack[0] instanceof Type && stack[1] instanceof Type)) {
-                    final String contextClassName = ((Type) stack[0]).getClassName();
-                    final String keyClassName = ((Type) stack[1]).getClassName();
-                    final TypeDescription contextStoreImplementationClass =
+                    String contextClassName = ((Type) stack[0]).getClassName();
+                    String keyClassName = ((Type) stack[1]).getClassName();
+                    TypeDescription contextStoreImplementationClass =
                         getContextStoreImplementation(keyClassName, contextClassName);
                     if (log.isDebugEnabled()) {
                       log.debug(
@@ -503,7 +502,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             if (interfaces == null) {
               interfaces = new String[] {};
             }
-            final Set<String> set = new LinkedHashSet<>(Arrays.asList(interfaces));
+            Set<String> set = new LinkedHashSet<>(Arrays.asList(interfaces));
             set.add(INJECTED_FIELDS_MARKER_CLASS_NAME);
             set.add(interfaceType.getInternalName());
             super.visit(version, access, name, signature, superName, set.toArray(new String[] {}));
@@ -564,7 +563,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           /** Just 'standard' getter implementation */
           private void addGetter() {
-            final MethodVisitor mv = getAccessorMethodVisitor(getterMethodName);
+            MethodVisitor mv = getAccessorMethodVisitor(getterMethodName);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitFieldInsn(
@@ -579,7 +578,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           /** Just 'standard' setter implementation */
           private void addSetter() {
-            final MethodVisitor mv = getAccessorMethodVisitor(setterMethodName);
+            MethodVisitor mv = getAccessorMethodVisitor(setterMethodName);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
@@ -608,7 +607,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private TypeDescription getContextStoreImplementation(
       final String keyClassName, final String contextClassName) {
-    final DynamicType.Unloaded<?> type =
+    DynamicType.Unloaded<?> type =
         contextStoreImplementations.get(
             getContextStoreImplementationClassName(keyClassName, contextClassName));
     if (type == null) {
@@ -619,10 +618,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private Map<String, DynamicType.Unloaded<?>> generateContextStoreImplementationClasses() {
-    final Map<String, DynamicType.Unloaded<?>> contextStoreImplementations =
+    Map<String, DynamicType.Unloaded<?>> contextStoreImplementations =
         new HashMap<>(contextStore.size());
-    for (final Map.Entry<String, String> entry : contextStore.entrySet()) {
-      final DynamicType.Unloaded<?> type =
+    for (Map.Entry<String, String> entry : contextStore.entrySet()) {
+      DynamicType.Unloaded<?> type =
           makeContextStoreImplementationClass(entry.getKey(), entry.getValue());
       contextStoreImplementations.put(type.getTypeDescription().getName(), type);
     }
@@ -729,9 +728,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            * @param name name of the method being visited
            */
           private void generateRealGetMethod(final String name) {
-            final String getterName = getContextGetterName(keyClassName);
-            final Label elseLabel = new Label();
-            final MethodVisitor mv = getMethodVisitor(name);
+            String getterName = getContextGetterName(keyClassName);
+            Label elseLabel = new Label();
+            MethodVisitor mv = getMethodVisitor(name);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitTypeInsn(Opcodes.INSTANCEOF, accessorInterfaceInternalName);
@@ -782,10 +781,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            * @param name name of the method being visited
            */
           private void generateRealPutMethod(final String name) {
-            final String setterName = getContextSetterName(keyClassName);
-            final Label elseLabel = new Label();
-            final Label endLabel = new Label();
-            final MethodVisitor mv = getMethodVisitor(name);
+            String setterName = getContextSetterName(keyClassName);
+            Label elseLabel = new Label();
+            Label endLabel = new Label();
+            MethodVisitor mv = getMethodVisitor(name);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitTypeInsn(Opcodes.INSTANCEOF, accessorInterfaceInternalName);
@@ -842,11 +841,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
            * @param name name of the method being visited
            */
           private void generateRealSynchronizeInstanceMethod(final String name) {
-            final MethodVisitor mv = getMethodVisitor(name);
+            MethodVisitor mv = getMethodVisitor(name);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitTypeInsn(Opcodes.INSTANCEOF, accessorInterfaceInternalName);
-            final Label elseLabel = new Label();
+            Label elseLabel = new Label();
             mv.visitJumpInsn(Opcodes.IFEQ, elseLabel);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitInsn(Opcodes.ARETURN);
@@ -928,7 +927,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         if (null != existingContext) {
           return existingContext;
         }
-        final Object context = contextFactory.create();
+        Object context = contextFactory.create();
         realPut(key, context);
         return context;
       }
@@ -974,7 +973,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private TypeDescription getFieldAccessorInterface(
       final String keyClassName, final String contextClassName) {
-    final DynamicType.Unloaded<?> type =
+    DynamicType.Unloaded<?> type =
         fieldAccessorInterfaces.get(
             getContextAccessorInterfaceName(keyClassName, contextClassName));
     if (type == null) {
@@ -985,11 +984,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private Map<String, DynamicType.Unloaded<?>> generateFieldAccessorInterfaces() {
-    final Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces =
+    Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces =
         new HashMap<>(contextStore.size());
-    for (final Map.Entry<String, String> entry : contextStore.entrySet()) {
-      final DynamicType.Unloaded<?> type =
-          makeFieldAccessorInterface(entry.getKey(), entry.getValue());
+    for (Map.Entry<String, String> entry : contextStore.entrySet()) {
+      DynamicType.Unloaded<?> type = makeFieldAccessorInterface(entry.getKey(), entry.getValue());
       fieldAccessorInterfaces.put(type.getTypeDescription().getName(), type);
     }
     return Collections.unmodifiableMap(fieldAccessorInterfaces);
@@ -1004,10 +1002,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    * @return unloaded dynamic type containing generated interface
    */
   private DynamicType.Unloaded<?> makeFieldAccessorInterface(
-      final String keyClassName, final String contextClassName) {
+      String keyClassName, final String contextClassName) {
     // We are using Object class name instead of contextClassName here because this gets injected
     // onto Bootstrap classloader where context class may be unavailable
-    final TypeDescription contextType = new TypeDescription.ForLoadedType(Object.class);
+    TypeDescription contextType = new TypeDescription.ForLoadedType(Object.class);
     return byteBuddy
         .makeInterface()
         .name(getContextAccessorInterfaceName(keyClassName, contextClassName))

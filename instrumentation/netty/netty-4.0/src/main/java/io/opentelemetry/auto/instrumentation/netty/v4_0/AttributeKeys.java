@@ -57,13 +57,13 @@ public class AttributeKeys {
    * cassandra driver.
    */
   private static <T> AttributeKey<T> attributeKey(final String key) {
-    final ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
+    ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
         map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
       return (AttributeKey<T>) classLoaderMap.get(key);
     }
 
-    final AttributeKey<T> value = new AttributeKey<>(key);
+    AttributeKey<T> value = new AttributeKey<>(key);
     classLoaderMap.put(key, value);
     return value;
   }

@@ -39,7 +39,7 @@ public class JavaUtilLoggingSpans {
 
   public static void capture(final Logger logger, final LogRecord logRecord) {
 
-    final Level level = logRecord.getLevel();
+    Level level = logRecord.getLevel();
     if (!logger.isLoggable(level)) {
       // this is already checked in most cases, except if Logger.log(LogRecord) was called directly
       return;
@@ -48,8 +48,8 @@ public class JavaUtilLoggingSpans {
       return;
     }
 
-    final Throwable t = logRecord.getThrown();
-    final Span span =
+    Throwable t = logRecord.getThrown();
+    Span span =
         TRACER
             .spanBuilder("log.message")
             .setAttribute("message", FORMATTER.formatMessage(logRecord))
@@ -63,13 +63,13 @@ public class JavaUtilLoggingSpans {
   }
 
   private static String toString(final Throwable t) {
-    final StringWriter out = new StringWriter();
+    StringWriter out = new StringWriter();
     t.printStackTrace(new PrintWriter(out));
     return out.toString();
   }
 
   private static Level getThreshold() {
-    final String level = Config.get().getExperimentalLogCaptureThreshold();
+    String level = Config.get().getExperimentalLogCaptureThreshold();
     if (level == null) {
       return Level.OFF;
     }

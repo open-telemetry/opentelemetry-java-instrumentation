@@ -48,7 +48,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
   @Override
   public Map<String, String> contextStore() {
-    final Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new HashMap<>();
     map.put(Runnable.class.getName(), State.class.getName());
     map.put(Callable.class.getName(), State.class.getName());
     map.put(ForkJoinTask.class.getName(), State.class.getName());
@@ -58,7 +58,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("execute").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
         JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
@@ -96,12 +96,12 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
+      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask, executor)) {
         task = newTask;
-        final ContextStore<Runnable, State> contextStore =
+        ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, newTask, Context.current());
       }
@@ -124,7 +124,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
-        final ContextStore<ForkJoinTask, State> contextStore =
+        ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, task, Context.current());
       }
@@ -146,12 +146,12 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
+      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask, executor)) {
         task = newTask;
-        final ContextStore<Runnable, State> contextStore =
+        ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, newTask, Context.current());
       }
@@ -165,7 +165,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final Future future) {
       if (state != null && future != null) {
-        final ContextStore<Future, State> contextStore =
+        ContextStore<Future, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
@@ -179,12 +179,12 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
-      final Callable newTask = CallableWrapper.wrapIfNeeded(task);
+      Callable newTask = CallableWrapper.wrapIfNeeded(task);
       // It is important to check potentially wrapped task if we can instrument task in this
       // executor. Some executors do not support wrapped tasks.
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask, executor)) {
         task = newTask;
-        final ContextStore<Callable, State> contextStore =
+        ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(contextStore, newTask, Context.current());
       }
@@ -198,7 +198,7 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final Future future) {
       if (state != null && future != null) {
-        final ContextStore<Future, State> contextStore =
+        ContextStore<Future, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
@@ -213,15 +213,15 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       if (tasks != null) {
-        final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
-        for (final Callable<?> task : tasks) {
+        Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
+        for (Callable<?> task : tasks) {
           if (task != null) {
-            final Callable newTask = CallableWrapper.wrapIfNeeded(task);
+            Callable newTask = CallableWrapper.wrapIfNeeded(task);
             if (ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, newTask)) {
               wrappedTasks.add(task);
             } else {
               wrappedTasks.add(newTask);
-              final ContextStore<Callable, State> contextStore =
+              ContextStore<Callable, State> contextStore =
                   InstrumentationContext.get(Callable.class, State.class);
               ExecutorInstrumentationUtils.setupState(contextStore, newTask, Context.current());
             }
@@ -248,11 +248,11 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
        (according to ExecutorService docs and AbstractExecutorService code)
       */
       if (null != throwable && wrappedTasks != null) {
-        for (final Callable<?> task : wrappedTasks) {
+        for (Callable<?> task : wrappedTasks) {
           if (task != null) {
-            final ContextStore<Callable, State> contextStore =
+            ContextStore<Callable, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
-            final State state = contextStore.get(task);
+            State state = contextStore.get(task);
             if (state != null) {
               /*
               Note: this may potentially close somebody else's continuation if we didn't set it

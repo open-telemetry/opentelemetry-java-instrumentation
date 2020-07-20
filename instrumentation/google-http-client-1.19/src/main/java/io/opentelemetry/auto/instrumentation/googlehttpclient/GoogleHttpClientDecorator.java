@@ -40,8 +40,8 @@ public class GoogleHttpClientDecorator extends HttpClientDecorator<HttpRequest, 
   protected URI url(final HttpRequest httpRequest) throws URISyntaxException {
     // Google uses %20 (space) instead of "+" for spaces in the fragment
     // Add "+" back for consistency with the other http client instrumentations
-    final String url = httpRequest.getUrl().build();
-    final String fixedUrl = url.replaceAll("%20", "+");
+    String url = httpRequest.getUrl().build();
+    String fixedUrl = url.replaceAll("%20", "+");
     return new URI(fixedUrl);
   }
 

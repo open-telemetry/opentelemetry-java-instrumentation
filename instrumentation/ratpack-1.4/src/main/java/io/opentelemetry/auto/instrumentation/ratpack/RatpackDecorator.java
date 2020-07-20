@@ -29,7 +29,6 @@ public class RatpackDecorator extends BaseDecorator {
       OpenTelemetry.getTracerProvider().get("io.opentelemetry.auto.ratpack-1.4");
 
   public Span onContext(final Span span, final Context ctx) {
-
     String description = ctx.getPathBinding().getDescription();
     if (description == null || description.isEmpty()) {
       description = "/";

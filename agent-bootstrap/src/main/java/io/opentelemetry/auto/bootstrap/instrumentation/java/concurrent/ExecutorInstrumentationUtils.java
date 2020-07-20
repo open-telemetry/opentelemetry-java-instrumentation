@@ -46,8 +46,8 @@ public class ExecutorInstrumentationUtils {
       return false;
     }
 
-    final Span span = TRACER.getCurrentSpan();
-    final Class enclosingClass = task.getClass().getEnclosingClass();
+    Span span = TRACER.getCurrentSpan();
+    Class enclosingClass = task.getClass().getEnclosingClass();
 
     return span.getContext().isValid()
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task)
@@ -72,7 +72,7 @@ public class ExecutorInstrumentationUtils {
    */
   public static <T> State setupState(
       final ContextStore<T, State> contextStore, final T task, final Context context) {
-    final State state = contextStore.putIfAbsent(task, State.FACTORY);
+    State state = contextStore.putIfAbsent(task, State.FACTORY);
     state.setParentSpan(context);
     return state;
   }

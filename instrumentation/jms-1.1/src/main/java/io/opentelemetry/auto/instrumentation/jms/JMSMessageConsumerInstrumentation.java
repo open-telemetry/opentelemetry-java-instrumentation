@@ -74,7 +74,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
         JMSMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
@@ -111,20 +111,20 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       } else {
         spanName = DECORATE.spanNameForReceive(message);
       }
-      final Span.Builder spanBuilder =
+      Span.Builder spanBuilder =
           TRACER
               .spanBuilder(spanName)
               .setSpanKind(CLIENT)
               .setStartTimestamp(TimeUnit.MILLISECONDS.toNanos(startTime));
       if (message != null) {
-        final SpanContext spanContext = extract(message, GETTER);
+        SpanContext spanContext = extract(message, GETTER);
         if (spanContext.isValid()) {
           spanBuilder.addLink(spanContext);
         }
       }
-      final Span span = spanBuilder.startSpan();
+      Span span = spanBuilder.startSpan();
 
-      try (final Scope scope = currentContextWith(span)) {
+      try (Scope scope = currentContextWith(span)) {
         DECORATE.afterStart(span);
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);

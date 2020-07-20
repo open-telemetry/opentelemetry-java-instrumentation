@@ -31,18 +31,18 @@ public class JpaPersistenceConfig {
 
   @Bean
   public PlatformTransactionManager transactionManager() {
-    final JpaTransactionManager transactionManager = new JpaTransactionManager();
+    JpaTransactionManager transactionManager = new JpaTransactionManager();
     transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
     return transactionManager;
   }
 
   @Bean
   public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-    final HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+    HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setDatabase(Database.HSQL);
     vendorAdapter.setGenerateDdl(true);
 
-    final LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+    LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
     em.setDataSource(dataSource());
     em.setPackagesToScan("spring.jpa");
     em.setJpaVendorAdapter(vendorAdapter);
@@ -51,7 +51,7 @@ public class JpaPersistenceConfig {
 
   @Bean
   public DataSource dataSource() {
-    final DriverManagerDataSource dataSource = new DriverManagerDataSource();
+    DriverManagerDataSource dataSource = new DriverManagerDataSource();
     dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
     dataSource.setUrl("jdbc:hsqldb:mem:test");
     dataSource.setUsername("sa");

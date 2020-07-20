@@ -40,14 +40,14 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SpanWithScope decorateAbortSpan(
         @Advice.This final ContainerRequestContext context) {
-      final UriInfo uriInfo = context.getUriInfo();
+      UriInfo uriInfo = context.getUriInfo();
 
       if (context.getProperty(JaxRsAnnotationsDecorator.ABORT_HANDLED) == null
           && uriInfo instanceof ResourceInfo) {
 
-        final ResourceInfo resourceInfo = (ResourceInfo) uriInfo;
-        final Method method = resourceInfo.getResourceMethod();
-        final Class resourceClass = resourceInfo.getResourceClass();
+        ResourceInfo resourceInfo = (ResourceInfo) uriInfo;
+        Method method = resourceInfo.getResourceMethod();
+        Class resourceClass = resourceInfo.getResourceClass();
 
         return RequestFilterHelper.createOrUpdateAbortSpan(context, resourceClass, method);
       }

@@ -88,7 +88,7 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      final Span span =
+      Span span =
           TRACER.spanBuilder(action.getClass().getSimpleName()).setSpanKind(CLIENT).startSpan();
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, action.getClass(), actionRequest.getClass());
@@ -102,7 +102,7 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
     public static void stopSpan(
         @Advice.Enter final SpanWithScope spanWithScope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final Span span = spanWithScope.getSpan();
+        Span span = spanWithScope.getSpan();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.end();

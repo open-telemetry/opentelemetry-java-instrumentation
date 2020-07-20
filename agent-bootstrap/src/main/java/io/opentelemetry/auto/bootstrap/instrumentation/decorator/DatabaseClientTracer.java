@@ -50,7 +50,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
   public Span startSpan(CONNECTION connection, QUERY query) {
     String normalizedQuery = normalizeQuery(query);
 
-    final Span span =
+    Span span =
         tracer
             .spanBuilder(spanName(normalizedQuery))
             .setSpanKind(CLIENT)
@@ -83,7 +83,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
   }
 
   public Span getClientSpan() {
-    final Context context = Context.current();
+    Context context = Context.current();
     return CONTEXT_CLIENT_SPAN_KEY.get(context);
   }
 
@@ -133,7 +133,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> {
     span.setAttribute(MoreAttributes.ERROR_MSG, throwable.getMessage());
     span.setAttribute(MoreAttributes.ERROR_TYPE, throwable.getClass().getName());
 
-    final StringWriter errorString = new StringWriter();
+    StringWriter errorString = new StringWriter();
     throwable.printStackTrace(new PrintWriter(errorString));
     span.setAttribute(MoreAttributes.ERROR_STACK, errorString.toString());
   }

@@ -87,9 +87,9 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final ClientRequest request, @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
-      final boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
+      boolean isRootClientHandler = null == request.getProperties().get(CONTEXT_ATTRIBUTE);
       if (isRootClientHandler) {
-        final Span span =
+        Span span =
             TRACER
                 .spanBuilder(DECORATE.spanNameForRequest(request))
                 .setSpanKind(CLIENT)
@@ -97,7 +97,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
 
-        final Context context = withSpan(span, Context.current());
+        Context context = withSpan(span, Context.current());
         request.getProperties().put(CONTEXT_ATTRIBUTE, context);
 
         OpenTelemetry.getPropagators()
@@ -116,7 +116,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       if (spanWithScope == null) {
         return;
       }
-      final Span span = spanWithScope.getSpan();
+      Span span = spanWithScope.getSpan();
       DECORATE.onResponse(span, response);
       DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);

@@ -58,16 +58,16 @@ final class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, Sd
   }
 
   String spanName(final ExecutionAttributes attributes) {
-    final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
-    final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
     return awsServiceName + "." + awsOperation;
   }
 
   Span onAttributes(final Span span, final ExecutionAttributes attributes) {
 
-    final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
-    final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
     span.setAttribute("aws.agent", COMPONENT_NAME);
     span.setAttribute("aws.service", awsServiceName);

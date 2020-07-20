@@ -75,12 +75,12 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) final CouchbaseRequest request) {
 
-      final Span parentSpan = TRACER.getCurrentSpan();
+      Span parentSpan = TRACER.getCurrentSpan();
       if (parentSpan != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store
 
-        final ContextStore<CouchbaseRequest, Span> contextStore =
+        ContextStore<CouchbaseRequest, Span> contextStore =
             InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
         Span span = contextStore.get(request);

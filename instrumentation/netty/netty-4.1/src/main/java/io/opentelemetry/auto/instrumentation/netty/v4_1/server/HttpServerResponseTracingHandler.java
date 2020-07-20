@@ -39,7 +39,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     }
 
     Span span = TracingContextUtils.getSpan(context);
-    try (final Scope ignored = ContextUtils.withScopedContext(context)) {
+    try (Scope ignored = ContextUtils.withScopedContext(context)) {
       ctx.write(msg, prm);
     } catch (final Throwable throwable) {
       TRACER.endExceptionally(span, throwable);

@@ -38,7 +38,7 @@ public class LettuceInstrumentationUtil {
    * @return false if the span should finish early (the command will not have a return value)
    */
   public static boolean expectsResponse(final RedisCommand command) {
-    final String commandName = LettuceInstrumentationUtil.getCommandName(command);
+    String commandName = LettuceInstrumentationUtil.getCommandName(command);
     return !nonInstrumentingCommands.contains(commandName);
   }
 

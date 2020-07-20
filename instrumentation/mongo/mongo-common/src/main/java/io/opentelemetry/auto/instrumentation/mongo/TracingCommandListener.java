@@ -38,7 +38,7 @@ public class TracingCommandListener implements CommandListener {
 
   @Override
   public void commandSucceeded(final CommandSucceededEvent event) {
-    final Span span = spanMap.remove(event.getRequestId());
+    Span span = spanMap.remove(event.getRequestId());
     if (span != null) {
       TRACER.end(span);
     }
@@ -46,7 +46,7 @@ public class TracingCommandListener implements CommandListener {
 
   @Override
   public void commandFailed(final CommandFailedEvent event) {
-    final Span span = spanMap.remove(event.getRequestId());
+    Span span = spanMap.remove(event.getRequestId());
     if (span != null) {
       TRACER.endExceptionally(span, event.getThrowable());
     }
