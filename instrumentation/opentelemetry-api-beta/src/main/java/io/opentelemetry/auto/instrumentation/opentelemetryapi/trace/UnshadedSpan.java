@@ -21,6 +21,7 @@ import static io.opentelemetry.auto.instrumentation.opentelemetryapi.trace.Bridg
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.common.AttributeValue;
 import unshaded.io.opentelemetry.common.Attributes;
 import unshaded.io.opentelemetry.trace.EndSpanOptions;
@@ -164,6 +165,12 @@ class UnshadedSpan implements Span {
     @Override
     public Span.Builder setParent(final SpanContext remoteParent) {
       shadedBuilder.setParent(toShaded(remoteParent));
+      return this;
+    }
+
+    @Override
+    public Span.Builder setParent(Context context) {
+      shadedBuilder.setParent(toShaded(context));
       return this;
     }
 

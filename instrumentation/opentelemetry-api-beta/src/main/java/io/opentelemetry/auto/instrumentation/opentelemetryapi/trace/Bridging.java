@@ -16,9 +16,12 @@
 
 package io.opentelemetry.auto.instrumentation.opentelemetryapi.trace;
 
+import io.opentelemetry.auto.bootstrap.ContextStore;
+import io.opentelemetry.auto.bootstrap.InstrumentationContext;
 import io.opentelemetry.common.Attributes.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import unshaded.io.grpc.Context;
 import unshaded.io.opentelemetry.common.AttributeValue;
 import unshaded.io.opentelemetry.common.Attributes;
 import unshaded.io.opentelemetry.common.ReadableKeyValuePairs.KeyValueConsumer;
@@ -167,6 +170,12 @@ public class Bridging {
     return io.opentelemetry.trace.EndSpanOptions.builder()
         .setEndTimestamp(unshadedEndSpanOptions.getEndTimestamp())
         .build();
+  }
+
+  public static io.grpc.Context toShaded(Context context) {
+    ContextStore<Context, io.grpc.Context> contextStore =
+        InstrumentationContext.get(Context.class, io.grpc.Context.class);
+    return contextStore.get(context);
   }
 
   private static TraceId toUnshaded(final io.opentelemetry.trace.TraceId shadedTraceId) {
